@@ -5,12 +5,15 @@ import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 import java.io.IOException
 import java.io.InputStream
 
+/** Represents a wrapper for an [inputStream] of bytes to be used in binary columns. */
 class ExposedBlob(inputStream: InputStream) {
     constructor(bytes: ByteArray) : this (bytes.inputStream())
 
+    /** The [InputStream] contained by this wrapper. */
     var inputStream = inputStream
         private set
 
+    /** The `ByteArray` returned as a result of reading the contained [InputStream] completely. */
     val bytes: ByteArray
         get() = inputStream.readBytes().also {
             if (inputStream.markSupported()) {
@@ -35,6 +38,7 @@ class ExposedBlob(inputStream: InputStream) {
 
     override fun hashCode(): Int = bytes.contentHashCode()
 
+    /** Returns the hex-encoded string of the contained [InputStream] after being read. */
     fun hexString(): String = bytes.toHexString()
 
     /** Returns the hex-encoded string of a ByteArray. */

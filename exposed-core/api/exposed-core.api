@@ -1200,6 +1200,7 @@ public final class org/jetbrains/exposed/sql/JoinType : java/lang/Enum {
 	public static final field INNER Lorg/jetbrains/exposed/sql/JoinType;
 	public static final field LEFT Lorg/jetbrains/exposed/sql/JoinType;
 	public static final field RIGHT Lorg/jetbrains/exposed/sql/JoinType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/JoinType;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/JoinType;
 }
@@ -1679,6 +1680,7 @@ public final class org/jetbrains/exposed/sql/ReferenceOption : java/lang/Enum {
 	public static final field RESTRICT Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public static final field SET_DEFAULT Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public static final field SET_NULL Lorg/jetbrains/exposed/sql/ReferenceOption;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public fun toString ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/ReferenceOption;
@@ -1917,6 +1919,7 @@ public final class org/jetbrains/exposed/sql/SortOrder : java/lang/Enum {
 	public static final field DESC_NULLS_FIRST Lorg/jetbrains/exposed/sql/SortOrder;
 	public static final field DESC_NULLS_LAST Lorg/jetbrains/exposed/sql/SortOrder;
 	public final fun getCode ()Ljava/lang/String;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/SortOrder;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/SortOrder;
 }
@@ -2263,6 +2266,7 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun getMaxRepetitionDelay ()J
 	public final fun getMinRepetitionDelay ()J
 	public fun getOuterTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
+	public final fun getQueryTimeout ()Ljava/lang/Integer;
 	public fun getReadOnly ()Z
 	public final fun getRepetitionAttempts ()I
 	public final fun getStatementCount ()I
@@ -2279,6 +2283,7 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun setDuration (J)V
 	public final fun setMaxRepetitionDelay (J)V
 	public final fun setMinRepetitionDelay (J)V
+	public final fun setQueryTimeout (Ljava/lang/Integer;)V
 	public final fun setRepetitionAttempts (I)V
 	public final fun setStatementCount (I)V
 	public final fun setWarnLongQueriesDuration (Ljava/lang/Long;)V
@@ -2432,6 +2437,7 @@ public final class org/jetbrains/exposed/sql/WindowFrameBound$Companion {
 public final class org/jetbrains/exposed/sql/WindowFrameBoundDirection : java/lang/Enum {
 	public static final field FOLLOWING Lorg/jetbrains/exposed/sql/WindowFrameBoundDirection;
 	public static final field PRECEDING Lorg/jetbrains/exposed/sql/WindowFrameBoundDirection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/WindowFrameBoundDirection;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/WindowFrameBoundDirection;
 }
@@ -2446,6 +2452,7 @@ public final class org/jetbrains/exposed/sql/WindowFrameUnit : java/lang/Enum {
 	public static final field GROUPS Lorg/jetbrains/exposed/sql/WindowFrameUnit;
 	public static final field RANGE Lorg/jetbrains/exposed/sql/WindowFrameUnit;
 	public static final field ROWS Lorg/jetbrains/exposed/sql/WindowFrameUnit;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/WindowFrameUnit;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/WindowFrameUnit;
 }
@@ -2741,6 +2748,7 @@ public final class org/jetbrains/exposed/sql/statements/StatementContext {
 public final class org/jetbrains/exposed/sql/statements/StatementGroup : java/lang/Enum {
 	public static final field DDL Lorg/jetbrains/exposed/sql/statements/StatementGroup;
 	public static final field DML Lorg/jetbrains/exposed/sql/statements/StatementGroup;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/StatementGroup;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/statements/StatementGroup;
 }
@@ -2771,6 +2779,31 @@ public final class org/jetbrains/exposed/sql/statements/StatementKt {
 	public static final fun expandArgs (Lorg/jetbrains/exposed/sql/statements/StatementContext;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
 }
 
+public abstract class org/jetbrains/exposed/sql/statements/StatementResult {
+}
+
+public final class org/jetbrains/exposed/sql/statements/StatementResult$Count : org/jetbrains/exposed/sql/statements/StatementResult {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lorg/jetbrains/exposed/sql/statements/StatementResult$Count;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/statements/StatementResult$Count;IILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/StatementResult$Count;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCount ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/sql/statements/StatementResult$Object : org/jetbrains/exposed/sql/statements/StatementResult {
+	public fun <init> (Ljava/sql/ResultSet;)V
+	public final fun component1 ()Ljava/sql/ResultSet;
+	public final fun copy (Ljava/sql/ResultSet;)Lorg/jetbrains/exposed/sql/statements/StatementResult$Object;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/statements/StatementResult$Object;Ljava/sql/ResultSet;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/StatementResult$Object;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getResultSet ()Ljava/sql/ResultSet;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/jetbrains/exposed/sql/statements/StatementType : java/lang/Enum {
 	public static final field ALTER Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field CREATE Lorg/jetbrains/exposed/sql/statements/StatementType;
@@ -2779,12 +2812,14 @@ public final class org/jetbrains/exposed/sql/statements/StatementType : java/lan
 	public static final field EXEC Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field GRANT Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field INSERT Lorg/jetbrains/exposed/sql/statements/StatementType;
+	public static final field MULTI Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field OTHER Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field PRAGMA Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field SELECT Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field SHOW Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field TRUNCATE Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static final field UPDATE Lorg/jetbrains/exposed/sql/statements/StatementType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getGroup ()Lorg/jetbrains/exposed/sql/statements/StatementGroup;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/StatementType;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/statements/StatementType;
@@ -2920,6 +2955,7 @@ protected final class org/jetbrains/exposed/sql/statements/api/IdentifierManager
 	public static final field Oracle11g Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi$OracleVersion;
 	public static final field Oracle12_1g Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi$OracleVersion;
 	public static final field Oracle12plus Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi$OracleVersion;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi$OracleVersion;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi$OracleVersion;
 }
@@ -2929,15 +2965,18 @@ public abstract interface class org/jetbrains/exposed/sql/statements/api/Prepare
 	public abstract fun cancel ()V
 	public abstract fun closeIfPossible ()V
 	public abstract fun executeBatch ()Ljava/util/List;
+	public abstract fun executeMultiple ()Ljava/util/List;
 	public abstract fun executeQuery ()Ljava/sql/ResultSet;
 	public abstract fun executeUpdate ()I
 	public abstract fun fillParameters (Ljava/lang/Iterable;)I
 	public abstract fun getFetchSize ()Ljava/lang/Integer;
 	public abstract fun getResultSet ()Ljava/sql/ResultSet;
+	public abstract fun getTimeout ()Ljava/lang/Integer;
 	public abstract fun set (ILjava/lang/Object;)V
 	public abstract fun setFetchSize (Ljava/lang/Integer;)V
 	public abstract fun setInputStream (ILjava/io/InputStream;)V
 	public abstract fun setNull (ILorg/jetbrains/exposed/sql/IColumnType;)V
+	public abstract fun setTimeout (Ljava/lang/Integer;)V
 }
 
 public final class org/jetbrains/exposed/sql/statements/api/PreparedStatementApi$DefaultImpls {
@@ -3283,6 +3322,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreS
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE : java/lang/Enum {
 	public static final field NO_WAIT Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;
 	public static final field SKIP_LOCKED Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getStatement ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;
@@ -3377,6 +3417,7 @@ public final class org/jetbrains/exposed/sql/vendors/H2Dialect$H2CompatibilityMo
 	public static final field Oracle Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2CompatibilityMode;
 	public static final field PostgreSQL Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2CompatibilityMode;
 	public static final field SQLServer Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2CompatibilityMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2CompatibilityMode;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2CompatibilityMode;
 }

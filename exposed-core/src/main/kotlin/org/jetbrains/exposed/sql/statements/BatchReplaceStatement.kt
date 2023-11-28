@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
 import org.jetbrains.exposed.sql.vendors.h2Mode
 
 /**
- * Represents the SQL command that either batch inserts new rows into a table, or, if insertions violate unique constraints,
+ * Represents the SQL statement that either batch inserts new rows into a table, or, if insertions violate unique constraints,
  * first deletes the existing rows before inserting new rows.
  *
  * @param table Table to either insert values into or delete values from then insert into.

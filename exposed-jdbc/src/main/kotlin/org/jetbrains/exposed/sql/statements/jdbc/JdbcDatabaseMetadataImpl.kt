@@ -117,7 +117,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
-    /** Returns a list of existing schema names. */
     override val schemaNames: List<String> get() = schemaNames()
 
     /** Returns a list of existing schema names. */
@@ -132,10 +131,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    /**
-     * Returns the default schema name and a list of its existing table names, as [SchemaMetadata],
-     * found either by reading metadata or from a cache of previously read metadata.
-     */
     override fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata {
         val tablesInSchema = (tableNamesCache ?: tableNames).getValue(currentSchema!!)
         return SchemaMetadata(currentSchema!!, tablesInSchema)

@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
+import kotlin.test.assertFailsWith
 
 class ConditionsTests : DatabaseTestsBase() {
     @Test
@@ -76,6 +77,15 @@ class ConditionsTests : DatabaseTestsBase() {
             val row = city.slice(city.name, city.name, city.id).select { city.name eq "Munich" }.toList().single()
             assertEquals(2, row[city.id])
             assertEquals("Munich", row[city.name])
+        }
+    }
+
+    @Test
+    fun testSliceWithEmptyListThrows() {
+        withCitiesAndUsers { cities, _, _ ->
+            assertFailsWith<IllegalArgumentException> {
+                cities.slice(emptyList()).selectAll().toList()
+            }
         }
     }
 

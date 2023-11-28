@@ -141,14 +141,17 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         }
     }
 
+    /** Indicates whether the H2 Database Engine version is greater than or equal to 2.0. */
     val isSecondVersion get() = majorVersion == H2MajorVersion.Two
 
     private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata { databaseProductVersion.substringBefore(" (") }
 
+    /** H2 database compatibility modes that emulate the behavior of other specific databases. */
     enum class H2CompatibilityMode {
         MySQL, MariaDB, SQLServer, Oracle, PostgreSQL
     }
 
+    /** The specific database name that an H2 compatibility mode delegates to. */
     val delegatedDialectNameProvider: DialectNameProvider? by lazy {
         when (h2Mode) {
             H2CompatibilityMode.MySQL -> MysqlDialect
@@ -170,18 +173,21 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         }
     }
 
+    /** The regular H2 mode implementation of [FunctionProvider] instead of a delegated mode implementation. */
     val originalFunctionProvider: FunctionProvider = H2FunctionProvider
 
     override val functionProvider: FunctionProvider by lazy {
         resolveDelegatedDialect()?.takeIf { it !is MysqlDialect }?.functionProvider ?: originalFunctionProvider
     }
 
+    /** The regular H2 mode implementation of [DataTypeProvider] instead of a delegated mode implementation. */
     val originalDataTypeProvider: DataTypeProvider = H2DataTypeProvider
 
     override val dataTypeProvider: DataTypeProvider by lazy {
         resolveDelegatedDialect()?.takeIf { it !is MysqlDialect }?.dataTypeProvider ?: originalDataTypeProvider
     }
 
+    /** The H2 database compatibility mode retrieved from metadata. */
     val h2Mode: H2CompatibilityMode? by lazy {
         val (settingNameField, settingValueField) = when (majorVersion) {
             H2MajorVersion.One -> "NAME" to "VALUE"
@@ -272,4 +278,5 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     companion object : DialectNameProvider("H2")
 }
 
+/** The current H2 database compatibility mode or `null` if the current database is not H2. */
 val DatabaseDialect.h2Mode: H2Dialect.H2CompatibilityMode? get() = (this as? H2Dialect)?.h2Mode

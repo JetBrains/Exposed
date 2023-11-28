@@ -27,7 +27,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 "enumColumn", sql,
                 { value ->
                     when {
-                        currentDialectTest is H2Dialect && value is Int -> DDLTests.Foo.values()[value]
+                        currentDialectTest is H2Dialect && value is Int -> DDLTests.Foo.entries[value]
                         else -> DDLTests.Foo.valueOf(value as String)
                     }
                 },
