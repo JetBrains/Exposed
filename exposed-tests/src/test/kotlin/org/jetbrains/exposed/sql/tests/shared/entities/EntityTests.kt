@@ -1529,8 +1529,8 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testEagerLoadingWithStringParentId() {
-        withDb {
-            val db = it.connect {
+        withDb { testDb ->
+            val db = testDb.connect {
                 keepLoadedReferencesOutOfTransaction = true
             }
             transaction(db) {
@@ -1562,6 +1562,75 @@ class EntityTests : DatabaseTestsBase() {
                     Country.all().with(Country::dishes)
                 } finally {
                     SchemaUtils.drop(Dishes, Countries)
+                }
+            }
+        }
+    }
+
+    object Customers : IntIdTable("Customers") {
+        val emailAddress = varchar("emailAddress", 30).uniqueIndex()
+        val fullName = text("fullName")
+    }
+
+    class Customer(id: EntityID<Int>) : IntEntity(id) {
+        var emailAddress by Customers.emailAddress
+        var name by Customers.fullName
+
+        val orders by Order referrersOn Orders.customer
+
+        companion object : IntEntityClass<Customer>(Customers)
+    }
+
+    object Orders : IntIdTable("Orders") {
+        var orderName = text("orderName")
+        val customer = reference("customer", Customers.emailAddress)
+    }
+
+    class Order(id: EntityID<Int>) : IntEntity(id) {
+        var name by Orders.orderName
+        var customer by Customer referencedOn Orders.customer
+
+        companion object : IntEntityClass<Order>(Orders)
+    }
+
+    /**
+     * This test is for the case when a child references a parent but not using the parent's id column, but rather
+     * another column that is a unique index.
+     */
+    @Test
+    fun testEagerLoadingWithReferenceDifferentFromParentId() {
+        withDb { testDb ->
+            val db = testDb.connect {
+                keepLoadedReferencesOutOfTransaction = true
+            }
+            transaction(db) {
+                try {
+                    SchemaUtils.drop(Orders, Customers)
+                    SchemaUtils.create(Customers, Orders)
+
+                    val customer1 = Customer.new {
+                        emailAddress = "customer1@testing.com"
+                        name = "Customer1"
+                    }
+
+                    val order1 = Order.new {
+                        name = "Order1"
+                        customer = customer1
+                    }
+
+                    val order2 = Order.new {
+                        name = "Order2"
+                        customer = customer1
+                    }
+
+                    Customer.all().with(Customer::orders)
+
+                    val cache = this.entityCache
+
+                    assertEquals(true, cache.getReferrers<Order>(customer1.id, Orders.customer)?.contains(order1))
+                    assertEquals(true, cache.getReferrers<Order>(customer1.id, Orders.customer)?.contains(order2))
+                } finally {
+                    SchemaUtils.drop(Orders, Customers)
                 }
             }
         }
