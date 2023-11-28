@@ -1,3 +1,24 @@
+# 0.45.0
+Infrastructure:
+* Kotlin 1.9.21
+
+Features:
+* feat: EXPOSED-220 Support multiple statements returning a result in exec() by @bog-walk in https://github.com/JetBrains/Exposed/pull/1888
+* feat: EXPOSED-224 Add query timeout at Transaction by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1890
+* feat: EXPOSED-225 Support transaction timeout in SpringTransactionManager by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1897
+
+Bug fixes:
+* fix: EXPOSED-93 Error when using `with` by @joc-a in https://github.com/JetBrains/Exposed/pull/1891
+* fix: EXPOSED-227 Slice() with empty list creates invalid SQL by @bog-walk in https://github.com/JetBrains/Exposed/pull/1899
+* fix: EXPOSED-226 Upsert fails with only key columns in update by @bog-walk in https://github.com/JetBrains/Exposed/pull/1900
+* fix: Error when using `with` when the child references a parent but not using the parent's id column, but rather another column that is a unique index. by @joc-a in https://github.com/JetBrains/Exposed/pull/1902
+
+Docs:
+* docs: Add missing KDocs for exposed-core statements API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1893
+* docs: Add missing KDocs for exposed-core vendors API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1892
+* docs: Add missing KDocs for exposed-core api package by @bog-walk in https://github.com/JetBrains/Exposed/pull/1896
+* docs: Add missing KDocs for exposed-core transactions API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1898
+
 # 0.44.1
 Infrastructure:
 * MySQL driver 8.0.33
