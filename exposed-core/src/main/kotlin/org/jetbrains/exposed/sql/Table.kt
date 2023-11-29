@@ -797,7 +797,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         defaultValueFun = defaultValue
     }
 
-    // Potential names: readOnly, generatable, dbGeneratable, dbGenerated, generated, generatedDefault, generatedInDb
+    /**
+     * Marks a column as `databaseGenerated` if the default value of the column is not known at the time of table creation
+     * and/or if it depends on other columns. It makes it possible to omit setting it when inserting a new record,
+     * without getting an error.
+     * The value for the column can be set by creating a TRIGGER or with a DEFAULT clause, for example.
+     */
     fun <T> Column<T>.databaseGenerated(): Column<T> = apply {
         isDatabaseGenerated = true
     }

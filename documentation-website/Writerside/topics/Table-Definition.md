@@ -56,6 +56,16 @@ For example, to configure the default value for the `name` column, use the follo
 val name: Column<String> = varchar("name", 50).default("Unknown")
 ```
 
+Exposed also supports marking a column as `databaseGenerated` if the default value of the column is not known at the
+time of table creation and/or if it depends on other columns. It makes it possible to omit setting a value for the
+column when inserting a new record, without getting an error. The value for the column can be set by creating a TRIGGER
+or with a DEFAULT clause, for example.
+
+For example:
+```kotlin
+val name: Column<String> = varchar("name", 50).databaseGenerated()
+```
+
 ### Index
 
 The `INDEX` SQL constraint makes traversing through tables quicker. Exposed supports the `index()` method. 
