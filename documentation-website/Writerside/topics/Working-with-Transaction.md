@@ -80,43 +80,64 @@ TransactionManager.defaultDatabase = db
 
 ### Using nested transactions
 
-Since Exposed 0.16.1, it is possible to use nested transactions. To enable this feature, you should set `useNestedTransactions` on the desired `Database`
-instance to `true`.
+By default, a nested transaction block shares the `transaction` resources of its parent transaction block, so any effect on the child affects the parent:
 
-After that, any exception that happens within the `transaction` block will not rollback the whole transaction but only the code inside the
+```kotlin
+val db = Database.connect( // connection parameters )
+db.useNestedTransactions = false // set by default
+
+transaction {
+    println("Transaction # ${this.id}") // Transaction # 1
+    FooTable.insert{ it[id] = 1 }
+    println(FooTable.selectAll().count()) // 1
+    
+    transaction {
+        println("Transaction # ${this.id}") // Transaction # 1
+        FooTable.insert{ it[id] = 2 }
+        println(FooTable.selectAll().count()) // 2
+    
+        rollback() 
+    }
+
+    println(FooTable.selectAll().count()) // 0
+}
+```
+
+Since Exposed 0.16.1, it is possible to use nested transactions as separate transactions by setting `useNestedTransactions = true` on the desired `Database` instance.
+
+After that, any exception or rollback operation that happens within the `transaction` block will not rollback the whole transaction but only the code inside the
 current `transaction`.
-Exposed uses SQL `SAVEPOINT` functionality to mark the current transaction at the beginning of the `transaction` block and release it on exit from it.
+Exposed uses SQL `SAVEPOINT` functionality to mark the current transaction at the beginning of the `transaction` block and release it on exit.
 
 Using `SAVEPOINT` could affect performance, so please read the documentation of the DBMS you use for more details.
 
 ```kotlin
-val db = Database.connect()
+val db = Database.connect( // connection parameters )
 db.useNestedTransactions = true
 
 transaction {
-    FooTable.insert { it[id] = 1 }
+    println("Transaction # ${this.id}") // Transaction # 1
+    FooTable.insert{ it[id] = 1 }
+    println(FooTable.selectAll().count()) // 1
 
-    var idToInsert = 0
-    transaction { // nested transaction
-        idToInsert ++
-        // On the first insert it will fail with unique constraint exception and will rollback to the `nested transaction` and then insert a new record with id = 2
-        FooTable.insert { it[id] = idToInsert }
+    transaction {
+        println("Transaction # ${this.id}") // Transaction # 2
+        FooTable.insert{ it[id] = 2 }
+        println(FooTable.selectAll().count()) // 2
+
+        rollback()
     }
+
+    println(FooTable.selectAll().count()) // 1
 }
 ```
 
 ### Advanced parameters and usage
 
-For specific functionality, transactions can be created with additional parameters: `transactionIsolation` and `db`.
-The following properties can be set inside the `transaction` lambda:
-
-* `repetitionAttempts`: The number of retries that will be made inside this `transaction` block if SQLException happens
-* `minRepetitionDelay`: The minimum number of milliseconds to wait before retrying this `transaction` if SQLException happens
-* `maxRepetitionDelay`: The maximum number of milliseconds to wait before retrying this `transaction` if SQLException happens
+For specific functionality, transactions can be created with additional parameters: `transactionIsolation`, `readOnly`, and `db`.
 
 ```kotlin
-transaction(Connection.TRANSACTION_SERIALIZABLE, db) {
-    repetitionAttempts = 2
+transaction(Connection.TRANSACTION_SERIALIZABLE, true, db = db) {
     // DSL/DAO operations go here
 }
 ```
@@ -137,4 +158,67 @@ Allowable values are defined in `java.sql.Connection` and are as follows:
   WHERE clause again, resulting in an inconsistency.
 * **TRANSACTION_SERIALIZABLE**: The strictest setting. Prevents dirty reads, non-repeatable reads, and phantom reads.
 
-**db** parameter is optional and used to select the database where the transaction should be settled (see section above).
+**readOnly**: This parameter indicates whether any database connection used by the transaction is in read-only mode, and is set to `false` by default. 
+Much like with `transactionIsolation`, this value is not directly used by Exposed, but is simply relayed to the database.
+
+**db**: This parameter is optional and is used to select the database where the transaction should be settled 
+([[see section above|Transactions#working-with-multiple-databases]]).
+
+**Transaction Repetition Attempts**
+
+Transactions also provide a property, `repetitionAttempts`, which sets the number of retries that should be made if an SQLException occurs inside the transaction block. 
+If this property is not set, any default value provided in `DatabaseConfig` will be used instead:
+
+```kotlin
+val db = Database.connect(
+    datasource = datasource,
+    databaseConfig = DatabaseConfig {
+        defaultRepetitionAttempts = 3
+    }
+)
+
+// property set in transaction block overrides default DatabaseConfig
+transaction(db = db) {
+    repetitionAttempts = 25
+    // operation that may need multiple attempts
+}
+```
+
+If this property is set to a value greater than 0, `minRepetitionDelay` and `maxRepetitionDelay` can also be set in the transaction block to indicate the minimum 
+and maximum number of milliseconds to wait before retrying.
+
+**Transaction Query Timeout**
+
+Another advanced property available in a transaction block is `queryTimeout`. 
+This sets the number of seconds to wait for each statement in the block to execute before timing out:
+
+```kotlin
+transaction {
+    queryTimeout = 3
+    try {
+        // operation that may run for more than 3 seconds
+    } catch (cause: ExposedSQLException) {
+        // logic to perform if execution is timed out
+    }
+}
+```
+
+<note>
+As is the case for `transactionIsolation` and `readOnly` properties, this value is not directly managed by Exposed, but is simply relayed to the JDBC driver. 
+Some drivers may not support implementing this limit.
+</note>
+
+### Statement Interceptors
+
+DSL operations within a transaction create SQL statements, on which commands like *Execute*, *Commit*, and *Rollback* are issued. 
+Exposed provides the `StatementInterceptor` interface that allows you to implement your own logic before and after these specific steps in a statement's lifecycle.
+
+`registerInterceptor()` and `unregisterInterceptor()` can be used in a `transaction` block to enable and disable a custom interceptor in a single transaction.
+
+To use a custom interceptor that acts on all transactions, extend the `GlobalStatementInterceptor` class instead. 
+Exposed uses the Java SPI ServiceLoader to discover and load any implementations of this class. 
+In this situation, a new file should be created in the *resources* folder named:
+```
+META-INF/services/org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
+```
+The contents of this file should be the fully qualified class names of all custom implementations.

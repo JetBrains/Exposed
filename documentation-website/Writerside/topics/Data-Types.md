@@ -174,3 +174,29 @@ val kotlinTeams = Team.select { usesKotlin }.count()
 val usesKotlin = Team.project.contains("\"Kotlin\"", ".language")
 val kotlinTeams = Team.select { usesKotlin }.count()
 ```
+
+### Json Arrays
+
+JSON columns also accept JSON arrays as input values. For example, using the serializable data class `Project` from the 
+example above, the following details some ways to create such a column:
+
+```kotlin
+object TeamProjects : Table("team_projects") {
+    val memberIds = json<IntArray>("member_ids", Json.Default)
+    val projects = json<Array<Project>>("projects", Json.Default)
+    // equivalent to:
+    // @OptIn(ExperimentalSerializationApi::class) json("projects", Json.Default, ArraySerializer(Project.serializer()))
+}
+
+transaction {
+    TeamProjects.insert {
+        it[memberIds] = intArrayOf(1, 2, 3)
+        it[projects] = arrayOf(
+            Project("A", "Kotlin", true),
+            Project("B", "Java", true)
+        )
+    }
+    // generates SQL
+    // INSERT INTO team_projects (member_ids, projects) VALUES ([1,2,3], [{"name":"A","language":"Kotlin","active":true},{"name":"B","language":"Java","active":true}])
+}
+```

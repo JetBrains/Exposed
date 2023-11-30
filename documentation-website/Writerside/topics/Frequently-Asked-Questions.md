@@ -6,7 +6,7 @@ A: [Ilya Ryzhenkov](https://github.com/orangy/) (Squash maintainer) answers:
 
 ### Q: Can I use multiple Database Connections?
 
-A: Yes. See [[Working with a multiple databases|Transactions#working-with-a-multiple-databases]]
+A: Yes. See [[Working with multiple databases|Transactions#working-with-multiple-databases]]
 
 ### Q: Is `Array` column type supported?
 

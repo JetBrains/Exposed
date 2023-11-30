@@ -86,6 +86,17 @@ transaction {
 }
 ```
 
+To log database calls when using Exposed with a **Spring Boot** application, add the following property to the `application.properties` file:
+
+```properties
+spring.exposed.show-sql=true
+```
+
+The `exposed-spring-boot-starter` [README](https://github.com/JetBrains/Exposed/tree/main/exposed-spring-boot-starter#configuring-exposed) 
+covers the necessary steps to configure Exposed to use this and any [other properties](https://github.com/JetBrains/Exposed/tree/main/exposed-spring-boot-starter#automatic-schema-creation).
+
+Alternatively, the `SpringTransactionManager` class has the parameter `showSql`, which can be set to `true` if a transaction manager bean is defined manually.
+
 ## Access Layers
 
 Exposed comes in two flavors: DSL and DAO.
