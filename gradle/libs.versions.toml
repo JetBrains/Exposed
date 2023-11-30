@@ -4,7 +4,7 @@ detekt = "1.23.3"
 binary-compatibility-validator = "0.13.2"
 docker-compose = "0.17.4"
 kotlinCoroutines = "1.7.3"
-kotlinxSerialization = "1.5.1"
+kotlinxSerialization = "1.6.1"
 
 slf4j = "1.7.36"
 log4j2 = "2.20.0"
