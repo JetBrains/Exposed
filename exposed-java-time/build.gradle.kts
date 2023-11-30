@@ -19,7 +19,7 @@ dependencies {
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation(project(":exposed-json"))
-    testImplementation("junit", "junit", "4.12")
+    testImplementation(libs.junit)
     testImplementation(kotlin("test-junit"))
 }
 
