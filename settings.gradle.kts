@@ -14,9 +14,17 @@ include("exposed-crypt")
 include("exposed-json")
 
 pluginManagement {
-    plugins {
-        id("org.jetbrains.kotlin.jvm") version "1.9.21"
-        id("org.jetbrains.kotlin.plugin.serialization") version "1.9.21"
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
     }
 }
 
