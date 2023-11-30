@@ -4,7 +4,6 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 plugins {
     kotlin("jvm") apply true
     alias(libs.plugins.serialization)
-    //kotlin("plugin.serialization") apply true
 }
 
 repositories {
