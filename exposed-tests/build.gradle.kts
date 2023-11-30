@@ -34,6 +34,7 @@ dependencies {
     testCompileOnly(libs.mysql)
     testCompileOnly(libs.postgre)
     testCompileOnly(libs.pgjdbc.ng)
+    testCompileOnly(libs.mssql)
     compileOnly(libs.h2)
     testCompileOnly(libs.sqlite.jdbc)
     testImplementation(libs.logcaptor)
