@@ -1,7 +1,6 @@
 plugins {
     kotlin("jvm") apply true
     alias(libs.plugins.serialization) apply true
-    //kotlin("plugin.serialization") apply true
 }
 
 repositories {
