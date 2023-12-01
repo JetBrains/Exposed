@@ -83,7 +83,9 @@ TransactionManager.defaultDatabase = db
 By default, a nested transaction block shares the `transaction` resources of its parent transaction block, so any effect on the child affects the parent:
 
 ```kotlin
-val db = Database.connect( // connection parameters )
+val db = Database.connect(
+    // connection parameters
+)
 db.useNestedTransactions = false // set by default
 
 transaction {
@@ -112,7 +114,9 @@ Exposed uses SQL `SAVEPOINT` functionality to mark the current transaction at th
 Using `SAVEPOINT` could affect performance, so please read the documentation of the DBMS you use for more details.
 
 ```kotlin
-val db = Database.connect( // connection parameters )
+val db = Database.connect(
+    // connection parameters
+)
 db.useNestedTransactions = true
 
 transaction {
