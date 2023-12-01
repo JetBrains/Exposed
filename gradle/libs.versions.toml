@@ -1,6 +1,6 @@
 [versions]
 kotlin = "1.9.21"
-detekt = "1.23.3"
+detekt = "1.23.4"
 binary-compatibility-validator = "0.13.2"
 docker-compose = "0.17.4"
 kotlinCoroutines = "1.7.3"
