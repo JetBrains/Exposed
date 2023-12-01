@@ -67,15 +67,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
     @Deprecated(
         message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+        replaceWith = ReplaceWith("adjustSelect { body.invoke() }"),
         level = DeprecationLevel.WARNING
     )
     fun adjustSlice(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
 
-    /**
-     * Changes [set.fields] field of a Query, [set.source] will be preserved
-     * @param body builder for new column set, current [set.source] used as a receiver and current [set] as an argument, you are expected to slice it
-     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
-     */
     fun adjustSelect(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
 
     /**

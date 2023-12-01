@@ -1,3 +1,5 @@
+@file:Suppress("internal", "INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
@@ -9,6 +11,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.util.*
+import kotlin.internal.LowPriorityInOverloadResolution
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
@@ -112,9 +115,11 @@ abstract class ColumnSet : FieldSet {
     )
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 
+    @LowPriorityInOverloadResolution
     fun select(column: Expression<*>, vararg columns: Expression<*>): Query =
         Query(Select(this, listOf(column) + columns), null)
 
+    @LowPriorityInOverloadResolution
     fun select(columns: List<Expression<*>>): Query = Query(Select(this, columns), null)
 }
 
