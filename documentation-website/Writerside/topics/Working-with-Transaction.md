@@ -154,8 +154,8 @@ Allowable values are defined in `java.sql.Connection` and are as follows:
   A reads the row again, resulting in an inconsistency.
 * **TRANSACTION_REPEATABLE_READ**: The default setting for Exposed transactions. Prevents both dirty and non-repeatable reads, but still allows for
   phantom reads. A _phantom read_ is when a transaction ("Transaction A") selects a list of rows through a `WHERE` clause, another transaction ("
-  Transaction B") performs an `INSERT` or `DELETE` with a row that satisfies Transaction A's `WHERE` clause, and Transaction A selects using the same
-  WHERE clause again, resulting in an inconsistency.
+  Transaction B") performs an `INSERT` or `DELETE` with a row that satisfies the `WHERE` clause in Transaction A, and Transaction A selects using the same
+  `WHERE` clause again, resulting in an inconsistency.
 * **TRANSACTION_SERIALIZABLE**: The strictest setting. Prevents dirty reads, non-repeatable reads, and phantom reads.
 
 **readOnly**: This parameter indicates whether any database connection used by the transaction is in read-only mode, and is set to `false` by default. 
