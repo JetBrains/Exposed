@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.sql.Table.Dual.source
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
@@ -31,6 +30,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
     private var forUpdate: ForUpdateOption? = null
 
+    /** The stored condition for a `WHERE` clause in this query. */
     var where: Op<Boolean>? = where
         private set
 
@@ -72,11 +72,21 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     )
     fun adjustSlice(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
 
+    /**
+     * Assigns a new selection of columns, by changing the `fields` property of this query's [set],
+     * while preserving its `source` property.
+     *
+     * @param body Builder for the new column set defined using `select()`, with the current [set]'s `source`
+     * property used as the receiver and the current [set] as an argument.
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
+     */
     fun adjustSelect(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
 
     /**
-     * Changes [set.source] field of a Query, [set.fields] will be preserved
-     * @param body builder for new column set, previous value used as a receiver
+     * Assigns a new column set, either a [Table] or a [Join], by changing the `source` property of this query's [set],
+     * while preserving its `fields` property.
+     *
+     * @param body Builder for the new column set, with the previous column set value as the receiver.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
      */
     fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
@@ -183,8 +193,18 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         return this
     }
 
+    /**
+     * Appends a `WHERE` clause with the specified [predicate] to this query.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testSelect
+     */
     fun where(predicate: SqlExpressionBuilder.() -> Op<Boolean>): Query = where(SqlExpressionBuilder.predicate())
 
+    /**
+     * Appends a `WHERE` clause with the specified [predicate] to this query.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.ExistsTests.testExists01
+     */
     fun where(predicate: Op<Boolean>): Query {
         where?.let {
             error("WHERE clause is specified twice. Old value = '$it', new value = '$predicate'")
@@ -193,11 +213,21 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         return this
     }
 
+    /**
+     * Iterates over multiple executions of this query with its `LIMIT` clause set to [batchSize]
+     * until the amount of results retrieved from the database is less than [batchSize].
+     *
+     * This query's [FieldSet] will be ordered by the first auto-increment column.
+     *
+     * @param batchSize Size of each sub-collection to return.
+     * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectBatchedTests.testFetchBatchedResultsWithWhereAndSetBatchSize
+     */
     fun fetchBatchedResults(batchSize: Int = 1000): Iterable<Iterable<ResultRow>> {
         require(batchSize > 0) { "Batch size should be greater than 0." }
-        require(limit == null) { "A manual LIMIT clause should not be set. By default, batchSize will be used." }
+        require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
         require(orderByExpressions.isEmpty()) {
-            "A manual ORDER BY clause should not be set. By default, the auto-incrementing column will be used."
+            "A manual `ORDER BY` clause should not be set. By default, the auto-incrementing column will be used."
         }
 
         val autoIncColumn = try {
@@ -218,7 +248,6 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                             whereOp and (autoIncColumn greater lastOffset)
                         }
 
-                        // query.iterator() executes the query
                         val results = query.iterator().asSequence().toList()
 
                         if (results.isNotEmpty()) {
@@ -249,9 +278,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             try {
                 var expInx = 0
                 adjustSelect {
-                    select(originalSet.fields.map {
-                        it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
-                    }).set
+                    select(
+                        originalSet.fields.map {
+                            it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
+                        }
+                    ).set
                 }
 
                 alias("subquery").selectAll().count()

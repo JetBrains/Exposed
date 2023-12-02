@@ -24,7 +24,7 @@ sealed class SetOperation(
                     else -> expression.alias("exp$index")
                 }
             }
-            _firstStatement.copy().adjustSlice { slice(newSlice) }
+            _firstStatement.copy().adjustSelect { select(newSlice).set }
         }
         is SetOperation -> _firstStatement
         else -> error("Unsupported statement type ${_firstStatement::class.simpleName} in $operationName")

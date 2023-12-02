@@ -1,4 +1,4 @@
-@file:Suppress("internal", "INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 
 package org.jetbrains.exposed.sql
 
@@ -22,6 +22,7 @@ import kotlin.reflect.full.primaryConstructor
 /** Pair of expressions used to match rows from two joined tables. */
 typealias JoinCondition = Pair<Expression<*>, Expression<*>>
 
+/** Represents a subset of fields from a given source. */
 typealias Select = Slice
 
 /**
@@ -115,10 +116,23 @@ abstract class ColumnSet : FieldSet {
     )
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 
+    /**
+     * Creates a [Query] by selecting either a single [column], or a subset of [columns], from this [ColumnSet].
+     *
+     * The column set selected from may be either a [Table] or a [Join].
+     * Arguments provided to [column] and [columns] may be table object columns or function expressions.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
+     */
     @LowPriorityInOverloadResolution
     fun select(column: Expression<*>, vararg columns: Expression<*>): Query =
         Query(Select(this, listOf(column) + columns), null)
 
+    /**
+     * Creates a [Query] using a list of [columns] or expressions from this [ColumnSet].
+     *
+     * The column set selected from may be either a [Table] or a [Join].
+     */
     @LowPriorityInOverloadResolution
     fun select(columns: List<Expression<*>>): Query = Query(Select(this, columns), null)
 }

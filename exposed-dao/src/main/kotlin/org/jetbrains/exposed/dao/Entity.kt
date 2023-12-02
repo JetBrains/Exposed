@@ -45,7 +45,8 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     val readValues: ResultRow
         get() = _readValues ?: run {
             val table = klass.table
-            _readValues = klass.searchQuery(Op.build { table.id eq id }).firstOrNull() ?: table.select { table.id eq id }.first()
+            _readValues = klass.searchQuery(Op.build { table.id eq id }).firstOrNull()
+                ?: table.selectAll().where { table.id eq id }.first()
             _readValues!!
         }
 

@@ -60,7 +60,7 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
 
         val (columns, entityTables) = columnsAndTables
 
-        val query = { target.wrapRows(entityTables.slice(columns).select { sourceColumn eq o.id }) }
+        val query = { target.wrapRows(entityTables.select(columns).where { sourceColumn eq o.id }) }
         return transaction.entityCache.getOrPutReferrers(o.id, sourceColumn, query).also {
             o.storeReferenceInCache(sourceColumn, it)
         }
