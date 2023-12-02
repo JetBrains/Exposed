@@ -15,6 +15,7 @@ import kotlin.sequences.Sequence
 )
 inline fun FieldSet.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = Query(this, SqlExpressionBuilder.where())
 
+@Suppress("UnusedParameter")
 @Deprecated(
     message = "This method only exists as part of the migration for SELECT DSL design changes.",
     replaceWith = ReplaceWith("where { where.invoke() }"),
@@ -29,6 +30,7 @@ inline fun Query.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = 
 )
 fun FieldSet.select(where: Op<Boolean>): Query = Query(this, where)
 
+@Suppress("UnusedParameter")
 @Deprecated(
     message = "This method only exists as part of the migration for SELECT DSL design changes.",
     replaceWith = ReplaceWith("where(where)"),
