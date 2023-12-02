@@ -8,53 +8,69 @@ Kotlin frameworks (like [ktor](https://ktor.io)) have built-in support for Corou
 with databases that was designed in an era of blocking APIs. Moreover, Exposed stores some values in
 thread-local variables while coroutines could (and will) be executed in different threads.
 
-Since Exposed 0.15.1, there are bridge functions that will give you a safe way to interact with Exposed within `suspend`
-blocks: `newSuspendedTransaction/Transaction.withSuspendTransaction` have the same parameters as a blocking `transaction` function but will allow you to
-provide a `CoroutineDispatcher` in which the function will be executed. If context is not provided, your code will be executed within the current `coroutineContext`.
+Since Exposed 0.15.1, bridge functions are available that give you a safe way to interact with Exposed within `suspend`
+blocks: `newSuspendedTransaction()` and `Transaction.withSuspendTransaction()`. These have the same parameters as a blocking `transaction` function but allow you to
+provide a `CoroutineContext` argument that explicitly specifies the `CoroutineDispatcher` in which the function will be executed. 
+If context is not provided, your code will be executed within the current `CoroutineContext`.
 
-Sample usage looks like:
+Here is an example that uses these 3 types of transactions:
 
 ```kotlin
-runBlocking {
-    transaction {
-        SchemaUtils.create(FooTable) // Table will be created on a current thread
+transaction {
+    println("Transaction # ${this.id}") // Transaction # 1
+    SchemaUtils.create(FooTable) // Table will be created on a current thread
 
+    runBlocking {
         newSuspendedTransaction(Dispatchers.Default) {
-            FooTable.insert { it[id] = 1 } // This insert will be executed in one of Default dispatcher threads
+            println("Transaction # ${this.id}") // Transaction # 2
+            FooTable.insert { it[id] = 1 }  // This insert will be executed in one of the Default dispatcher threads
 
             withSuspendTransaction {
-                val id = FooTable.select { FooTable.id eq 1 }
-                    .single()()[FooTable.id] // This select also will be executed on some thread from Default dispatcher using the same transaction
+                println("Transaction # ${this.id}") // Transaction # 2
+                // This select also will be executed on some thread from Default dispatcher using the same transaction as its parent
+                FooTable.select { FooTable.id eq 1 }.single()[FooTable.id]
             }
         }
-
-        val result = newSuspendedTransaction(Dispatchers.IO) {
-            FooTable.select { FooTable.id eq 1 }
-                .single()[H2Tests.Testing.id] // This select will be executed on some thread from IO dispatcher using the same transaction
-        }
     }
-}
 
+    transaction {
+        println("Transaction # ${this.id}") // Transaction # 1
+    }
+
+    runBlocking {
+        val result = newSuspendedTransaction(Dispatchers.IO) {
+            println("Transaction # ${this.id}") // Transaction # 3
+            FooTable.select { FooTable.id eq 1 }.single()[FooTable.id] // This select will be executed on some thread from IO dispatcher
+        }
+        println("Result: $result") // Result: 1
+    }
+
+    SchemaUtils.drop(Testing)
+}
 ```  
 
 Please note that such code remains blocking (as it still uses JDBC) and you should not try to share a transaction between multiple threads as it will
 lead to undefined behaviour.
 
-If you want to execute some code asynchronously and use the result later in your code, take a look at `suspendedTransactionAsync` function.
+If you want to execute some code asynchronously and use the result later, take a look at `suspendedTransactionAsync()`:
 
 ```kotlin
-val launchResult = suspendedTransactionAsync(Dispatchers.IO, db = db) {
-    FooTable.insert {}
+runBlocking {
+    val launchResult = suspendedTransactionAsync(Dispatchers.IO) {
+        FooTable.insert { it[id] = 2 }
 
-    FooTable.select { FooTable.id eq 1 }.singleOrNull()?.getOrNull(Testing.id)
+        FooTable.select { FooTable.id eq 2 }.singleOrNull()?.getOrNull(FooTable.id)
+    }
+
+    println("Async result: " + (launchResult.await() ?: -1)) // Async result: 2
 }
-
-println("Result: " + (launchResult.await() ?: - 1))
-
 ```
 
-This function will accept the same parameters as `newSuspendedTransaction` above, but returns `Deferred` which you could call `await` on to achieve your
-result.
+This function will accept the same parameters as `newSuspendedTransaction()` above, but returns its future result as an implementation of `Deferred`, 
+which you could call `await` on to achieve your result.
 
-`suspendedTransactionAsync` is always executed in a new transaction to prevent concurrency issues when queries execution order could be changed
-by `CoroutineDispatcher`.
+<note>
+`newSuspendedTransaction()` and `suspendedTransactionAsync()` are always executed in a new transaction to prevent concurrency issues when query 
+execution order could be changed by `CoroutineDispatcher`. 
+This means that nesting these suspend transactions may not result in the same behavior as nested `transaction`s (when `useNestedTransactions = false`).
+</note>

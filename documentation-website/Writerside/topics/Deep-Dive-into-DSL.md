@@ -55,18 +55,19 @@ To create a new table row, you use the `insert` query. Exposed provides several 
         it[population] = 500
     }
     ```
-* `insertIgnore` adds a new row. If the same row already exists in the table, it ignores it and doesn't throw an exception. This function is supported only for MySQL.
+* `insertIgnore` adds a new row. If the same row already exists in the table, it ignores it and doesn't throw an exception. This function is supported only for MySQL, 
+  PostgreSQL, and SQLite. 
     ```kotlin
     // SQL: INSERT IGNORE INTO CITIES (COUNTRY, "NAME", POPULATION)
     // VALUES ('RUSSIA', 'St. Petersburg', 300)
-    val id = Cities.insertIgnore {
+    Cities.insertIgnore {
         it[name] = "St. Petersburg"
         it[country] = Country.RUSSIA
         it[population] = 500
     }
     ```
 * `insertIgnoreAndGetId` adds a new row and returns its ID. If the same row already exists in the table, it ignores it and doesn't throw an exception. This function
-  is supported only for MySQL. Works only with IntIdTable() tables.
+  is supported only for MySQL, PostgreSQL, and SQLite. Works only with `IntIdTable()` tables.
     ```kotlin
     // SQL: INSERT IGNORE INTO CITIES (COUNTRY, "NAME", POPULATION)
     // VALUES ('RUSSIA', 'St. Petersburg', 300)
@@ -83,6 +84,18 @@ val id = StarWarsFilms.insertAndGetId {
     it[sequelId] = 8
     it[director] = "Rian Johnson"
 }
+```
+
+Some databases return a count of the number of rows inserted, updated, or deleted by the CRUD operation.
+For `insert()`, `upsert()`, and `replace()`, this value can be accessed using the statement class property, `insertedCount`:
+
+```kotlin
+val insertStatement = StarWarsFilms.insertIgnore {
+  it[name] = "The Last Jedi"
+  it[sequelId] = 8
+  it[director] = "Rian Johnson"
+}
+val rowCount: Int = insertStatement.insertedCount
 ```
 
 ### Read
@@ -135,11 +148,21 @@ StarWarsFilms.update({ StarWarsFilms.sequelId eq 8 }) {
 } 
 ```
 
+If you want to know the number of updated rows, this value is also returned by the `update()` function:
+
+```kotlin
+val updatedCount = StarWarsFilms.update({ StarWarsFilms.name like "Episode%" }) {
+    it[StarWarsFilms.director] = StarWarsFilms.director.upperCase()
+}
+```
+
 ### Delete
 
 ```kotlin
 StarWarsFilms.deleteWhere { StarWarsFilms.sequelId eq 8 }
 ```
+
+Delete functions also return a count of the number of deleted rows, as for Update above.
 
 ## Where expression
 
@@ -160,7 +183,6 @@ notLike - (!~)
 exists
 notExists
 regexp
-notRegexp
 inList
 notInList
 between
@@ -240,9 +262,49 @@ actorName?.let {
 }
 ```
 
+### Check for a match in a pattern
+
+```kotlin
+StarWarsFilms.select { StarWarsFilms.name like "The %" }
+```
+
+`notLike` is also available to check for expressions that do not match the provided pattern.
+
+To perform a pattern match that supports regular expressions, use `regexp` instead:
+
+```kotlin
+StarWarsFilms.select { StarWarsFilms.name regexp "^The(\\s\\w+){2}\$" }
+```
+
+### Check for a match in a range
+
+```kotlin
+StarWarsFilms.select { StarWarsFilms.sequelId.between(4, 6) }
+```
+
+The `between` operator returns `true` if the expression is between the lower and upper range values (inclusive). 
+Date and time values are also supported as arguments.
+
+### Check for a match in a collection
+
+```kotlin
+StarWarsFilms.select { StarWarsFilms.sequelId inList listOf(6, 4) }
+```
+
+`inList` also accepts multiple expressions to check for equality, either as a `Pair` or a `Triple`:
+
+```kotlin
+val topRated = listOf(5 to "Empire Strikes Back", 4 to "A New Hope")
+StarWarsFilms.select {
+    StarWarsFilms.sequelId to StarWarsFilms.name inList topRated
+}
+```
+
+`notInList` is available to check for expressions that are not equal to any elements in the provided collection.
+
 ## Count
 
-`count()` is a method of `Query` that is used like below example:
+`count()` is a method of `Query` that is used like in the example below:
 
 ```kotlin
 val count = StarWarsFilms.select { StarWarsFilms.sequelId eq 8 }.count()
@@ -350,7 +412,7 @@ Actors.join(Roles, JoinType.INNER, onColumn = Actors.id, otherColumn = Roles.act
 
 ## Union
 
-You can combine the results of multiple queries using using `.union(...)`.
+You can combine the results of multiple queries using `.union(...)`.
 Per the SQL specification, the queries must have the same number of columns, and not be marked for update.
 Subqueries may be combined when supported by the database.
 
@@ -482,12 +544,35 @@ val firstValue = StarWarsFilms.slice(nextVal).selectAll().single()[nextVal]
 ## Batch Insert
 
 Batch Insert allow mapping a list of entities into DB raws in one sql statement. It is more efficient than inserting one by one as it initiates only one statement.
-Here is an example:
+Here is an example that uses a simple list:
 
 ```kotlin
 val cityNames = listOf("Paris", "Moscow", "Helsinki")
 val allCitiesID = cities.batchInsert(cityNames) { name ->
     this[cities.name] = name
+}
+```
+
+Here is an example that uses a list of data class instances:
+
+```kotlin
+data class SWFilmData(val sequelId: Int, val name: String, val director: String)
+
+transaction {
+    // ...
+    val films = listOf(
+        SWFilmData(5, "The Empire Strikes Back", "Irvin Kershner"),
+        SWFilmData(4, "A New Hope", "George Lucas"),
+        SWFilmData(7, "The Force Awakens", "JJ Abrams")
+    )
+
+    StarWarsFilms.batchInsert(films) { (id, name, director) ->
+        this[StarWarsFilms.sequelId] = id
+        this[StarWarsFilms.name] = name
+        this[StarWarsFilms.director] = director
+    }
+
+    StarWarsFilms.selectAll().count() // 3
 }
 ```
 
@@ -559,6 +644,12 @@ StarWarsFilms.upsert {
     it[director] = "JJ Abrams"
 }
 ```
+
+If none of the optional arguments are provided to `upsert()`, the statements in the `body` block will be used for both the insert and update parts of the operation. 
+This means that, for example, if a table mapping has columns with default values and these columns are omitted from the `body` block, the default values will be 
+used for insertion as well as for the update operation. If the update operation should differ from the insert operation, then `onUpdate` should be provided an 
+argument with the specific columns to update, as seen in the example below.
+
 Using another example, PostgreSQL allows more control over which key constraint columns to check for conflict, whether different 
 values should be used for an update, and whether the update statement should have a `WHERE` clause:
 ```kotlin
@@ -578,6 +669,54 @@ is no defined primary key, the first unique index is used. If there are no uniqu
 differently, so it is strongly advised that keys are defined to avoid unexpected results.
 
 <note>
-Databases that do not support a specific upsert command implement the standard `MERGE USING` statement with aliases 
-and a derived table. These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode).
+Databases that do not support a specific Insert or Update command implement the standard `MERGE INTO ... USING` statement with aliases and a derived table column list. 
+These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode). 
+Any columns defined as key constraints (to be used in the `ON` clause) must be included in the statement block to avoid throwing an error.
+</note>
+
+## Replace
+
+SQLite, MySQL, and MariaDB (as well as the H2 compatibility modes of the latter 2 databases) support a `REPLACE` statement that acts in a similar manner 
+to an `INSERT OR UPDATE` statement. The only difference is that, if an insertion would violate a unique constraint, the existing row is deleted (not updated) 
+before the new row is inserted.
+
+```kotlin
+object StarWarsFilms : Table() {
+    val sequelId: Column<Int> = integer("sequel_id").uniqueIndex()
+    val releaseYear: Column<Int> = integer("release_year")
+    val name: Column<String> = varchar("name", 50)
+    val director: Column<String> = varchar("director", 50)
+    val rating: Column<Double> = double("rating").default(10.0)
+
+    override val primaryKey = PrimaryKey(sequelId, releaseYear)
+}
+
+transaction {
+    // ...
+    // inserts a new row with default rating
+    StarWarsFilms.replace {
+        it[sequelId] = 9
+        it[releaseYear] = 2019
+        it[name] = "The Rise of Skywalker"
+        it[director] = "JJ Abrams"
+    }
+    // deletes existing row and inserts new row with set [rating]
+    StarWarsFilms.replace {
+        it[sequelId] = 9
+        it[releaseYear] = 2019
+        it[name] = "The Rise of Skywalker"
+        it[director] = "JJ Abrams"
+        it[rating] = 5.2
+    }
+}
+```
+
+Unlike Insert or Update, none of the supporting databases allows a `WHERE` clause. 
+Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there is no parameter for a custom key set.
+
+The values specified in the statement block will be used for the insert statement and any omitted columns are set to their default values, if applicable.
+
+<note>
+In the example above, if the original row was inserted with a user-defined `rating`, then `replace()` was executed with a block that omitted the `rating` column, 
+the newly inserted row would store the default rating value. This is because the old row was completely deleted first.
 </note>
