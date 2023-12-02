@@ -8,6 +8,8 @@ import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.json.extract
 import org.jetbrains.exposed.sql.json.jsonb
@@ -39,12 +41,12 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
                 it[local_time] = now
             }
 
-            val insertedYear = CitiesTime.slice(CitiesTime.local_time.year()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.year()]
-            val insertedMonth = CitiesTime.slice(CitiesTime.local_time.month()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.month()]
-            val insertedDay = CitiesTime.slice(CitiesTime.local_time.day()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.day()]
-            val insertedHour = CitiesTime.slice(CitiesTime.local_time.hour()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.hour()]
-            val insertedMinute = CitiesTime.slice(CitiesTime.local_time.minute()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.minute()]
-            val insertedSecond = CitiesTime.slice(CitiesTime.local_time.second()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.second()]
+            val insertedYear = CitiesTime.select(CitiesTime.local_time.year()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.year()]
+            val insertedMonth = CitiesTime.select(CitiesTime.local_time.month()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.month()]
+            val insertedDay = CitiesTime.select(CitiesTime.local_time.day()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.day()]
+            val insertedHour = CitiesTime.select(CitiesTime.local_time.hour()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.hour()]
+            val insertedMinute = CitiesTime.select(CitiesTime.local_time.minute()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.minute()]
+            val insertedSecond = CitiesTime.select(CitiesTime.local_time.second()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.second()]
 
             assertEquals(now.year, insertedYear)
             assertEquals(now.month.value, insertedMonth)
@@ -72,7 +74,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
                 val hour = testDate.time.hour()
                 val minute = testDate.time.minute()
 
-                val result = testDate.slice(year, month, day, hour, minute).selectAll().single()
+                val result = testDate.select(year, month, day, hour, minute).single()
 
                 val now = now()
                 assertEquals(now.year, result[year])
@@ -127,19 +129,19 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             }
 
             val maxTsExpr = testTable.ts.max()
-            val maxTimestamp = testTable.slice(maxTsExpr).selectAll().single()[maxTsExpr]
+            val maxTimestamp = testTable.select(maxTsExpr).single()[maxTsExpr]
             assertEqualDateTime(now, maxTimestamp)
 
             val minTsExpr = testTable.ts.min()
-            val minTimestamp = testTable.slice(minTsExpr).selectAll().single()[minTsExpr]
+            val minTimestamp = testTable.select(minTsExpr).single()[minTsExpr]
             assertEqualDateTime(now, minTimestamp)
 
             val maxTsnExpr = testTable.tsn.max()
-            val maxNullableTimestamp = testTable.slice(maxTsnExpr).selectAll().single()[maxTsnExpr]
+            val maxNullableTimestamp = testTable.select(maxTsnExpr).single()[maxTsnExpr]
             assertEqualDateTime(now, maxNullableTimestamp)
 
             val minTsnExpr = testTable.tsn.min()
-            val minNullableTimestamp = testTable.slice(minTsnExpr).selectAll().single()[minTsnExpr]
+            val minNullableTimestamp = testTable.select(minTsnExpr).single()[minTsnExpr]
             assertEqualDateTime(now, minNullableTimestamp)
         }
     }
@@ -163,7 +165,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
                 val month = testTable.dateCol.month()
                 val day = testTable.dateCol.day()
 
-                val result1 = testTable.slice(year, month, day).selectAll().single()
+                val result1 = testTable.select(year, month, day).single()
                 assertEquals(today.year, result1[year])
                 assertEquals(today.monthNumber, result1[month])
                 assertEquals(today.dayOfMonth, result1[day])
@@ -178,7 +180,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
                 val nextMonth = LocalDate(today.year, today.monthNumber, 1).plus(1, DateTimeUnit.MONTH)
                 val expectedLastDayOfMonth = nextMonth.minus(1, DateTimeUnit.DAY)
 
-                val result2 = testTable.slice(lastDayOfMonth).selectAll().single()
+                val result2 = testTable.select(lastDayOfMonth).single()
                 assertEquals(expectedLastDayOfMonth, result2[lastDayOfMonth])
             } finally {
                 SchemaUtils.drop(testTable)
@@ -209,22 +211,22 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
                 }
 
                 val inYear2000 = testTable.defaultDate.castTo<String>(TextColumnType()) like "2000%"
-                assertEquals(1, testTable.select { inYear2000 }.count())
+                assertEquals(1, testTable.selectAll().where { inYear2000 }.count())
 
-                val todayResult1 = testTable.select { testTable.defaultDate eq today }.single()
+                val todayResult1 = testTable.selectAll().where { testTable.defaultDate eq today }.single()
                 assertEquals(eventBId, todayResult1[testTable.id])
 
                 testTable.update({ testTable.id eq eventAId }) {
                     it[testTable.defaultDate] = today
                 }
 
-                val todayResult2 = testTable.select { testTable.defaultDate eq today }.count()
+                val todayResult2 = testTable.selectAll().where { testTable.defaultDate eq today }.count()
                 assertEquals(2, todayResult2)
 
                 val twoYearsAgo = today.minus(2, DateTimeUnit.YEAR)
                 val twoYearsInFuture = today.plus(2, DateTimeUnit.YEAR)
                 val isWithinTwoYears = testTable.defaultDate.between(twoYearsAgo, twoYearsInFuture)
-                assertEquals(2, testTable.select { isWithinTwoYears }.count())
+                assertEquals(2, testTable.selectAll().where { isWithinTwoYears }.count())
 
                 val yesterday = today.minus(1, DateTimeUnit.DAY)
 
@@ -257,11 +259,11 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
                 it[deleted] = mayTheFourth.plus(1, DateTimeUnit.DAY)
             }
 
-            val sameDateResult = testTable.select { testTable.created eq testTable.deleted }.toList()
+            val sameDateResult = testTable.selectAll().where { testTable.created eq testTable.deleted }.toList()
             assertEquals(1, sameDateResult.size)
             assertEquals(mayTheFourth, sameDateResult.single()[testTable.deleted])
 
-            val sameMonthResult = testTable.select { testTable.created.month() eq testTable.deleted.month() }.toList()
+            val sameMonthResult = testTable.selectAll().where { testTable.created.month() eq testTable.deleted.month() }.toList()
             assertEquals(2, sameMonthResult.size)
 
             val year2023 = if (currentDialectTest is PostgreSQLDialect) {
@@ -270,7 +272,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             } else {
                 dateParam(mayTheFourth).year()
             }
-            val createdIn2023 = testTable.select { testTable.created.year() eq year2023 }.toList()
+            val createdIn2023 = testTable.selectAll().where { testTable.created.year() eq year2023 }.toList()
             assertEquals(2, createdIn2023.size)
         }
     }
@@ -301,13 +303,13 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
                 in requiresExplicitDTCast -> Cast(dateTimeParam(mayTheFourthDT), KotlinLocalDateTimeColumnType())
                 else -> dateTimeParam(mayTheFourthDT)
             }
-            val createdMayFourth = testTableDT.select { testTableDT.created eq dateTime }.count()
+            val createdMayFourth = testTableDT.selectAll().where { testTableDT.created eq dateTime }.count()
             assertEquals(2, createdMayFourth)
 
-            val modifiedAtSameDT = testTableDT.select { testTableDT.modified eq testTableDT.created }.single()
+            val modifiedAtSameDT = testTableDT.selectAll().where { testTableDT.modified eq testTableDT.created }.single()
             assertEquals(id1, modifiedAtSameDT[testTableDT.id])
 
-            val modifiedAtLaterDT = testTableDT.select { testTableDT.modified greater testTableDT.created }.single()
+            val modifiedAtLaterDT = testTableDT.selectAll().where { testTableDT.modified greater testTableDT.created }.single()
             assertEquals(id2, modifiedAtLaterDT[testTableDT.id])
         }
     }
@@ -334,11 +336,11 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
 
             // value extracted in same manner it is stored, a json string
             val modifiedAsString = tester.modified.extract<String>("${prefix}timestamp")
-            val allModifiedAsString = tester.slice(modifiedAsString).selectAll()
+            val allModifiedAsString = tester.select(modifiedAsString)
             assertTrue(allModifiedAsString.all { it[modifiedAsString] == dateTimeNow.toString() })
             // value extracted as json, with implicit LocalDateTime serializer() performing conversions
             val modifiedAsJson = tester.modified.extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
-            val allModifiedAsJson = tester.slice(modifiedAsJson).selectAll()
+            val allModifiedAsJson = tester.select(modifiedAsJson)
             assertTrue(allModifiedAsJson.all { it[modifiedAsJson] == dateTimeNow })
 
             // PostgreSQL requires explicit type cast to timestamp for in-DB comparison
@@ -347,7 +349,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             } else {
                 tester.modified.extract<LocalDateTime>("${prefix}timestamp")
             }
-            val modifiedBeforeCreation = tester.select { dateModified less tester.created }.single()
+            val modifiedBeforeCreation = tester.selectAll().where { dateModified less tester.created }.single()
             assertEquals(2, modifiedBeforeCreation[tester.modified].userId)
         }
     }
@@ -372,35 +374,35 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
                     it[timestampWithTimeZone] = cairoNow
                 }
 
-                val cairoNowInsertedInCairoTimeZone = testTable.select { testTable.id eq cairoId }
+                val cairoNowInsertedInCairoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
                     .single()[testTable.timestampWithTimeZone]
 
                 // UTC time zone
                 java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
                 assertEquals("UTC", ZoneId.systemDefault().id)
 
-                val cairoNowRetrievedInUTCTimeZone = testTable.select { testTable.id eq cairoId }
+                val cairoNowRetrievedInUTCTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
                     .single()[testTable.timestampWithTimeZone]
 
                 val utcID = testTable.insertAndGetId {
                     it[timestampWithTimeZone] = cairoNow
                 }
 
-                val cairoNowInsertedInUTCTimeZone = testTable.select { testTable.id eq utcID }
+                val cairoNowInsertedInUTCTimeZone = testTable.selectAll().where { testTable.id eq utcID }
                     .single()[testTable.timestampWithTimeZone]
 
                 // Tokyo time zone
                 java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Tokyo"))
                 assertEquals("Asia/Tokyo", ZoneId.systemDefault().id)
 
-                val cairoNowRetrievedInTokyoTimeZone = testTable.select { testTable.id eq cairoId }
+                val cairoNowRetrievedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
                     .single()[testTable.timestampWithTimeZone]
 
                 val tokyoID = testTable.insertAndGetId {
                     it[timestampWithTimeZone] = cairoNow
                 }
 
-                val cairoNowInsertedInTokyoTimeZone = testTable.select { testTable.id eq tokyoID }
+                val cairoNowInsertedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq tokyoID }
                     .single()[testTable.timestampWithTimeZone]
 
                 // PostgreSQL and MySQL always store the timestamp in UTC, thereby losing the original time zone.
@@ -456,7 +458,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
 
         withTables(fakeTestTable) {
             fun currentDbDateTime(): LocalDateTime {
-                return fakeTestTable.slice(CurrentDateTime).selectAll().first()[CurrentDateTime]
+                return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
             }
 
             fakeTestTable.insert {}

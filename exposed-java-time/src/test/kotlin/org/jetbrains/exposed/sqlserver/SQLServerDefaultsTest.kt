@@ -47,7 +47,7 @@ class SQLServerDefaultsTest : DatabaseTestsBase() {
                         this[temporalTable.name] = "name"
                     }
                 val id = batchInsert.first()[temporalTable.id]
-                val result = temporalTable.select { temporalTable.id eq id }.single()
+                val result = temporalTable.selectAll().where { temporalTable.id eq id }.single()
                 assertThat(result[temporalTable.name], `is`("name"))
                 assertThat(result[temporalTable.sysStart], notNullValue())
                 assertThat(result[temporalTable.sysEnd], notNullValue())

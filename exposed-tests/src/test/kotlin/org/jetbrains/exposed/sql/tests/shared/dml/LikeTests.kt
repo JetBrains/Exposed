@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 import org.jetbrains.exposed.sql.LikePattern
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
@@ -36,7 +36,7 @@ class LikeTests : DatabaseTestsBase() {
                 }
             }
             val specialChars = charRange.filter {
-                t.select { t.char like LikePattern("" + it, escapeChar = escapeChar) }.count() != 1L
+                t.selectAll().where { t.char like LikePattern("" + it, escapeChar = escapeChar) }.count() != 1L
             }
             assertEquals(specialChars.toSet(), dialectSpecialChars.keys)
         }
@@ -63,10 +63,10 @@ class LikeTests : DatabaseTestsBase() {
                 it[this.char] = "\\a"
             }
 
-            assertEquals("_a", t.select { t.char like LikePattern.ofLiteral("_a") }.firstOrNull()?.get(t.char))
-            assertEquals("%a%", t.select { t.char like LikePattern.ofLiteral("%a%") }.firstOrNull()?.get(t.char))
-            assertEquals("\\a", t.select { t.char like LikePattern.ofLiteral("\\a") }.firstOrNull()?.get(t.char))
-            assertEquals(listOf("_a", "_b"), t.select { t.char like LikePattern.ofLiteral("_") + "%" }.map { it[t.char] } as Any)
+            assertEquals("_a", t.selectAll().where { t.char like LikePattern.ofLiteral("_a") }.firstOrNull()?.get(t.char))
+            assertEquals("%a%", t.selectAll().where { t.char like LikePattern.ofLiteral("%a%") }.firstOrNull()?.get(t.char))
+            assertEquals("\\a", t.selectAll().where { t.char like LikePattern.ofLiteral("\\a") }.firstOrNull()?.get(t.char))
+            assertEquals(listOf("_a", "_b"), t.selectAll().where { t.char like LikePattern.ofLiteral("_") + "%" }.map { it[t.char] } as Any)
         }
     }
 }

@@ -20,7 +20,7 @@ class UserService {
     // read user by user primary key
     fun findUserById(id: UserId): User? {
         // Use Exposed dsl without `transaction { }`
-        return UserEntity.select { UserEntity.id eq id.value }.firstOrNull()?.let {
+        return UserEntity.selectAll().where { UserEntity.id eq id.value }.firstOrNull()?.let {
             User(
                 id = UserId(it[UserEntity.id].value),
                 name = it[UserEntity.name],

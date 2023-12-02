@@ -247,23 +247,23 @@ class DefaultsTest : DatabaseTestsBase() {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(100)
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
-                "${"t".inProperCase()} (" +
-                "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                "${"s".inProperCase()} $varCharType${testTable.s.constraintNamePart()} DEFAULT 'test' NOT NULL, " +
-                "${"sn".inProperCase()} $varCharType${testTable.sn.constraintNamePart()} DEFAULT 'testNullable' NULL, " +
-                "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()}${testTable.l.constraintNamePart()} DEFAULT 42 NOT NULL, " +
-                "$q${"c".inProperCase()}$q CHAR${testTable.c.constraintNamePart()} DEFAULT 'X' NOT NULL, " +
-                "${"t1".inProperCase()} $dtType${testTable.t1.constraintNamePart()} ${currentDT.itOrNull()}, " +
-                "${"t2".inProperCase()} $dtType${testTable.t2.constraintNamePart()} ${nowExpression.itOrNull()}, " +
-                "${"t3".inProperCase()} $dtType${testTable.t3.constraintNamePart()} ${dtLiteral.itOrNull()}, " +
-                "${"t4".inProperCase()} DATE${testTable.t4.constraintNamePart()} ${dLiteral.itOrNull()}, " +
-                "${"t5".inProperCase()} $dtType${testTable.t5.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
-                "${"t6".inProperCase()} $dtType${testTable.t6.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
-                "${"t7".inProperCase()} $longType${testTable.t7.constraintNamePart()} ${durLiteral.itOrNull()}, " +
-                "${"t8".inProperCase()} $longType${testTable.t8.constraintNamePart()} ${durLiteral.itOrNull()}, " +
-                "${"t9".inProperCase()} $timeType${testTable.t9.constraintNamePart()} ${tLiteral.itOrNull()}, " +
-                "${"t10".inProperCase()} $timeType${testTable.t10.constraintNamePart()} ${tLiteral.itOrNull()}" +
-                ")"
+                    "${"t".inProperCase()} (" +
+                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                    "${"s".inProperCase()} $varCharType${testTable.s.constraintNamePart()} DEFAULT 'test' NOT NULL, " +
+                    "${"sn".inProperCase()} $varCharType${testTable.sn.constraintNamePart()} DEFAULT 'testNullable' NULL, " +
+                    "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()}${testTable.l.constraintNamePart()} DEFAULT 42 NOT NULL, " +
+                    "$q${"c".inProperCase()}$q CHAR${testTable.c.constraintNamePart()} DEFAULT 'X' NOT NULL, " +
+                    "${"t1".inProperCase()} $dtType${testTable.t1.constraintNamePart()} ${currentDT.itOrNull()}, " +
+                    "${"t2".inProperCase()} $dtType${testTable.t2.constraintNamePart()} ${nowExpression.itOrNull()}, " +
+                    "${"t3".inProperCase()} $dtType${testTable.t3.constraintNamePart()} ${dtLiteral.itOrNull()}, " +
+                    "${"t4".inProperCase()} DATE${testTable.t4.constraintNamePart()} ${dLiteral.itOrNull()}, " +
+                    "${"t5".inProperCase()} $dtType${testTable.t5.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
+                    "${"t6".inProperCase()} $dtType${testTable.t6.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
+                    "${"t7".inProperCase()} $longType${testTable.t7.constraintNamePart()} ${durLiteral.itOrNull()}, " +
+                    "${"t8".inProperCase()} $longType${testTable.t8.constraintNamePart()} ${durLiteral.itOrNull()}, " +
+                    "${"t9".inProperCase()} $timeType${testTable.t9.constraintNamePart()} ${tLiteral.itOrNull()}, " +
+                    "${"t10".inProperCase()} $timeType${testTable.t10.constraintNamePart()} ${tLiteral.itOrNull()}" +
+                    ")"
 
             val expected = if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
                 arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
@@ -275,7 +275,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
             val id1 = testTable.insertAndGetId { }
 
-            val row1 = testTable.select { testTable.id eq id1 }.single()
+            val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
             assertEquals("test", row1[testTable.s])
             assertEquals("testNullable", row1[testTable.sn])
             assertEquals(42, row1[testTable.l])
@@ -310,7 +310,7 @@ class DefaultsTest : DatabaseTestsBase() {
             val id = foo.insertAndGetId {
                 it[foo.name] = "bar"
             }
-            val result = foo.select { foo.id eq id }.single()
+            val result = foo.selectAll().where { foo.id eq id }.single()
 
             assertEquals(today, result[foo.defaultDateTime].date)
             assertEquals(today, result[foo.defaultDate])
@@ -335,7 +335,7 @@ class DefaultsTest : DatabaseTestsBase() {
                 it[foo.defaultDateTime] = nonDefaultDate
             }
 
-            val result = foo.select { foo.id eq id }.single()
+            val result = foo.selectAll().where { foo.id eq id }.single()
 
             assertEquals("bar", result[foo.name])
             assertEquals(nonDefaultDate, result[foo.defaultDateTime])
@@ -344,7 +344,7 @@ class DefaultsTest : DatabaseTestsBase() {
                 it[foo.name] = "baz"
             }
 
-            val result2 = foo.select { foo.id eq id }.single()
+            val result2 = foo.selectAll().where { foo.id eq id }.single()
             assertEquals("baz", result2[foo.name])
             assertEquals(nonDefaultDate, result2[foo.defaultDateTime])
         }
@@ -365,7 +365,7 @@ class DefaultsTest : DatabaseTestsBase() {
             foo.insert { it[dt] = LocalDateTime(2019, 1, 1, 1, 1) }
             foo.insert { it[dt] = dt2020 }
             foo.insert { it[dt] = LocalDateTime(2021, 1, 1, 1, 1) }
-            val count = foo.select { foo.dt.between(dt2020m1w, dt2020p1w) }.count()
+            val count = foo.selectAll().where { foo.dt.between(dt2020m1w, dt2020p1w) }.count()
             assertEquals(1, count)
         }
     }
@@ -429,11 +429,11 @@ class DefaultsTest : DatabaseTestsBase() {
                 val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 
                 val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
-                    "${"t".inProperCase()} (" +
-                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                    "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
-                    "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}" +
-                    ")"
+                        "${"t".inProperCase()} (" +
+                        "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                        "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
+                        "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}" +
+                        ")"
 
                 val expected = if (currentDialectTest is OracleDialect ||
                     currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
@@ -450,7 +450,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
                 val id1 = testTable.insertAndGetId { }
 
-                val row1 = testTable.select { testTable.id eq id1 }.single()
+                val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
             }

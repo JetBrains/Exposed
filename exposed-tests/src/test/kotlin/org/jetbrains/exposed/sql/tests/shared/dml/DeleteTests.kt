@@ -36,11 +36,11 @@ class DeleteTests : DatabaseTestsBase() {
             val userDataExists = userData.selectAll().any()
             assertEquals(false, userDataExists)
 
-            val smthId = users.slice(users.id).select { users.name.like("%thing") }.single()[users.id]
+            val smthId = users.select(users.id).where { users.name.like("%thing") }.single()[users.id]
             assertEquals("smth", smthId)
 
             users.deleteWhere { users.name like "%thing" }
-            val hasSmth = users.slice(users.id).select { users.name.like("%thing") }.any()
+            val hasSmth = users.select(users.id).where { users.name.like("%thing") }.any()
             assertEquals(false, hasSmth)
         }
     }
@@ -52,13 +52,13 @@ class DeleteTests : DatabaseTestsBase() {
             val userDataExists = userData.selectAll().any()
             assertEquals(false, userDataExists)
 
-            val smthId = users.slice(users.id).select { users.name.like("%thing") }.single()[users.id]
+            val smthId = users.select(users.id).where { users.name.like("%thing") }.single()[users.id]
             assertEquals("smth", smthId)
 
             // Now deleteWhere and deleteIgnoreWhere should bring the table it operates on into context
             users.deleteWhere { name like "%thing" }
 
-            val hasSmth = users.select { users.name.like("%thing") }.firstOrNull()
+            val hasSmth = users.selectAll().where { users.name.like("%thing") }.firstOrNull()
             assertNull(hasSmth)
         }
     }
@@ -67,7 +67,7 @@ class DeleteTests : DatabaseTestsBase() {
     fun testDeleteWithLimitAndOffset01() {
         withCitiesAndUsers(exclude = notSupportLimit) { _, _, userData ->
             userData.deleteWhere(limit = 1) { userData.value eq 20 }
-            userData.slice(userData.user_id, userData.value).select { userData.value eq 20 }.let {
+            userData.select(userData.user_id, userData.value).where { userData.value eq 20 }.let {
                 assertEquals(1L, it.count())
                 val expected = if (currentDialectTest is H2Dialect) "smth" else "eugene"
                 assertEquals(expected, it.single()[userData.user_id])

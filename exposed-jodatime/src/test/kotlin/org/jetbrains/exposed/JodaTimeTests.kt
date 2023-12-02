@@ -41,12 +41,12 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
                 it[local_time] = now.toDateTime()
             }
 
-            val insertedYear = CitiesTime.slice(CitiesTime.local_time.year()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.year()]
-            val insertedMonth = CitiesTime.slice(CitiesTime.local_time.month()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.month()]
-            val insertedDay = CitiesTime.slice(CitiesTime.local_time.day()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.day()]
-            val insertedHour = CitiesTime.slice(CitiesTime.local_time.hour()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.hour()]
-            val insertedMinute = CitiesTime.slice(CitiesTime.local_time.minute()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.minute()]
-            val insertedSecond = CitiesTime.slice(CitiesTime.local_time.second()).select { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.second()]
+            val insertedYear = CitiesTime.select(CitiesTime.local_time.year()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.year()]
+            val insertedMonth = CitiesTime.select(CitiesTime.local_time.month()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.month()]
+            val insertedDay = CitiesTime.select(CitiesTime.local_time.day()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.day()]
+            val insertedHour = CitiesTime.select(CitiesTime.local_time.hour()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.hour()]
+            val insertedMinute = CitiesTime.select(CitiesTime.local_time.minute()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.minute()]
+            val insertedSecond = CitiesTime.select(CitiesTime.local_time.second()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.second()]
 
             assertEquals(now.year, insertedYear)
             assertEquals(now.monthOfYear, insertedMonth)
@@ -76,7 +76,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
                 val month = testTable.dateCol.month()
                 val day = testTable.dateCol.day()
 
-                val result1 = testTable.slice(year, month, day).selectAll().single()
+                val result1 = testTable.select(year, month, day).single()
                 assertEquals(today.year, result1[year])
                 assertEquals(today.monthOfYear, result1[month])
                 assertEquals(today.dayOfMonth, result1[day])
@@ -91,7 +91,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
                 val nextMonth = DateTime.parse("${today.year}-${today.monthOfYear}-01").plusMonths(1)
                 val expectedLastDayOfMonth = nextMonth.minusDays(1)
 
-                val result2 = testTable.slice(lastDayOfMonth).selectAll().single()
+                val result2 = testTable.select(lastDayOfMonth).single()
                 assertEquals(expectedLastDayOfMonth, result2[lastDayOfMonth])
             } finally {
                 SchemaUtils.drop(testTable)
@@ -122,22 +122,22 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
                 }
 
                 val inYear2000 = testTable.defaultDate.castTo<String>(TextColumnType()) like "2000%"
-                assertEquals(1, testTable.select { inYear2000 }.count())
+                assertEquals(1, testTable.selectAll().where { inYear2000 }.count())
 
-                val todayResult1 = testTable.select { testTable.defaultDate eq today }.single()
+                val todayResult1 = testTable.selectAll().where { testTable.defaultDate eq today }.single()
                 assertEquals(eventBId, todayResult1[testTable.id])
 
                 testTable.update({ testTable.id eq eventAId }) {
                     it[testTable.defaultDate] = today
                 }
 
-                val todayResult2 = testTable.select { testTable.defaultDate eq today }.count()
+                val todayResult2 = testTable.selectAll().where { testTable.defaultDate eq today }.count()
                 assertEquals(2, todayResult2)
 
                 val twoYearsAgo = today.minusYears(2)
                 val twoYearsInFuture = today.plusYears(2)
                 val isWithinTwoYears = testTable.defaultDate.between(twoYearsAgo, twoYearsInFuture)
-                assertEquals(2, testTable.select { isWithinTwoYears }.count())
+                assertEquals(2, testTable.selectAll().where { isWithinTwoYears }.count())
 
                 val yesterday = today.minusDays(1)
 
@@ -170,11 +170,13 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
                 it[deleted] = mayTheFourth.plusDays(1)
             }
 
-            val sameDateResult = testTable.select { testTable.created eq testTable.deleted }.toList()
+            val sameDateResult = testTable.selectAll().where { testTable.created eq testTable.deleted }.toList()
             assertEquals(1, sameDateResult.size)
             assertEquals(mayTheFourth, sameDateResult.single()[testTable.deleted])
 
-            val sameMonthResult = testTable.select { testTable.created.month() eq testTable.deleted.month() }.toList()
+            val sameMonthResult = testTable.selectAll().where {
+                testTable.created.month() eq testTable.deleted.month()
+            }.toList()
             assertEquals(2, sameMonthResult.size)
 
             val year2023 = if (currentDialectTest is PostgreSQLDialect) {
@@ -183,7 +185,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
             } else {
                 dateParam(mayTheFourth).year()
             }
-            val createdIn2023 = testTable.select { testTable.created.year() eq year2023 }.toList()
+            val createdIn2023 = testTable.selectAll().where { testTable.created.year() eq year2023 }.toList()
             assertEquals(2, createdIn2023.size)
         }
     }
@@ -207,13 +209,19 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
                 it[modified] = nowDT
             }
 
-            val createdMayFourth = testTableDT.select { testTableDT.created eq dateTimeParam(mayTheFourthDT) }.count()
+            val createdMayFourth = testTableDT.selectAll().where {
+                testTableDT.created eq dateTimeParam(mayTheFourthDT)
+            }.count()
             assertEquals(2, createdMayFourth)
 
-            val modifiedAtSameDT = testTableDT.select { testTableDT.modified eq testTableDT.created }.single()
+            val modifiedAtSameDT = testTableDT.selectAll().where {
+                testTableDT.modified eq testTableDT.created
+            }.single()
             assertEquals(id1, modifiedAtSameDT[testTableDT.id])
 
-            val modifiedAtLaterDT = testTableDT.select { testTableDT.modified greater testTableDT.created }.single()
+            val modifiedAtLaterDT = testTableDT.selectAll().where {
+                testTableDT.modified greater testTableDT.created
+            }.single()
             assertEquals(id2, modifiedAtLaterDT[testTableDT.id])
         }
     }
@@ -240,7 +248,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
 
             // value extracted in same manner it is stored, a json string
             val modifiedAsString = tester.modified.extract<String>("${prefix}timestamp")
-            val allModifiedAsString = tester.slice(modifiedAsString).selectAll()
+            val allModifiedAsString = tester.select(modifiedAsString)
             assertTrue(allModifiedAsString.all { it[modifiedAsString] == dateTimeNow.toString() })
 
             // PostgreSQL requires explicit type cast to timestamp for in-DB comparison
@@ -249,7 +257,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
             } else {
                 tester.modified.extract<DateTime>("${prefix}timestamp")
             }
-            val modifiedBeforeCreation = tester.select { dateModified less tester.created }.single()
+            val modifiedBeforeCreation = tester.selectAll().where { dateModified less tester.created }.single()
             assertEquals(2, modifiedBeforeCreation[tester.modified].userId)
         }
     }
@@ -274,35 +282,35 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
                     it[timestampWithTimeZone] = cairoNow
                 }
 
-                val cairoNowInsertedInCairoTimeZone = testTable.select { testTable.id eq cairoId }
+                val cairoNowInsertedInCairoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
                     .single()[testTable.timestampWithTimeZone]
 
                 // UTC time zone
                 DateTimeZone.setDefault(DateTimeZone.UTC)
                 assertEquals("UTC", DateTimeZone.getDefault().id)
 
-                val cairoNowRetrievedInUTCTimeZone = testTable.select { testTable.id eq cairoId }
+                val cairoNowRetrievedInUTCTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
                     .single()[testTable.timestampWithTimeZone]
 
                 val utcID = testTable.insertAndGetId {
                     it[timestampWithTimeZone] = cairoNow
                 }
 
-                val cairoNowInsertedInUTCTimeZone = testTable.select { testTable.id eq utcID }
+                val cairoNowInsertedInUTCTimeZone = testTable.selectAll().where { testTable.id eq utcID }
                     .single()[testTable.timestampWithTimeZone]
 
                 // Tokyo time zone
                 DateTimeZone.setDefault(DateTimeZone.forID("Asia/Tokyo"))
                 assertEquals("Asia/Tokyo", DateTimeZone.getDefault().id)
 
-                val cairoNowRetrievedInTokyoTimeZone = testTable.select { testTable.id eq cairoId }
+                val cairoNowRetrievedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
                     .single()[testTable.timestampWithTimeZone]
 
                 val tokyoID = testTable.insertAndGetId {
                     it[timestampWithTimeZone] = cairoNow
                 }
 
-                val cairoNowInsertedInTokyoTimeZone = testTable.select { testTable.id eq tokyoID }
+                val cairoNowInsertedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq tokyoID }
                     .single()[testTable.timestampWithTimeZone]
 
                 // PostgreSQL and MySQL always store the timestamp in UTC, thereby losing the original time zone.
@@ -354,7 +362,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
 
         withTables(fakeTestTable) {
             fun currentDbDateTime(): DateTime {
-                return fakeTestTable.slice(CurrentDateTime).selectAll().first()[CurrentDateTime]
+                return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
             }
 
             fakeTestTable.insert {}

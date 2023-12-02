@@ -1,8 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared.types
 
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
@@ -19,7 +18,7 @@ class CharColumnType : DatabaseTestsBase() {
                 it[charColumn] = 'A'
             }
 
-            val result = CharTable.select { CharTable.id eq id }.singleOrNull()
+            val result = CharTable.selectAll().where { CharTable.id eq id }.singleOrNull()
 
             assertEquals('A', result?.get(CharTable.charColumn))
         }

@@ -48,14 +48,14 @@ class CoroutineTests : DatabaseTestsBase() {
                         Testing.insert {}
 
                         withSuspendTransaction {
-                            assertEquals(1, Testing.select { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)?.value)
+                            assertEquals(1, Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)?.value)
                         }
                     }
                 }
 
                 job.join()
                 val result = newSuspendedTransaction(singleThreadDispatcher, db = db) {
-                    Testing.select { Testing.id.eq(1) }.single()[Testing.id].value
+                    Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value
                 }
 
                 kotlin.test.assertEquals(1, result)
@@ -63,7 +63,7 @@ class CoroutineTests : DatabaseTestsBase() {
 
             while (!mainJob.isCompleted) Thread.sleep(100)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
-            assertEquals(1, Testing.select { Testing.id.eq(1) }.single()[Testing.id].value)
+            assertEquals(1, Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value)
         }
     }
 
@@ -121,13 +121,16 @@ class CoroutineTests : DatabaseTestsBase() {
                     Testing.insert {}
 
                     withSuspendTransaction {
-                        assertEquals(1, Testing.select { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)?.value)
+                        assertEquals(
+                            1,
+                            Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)?.value
+                        )
                     }
                 }
 
                 launchResult.await()
                 val result = suspendedTransactionAsync(Dispatchers.Default, db = db) {
-                    Testing.select { Testing.id.eq(1) }.single()[Testing.id].value
+                    Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value
                 }.await()
 
                 val result2 = suspendedTransactionAsync(Dispatchers.Default, db = db) {
@@ -196,17 +199,23 @@ class CoroutineTests : DatabaseTestsBase() {
                 val job = launch(Dispatchers.IO) {
                     newSuspendedTransaction(db = db) {
                         connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
-                        assertEquals(null, Testing.select { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id))
+                        assertEquals(
+                            null,
+                            Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)
+                        )
 
                         insertTesting(db)
 
-                        assertEquals(1, Testing.select { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)?.value)
+                        assertEquals(
+                            1,
+                            Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)?.value
+                        )
                     }
                 }
 
                 job.join()
                 val result = newSuspendedTransaction(Dispatchers.Default, db = db) {
-                    Testing.select { Testing.id.eq(1) }.single()[Testing.id].value
+                    Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value
                 }
 
                 kotlin.test.assertEquals(1, result)
@@ -214,7 +223,7 @@ class CoroutineTests : DatabaseTestsBase() {
 
             while (!mainJob.isCompleted) Thread.sleep(100)
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
-            assertEquals(1, Testing.select { Testing.id.eq(1) }.single()[Testing.id].value)
+            assertEquals(1, Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id].value)
         }
     }
 

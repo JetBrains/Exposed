@@ -41,7 +41,7 @@ class UpsertTests : DatabaseTestsBase() {
                 }
 
                 assertEquals(2, AutoIncTable.selectAll().count())
-                val updatedResult = AutoIncTable.select { AutoIncTable.id eq id1 }.single()
+                val updatedResult = AutoIncTable.selectAll().where { AutoIncTable.id eq id1 }.single()
                 assertEquals("C", updatedResult[AutoIncTable.name])
             }
         }
@@ -82,7 +82,7 @@ class UpsertTests : DatabaseTestsBase() {
                 }
 
                 assertEquals(3, tester.selectAll().count())
-                val updatedResult = tester.select { tester.idA eq insertStmt[tester.idA] }.single()
+                val updatedResult = tester.selectAll().where { tester.idA eq insertStmt[tester.idA] }.single()
                 assertEquals("D", updatedResult[tester.name])
             }
         }
@@ -146,7 +146,7 @@ class UpsertTests : DatabaseTestsBase() {
                 }
 
                 assertEquals(2, Words.selectAll().count())
-                val updatedResult = Words.select { Words.word eq wordA }.single()
+                val updatedResult = Words.selectAll().where { Words.word eq wordA }.single()
                 assertEquals(9, updatedResult[Words.count])
             }
         }
@@ -294,7 +294,7 @@ class UpsertTests : DatabaseTestsBase() {
                     it[losses] = 0
                 }
 
-                val insertResult = tester.select { tester.item neq itemA }.single()
+                val insertResult = tester.selectAll().where { tester.item neq itemA }.single()
                 assertEquals(200, insertResult[tester.gains])
                 assertEquals(0, insertResult[tester.losses])
 
@@ -304,7 +304,7 @@ class UpsertTests : DatabaseTestsBase() {
                     it[losses] = 0
                 }
 
-                val updateResult = tester.select { tester.item eq itemA }.single()
+                val updateResult = tester.selectAll().where { tester.item eq itemA }.single()
                 assertEquals(125, updateResult[tester.gains])
                 assertEquals(75, updateResult[tester.losses])
             }
@@ -337,7 +337,7 @@ class UpsertTests : DatabaseTestsBase() {
                     it[word] = "$testWord 2"
                     it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar"))
                 }
-                assertEquals("foobar", tester.select { tester.word eq "$testWord 2" }.single()[tester.phrase])
+                assertEquals("foobar", tester.selectAll().where { tester.word eq "$testWord 2" }.single()[tester.phrase])
             }
         }
     }
@@ -376,9 +376,9 @@ class UpsertTests : DatabaseTestsBase() {
             }
 
             assertEquals(2, tester.selectAll().count())
-            val unchangedResult = tester.select { tester.id eq unchanged[tester.id] }.single()
+            val unchangedResult = tester.selectAll().where { tester.id eq unchanged[tester.id] }.single()
             assertEquals(unchanged[tester.address], unchangedResult[tester.address])
-            val updatedResult = tester.select { tester.id eq id1 }.single()
+            val updatedResult = tester.selectAll().where { tester.id eq id1 }.single()
             assertEquals(updatedAge, updatedResult[tester.age])
         }
     }
@@ -401,14 +401,14 @@ class UpsertTests : DatabaseTestsBase() {
                     it[name] = "bar"
                 }
 
-                val query1 = tester1.slice(tester1.name).select { tester1.id eq id1 }
+                val query1 = tester1.select(tester1.name).where { tester1.id eq id1 }
                 val id3 = tester2.upsert {
                     if (testDb in upsertViaMergeDB) it[id] = 1
                     it[name] = query1
                 } get tester2.id
                 assertEquals("foo", tester2.selectAll().single()[tester2.name])
 
-                val query2 = tester1.slice(tester1.name).select { tester1.id eq id2 }
+                val query2 = tester1.select(tester1.name).where { tester1.id eq id2 }
                 tester2.upsert {
                     it[id] = id3
                     it[name] = query2

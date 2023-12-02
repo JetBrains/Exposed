@@ -352,7 +352,12 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
                     val whiteSpaceId = whiteSpaceTable.insertAndGetId { }
 
-                    assertEquals(" ", whiteSpaceTable.select { whiteSpaceTable.id eq whiteSpaceId }.single()[whiteSpaceTable.column])
+                    assertEquals(
+                        " ",
+                        whiteSpaceTable.selectAll().where {
+                            whiteSpaceTable.id eq whiteSpaceId
+                        }.single()[whiteSpaceTable.column]
+                    )
 
                     val actual = SchemaUtils.statementsRequiredToActualizeScheme(emptyTable)
                     val expected = if (testDb == TestDB.SQLSERVER) 2 else 1
@@ -375,7 +380,10 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                         else -> ""
                     }
 
-                    assertEquals(expectedEmptyValue, emptyTable.select { emptyTable.id eq emptyId }.single()[emptyTable.column])
+                    assertEquals(
+                        expectedEmptyValue,
+                        emptyTable.selectAll().where { emptyTable.id eq emptyId }.single()[emptyTable.column]
+                    )
                 } finally {
                     SchemaUtils.drop(whiteSpaceTable, emptyTable)
                 }

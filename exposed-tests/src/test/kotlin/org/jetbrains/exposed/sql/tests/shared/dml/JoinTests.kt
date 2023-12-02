@@ -14,7 +14,8 @@ class JoinTests : DatabaseTestsBase() {
     @Test
     fun testJoin01() {
         withCitiesAndUsers { cities, users, userData ->
-            (users innerJoin cities).slice(users.name, cities.name).select { (users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id) }
+            (users innerJoin cities).select(users.name, cities.name)
+                .where { (users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id) }
                 .forEach {
                     val userName = it[users.name]
                     val cityName = it[cities.name]
@@ -31,9 +32,8 @@ class JoinTests : DatabaseTestsBase() {
     @Test
     fun testJoin02() {
         withCitiesAndUsers { cities, users, userData ->
-            val stPetersburgUser = (users innerJoin cities).slice(users.name, users.cityId, cities.name).select {
-                cities.name.eq("St. Petersburg") or users.cityId.isNull()
-            }.single()
+            val stPetersburgUser = (users innerJoin cities).select(users.name, users.cityId, cities.name)
+                .where { cities.name.eq("St. Petersburg") or users.cityId.isNull() }.single()
             assertEquals("Andrey", stPetersburgUser[users.name])
             assertEquals("St. Petersburg", stPetersburgUser[cities.name])
         }
@@ -95,9 +95,10 @@ class JoinTests : DatabaseTestsBase() {
     @Test
     fun testJoin05() {
         withCitiesAndUsers { cities, users, _ ->
-            val allUsersToStPetersburg = (users crossJoin cities).slice(users.name, users.cityId, cities.name).select { cities.name.eq("St. Petersburg") }.map {
-                it[users.name] to it[cities.name]
-            }
+            val allUsersToStPetersburg = (users crossJoin cities).select(users.name, users.cityId, cities.name)
+                .where { cities.name.eq("St. Petersburg") }.map {
+                    it[users.name] to it[cities.name]
+                }
             val allUsers = setOf(
                 "Andrey",
                 "Sergey",
@@ -167,7 +168,7 @@ class JoinTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val usersAlias = users.alias("u2")
             val resultRow = Join(users).join(usersAlias, JoinType.LEFT, usersAlias[users.id], stringLiteral("smth"))
-                .select { users.id eq "alex" }.single()
+                .selectAll().where { users.id eq "alex" }.single()
 
             assert(resultRow[users.name] == "Alex")
             assert(resultRow[usersAlias[users.name]] == "Something")
@@ -210,8 +211,7 @@ class JoinTests : DatabaseTestsBase() {
             mainTable.insert { it[id] = 2 }
 
             mainTable.join(joinTable, JoinType.LEFT, joinTable.id, mainTable.id)
-                .slice(joinTable.data)
-                .selectAll()
+                .select(joinTable.data)
                 .single()
                 .getOrNull(joinTable.data)
 

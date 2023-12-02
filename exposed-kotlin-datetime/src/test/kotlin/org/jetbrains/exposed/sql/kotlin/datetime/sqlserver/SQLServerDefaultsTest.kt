@@ -6,6 +6,7 @@ import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.kotlin.datetime.KotlinLocalDateTimeColumnType
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -48,7 +49,7 @@ class SQLServerDefaultsTest : DatabaseTestsBase() {
                         this[temporalTable.name] = "name"
                     }
                 val id = batchInsert.first()[temporalTable.id]
-                val result = temporalTable.select { temporalTable.id eq id }.single()
+                val result = temporalTable.selectAll().where { temporalTable.id eq id }.single()
                 assertThat(result[temporalTable.name], `is`("name"))
                 assertThat(result[temporalTable.sysStart], notNullValue())
                 assertThat(result[temporalTable.sysEnd], notNullValue())

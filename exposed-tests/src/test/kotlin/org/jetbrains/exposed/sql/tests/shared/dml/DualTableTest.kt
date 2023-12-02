@@ -13,7 +13,7 @@ class DualTableTest : DatabaseTestsBase() {
     fun testDualTable() {
         withDb {
             val resultColumn = intLiteral(1)
-            val result = Table.Dual.slice(resultColumn).selectAll().single()
+            val result = Table.Dual.select(resultColumn).single()
             assertEquals(1, result[resultColumn])
         }
     }

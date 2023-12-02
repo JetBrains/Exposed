@@ -118,8 +118,8 @@ class SequencesTests : DatabaseTestsBase() {
                         it[name] = "Hichem"
                     }
 
-                    val firstValue = Developer.slice(nextVal).selectAll().single()[nextVal]
-                    val secondValue = Developer.slice(nextVal).selectAll().single()[nextVal]
+                    val firstValue = Developer.select(nextVal).single()[nextVal]
+                    val secondValue = Developer.select(nextVal).single()[nextVal]
 
                     val expFirstValue = myseq.startWith!! + myseq.incrementBy!!
                     assertEquals(expFirstValue, firstValue.toLong())

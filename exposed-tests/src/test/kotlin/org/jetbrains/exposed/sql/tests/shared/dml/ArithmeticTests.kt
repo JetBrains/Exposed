@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.div
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.sql.decimalLiteral
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -19,8 +18,7 @@ class ArithmeticTests : DatabaseTestsBase() {
         withCitiesAndUsers(exclude = listOf(TestDB.H2_ORACLE)) { _, _, userData ->
             val calculatedColumn = ((DMLTestsData.UserData.value - 5) * 2) / 2
             userData
-                .slice(DMLTestsData.UserData.value, calculatedColumn)
-                .selectAll()
+                .select(DMLTestsData.UserData.value, calculatedColumn)
                 .forEach {
                     val value = it[DMLTestsData.UserData.value]
                     val actualResult = it[calculatedColumn]
@@ -37,11 +35,11 @@ class ArithmeticTests : DatabaseTestsBase() {
             val three = decimalLiteral(BigDecimal(3))
 
             val divTenToThreeWithoutScale = Expression.build { ten / three }
-            val resultWithoutScale = cities.slice(divTenToThreeWithoutScale).selectAll().limit(1).single()[divTenToThreeWithoutScale]
+            val resultWithoutScale = cities.select(divTenToThreeWithoutScale).limit(1).single()[divTenToThreeWithoutScale]
             assertEquals(BigDecimal(3), resultWithoutScale)
 
             val divTenToThreeWithScale = divTenToThreeWithoutScale.withScale(2)
-            val resultWithScale = cities.slice(divTenToThreeWithScale).selectAll().limit(1).single()[divTenToThreeWithScale]
+            val resultWithScale = cities.select(divTenToThreeWithScale).limit(1).single()[divTenToThreeWithScale]
             assertEquals(BigDecimal.valueOf(3.33), resultWithScale)
         }
     }
