@@ -24,7 +24,7 @@ inline fun Query.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = 
 
 @Deprecated(
     message = "As part of SELECT DSL design changes, this will be removed in future releases.",
-    replaceWith = ReplaceWith("selectAll().where(predicate = where)", "import org.jetbrains.exposed.sql.selectAll"),
+    replaceWith = ReplaceWith("selectAll().where(where)", "import org.jetbrains.exposed.sql.selectAll"),
     level = DeprecationLevel.WARNING
 )
 fun FieldSet.select(where: Op<Boolean>): Query = Query(this, where)
@@ -37,7 +37,7 @@ fun FieldSet.select(where: Op<Boolean>): Query = Query(this, where)
 fun Query.select(where: Op<Boolean>): Query = this
 
 /**
- * Creates a [Query] by selecting all columns from this [ColumnSet].
+ * Creates a `SELECT` [Query] by selecting all columns from this [ColumnSet].
  *
  * The column set selected from may be either a [Table] or a [Join].
  *

@@ -117,7 +117,7 @@ abstract class ColumnSet : FieldSet {
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 
     /**
-     * Creates a [Query] by selecting either a single [column], or a subset of [columns], from this [ColumnSet].
+     * Creates a `SELECT` [Query] by selecting either a single [column], or a subset of [columns], from this [ColumnSet].
      *
      * The column set selected from may be either a [Table] or a [Join].
      * Arguments provided to [column] and [columns] may be table object columns or function expressions.
@@ -129,7 +129,7 @@ abstract class ColumnSet : FieldSet {
         Query(Select(this, listOf(column) + columns), null)
 
     /**
-     * Creates a [Query] using a list of [columns] or expressions from this [ColumnSet].
+     * Creates a `SELECT` [Query] using a list of [columns] or expressions from this [ColumnSet].
      *
      * The column set selected from may be either a [Table] or a [Join].
      */

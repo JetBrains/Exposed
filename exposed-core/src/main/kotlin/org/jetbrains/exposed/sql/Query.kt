@@ -30,7 +30,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
     private var forUpdate: ForUpdateOption? = null
 
-    /** The stored condition for a `WHERE` clause in this query. */
+    /** The stored condition for a `WHERE` clause in this `SELECT` query. */
     var where: Op<Boolean>? = where
         private set
 
@@ -194,14 +194,14 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     }
 
     /**
-     * Appends a `WHERE` clause with the specified [predicate] to this query.
+     * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testSelect
      */
     fun where(predicate: SqlExpressionBuilder.() -> Op<Boolean>): Query = where(SqlExpressionBuilder.predicate())
 
     /**
-     * Appends a `WHERE` clause with the specified [predicate] to this query.
+     * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.ExistsTests.testExists01
      */
@@ -214,7 +214,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     }
 
     /**
-     * Iterates over multiple executions of this query with its `LIMIT` clause set to [batchSize]
+     * Iterates over multiple executions of this `SELECT` query with its `LIMIT` clause set to [batchSize]
      * until the amount of results retrieved from the database is less than [batchSize].
      *
      * This query's [FieldSet] will be ordered by the first auto-increment column.
