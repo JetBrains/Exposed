@@ -19,7 +19,7 @@ oracle12 = "12.2.0.1"
 postgre = "42.7.0"
 postgreNG = "0.8.9"
 sqlLite3 = "3.43.0.0"
-sqlserver = "9.4.1.jre8"
+sqlserver = "12.5.0.jre8-preview"
 
 springFramework = "6.1.1"
 springBoot = "3.1.3"
