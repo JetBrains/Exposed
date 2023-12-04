@@ -1,3 +1,5 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
@@ -9,6 +11,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.util.*
+import kotlin.internal.LowPriorityInOverloadResolution
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
@@ -18,6 +21,9 @@ import kotlin.reflect.full.primaryConstructor
 
 /** Pair of expressions used to match rows from two joined tables. */
 typealias JoinCondition = Pair<Expression<*>, Expression<*>>
+
+/** Represents a subset of fields from a given source. */
+typealias Select = Slice
 
 /**
  * Represents a set of expressions, contained in the given column set.
@@ -96,11 +102,39 @@ abstract class ColumnSet : FieldSet {
     /** Creates a cross join relation with [otherTable]. */
     abstract fun crossJoin(otherTable: ColumnSet): Join
 
-    /** Specifies a subset of [columns] of this [ColumnSet]. */
+    @Deprecated(
+        message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+        replaceWith = ReplaceWith("select(column, *columns)"),
+        level = DeprecationLevel.WARNING
+    )
     fun slice(column: Expression<*>, vararg columns: Expression<*>): FieldSet = Slice(this, listOf(column) + columns)
 
-    /** Specifies a subset of [columns] of this [ColumnSet]. */
+    @Deprecated(
+        message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+        replaceWith = ReplaceWith("select(columns)"),
+        level = DeprecationLevel.WARNING
+    )
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
+
+    /**
+     * Creates a `SELECT` [Query] by selecting either a single [column], or a subset of [columns], from this [ColumnSet].
+     *
+     * The column set selected from may be either a [Table] or a [Join].
+     * Arguments provided to [column] and [columns] may be table object columns or function expressions.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
+     */
+    @LowPriorityInOverloadResolution
+    fun select(column: Expression<*>, vararg columns: Expression<*>): Query =
+        Query(Select(this, listOf(column) + columns), null)
+
+    /**
+     * Creates a `SELECT` [Query] using a list of [columns] or expressions from this [ColumnSet].
+     *
+     * The column set selected from may be either a [Table] or a [Join].
+     */
+    @LowPriorityInOverloadResolution
+    fun select(columns: List<Expression<*>>): Query = Query(Select(this, columns), null)
 }
 
 /** Creates an inner join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */

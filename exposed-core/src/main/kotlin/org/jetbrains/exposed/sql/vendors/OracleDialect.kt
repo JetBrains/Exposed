@@ -236,7 +236,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
             listOfNotNull(it.first, it.second as? Expression<*>)
         }.mapIndexed { index, expression -> expression to expression.alias("c$index") }.toMap()
 
-        val subQuery = targets.slice(columnsToSelect.values.toList()).selectAll()
+        val subQuery = targets.select(columnsToSelect.values.toList())
         where?.let {
             subQuery.adjustWhere { it }
         }

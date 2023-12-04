@@ -400,6 +400,8 @@ public abstract class org/jetbrains/exposed/sql/ColumnSet : org/jetbrains/expose
 	public static synthetic fun join$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/JoinType;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
 	public abstract fun leftJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public abstract fun rightJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
+	public final fun select (Ljava/util/List;)Lorg/jetbrains/exposed/sql/Query;
+	public final fun select (Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun slice (Ljava/util/List;)Lorg/jetbrains/exposed/sql/FieldSet;
 	public final fun slice (Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/FieldSet;
 }
@@ -1562,11 +1564,17 @@ public final class org/jetbrains/exposed/sql/QueriesKt {
 	public static final fun replace (Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReplaceStatement;
 	public static final fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public static final fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
+	public static final fun select (Lorg/jetbrains/exposed/sql/Query;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
+	public static final fun select (Lorg/jetbrains/exposed/sql/Query;Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
 	public static final fun selectAll (Lorg/jetbrains/exposed/sql/FieldSet;)Lorg/jetbrains/exposed/sql/Query;
 	public static final fun selectAllBatched (Lorg/jetbrains/exposed/sql/FieldSet;I)Ljava/lang/Iterable;
+	public static final fun selectAllBatched (Lorg/jetbrains/exposed/sql/Query;I)Ljava/lang/Iterable;
 	public static synthetic fun selectAllBatched$default (Lorg/jetbrains/exposed/sql/FieldSet;IILjava/lang/Object;)Ljava/lang/Iterable;
+	public static synthetic fun selectAllBatched$default (Lorg/jetbrains/exposed/sql/Query;IILjava/lang/Object;)Ljava/lang/Iterable;
 	public static final fun selectBatched (Lorg/jetbrains/exposed/sql/FieldSet;ILkotlin/jvm/functions/Function1;)Ljava/lang/Iterable;
+	public static final fun selectBatched (Lorg/jetbrains/exposed/sql/Query;ILkotlin/jvm/functions/Function1;)Ljava/lang/Iterable;
 	public static synthetic fun selectBatched$default (Lorg/jetbrains/exposed/sql/FieldSet;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Iterable;
+	public static synthetic fun selectBatched$default (Lorg/jetbrains/exposed/sql/Query;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Iterable;
 	public static final fun update (Lorg/jetbrains/exposed/sql/Join;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)I
 	public static final fun update (Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;)I
 	public static synthetic fun update$default (Lorg/jetbrains/exposed/sql/Join;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)I
@@ -1579,6 +1587,7 @@ public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/Abstrac
 	public fun <init> (Lorg/jetbrains/exposed/sql/FieldSet;Lorg/jetbrains/exposed/sql/Op;)V
 	public final fun adjustColumnSet (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun adjustHaving (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
+	public final fun adjustSelect (Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun adjustSlice (Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun adjustWhere (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public fun copy ()Lorg/jetbrains/exposed/sql/Query;
@@ -1587,6 +1596,8 @@ public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/Abstrac
 	public fun empty ()Z
 	public synthetic fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Object;
 	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/sql/ResultSet;
+	public final fun fetchBatchedResults (I)Ljava/lang/Iterable;
+	public static synthetic fun fetchBatchedResults$default (Lorg/jetbrains/exposed/sql/Query;IILjava/lang/Object;)Ljava/lang/Iterable;
 	public fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/Query;
 	public synthetic fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public final fun getDistinct ()Z
@@ -1604,6 +1615,8 @@ public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/Abstrac
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/QueryBuilder;)Ljava/lang/String;
 	protected final fun setDistinct (Z)V
 	public fun setSet (Lorg/jetbrains/exposed/sql/FieldSet;)V
+	public final fun where (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
+	public final fun where (Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/sql/AbstractQuery;
 	public fun withDistinct (Z)Lorg/jetbrains/exposed/sql/Query;
 }

@@ -8,7 +8,7 @@ import java.util.*
 
 class SelectBatchedTests : DatabaseTestsBase() {
     @Test
-    fun `selectBatched should respect 'where' expression and the provided batch size`() {
+    fun testFetchBatchedResultsWithWhereAndSetBatchSize() {
         val cities = DMLTestsData.Cities
         withTables(cities) {
             val names = List(100) { UUID.randomUUID().toString() }
