@@ -21,7 +21,7 @@ immutability:
 
 ```kotlin
 val jamesList = transaction {
-    Users.select { Users.firstName eq "James" }.toList()
+    Users.selectAll().where { Users.firstName eq "James" }.toList()
 }
 // jamesList is now a List<ResultRow> containing Users data
 ```
@@ -57,10 +57,10 @@ val db1 = connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root",
 val db2 = connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")
 transaction(db1) {
     val result = transaction(db2) {
-        Table1.select { }.map { it[Table1.name] }
+        Table1.selectAll().where { }.map { it[Table1.name] }
     }
 
-    val count = Table2.select { Table2.name inList result }.count()
+    val count = Table2.selectAll().where { Table2.name inList result }.count()
 }
 ```
 

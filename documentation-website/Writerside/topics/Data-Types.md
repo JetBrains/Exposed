@@ -146,7 +146,7 @@ JSON path strings can be used to extract values (either as JSON or as a scalar v
 ```kotlin
 val projectName = Team.project.extract<String>("name")
 val languageIsKotlin = Team.project.extract<String>("language").lowerCase() eq "kotlin"
-Team.slice(projectName).select { languageIsKotlin }.map { it[projectName] }
+Team.select(projectName).where { languageIsKotlin }.map { it[projectName] }
 ```
 
 <note>
@@ -158,21 +158,21 @@ used, the provided path arguments should be `.name` and `.language` respectively
 The JSON functions `exists()` and `contains()` are currently supported as well:
 ```kotlin
 val hasActiveStatus = Team.project.exists(".active")
-val activeProjects = Team.select { hasActiveStatus }.count()
+val activeProjects = Team.selectAll().where { hasActiveStatus }.count()
 
 // Depending on the database, filter paths can be provided instead, as well as optional arguments
 // PostgreSQL example
 val mainId = "Main"
 val hasMainProject = Team.project.exists(".name ? (@ == \$main)", optional = "{\"main\":\"$mainId\"}")
-val mainProjects = Team.select { hasMainProject }.map { it[Team.groupId] }
+val mainProjects = Team.selectAll().where { hasMainProject }.map { it[Team.groupId] }
 
 val usesKotlin = Team.project.contains("{\"language\":\"Kotlin\"}")
-val kotlinTeams = Team.select { usesKotlin }.count()
+val kotlinTeams = Team.selectAll().where { usesKotlin }.count()
 
 // Depending on the database, an optional path can be provided too
 // MySQL example
 val usesKotlin = Team.project.contains("\"Kotlin\"", ".language")
-val kotlinTeams = Team.select { usesKotlin }.count()
+val kotlinTeams = Team.selectAll().where { usesKotlin }.count()
 ```
 
 ### Json Arrays

@@ -7,13 +7,13 @@ usage examples. It also explains how to define [custom functions](#custom-functi
 If you want to retrieve a function result from a query, you have to declare the function as a variable:
 ```kotlin
 val lowerCasedName = FooTable.name.lowerCase()
-val lowerCasedNames = FooTable.slice(lowerCasedName).selectAll().map { it[lowerCasedName] }
+val lowerCasedNames = FooTable.select(lowerCasedName).map { it[lowerCasedName] }
 
 ``` 
 Also, functions could be chained and combined:
 ```kotlin
 val trimmedAndLoweredFullName = Concat(FooTable.firstName, stringLiteral(" "), FooTable.lastName).trim().lowerCase()
-val fullNames = FooTable.slice(trimmedAndLoweredFullName).selectAll().map { it[trimmedAndLoweredFullName] }
+val fullNames = FooTable.select(trimmedAndLoweredFullName).map { it[trimmedAndLoweredFullName] }
 
 ```
 
@@ -22,35 +22,35 @@ val fullNames = FooTable.slice(trimmedAndLoweredFullName).selectAll().map { it[t
 Returns a lower-cased/upper-cased string value.
 ```kotlin
 val lowerCasedName = FooTable.name.lowerCase()
-val lowerCasedNames = FooTable.slice(lowerCasedName).selectAll().map { it[lowerCasedName] }
+val lowerCasedNames = FooTable.select(lowerCasedName).map { it[lowerCasedName] }
 
 ```
 ### Substring
 Returns a substring value from the specified start and with the specified length.
 ```kotlin
 val shortenedName = FooTable.name.substring(start = 1, length = 3)
-val shortenedNames = FooTable.slice(shortenedName).selectAll().map { it[shortenedName] }
+val shortenedNames = FooTable.select(shortenedName).map { it[shortenedName] }
 
 ```
 ### Concat
 Returns a string value that concatenates the text representations of all non-null input values, separated by an optional separator.
 ```kotlin
 val userName = concat(stringLiteral("User - "), FooTable.name)
-val userNames = FooTable.slice(userName).selectAll().map { it[userName] }
+val userNames = FooTable.select(userName).map { it[userName] }
 
 ```
 ### Locate
 Returns the index of the first occurrence of a specified substring or 0.
 ```kotlin
 val firstAIndex = FooTable.name.locate("a")
-val firstAIndices = FooTable.slice(firstAIndex).selectAll().map { it[firstAIndex] }
+val firstAIndices = FooTable.select(firstAIndex).map { it[firstAIndex] }
 
 ```
 ### CharLength
 Returns the length, measured in characters, or `null` if the String value is null.
 ```kotlin
 val nameLength = FooTable.name.charLength()
-val nameLengths = FooTable.slice(nameLength).selectAll().map { it[nameLength] }
+val nameLengths = FooTable.select(nameLength).map { it[nameLength] }
 
 ```
 
@@ -62,7 +62,7 @@ Returns minimum/maximum/average value and can be applied to any comparable expre
 val minId = FooTable.id.min()
 val maxId = FooTable.id.max()
 val averageId = FooTable.id.avg()
-val (min, max, avg) = FooTable.slice(minId, maxId, averageId).selecAll().map { 
+val (min, max, avg) = FooTable.select(minId, maxId, averageId).map { 
     Triple(it[minId], it[maxId], it[averageId]) 
 }
 
@@ -141,8 +141,8 @@ transaction {
     val leadingXTrim = FooTable.name.customTrim(stringLiteral("x"), TrimSpecifier.LEADING)
     val trailingXTrim = FooTable.name.customTrim(stringLiteral("x"), TrimSpecifier.TRAILING)
 
-    FooTable.slice(leadingXTrim).selectAll() // barxxx
-    FooTable.slice(trailingXTrim).selectAll()  // xxxbar
+    FooTable.select(leadingXTrim) // barxxx
+    FooTable.select(trailingXTrim)  // xxxbar
 }
 
 ```
