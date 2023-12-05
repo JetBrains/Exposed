@@ -18,7 +18,6 @@ dependencies {
 
     implementation(kotlin("test-junit"))
     implementation(libs.junit)
-    implementation(libs.hamcrest)
 
     implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))

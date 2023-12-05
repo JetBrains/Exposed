@@ -30,7 +30,6 @@ junit = "4.13.2"
 kotlinx-datetime = "0.4.0"
 javax-money = "1.1"
 moneta = "1.4.2"
-hamcrest = "2.2"
 hikariCP = "4.0.3"
 logcaptor = "2.9.1"
 
@@ -64,8 +63,6 @@ spring-test = { group = "org.springframework", name = "spring-test", version.ref
 
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2_v2" }
 h1 = { group = "com.h2database", name = "h2", version.ref = "h2" }
-
-hamcrest = { group = "org.hamcrest", name = "hamcrest-library", version.ref = "hamcrest" }
 
 log4j-slf4j-impl = { group = "org.apache.logging.log4j", name = "log4j-slf4j-impl", version.ref = "log4j2" }
 log4j-api = { group = "org.apache.logging.log4j", name = "log4j-api", version.ref = "log4j2" }

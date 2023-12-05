@@ -1,14 +1,14 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
-import org.hamcrest.MatcherAssert
-import org.hamcrest.Matchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -26,10 +26,9 @@ class AdjustQueryTests : DatabaseTestsBase() {
             val expectedSlice = queryAdjusted.sliceIt().fields
             queryAdjusted.adjustSelect { select(users.name, cities.name).set }
             val actualSlice = queryAdjusted.set.fields
-            fun containsInAnyOrder(list: List<*>) = Matchers.containsInAnyOrder(*list.toTypedArray())
 
-            MatcherAssert.assertThat(oldSlice, Matchers.not(containsInAnyOrder(actualSlice)))
-            MatcherAssert.assertThat(actualSlice, containsInAnyOrder(expectedSlice))
+            assertFalse { oldSlice.size == actualSlice.size && oldSlice.all { it in actualSlice } }
+            assertEqualLists(expectedSlice, actualSlice)
             assertQueryResultValid(queryAdjusted)
         }
     }
