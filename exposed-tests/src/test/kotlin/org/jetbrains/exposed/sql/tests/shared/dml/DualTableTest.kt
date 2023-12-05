@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test

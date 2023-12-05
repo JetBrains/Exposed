@@ -13,9 +13,6 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.*
-import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.CreditCards
-import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Posts
-import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.SelfReferenceTable
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
