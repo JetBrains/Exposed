@@ -491,7 +491,7 @@ class EntityTests : DatabaseTestsBase() {
         withTables(SelfReferenceTable) {
             val ref1 = SelfReferencedEntity.new { }
             ref1.parent = ref1.id
-            val refRow = SelfReferenceTable.select { SelfReferenceTable.id eq ref1.id }.single()
+            val refRow = SelfReferenceTable.selectAll().where { SelfReferenceTable.id eq ref1.id }.single()
             assertEquals(ref1.id._value, refRow[SelfReferenceTable.parentId]!!.value)
         }
     }
@@ -515,7 +515,7 @@ class EntityTests : DatabaseTestsBase() {
 
             assertEquals(2L, Post.all().count())
             assertEquals(2L, category1.posts.count())
-            assertEquals(2L, Posts.select { Posts.optCategory eq category1.uniqueId }.count())
+            assertEquals(2L, Posts.selectAll().where { Posts.optCategory eq category1.uniqueId }.count())
         }
     }
 
@@ -1491,7 +1491,7 @@ class EntityTests : DatabaseTestsBase() {
             }.value
             assertEquals(
                 10000uL,
-                CreditCards.select { CreditCards.id eq creditCardId }.single()[CreditCards.spendingLimit]
+                CreditCards.selectAll().where { CreditCards.id eq creditCardId }.single()[CreditCards.spendingLimit]
             )
 
             val creditCard = CreditCard.new {

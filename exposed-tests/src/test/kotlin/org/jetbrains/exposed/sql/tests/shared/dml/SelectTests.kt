@@ -70,7 +70,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testSelect() {
         withCitiesAndUsers { _, users, _ ->
-            users.select { users.id.eq("andrey") }.forEach {
+            users.selectAll().where { users.id.eq("andrey") }.forEach {
                 val userId = it[users.id]
                 val userName = it[users.name]
                 when (userId) {
@@ -84,7 +84,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testSelectAnd() {
         withCitiesAndUsers { cities, users, userData ->
-            users.select { users.id.eq("andrey") and users.name.eq("Andrey") }.forEach {
+            users.selectAll().where { users.id.eq("andrey") and users.name.eq("Andrey") }.forEach {
                 val userId = it[users.id]
                 val userName = it[users.name]
                 when (userId) {
@@ -98,7 +98,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testSelectOr() {
         withCitiesAndUsers { cities, users, userData ->
-            users.select { users.id.eq("andrey") or users.name.eq("Andrey") }.forEach {
+            users.selectAll().where { users.id.eq("andrey") or users.name.eq("Andrey") }.forEach {
                 val userId = it[users.id]
                 val userName = it[users.name]
                 when (userId) {
@@ -112,7 +112,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testSelectNot() {
         withCitiesAndUsers { cities, users, userData ->
-            users.select { org.jetbrains.exposed.sql.not(users.id.eq("andrey")) }.forEach {
+            users.selectAll().where { not(users.id.eq("andrey")) }.forEach {
                 val userId = it[users.id]
                 val userName = it[users.name]
                 if (userId == "andrey") {
@@ -126,18 +126,20 @@ class SelectTests : DatabaseTestsBase() {
     fun testSizedIterable() {
         withCitiesAndUsers { cities, users, userData ->
             assertEquals(false, cities.selectAll().empty())
-            assertEquals(true, cities.select { cities.name eq "Qwertt" }.empty())
-            assertEquals(0L, cities.select { cities.name eq "Qwertt" }.count())
+            assertEquals(true, cities.selectAll().where { cities.name eq "Qwertt" }.empty())
+            assertEquals(0L, cities.selectAll().where { cities.name eq "Qwertt" }.count())
             assertEquals(3L, cities.selectAll().count())
             val cityID: Int? = null
-            assertEquals(2L, users.select { users.cityId eq cityID }.count())
+            assertEquals(2L, users.selectAll().where { users.cityId eq cityID }.count())
         }
     }
 
     @Test
     fun testInList01() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select { users.id inList listOf("andrey", "alex") }.orderBy(users.name).toList()
+            val r = users.selectAll().where {
+                users.id inList listOf("andrey", "alex")
+            }.orderBy(users.name).toList()
 
             assertEquals(2, r.size)
             assertEquals("Alex", r[0][users.name])
@@ -149,7 +151,7 @@ class SelectTests : DatabaseTestsBase() {
     fun testInList02() {
         withCitiesAndUsers { cities, users, userData ->
             val cityIds = cities.selectAll().map { it[cities.id] }.take(2)
-            val r = cities.select { cities.id inList cityIds }
+            val r = cities.selectAll().where { cities.id inList cityIds }
 
             assertEquals(2L, r.count())
         }
@@ -158,7 +160,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testInList03() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
-            val r = users.select {
+            val r = users.selectAll().where {
                 users.id to users.name inList listOf("andrey" to "Andrey", "alex" to "Alex")
             }.orderBy(users.name).toList()
 
@@ -171,9 +173,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testInList04() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
-            val r = users.select {
-                users.id to users.name inList listOf("andrey" to "Andrey")
-            }.toList()
+            val r = users.selectAll().where { users.id to users.name inList listOf("andrey" to "Andrey") }.toList()
 
             assertEquals(1, r.size)
             assertEquals("Andrey", r[0][users.name])
@@ -183,9 +183,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testInList05() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
-            val r = users.select {
-                users.id to users.name inList emptyList()
-            }.toList()
+            val r = users.selectAll().where { users.id to users.name inList emptyList() }.toList()
 
             assertEquals(0, r.size)
         }
@@ -194,9 +192,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testInList06() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
-            val r = users.select {
-                users.id to users.name notInList emptyList()
-            }.toList()
+            val r = users.selectAll().where { users.id to users.name notInList emptyList() }.toList()
 
             assertEquals(users.selectAll().count().toInt(), r.size)
         }
@@ -205,7 +201,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testInList07() {
         withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
-            val r = users.select {
+            val r = users.selectAll().where {
                 Triple(users.id, users.name, users.cityId) notInList listOf(Triple("alex", "Alex", null))
             }.toList()
 
@@ -228,7 +224,9 @@ class SelectTests : DatabaseTestsBase() {
                 category = EntityTests.Category.new { title = "Category1" }
             }
 
-            val result = EntityTests.Posts.select { EntityTests.Posts.board inList listOf(board1.id) }.singleOrNull()?.get(EntityTests.Posts.id)
+            val result = EntityTests.Posts.selectAll().where {
+                EntityTests.Posts.board inList listOf(board1.id)
+            }.singleOrNull()?.get(EntityTests.Posts.id)
             assertEquals(post1.id, result)
         }
     }
@@ -236,7 +234,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testInSubQuery01() {
         withCitiesAndUsers { cities, _, _ ->
-            val r = cities.select { cities.id inSubQuery cities.slice(cities.id).select { cities.id eq 2 } }
+            val r = cities.selectAll().where { cities.id inSubQuery cities.select(cities.id).where { cities.id eq 2 } }
             assertEquals(1L, r.count())
         }
     }
@@ -244,7 +242,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testNotInSubQueryNoData() {
         withCitiesAndUsers { cities, _, _ ->
-            val r = cities.select { cities.id notInSubQuery cities.slice(cities.id).selectAll() }
+            val r = cities.selectAll().where { cities.id notInSubQuery cities.select(cities.id) }
             // no data since all ids are selected
             assertEquals(0L, r.count())
         }
@@ -254,7 +252,9 @@ class SelectTests : DatabaseTestsBase() {
     fun testNotInSubQuery() {
         withCitiesAndUsers { cities, _, _ ->
             val cityId = 2
-            val r = cities.select { cities.id notInSubQuery cities.slice(cities.id).select { cities.id eq cityId } }.map { it[cities.id] }.sorted()
+            val r = cities.selectAll().where {
+                cities.id notInSubQuery cities.select(cities.id).where { cities.id eq cityId }
+            }.map { it[cities.id] }.sorted()
             assertEquals(2, r.size)
             // only 2 cities with id 1 and 2 respectively
             assertEquals(1, r[0])
@@ -273,8 +273,8 @@ class SelectTests : DatabaseTestsBase() {
 
             assertEquals(2L, tbl.selectAll().count())
             assertEquals(2L, tbl.selectAll().withDistinct().count())
-            assertEquals(1L, tbl.slice(tbl.name).selectAll().withDistinct().count())
-            assertEquals("test", tbl.slice(tbl.name).selectAll().withDistinct().single()[tbl.name])
+            assertEquals(1L, tbl.select(tbl.name).withDistinct().count())
+            assertEquals("test", tbl.select(tbl.name).withDistinct().single()[tbl.name])
         }
     }
 
@@ -289,11 +289,11 @@ class SelectTests : DatabaseTestsBase() {
                 "Something"
             )
             val orOp = allUsers.map { Op.build { users.name eq it } }.compoundOr()
-            val userNamesOr = users.select(orOp).map { it[users.name] }.toSet()
+            val userNamesOr = users.selectAll().where(orOp).map { it[users.name] }.toSet()
             assertEquals(allUsers, userNamesOr)
 
             val andOp = allUsers.map { Op.build { users.name eq it } }.compoundAnd()
-            assertEquals(0L, users.select(andOp).count())
+            assertEquals(0L, users.selectAll().where(andOp).count())
         }
     }
 
@@ -312,10 +312,10 @@ class SelectTests : DatabaseTestsBase() {
             secondTable.insert { }
 
             assertEquals(2L, secondTable.selectAll().count())
-            assertEquals(1, secondTable.select { secondTable.firstOpt eq firstId.value }.toList().size)
-            assertEquals(0, secondTable.select { secondTable.firstOpt neq firstId.value }.toList().size)
-            assertEquals(1, secondTable.select { secondTable.firstOpt eq null }.count())
-            assertEquals(1, secondTable.select { secondTable.firstOpt neq null }.count())
+            assertEquals(1, secondTable.selectAll().where { secondTable.firstOpt eq firstId.value }.toList().size)
+            assertEquals(0, secondTable.selectAll().where { secondTable.firstOpt neq firstId.value }.toList().size)
+            assertEquals(1, secondTable.selectAll().where { secondTable.firstOpt eq null }.count())
+            assertEquals(1, secondTable.selectAll().where { secondTable.firstOpt neq null }.count())
         }
     }
 
@@ -329,10 +329,10 @@ class SelectTests : DatabaseTestsBase() {
             stringTable.insert {
                 it[name] = "TestName"
             }
-            assertEquals(1, stringTable.select { stringTable.name eq "TestName" }.count())
+            assertEquals(1, stringTable.selectAll().where { stringTable.name eq "TestName" }.count())
 
             val veryLongString = "1".repeat(255)
-            assertEquals(0, stringTable.select { stringTable.name eq veryLongString }.count())
+            assertEquals(0, stringTable.selectAll().where { stringTable.name eq veryLongString }.count())
         }
     }
 
@@ -355,10 +355,10 @@ class SelectTests : DatabaseTestsBase() {
 
             assertEquals(1L, stringTable.selectAll().count())
 
-            assertEquals("testName", stringTable.select { stringTable.id eq id1 }.first()[stringTable.name])
-            assertEquals("testCity", String(stringTable.select { stringTable.id eq id1 }.first()[stringTable.city]))
-            assertEquals("testAddress", stringTable.select { stringTable.id eq id1 }.first()[stringTable.address])
-            assertEquals("testAge", stringTable.select { stringTable.id eq id1 }.first()[stringTable.age])
+            assertEquals("testName", stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.name])
+            assertEquals("testCity", String(stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.city]))
+            assertEquals("testAddress", stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.address])
+            assertEquals("testAge", stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.age])
         }
     }
 }

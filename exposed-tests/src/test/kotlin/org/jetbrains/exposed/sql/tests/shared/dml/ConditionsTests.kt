@@ -16,8 +16,8 @@ class ConditionsTests : DatabaseTestsBase() {
     fun testTRUEandFALSEOps() {
         withCitiesAndUsers { cities, _, _ ->
             val allCities = cities.selectAll().toCityNameList()
-            assertEquals(0L, cities.select { Op.FALSE }.count())
-            assertEquals(allCities.size.toLong(), cities.select { Op.TRUE }.count())
+            assertEquals(0L, cities.selectAll().where { Op.FALSE }.count())
+            assertEquals(allCities.size.toLong(), cities.selectAll().where { Op.TRUE }.count())
         }
     }
 
@@ -48,23 +48,23 @@ class ConditionsTests : DatabaseTestsBase() {
 
             // null == null returns null
             assertEqualLists(
-                table.select { table.number1 eq table.number2 }.map { it[table.id] },
+                table.selectAll().where { table.number1 eq table.number2 }.map { it[table.id] },
                 listOf(sameNumberId)
             )
             // null == null returns true
             assertEqualLists(
-                table.select { table.number1 isNotDistinctFrom table.number2 }.map { it[table.id] },
+                table.selectAll().where { table.number1 isNotDistinctFrom table.number2 }.map { it[table.id] },
                 listOf(sameNumberId, bothNullId)
             )
 
             // number != null returns null
             assertEqualLists(
-                table.select { table.number1 neq table.number2 }.map { it[table.id] },
+                table.selectAll().where { table.number1 neq table.number2 }.map { it[table.id] },
                 listOf(differentNumberId)
             )
             // number != null returns true
             assertEqualLists(
-                table.select { table.number1 isDistinctFrom table.number2 }.map { it[table.id] },
+                table.selectAll().where { table.number1 isDistinctFrom table.number2 }.map { it[table.id] },
                 listOf(differentNumberId, oneNullId)
             )
         }
@@ -74,7 +74,7 @@ class ConditionsTests : DatabaseTestsBase() {
     @Test
     fun sameColumnUsedInSliceMultipleTimes() {
         withCitiesAndUsers { city, _, _ ->
-            val row = city.slice(city.name, city.name, city.id).select { city.name eq "Munich" }.toList().single()
+            val row = city.select(city.name, city.name, city.id).where { city.name eq "Munich" }.toList().single()
             assertEquals(2, row[city.id])
             assertEquals("Munich", row[city.name])
         }
@@ -84,7 +84,7 @@ class ConditionsTests : DatabaseTestsBase() {
     fun testSliceWithEmptyListThrows() {
         withCitiesAndUsers { cities, _, _ ->
             assertFailsWith<IllegalArgumentException> {
-                cities.slice(emptyList()).selectAll().toList()
+                cities.select(emptyList()).toList()
             }
         }
     }
@@ -110,26 +110,26 @@ class ConditionsTests : DatabaseTestsBase() {
                 it[c2] = 1
             }
 
-            assertEquals(1, table.select { table.c1.less(table.c2) }.single()[table.c1])
+            assertEquals(1, table.selectAll().where { table.c1.less(table.c2) }.single()[table.c1])
             assertEqualLists(
                 listOf(0, 1),
-                table.select { table.c1.lessEq(table.c2) }.orderBy(table.c1).map { it[table.c1] }
+                table.selectAll().where { table.c1.lessEq(table.c2) }.orderBy(table.c1).map { it[table.c1] }
             )
-            assertEquals(2, table.select { table.c1.greater(table.c2) }.single()[table.c1])
+            assertEquals(2, table.selectAll().where { table.c1.greater(table.c2) }.single()[table.c1])
             assertEqualLists(
                 listOf(0, 2),
-                table.select { table.c1.greaterEq(table.c2) }.orderBy(table.c1).map { it[table.c1] }
+                table.selectAll().where { table.c1.greaterEq(table.c2) }.orderBy(table.c1).map { it[table.c1] }
             )
 
-            assertEquals(2, table.select { table.c2.less(table.c1) }.single()[table.c1])
+            assertEquals(2, table.selectAll().where { table.c2.less(table.c1) }.single()[table.c1])
             assertEqualLists(
                 listOf(0, 2),
-                table.select { table.c2.lessEq(table.c1) }.orderBy(table.c1).map { it[table.c1] }
+                table.selectAll().where { table.c2.lessEq(table.c1) }.orderBy(table.c1).map { it[table.c1] }
             )
-            assertEquals(1, table.select { table.c2.greater(table.c1) }.single()[table.c1])
+            assertEquals(1, table.selectAll().where { table.c2.greater(table.c1) }.single()[table.c1])
             assertEqualLists(
                 listOf(0, 1),
-                table.select { table.c2.greaterEq(table.c1) }.orderBy(table.c1).map { it[table.c1] }
+                table.selectAll().where { table.c2.greaterEq(table.c1) }.orderBy(table.c1).map { it[table.c1] }
             )
         }
     }
@@ -144,13 +144,13 @@ class ConditionsTests : DatabaseTestsBase() {
             users.update {
                 it[users.cityId] = null
             }
-            val nullUsers1 = users.select { users.cityId.isNull() }.count()
+            val nullUsers1 = users.selectAll().where { users.cityId.isNull() }.count()
             assertEquals(allUsers, nullUsers1)
 
-            val nullUsers2 = users.select { users.cityId eq Op.nullOp() }.count()
+            val nullUsers2 = users.selectAll().where { users.cityId eq Op.nullOp() }.count()
             assertEquals(allUsers, nullUsers2)
 
-            val nullUsers3 = users.select { users.cityId eq null }.count()
+            val nullUsers3 = users.selectAll().where { users.cityId eq null }.count()
             assertEquals(allUsers, nullUsers3)
         }
     }
@@ -173,7 +173,7 @@ class ConditionsTests : DatabaseTestsBase() {
                 .When(Op.build { cities.id eq 1 }, Op.nullOp<String>())
                 .Else(cities.name)
             var nullBranchWasExecuted = false
-            cities.slice(cities.id, cities.name, caseCondition).selectAll().forEach {
+            cities.select(cities.id, cities.name, caseCondition).forEach {
                 val result = it[caseCondition]
                 if (it[cities.id] == 1) {
                     nullBranchWasExecuted = true
@@ -205,12 +205,12 @@ class ConditionsTests : DatabaseTestsBase() {
             val function2 = Coalesce(caseCondition2, stringLiteral(copy))
 
             // confirm both formats produce identical SQL
-            val query1 = cities.slice(cities.id, function1).selectAll().prepareSQL(this, prepared = false)
-            val query2 = cities.slice(cities.id, function2).selectAll().prepareSQL(this, prepared = false)
+            val query1 = cities.select(cities.id, function1).prepareSQL(this, prepared = false)
+            val query2 = cities.select(cities.id, function2).prepareSQL(this, prepared = false)
             assertEquals(query1, query2)
 
-            val results1 = cities.slice(cities.id, function1).selectAll().toList()
-            cities.slice(cities.id, function2).selectAll().forEachIndexed { i, row ->
+            val results1 = cities.select(cities.id, function1).toList()
+            cities.select(cities.id, function2).forEachIndexed { i, row ->
                 val currentId = row[cities.id]
                 val functionResult = row[function2]
 
@@ -233,7 +233,7 @@ class ConditionsTests : DatabaseTestsBase() {
                 .When(Op.build { cities.name like "P%" }, intLiteral(2))
                 .Else(intLiteral(-1))
 
-            val results = cities.slice(cities.name, chainedCondition).selectAll()
+            val results = cities.select(cities.name, chainedCondition)
             results.forEach {
                 val cityName = it[cities.name]
                 val expectedNumber = when {

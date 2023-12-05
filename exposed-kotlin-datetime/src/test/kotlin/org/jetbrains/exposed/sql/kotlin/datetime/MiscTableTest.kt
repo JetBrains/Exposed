@@ -284,7 +284,7 @@ class MiscTableTest : DatabaseTestsBase() {
             }
 
             tbl.checkRowFull(
-                tbl.select { tbl.n.eq(42) }.single(),
+                tbl.selectAll().where { tbl.n.eq(42) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -315,7 +315,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
             tbl.checkRowFull(
-                tbl.select { tbl.nn.isNull() }.single(),
+                tbl.selectAll().where { tbl.nn.isNull() }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -346,7 +346,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
             tbl.checkRowFull(
-                tbl.select { tbl.nn.eq(null as Int?) }.single(),
+                tbl.selectAll().where { tbl.nn.eq(null as Int?) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -378,7 +378,7 @@ class MiscTableTest : DatabaseTestsBase() {
             )
 
             tbl.checkRowFull(
-                tbl.select { tbl.d.eq(date) }.single(),
+                tbl.selectAll().where { tbl.d.eq(date) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -409,7 +409,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
             tbl.checkRowFull(
-                tbl.select { tbl.dn.isNull() }.single(),
+                tbl.selectAll().where { tbl.dn.isNull() }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -445,7 +445,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 else -> dateTimeParam(dateTime)
             }
             tbl.checkRowFull(
-                tbl.select { tbl.dt.eq(dtValue) }.single(),
+                tbl.selectAll().where { tbl.dt.eq(dtValue) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -476,101 +476,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
             tbl.checkRowFull(
-                tbl.select { tbl.dtn.isNull() }.single(),
-                by = 13,
-                byn = null,
-                sm = -10,
-                smn = null,
-                n = 42,
-                nn = null,
-                d = date,
-                dn = null,
-                t = time,
-                tn = null,
-                dt = dateTime,
-                dtn = null,
-                ts = timestamp,
-                tsn = null,
-                dr = duration,
-                drn = null,
-                e = MiscTable.E.ONE,
-                en = null,
-                es = MiscTable.E.ONE,
-                esn = null,
-                c = sTest,
-                cn = null,
-                s = sTest,
-                sn = null,
-                dc = dec,
-                dcn = null,
-                fcn = null,
-                dblcn = null
-            )
-
-            tbl.checkRowFull(
-                tbl.select { tbl.e.eq(MiscTable.E.ONE) }.single(),
-                by = 13,
-                byn = null,
-                sm = -10,
-                smn = null,
-                n = 42,
-                nn = null,
-                d = date,
-                dn = null,
-                t = time,
-                tn = null,
-                dt = dateTime,
-                dtn = null,
-                ts = timestamp,
-                tsn = null,
-                dr = duration,
-                drn = null,
-                e = MiscTable.E.ONE,
-                en = null,
-                es = MiscTable.E.ONE,
-                esn = null,
-                c = sTest,
-                cn = null,
-                s = sTest,
-                sn = null,
-                dc = dec,
-                dcn = null,
-                fcn = null,
-                dblcn = null
-            )
-            tbl.checkRowFull(
-                tbl.select { tbl.en.isNull() }.single(),
-                by = 13,
-                byn = null,
-                sm = -10,
-                smn = null,
-                n = 42,
-                nn = null,
-                d = date,
-                dn = null,
-                t = time,
-                tn = null,
-                dt = dateTime,
-                dtn = null,
-                ts = timestamp,
-                tsn = null,
-                dr = duration,
-                drn = null,
-                e = MiscTable.E.ONE,
-                en = null,
-                es = MiscTable.E.ONE,
-                esn = null,
-                c = sTest,
-                cn = null,
-                s = sTest,
-                sn = null,
-                dc = dec,
-                dcn = null,
-                fcn = null,
-                dblcn = null
-            )
-            tbl.checkRowFull(
-                tbl.select { tbl.en.eq(null as MiscTable.E?) }.single(),
+                tbl.selectAll().where { tbl.dtn.isNull() }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -602,7 +508,7 @@ class MiscTableTest : DatabaseTestsBase() {
             )
 
             tbl.checkRowFull(
-                tbl.select { tbl.s.eq(sTest) }.single(),
+                tbl.selectAll().where { tbl.e.eq(MiscTable.E.ONE) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -633,7 +539,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
             tbl.checkRowFull(
-                tbl.select { tbl.sn.isNull() }.single(),
+                tbl.selectAll().where { tbl.en.isNull() }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -664,7 +570,101 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
             tbl.checkRowFull(
-                tbl.select { tbl.sn.eq(null as String?) }.single(),
+                tbl.selectAll().where { tbl.en.eq(null as MiscTable.E?) }.single(),
+                by = 13,
+                byn = null,
+                sm = -10,
+                smn = null,
+                n = 42,
+                nn = null,
+                d = date,
+                dn = null,
+                t = time,
+                tn = null,
+                dt = dateTime,
+                dtn = null,
+                ts = timestamp,
+                tsn = null,
+                dr = duration,
+                drn = null,
+                e = MiscTable.E.ONE,
+                en = null,
+                es = MiscTable.E.ONE,
+                esn = null,
+                c = sTest,
+                cn = null,
+                s = sTest,
+                sn = null,
+                dc = dec,
+                dcn = null,
+                fcn = null,
+                dblcn = null
+            )
+
+            tbl.checkRowFull(
+                tbl.selectAll().where { tbl.s.eq(sTest) }.single(),
+                by = 13,
+                byn = null,
+                sm = -10,
+                smn = null,
+                n = 42,
+                nn = null,
+                d = date,
+                dn = null,
+                t = time,
+                tn = null,
+                dt = dateTime,
+                dtn = null,
+                ts = timestamp,
+                tsn = null,
+                dr = duration,
+                drn = null,
+                e = MiscTable.E.ONE,
+                en = null,
+                es = MiscTable.E.ONE,
+                esn = null,
+                c = sTest,
+                cn = null,
+                s = sTest,
+                sn = null,
+                dc = dec,
+                dcn = null,
+                fcn = null,
+                dblcn = null
+            )
+            tbl.checkRowFull(
+                tbl.selectAll().where { tbl.sn.isNull() }.single(),
+                by = 13,
+                byn = null,
+                sm = -10,
+                smn = null,
+                n = 42,
+                nn = null,
+                d = date,
+                dn = null,
+                t = time,
+                tn = null,
+                dt = dateTime,
+                dtn = null,
+                ts = timestamp,
+                tsn = null,
+                dr = duration,
+                drn = null,
+                e = MiscTable.E.ONE,
+                en = null,
+                es = MiscTable.E.ONE,
+                esn = null,
+                c = sTest,
+                cn = null,
+                s = sTest,
+                sn = null,
+                dc = dec,
+                dcn = null,
+                fcn = null,
+                dblcn = null
+            )
+            tbl.checkRowFull(
+                tbl.selectAll().where { tbl.sn.eq(null as String?) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -741,7 +741,7 @@ class MiscTableTest : DatabaseTestsBase() {
             }
 
             tbl.checkRowFull(
-                tbl.select { tbl.nn.eq(42) }.single(),
+                tbl.selectAll().where { tbl.nn.eq(42) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -772,7 +772,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = 567.89
             )
             tbl.checkRowFull(
-                tbl.select { tbl.nn.neq<Int?>(null) }.single(),
+                tbl.selectAll().where { tbl.nn.neq(null) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -804,7 +804,7 @@ class MiscTableTest : DatabaseTestsBase() {
             )
 
             tbl.checkRowFull(
-                tbl.select { tbl.dn.eq(date) }.single(),
+                tbl.selectAll().where { tbl.dn.eq(date) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -835,7 +835,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = 567.89
             )
             tbl.checkRowFull(
-                tbl.select { tbl.dn.isNotNull() }.single(),
+                tbl.selectAll().where { tbl.dn.isNotNull() }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -871,7 +871,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 else -> dateTimeParam(dateTime)
             }
             tbl.checkRowFull(
-                tbl.select { tbl.dt.eq(dtValue) }.single(),
+                tbl.selectAll().where { tbl.dt.eq(dtValue) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -902,70 +902,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = 567.89
             )
             tbl.checkRowFull(
-                tbl.select { tbl.dtn.isNotNull() }.single(),
-                by = 13,
-                byn = 13,
-                sm = -10,
-                smn = -10,
-                n = 42,
-                nn = 42,
-                d = date,
-                dn = date,
-                t = time,
-                tn = time,
-                dt = dateTime,
-                dtn = dateTime,
-                ts = timestamp,
-                tsn = timestamp,
-                dr = duration,
-                drn = duration,
-                e = eOne,
-                en = eOne,
-                es = eOne,
-                esn = eOne,
-                c = sTest,
-                cn = sTest,
-                s = sTest,
-                sn = sTest,
-                dc = dec,
-                dcn = dec,
-                fcn = 239.42f,
-                dblcn = 567.89
-            )
-
-            tbl.checkRowFull(
-                tbl.select { tbl.en.eq(eOne) }.single(),
-                by = 13,
-                byn = 13,
-                sm = -10,
-                smn = -10,
-                n = 42,
-                nn = 42,
-                d = date,
-                dn = date,
-                t = time,
-                tn = time,
-                dt = dateTime,
-                dtn = dateTime,
-                ts = timestamp,
-                tsn = timestamp,
-                dr = duration,
-                drn = duration,
-                e = eOne,
-                en = eOne,
-                es = eOne,
-                esn = eOne,
-                c = sTest,
-                cn = sTest,
-                s = sTest,
-                sn = sTest,
-                dc = dec,
-                dcn = dec,
-                fcn = 239.42f,
-                dblcn = 567.89
-            )
-            tbl.checkRowFull(
-                tbl.select { tbl.en.isNotNull() }.single(),
+                tbl.selectAll().where { tbl.dtn.isNotNull() }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -997,7 +934,7 @@ class MiscTableTest : DatabaseTestsBase() {
             )
 
             tbl.checkRowFull(
-                tbl.select { tbl.sn.eq(sTest) }.single(),
+                tbl.selectAll().where { tbl.en.eq(eOne) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -1028,7 +965,70 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = 567.89
             )
             tbl.checkRowFull(
-                tbl.select { tbl.sn.isNotNull() }.single(),
+                tbl.selectAll().where { tbl.en.isNotNull() }.single(),
+                by = 13,
+                byn = 13,
+                sm = -10,
+                smn = -10,
+                n = 42,
+                nn = 42,
+                d = date,
+                dn = date,
+                t = time,
+                tn = time,
+                dt = dateTime,
+                dtn = dateTime,
+                ts = timestamp,
+                tsn = timestamp,
+                dr = duration,
+                drn = duration,
+                e = eOne,
+                en = eOne,
+                es = eOne,
+                esn = eOne,
+                c = sTest,
+                cn = sTest,
+                s = sTest,
+                sn = sTest,
+                dc = dec,
+                dcn = dec,
+                fcn = 239.42f,
+                dblcn = 567.89
+            )
+
+            tbl.checkRowFull(
+                tbl.selectAll().where { tbl.sn.eq(sTest) }.single(),
+                by = 13,
+                byn = 13,
+                sm = -10,
+                smn = -10,
+                n = 42,
+                nn = 42,
+                d = date,
+                dn = date,
+                t = time,
+                tn = time,
+                dt = dateTime,
+                dtn = dateTime,
+                ts = timestamp,
+                tsn = timestamp,
+                dr = duration,
+                drn = duration,
+                e = eOne,
+                en = eOne,
+                es = eOne,
+                esn = eOne,
+                c = sTest,
+                cn = sTest,
+                s = sTest,
+                sn = sTest,
+                dc = dec,
+                dcn = dec,
+                fcn = 239.42f,
+                dblcn = 567.89
+            )
+            tbl.checkRowFull(
+                tbl.selectAll().where { tbl.sn.isNotNull() }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -1188,7 +1188,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 it.update(sn) { tbl.s.substring(3, 255) }
             }
 
-            val row = tbl.select { tbl.n eq 101 }.single()
+            val row = tbl.selectAll().where { tbl.n eq 101 }.single()
 
             tbl.checkRowFull(
                 row,

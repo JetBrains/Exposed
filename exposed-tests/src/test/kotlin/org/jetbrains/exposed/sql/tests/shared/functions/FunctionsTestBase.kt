@@ -21,7 +21,7 @@ abstract class FunctionsTestBase : DatabaseTestsBase() {
     }
 
     protected fun <T> Transaction.assertExpressionEqual(expected: T, expression: Function<T>) {
-        val result = FakeTestTable.slice(expression).selectAll().first()[expression]
+        val result = FakeTestTable.select(expression).first()[expression]
         if (expected is BigDecimal && result is BigDecimal) {
             assertEquals(expected, result.setScale(expected.scale(), RoundingMode.HALF_UP))
         } else {

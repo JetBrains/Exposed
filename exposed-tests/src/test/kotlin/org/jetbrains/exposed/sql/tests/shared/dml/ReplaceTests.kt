@@ -78,7 +78,7 @@ class ReplaceTests : DatabaseTestsBase() {
             }
 
             assertEquals(2, tester.selectAll().count())
-            assertEquals(0, tester.select { tester.key2 eq id2 }.single()[tester.replaced])
+            assertEquals(0, tester.selectAll().where { tester.key2 eq id2 }.single()[tester.replaced])
 
             tester.replace { // delete & insert because both constraints match
                 it[key1] = id1
@@ -87,7 +87,7 @@ class ReplaceTests : DatabaseTestsBase() {
             }
 
             assertEquals(2, tester.selectAll().count())
-            assertEquals(timeNow, tester.select { tester.key2 eq id2 }.single()[tester.replaced])
+            assertEquals(timeNow, tester.selectAll().where { tester.key2 eq id2 }.single()[tester.replaced])
         }
     }
 
@@ -122,8 +122,8 @@ class ReplaceTests : DatabaseTestsBase() {
     @Test
     fun testBatchReplace01() {
         withCitiesAndUsers(replaceNotSupported) { cities, users, userData ->
-            val (munichId, pragueId, saintPetersburgId) = cities.slice(cities.id)
-                .select { cities.name inList listOf("Munich", "Prague", "St. Petersburg") }
+            val (munichId, pragueId, saintPetersburgId) = cities.select(cities.id)
+                .where { cities.name inList listOf("Munich", "Prague", "St. Petersburg") }
                 .orderBy(cities.name).map { it[cities.id] }
 
             // replace is implemented as delete-then-insert on conflict, which breaks foreign key constraints,
@@ -142,8 +142,8 @@ class ReplaceTests : DatabaseTestsBase() {
                 this[cities.name] = it.second
             }
 
-            val cityNames = cities.slice(cities.name)
-                .select { cities.id inList cityUpdates.unzip().first }
+            val cityNames = cities.select(cities.name)
+                .where { cities.id inList cityUpdates.unzip().first }
                 .orderBy(cities.name).toCityNameList()
 
             assertEqualLists(cityUpdates.unzip().second, cityNames)

@@ -30,7 +30,7 @@ class PostgresqlTests : DatabaseTestsBase() {
         fun Query.city() = map { it[table.name] }.single()
 
         fun select(option: ForUpdateOption): String {
-            return table.select { table.id eq id }.forUpdate(option).city()
+            return table.selectAll().where { table.id eq id }.forUpdate(option).city()
         }
 
         withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
@@ -42,7 +42,7 @@ class PostgresqlTests : DatabaseTestsBase() {
                 }
                 commit()
 
-                val defaultForUpdateRes = table.select { table.id eq id }.city()
+                val defaultForUpdateRes = table.selectAll().where { table.id eq id }.city()
                 val forUpdateRes = select(ForUpdateOption.ForUpdate)
                 val forUpdateOfTableRes = select(PostgreSQL.ForUpdate(ofTables = arrayOf(table)))
                 val forShareRes = select(PostgreSQL.ForShare)
@@ -50,7 +50,7 @@ class PostgresqlTests : DatabaseTestsBase() {
                 val forKeyShareRes = select(PostgreSQL.ForKeyShare)
                 val forKeyShareSkipLockedRes = select(PostgreSQL.ForKeyShare(PostgreSQL.MODE.SKIP_LOCKED))
                 val forNoKeyUpdateRes = select(PostgreSQL.ForNoKeyUpdate)
-                val notForUpdateRes = table.select { table.id eq id }.notForUpdate().city()
+                val notForUpdateRes = table.selectAll().where { table.id eq id }.notForUpdate().city()
 
                 assertEquals(name, defaultForUpdateRes)
                 assertEquals(name, forUpdateRes)

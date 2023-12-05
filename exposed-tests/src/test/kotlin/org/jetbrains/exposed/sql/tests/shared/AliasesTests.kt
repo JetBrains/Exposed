@@ -35,11 +35,10 @@ class AliasesTests : DatabaseTestsBase() {
                 it[facilities.name] = "Facility1"
             }
             val fcAlias = facilities.name.count().alias("fc")
-            val fAlias = facilities.slice(facilities.stableId, fcAlias).selectAll().groupBy(facilities.stableId).alias("f")
+            val fAlias = facilities.select(facilities.stableId, fcAlias).groupBy(facilities.stableId).alias("f")
             val sliceColumns = stables.columns + fAlias[fcAlias]
             val stats = stables.join(fAlias, JoinType.LEFT, stables.id, fAlias[facilities.stableId])
-                .slice(sliceColumns)
-                .selectAll()
+                .select(sliceColumns)
                 .groupBy(*sliceColumns.toTypedArray()).map {
                     it[stables.name] to it[fAlias[fcAlias]]
                 }.toMap()
@@ -53,7 +52,7 @@ class AliasesTests : DatabaseTestsBase() {
     fun testJoinSubQuery01() {
         withCitiesAndUsers { cities, users, userData ->
             val expAlias = users.name.max().alias("m")
-            val usersAlias = users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId).alias("u2")
+            val usersAlias = users.select(users.cityId, expAlias).groupBy(users.cityId).alias("u2")
             val resultRows = Join(users).join(usersAlias, JoinType.INNER, usersAlias[expAlias], users.name).selectAll().toList()
             assertEquals(3, resultRows.size)
         }
@@ -65,13 +64,13 @@ class AliasesTests : DatabaseTestsBase() {
             val expAlias = users.name.max().alias("m")
 
             val query = Join(users).joinQuery(on = { it[expAlias].eq(users.name) }) {
-                users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId)
+                users.select(users.cityId, expAlias).groupBy(users.cityId)
             }
             val innerExp = query.lastQueryAlias!![expAlias]
 
             assertEquals("q0", query.lastQueryAlias?.alias)
             assertEquals(3L, query.selectAll().count())
-            assertNotNull(query.slice(users.columns + innerExp).selectAll().first()[innerExp])
+            assertNotNull(query.select(users.columns + innerExp).first()[innerExp])
         }
     }
 
@@ -120,8 +119,7 @@ class AliasesTests : DatabaseTestsBase() {
             }
             val aliasedExpression = EntityTestsData.XTable.id.max().alias("maxId")
             val aliasedQuery = EntityTestsData.XTable
-                .slice(EntityTestsData.XTable.b1, aliasedExpression)
-                .selectAll()
+                .select(EntityTestsData.XTable.b1, aliasedExpression)
                 .groupBy(EntityTestsData.XTable.b1)
                 .alias("maxBoolean")
 
@@ -131,8 +129,7 @@ class AliasesTests : DatabaseTestsBase() {
 
             val resultQuery = aliasedQuery
                 .leftJoin(EntityTestsData.XTable, { this[aliasedExpression] }, { id })
-                .slice(aliasedBool, expressionToCheck)
-                .selectAll()
+                .select(aliasedBool, expressionToCheck)
 
             val result = resultQuery.map {
                 it[aliasedBool] to it[expressionToCheck]!!.value
@@ -146,11 +143,11 @@ class AliasesTests : DatabaseTestsBase() {
         withTables(EntityTestsData.XTable) {
             val table1Count = EntityTestsData.XTable.id.max().alias("t1max")
             val table2Count = EntityTestsData.XTable.id.max().alias("t2max")
-            val t1Alias = EntityTestsData.XTable.slice(table1Count).selectAll().groupBy(EntityTestsData.XTable.b1).alias("t1")
-            val t2Alias = EntityTestsData.XTable.slice(table2Count).selectAll().groupBy(EntityTestsData.XTable.b1).alias("t2")
+            val t1Alias = EntityTestsData.XTable.select(table1Count).groupBy(EntityTestsData.XTable.b1).alias("t1")
+            val t2Alias = EntityTestsData.XTable.select(table2Count).groupBy(EntityTestsData.XTable.b1).alias("t2")
             t1Alias.join(t2Alias, JoinType.INNER) {
                 t1Alias[table1Count] eq t2Alias[table2Count]
-            }.slice(t1Alias[table1Count]).selectAll().toList()
+            }.select(t1Alias[table1Count]).toList()
         }
     }
 }

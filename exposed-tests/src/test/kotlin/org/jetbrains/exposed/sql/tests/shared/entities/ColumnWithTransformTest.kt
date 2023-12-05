@@ -5,7 +5,7 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
@@ -45,7 +45,8 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
 
             assertEquals("stuff", entity.value)
 
-            val row = TransformationsTable.select(Op.TRUE)
+            val row = TransformationsTable.selectAll()
+                .where(Op.TRUE)
                 .first()
 
             assertEquals("transformed-stuff", row[TransformationsTable.value])
@@ -61,7 +62,8 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
 
             assertEquals("stuff", entity.value)
 
-            val row = NullableTransformationsTable.select(Op.TRUE)
+            val row = NullableTransformationsTable.selectAll()
+                .where(Op.TRUE)
                 .first()
 
             assertEquals("transformed-stuff", row[NullableTransformationsTable.value])
@@ -75,7 +77,8 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
 
             assertEquals(null, entity.value)
 
-            val row = NullableTransformationsTable.select(Op.TRUE)
+            val row = NullableTransformationsTable.selectAll()
+                .where(Op.TRUE)
                 .first()
 
             assertEquals(null, row[NullableTransformationsTable.value])

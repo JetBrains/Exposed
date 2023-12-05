@@ -264,8 +264,8 @@ class DDLTests : DatabaseTestsBase() {
 
         withDb(TestDB.H2) {
             assertEquals("CREATE TABLE IF NOT EXISTS ${"test_named_table".inProperCase()}", testTable.ddl)
-            DMLTestsData.Users.select {
-                exists(DMLTestsData.UserData.select { DMLTestsData.Users.id eq DMLTestsData.UserData.user_id })
+            DMLTestsData.Users.selectAll().where {
+                exists(DMLTestsData.UserData.selectAll().where { DMLTestsData.Users.id eq DMLTestsData.UserData.user_id })
             }
         }
     }
@@ -655,21 +655,21 @@ class DDLTests : DatabaseTestsBase() {
                 it[t.b] = blobParam(ExposedBlob(shortBytes))
             } get (t.id)
 
-            val readOn1 = t.select { t.id eq id1 }.first()[t.b]
+            val readOn1 = t.selectAll().where { t.id eq id1 }.first()[t.b]
             val text1 = String(readOn1.bytes)
             val text2 = readOn1.inputStream.bufferedReader().readText()
 
             assertEquals("Hello there!", text1)
             assertEquals("Hello there!", text2)
 
-            val readOn2 = t.select { t.id eq id2 }.first()[t.b]
+            val readOn2 = t.selectAll().where { t.id eq id2 }.first()[t.b]
             val bytes1 = readOn2.bytes
             val bytes2 = readOn2.inputStream.readBytes()
 
             assertTrue(longBytes.contentEquals(bytes1))
             assertTrue(longBytes.contentEquals(bytes2))
 
-            val bytes3 = t.select { t.id eq id3 }.first()[t.b].inputStream.readBytes()
+            val bytes3 = t.selectAll().where { t.id eq id3 }.first()[t.b].inputStream.readBytes()
             assertTrue(shortBytes.contentEquals(bytes3))
         }
     }
@@ -734,7 +734,9 @@ class DDLTests : DatabaseTestsBase() {
 
             assertEqualCollections(tableWithBinary.selectAll().readAsString(), "Exposed", "Kotlin")
 
-            val insertedKotlin = tableWithBinary.select { tableWithBinary.binaryColumn eq kotlinBytes }.readAsString()
+            val insertedKotlin = tableWithBinary.selectAll().where {
+                tableWithBinary.binaryColumn eq kotlinBytes
+            }.readAsString()
             assertEqualCollections(insertedKotlin, "Kotlin")
 
             SchemaUtils.drop(tableWithBinary)
@@ -773,10 +775,10 @@ class DDLTests : DatabaseTestsBase() {
 
             assertEqualCollections(t.selectAll().readAsString(), "Hello!", "World!", null)
 
-            val world = t.select { t.binary eq worldBytes }.readAsString()
+            val world = t.selectAll().where { t.binary eq worldBytes }.readAsString()
             assertEqualCollections(world, "World!")
 
-            val worldByBitCol = t.select { t.byteCol eq byteArrayOf(1) }.readAsString()
+            val worldByBitCol = t.selectAll().where { t.byteCol eq byteArrayOf(1) }.readAsString()
             assertEqualCollections(worldByBitCol, "World!")
         }
     }
@@ -892,9 +894,9 @@ class DDLTests : DatabaseTestsBase() {
             val key: UUID = UUID.randomUUID()
             val id = node.insertAndGetId { it[uuid] = key }
             assertNotNull(id)
-            val uidById = node.select { node.id eq id }.singleOrNull()?.get(node.uuid)
+            val uidById = node.selectAll().where { node.id eq id }.singleOrNull()?.get(node.uuid)
             assertEquals(key, uidById)
-            val uidByKey = node.select { node.uuid eq key }.singleOrNull()?.get(node.uuid)
+            val uidByKey = node.selectAll().where { node.uuid eq key }.singleOrNull()?.get(node.uuid)
             assertEquals(key, uidByKey)
         }
     }
@@ -959,7 +961,7 @@ class DDLTests : DatabaseTestsBase() {
             )
 
             // just to be sure new type didn't break the functions
-            testTable.slice(concat).selectAll().forEach {
+            testTable.select(concat).forEach {
                 assertEquals(it[concat], "1txt 1TXTMED 1txtlong")
             }
         }

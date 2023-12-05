@@ -206,7 +206,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             val id1 = testTable.insertAndGetId { }
 
-            val row1 = testTable.select { testTable.id eq id1 }.single()
+            val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
             assertEquals("test", row1[testTable.s])
             assertEquals("testNullable", row1[testTable.sn])
             assertEquals(42, row1[testTable.l])
@@ -216,7 +216,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             val id2 = testTable.insertAndGetId { it[testTable.sn] = null }
 
-            testTable.select { testTable.id eq id2 }.single()
+            testTable.selectAll().where { testTable.id eq id2 }.single()
         }
     }
 
@@ -239,7 +239,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             val id = foo.insertAndGetId {
                 it[foo.name] = "bar"
             }
-            val result = foo.select { foo.id eq id }.single()
+            val result = foo.selectAll().where { foo.id eq id }.single()
 
             assertEquals(today, result[foo.defaultDateTime].withTimeAtStartOfDay())
             assertEquals(today, result[foo.defaultDate])
@@ -264,7 +264,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 it[foo.defaultDate] = nonDefaultDate
             }
 
-            val result = foo.select { foo.id eq id }.single()
+            val result = foo.selectAll().where { foo.id eq id }.single()
 
             assertEquals("bar", result[foo.name])
             assertEqualDateTime(nonDefaultDate, result[foo.defaultDateTime])
@@ -274,7 +274,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 it[foo.name] = "baz"
             }
 
-            val result2 = foo.select { foo.id eq id }.single()
+            val result2 = foo.selectAll().where { foo.id eq id }.single()
             assertEquals("baz", result2[foo.name])
             assertEqualDateTime(nonDefaultDate, result2[foo.defaultDateTime])
             assertEqualDateTime(nonDefaultDate, result[foo.defaultDate])
@@ -327,7 +327,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 val hour = testDate.time.hour()
                 val minute = testDate.time.minute()
 
-                val result = testDate.slice(year, month, day, hour, minute).selectAll().single()
+                val result = testDate.select(year, month, day, hour, minute).single()
 
                 val now = DateTime.now()
                 assertEquals(now.year, result[year])
@@ -413,7 +413,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
                 val id1 = testTable.insertAndGetId { }
 
-                val row1 = testTable.select { testTable.id eq id1 }.single()
+                val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
             }

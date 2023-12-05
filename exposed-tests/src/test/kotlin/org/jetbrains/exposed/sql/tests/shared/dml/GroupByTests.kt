@@ -18,7 +18,7 @@ class GroupByTests : DatabaseTestsBase() {
     fun testGroupBy01() {
         withCitiesAndUsers { cities, users, userData ->
             val cAlias = users.id.count().alias("c")
-            ((cities innerJoin users).slice(cities.name, users.id.count(), cAlias).selectAll().groupBy(cities.name)).forEach {
+            ((cities innerJoin users).select(cities.name, users.id.count(), cAlias).groupBy(cities.name)).forEach {
                 val cityName = it[cities.name]
                 val userCount = it[users.id.count()]
                 val userCountAlias = it[cAlias]
@@ -36,7 +36,10 @@ class GroupByTests : DatabaseTestsBase() {
     @Test
     fun testGroupBy02() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).having { users.id.count() eq 1 }.toList()
+            val r = (cities innerJoin users).select(cities.name, users.id.count())
+                .groupBy(cities.name)
+                .having { users.id.count() eq 1 }
+                .toList()
             assertEquals(1, r.size)
             assertEquals("St. Petersburg", r[0][cities.name])
             val count = r[0][users.id.count()]
@@ -48,7 +51,7 @@ class GroupByTests : DatabaseTestsBase() {
     fun testGroupBy03() {
         withCitiesAndUsers { cities, users, userData ->
             val maxExpr = cities.id.max()
-            val r = (cities innerJoin users).slice(cities.name, users.id.count(), maxExpr).selectAll()
+            val r = (cities innerJoin users).select(cities.name, users.id.count(), maxExpr)
                 .groupBy(cities.name)
                 .having { users.id.count().eq(maxExpr) }
                 .orderBy(cities.name)
@@ -75,7 +78,7 @@ class GroupByTests : DatabaseTestsBase() {
     @Test
     fun testGroupBy04() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = (cities innerJoin users).slice(cities.name, users.id.count(), cities.id.max()).selectAll()
+            val r = (cities innerJoin users).select(cities.name, users.id.count(), cities.id.max())
                 .groupBy(cities.name)
                 .having { users.id.count() lessEq 42L }
                 .orderBy(cities.name)
@@ -100,13 +103,13 @@ class GroupByTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val maxNullableCityId = users.cityId.max()
 
-            users.slice(maxNullableCityId).selectAll()
+            users.select(maxNullableCityId)
                 .map { it[maxNullableCityId] }.let { result ->
                     assertEquals(result.size, 1)
                     assertNotNull(result.single())
                 }
 
-            users.slice(maxNullableCityId).select { users.cityId.isNull() }
+            users.select(maxNullableCityId).where { users.cityId.isNull() }
                 .map { it[maxNullableCityId] }.let { result ->
                     assertEquals(result.size, 1)
                     assertNull(result.single())
@@ -119,13 +122,13 @@ class GroupByTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, userData ->
             val maxNullableId = cities.id.max()
 
-            cities.slice(maxNullableId).selectAll()
+            cities.select(maxNullableId)
                 .map { it[maxNullableId] }.let { result ->
                     assertEquals(result.size, 1)
                     assertNotNull(result.single())
                 }
 
-            cities.slice(maxNullableId).select { cities.id.isNull() }
+            cities.select(maxNullableId).where { cities.id.isNull() }
                 .map { it[maxNullableId] }.let { result: List<Int?> ->
                     assertEquals(result.size, 1)
                     assertNull(result.single())
@@ -139,13 +142,13 @@ class GroupByTests : DatabaseTestsBase() {
             val avgIdExpr = cities.id.avg()
             val avgId = BigDecimal.valueOf(cities.selectAll().map { it[cities.id] }.average())
 
-            cities.slice(avgIdExpr).selectAll()
+            cities.select(avgIdExpr)
                 .map { it[avgIdExpr] }.let { result ->
                     assertEquals(result.size, 1)
                     assertEquals(result.single()!!.compareTo(avgId), 0)
                 }
 
-            cities.slice(avgIdExpr).select { cities.id.isNull() }
+            cities.select(avgIdExpr).where { cities.id.isNull() }
                 .map { it[avgIdExpr] }.let { result ->
                     assertEquals(result.size, 1)
                     assertNull(result.single())
@@ -159,8 +162,7 @@ class GroupByTests : DatabaseTestsBase() {
             fun <T : String?> GroupConcat<T>.checkExcept(vararg dialects: VendorDialect.DialectNameProvider, assert: (Map<String, String?>) -> Unit) {
                 try {
                     val result = cities.leftJoin(users)
-                        .slice(cities.name, this)
-                        .selectAll()
+                        .select(cities.name, this)
                         .groupBy(cities.id, cities.name).associate {
                             it[cities.name] to it[this]
                         }

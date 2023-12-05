@@ -18,15 +18,15 @@ class CountTests : DatabaseTestsBase() {
     @Test
     fun `test that count() works with Query that contains distinct and columns with same name from different tables and already defined alias`() {
         withCitiesAndUsers { cities, users, _ ->
-            assertEquals(3L, cities.innerJoin(users).slice(users.id.alias("usersId"), cities.id).selectAll().withDistinct().count())
+            assertEquals(3L, cities.innerJoin(users).select(users.id.alias("usersId"), cities.id).withDistinct().count())
         }
     }
 
     @Test
     fun `test that count() returns right value for Query with group by`() {
         withCitiesAndUsers { _, user, userData ->
-            val uniqueUsersInData = userData.slice(userData.user_id).selectAll().withDistinct().count()
-            val sameQueryWithGrouping = userData.slice(userData.value.max()).selectAll().groupBy(userData.user_id).count()
+            val uniqueUsersInData = userData.select(userData.user_id).withDistinct().count()
+            val sameQueryWithGrouping = userData.select(userData.value.max()).groupBy(userData.user_id).count()
             assertEquals(uniqueUsersInData, sameQueryWithGrouping)
         }
 

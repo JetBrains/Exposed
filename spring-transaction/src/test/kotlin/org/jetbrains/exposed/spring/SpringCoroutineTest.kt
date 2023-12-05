@@ -61,14 +61,14 @@ open class SpringCoroutineTest : SpringTransactionTestBase() {
                         Testing.insert {}
 
                         suspendedTransaction {
-                            assertEquals(1, Testing.select { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id))
+                            assertEquals(1, Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id))
                         }
                     }
                 }
 
                 job.join()
                 val result = newSuspendedTransaction(Dispatchers.Default, db = db) {
-                    Testing.select { Testing.id.eq(1) }.single()[Testing.id]
+                    Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.id]
                 }
 
                 kotlin.test.assertEquals(1, result)

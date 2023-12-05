@@ -83,7 +83,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                 val number1 = Byte.MAX_VALUE.toUByte()
                 UByteTable.insert { it[unsignedByte] = number1 }
 
-                val result1 = UByteTable.select { UByteTable.unsignedByte eq number1 }.count()
+                val result1 = UByteTable.selectAll().where { UByteTable.unsignedByte eq number1 }.count()
                 assertEquals(1, result1)
 
                 // TINYINT maps to INTEGER in SQLite, so it will not throw OoR error
@@ -91,7 +91,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                     val number2 = (Byte.MAX_VALUE + 1).toUByte()
                     assertFailAndRollback("Out-of-range (OoR) error") {
                         UByteTable.insert { it[unsignedByte] = number2 }
-                        assertEquals(0, UByteTable.select { UByteTable.unsignedByte less 0u }.count())
+                        assertEquals(0, UByteTable.selectAll().where { UByteTable.unsignedByte less 0u }.count())
                     }
 
                     // modify column to now have SMALLINT type
@@ -160,7 +160,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                 val number1 = Short.MAX_VALUE.toUShort()
                 UShortTable.insert { it[unsignedShort] = number1 }
 
-                val result1 = UShortTable.select { UShortTable.unsignedShort eq number1 }.count()
+                val result1 = UShortTable.selectAll().where { UShortTable.unsignedShort eq number1 }.count()
                 assertEquals(1, result1)
 
                 // SMALLINT maps to INTEGER in SQLite and NUMBER(38) in Oracle, so they will not throw OoR error
@@ -168,7 +168,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                     val number2 = (Short.MAX_VALUE + 1).toUShort()
                     assertFailAndRollback("Out-of-range (OoR) error") {
                         UShortTable.insert { it[unsignedShort] = number2 }
-                        assertEquals(0, UShortTable.select { UShortTable.unsignedShort less 0u }.count())
+                        assertEquals(0, UShortTable.selectAll().where { UShortTable.unsignedShort less 0u }.count())
                     }
 
                     // modify column to now have INT type
@@ -238,7 +238,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                 val number1 = Int.MAX_VALUE.toUInt()
                 UIntTable.insert { it[unsignedInt] = number1 }
 
-                val result1 = UIntTable.select { UIntTable.unsignedInt eq number1 }.count()
+                val result1 = UIntTable.selectAll().where { UIntTable.unsignedInt eq number1 }.count()
                 assertEquals(1, result1)
 
                 // INT maps to INTEGER in SQLite, so it will not throw OoR error
@@ -246,7 +246,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                     val number2 = Int.MAX_VALUE.toUInt() + 1u
                     assertFailAndRollback("Out-of-range (OoR) error") {
                         UIntTable.insert { it[unsignedInt] = number2 }
-                        assertEquals(0, UIntTable.select { UIntTable.unsignedInt less 0u }.count())
+                        assertEquals(0, UIntTable.selectAll().where { UIntTable.unsignedInt less 0u }.count())
                     }
 
                     // modify column to now have BIGINT type

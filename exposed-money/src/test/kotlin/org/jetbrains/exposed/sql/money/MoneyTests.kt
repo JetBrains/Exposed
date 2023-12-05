@@ -6,9 +6,8 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -89,7 +88,7 @@ open class MoneyBaseTest : DatabaseTestsBase() {
                 it[composite_money] = null
             }
 
-            val resultRow = table.select { table.id.eq(id) }.single()
+            val resultRow = table.selectAll().where { table.id.eq(id) }.single()
             val result = resultRow[table.composite_money]
 
             assertEquals(null, result)
@@ -102,7 +101,7 @@ open class MoneyBaseTest : DatabaseTestsBase() {
                 it[composite_money] = toInsert!!
             }
 
-            val single = Account.slice(Account.composite_money).select { Account.id.eq(accountID) }.single()
+            val single = Account.select(Account.composite_money).where { Account.id.eq(accountID) }.single()
             val inserted = single[Account.composite_money]
 
             assertEquals(toInsert, inserted)

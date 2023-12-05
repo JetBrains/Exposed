@@ -32,7 +32,7 @@ class JsonColumnTests : DatabaseTestsBase() {
                 it[jsonColumn] = newData
             }
 
-            val newResult = tester.select { tester.id eq newId }.singleOrNull()
+            val newResult = tester.selectAll().where { tester.id eq newId }.singleOrNull()
             assertEquals(newData, newResult?.get(tester.jsonColumn))
         }
     }
@@ -58,16 +58,16 @@ class JsonColumnTests : DatabaseTestsBase() {
             // SQLServer & Oracle return null if extracted JSON is not scalar
             val requiresScalar = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect
             val isActive = tester.jsonColumn.extract<Boolean>("${pathPrefix}active", toScalar = requiresScalar)
-            val result1 = tester.slice(isActive).selectAll().singleOrNull()
+            val result1 = tester.select(isActive).singleOrNull()
             assertEquals(data1.active, result1?.get(isActive))
 
             val storedUser = tester.jsonColumn.extract<User>("${pathPrefix}user", toScalar = false)
-            val result2 = tester.slice(storedUser).selectAll().singleOrNull()
+            val result2 = tester.select(storedUser).singleOrNull()
             assertEquals(user1, result2?.get(storedUser))
 
             val path = if (currentDialectTest is PostgreSQLDialect) arrayOf("user", "name") else arrayOf(".user.name")
             val username = tester.jsonColumn.extract<String>(*path)
-            val result3 = tester.slice(username).selectAll().singleOrNull()
+            val result3 = tester.select(username).singleOrNull()
             assertEquals(user1.name, result3?.get(username))
         }
     }
@@ -87,7 +87,7 @@ class JsonColumnTests : DatabaseTestsBase() {
             }
             val tooManyLogins = logins greaterEq 1000
 
-            val result = tester.slice(tester.id).select { tooManyLogins }.singleOrNull()
+            val result = tester.select(tester.id).where { tooManyLogins }.singleOrNull()
             assertEquals(newId, result?.get(tester.id))
         }
     }
@@ -162,17 +162,17 @@ class JsonColumnTests : DatabaseTestsBase() {
             }
 
             val userIsInactive = tester.jsonColumn.contains("{\"active\":false}")
-            val result = tester.select { userIsInactive }.toList()
+            val result = tester.selectAll().where { userIsInactive }.toList()
             assertEquals(0, result.size)
 
             val alphaTeamUserAsJson = "{\"user\":${Json.Default.encodeToString(alphaTeamUser)}}"
             var userIsInAlphaTeam = tester.jsonColumn.contains(stringLiteral(alphaTeamUserAsJson))
-            assertEquals(1, tester.select { userIsInAlphaTeam }.count())
+            assertEquals(1, tester.selectAll().where { userIsInAlphaTeam }.count())
 
             // test target contains candidate at specified path
             if (testDb in TestDB.mySqlRelatedDB) {
                 userIsInAlphaTeam = tester.jsonColumn.contains("\"Alpha\"", ".user.team")
-                val alphaTeamUsers = tester.slice(tester.id).select { userIsInAlphaTeam }
+                val alphaTeamUsers = tester.select(tester.id).where { userIsInAlphaTeam }
                 assertEquals(newId, alphaTeamUsers.single()[tester.id])
             }
         }
@@ -191,13 +191,13 @@ class JsonColumnTests : DatabaseTestsBase() {
 
             // test data at path root '$' exists by providing no path arguments
             val hasAnyData = tester.jsonColumn.exists(optional = optional)
-            assertEquals(2, tester.select { hasAnyData }.count())
+            assertEquals(2, tester.selectAll().where { hasAnyData }.count())
 
             val hasFakeKey = tester.jsonColumn.exists(".fakeKey", optional = optional)
-            assertEquals(0, tester.select { hasFakeKey }.count())
+            assertEquals(0, tester.selectAll().where { hasFakeKey }.count())
 
             val hasLogins = tester.jsonColumn.exists(".logins", optional = optional)
-            assertEquals(2, tester.select { hasLogins }.count())
+            assertEquals(2, tester.selectAll().where { hasLogins }.count())
 
             // test data at path exists with filter condition & optional arguments
             val testDialect = currentDialectTest
@@ -208,7 +208,7 @@ class JsonColumnTests : DatabaseTestsBase() {
                     ".logins ? (@ == $maximumLogins)"
                 }
                 val hasMaxLogins = tester.jsonColumn.exists(filterPath)
-                val usersWithMaxLogin = tester.slice(tester.id).select { hasMaxLogins }
+                val usersWithMaxLogin = tester.select(tester.id).where { hasMaxLogins }
                 assertEquals(newId, usersWithMaxLogin.single()[tester.id])
 
                 val (jsonPath, optionalArg) = if (testDialect is OracleDialect) {
@@ -217,7 +217,7 @@ class JsonColumnTests : DatabaseTestsBase() {
                     ".user.team ? (@ == \$team)" to "{\"team\":\"$teamA\"}"
                 }
                 val isOnTeamA = tester.jsonColumn.exists(jsonPath, optional = optionalArg)
-                val usersOnTeamA = tester.slice(tester.id).select { isOnTeamA }
+                val usersOnTeamA = tester.select(tester.id).where { isOnTeamA }
                 assertEquals(newId, usersOnTeamA.single()[tester.id])
             }
         }
@@ -232,12 +232,12 @@ class JsonColumnTests : DatabaseTestsBase() {
                 arrayOf(".users[0].team")
             }
             val firstIsOnTeamA = tester.groups.extract<String>(*path1) eq "Team A"
-            assertEquals(singleId, tester.select { firstIsOnTeamA }.single()[tester.id])
+            assertEquals(singleId, tester.selectAll().where { firstIsOnTeamA }.single()[tester.id])
 
             // older MySQL and MariaDB versions require non-scalar extracted value from JSON Array
             val path2 = if (currentDialectTest is PostgreSQLDialect) "0" else "[0]"
             val firstNumber = tester.numbers.extract<Int>(path2, toScalar = !isOldMySql())
-            assertEqualCollections(listOf(100, 3), tester.slice(firstNumber).selectAll().map { it[firstNumber] })
+            assertEqualCollections(listOf(100, 3), tester.select(firstNumber).map { it[firstNumber] })
         }
     }
 
@@ -245,11 +245,11 @@ class JsonColumnTests : DatabaseTestsBase() {
     fun testJsonContainsWithArrays() {
         withJsonArrays(exclude = jsonContainsNotSupported) { tester, _, tripleId, testDb ->
             val hasSmallNumbers = tester.numbers.contains("[3, 5]")
-            assertEquals(tripleId, tester.select { hasSmallNumbers }.single()[tester.id])
+            assertEquals(tripleId, tester.selectAll().where { hasSmallNumbers }.single()[tester.id])
 
             if (testDb in TestDB.mySqlRelatedDB) {
                 val hasUserNameB = tester.groups.contains("\"B\"", ".users[0].name")
-                assertEquals(tripleId, tester.select { hasUserNameB }.single()[tester.id])
+                assertEquals(tripleId, tester.selectAll().where { hasUserNameB }.single()[tester.id])
             }
         }
     }
@@ -260,10 +260,10 @@ class JsonColumnTests : DatabaseTestsBase() {
             val optional = if (testDb in TestDB.mySqlRelatedDB) "one" else null
 
             val hasMultipleUsers = tester.groups.exists(".users[1]", optional = optional)
-            assertEquals(tripleId, tester.select { hasMultipleUsers }.single()[tester.id])
+            assertEquals(tripleId, tester.selectAll().where { hasMultipleUsers }.single()[tester.id])
 
             val hasAtLeast3Numbers = tester.numbers.exists("[2]", optional = optional)
-            assertEquals(tripleId, tester.select { hasAtLeast3Numbers }.single()[tester.id])
+            assertEquals(tripleId, tester.selectAll().where { hasAtLeast3Numbers }.single()[tester.id])
         }
     }
 

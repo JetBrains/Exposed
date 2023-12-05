@@ -63,7 +63,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
         assertEquals(
             saladsId,
-            Item.select { Item.id eq tabboulehId }.single().also {
+            Item.selectAll().where { Item.id eq tabboulehId }.single().also {
                 println("SELECT result = $it")
             }[Item.categoryId]
         )
@@ -72,7 +72,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
         assertEquals(
             DEFAULT_CATEGORY_ID,
-            Item.select { Item.id eq tabboulehId }.single()[Item.categoryId]
+            Item.selectAll().where { Item.id eq tabboulehId }.single()[Item.categoryId]
         )
     }
 

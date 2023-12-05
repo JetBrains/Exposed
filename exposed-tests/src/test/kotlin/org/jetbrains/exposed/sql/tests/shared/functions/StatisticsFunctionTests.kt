@@ -59,7 +59,7 @@ class StatisticsFunctionTests : DatabaseTestsBase() {
     }
 
     private fun Transaction.assertExpressionEqual(expected: BigDecimal, expression: Function<BigDecimal?>) {
-        val result = SampleTestTable.slice(expression).selectAll().first()[expression]
+        val result = SampleTestTable.select(expression).first()[expression]
         assertEquals(expected, result?.setScale(expected.scale(), RoundingMode.HALF_EVEN))
     }
 
