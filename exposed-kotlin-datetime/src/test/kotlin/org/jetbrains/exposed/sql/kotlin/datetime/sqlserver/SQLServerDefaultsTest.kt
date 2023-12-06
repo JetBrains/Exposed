@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.sql.kotlin.datetime.sqlserver
 
 import kotlinx.datetime.LocalDateTime
-import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.notNullValue
-import org.hamcrest.MatcherAssert.assertThat
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.kotlin.datetime.KotlinLocalDateTimeColumnType
@@ -11,6 +8,8 @@ import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class SQLServerDefaultsTest : DatabaseTestsBase() {
 
@@ -49,9 +48,9 @@ class SQLServerDefaultsTest : DatabaseTestsBase() {
                     }
                 val id = batchInsert.first()[temporalTable.id]
                 val result = temporalTable.selectAll().where { temporalTable.id eq id }.single()
-                assertThat(result[temporalTable.name], `is`("name"))
-                assertThat(result[temporalTable.sysStart], notNullValue())
-                assertThat(result[temporalTable.sysEnd], notNullValue())
+                assertEquals("name", result[temporalTable.name])
+                assertNotNull(result[temporalTable.sysStart])
+                assertNotNull(result[temporalTable.sysEnd])
             } finally {
                 SchemaUtils.drop(temporalTable)
             }

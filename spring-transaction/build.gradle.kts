@@ -30,7 +30,6 @@ dependencies {
     testImplementation(libs.log4j.api)
     testImplementation(libs.log4j.core)
     testImplementation(libs.junit)
-    testImplementation(libs.hamcrest)
     testImplementation(libs.h2)
 }
 
