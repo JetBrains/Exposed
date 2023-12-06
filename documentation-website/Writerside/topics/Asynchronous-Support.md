@@ -28,7 +28,7 @@ transaction {
             withSuspendTransaction {
                 println("Transaction # ${this.id}") // Transaction # 2
                 // This select also will be executed on some thread from Default dispatcher using the same transaction as its parent
-                FooTable.select { FooTable.id eq 1 }.single()[FooTable.id]
+                FooTable.selectAll().where { FooTable.id eq 1 }.single()[FooTable.id]
             }
         }
     }
@@ -40,7 +40,7 @@ transaction {
     runBlocking {
         val result = newSuspendedTransaction(Dispatchers.IO) {
             println("Transaction # ${this.id}") // Transaction # 3
-            FooTable.select { FooTable.id eq 1 }.single()[FooTable.id] // This select will be executed on some thread from IO dispatcher
+            FooTable.selectAll().where { FooTable.id eq 1 }.single()[FooTable.id] // This select will be executed on some thread from IO dispatcher
         }
         println("Result: $result") // Result: 1
     }
@@ -59,7 +59,7 @@ runBlocking {
     val launchResult = suspendedTransactionAsync(Dispatchers.IO) {
         FooTable.insert { it[id] = 2 }
 
-        FooTable.select { FooTable.id eq 2 }.singleOrNull()?.getOrNull(FooTable.id)
+        FooTable.selectAll().where { FooTable.id eq 2 }.singleOrNull()?.getOrNull(FooTable.id)
     }
 
     println("Async result: " + (launchResult.await() ?: -1)) // Async result: 2

@@ -262,8 +262,8 @@ Let's imagine that you want to find all users who rated second SW film with more
 First of all, we should write that query using Exposed DSL.
 ```kotlin
 val query = Users.innerJoin(UserRatings).innerJoin(StarWarsFilm)
-  .slice(Users.columns)
-  .select {
+  .select(Users.columns)
+  .where {
     StarWarsFilms.sequelId eq 2 and (UserRatings.value gt 5) 
   }.withDistinct()
 ```
@@ -277,8 +277,8 @@ See example by @PaulMuriithi [here](https://github.com/PaulMuriithi/ExposedDates
 Imagine that you want to sort cities by how many users each city has. In order to do so, you can write a sub-query which counts users in each city and order by that number. Though in order to do so you'll have to convert `Query` to `Expression`. This can be done using `wrapAsExpression` function:
 ```kotlin
 val expression = wrapAsExpression<Int>(Users
-  .slice(Users.id.count())
-  .select {
+  .select(Users.id.count())
+  .where {
       Cities.id eq Users.cityId
   })
 val cities = Cities
@@ -309,8 +309,8 @@ class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
 
     companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms) {
         override fun searchQuery(op: Op<Boolean>): Query {
-            return super.searchQuery(op).adjustSlice {
-                slice(columns + StarWarsFilms.rank)
+            return super.searchQuery(op).adjustSelect {
+                select(columns + StarWarsFilms.rank).set
             }
         }
     }

@@ -25,7 +25,7 @@ A: Yes. See [[How to use Json and JsonB types|DataTypes#how-to-use-json-and-json
 
 A:
 ```kotlin
-val plainSQL = FooTable.select {}.prepareSQL(QueryBuilder(false)) 
+val plainSQL = FooTable.selectAll().where {}.prepareSQL(QueryBuilder(false)) 
 ```
 Use QueryBuiler with `false` - if you want to inline statement arguments, `true` - to see '?' in query.
 
