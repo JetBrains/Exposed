@@ -1,14 +1,15 @@
-# Migration Guide
+# Exposed Migration Guide
 
 ## Migrating from 0.45.0 to 0.46.0
 
-This guide provides instructions on how to migrate your Exposed application from version 0.45.0 to 0.46.0.
+While Exposed provides migration support in the code itself (by using the `@Deprecated` annotation), 
+this document serves as a reference point for the migration steps necessary to switch to the new query DSL.
 
 ### SELECT Query DSL
 
 Exposed's query DSL has been refactored to bring it closer to the syntax of a standard SQL `SELECT` statement.
 
-The `slice()` function has been deprecated in favor of a new `select()` function that accepts a variable amount of columns or expressions and creates a `Query` instance.
+The `slice()` function has been deprecated in favor of a new `select()` function that accepts a variable amount of columns or expressions and creates a `Query` instance. 
 The `Query` class now has the method `where()`, which can be chained to replace the old version of `select { }`.
 
 [Go to migration steps](#migration-steps)
@@ -51,8 +52,8 @@ TestTable
 TestTable.selectAll()
 ```
 
-To be consistent with these changes, the functions `selectBatched()` and `selectAllBatched()` have also been deprecated.
-A new `Query` method, `fetchBatchedResults()`, can be used instead as a terminal operation on an existing query instance:
+To be consistent with these changes, the functions `selectBatched()` and `selectAllBatched()` have also been deprecated. 
+A new `Query` method, `fetchBatchedResults()`, should be used instead as a terminal operation on an existing query instance:
 
 ```kotlin
 // Example 1
@@ -78,7 +79,7 @@ TestTable
     .fetchBatchedResults(50)
 ```
 
-Lastly, `adjustSlice()` has been renamed to `adjustSelect()`. Since the new `select()` returns a `Query` instead of a `FieldSet`,
+Lastly, `adjustSlice()` has been renamed to `adjustSelect()`. Since the new `select()` returns a `Query` instead of a `FieldSet`, 
 the property `set` should be accessed within the lambda expression of `adjustSelect()` to retrieve the query's `FieldSet`:
 
 ```kotlin
