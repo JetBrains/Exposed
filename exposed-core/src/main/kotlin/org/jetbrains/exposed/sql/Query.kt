@@ -37,7 +37,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     override val queryToExecute: Statement<ResultSet> get() {
         val distinctExpressions = set.fields.distinct()
         return if (distinctExpressions.size < set.fields.size) {
-            copy().adjustSelect { select(distinctExpressions).set }
+            copy().adjustSelect { select(distinctExpressions) }
         } else {
             this
         }
@@ -80,7 +80,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * property used as the receiver and the current [set] as an argument.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
      */
-    fun adjustSelect(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
+    fun adjustSelect(body: ColumnSet.(FieldSet) -> Query): Query = apply { set = set.source.body(set).set }
 
     /**
      * Assigns a new column set, either a [Table] or a [Join], by changing the `source` property of this query's [set],
@@ -90,7 +90,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
      */
     fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
-        return adjustSelect { oldSlice -> body().select(oldSlice.fields).set }
+        return adjustSelect { oldSlice -> body().select(oldSlice.fields) }
     }
 
     /**
@@ -282,7 +282,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                         originalSet.fields.map {
                             it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
                         }
-                    ).set
+                    )
                 }
 
                 alias("subquery").selectAll().count()

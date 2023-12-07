@@ -24,7 +24,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
             fun Query.sliceIt(): FieldSet = this.set.source.select(users.name, cities.name).set
             val oldSlice = queryAdjusted.set.fields
             val expectedSlice = queryAdjusted.sliceIt().fields
-            queryAdjusted.adjustSelect { select(users.name, cities.name).set }
+            queryAdjusted.adjustSelect { select(users.name, cities.name) }
             val actualSlice = queryAdjusted.set.fields
 
             assertFalse { oldSlice.size == actualSlice.size && oldSlice.all { it in actualSlice } }
@@ -39,7 +39,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
             val originalQuery = cities.select(cities.name)
 
             assertFailsWith<IllegalArgumentException> {
-                originalQuery.adjustSelect { select(emptyList()).set }.toList()
+                originalQuery.adjustSelect { select(emptyList()) }.toList()
             }
         }
     }

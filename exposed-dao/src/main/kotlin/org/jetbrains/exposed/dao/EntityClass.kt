@@ -487,7 +487,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             val finalQuery = if (parentTable.id in baseQuery.set.fields) {
                 baseQuery
             } else {
-                baseQuery.adjustSelect { select(fields + parentTable.id).set }
+                baseQuery.adjustSelect { select(fields + parentTable.id) }
                     .adjustColumnSet { innerJoin(parentTable, { refColumn }, { refColumn.referee!! }) }
             }
 
