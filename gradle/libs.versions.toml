@@ -30,7 +30,7 @@ junit = "4.13.2"
 kotlinx-datetime = "0.5.0"
 javax-money = "1.1"
 moneta = "1.4.2"
-hikariCP = "4.0.3"
+hikariCP = "5.1.0"
 logcaptor = "2.9.2"
 
 
