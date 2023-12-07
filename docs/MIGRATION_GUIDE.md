@@ -2,14 +2,16 @@
 
 ## Migrating from 0.45.0 to 0.46.0
 
-While Exposed provides migration support in the code itself (by using the `@Deprecated` annotation), 
+While Exposed provides migration support in the code itself (by using the `@Deprecated` annotation and `ReplaceWith` quickfix), 
 this document serves as a reference point for the migration steps necessary to switch to the new query DSL.
 
 ### SELECT Query DSL
 
 Exposed's query DSL has been refactored to bring it closer to the syntax of a standard SQL `SELECT` statement.
 
-The `slice()` function has been deprecated in favor of a new `select()` function that accepts a variable amount of columns or expressions and creates a `Query` instance. 
+The `slice()` function has been deprecated in favor of a new `select()` function that accepts the same variable amount of columns and creates a `Query` instance. 
+If all columns should be selected, use `selectAll()` to create a `Query` instance.
+
 The `Query` class now has the method `where()`, which can be chained to replace the old version of `select { }`.
 
 [Go to migration steps](#migration-steps)
@@ -53,7 +55,7 @@ TestTable.selectAll()
 ```
 
 To be consistent with these changes, the functions `selectBatched()` and `selectAllBatched()` have also been deprecated. 
-A new `Query` method, `fetchBatchedResults()`, should be used instead as a terminal operation on an existing query instance:
+A new `Query` method, `fetchBatchedResults()`, should be used instead as a terminal operation on an existing `Query`:
 
 ```kotlin
 // Example 1
@@ -79,8 +81,7 @@ TestTable
     .fetchBatchedResults(50)
 ```
 
-Lastly, `adjustSlice()` has been renamed to `adjustSelect()`. Since the new `select()` returns a `Query` instead of a `FieldSet`, 
-the property `set` should be accessed within the lambda expression of `adjustSelect()` to retrieve the query's `FieldSet`:
+Lastly, `adjustSlice()` has been renamed to `adjustSelect()`:
 
 ```kotlin
 // before
@@ -89,15 +90,15 @@ originalQuery.adjustSlice { slice(TestTable.columnA) }
 
 // after
 val originalQuery = TestTable.selectAll().where { TestTable.columnA eq 1 }
-originalQuery.adjustSelect { select(TestTable.columnA).set }
+originalQuery.adjustSelect { select(TestTable.columnA) }
 ```
 
 ### Migration Steps
 
-1. Use *Edit > Find > Find in Files...* to find any use of `adjustSlice`, and use the `Alt+Enter` quickfix with "Replace usages of '...' in whole project".
+1. Use *Edit > Find > Find in Files...* to find any use of `adjustSlice`, then use the `Alt+Enter` quickfix with "Replace usages of '...' in whole project".
 2. Repeat step 1 with all the deprecated methods in the following list:
     * `slice`
-    * `Query.select`: enter `select\(((\s*.+\s*)\)(\s*)\.select` in the search bar (with the regex tab enabled) to find this method easily
+    * `Query.select`: enter `select\((\s*.+\s*)\)(\s*)\.select` in the search bar (with the regex tab enabled) to find this method easily
     * `select`
     * `selectBatched`
     * `selectAllBatched`
@@ -105,6 +106,4 @@ originalQuery.adjustSelect { select(TestTable.columnA).set }
     * Enter `select\((\s*.+\s*)\)(\s*)\.selectAll\(\)` in the search bar (with the regex tab enabled)
     * Enter `select\($1\)` in the replace bar
     * Confirm the results and select "Replace All"
-4. Use *Edit > Find > Find in Files...* to find any use of `adjustSelect` and resolve type mismatch errors by accessing the `set` property:
-    * `adjustSelect { select(TestTable.columnA).set }`
-5. Rebuild the project
+4. Rebuild the project
