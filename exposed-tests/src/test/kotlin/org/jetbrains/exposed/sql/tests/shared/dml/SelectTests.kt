@@ -56,7 +56,7 @@ class SelectTests : DatabaseTestsBase() {
             cities.selectAll().fetchBatchedResults(50).toList()
 
             val originalQuery2 = cities.selectAll().where { cities.name eq "andrey" }.also { it.toList() }
-            originalQuery2.adjustSelect { select(cities.name).set }.toList()
+            originalQuery2.adjustSelect { select(cities.name) }.toList()
 
             val sqlLoggedWithNewDSL = logCaptor.debugLogs.toList()
             logCaptor.clearLogs()
