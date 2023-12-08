@@ -72,6 +72,8 @@ class Database private constructor(
         return this
     }
 
+    val defaultCache by lazy { dataSourceCache }
+
     companion object {
         internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
@@ -134,14 +136,24 @@ class Database private constructor(
             }
         }
 
+        internal var dataSourceCache: Pair<Int, Boolean>? = null
+            private set
+
         fun connect(
             datasource: DataSource,
             setupConnection: (Connection) -> Unit = {},
             databaseConfig: DatabaseConfig? = null,
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
+            dataSourceCache = (databaseConfig?.defaultIsolationLevel ?: datasource.connection.transactionIsolation) to (databaseConfig?.defaultReadOnly ?: datasource.connection.isReadOnly)
+            println("Cacheing ${dataSourceCache?.first} and ${dataSourceCache?.second}")
             return doConnect(
                 explicitVendor = null,
+                // OPT WITHOUT CACHE
+//                config = databaseConfig ?: DatabaseConfig {
+//                    defaultIsolationLevel = datasource.connection.transactionIsolation
+//                    defaultReadOnly = datasource.connection.isReadOnly
+//                },
                 config = databaseConfig,
                 getNewConnection = { datasource.connection!! },
                 setupConnection = setupConnection,

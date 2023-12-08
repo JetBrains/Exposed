@@ -44,7 +44,7 @@ class ThreadLocalTransactionManager(
     override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
         get() {
             if (field == -1) {
-                field = Database.getDefaultIsolationLevel(db)
+                field = db.defaultCache?.first ?: Database.getDefaultIsolationLevel(db)
             }
             return field
         }
@@ -54,7 +54,7 @@ class ThreadLocalTransactionManager(
         set
 
     @Volatile
-    override var defaultReadOnly: Boolean = db.config.defaultReadOnly
+    override var defaultReadOnly: Boolean = db.defaultCache?.second ?: db.config.defaultReadOnly
 
     /** A thread local variable storing the current transaction. */
     val threadLocal = ThreadLocal<Transaction>()
@@ -104,12 +104,26 @@ class ThreadLocalTransactionManager(
                     // Transaction isolation should go first as the readOnly or autoCommit can start transaction with wrong isolation level
                     // Some drivers start a transaction right after `setAutoCommit(false)`,
                     // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                    transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
-                    readOnly = this@ThreadLocalTransaction.readOnly
+                    // OPT WITHOUT CACHE
+                    // worse case scenario: a get and a set is performed instead of just a redundant set...
+//                    if (transactionIsolation != this@ThreadLocalTransaction.transactionIsolation) {
+//                        transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+//                    }
+//                    if (readOnly != this@ThreadLocalTransaction.readOnly) {
+//                        readOnly = this@ThreadLocalTransaction.readOnly
+//                    }
+                    // OPT WITH CACHE
+                    if (db.defaultCache?.first != this@ThreadLocalTransaction.transactionIsolation) {
+                        transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                    }
+                    if (db.defaultCache?.second != this@ThreadLocalTransaction.readOnly) {
+                        readOnly = this@ThreadLocalTransaction.readOnly
+                    }
                     autoCommit = false
                 }
             }
         }
+
         override val connection: ExposedConnection<*>
             get() = connectionLazy.value
 

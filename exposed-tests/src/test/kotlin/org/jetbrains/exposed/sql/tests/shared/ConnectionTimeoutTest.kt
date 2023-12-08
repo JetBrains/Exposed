@@ -28,7 +28,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
     @Test
     fun `connect fail causes repeated connect attempts`() {
         val datasource = ExceptionOnGetConnectionDataSource()
-        val db = Database.connect(datasource = datasource)
+        val db = Database.connect(datasource = datasource, databaseConfig = DatabaseConfig {})
 
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
