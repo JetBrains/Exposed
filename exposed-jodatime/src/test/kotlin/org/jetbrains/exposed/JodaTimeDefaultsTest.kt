@@ -290,19 +290,17 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         withTables(testDate) {
             val duration: Long = 2000
 
-            repeat(2) {
-                testDate.insertAndWait(duration)
-            }
+            testDate.insertAndWait(duration)
 
             Thread.sleep(duration)
 
-            repeat(2) {
+            repeat(3) {
                 testDate.insertAndWait(duration)
             }
 
-            val sortedEntries = testDate.selectAll().map { it[testDate.time] }.sorted()
+            val sortedEntries = testDate.selectAll().sortedBy { it[testDate.id].value }.map { it[testDate.time] }
 
-            assertTrue(sortedEntries[1].millis - sortedEntries[0].millis >= 2000)
+            assertTrue(sortedEntries[1].millis - sortedEntries[0].millis >= 4000)
             assertTrue(sortedEntries[2].millis - sortedEntries[0].millis >= 6000)
             assertTrue(sortedEntries[3].millis - sortedEntries[0].millis >= 8000)
         }
