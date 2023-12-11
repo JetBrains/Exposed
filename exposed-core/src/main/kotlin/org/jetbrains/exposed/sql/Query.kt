@@ -18,13 +18,17 @@ enum class SortOrder(val code: String) {
     DESC_NULLS_LAST(code = "DESC NULLS LAST")
 }
 
+/** Class representing an SQL `SELECT` statement on which query clauses can be built. */
 open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuery<Query>(set.source.targetTables()) {
+    /** Whether only distinct results should be retrieved by this `SELECT` query. */
     var distinct: Boolean = false
         protected set
 
+    /** The stored list of columns for a `GROUP BY` clause in this `SELECT` query. */
     var groupedByColumns: List<Expression<*>> = mutableListOf()
         private set
 
+    /** The stored condition for a `HAVING` clause in this `SELECT` query. */
     var having: Op<Boolean>? = null
         private set
 
@@ -43,6 +47,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         }
     }
 
+    /** Creates a new [Query] instance using all stored properties of this `SELECT` query. */
     override fun copy(): Query = Query(set, where).also { copy ->
         copyTo(copy)
         copy.distinct = distinct
@@ -94,20 +99,29 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     }
 
     /**
-     * Changes [where] field of a Query.
-     * @param body new WHERE condition builder, previous value used as a receiver
+     * Changes the [where] field of this query.
+     *
+     * @param body Builder for the new `WHERE` condition, with the previous value used as the receiver.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
      */
     fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
 
     /**
-     * Changes [having] field of a Query.
-     * @param body new HAVING condition builder, previous value used as a receiver
+     * Changes the [having] field of this query.
+     *
+     * @param body Builder for the new `HAVING` condition, with the previous value used as the receiver.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryHaving
      */
     fun adjustHaving(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { having = having.body() }
 
+    /** Whether this `SELECT` query already has a stored value option for performing locking reads. */
     fun hasCustomForUpdateState() = forUpdate != null
+
+    /**
+     * Whether this `SELECT` query will perform a locking read.
+     *
+     * **Note:** `SELECT FOR UPDATE` is not supported by all vendors. Please check the documentation.
+     */
     fun isForUpdate() = (forUpdate?.let { it != ForUpdateOption.NoForUpdateOption } ?: false) && currentDialect.supportsSelectForUpdate()
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet? {
@@ -177,6 +191,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         return builder.toString()
     }
 
+    /**
+     * Appends a `GROUP BY` clause with the specified [columns] to this `SELECT` query.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupBy02
+     */
     fun groupBy(vararg columns: Expression<*>): Query {
         for (column in columns) {
             (groupedByColumns as MutableList).add(column)
@@ -184,6 +203,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         return this
     }
 
+    /**
+     * Appends a `HAVING` clause with the specified [op] condition to this `SELECT` query.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupBy02
+     */
     fun having(op: SqlExpressionBuilder.() -> Op<Boolean>): Query {
         val oop = SqlExpressionBuilder.op()
         if (having != null) {
@@ -269,6 +293,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         }
     }
 
+    /**
+     * Returns the number of results retrieved after query execution.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertSelectTests.testInsertSelect02
+     */
     override fun count(): Long {
         return if (distinct || groupedByColumns.isNotEmpty() || limit != null) {
             fun Column<*>.makeAlias() =
@@ -302,6 +331,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         }
     }
 
+    /**
+     * Returns whether any results were retrieved by query execution.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testSizedIterable
+     */
     override fun empty(): Boolean {
         val oldLimit = limit
         try {

@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 
 class UnionTests : DatabaseTestsBase() {
     @Test
-    fun `test limit`() {
+    fun testUnionWithLimit() {
         withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _ ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             val sergeyQuery = users.selectAll().where { users.id.eq("sergey") }
@@ -79,7 +79,7 @@ class UnionTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test intersection of three queries`() {
+    fun testIntersectWithThreeQueries() {
         withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _ ->
             val usersQuery = users.selectAll()
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
@@ -102,7 +102,7 @@ class UnionTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test except of two queries`() {
+    fun testExceptWithTwoQueries() {
         withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _ ->
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey"
@@ -221,7 +221,7 @@ class UnionTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test union with all results`() {
+    fun testUnionWithAllResults() {
         withCitiesAndUsers { _, users, _ ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             andreyQuery.unionAll(andreyQuery).map { it[users.id] }.apply {
