@@ -2,18 +2,34 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 
+/** Represents iterable elements of a database result that can be manipulated using SQL clauses. */
 interface SizedIterable<out T> : Iterable<T> {
+    /** Returns the specified amount of elements, [n], starting after the specified [offset]. */
     fun limit(n: Int, offset: Long = 0): SizedIterable<T>
+
+    /** Returns the number of elements that match a specified criterion. */
     fun count(): Long
+
+    /** Whether there are no elements. */
     fun empty(): Boolean
+
+    /** Adds a locking read for the elements against concurrent updates according to the rules specified by [option]. */
     fun forUpdate(option: ForUpdateOption = ForUpdateOption.ForUpdate): SizedIterable<T> = this
+
+    /** Removes any locking read for the elements. */
     fun notForUpdate(): SizedIterable<T> = this
+
+    /** Copies the elements. */
     fun copy(): SizedIterable<T>
+
+    /** Sorts the elements according to the specified expression [order]. */
     fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T>
 }
 
+/** Returns an [EmptySizedIterable]. */
 fun <T> emptySized(): SizedIterable<T> = EmptySizedIterable()
 
+/** Represents an empty set of elements that cannot be iterated over. */
 @Suppress("IteratorNotThrowingNoSuchElementException")
 class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
     override fun count(): Long = 0
@@ -35,6 +51,7 @@ class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
     override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T> = this
 }
 
+/** Represents a collection of elements that defers to the specified [delegate]. */
 class SizedCollection<out T>(val delegate: Collection<T>) : SizedIterable<T> {
     constructor(vararg values: T) : this(values.toList())
     override fun limit(n: Int, offset: Long): SizedIterable<T> {
@@ -52,6 +69,7 @@ class SizedCollection<out T>(val delegate: Collection<T>) : SizedIterable<T> {
     override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T> = this
 }
 
+/** Represents a lazily loaded collection of elements. */
 class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T> {
     private var delegate: SizedIterable<T> = _delegate
 
@@ -59,6 +77,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
     private var _size: Long? = null
     private var _empty: Boolean? = null
 
+    /** A list wrapping data loaded lazily loaded. */
     val wrapper: List<T> get() {
         if (_wrapper == null) {
             _wrapper = delegate.toList()
@@ -117,9 +136,11 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
         return this
     }
 
+    /** Whether the collection already has data loaded by its delegate. */
     fun isLoaded(): Boolean = _wrapper != null
 }
 
+/** */
 infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
     val source = this
     return object : SizedIterable<R> {

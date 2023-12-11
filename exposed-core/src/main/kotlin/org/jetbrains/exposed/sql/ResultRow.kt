@@ -4,7 +4,11 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.withDialect
 import java.sql.ResultSet
 
+/**
+ * A row of data representing a single record retrieved from a database result set.
+ */
 class ResultRow(
+    /** Mapping of the expressions stored on this row to their index positions. */
     val fieldIndex: Map<Expression<*>, Int>,
     private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
 ) {
@@ -37,6 +41,7 @@ class ResultRow(
         data[index] = value
     }
 
+    /** Whether the given [expression] has been initialized with a value on this row. */
     fun <T> hasValue(expression: Expression<T>): Boolean = fieldIndex[expression]?.let { data[it] != NotInitializedValue } ?: false
 
     /**
@@ -119,6 +124,7 @@ class ResultRow(
 
     companion object {
 
+        /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [ResultSet]. */
         fun create(rs: ResultSet, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             return ResultRow(fieldsIndex).apply {
                 fieldsIndex.forEach { (field, index) ->
@@ -133,6 +139,7 @@ class ResultRow(
             }
         }
 
+        /** Creates a [ResultRow] using the expressions and values provided by [data]. */
         fun createAndFillValues(data: Map<Expression<*>, Any?>): ResultRow {
             val fieldIndex = HashMap<Expression<*>, Int>(data.size)
             val values = arrayOfNulls<Any?>(data.size)
@@ -144,6 +151,7 @@ class ResultRow(
             return ResultRow(fieldIndex, values)
         }
 
+        /** Creates a [ResultRow] storing [columns] with their default or nullable values. */
         fun createAndFillDefaults(columns: List<Column<*>>): ResultRow =
             ResultRow(columns.withIndex().associate { it.value to it.index }).apply {
                 columns.forEach {
