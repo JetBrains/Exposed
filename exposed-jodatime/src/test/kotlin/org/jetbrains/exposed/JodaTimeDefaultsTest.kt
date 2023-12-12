@@ -293,6 +293,8 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             // inserts only default values
             testDate.insertAndWait(duration)
 
+            Thread.sleep(100L)
+
             repeat(2) {
                 testDate.insertAndWait(duration)
             }
