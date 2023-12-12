@@ -300,8 +300,11 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             val sortedEntries = testDate.selectAll().sortedBy { it[testDate.id].value }.map { it[testDate.time] }
 
+            println("EXPOSED TEST DEBUG: ${sortedEntries[1].millis - sortedEntries[0].millis} >= 4000")
             assertTrue(sortedEntries[1].millis - sortedEntries[0].millis >= 4000)
+            println("EXPOSED TEST DEBUG: ${sortedEntries[2].millis - sortedEntries[0].millis} >= 6000")
             assertTrue(sortedEntries[2].millis - sortedEntries[0].millis >= 6000)
+            println("EXPOSED TEST DEBUG: ${sortedEntries[3].millis - sortedEntries[0].millis} >= 8000")
             assertTrue(sortedEntries[3].millis - sortedEntries[0].millis >= 8000)
         }
     }
