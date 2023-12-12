@@ -44,8 +44,12 @@ class ThreadLocalTransactionManager(
     override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
         get() {
             if (field == -1) {
-                field = db.defaultCache?.first ?: Database.getDefaultIsolationLevel(db)
+                field = if (db.isDataSource) db.dataSourceTransactionIsolation else Database.getDefaultIsolationLevel(db)
             }
+//            when (field) {
+//                -1 -> field = db.dataSourceDefaultCache?.getOrDefault("isolation", -2) ?: Database.getDefaultIsolationLevel(db)
+//                -2 -> field = db.dataSourceDefaultCache?.get("isolation")!!
+//            }
             return field
         }
 
@@ -54,7 +58,7 @@ class ThreadLocalTransactionManager(
         set
 
     @Volatile
-    override var defaultReadOnly: Boolean = db.defaultCache?.second ?: db.config.defaultReadOnly
+    override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
     /** A thread local variable storing the current transaction. */
     val threadLocal = ThreadLocal<Transaction>()
@@ -99,28 +103,29 @@ class ThreadLocalTransactionManager(
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
-                setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
-                    // The order of setters here is important.
-                    // Transaction isolation should go first as the readOnly or autoCommit can start transaction with wrong isolation level
-                    // Some drivers start a transaction right after `setAutoCommit(false)`,
-                    // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                    // OPT WITHOUT CACHE
-                    // worse case scenario: a get and a set is performed instead of just a redundant set...
-//                    if (transactionIsolation != this@ThreadLocalTransaction.transactionIsolation) {
-//                        transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
-//                    }
-//                    if (readOnly != this@ThreadLocalTransaction.readOnly) {
+                setupTxConnection?.invoke(this, this@ThreadLocalTransaction)
+//                    ?: db.dataSourceDefaultCache?.let { cache ->
+//                        val dataSourceIsolation = cache.getOrPut("isolation") { transactionIsolation }
+//                        if (
+//                            dataSourceIsolation != this@ThreadLocalTransaction.transactionIsolation &&
+//                            this@ThreadLocalTransaction.transactionIsolation != -2
+//                        ) {
+//                            transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+//                        }
 //                        readOnly = this@ThreadLocalTransaction.readOnly
+//                        autoCommit = false
 //                    }
-                    // OPT WITH CACHE
-                    if (db.defaultCache?.first != this@ThreadLocalTransaction.transactionIsolation) {
-                        transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
-                    }
-                    if (db.defaultCache?.second != this@ThreadLocalTransaction.readOnly) {
+                    ?: run {
+                        // The order of setters here is important.
+                        // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
+                        // Some drivers start a transaction right after `setAutoCommit(false)`,
+                        // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
+                        if (!db.isDataSource || db.dataSourceTransactionIsolation != this@ThreadLocalTransaction.transactionIsolation) {
+                            transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                        }
                         readOnly = this@ThreadLocalTransaction.readOnly
+                        autoCommit = false
                     }
-                    autoCommit = false
-                }
             }
         }
 
