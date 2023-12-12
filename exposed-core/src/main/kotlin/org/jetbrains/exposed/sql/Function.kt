@@ -367,7 +367,7 @@ sealed class NextVal<T>(
 /**
  * Represents an SQL function that allows the comparison of [value] to chained conditional clauses.
  *
- * If a [value] is not provided, each chained conditional will be evaluated independently.
+ * If [value] is not provided, each chained conditional will be evaluated independently.
  */
 @Suppress("FunctionNaming")
 class Case(
@@ -381,7 +381,7 @@ class Case(
 /**
  * Represents an SQL function that allows the comparison of [value] to chained conditional clauses.
  *
- * If a [value] is not provided, each chained conditional will be evaluated independently.
+ * If [value] is not provided, each chained conditional will be evaluated independently.
  */
 @Suppress("FunctionNaming")
 class CaseWhen<T>(

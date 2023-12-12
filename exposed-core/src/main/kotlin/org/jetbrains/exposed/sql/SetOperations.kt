@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.vendors.h2Mode
 import java.sql.ResultSet
 
 /**
- * Represents an SQL operation that combine the results of multiple queries into a single result.
+ * Represents an SQL operation that combines the results of multiple queries into a single result.
  *
  * @param secondStatement The SQL statement on the right-hand side of the set operator.
  */

@@ -4,9 +4,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.withDialect
 import java.sql.ResultSet
 
-/**
- * A row of data representing a single record retrieved from a database result set.
- */
+/** A row of data representing a single record retrieved from a database result set. */
 class ResultRow(
     /** Mapping of the expressions stored on this row to their index positions. */
     val fieldIndex: Map<Expression<*>, Int>,
@@ -123,7 +121,6 @@ class ResultRow(
     internal object NotInitializedValue
 
     companion object {
-
         /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [ResultSet]. */
         fun create(rs: ResultSet, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             return ResultRow(fieldsIndex).apply {

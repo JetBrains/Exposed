@@ -105,9 +105,10 @@ fun Query.selectAllBatched(
  * @param limit Maximum number of rows to delete.
  * @param offset The number of rows to skip.
  * @param op Condition that determines which rows to delete.
+ * @return Count of deleted rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
  */
-fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>) =
+fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
     DeleteStatement.where(TransactionManager.current(), this@deleteWhere, op(SqlExpressionBuilder), false, limit, offset)
 
 /**
@@ -119,16 +120,18 @@ fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(I
  * @param limit Maximum number of rows to delete.
  * @param offset The number of rows to skip.
  * @param op Condition that determines which rows to delete.
+ * @return Count of deleted rows.
  */
-fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>) =
+fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
     DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, op(SqlExpressionBuilder), true, limit, offset)
 
 /**
  * Represents the SQL statement that deletes all rows in a table.
  *
+ * @return Count of deleted rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
  */
-fun Table.deleteAll() =
+fun Table.deleteAll(): Int =
     DeleteStatement.all(TransactionManager.current(), this@deleteAll)
 
 /**
@@ -136,18 +139,18 @@ fun Table.deleteAll() =
  *
  * @sample org.jetbrains.exposed.sql.tests.h2.H2Tests.insertInH2
  */
-fun <T : Table> T.insert(body: T.(InsertStatement<Number>) -> Unit): InsertStatement<Number> =
-    InsertStatement<Number>(this).apply {
-        body(this)
-        execute(TransactionManager.current())
-    }
+fun <T : Table> T.insert(body: T.(InsertStatement<Number>) -> Unit): InsertStatement<Number> = InsertStatement<Number>(this).apply {
+    body(this)
+    execute(TransactionManager.current())
+}
 
 /**
- * Represents the SQL statement that inserts a new row into a table and returns the generated ID for the new row.
+ * Represents the SQL statement that inserts a new row into a table.
  *
+ * @return The generated ID for the new row.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testGeneratedKey04
  */
-fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>) -> Unit) =
+fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>) -> Unit): EntityID<Key> =
     InsertStatement<EntityID<Key>>(this, false).run {
         body(this)
         execute(TransactionManager.current())
@@ -311,11 +314,10 @@ private fun <E, S : BaseBatchInsertStatement> executeBatch(
  *
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetIdWithPredefinedId
  */
-fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatement<Long> =
-    InsertStatement<Long>(this, isIgnore = true).apply {
-        body(this)
-        execute(TransactionManager.current())
-    }
+fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
+    body(this)
+    execute(TransactionManager.current())
+}
 
 /**
  * Represents the SQL statement that inserts a new row into a table, while ignoring any possible errors that occur
@@ -327,7 +329,7 @@ fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatem
  * @return The generated ID for the new row, or `null` if none was retrieved after statement execution.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetId01
  */
-fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit) =
+fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit): EntityID<Key>? =
     InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
         body(this)
         when (execute(TransactionManager.current())) {
@@ -361,7 +363,7 @@ fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<
 fun <T : Table> T.insert(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>> = this.columns.filter { !it.columnType.isAutoInc || it.autoIncColumnType?.nextValExpression != null }
-) = InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
+): Int? = InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
 
 /**
  * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table,
@@ -377,7 +379,7 @@ fun <T : Table> T.insert(
 fun <T : Table> T.insertIgnore(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>> = this.columns.filter { !it.columnType.isAutoInc || it.autoIncColumnType?.nextValExpression != null }
-) = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
+): Int? = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
 
 /**
  * Represents the SQL statement that updates rows of a table.

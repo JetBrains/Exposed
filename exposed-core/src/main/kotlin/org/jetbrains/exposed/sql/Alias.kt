@@ -44,7 +44,7 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
 class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expression<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(delegate).append(" $alias") }
 
-    /** Returns an expression containing only the string representation of this [alias]. */
+    /** Returns an [Expression] containing only the string representation of this [alias]. */
     fun aliasOnlyExpression(): Expression<T> {
         return if (delegate is ExpressionWithColumnType<T>) {
             object : Function<T>(delegate.columnType) {
@@ -125,8 +125,11 @@ fun <T : AbstractQuery<*>> T.alias(alias: String) = QueryAlias(this, alias)
 fun <T> Expression<T>.alias(alias: String) = ExpressionAlias(this, alias)
 
 /**
- * Creates a join relation with a query specified in [joinPart].
+ * Creates a join relation with a query.
  *
+ * @param on The condition to join that will be placed in the `ON` clause.
+ * @param joinType The `JOIN` clause type used to combine rows. Defaults to [JoinType.INNER].
+ * @param joinPart The query to join with.
  * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery02
  */
 fun Join.joinQuery(on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> AbstractQuery<*>): Join {
@@ -134,7 +137,13 @@ fun Join.joinQuery(on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>), joinT
     return join(qAlias, joinType, additionalConstraint = { on(qAlias) })
 }
 
-/** Creates a join relation between [this] table and a query specified in [joinPart]. */
+/**
+ * Creates a join relation between [this] table and a query.
+ *
+ * @param on The condition to join that will be placed in the `ON` clause.
+ * @param joinType The `JOIN` clause type used to combine rows. Defaults to [JoinType.INNER].
+ * @param joinPart The query to join with.
+ */
 fun Table.joinQuery(on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> AbstractQuery<*>) =
     Join(this).joinQuery(on, joinType, joinPart)
 
