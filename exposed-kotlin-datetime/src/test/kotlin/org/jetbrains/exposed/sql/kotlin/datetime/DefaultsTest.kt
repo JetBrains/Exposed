@@ -468,17 +468,21 @@ class DefaultsTest : DatabaseTestsBase() {
         withTables(testDate) {
             val duration: Long = 2000
 
-            // inserts only default values
-            testDate.insertAndWait(duration)
+            repeat(2) {
+                testDate.insertAndWait(duration)
+            }
+
+            Thread.sleep(duration)
 
             repeat(2) {
                 testDate.insertAndWait(duration)
             }
 
-            val sortedEntries = testDate.selectAll().sortedBy { it[testDate.id].value }.map { it[testDate.time] }
+            val sortedEntries: List<LocalDateTime> = testDate.selectAll().map { it[testDate.time] }.sorted()
 
             assertTrue(sortedEntries[1].millis() - sortedEntries[0].millis() >= 2000)
-            assertTrue(sortedEntries[2].millis() - sortedEntries[0].millis() >= 4000)
+            assertTrue(sortedEntries[2].millis() - sortedEntries[0].millis() >= 6000)
+            assertTrue(sortedEntries[3].millis() - sortedEntries[0].millis() >= 8000)
         }
     }
 }

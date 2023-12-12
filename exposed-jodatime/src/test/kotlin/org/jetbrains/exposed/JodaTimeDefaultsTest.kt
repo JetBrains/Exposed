@@ -287,13 +287,14 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             val time = datetime("time").defaultExpression(CurrentDateTime)
         }
 
-        withTables(testDate) {
+        withTables(testDate) { testDb ->
             val duration: Long = 2000
 
-            // inserts only default values
+            // insert only default values
             testDate.insertAndWait(duration)
 
-            Thread.sleep(100L)
+            // an epsilon value for SQL Server, which has been flaky with average results +/- 10 compared to expected
+            if (testDb == TestDB.SQLSERVER) Thread.sleep(100L)
 
             repeat(2) {
                 testDate.insertAndWait(duration)
@@ -301,8 +302,6 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             val sortedEntries = testDate.selectAll().sortedBy { it[testDate.id].value }.map { it[testDate.time] }
 
-            println("EXPOSED TEST DEBUG: ${sortedEntries[1].millis - sortedEntries[0].millis} >= 2000")
-            println("EXPOSED TEST DEBUG: ${sortedEntries[2].millis - sortedEntries[0].millis} >= 4000")
             assertTrue(sortedEntries[1].millis - sortedEntries[0].millis >= 2000)
             assertTrue(sortedEntries[2].millis - sortedEntries[0].millis >= 4000)
         }
