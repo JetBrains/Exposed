@@ -72,15 +72,19 @@ class Database private constructor(
         return this
     }
 
-    internal var usesDataSource = false
+    /** Whether [Database.connect] was invoked with a [DataSource] argument. */
+    internal var connectsViaDataSource = false
         private set
 
-    internal var dataSourceTransactionIsolation: Int? = null
+    /**
+     * The transaction isolation level defined by a [DataSource] connection.
+     *
+     * This should only hold a non-null value if [connectsViaDataSource] has been set to `true`.
+     */
+    internal var dataSourceIsolationLevel: Int? = null
 
     companion object {
         internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
-
-        internal const val UNINITIALIZED_DATASOURCE_ISOLATION = -2
 
         private val connectionInstanceImpl: DatabaseConnectionAutoRegistration =
             ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull()
@@ -154,7 +158,7 @@ class Database private constructor(
                 setupConnection = setupConnection,
                 manager = manager
             ).apply {
-                usesDataSource = true
+                connectsViaDataSource = true
             }
         }
 

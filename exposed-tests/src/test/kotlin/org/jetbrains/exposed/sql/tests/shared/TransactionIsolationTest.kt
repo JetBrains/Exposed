@@ -31,20 +31,32 @@ class TransactionIsolationTest : DatabaseTestsBase() {
         Assume.assumeTrue(setOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER).containsAll(TestDB.enabledDialects()))
         val dialect = TestDB.enabledDialects().first()
 
-        val db = Database.connect(HikariDataSource(setupHikariConfig(dialect)))
+        val db = Database.connect(
+            HikariDataSource(setupHikariConfig(dialect, "TRANSACTION_REPEATABLE_READ"))
+        )
+        val manager = TransactionManager.managerFor(db)
 
         transaction(db) {
-            // level should be set by hikari dataSource
+            // transaction manager should use database default since no level is provided other than hikari
+            assertEquals(Database.getDefaultIsolationLevel(db), manager?.defaultIsolationLevel)
+
+            // database level should be set by hikari dataSource
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_REPEATABLE_READ)
+            // after first connection, transaction manager should use hikari level by default
+            assertEquals(Connection.TRANSACTION_REPEATABLE_READ, manager?.defaultIsolationLevel)
         }
 
         transaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED, db = db) {
-            // level should be set by transaction-specific setting
+            assertEquals(Connection.TRANSACTION_REPEATABLE_READ, manager?.defaultIsolationLevel)
+
+            // database level should be set by transaction-specific setting
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)
         }
 
         transaction(db) {
-            // level should be set by hikari dataSource
+            assertEquals(Connection.TRANSACTION_REPEATABLE_READ, manager?.defaultIsolationLevel)
+
+            // database level should be set by hikari dataSource
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_REPEATABLE_READ)
         }
 
@@ -57,29 +69,39 @@ class TransactionIsolationTest : DatabaseTestsBase() {
         val dialect = TestDB.enabledDialects().first()
 
         val db = Database.connect(
-            HikariDataSource(setupHikariConfig(dialect)),
+            HikariDataSource(setupHikariConfig(dialect, "TRANSACTION_REPEATABLE_READ")),
             databaseConfig = DatabaseConfig { defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED }
         )
+        val manager = TransactionManager.managerFor(db)
 
         transaction(db) {
-            // level should be set by DatabaseConfig
+            // transaction manager should default to use DatabaseConfig level
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+
+            // database level should be set by DatabaseConfig
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)
+            // after first connection, transaction manager should retain DatabaseConfig level
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
         }
 
         transaction(transactionIsolation = Connection.TRANSACTION_REPEATABLE_READ, db = db) {
-            // level should be set by transaction-specific setting
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+
+            // database level should be set by transaction-specific setting
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_REPEATABLE_READ)
         }
 
         transaction(db) {
-            // level should be set by DatabaseConfig
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, manager?.defaultIsolationLevel)
+
+            // database level should be set by DatabaseConfig
             assertTransactionIsolationLevel(dialect, Connection.TRANSACTION_READ_COMMITTED)
         }
 
         TransactionManager.closeAndUnregister(db)
     }
 
-    private fun setupHikariConfig(dialect: TestDB): HikariConfig {
+    private fun setupHikariConfig(dialect: TestDB, isolation: String): HikariConfig {
         return HikariConfig().apply {
             jdbcUrl = dialect.connection.invoke()
             driverClassName = dialect.driver
@@ -87,7 +109,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
             password = dialect.pass
             maximumPoolSize = 6
             isAutoCommit = false
-            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+            transactionIsolation = isolation
             validate()
         }
     }

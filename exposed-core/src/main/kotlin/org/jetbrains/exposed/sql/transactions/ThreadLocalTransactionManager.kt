@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.transactions
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Database.Companion.UNINITIALIZED_DATASOURCE_ISOLATION
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
@@ -44,14 +43,16 @@ class ThreadLocalTransactionManager(
     @Volatile
     override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
         get() {
-            when (field) {
-                -1 -> field = if (db.usesDataSource) {
-                    db.dataSourceTransactionIsolation ?: UNINITIALIZED_DATASOURCE_ISOLATION
-                } else {
-                    Database.getDefaultIsolationLevel(db)
+            when {
+                field == -1 -> {
+                    if (db.connectsViaDataSource) loadDataSourceIsolationLevel = true
+                    field = Database.getDefaultIsolationLevel(db)
                 }
-                UNINITIALIZED_DATASOURCE_ISOLATION -> {
-                    field = db.dataSourceTransactionIsolation ?: Database.getDefaultIsolationLevel(db)
+                db.connectsViaDataSource && loadDataSourceIsolationLevel -> {
+                    db.dataSourceIsolationLevel?.let {
+                        loadDataSourceIsolationLevel = false
+                        field = it
+                    }
                 }
             }
             return field
@@ -60,6 +61,14 @@ class ThreadLocalTransactionManager(
         @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel")
         @TestOnly
         set
+
+    /**
+     * Whether the transaction isolation level of the underlying DataSource should be retrieved from the database.
+     *
+     * This should only be set to `true` if [Database.connectsViaDataSource] has also been set to `true` and if
+     * an initial connection to the database has not already been made.
+     */
+    private var loadDataSourceIsolationLevel = false
 
     @Volatile
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
@@ -79,7 +88,8 @@ class ThreadLocalTransactionManager(
                 transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
                 setupTxConnection = setupTxConnection,
                 threadLocal = threadLocal,
-                outerTransaction = outerTransaction
+                outerTransaction = outerTransaction,
+                loadDataSourceIsolationLevel = loadDataSourceIsolationLevel,
             )
         )
 
@@ -102,7 +112,8 @@ class ThreadLocalTransactionManager(
         override val transactionIsolation: Int,
         override val readOnly: Boolean,
         val threadLocal: ThreadLocal<Transaction>,
-        override val outerTransaction: Transaction?
+        override val outerTransaction: Transaction?,
+        private val loadDataSourceIsolationLevel: Boolean
     ) : TransactionInterface {
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
@@ -112,15 +123,14 @@ class ThreadLocalTransactionManager(
                     // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
                     // Some drivers start a transaction right after `setAutoCommit(false)`,
                     // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                    if (
-                        db.usesDataSource && db.dataSourceTransactionIsolation == null &&
-                        this@ThreadLocalTransaction.transactionIsolation == UNINITIALIZED_DATASOURCE_ISOLATION
-                    ) {
-                        db.dataSourceTransactionIsolation = transactionIsolation
+                    if (db.connectsViaDataSource && loadDataSourceIsolationLevel && db.dataSourceIsolationLevel == null) {
+                        // retrieves the setting of the datasource connection & caches it
+                        db.dataSourceIsolationLevel = transactionIsolation
                     } else if (
-                        !db.usesDataSource ||
-                        db.dataSourceTransactionIsolation?.equals(this@ThreadLocalTransaction.transactionIsolation) != true
+                        !db.connectsViaDataSource ||
+                        db.dataSourceIsolationLevel?.equals(this@ThreadLocalTransaction.transactionIsolation) != true
                     ) {
+                        // only set the level if there is no cached datasource value or if the value differs
                         transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
                     }
                     readOnly = this@ThreadLocalTransaction.readOnly
