@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.transactions
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Database.Companion.UNINITIALIZED_DATASOURCE_ISOLATION
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
@@ -43,13 +44,16 @@ class ThreadLocalTransactionManager(
     @Volatile
     override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
         get() {
-            if (field == -1) {
-                field = if (db.isDataSource) db.dataSourceTransactionIsolation else Database.getDefaultIsolationLevel(db)
+            when (field) {
+                -1 -> field = if (db.usesDataSource) {
+                    db.dataSourceTransactionIsolation ?: UNINITIALIZED_DATASOURCE_ISOLATION
+                } else {
+                    Database.getDefaultIsolationLevel(db)
+                }
+                UNINITIALIZED_DATASOURCE_ISOLATION -> {
+                    field = db.dataSourceTransactionIsolation ?: Database.getDefaultIsolationLevel(db)
+                }
             }
-//            when (field) {
-//                -1 -> field = db.dataSourceDefaultCache?.getOrDefault("isolation", -2) ?: Database.getDefaultIsolationLevel(db)
-//                -2 -> field = db.dataSourceDefaultCache?.get("isolation")!!
-//            }
             return field
         }
 
@@ -103,29 +107,25 @@ class ThreadLocalTransactionManager(
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
-                setupTxConnection?.invoke(this, this@ThreadLocalTransaction)
-//                    ?: db.dataSourceDefaultCache?.let { cache ->
-//                        val dataSourceIsolation = cache.getOrPut("isolation") { transactionIsolation }
-//                        if (
-//                            dataSourceIsolation != this@ThreadLocalTransaction.transactionIsolation &&
-//                            this@ThreadLocalTransaction.transactionIsolation != -2
-//                        ) {
-//                            transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
-//                        }
-//                        readOnly = this@ThreadLocalTransaction.readOnly
-//                        autoCommit = false
-//                    }
-                    ?: run {
-                        // The order of setters here is important.
-                        // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
-                        // Some drivers start a transaction right after `setAutoCommit(false)`,
-                        // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                        if (!db.isDataSource || db.dataSourceTransactionIsolation != this@ThreadLocalTransaction.transactionIsolation) {
-                            transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
-                        }
-                        readOnly = this@ThreadLocalTransaction.readOnly
-                        autoCommit = false
+                setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
+                    // The order of setters here is important.
+                    // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
+                    // Some drivers start a transaction right after `setAutoCommit(false)`,
+                    // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
+                    if (
+                        db.usesDataSource && db.dataSourceTransactionIsolation == null &&
+                        this@ThreadLocalTransaction.transactionIsolation == UNINITIALIZED_DATASOURCE_ISOLATION
+                    ) {
+                        db.dataSourceTransactionIsolation = transactionIsolation
+                    } else if (
+                        !db.usesDataSource ||
+                        db.dataSourceTransactionIsolation?.equals(this@ThreadLocalTransaction.transactionIsolation) != true
+                    ) {
+                        transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
                     }
+                    readOnly = this@ThreadLocalTransaction.readOnly
+                    autoCommit = false
+                }
             }
         }
 

@@ -72,15 +72,15 @@ class Database private constructor(
         return this
     }
 
-    internal var isDataSource = false
+    internal var usesDataSource = false
         private set
 
-    internal val dataSourceTransactionIsolation by lazy { metadata { defaultIsolationLevel } }
-
-    // internal var dataSourceDefaultCache: MutableMap<String, Int?>? = null
+    internal var dataSourceTransactionIsolation: Int? = null
 
     companion object {
         internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
+
+        internal const val UNINITIALIZED_DATASOURCE_ISOLATION = -2
 
         private val connectionInstanceImpl: DatabaseConnectionAutoRegistration =
             ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull()
@@ -154,8 +154,7 @@ class Database private constructor(
                 setupConnection = setupConnection,
                 manager = manager
             ).apply {
-                // dataSourceDefaultCache = mutableMapOf()
-                isDataSource = true
+                usesDataSource = true
             }
         }
 
