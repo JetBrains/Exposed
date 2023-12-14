@@ -2,6 +2,12 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 
+/**
+ * A configuration class for a [Database].
+ *
+ * Parameters set in this class apply to all transactions that use the [Database] instance,
+ * unless an applicable override is specified in an individual transaction block.
+ */
 @Suppress("LongParameterList")
 class DatabaseConfig private constructor(
     val sqlLogger: SqlLogger,

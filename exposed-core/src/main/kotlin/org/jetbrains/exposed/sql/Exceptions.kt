@@ -10,6 +10,10 @@ import org.jetbrains.exposed.sql.statements.expandArgs
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import java.sql.SQLException
 
+/**
+ * An exception that provides information on a database access error,
+ * within the [contexts] of the executed statements that caused the exception.
+ */
 class ExposedSQLException(
     cause: Throwable?,
     val contexts: List<StatementContext>,
@@ -40,7 +44,10 @@ class ExposedSQLException(
     override fun toString() = "${super.toString()}\nSQL: ${causedByQueries()}"
 }
 
-@Suppress("MaximumLineLength")
+/**
+ * An exception that provides information on an operation that is not supported by
+ * the provided [dialect].
+ */
 class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDialect) : UnsupportedOperationException(
     baseMessage + ", dialect: ${dialect.name}."
 )
@@ -53,7 +60,6 @@ class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDi
  *
  * @param columnName the duplicated column name
  */
-@Suppress("MaximumLineLength")
 class DuplicateColumnException(columnName: String, tableName: String) : ExceptionInInitializerError(
     "Duplicate column name \"$columnName\" in table \"$tableName\""
 )

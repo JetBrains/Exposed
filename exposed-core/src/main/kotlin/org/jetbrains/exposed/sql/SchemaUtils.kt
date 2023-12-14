@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 
+/** Utility functions that assist with creating, altering, and dropping database schema objects. */
 @Suppress("TooManyFunctions")
 object SchemaUtils {
     private inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
@@ -86,10 +87,13 @@ object SchemaUtils {
         }
     }
 
+    /** Return a list of [tables] sorted according to the targets of their foreign key constraints, if any. */
     fun sortTablesByReferences(tables: Iterable<Table>) = TableDepthGraph(tables).sorted()
 
+    /** Checks whether any of the [tables] have a sequence of foreign key constraints that cycle back to them. */
     fun checkCycle(vararg tables: Table) = TableDepthGraph(tables.toList()).hasCycle()
 
+    /** Returns the SQL statements that create all [tables] that do not already exist. */
     fun createStatements(vararg tables: Table): List<String> {
         if (tables.isEmpty()) return emptyList()
 
@@ -103,6 +107,7 @@ object SchemaUtils {
         } + alters
     }
 
+    /** Create the provided sequences, using a batch execution if [inBatch] is set to `true`. */
     fun createSequence(vararg seq: Sequence, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             val createStatements = seq.flatMap { it.createStatement() }
@@ -110,6 +115,7 @@ object SchemaUtils {
         }
     }
 
+    /** Drops the provided sequences, using a batch execution if [inBatch] is set to `true`. */
     fun dropSequence(vararg seq: Sequence, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             val dropStatements = seq.flatMap { it.dropStatement() }
@@ -117,6 +123,7 @@ object SchemaUtils {
         }
     }
 
+    /** Returns the SQL statements that create the provided [ForeignKeyConstraint]. */
     fun createFKey(foreignKey: ForeignKeyConstraint): List<String> = with(foreignKey) {
         val allFromColumnsBelongsToTheSameTable = from.all { it.table == fromTable }
         require(
@@ -133,6 +140,7 @@ object SchemaUtils {
         return createStatement()
     }
 
+    /** Returns the SQL statements that create the provided [index]. */
     fun createIndex(index: Index): List<String> = index.createStatement()
 
     @Suppress("NestedBlockDepth", "ComplexMethod")
@@ -215,6 +223,16 @@ object SchemaUtils {
         }
     }
 
+    /**
+     * Returns the SQL statements that create any columns defined in [tables], which are missing from the existing
+     * tables in the database.
+     *
+     * By default, a descriptor for each intermediate step, as well as its execution time, is logged at the INFO level.
+     * This can be disabled by setting [withLogs] to `false`.
+     *
+     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ... ADD COLUMN` syntax completely.
+     * Please check the documentation.
+     */
     fun addMissingColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
 
@@ -323,6 +341,7 @@ object SchemaUtils {
         }
     }
 
+    /** Creates all [tables] that do not already exist, using a batch execution if [inBatch] is set to `true`. */
     fun <T : Table> create(vararg tables: T, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             execStatements(inBatch, createStatements(*tables))
@@ -486,6 +505,12 @@ object SchemaUtils {
         return checkMissingIndices(tables = tables, withLogs).flatMap { it.createStatement() }
     }
 
+    /**
+     * Checks all [tables] for any that has more than one defined foreign key constraint or index and
+     * logs the findings.
+     *
+     * If found, this function also logs the SQL statements that can be used to drop these constraints.
+     */
     fun checkExcessiveIndices(vararg tables: Table) {
         val excessiveConstraints = currentDialect.columnConstraints(*tables).filter { it.value.size > 1 }
 
@@ -616,6 +641,7 @@ object SchemaUtils {
      */
     fun listTables(): List<String> = currentDialect.allTablesNames()
 
+    /** Drops all [tables], using a batch execution if [inBatch] is set to `true`. */
     fun drop(vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
         with(TransactionManager.current()) {
