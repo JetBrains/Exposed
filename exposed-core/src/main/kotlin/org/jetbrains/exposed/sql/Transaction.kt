@@ -91,7 +91,7 @@ open class Transaction(
     internal val interceptors = arrayListOf<StatementInterceptor>()
 
     /**
-     * Returns a [StringBuilder] containing string representations of previously executed statements
+     * A [StringBuilder] containing string representations of previously executed statements
      * prefixed by their execution time in milliseconds.
      *
      * **Note:** [Transaction.debug] must be set to `true` for execution strings to be appended.
@@ -99,7 +99,7 @@ open class Transaction(
     val statements = StringBuilder()
 
     /**
-     * Returns a mapping of previously executed statements in this transaction, with a string representation of
+     * A mapping of previously executed statements in this transaction, with a string representation of
      * the prepared statement as the key and the statement count to execution time as the value.
      *
      * **Note:** [Transaction.debug] must be set to `true` for this mapping to be populated.

@@ -11,7 +11,7 @@ import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import java.sql.SQLException
 
 /**
- * An exception that provides information on a database access error,
+ * An exception that provides information about a database access error,
  * within the [contexts] of the executed statements that caused the exception.
  */
 class ExposedSQLException(
@@ -45,7 +45,7 @@ class ExposedSQLException(
 }
 
 /**
- * An exception that provides information on an operation that is not supported by
+ * An exception that provides information about an operation that is not supported by
  * the provided [dialect].
  */
 class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDialect) : UnsupportedOperationException(

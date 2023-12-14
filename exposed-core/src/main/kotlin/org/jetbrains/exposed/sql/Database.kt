@@ -22,7 +22,6 @@ class Database private constructor(
     val config: DatabaseConfig,
     val connector: () -> ExposedConnection<*>
 ) {
-
     /** Whether nested transaction blocks are configured to act like top-level transactions. */
     var useNestedTransactions: Boolean = config.useNestedTransactions
         @Deprecated("Use DatabaseConfig to define the useNestedTransactions")
@@ -155,7 +154,7 @@ class Database private constructor(
          * Creates a [Database] instance.
          *
          * **Note:** This function does not immediately instantiate an actual connection to a database,
-         * but provides the details necessary to do so whenever a connection is required by a transaction.
+         * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param datasource The [DataSource] object to be used as a means of getting a connection.
          * @param setupConnection Any setup that should be applied to each new connection.
@@ -181,7 +180,7 @@ class Database private constructor(
          * Creates a [Database] instance.
          *
          * **Note:** This function does not immediately instantiate an actual connection to a database,
-         * but provides the details necessary to do so whenever a connection is required by a transaction.
+         * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param datasource The [ConnectionPoolDataSource] object to be used as a means of getting a pooled connection.
          * @param setupConnection Any setup that should be applied to each new connection.
@@ -207,7 +206,7 @@ class Database private constructor(
          * Creates a [Database] instance.
          *
          * **Note:** This function does not immediately instantiate an actual connection to a database,
-         * but provides the details necessary to do so whenever a connection is required by a transaction.
+         * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param getNewConnection A function that returns a new connection.
          * @param databaseConfig Configuration parameters for this [Database] instance.
@@ -230,7 +229,7 @@ class Database private constructor(
          * Creates a [Database] instance.
          *
          * **Note:** This function does not immediately instantiate an actual connection to a database,
-         * but provides the details necessary to do so whenever a connection is required by a transaction.
+         * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param url The URL that represents the database when getting a connection.
          * @param driver The JDBC driver class. If not provided, the specified [url] will be used to find

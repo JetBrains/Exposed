@@ -87,8 +87,8 @@ object SchemaUtils {
         }
     }
 
-    /** Return a list of [tables] sorted according to the targets of their foreign key constraints, if any. */
-    fun sortTablesByReferences(tables: Iterable<Table>) = TableDepthGraph(tables).sorted()
+    /** Returns a list of [tables] sorted according to the targets of their foreign key constraints, if any exist. */
+    fun sortTablesByReferences(tables: Iterable<Table>): List<Table> = TableDepthGraph(tables).sorted()
 
     /** Checks whether any of the [tables] have a sequence of foreign key constraints that cycle back to them. */
     fun checkCycle(vararg tables: Table) = TableDepthGraph(tables.toList()).hasCycle()
@@ -107,7 +107,7 @@ object SchemaUtils {
         } + alters
     }
 
-    /** Create the provided sequences, using a batch execution if [inBatch] is set to `true`. */
+    /** Creates the provided sequences, using a batch execution if [inBatch] is set to `true`. */
     fun createSequence(vararg seq: Sequence, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             val createStatements = seq.flatMap { it.createStatement() }
@@ -227,10 +227,10 @@ object SchemaUtils {
      * Returns the SQL statements that create any columns defined in [tables], which are missing from the existing
      * tables in the database.
      *
-     * By default, a descriptor for each intermediate step, as well as its execution time, is logged at the INFO level.
+     * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
      *
-     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ... ADD COLUMN` syntax completely.
+     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ADD COLUMN` syntax completely.
      * Please check the documentation.
      */
     fun addMissingColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
@@ -427,20 +427,27 @@ object SchemaUtils {
     }
 
     /**
-     * This function should be used in cases when you want an easy-to-use auto-actualization of database scheme.
-     * It will create all absent tables, add missing columns for existing tables if it's possible (columns are nullable or have default values).
+     * This function should be used in cases when an easy-to-use auto-actualization of database schema is required.
+     * It creates any missing tables and, if possible, adds any missing columns for existing tables
+     * (for example, when columns are nullable or have default values).
      *
-     * Also if there is inconsistency in DB vs code mappings (excessive or absent indexes)
-     * then DDLs to fix it will be logged to exposedLogger.
+     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ADD COLUMN` syntax completely,
+     * which restricts the behavior when adding some missing columns. Please check the documentation.
      *
-     * This functionality is based on jdbc metadata what might be a bit slow, so it is recommended to call this function once
-     * at application startup and provide all tables you want to actualize.
+     * Also, if there is inconsistency between the database schema and table objects (for example,
+     * excessive or missing indices), then SQL statements to fix this will be logged at the INFO level.
      *
-     * Please note, that execution of this function concurrently might lead to unpredictable state in database due to
-     * non-transactional behavior of some DBMS on processing DDL statements (e.g. MySQL) and metadata caches.
-
-     * To prevent such cases is advised to use any "global" synchronization you prefer (via redis, memcached, etc) or
-     * with Exposed's provided lock based on synchronization on a dummy "Buzy" table (@see SchemaUtils#withDataBaseLock).
+     * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
+     * This can be disabled by setting [withLogs] to `false`.
+     *
+     * **Note:** This functionality is reliant on retrieving JDBC metadata, which might be a bit slow. It is recommended
+     * to call this function only once at application startup and to provide all tables that need to be actualized.
+     *
+     * **Note:** Execution of this function concurrently might lead to unpredictable state in the database due to
+     * non-transactional behavior of some DBMS when processing DDL statements (for example, MySQL) and metadata caches.
+     * To prevent such cases, it is advised to use any preferred "global" synchronization (via redis or memcached) or
+     * to use a lock based on synchronization with a dummy table.
+     * @see SchemaUtils.withDataBaseLock
      */
     fun createMissingTablesAndColumns(vararg tables: Table, inBatch: Boolean = false, withLogs: Boolean = true) {
         with(TransactionManager.current()) {
@@ -474,8 +481,14 @@ object SchemaUtils {
     }
 
     /**
-     * The function provides a list of statements those need to be executed to make
-     * existing table definition compatible with Exposed tables mapping.
+     * Returns the SQL statements that need to be executed to make the existing database schema compatible with
+     * the table objects defined using Exposed.
+     *
+     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ADD COLUMN` syntax completely,
+     * which restricts the behavior when adding some missing columns. Please check the documentation.
+     *
+     * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
+     * This can be disabled by setting [withLogs] to `false`.
      */
     fun statementsRequiredToActualizeScheme(vararg tables: Table, withLogs: Boolean = true): List<String> {
         val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() }
@@ -506,7 +519,7 @@ object SchemaUtils {
     }
 
     /**
-     * Checks all [tables] for any that has more than one defined foreign key constraint or index and
+     * Checks all [tables] for any that have more than one defined foreign key constraint or index and
      * logs the findings.
      *
      * If found, this function also logs the SQL statements that can be used to drop these constraints.
