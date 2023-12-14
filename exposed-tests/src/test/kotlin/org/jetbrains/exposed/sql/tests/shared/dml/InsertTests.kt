@@ -186,7 +186,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `batchInserting using a sequence should work`() {
+    fun testBatchInsertWithSequence() {
         val cities = DMLTestsData.Cities
         withTables(cities) {
             val names = List(25) { UUID.randomUUID().toString() }.asSequence()

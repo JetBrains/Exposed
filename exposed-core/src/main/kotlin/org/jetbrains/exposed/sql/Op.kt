@@ -584,7 +584,9 @@ class NotExists(
 /** Returns an SQL operator that checks if [query] doesn't returns any row. */
 fun notExists(query: AbstractQuery<*>) = NotExists(query)
 
+/** Represents an SQL operator that compares [expr] to any row returned from [query]. */
 sealed class SubQueryOp<T>(
+    /** Returns the string representation of the operator to use in the comparison. */
     val operator: String,
     /** Returns the expression compared to each row of the query result. */
     val expr: Expression<T>,

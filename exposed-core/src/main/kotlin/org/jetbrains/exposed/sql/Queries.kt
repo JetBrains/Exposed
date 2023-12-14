@@ -100,22 +100,44 @@ fun Query.selectAllBatched(
 }
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
+ * Represents the SQL statement that deletes only rows in a table that match the provided [op].
+ *
+ * @param limit Maximum number of rows to delete.
+ * @param offset The number of rows to skip.
+ * @param op Condition that determines which rows to delete.
+ * @return Count of deleted rows.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
  */
-fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>) =
+fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
     DeleteStatement.where(TransactionManager.current(), this@deleteWhere, op(SqlExpressionBuilder), false, limit, offset)
 
-fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>) =
+/**
+ * Represents the SQL statement that deletes only rows in a table that match the provided [op], while ignoring any
+ * possible errors that occur during the process.
+ *
+ * **Note:** `DELETE IGNORE` is not supported by all vendors. Please check the documentation.
+ *
+ * @param limit Maximum number of rows to delete.
+ * @param offset The number of rows to skip.
+ * @param op Condition that determines which rows to delete.
+ * @return Count of deleted rows.
+ */
+fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
     DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, op(SqlExpressionBuilder), true, limit, offset)
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testDelete01
+ * Represents the SQL statement that deletes all rows in a table.
+ *
+ * @return Count of deleted rows.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
  */
-fun Table.deleteAll() =
+fun Table.deleteAll(): Int =
     DeleteStatement.all(TransactionManager.current(), this@deleteAll)
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsert01
+ * Represents the SQL statement that inserts a new row into a table.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.h2.H2Tests.insertInH2
  */
 fun <T : Table> T.insert(body: T.(InsertStatement<Number>) -> Unit): InsertStatement<Number> = InsertStatement<Number>(this).apply {
     body(this)
@@ -123,9 +145,12 @@ fun <T : Table> T.insert(body: T.(InsertStatement<Number>) -> Unit): InsertState
 }
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testGeneratedKey03
+ * Represents the SQL statement that inserts a new row into a table.
+ *
+ * @return The generated ID for the new row.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testGeneratedKey04
  */
-fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>) -> Unit) =
+fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>) -> Unit): EntityID<Key> =
     InsertStatement<EntityID<Key>>(this, false).run {
         body(this)
         execute(TransactionManager.current())
@@ -133,7 +158,15 @@ fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertSt
     }
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testBatchInsert01
+ * Represents the SQL statement that batch inserts new rows into a table.
+ *
+ * @param data Collection of values to use in the batch insert.
+ * @param ignore Whether to ignore errors or not.
+ * **Note** [ignore] is not supported by all vendors. Please check the documentation.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
+ * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @return A list of [ResultRow] representing data from each newly inserted row.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testBatchInsert01
  */
 fun <T : Table, E> T.batchInsert(
     data: Iterable<E>,
@@ -142,6 +175,17 @@ fun <T : Table, E> T.batchInsert(
     body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
+/**
+ * Represents the SQL statement that batch inserts new rows into a table.
+ *
+ * @param data Sequence of values to use in the batch insert.
+ * @param ignore Whether to ignore errors or not.
+ * **Note** [ignore] is not supported by all vendors. Please check the documentation.
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
+ * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ * @return A list of [ResultRow] representing data from each newly inserted row.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testBatchInsertWithSequence
+ */
 fun <T : Table, E> T.batchInsert(
     data: Sequence<E>,
     ignore: Boolean = false,
@@ -163,7 +207,7 @@ private fun <T : Table, E> T.batchInsert(
 }
 
 /**
- * Represents the SQL command that either batch inserts new rows into a table, or, if insertions violate unique constraints,
+ * Represents the SQL statement that either batch inserts new rows into a table, or, if insertions violate unique constraints,
  * first deletes the existing rows before inserting new rows.
  *
  * **Note:** This operation is not supported by all vendors, please check the documentation.
@@ -180,7 +224,7 @@ fun <T : Table, E : Any> T.batchReplace(
 ): List<ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
 
 /**
- * Represents the SQL command that either batch inserts new rows into a table, or, if insertions violate unique constraints,
+ * Represents the SQL statement that either batch inserts new rows into a table, or, if insertions violate unique constraints,
  * first deletes the existing rows before inserting new rows.
  *
  * **Note:** This operation is not supported by all vendors, please check the documentation.
@@ -197,7 +241,7 @@ fun <T : Table, E : Any> T.batchReplace(
 ): List<ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
 
 /**
- * Represents the SQL command that either batch inserts new rows into a table, or, if insertions violate unique constraints,
+ * Represents the SQL statement that either batch inserts new rows into a table, or, if insertions violate unique constraints,
  * first deletes the existing rows before inserting new rows.
  *
  * **Note:** This operation is not supported by all vendors, please check the documentation.
@@ -261,12 +305,31 @@ private fun <E, S : BaseBatchInsertStatement> executeBatch(
     return result
 }
 
+/**
+ * Represents the SQL statement that inserts a new row into a table, while ignoring any possible errors that occur
+ * during the process.
+ *
+ * For example, if the new row would violate a unique constraint, its insertion would be ignored.
+ * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetIdWithPredefinedId
+ */
 fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
     body(this)
     execute(TransactionManager.current())
 }
 
-fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit) =
+/**
+ * Represents the SQL statement that inserts a new row into a table, while ignoring any possible errors that occur
+ * during the process.
+ *
+ * For example, if the new row would violate a unique constraint, its insertion would be ignored.
+ * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
+ *
+ * @return The generated ID for the new row, or `null` if none was retrieved after statement execution.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetId01
+ */
+fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit): EntityID<Key>? =
     InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
         body(this)
         when (execute(TransactionManager.current())) {
@@ -276,7 +339,7 @@ fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(Up
     }
 
 /**
- * Represents the SQL command that either inserts a new row into a table, or, if insertion would violate a unique constraint,
+ * Represents the SQL statement that either inserts a new row into a table, or, if insertion would violate a unique constraint,
  * first deletes the existing row before inserting a new row.
  *
  * **Note:** This operation is not supported by all vendors, please check the documentation.
@@ -289,20 +352,42 @@ fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<
 }
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testInsertSelect01
+ * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table.
+ *
+ * @param selectQuery Source `SELECT` query that provides the values to insert.
+ * @param columns Columns to insert the values into. This defaults to all columns in the table that are not
+ * auto-increment columns without a valid sequence to generate new values.
+ * @return The number of inserted rows, or `null` if nothing was retrieved after statement execution.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertSelectTests.testInsertSelect04
  */
 fun <T : Table> T.insert(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>> = this.columns.filter { !it.columnType.isAutoInc || it.autoIncColumnType?.nextValExpression != null }
-) = InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
+): Int? = InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
 
+/**
+ * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table,
+ * while ignoring any possible errors that occur during the process.
+ *
+ * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
+ *
+ * @param selectQuery Source `SELECT` query that provides the values to insert.
+ * @param columns Columns to insert the values into. This defaults to all columns in the table that are not
+ * auto-increment columns without a valid sequence to generate new values.
+ * @return The number of inserted rows, or `null` if nothing was retrieved after statement execution.
+ */
 fun <T : Table> T.insertIgnore(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>> = this.columns.filter { !it.columnType.isAutoInc || it.autoIncColumnType?.nextValExpression != null }
-) = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
+): Int? = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
 
 /**
- * @sample org.jetbrains.exposed.sql.tests.shared.DMLTests.testUpdate01
+ * Represents the SQL statement that updates rows of a table.
+ *
+ * @param where Condition that determines which rows to update.
+ * @param limit Maximum number of rows to update.
+ * @return The number of updated rows.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdate01
  */
 fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
@@ -310,6 +395,14 @@ fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
     return query.execute(TransactionManager.current())!!
 }
 
+/**
+ * Represents the SQL statement that updates rows of a join relation.
+ *
+ * @param where Condition that determines which rows to update.
+ * @param limit Maximum number of rows to update.
+ * @return The number of updated rows.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdateWithJoin01
+ */
 fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
@@ -317,7 +410,7 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
 }
 
 /**
- * Represents the SQL command that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
+ * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
  *
  * **Note:** Vendors that do not support this operation directly implement the standard MERGE USING command.
  *
@@ -326,6 +419,7 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testUpsertWithUniqueIndexConflict
  */
 fun <T : Table> T.upsert(
     vararg keys: Column<*>,
@@ -338,7 +432,7 @@ fun <T : Table> T.upsert(
 }
 
 /**
- * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
+ * Represents the SQL statement that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
  * **Note**: Unlike `upsert`, `batchUpsert` does not include a `where` parameter. Please log a feature request on
  * [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.
@@ -363,7 +457,7 @@ fun <T : Table, E : Any> T.batchUpsert(
 }
 
 /**
- * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
+ * Represents the SQL statement that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
  * **Note**: Unlike `upsert`, `batchUpsert` does not include a `where` parameter. Please log a feature request on
  * [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.
@@ -388,7 +482,7 @@ fun <T : Table, E : Any> T.batchUpsert(
 }
 
 /**
- * Represents the SQL command that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
+ * Represents the SQL statement that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
  * **Note**: Unlike `upsert`, `batchUpsert` does not include a `where` parameter. Please log a feature request on
  * [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.
@@ -413,6 +507,8 @@ private fun <T : Table, E> T.batchUpsert(
 }
 
 /**
+ * Returns whether [this] table exists in the database.
+ *
  * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.tableExists02
  */
 fun Table.exists(): Boolean = currentDialect.tableExists(this)

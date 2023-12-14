@@ -25,12 +25,28 @@ fun <T : String?> Expression<T>.lowerCase(): LowerCase<T> = LowerCase(this)
 /** Converts this string expression to upper case. */
 fun <T : String?> Expression<T>.upperCase(): UpperCase<T> = UpperCase(this)
 
+/**
+ * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
+ *
+ * When [distinct] is set to `true`, duplicate values will be eliminated.
+ * [orderBy] can be used to sort values in the concatenated string.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupConcat
+ */
 fun <T : String?> Expression<T>.groupConcat(
     separator: String? = null,
     distinct: Boolean = false,
     orderBy: Pair<Expression<*>, SortOrder>
 ): GroupConcat<T> = GroupConcat(this, separator, distinct, orderBy)
 
+/**
+ * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
+ *
+ * When [distinct] is set to `true`, duplicate values will be eliminated.
+ * [orderBy] can be used to sort values in the concatenated string by one or more expressions.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupConcat
+ */
 fun <T : String?> Expression<T>.groupConcat(
     separator: String? = null,
     distinct: Boolean = false,
@@ -134,8 +150,11 @@ fun CustomLongFunction(
     vararg params: Expression<*>
 ): CustomFunction<Long?> = CustomFunction(functionName, LongColumnType(), *params)
 
+/** Represents a pattern used for the comparison of string expressions. */
 data class LikePattern(
+    /** The string representation of a pattern to match. */
     val pattern: String,
+    /** The special character to use as the escape character. */
     val escapeChar: Char? = null
 ) {
 
@@ -149,6 +168,7 @@ data class LikePattern(
     }
 
     companion object {
+        /** Creates a [LikePattern] from the provided [text], with any special characters escaped using [escapeChar]. */
         fun ofLiteral(text: String, escapeChar: Char = '\\'): LikePattern {
             val likePatternSpecialChars = currentDialect.likePatternSpecialChars
             val nextExpectedPatternQueue = arrayListOf<Char>()
@@ -182,6 +202,7 @@ data class LikePattern(
     }
 }
 
+/** Represents all the operators available when building SQL expressions. */
 @Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions")
 interface ISqlExpressionBuilder {
 
@@ -560,6 +581,13 @@ interface ISqlExpressionBuilder {
         vararg others: A
     ): Coalesce<T?, S, R> = Coalesce(expr, alternate, others = others)
 
+    /**
+     * Compares [value] against any chained conditional expressions.
+     *
+     * If [value] is `null`, chained conditionals will be evaluated separately until the first is evaluated as `true`.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.ConditionsTests.nullOpInCaseTest
+     */
     fun case(value: Expression<*>? = null): Case = Case(value)
 
     // Subquery Expressions

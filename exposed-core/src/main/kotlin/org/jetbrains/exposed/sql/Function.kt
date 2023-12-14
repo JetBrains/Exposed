@@ -363,26 +363,53 @@ sealed class NextVal<T>(
 }
 
 // Conditional Expressions
+
+/**
+ * Represents an SQL function that allows the comparison of [value] to chained conditional clauses.
+ *
+ * If [value] is not provided, each chained conditional will be evaluated independently.
+ */
 @Suppress("FunctionNaming")
-class Case(val value: Expression<*>? = null) {
+class Case(
+    /** The value that is compared against every conditional expression. */
+    val value: Expression<*>? = null
+) {
+    /** Adds a conditional expression with a [result] if the expression evaluates to `true`. */
     fun <T> When(cond: Expression<Boolean>, result: Expression<T>): CaseWhen<T> = CaseWhen<T>(value).When(cond, result)
 }
 
+/**
+ * Represents an SQL function that allows the comparison of [value] to chained conditional clauses.
+ *
+ * If [value] is not provided, each chained conditional will be evaluated independently.
+ */
 @Suppress("FunctionNaming")
-class CaseWhen<T>(val value: Expression<*>?) {
+class CaseWhen<T>(
+    /** The value that is compared against every conditional expression. */
+    val value: Expression<*>?
+) {
+    /** The boolean conditions to check and their resulting expressions if the condition is met. */
     val cases: MutableList<Pair<Expression<Boolean>, Expression<out T>>> = mutableListOf()
 
+    /** Adds a conditional expression with a [result] if the expression evaluates to `true`. */
     @Suppress("UNCHECKED_CAST")
     fun <R : T> When(cond: Expression<Boolean>, result: Expression<R>): CaseWhen<R> {
         cases.add(cond to result)
         return this as CaseWhen<R>
     }
 
+    /** Adds an expression that will be used as the function result if all [cases] evaluate to `false`. */
     fun <R : T> Else(e: Expression<R>): ExpressionWithColumnType<R> = CaseWhenElse(this, e)
 }
 
+/**
+ * Represents an SQL function that steps through conditions, and either returns a value when the first condition is met
+ * or returns [elseResult] if all conditions are `false`.
+ */
 class CaseWhenElse<T, R : T>(
+    /** The conditions to check and their results if met. */
     val caseWhen: CaseWhen<T>,
+    /** The result if none of the conditions checked are found to be `true`. */
     val elseResult: Expression<R>
 ) : ExpressionWithColumnType<R>(), ComplexExpression {
 
