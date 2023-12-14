@@ -79,9 +79,9 @@ class Database private constructor(
     /**
      * The transaction isolation level defined by a [DataSource] connection.
      *
-     * This should only hold a non-null value if [connectsViaDataSource] has been set to `true`.
+     * This should only hold a value other than -1 if [connectsViaDataSource] has been set to `true`.
      */
-    internal var dataSourceIsolationLevel: Int? = null
+    internal var dataSourceIsolationLevel: Int = -1
 
     companion object {
         internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()

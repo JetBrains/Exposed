@@ -49,9 +49,9 @@ class ThreadLocalTransactionManager(
                     field = Database.getDefaultIsolationLevel(db)
                 }
                 db.connectsViaDataSource && loadDataSourceIsolationLevel -> {
-                    db.dataSourceIsolationLevel?.let {
+                    if (db.dataSourceIsolationLevel != -1) {
                         loadDataSourceIsolationLevel = false
-                        field = it
+                        field = db.dataSourceIsolationLevel
                     }
                 }
             }
@@ -123,12 +123,12 @@ class ThreadLocalTransactionManager(
                     // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
                     // Some drivers start a transaction right after `setAutoCommit(false)`,
                     // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                    if (db.connectsViaDataSource && loadDataSourceIsolationLevel && db.dataSourceIsolationLevel == null) {
+                    if (db.connectsViaDataSource && loadDataSourceIsolationLevel && db.dataSourceIsolationLevel == -1) {
                         // retrieves the setting of the datasource connection & caches it
                         db.dataSourceIsolationLevel = transactionIsolation
                     } else if (
                         !db.connectsViaDataSource ||
-                        db.dataSourceIsolationLevel?.equals(this@ThreadLocalTransaction.transactionIsolation) != true
+                        db.dataSourceIsolationLevel != this@ThreadLocalTransaction.transactionIsolation
                     ) {
                         // only set the level if there is no cached datasource value or if the value differs
                         transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
