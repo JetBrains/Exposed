@@ -72,13 +72,7 @@ abstract class IdentifierManagerApi {
     }
 
     @Deprecated(
-        message = "This will be removed in future releases when the behavior becomes default in IdentifierManagerApi",
-        level = DeprecationLevel.WARNING
-    )
-    internal fun isUnflaggedKeyword(identity: String): Boolean = identity.isAKeyword() && !shouldPreserveKeywordCasing
-
-    @Deprecated(
-        message = "This will be removed in future releases when the behavior becomes default in IdentifierManagerApi",
+        message = "This will be removed in future releases when the opt-out flag is removed in DatabaseConfig",
         level = DeprecationLevel.WARNING
     )
     private val shouldPreserveKeywordCasing by lazy {

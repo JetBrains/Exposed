@@ -111,10 +111,10 @@ class DatabaseConfig private constructor(
         var logTooMuchResultSetsThreshold: Int = 0,
         /**
          * Toggle whether table and column identifiers that are also keywords should retain their case sensitivity.
-         * Keeping user-defined case sensitivity (value set to `true`) may become the default in future releases.
+         * Keeping user-defined case sensitivity (value set to `true`) is the default setting.
          */
         @ExperimentalKeywordApi
-        var preserveKeywordCasing: Boolean = false,
+        var preserveKeywordCasing: Boolean = true,
     )
 
     companion object {
@@ -143,8 +143,8 @@ class DatabaseConfig private constructor(
 }
 
 @RequiresOptIn(
-    message = "This API is experimental and the behavior defined by setting this value to 'true' may become the default " +
-        "in future releases. Its usage must be marked with '@OptIn(org.jetbrains.exposed.sql.ExperimentalKeywordApi::class)' " +
+    message = "This API is experimental and the behavior defined by setting this value to 'true' is now the default. " +
+        "Its usage must be marked with '@OptIn(org.jetbrains.exposed.sql.ExperimentalKeywordApi::class)' " +
         "or '@org.jetbrains.exposed.sql.ExperimentalKeywordApi'."
 )
 @Target(AnnotationTarget.PROPERTY)
