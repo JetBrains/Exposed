@@ -5,15 +5,16 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 /**
- * Database Sequence.
+ * Represents a database sequence.
  *
- * @param name          Name of the sequence.
- * @param startWith     Beginning of the sequence.
- * @param incrementBy   Value is added to the current sequence value to create a new value.
- * @param minValue      Minimum value a sequence can generate.
- * @param maxValue      Maximum value for the sequence.
- * @param cycle         Allows the sequence to wrap around when the [maxValue] or [minValue] has been reached by an ascending or descending sequence respectively.
- * @param cache         Specifies how many sequence numbers are to be preallocated and stored in memory for faster access.
+ * @param name Name of the sequence.
+ * @param startWith Beginning of the sequence.
+ * @param incrementBy Value to be added to the current sequence value when creating a new value.
+ * @param minValue Minimum value a sequence can generate.
+ * @param maxValue Maximum value for the sequence.
+ * @param cycle Allows the sequence to wrap around when the [maxValue] or [minValue] has been reached by
+ * an ascending or descending sequence respectively.
+ * @param cache Specifies how many sequence numbers are to be pre-allocated and stored in memory for faster access.
  */
 class Sequence(
     private val name: String,
@@ -24,14 +25,16 @@ class Sequence(
     val cycle: Boolean? = null,
     val cache: Long? = null
 ) {
+    /** This sequence's name in proper database casing. */
+    val identifier
+        get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
 
-    val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
-
+    /** The SQL statements that create this sequence. */
     val ddl: List<String>
         get() = createStatement()
 
     /**
-     * Returns the SQL command that creates sequence with the specified properties.
+     * Returns the SQL statements that create this sequence with the specified properties.
      */
     fun createStatement(): List<String> {
         if (!currentDialect.supportsCreateSequence) {
@@ -59,6 +62,7 @@ class Sequence(
         return listOf(createSequenceDDL)
     }
 
+    /** Returns the SQL statements that drop this sequence. */
     fun dropStatement(): List<String> {
         if (!currentDialect.supportsCreateSequence) {
             throw UnsupportedByDialectException("The current dialect doesn't support drop sequence statement", currentDialect)

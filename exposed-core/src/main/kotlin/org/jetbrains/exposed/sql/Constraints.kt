@@ -23,15 +23,22 @@ interface DdlAware {
 }
 
 /**
- * Represents reference constraint actions.
- * Read [Referential actions](https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html#foreign-key-referential-actions) from MySQL docs
- * or on [StackOverflow](https://stackoverflow.com/a/6720458/813981)
+ * Represents referential actions specified by `ON UPDATE` or `ON DELETE` subclauses of a `FOREIGN KEY` constraint clause.
  */
 enum class ReferenceOption {
+    /** Updates/deletes the referenced parent row, in addition to any rows in the referencing child table. */
     CASCADE,
+
+    /** Updates/deletes the referenced parent row, and sets the column in the referencing child table to `NULL`. */
     SET_NULL,
+
+    /** Prevents updating/deleting the referenced parent row. */
     RESTRICT,
+
+    /** In some, but not all, databases, this action is equivalent to `RESTRICT`. Please check the documentation. */
     NO_ACTION,
+
+    /** Updates/deletes the referenced parent row, and sets the column in the referencing child table to its default value. */
     SET_DEFAULT;
 
     override fun toString(): String = name.replace("_", " ")
@@ -41,6 +48,7 @@ enum class ReferenceOption {
  * Represents a foreign key constraint.
  */
 data class ForeignKeyConstraint(
+    /** Mapping of referenced parent table columns to the foreign key columns in their child tables. */
     val references: Map<Column<*>, Column<*>>,
     private val onUpdate: ReferenceOption?,
     private val onDelete: ReferenceOption?,
@@ -57,8 +65,10 @@ data class ForeignKeyConstraint(
     private val tx: Transaction
         get() = TransactionManager.current()
 
+    /** The columns of the referencing child table. */
     val target: LinkedHashSet<Column<*>> = LinkedHashSet(references.values)
 
+    /** The referencing child table. */
     val targetTable: Table = target.first().table
 
     /** Name of the child table. */
@@ -69,8 +79,10 @@ data class ForeignKeyConstraint(
     private val targetColumns: String
         get() = target.joinToString { tx.identity(it) }
 
+    /** The columns of the referenced parent table. */
     val from: LinkedHashSet<Column<*>> = LinkedHashSet(references.keys)
 
+    /** The referenced parent table. */
     val fromTable: Table = from.first().table
 
     /** Name of the parent table. */
@@ -89,7 +101,7 @@ data class ForeignKeyConstraint(
     val deleteRule: ReferenceOption?
         get() = onDelete ?: currentDialectIfAvailable?.defaultReferenceOption
 
-    /** Custom foreign key name if was provided */
+    /** Custom foreign key name, if provided. */
     val customFkName: String?
         get() = name
 
@@ -156,6 +168,7 @@ data class ForeignKeyConstraint(
         return listOf("ALTER TABLE $fromTableName DROP $constraintType $fkName")
     }
 
+    /** The child table column that is referencing the provided column in the parent table. */
     fun targetOf(from: Column<*>): Column<*>? = references[from]
 
     operator fun plus(other: ForeignKeyConstraint): ForeignKeyConstraint {
@@ -214,6 +227,7 @@ data class CheckConstraint(
     }
 }
 
+/** A predicate expression used as a filter when creating a partial index. */
 typealias FilterCondition = (SqlExpressionBuilder.() -> Op<Boolean>)?
 
 /**
