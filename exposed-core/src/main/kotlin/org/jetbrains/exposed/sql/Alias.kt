@@ -10,7 +10,10 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
 
     private fun <T : Any?> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
 
-    /** Returns the original column from the [delegate] table, if [column] is associated with this table alias. */
+    /**
+     * Returns the original column from the [delegate] table, or `null` if the [column] is not associated
+     * with this table alias.
+     */
     fun <R> originalColumn(column: Column<R>): Column<R>? {
         @Suppress("UNCHECKED_CAST")
         return if (column.table == this) {

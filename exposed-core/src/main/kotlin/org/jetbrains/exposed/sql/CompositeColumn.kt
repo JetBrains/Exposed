@@ -11,7 +11,7 @@ abstract class CompositeColumn<T> : Expression<T>() {
     /**
      * Parses the [compositeValue] and returns a list of real columns with their values.
      *
-     * @return key - real column, value - its parsed value
+     * @return Map of real columns as keys to their parsed values.
      */
     abstract fun getRealColumnsWithValues(compositeValue: T): Map<Column<*>, Any?>
 
@@ -21,7 +21,7 @@ abstract class CompositeColumn<T> : Expression<T>() {
     abstract fun getRealColumns(): List<Column<*>>
 
     /**
-     * Restores the composite value from its parts loaded from the database.
+     * Restores the composite value based on its component column values loaded from the database.
      */
     abstract fun restoreValueFromParts(parts: Map<Column<*>, Any?>): T
 
@@ -31,7 +31,7 @@ abstract class CompositeColumn<T> : Expression<T>() {
 }
 
 /**
- * Extension of [CompositeColumn] which consists of two columns, [column1] and [column2].
+ * Extension of [CompositeColumn] that consists of two columns, [column1] and [column2].
  */
 abstract class BiCompositeColumn<C1, C2, T>(
     protected val column1: Column<C1>,

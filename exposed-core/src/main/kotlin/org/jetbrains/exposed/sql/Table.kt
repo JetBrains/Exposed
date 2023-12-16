@@ -327,9 +327,9 @@ class Join(
         val joinType: JoinType,
         /** The column set to join to other components of the relation. */
         val joinPart: ColumnSet,
-        /** The expressions used to match rows from two joined tables. */
+        /** The [JoinCondition] expressions used to match rows from two joined tables. */
         val conditions: List<JoinCondition>,
-        /** The condition to join placed in the `ON` clause. */
+        /** The conditions used to join tables, placed in the `ON` clause. */
         val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
     ) {
         init {
@@ -553,7 +553,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /**
      * Returns the primary key of the table if present, `null` otherwise.
      *
-     * You have to define it explicitly by overriding the property directly or by using one of the predefined
+     * The primary key can be defined explicitly by overriding the property directly or by using one of the predefined
      * table types like `IntIdTable`, `LongIdTable`, or `UUIDIdTable`.
      */
     open val primaryKey: PrimaryKey? = null
@@ -1403,7 +1403,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Represents a special dummy `DUAL` table that is accessible by all users.
      *
      * This can be useful when needing to execute queries that do not rely on a specific table object.
-     * **Note:** `DUAL` tables are only automatically supported by the Oracle database.
+     * **Note:** `DUAL` tables are only automatically supported by Oracle. Please check the documentation.
      */
     object Dual : Table("dual")
 }

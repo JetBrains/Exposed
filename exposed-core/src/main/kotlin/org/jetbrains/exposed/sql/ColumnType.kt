@@ -677,9 +677,12 @@ open class VarCharColumnType(
 
 /**
  * Character column for storing strings of arbitrary length using the specified [collate] type.
- * [eagerLoading] means what content will be loaded immediately when data is loaded from the database.
  */
-open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = false) : StringColumnType(collate) {
+open class TextColumnType(
+    collate: String? = null,
+    /** Whether content will be loaded immediately when data is retrieved from the database. */
+    val eagerLoading: Boolean = false
+) : StringColumnType(collate) {
     /** The exact SQL type representing this character type. */
     open fun preciseType() = currentDialect.dataTypeProvider.textType()
 

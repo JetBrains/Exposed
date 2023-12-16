@@ -23,7 +23,7 @@ interface DdlAware {
 }
 
 /**
- * Represents referential actions specified by `ON UPDATE` or `ON DELETE` subclauses of a `FOREIGN KEY` constraint clause.
+ * Represents referential actions used by `ON UPDATE` or `ON DELETE` subclauses of a `FOREIGN KEY` constraint clause.
  */
 enum class ReferenceOption {
     /** Updates/deletes the referenced parent row, in addition to any rows in the referencing child table. */
@@ -168,7 +168,7 @@ data class ForeignKeyConstraint(
         return listOf("ALTER TABLE $fromTableName DROP $constraintType $fkName")
     }
 
-    /** The child table column that is referencing the provided column in the parent table. */
+    /** Returns the child table column that is referencing the provided column in the parent table. */
     fun targetOf(from: Column<*>): Column<*>? = references[from]
 
     operator fun plus(other: ForeignKeyConstraint): ForeignKeyConstraint {
@@ -227,7 +227,7 @@ data class CheckConstraint(
     }
 }
 
-/** A predicate expression used as a filter when creating a partial index. */
+/** A conditional expression used as a filter when creating a partial index. */
 typealias FilterCondition = (SqlExpressionBuilder.() -> Op<Boolean>)?
 
 /**

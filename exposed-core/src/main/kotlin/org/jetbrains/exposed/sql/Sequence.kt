@@ -25,7 +25,7 @@ class Sequence(
     val cycle: Boolean? = null,
     val cache: Long? = null
 ) {
-    /** This sequence's name in proper database casing. */
+    /** This name of this sequence in proper database casing. */
     val identifier
         get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
 
@@ -33,9 +33,7 @@ class Sequence(
     val ddl: List<String>
         get() = createStatement()
 
-    /**
-     * Returns the SQL statements that create this sequence with the specified properties.
-     */
+    /** Returns the SQL statements that create this sequence. */
     fun createStatement(): List<String> {
         if (!currentDialect.supportsCreateSequence) {
             throw UnsupportedByDialectException("The current dialect doesn't support create sequence statement", currentDialect)
