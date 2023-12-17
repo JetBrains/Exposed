@@ -65,7 +65,7 @@ fun Project.testDb(name: String, block: TestDb.() -> Unit) {
         if (db.ignoresSpringTests) {
             filter {
                 // exclude all test classes in (spring-transaction, exposed-spring-boot-starter) modules
-                exclude("org/jetbrains/exposed/spring/*", "org/jetbrains/exposed/jdbc_template/*")
+                exclude("org/jetbrains/exposed/spring/*", "org/jetbrains/exposed/jdbc-template/*")
                 isFailOnNoMatchingTests = false
             }
         }
