@@ -26,6 +26,8 @@ class TestDb(val name: String) {
 
     internal val dependencies = mutableListOf<String>()
 
+    internal val ignoresSpringTests = name != "h2"
+
     inner class DependencyBlock {
         fun dependency(dependencyNotation: String) {
             dependencies.add(dependencyNotation)
@@ -59,6 +61,14 @@ fun Project.testDb(name: String, block: TestDb.() -> Unit) {
         systemProperties["exposed.test.container"] = if (db.withContainer) db.container else "none"
         systemProperties["exposed.test.dialects"] = db.dialects.joinToString(",") { it.uppercase(Locale.getDefault()) }
         outputs.cacheIf { false }
+
+        if (db.ignoresSpringTests) {
+            filter {
+                // exclude all test classes in (spring-transaction, exposed-spring-boot-starter) modules
+                exclude("org/jetbrains/exposed/spring/*", "org/jetbrains/exposed/jdbc_template/*")
+                isFailOnNoMatchingTests = false
+            }
+        }
 
         if (!db.withContainer) return@register
         dependsOn(rootProject.tasks.getByName("${db.container}ComposeUp"))
