@@ -250,7 +250,12 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testNeqAnyFromSubQuery() {
-        // TODO
+        withDb(testDBsSupportingAnyAndAllFromSubQuries) {
+            withCitiesAndUsers { cities, _, _ ->
+                val r = cities.select { cities.id neq anyFrom(cities.slice(cities.id).select { cities.id eq 2 }) }
+                assertEquals(2, r.count())
+            }
+        }
     }
 
     /** Adapted from [testInList01]. */
@@ -269,12 +274,36 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testNeqAnyFromArray() {
-        // TODO
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withCitiesAndUsers { _, users, _ ->
+                val r = users.select { users.id neq anyFrom(arrayOf("andrey")) }.orderBy(users.name)
+                assertEquals(4, r.count())
+            }
+        }
     }
 
     @Test
     fun testNeqAnyFromEmptyArray() {
-        // TODO
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withCitiesAndUsers { _, users, _ ->
+                val r = users.select { users.id neq anyFrom(emptyArray()) }.orderBy(users.name)
+                assert(r.empty())
+            }
+        }
+    }
+
+    @Test
+    fun testGreaterEqAnyFromArray() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withSales { _, sales ->
+                val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
+                val r = sales.select { sales.amount greaterEq anyFrom(amounts) }.orderBy(sales.amount)
+                    .map { it[sales.product] }
+                assertEquals(6, r.size)
+                r.subList(0, 3).forEach { assertEquals("tea", it) }
+                r.subList(3, 6).forEach { assertEquals("coffee", it) }
+            }
+        }
     }
 
     /** Adapted from [testInTable]. */
@@ -316,7 +345,7 @@ class SelectTests : DatabaseTestsBase() {
     fun testGreaterEqAllFromArray() {
         withDb(testDBsSupportingAnyAndAllFromArrays) {
             withSales { _, sales ->
-                val amounts = arrayOf(1, 10, 100, 1000).map { it.toBigDecimal() }.toTypedArray()
+                val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
                 val r = sales.select { sales.amount greaterEq allFrom(amounts) }.toList()
                 assertEquals(3, r.size)
                 r.forEach { assertEquals("coffee", it[sales.product]) }
