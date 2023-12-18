@@ -5,13 +5,11 @@ import org.jetbrains.exposed.crypt.encryptedBinary
 import org.jetbrains.exposed.crypt.encryptedVarchar
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.junit.Test
-import java.math.BigDecimal
 import kotlin.test.assertNull
 
 class SelectTests : DatabaseTestsBase() {
@@ -213,15 +211,54 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    val testDBsSupportingArrays =
-        listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2, TestDB.H2_MYSQL, TestDB.H2_MARIADB, TestDB.H2_PSQL, TestDB.H2_ORACLE, TestDB.H2_SQLSERVER)
+    val testDBsSupportingInAnyAllFromTables = TestDB.postgreSQLRelatedDB + TestDB.allH2TestDB
 
-    // adapted from `testInList01`
-    // TODO all the other tests of `inList` can be adapted to test both `inList` and `eqAny` if necessary
-    fun testEqAny(eqOp: Column<String>.() -> Op<Boolean>) {
-        withDb(testDBsSupportingArrays) {
+    @Test
+    fun testInTable() {
+        withDb(testDBsSupportingInAnyAllFromTables) {
+            withSalesAndSomeAmounts { _, sales, someAmounts ->
+                val r = sales.select { sales.amount inTable someAmounts }
+                assertEquals(2, r.count())
+            }
+        }
+    }
+
+    @Test
+    fun testNotInTable() {
+        withDb(testDBsSupportingInAnyAllFromTables) {
+            withSalesAndSomeAmounts { _, sales, someAmounts ->
+                val r = sales.select { sales.amount notInTable someAmounts }
+                assertEquals(5, r.count())
+            }
+        }
+    }
+
+
+    val testDBsSupportingAnyAndAllFromSubQuries = TestDB.values().asList() - TestDB.SQLITE
+    val testDBsSupportingAnyAndAllFromArrays = TestDB.postgreSQLRelatedDB + TestDB.allH2TestDB
+
+    /** Adapted from [testInSubQuery01]. */
+    @Test
+    fun testEqAnyFromSubQuery() {
+        withDb(testDBsSupportingAnyAndAllFromSubQuries) {
+            withCitiesAndUsers { cities, _, _ ->
+                val r = cities.select { cities.id eq anyFrom(cities.slice(cities.id).select { cities.id eq 2 }) }
+                assertEquals(1L, r.count())
+            }
+        }
+    }
+
+    @Test
+    fun testNeqAnyFromSubQuery() {
+        // TODO
+    }
+
+    /** Adapted from [testInList01]. */
+    @Test
+    fun testEqAnyFromArray() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
             withCitiesAndUsers { _, users, _ ->
-                val r = users.select { users.id.eqOp() }.orderBy(users.name).toList()
+                val r = users.select { users.id eq anyFrom(arrayOf("andrey", "alex")) }.orderBy(users.name).toList()
 
                 assertEquals(2, r.size)
                 assertEquals("Alex", r[0][users.name])
@@ -230,26 +267,57 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    fun testEqAny(anyExpression: Expression<String>) =
-        testEqAny { this eq anyExpression }
-
-    val userIds = arrayOf("andrey", "alex")
+    @Test
+    fun testNeqAnyFromArray() {
+        // TODO
+    }
 
     @Test
-    fun testEqAnyOp() = testEqAny(userIds.anyOp())
+    fun testNeqAnyFromEmptyArray() {
+        // TODO
+    }
+
+    /** Adapted from [testInTable]. */
+    @Test
+    fun testEqAnyFromTable() {
+        withDb(testDBsSupportingInAnyAllFromTables) {
+            withSalesAndSomeAmounts { testDb, sales, someAmounts ->
+                val r = sales.select { sales.amount eq anyFrom(someAmounts) }
+                assertEquals(2, r.count())
+            }
+        }
+    }
+
+    /** Adapted from [testNotInTable]. */
+    @Test
+    fun testNeqAllFromTable() {
+        withDb(testDBsSupportingInAnyAllFromTables) {
+            withSalesAndSomeAmounts { testDb, sales, someAmounts ->
+                val r = sales.select { sales.amount neq allFrom(someAmounts) }
+                assertEquals(5, r.count())
+            }
+        }
+    }
 
     @Test
-    fun testEqAnyFunction() = testEqAny(userIds.anyFunction())
-
-    @Test
-    fun testEqAny() = testEqAny { this eqAny userIds }
-
-    val amounts = arrayOf(1, 10, 100, 1000).map { it.toBigDecimal() }.toTypedArray()
-
-    fun testGreaterEqAll(allExpression: Expression<BigDecimal>) {
-        withDb(testDBsSupportingArrays) {
+    fun testGreaterEqAllFromSubQuery() {
+        withDb(testDBsSupportingAnyAndAllFromSubQuries) {
             withSales { _, sales ->
-                val r = sales.select { sales.amount greaterEq allExpression }.toList()
+                val r = sales.select { sales.amount greaterEq allFrom(sales.slice(sales.amount).select { sales.product eq "tea" }) }
+                    .orderBy(sales.amount).map { it[sales.product] }
+                assertEquals(4, r.size)
+                assertEquals("tea", r.first())
+                r.drop(1).forEach { assertEquals("coffee", it) }
+            }
+        }
+    }
+
+    @Test
+    fun testGreaterEqAllFromArray() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withSales { _, sales ->
+                val amounts = arrayOf(1, 10, 100, 1000).map { it.toBigDecimal() }.toTypedArray()
+                val r = sales.select { sales.amount greaterEq allFrom(amounts) }.toList()
                 assertEquals(3, r.size)
                 r.forEach { assertEquals("coffee", it[sales.product]) }
             }
@@ -257,10 +325,15 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testGreaterEqAllOp() = testGreaterEqAll(amounts.allOp())
-
-    @Test
-    fun testGreaterEqAllFunction() = testGreaterEqAll(amounts.allFunction())
+    fun testGreaterEqAllFromTable() {
+        withDb(testDBsSupportingInAnyAllFromTables) {
+            withSalesAndSomeAmounts { _, sales, someAmounts ->
+                val r = sales.select { sales.amount greaterEq allFrom(someAmounts) }.toList()
+                assertEquals(3, r.size)
+                r.forEach { assertEquals("coffee", it[sales.product]) }
+            }
+        }
+    }
 
     @Test
     fun testSelectDistinct() {

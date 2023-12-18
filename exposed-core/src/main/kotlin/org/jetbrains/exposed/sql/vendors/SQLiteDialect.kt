@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -20,8 +19,6 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun dateType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun jsonType(): String = "TEXT"
-    override fun untypedAndUnsizedArrayType(): String =
-        throw UnsupportedByDialectException("This vendor does not support array data type", currentDialect)
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
 

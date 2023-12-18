@@ -5,9 +5,6 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.functions.AllFunction
-import org.jetbrains.exposed.sql.functions.AnyFunction
 import org.jetbrains.exposed.sql.ops.*
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -96,26 +93,36 @@ fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = V
  */
 fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
 
-// using `Op`
+// Array Comparisons
 
-/** Returns this array of data wrapped in the `ALL` operator. */
-fun <T> Array<T>.allOp(): Op<T> = AllAnyOp("ALL", this)
+/** Returns this subquery wrapped in the `ANY` operator. This function is not supported by the SQLite dialect. */
+fun <T> anyFrom(subQuery: Query): Op<T> = AllAnyFromSubQueryOp(true, subQuery)
 
-/** Returns this array of data wrapped in the `ANY` operator. The name is explicitly distinguished from [Array.any]. */
-fun <T> Array<T>.anyOp(): Op<T> = AllAnyOp("ANY", this)
+/** Returns this array of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <T> anyFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(true, array)
 
-// using `CustomFunction`
+/** Returns this table wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <T> anyFrom(table: Table): Op<T> = AllAnyFromTableOp(true, table)
 
-/** Returns this array of data wrapped in the `ALL` operator. */
-fun <T> Array<T>.allFunction(): CustomFunction<T> = AllFunction(this)
+/** Returns this subquery wrapped in the `ALL` operator. This function is not supported by the SQLite dialect. */
+fun <T> allFrom(subQuery: Query): Op<T> = AllAnyFromSubQueryOp(false, subQuery)
 
-/** Returns this array of data wrapped in the `ANY` operator. The name is explicitly distinguished from [Array.any]. */
-fun <T> Array<T>.anyFunction(): CustomFunction<T> = AnyFunction(this)
+/** Returns this array of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <T> allFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(false, array)
 
-/** Checks if this expression is equal to any element from [array].
- * This is a more efficient alternative to [ISqlExpressionBuilder.inList] on PostgreSQL and H2. */
-infix fun <T> ExpressionWithColumnType<T>.eqAny(array: Array<T>): Op<Boolean> =
-    this eq array.anyOp() // TODO or `array.anyFunction()`
+/** Returns this table wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <T> allFrom(table: Table): Op<T> = AllAnyFromTableOp(false, table)
+
+// TODO Currently these functions delegate to `anyFrom`. Should the actual `SOME` SQL operator be supported?
+
+/** An alias for [anyFrom]. */
+fun <T> someFrom(subQuery: Query): Op<T> = anyFrom(subQuery)
+
+/** An alias for [anyFrom]. */
+fun <T> someFrom(array: Array<T>): Op<T> = anyFrom(array)
+
+/** An alias for [anyFrom]. */
+fun <T> someFrom(table: Table): Op<T> = anyFrom(table)
 
 // Sequence Manipulation Functions
 
@@ -655,6 +662,14 @@ interface ISqlExpressionBuilder {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
     }
+
+    // "IN (TABLE ...)" comparisons
+
+    /** Checks if this expression is equal to any element from the column of [table] with only a single column. This function is only supported by PostgreSQL and H2 dialects. */
+    infix fun <T> ExpressionWithColumnType<T>.inTable(table: Table): InTableOp = InTableOp(this, table, true)
+
+    /** Checks if this expression is equal to any element from the column of [table] with only a single column. This function is only supported by PostgreSQL and H2 dialects. */
+    infix fun <T> ExpressionWithColumnType<T>.notInTable(table: Table): InTableOp = InTableOp(this, table, false)
 
     // Misc.
 

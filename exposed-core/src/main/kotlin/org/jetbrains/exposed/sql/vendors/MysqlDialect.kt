@@ -49,8 +49,6 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     }
 
     override fun jsonBType(): String = "JSON"
-    override fun untypedAndUnsizedArrayType(): String =
-        throw UnsupportedByDialectException("This vendor does not support array data type", currentDialect)
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && e.columnType is JsonColumnMarker -> when {

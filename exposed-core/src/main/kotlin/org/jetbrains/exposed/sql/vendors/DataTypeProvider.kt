@@ -129,7 +129,8 @@ abstract class DataTypeProvider {
 
     /** Data type for arrays with no specified size or element type, used only as types of [QueryParameter]s for PostgreSQL and H2.
      * An array with no element type cannot be used for storing arrays in a column in either PostgreSQL or H2. */
-    abstract fun untypedAndUnsizedArrayType(): String
+    open fun untypedAndUnsizedArrayType(): String =
+        throw UnsupportedByDialectException("This vendor does not support array data type", currentDialect)
 
     // Misc.
 
