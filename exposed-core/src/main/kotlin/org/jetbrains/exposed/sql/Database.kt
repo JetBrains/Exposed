@@ -97,6 +97,13 @@ class Database private constructor(
      */
     internal var dataSourceIsolationLevel: Int = -1
 
+    /**
+     * The read-only setting defined by a [DataSource] connection.
+     *
+     * This value should only be adjusted if [connectsViaDataSource] has been set to `true`.
+     */
+    internal var dataSourceReadOnly: Boolean = false
+
     companion object {
         internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
