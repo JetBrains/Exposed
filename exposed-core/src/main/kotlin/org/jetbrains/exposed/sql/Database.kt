@@ -72,6 +72,17 @@ class Database private constructor(
         return this
     }
 
+    /** Whether [Database.connect] was invoked with a [DataSource] argument. */
+    internal var connectsViaDataSource = false
+        private set
+
+    /**
+     * The transaction isolation level defined by a [DataSource] connection.
+     *
+     * This should only hold a value other than -1 if [connectsViaDataSource] has been set to `true`.
+     */
+    internal var dataSourceIsolationLevel: Int = -1
+
     companion object {
         internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
@@ -146,7 +157,9 @@ class Database private constructor(
                 getNewConnection = { datasource.connection!! },
                 setupConnection = setupConnection,
                 manager = manager
-            )
+            ).apply {
+                connectsViaDataSource = true
+            }
         }
 
         fun connectPool(

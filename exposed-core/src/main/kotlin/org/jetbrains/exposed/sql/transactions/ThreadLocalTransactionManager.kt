@@ -43,8 +43,17 @@ class ThreadLocalTransactionManager(
     @Volatile
     override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
         get() {
-            if (field == -1) {
-                field = Database.getDefaultIsolationLevel(db)
+            when {
+                field == -1 -> {
+                    if (db.connectsViaDataSource) loadDataSourceIsolationLevel = true
+                    field = Database.getDefaultIsolationLevel(db)
+                }
+                db.connectsViaDataSource && loadDataSourceIsolationLevel -> {
+                    if (db.dataSourceIsolationLevel != -1) {
+                        loadDataSourceIsolationLevel = false
+                        field = db.dataSourceIsolationLevel
+                    }
+                }
             }
             return field
         }
@@ -52,6 +61,14 @@ class ThreadLocalTransactionManager(
         @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel")
         @TestOnly
         set
+
+    /**
+     * Whether the transaction isolation level of the underlying DataSource should be retrieved from the database.
+     *
+     * This should only be set to `true` if [Database.connectsViaDataSource] has also been set to `true` and if
+     * an initial connection to the database has not already been made.
+     */
+    private var loadDataSourceIsolationLevel = false
 
     @Volatile
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
@@ -71,7 +88,8 @@ class ThreadLocalTransactionManager(
                 transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
                 setupTxConnection = setupTxConnection,
                 threadLocal = threadLocal,
-                outerTransaction = outerTransaction
+                outerTransaction = outerTransaction,
+                loadDataSourceIsolationLevel = loadDataSourceIsolationLevel,
             )
         )
 
@@ -94,22 +112,33 @@ class ThreadLocalTransactionManager(
         override val transactionIsolation: Int,
         override val readOnly: Boolean,
         val threadLocal: ThreadLocal<Transaction>,
-        override val outerTransaction: Transaction?
+        override val outerTransaction: Transaction?,
+        private val loadDataSourceIsolationLevel: Boolean
     ) : TransactionInterface {
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
                 setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
                     // The order of setters here is important.
-                    // Transaction isolation should go first as the readOnly or autoCommit can start transaction with wrong isolation level
+                    // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
                     // Some drivers start a transaction right after `setAutoCommit(false)`,
                     // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                    transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                    if (db.connectsViaDataSource && loadDataSourceIsolationLevel && db.dataSourceIsolationLevel == -1) {
+                        // retrieves the setting of the datasource connection & caches it
+                        db.dataSourceIsolationLevel = transactionIsolation
+                    } else if (
+                        !db.connectsViaDataSource ||
+                        db.dataSourceIsolationLevel != this@ThreadLocalTransaction.transactionIsolation
+                    ) {
+                        // only set the level if there is no cached datasource value or if the value differs
+                        transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                    }
                     readOnly = this@ThreadLocalTransaction.readOnly
                     autoCommit = false
                 }
             }
         }
+
         override val connection: ExposedConnection<*>
             get() = connectionLazy.value
 
