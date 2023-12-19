@@ -1723,10 +1723,10 @@ public final class org/jetbrains/exposed/sql/RowNumber : org/jetbrains/exposed/s
 public final class org/jetbrains/exposed/sql/SQLExpressionBuilderKt {
 	public static final fun CustomLongFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
 	public static final fun CustomStringFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
-	public static final fun allFrom (Lorg/jetbrains/exposed/sql/Query;)Lorg/jetbrains/exposed/sql/Op;
+	public static final fun allFrom (Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun allFrom (Lorg/jetbrains/exposed/sql/Table;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun allFrom ([Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
-	public static final fun anyFrom (Lorg/jetbrains/exposed/sql/Query;)Lorg/jetbrains/exposed/sql/Op;
+	public static final fun anyFrom (Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun anyFrom (Lorg/jetbrains/exposed/sql/Table;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun anyFrom ([Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun avg (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/Avg;
@@ -1746,9 +1746,6 @@ public final class org/jetbrains/exposed/sql/SQLExpressionBuilderKt {
 	public static final fun min (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Min;
 	public static final fun nextIntVal (Lorg/jetbrains/exposed/sql/Sequence;)Lorg/jetbrains/exposed/sql/NextVal;
 	public static final fun nextLongVal (Lorg/jetbrains/exposed/sql/Sequence;)Lorg/jetbrains/exposed/sql/NextVal;
-	public static final fun someFrom (Lorg/jetbrains/exposed/sql/Query;)Lorg/jetbrains/exposed/sql/Op;
-	public static final fun someFrom (Lorg/jetbrains/exposed/sql/Table;)Lorg/jetbrains/exposed/sql/Op;
-	public static final fun someFrom ([Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun stdDevPop (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/StdDevPop;
 	public static synthetic fun stdDevPop$default (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;IILjava/lang/Object;)Lorg/jetbrains/exposed/sql/StdDevPop;
 	public static final fun stdDevSamp (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/StdDevSamp;
@@ -2587,9 +2584,9 @@ public abstract class org/jetbrains/exposed/sql/ops/AllAnyFromBaseOp : org/jetbr
 }
 
 public final class org/jetbrains/exposed/sql/ops/AllAnyFromSubQueryOp : org/jetbrains/exposed/sql/ops/AllAnyFromBaseOp {
-	public fun <init> (ZLorg/jetbrains/exposed/sql/Query;)V
+	public fun <init> (ZLorg/jetbrains/exposed/sql/AbstractQuery;)V
 	public synthetic fun registerSubSearchArgument (Lorg/jetbrains/exposed/sql/QueryBuilder;Ljava/lang/Object;)V
-	public fun registerSubSearchArgument (Lorg/jetbrains/exposed/sql/QueryBuilder;Lorg/jetbrains/exposed/sql/Query;)V
+	public fun registerSubSearchArgument (Lorg/jetbrains/exposed/sql/QueryBuilder;Lorg/jetbrains/exposed/sql/AbstractQuery;)V
 }
 
 public final class org/jetbrains/exposed/sql/ops/AllAnyFromTableOp : org/jetbrains/exposed/sql/ops/AllAnyFromBaseOp {

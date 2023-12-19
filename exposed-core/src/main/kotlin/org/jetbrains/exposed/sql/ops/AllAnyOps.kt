@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.ops
 
+import org.jetbrains.exposed.sql.AbstractQuery
 import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.UntypedAndUnsizedArrayColumnType
@@ -17,8 +17,8 @@ abstract class AllAnyFromBaseOp<T, SubSearch>(val isAny: Boolean, val subSearch:
     abstract fun QueryBuilder.registerSubSearchArgument(subSearch: SubSearch)
 }
 
-class AllAnyFromSubQueryOp<T>(isAny: Boolean, subQuery: Query) : AllAnyFromBaseOp<T, Query>(isAny, subQuery) {
-    override fun QueryBuilder.registerSubSearchArgument(subSearch: Query) {
+class AllAnyFromSubQueryOp<T>(isAny: Boolean, subQuery: AbstractQuery<*>) : AllAnyFromBaseOp<T, AbstractQuery<*>>(isAny, subQuery) {
+    override fun QueryBuilder.registerSubSearchArgument(subSearch: AbstractQuery<*>) {
         subSearch.prepareSQL(this)
     }
 }
