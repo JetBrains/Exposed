@@ -9,19 +9,19 @@ abstract class CompositeColumn<T> : Expression<T>() {
     internal var nullable: Boolean = false
 
     /**
-     * Parse values from [compositeValue] and return list of real columns with its values
+     * Parses the [compositeValue] and returns a list of real columns with their values.
      *
-     * @return key - real column, value - its parsed value
+     * @return Map of real columns as keys to their parsed values.
      */
     abstract fun getRealColumnsWithValues(compositeValue: T): Map<Column<*>, Any?>
 
     /**
-     * Return list of real columns, wrapped by this composite column
+     * Returns a list of real columns, wrapped by this composite column.
      */
     abstract fun getRealColumns(): List<Column<*>>
 
     /**
-     * Restore the composite value from its parts loaded from the DB
+     * Restores the composite value based on its component column values loaded from the database.
      */
     abstract fun restoreValueFromParts(parts: Map<Column<*>, Any?>): T
 
@@ -31,12 +31,14 @@ abstract class CompositeColumn<T> : Expression<T>() {
 }
 
 /**
- * Extension of [CompositeColumn] which consists of two columns
+ * Extension of [CompositeColumn] that consists of two columns, [column1] and [column2].
  */
 abstract class BiCompositeColumn<C1, C2, T>(
     protected val column1: Column<C1>,
     protected val column2: Column<C2>,
+    /** Transformation that receives the column's composite value and returns the parsed values of the underlying columns. */
     val transformFromValue: (T) -> Pair<C1?, C2?>,
+    /** Transformation that receives the retrieved values of [column1] and [column2] and returns a composite value. */
     val transformToValue: (Any?, Any?) -> T
 ) : CompositeColumn<T>() {
 

@@ -321,10 +321,15 @@ class Join(
     /** Return `true` if the specified [table] is already in this join, `false` otherwise. */
     fun alreadyInJoin(table: Table): Boolean = joinParts.any { it.joinPart == table }
 
+    /** Represents a component of an existing join relation. */
     internal class JoinPart(
+        /** The column set `JOIN` type. */
         val joinType: JoinType,
+        /** The column set to join to other components of the relation. */
         val joinPart: ColumnSet,
+        /** The [JoinCondition] expressions used to match rows from two joined tables. */
         val conditions: List<JoinCondition>,
+        /** The conditions used to join tables, placed in the `ON` clause. */
         val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
     ) {
         init {
@@ -333,6 +338,7 @@ class Join(
             ) { "Missing join condition on $${this.joinPart}" }
         }
 
+        /** Appends the SQL representation of this join component to the specified [QueryBuilder]. */
         fun describe(transaction: Transaction, builder: QueryBuilder) = with(builder) {
             append(" $joinType JOIN ")
             val isJoin = joinPart is Join
@@ -349,6 +355,7 @@ class Join(
             }
         }
 
+        /** Appends the SQL representation of the conditions in the `ON` clause to the specified [QueryBuilder]. */
         fun appendConditions(builder: QueryBuilder) = builder {
             conditions.appendTo(this, " AND ") { (pkColumn, fkColumn) -> append(pkColumn, " = ", fkColumn) }
             if (additionalConstraint != null) {
@@ -489,6 +496,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         type
     ).also { _columns.addColumn(it) }
 
+    /** Adds all wrapped column components of a [CompositeColumn] to the table. */
     fun <R, T : CompositeColumn<R>> registerCompositeColumn(column: T): T = column.apply {
         getRealColumns().forEach {
             _columns.addColumn(
@@ -545,8 +553,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /**
      * Returns the primary key of the table if present, `null` otherwise.
      *
-     * You have to define it explicitly by overriding that val instead or use one of predefined
-     * table types like [IntIdTable], [LongIdTable], or [UUIDIdTable]
+     * The primary key can be defined explicitly by overriding the property directly or by using one of the predefined
+     * table types like `IntIdTable`, `LongIdTable`, or `UUIDIdTable`.
      */
     open val primaryKey: PrimaryKey? = null
 
@@ -1068,6 +1076,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         return replaceColumn(this, newColumn)
     }
 
+    /** Marks this [CompositeColumn] as nullable. */
     @Suppress("UNCHECKED_CAST")
     fun <T : Any, C : CompositeColumn<T>> C.nullable(): CompositeColumn<T?> = apply {
         nullable = true
@@ -1390,6 +1399,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     override fun hashCode(): Int = tableName.hashCode()
 
+    /**
+     * Represents a special dummy `DUAL` table that is accessible by all users.
+     *
+     * This can be useful when needing to execute queries that do not rely on a specific table object.
+     * **Note:** `DUAL` tables are only automatically supported by Oracle. Please check the documentation.
+     */
     object Dual : Table("dual")
 }
 

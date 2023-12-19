@@ -1,13 +1,19 @@
 package org.jetbrains.exposed.sql
 
+/** Represents a temporary SQL identifier, [alias], for a [delegate] table. */
 class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
 
     override val tableName: String get() = alias
 
+    /** The table name along with its [alias]. */
     val tableNameWithAlias: String = "${delegate.tableName} $alias"
 
     private fun <T : Any?> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
 
+    /**
+     * Returns the original column from the [delegate] table, or `null` if the [column] is not associated
+     * with this table alias.
+     */
     fun <R> originalColumn(column: Column<R>): Column<R>? {
         @Suppress("UNCHECKED_CAST")
         return if (column.table == this) {
@@ -108,10 +114,21 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
     private fun <T : Any?> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
 }
 
+/**
+ * Creates a temporary identifier, [alias], for [this] table.
+ *
+ * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
+ * instead of [this] table object.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.JoinTests.testJoinWithAlias01
+ */
 fun <T : Table> T.alias(alias: String) = Alias(this, alias)
 
 /**
  * Creates a temporary identifier, [alias], for [this] query.
+ *
+ * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
+ * instead of [this] query object.
  *
  * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
  */
@@ -119,6 +136,9 @@ fun <T : AbstractQuery<*>> T.alias(alias: String) = QueryAlias(this, alias)
 
 /**
  * Creates a temporary identifier, [alias], for [this] expression.
+ *
+ * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
+ * instead of [this] expression object.
  *
  * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
  */

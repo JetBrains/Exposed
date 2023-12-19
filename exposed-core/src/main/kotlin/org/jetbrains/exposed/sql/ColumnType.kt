@@ -112,12 +112,14 @@ class AutoIncColumnType(
         if (delegate is IntegerColumnType) sequence.nextIntVal() else sequence.nextLongVal()
     }
 
-    /** Returns the name of the sequence used to generate new values for this auto-increment column. */
+    /** The name of the sequence used to generate new values for this auto-increment column. */
     val autoincSeq: String?
         get() = _autoincSeq.takeIf { currentDialect.supportsCreateSequence }
             ?: fallbackSeqName.takeIf { currentDialect.needsSequenceToAutoInc }
 
-    val nextValExpression: NextVal<*>? get() = nextValValue.takeIf { autoincSeq != null }
+    /** The SQL expression that advances the sequence of this auto-increment column. */
+    val nextValExpression: NextVal<*>?
+        get() = nextValValue.takeIf { autoincSeq != null }
 
     private fun resolveAutoIncType(columnType: IColumnType): String = when {
         columnType is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
@@ -172,7 +174,13 @@ internal fun IColumnType.rawSqlType(): IColumnType = when {
     else -> this
 }
 
-class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnType() {
+/**
+ * Identity column type for storing unique [EntityID] values.
+ */
+class EntityIDColumnType<T : Comparable<T>>(
+    /** The underlying wrapped column storing the identity values. */
+    val idColumn: Column<T>
+) : ColumnType() {
 
     init {
         require(idColumn.table is IdTable<*>) { "EntityId supported only for IdTables" }
@@ -669,9 +677,13 @@ open class VarCharColumnType(
 
 /**
  * Character column for storing strings of arbitrary length using the specified [collate] type.
- * [eagerLoading] means what content will be loaded immediately when data loaded from database.
  */
-open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = false) : StringColumnType(collate) {
+open class TextColumnType(
+    collate: String? = null,
+    /** Whether content will be loaded immediately when data is retrieved from the database. */
+    val eagerLoading: Boolean = false
+) : StringColumnType(collate) {
+    /** The exact SQL type representing this character type. */
     open fun preciseType() = currentDialect.dataTypeProvider.textType()
 
     override fun sqlType(): String = buildString {
