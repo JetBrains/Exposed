@@ -233,7 +233,6 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-
     val testDBsSupportingAnyAndAllFromSubQuries = TestDB.values().asList() - TestDB.SQLITE
     val testDBsSupportingAnyAndAllFromArrays = TestDB.postgreSQLRelatedDB + TestDB.allH2TestDB
 
