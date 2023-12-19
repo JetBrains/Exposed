@@ -117,6 +117,9 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
 /**
  * Creates a temporary identifier, [alias], for [this] table.
  *
+ * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
+ * instead of [this] table object.
+ *
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.JoinTests.testJoinWithAlias01
  */
 fun <T : Table> T.alias(alias: String) = Alias(this, alias)
@@ -124,12 +127,18 @@ fun <T : Table> T.alias(alias: String) = Alias(this, alias)
 /**
  * Creates a temporary identifier, [alias], for [this] query.
  *
+ * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
+ * instead of [this] query object.
+ *
  * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
  */
 fun <T : AbstractQuery<*>> T.alias(alias: String) = QueryAlias(this, alias)
 
 /**
  * Creates a temporary identifier, [alias], for [this] expression.
+ *
+ * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
+ * instead of [this] expression object.
  *
  * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
  */
