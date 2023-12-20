@@ -49,7 +49,7 @@ Releases of Exposed are available in the Maven Central repository. You can decla
 
 #### Gradle Groovy and Kotlin DSL
 
-**Warning:** You might need to set your Kotlin JVM target to 8 and when using Spring to 17 in order for it to work properly
+**Warning:** You might need to set your Kotlin JVM target to 8, and when using Spring to 17, in order for this to work properly:
 
 ```kotlin
 repositories {
@@ -264,7 +264,7 @@ fun main() {
             it.update(name, stringLiteral("   Prague   ").trim().substring(1, 2))
         }[Cities.id]
 
-        val pragueName = Cities.select { Cities.id eq pragueId }.single()[Cities.name]
+        val pragueName = Cities.selectAll().where { Cities.id eq pragueId }.single()[Cities.name]
         println("pragueName = $pragueName")
 
         Users.insert {
@@ -312,8 +312,8 @@ fun main() {
         println("Manual join:")
         
         (Users innerJoin Cities)
-            .slice(Users.name, Cities.name)
-            .select {
+            .select(Users.name, Cities.name)
+            .where {
                 (Users.id.eq("andrey") or Users.name.eq("Sergey")) and
                     Users.id.eq("sergey") and Users.cityId.eq(Cities.id)
             }.forEach { 
@@ -323,8 +323,8 @@ fun main() {
         println("Join with foreign key:")
 
         (Users innerJoin Cities)
-            .slice(Users.name, Users.cityId, Cities.name)
-            .select { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
+            .select(Users.name, Users.cityId, Cities.name)
+            .where { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
             .forEach { 
                 if (it[Users.cityId] != null) { 
                     println("${it[Users.name]} lives in ${it[Cities.name]}") 
@@ -337,8 +337,7 @@ fun main() {
         println("Functions and group by:")
 
         ((Cities innerJoin Users)
-            .slice(Cities.name, Users.id.count())
-            .selectAll()
+            .select(Cities.name, Users.id.count())
             .groupBy(Cities.name)
             ).forEach {
                 val cityName = it[Cities.name]
