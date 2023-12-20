@@ -126,14 +126,16 @@ class ThreadLocalTransactionManager(
                     if (db.connectsViaDataSource && loadDataSourceIsolationLevel && db.dataSourceIsolationLevel == -1) {
                         // retrieves the setting of the datasource connection & caches it
                         db.dataSourceIsolationLevel = transactionIsolation
+                        db.dataSourceReadOnly = readOnly
                     } else if (
                         !db.connectsViaDataSource ||
-                        db.dataSourceIsolationLevel != this@ThreadLocalTransaction.transactionIsolation
+                        db.dataSourceIsolationLevel != this@ThreadLocalTransaction.transactionIsolation ||
+                        db.dataSourceReadOnly != this@ThreadLocalTransaction.readOnly
                     ) {
                         // only set the level if there is no cached datasource value or if the value differs
                         transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                        readOnly = this@ThreadLocalTransaction.readOnly
                     }
-                    readOnly = this@ThreadLocalTransaction.readOnly
                     autoCommit = false
                 }
             }

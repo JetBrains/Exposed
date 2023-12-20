@@ -71,7 +71,7 @@ class SpringTransactionManagerTest {
         val tm = SpringTransactionManager(ds1)
         tm.executeAssert()
 
-        assertTrue(con1.verifyCallOrder("setReadOnly", "setAutoCommit", "commit", "close"))
+        assertTrue(con1.verifyCallOrder("setAutoCommit", "commit", "close"))
         assertEquals(1, con1.commitCallCount)
         assertEquals(1, con1.closeCallCount)
     }
@@ -178,7 +178,7 @@ class SpringTransactionManagerTest {
         val tm = SpringTransactionManager(transactionAwareDs)
         tm.executeAssert()
 
-        assertTrue(con1.verifyCallOrder("setReadOnly", "setAutoCommit", "commit"))
+        assertTrue(con1.verifyCallOrder("setAutoCommit", "commit"))
         assertEquals(1, con1.commitCallCount)
         assertTrue(con1.closeCallCount > 0)
     }
@@ -196,7 +196,7 @@ class SpringTransactionManagerTest {
             assertEquals(ex, e)
         }
 
-        assertTrue(con1.verifyCallOrder("setReadOnly", "setAutoCommit", "rollback"))
+        assertTrue(con1.verifyCallOrder("setAutoCommit", "rollback"))
         assertEquals(1, con1.rollbackCallCount)
         assertTrue(con1.closeCallCount > 0)
     }
@@ -211,7 +211,7 @@ class SpringTransactionManagerTest {
             tm.executeAssert()
         }
 
-        assertTrue(con1.verifyCallOrder("setReadOnly", "setAutoCommit", "commit", "isClosed", "rollback", "close"))
+        assertTrue(con1.verifyCallOrder("setAutoCommit", "commit", "isClosed", "rollback", "close"))
         assertEquals(1, con1.commitCallCount)
         assertEquals(1, con1.rollbackCallCount)
         assertEquals(1, con1.closeCallCount)
@@ -230,7 +230,7 @@ class SpringTransactionManagerTest {
             }
         }
 
-        assertTrue(con1.verifyCallOrder("setReadOnly", "setAutoCommit", "isClosed", "rollback", "close"))
+        assertTrue(con1.verifyCallOrder("setAutoCommit", "isClosed", "rollback", "close"))
         assertEquals(1, con1.rollbackCallCount)
         assertEquals(1, con1.closeCallCount)
     }
