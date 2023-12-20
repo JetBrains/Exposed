@@ -1,3 +1,43 @@
+# 0.46.0
+Infrastructure:
+* Kotlinx Datetime JVM 0.5.0
+* Joda Time 2.12.5
+* Kotlinx Serialization Json 1.6.2
+* log4j2 2.22.0
+* slf4j 2.0.9
+* MariaDB (V3) driver 3.3.1
+* PostgreSQL driver 42.7.1
+* h2-database (V2) driver 2.2.224
+* SQLite driver 3.44.1.0
+* Spring Framework 6.1.2
+* Spring Boot 3.2.0
+* Spring Security Crypto 5.8.8
+
+Breaking changes:
+* chore!: EXPOSED-239 Set `preserveKeywordCasing` flag to true by default by @bog-walk in https://github.com/JetBrains/Exposed/pull/1948
+* More details at [Breaking changes](BREAKING_CHANGES.md#0460)
+
+Features:
+* feat: EXPOSED-65 Design query DSL consistent with SQL language by @bog-walk in https://github.com/JetBrains/Exposed/pull/1916
+* More details in the [Migration guide](MIGRATION_GUIDE.md#migrating-from-0450-to-0460)
+
+Bug fixes:
+* perf: EXPOSED-204 Performance problem with getConnection() by @bog-walk in https://github.com/JetBrains/Exposed/pull/1943
+* fix: EXPOSED-242 [PostgreSQL] Cannot change connection setting in middle of a transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/1949
+
+Build:
+* build: Add dependencies to Version Catalog by @pank-su in https://github.com/JetBrains/Exposed/pull/1887
+
+Docs:
+* docs: Add KDoc for `databaseGenerated` feature by @joc-a in https://github.com/JetBrains/Exposed/pull/1904
+* WRS-3621 Update project configuration by @e5l in https://github.com/JetBrains/Exposed/pull/1911
+* docs: Add missing Wiki documentation by @bog-walk in https://github.com/JetBrains/Exposed/pull/1910
+* docs: Apply query DSL changes to writerside docs by @bog-walk in https://github.com/JetBrains/Exposed/pull/1926
+* docs: Add missing KDocs for exposed-core queries API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1941
+* docs: Add missing KDocs for exposed-core database API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1945
+* docs: Add missing KDocs for exposed-core table API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1946
+* docs: Add MIGRATION_GUIDE by @bog-walk in https://github.com/JetBrains/Exposed/pull/1933
+
 # 0.45.0
 Infrastructure:
 * Kotlin 1.9.21

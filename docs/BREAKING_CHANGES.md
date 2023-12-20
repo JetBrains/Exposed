@@ -1,5 +1,35 @@
 # Breaking Changes
 
+## 0.46.0
+
+* When an Exposed table object is created with a keyword identifier (a table or column name) it now retains the exact case used before being automatically quoted in generated SQL.
+  This primarily affects H2 and Oracle, both of which support folding identifiers to uppercase, and PostgreSQL, which folds identifiers to lower case.
+
+  If `preserveKeywordCasing = true` had been previously set in `DatabaseConfig` to remove logged warnings about any keyword identifiers, this can now be removed as the property is `true` by default.
+
+  To temporarily opt-out of this behavior and to not keep the defined casing of keyword identifiers, please set `preserveKeywordCasing = false` in `DatabaseConfig`:
+```kotlin
+object TestTable : Table("table") {
+    val col = integer("select")
+}
+
+// default behavior (preserveKeywordCasing is by default set to true)
+// H2 generates SQL -> CREATE TABLE IF NOT EXISTS "table" ("select" INT NOT NULL)
+
+// with opt-out
+Database.connect(
+    url = "jdbc:h2:mem:test",
+    driver = "org.h2.Driver",
+    databaseConfig = DatabaseConfig {
+        @OptIn(ExperimentalKeywordApi::class)
+        preserveKeywordCasing = false
+    }
+)
+// H2 generates SQL -> CREATE TABLE IF NOT EXISTS "TABLE" ("SELECT" INT NOT NULL)
+```
+
+**Note:** `preserveKeywordCasing` is an experimental flag and requires `@OptIn`. It may become deprecated in future releases.
+
 ## 0.44.0
 
 * `SpringTransactionManager` no longer extends `DataSourceTransactionManager`; instead, it directly extends `AbstractPlatformTransactionManager` while retaining the previous basic functionality.
