@@ -2071,6 +2071,7 @@ public abstract class org/jetbrains/exposed/sql/StringColumnType : org/jetbrains
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	protected final fun escape (Ljava/lang/String;)Ljava/lang/String;
+	protected final fun escapeAndQuote (Ljava/lang/String;)Ljava/lang/String;
 	public final fun getCollate ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
