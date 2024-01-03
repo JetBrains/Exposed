@@ -20,7 +20,12 @@ abstract class Op<T> : Expression<T>() {
 
     internal interface OpBoolean
 
-    /** Boolean operator corresponding to the SQL value `TRUE` */
+    /**
+     * Boolean operator that always evaluates to the SQL value `TRUE`.
+     *
+     * **Note** Some databases, like SQL Server and Oracle, do not support conditions like `WHERE 1` or `WHERE TRUE`.
+     * When using these databases, this operator will instead produce the condition `1 = 1`.
+     */
     object TRUE : Op<Boolean>(), OpBoolean {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
             when {
@@ -32,7 +37,12 @@ abstract class Op<T> : Expression<T>() {
         }
     }
 
-    /** Boolean operator corresponding to the SQL value `FALSE` */
+    /**
+     * Boolean operator that always evaluates to the SQL value `FALSE`.
+     *
+     * **Note** Some databases, like SQL Server and Oracle, do not support conditions like `WHERE 0` or `WHERE FALSE`.
+     * When using these databases, this operator will instead produce the condition `1 = 0`.
+     */
     object FALSE : Op<Boolean>(), OpBoolean {
         override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
             when {
