@@ -46,6 +46,10 @@ object DMLTestsData {
         val product: Column<String?> = varchar("product", 30).nullable()
         val amount: Column<BigDecimal> = decimal("amount", 8, 2)
     }
+
+    object SomeAmounts : Table() {
+        val amount: Column<BigDecimal> = decimal("amount", 8, 2)
+    }
 }
 
 @Suppress("LongMethod")
@@ -164,6 +168,31 @@ private fun insertSale(year: Int, month: Int, product: String?, amount: String) 
         it[sales.amount] = BigDecimal(amount)
     }
 }
+
+fun DatabaseTestsBase.withSomeAmounts(
+    statement: Transaction.(testDb: TestDB, someAmounts: DMLTestsData.SomeAmounts) -> Unit
+) {
+    val someAmounts = DMLTestsData.SomeAmounts
+
+    withTables(someAmounts) {
+        fun insertAmount(amount: BigDecimal) =
+            someAmounts.insert { it[someAmounts.amount] = amount }
+        insertAmount(BigDecimal("650.70"))
+        insertAmount(BigDecimal("1500.25"))
+        insertAmount(BigDecimal(1000))
+
+        statement(it, someAmounts)
+    }
+}
+
+fun DatabaseTestsBase.withSalesAndSomeAmounts(
+    statement: Transaction.(testDb: TestDB, sales: DMLTestsData.Sales, someAmounts: DMLTestsData.SomeAmounts) -> Unit
+) =
+    withSales { testDb, sales ->
+        withSomeAmounts { _, someAmounts ->
+            statement(testDb, sales, someAmounts)
+        }
+    }
 
 object OrgMemberships : IntIdTable() {
     val orgId = reference("org", Orgs.uid)

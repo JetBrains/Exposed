@@ -21,6 +21,8 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun jsonBType(): String = "JSONB"
 
+    override fun untypedAndUnsizedArrayType(): String = "ARRAY"
+
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && e.columnType is JsonColumnMarker && (currentDialect as? H2Dialect) == null -> {
             val cast = if (e.columnType.usesBinaryFormat) "::jsonb" else "::json"

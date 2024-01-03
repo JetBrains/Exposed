@@ -5,10 +5,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.ops.InListOrNotInListBaseOp
-import org.jetbrains.exposed.sql.ops.PairInListOp
-import org.jetbrains.exposed.sql.ops.SingleValueInListOp
-import org.jetbrains.exposed.sql.ops.TripleInListOp
+import org.jetbrains.exposed.sql.ops.*
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
@@ -111,6 +108,26 @@ fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = V
  * @param scale The scale of the decimal column expression returned.
  */
 fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
+
+// Array Comparisons
+
+/** Returns this subquery wrapped in the `ANY` operator. This function is not supported by the SQLite dialect. */
+fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, subQuery)
+
+/** Returns this array of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <T> anyFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(true, array)
+
+/** Returns this table wrapped in the `ANY` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
+fun <T> anyFrom(table: Table): Op<T> = AllAnyFromTableOp(true, table)
+
+/** Returns this subquery wrapped in the `ALL` operator. This function is not supported by the SQLite dialect. */
+fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false, subQuery)
+
+/** Returns this array of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <T> allFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(false, array)
+
+/** Returns this table wrapped in the `ALL` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
+fun <T> allFrom(table: Table): Op<T> = AllAnyFromTableOp(false, table)
 
 // Sequence Manipulation Functions
 
@@ -606,7 +623,7 @@ interface ISqlExpressionBuilder {
 
     // Array Comparisons
 
-    /** Checks if this expression is equals to any element from [list]. */
+    /** Checks if this expression is equal to any element from [list]. */
     infix fun <T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): InListOrNotInListBaseOp<T> = SingleValueInListOp(this, list, isInList = true)
 
     /**
@@ -662,6 +679,14 @@ interface ISqlExpressionBuilder {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
     }
+
+    // "IN (TABLE ...)" comparisons
+
+    /** Checks if this expression is equal to any element from the column of [table] with only a single column. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
+    infix fun <T> ExpressionWithColumnType<T>.inTable(table: Table): InTableOp = InTableOp(this, table, true)
+
+    /** Checks if this expression is not equal to any element from the column of [table] with only a single column. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
+    infix fun <T> ExpressionWithColumnType<T>.notInTable(table: Table): InTableOp = InTableOp(this, table, false)
 
     // Misc.
 
