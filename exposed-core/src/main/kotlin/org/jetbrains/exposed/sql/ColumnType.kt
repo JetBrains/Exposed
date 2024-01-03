@@ -546,6 +546,12 @@ abstract class StringColumnType(
     /** Returns the specified [value] with special characters escaped. */
     protected fun escape(value: String): String = value.map { charactersToEscape[it] ?: it }.joinToString("")
 
+    /** Returns the specified [value] with special characters escaped and wrapped in quotations, if necessary. */
+    protected fun escapeAndQuote(value: String): String = when (currentDialect) {
+        is PostgreSQLDialect -> "\"${escape(value)}\""
+        else -> escape(value)
+    }
+
     override fun valueFromDB(value: Any): Any = when (value) {
         is Clob -> value.characterStream.readText()
         is ByteArray -> String(value)
@@ -597,7 +603,7 @@ open class CharColumnType(
     override fun sqlType(): String = buildString {
         append("CHAR($colLength)")
         if (collate != null) {
-            append(" COLLATE ${escape(collate)}")
+            append(" COLLATE ${escapeAndQuote(collate)}")
         }
     }
 
@@ -643,7 +649,7 @@ open class VarCharColumnType(
     override fun sqlType(): String = buildString {
         append(preciseType())
         if (collate != null) {
-            append(" COLLATE ${escape(collate)}")
+            append(" COLLATE ${escapeAndQuote(collate)}")
         }
     }
 
@@ -689,7 +695,7 @@ open class TextColumnType(
     override fun sqlType(): String = buildString {
         append(preciseType())
         if (collate != null) {
-            append(" COLLATE ${escape(collate)}")
+            append(" COLLATE ${escapeAndQuote(collate)}")
         }
     }
 
