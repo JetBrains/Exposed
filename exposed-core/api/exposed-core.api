@@ -978,6 +978,9 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun nthValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/NthValue;
 	public abstract fun ntile (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Ntile;
 	public abstract fun percentRank ()Lorg/jetbrains/exposed/sql/PercentRank;
+	public abstract fun plus (Ljava/lang/String;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Concat;
+	public abstract fun plus (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Concat;
+	public abstract fun plus (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Concat;
 	public abstract fun plus (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/PlusOp;
 	public abstract fun plus (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/PlusOp;
 	public abstract fun rank ()Lorg/jetbrains/exposed/sql/Rank;
@@ -1087,6 +1090,9 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun nthValue (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/NthValue;
 	public static fun ntile (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Ntile;
 	public static fun percentRank (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;)Lorg/jetbrains/exposed/sql/PercentRank;
+	public static fun plus (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Concat;
+	public static fun plus (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Concat;
+	public static fun plus (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Concat;
 	public static fun plus (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/PlusOp;
 	public static fun plus (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/PlusOp;
 	public static fun rank (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;)Lorg/jetbrains/exposed/sql/Rank;
@@ -2037,6 +2043,9 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun nthValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/NthValue;
 	public fun ntile (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Ntile;
 	public fun percentRank ()Lorg/jetbrains/exposed/sql/PercentRank;
+	public fun plus (Ljava/lang/String;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Concat;
+	public fun plus (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Concat;
+	public fun plus (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Concat;
 	public fun plus (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/PlusOp;
 	public fun plus (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/PlusOp;
 	public fun rank ()Lorg/jetbrains/exposed/sql/Rank;
