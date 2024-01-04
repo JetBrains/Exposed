@@ -1003,7 +1003,14 @@ class CustomEnumerationColumnType<T : Enum<T>>(
     override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
 }
 
-object UntypedAndUnsizedArrayColumnType : ColumnType() {
+/**
+ * Array column for storing arrays of any size and type.
+ *
+ * This column type only exists to allow registering an array as a valid SQL type for statement clauses generated
+ * using `anyFrom(array)` and `allFrom(array)`. It does not correctly process arrays for use in `nonNullValueToString()`
+ * and will be replaced with a full implementation of ArrayColumnType.
+ */
+internal object UntypedAndUnsizedArrayColumnType : ColumnType() {
     override fun sqlType(): String =
         currentDialect.dataTypeProvider.untypedAndUnsizedArrayType()
 }

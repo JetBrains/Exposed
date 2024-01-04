@@ -6,12 +6,17 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
 
-/** This function is only supported by PostgreSQL and H2 dialects. */
+/**
+ * Represents an SQL operator that checks if [expr] is equal to any element from a single-column [table].
+ *
+ * **Note** This operation is only supported by MySQL, PostgreSQL, and H2 dialects.
+ */
 class InTableOp(
+    /** Returns the expression compared to each element in the table's column. */
     val expr: Expression<*>,
-    /** the table to check against. */
+    /** Returns the single-column table to check against. */
     val table: Table,
-    /** Returns `true` if the check is inverted, `false` otherwise. */
+    /** Returns `false` if the check is inverted, `true` otherwise. */
     val isInTable: Boolean = true
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {

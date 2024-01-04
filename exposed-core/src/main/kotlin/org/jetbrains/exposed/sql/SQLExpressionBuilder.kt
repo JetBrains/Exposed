@@ -682,10 +682,18 @@ interface ISqlExpressionBuilder {
 
     // "IN (TABLE ...)" comparisons
 
-    /** Checks if this expression is equal to any element from the column of [table] with only a single column. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
+    /**
+     * Checks if this expression is equal to any element from the column of [table] with only a single column.
+     *
+     * **Note** This function is only supported by MySQL, PostgreSQL, and H2 dialects.
+     */
     infix fun <T> ExpressionWithColumnType<T>.inTable(table: Table): InTableOp = InTableOp(this, table, true)
 
-    /** Checks if this expression is not equal to any element from the column of [table] with only a single column. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
+    /**
+     * Checks if this expression is **not** equal to any element from the column of [table] with only a single column.
+     *
+     * **Note** This function is only supported by MySQL, PostgreSQL, and H2 dialects.
+     */
     infix fun <T> ExpressionWithColumnType<T>.notInTable(table: Table): InTableOp = InTableOp(this, table, false)
 
     // Misc.
