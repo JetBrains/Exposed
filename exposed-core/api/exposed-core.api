@@ -2413,11 +2413,6 @@ public final class org/jetbrains/exposed/sql/UnionAll : org/jetbrains/exposed/sq
 	public fun withDistinct (Z)Lorg/jetbrains/exposed/sql/SetOperation;
 }
 
-public final class org/jetbrains/exposed/sql/UntypedAndUnsizedArrayColumnType : org/jetbrains/exposed/sql/ColumnType {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/UntypedAndUnsizedArrayColumnType;
-	public fun sqlType ()Ljava/lang/String;
-}
-
 public final class org/jetbrains/exposed/sql/UpperCase : org/jetbrains/exposed/sql/Function {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;)V
 	public final fun getExpr ()Lorg/jetbrains/exposed/sql/Expression;
