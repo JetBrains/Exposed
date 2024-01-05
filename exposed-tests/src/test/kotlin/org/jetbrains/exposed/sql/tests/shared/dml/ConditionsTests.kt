@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -67,6 +68,44 @@ class ConditionsTests : DatabaseTestsBase() {
                 table.selectAll().where { table.number1 isDistinctFrom table.number2 }.map { it[table.id] },
                 listOf(differentNumberId, oneNullId)
             )
+        }
+    }
+
+    @Test
+    fun testComparisonOperatorsWithEntityIDColumns() {
+        val longTable = object : LongIdTable("long_table") {
+            val amount = long("amount")
+        }
+
+        fun selectIdWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<Long> {
+            val query = longTable.select(longTable.id).where(SqlExpressionBuilder.condition())
+            return query.map { it[longTable.id].value }
+        }
+
+        // SQL Server doesn't support an explicit id for auto-increment table
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), longTable) {
+            addLogger(StdOutSqlLogger)
+            val id1 = longTable.insertAndGetId {
+                it[id] = 1
+                it[amount] = 9999
+            }.value
+            val id2 = longTable.insertAndGetId {
+                it[id] = 2
+                it[amount] = 2
+            }.value
+            val id3 = longTable.insertAndGetId {
+                it[id] = 3
+                it[amount] = 1
+            }.value
+
+            // the incorrect overload operator would previously throw an exception and
+            // a warning would show about 'Type argument ... cannot be inferred ... incompatible upper bounds'
+            assertEqualLists(listOf(id2), selectIdWhere { longTable.id eq longTable.amount })
+            assertEqualLists(listOf(id1, id3), selectIdWhere { longTable.id neq longTable.amount })
+            assertEqualLists(listOf(id1), selectIdWhere { longTable.id less longTable.amount })
+            assertEqualLists(listOf(id1, id2), selectIdWhere { longTable.id lessEq longTable.amount })
+            assertEqualLists(listOf(id3), selectIdWhere { longTable.id greater longTable.amount })
+            assertEqualLists(listOf(id2, id3), selectIdWhere { longTable.id greaterEq longTable.amount })
         }
     }
 
