@@ -109,6 +109,12 @@ fun main(args: Array<String>) {
 
 See the [official documentation](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using.auto-configuration.disabling-specific) for more options to exclude auto-configuration classes.
 
+**Note:** The `ExposedAutoConfiguration` class adds `@EnableTransactionManagement` without setting any attributes. 
+This means that all attributes have their default values, including `mode = AdviceMode.PROXY` and `proxyTargetClass = false`. 
+If the type of [proxying mechanism](https://docs.spring.io/spring-framework/reference/core/aop/proxying.html)  is unexpected, 
+the attributes can be set to the required values in a separate `@EnableTransactionManagement` on the main configuration class 
+or in the `application.properties` file using the property `spring.aop.proxy-target-class`.
+
 ### Configuring Additional Transaction Managers
 
 Once Exposed has been configured as shown [above](#configuring-exposed), other transaction managers can also be registered by creating their own `@Configuration` class containing a declared transaction manager bean.

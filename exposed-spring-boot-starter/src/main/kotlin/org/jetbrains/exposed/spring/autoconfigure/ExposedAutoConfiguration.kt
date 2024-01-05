@@ -19,6 +19,12 @@ import javax.sql.DataSource
  * This should be applied on a Spring configuration class using:
  * `@ImportAutoConfiguration(ExposedAutoConfiguration::class)`
  *
+ * **Note** As part of the configuration, `@EnableTransactionManagement` is added without setting any attributes.
+ * This means that all attributes have their default values, including `mode = AdviceMode.PROXY` and
+ * `proxyTargetClass = false`. If the type of proxy mechanism is unexpected, the attributes can be set to the
+ * required values in a separate `@EnableTransactionManagement` on the main configuration class or in a configuration
+ * file using `spring.aop.proxy-target-class`.
+ *
  * @property applicationContext The Spring ApplicationContext container responsible for managing beans.
  */
 @AutoConfiguration(after = [DataSourceAutoConfiguration::class])
