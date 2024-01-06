@@ -1,6 +1,4 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.exposed.gradle.Versions
+import org.gradle.api.tasks.testing.logging.*
 
 plugins {
     kotlin("jvm") apply true
@@ -15,30 +13,30 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.kotlinCoroutines)
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-debug", Versions.kotlinCoroutines)
+    implementation(libs.kotlinx.coroutines)
+    implementation(libs.kotlinx.coroutines.debug)
 
     implementation(kotlin("test-junit"))
-    implementation("junit", "junit", "4.12")
-    implementation("org.hamcrest", "hamcrest-library", "1.3")
+    implementation(libs.junit)
 
     implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-dao"))
     implementation(project(":exposed-crypt"))
 
-    implementation("org.slf4j", "slf4j-api", Versions.slf4j)
-    implementation("org.apache.logging.log4j", "log4j-slf4j-impl", Versions.log4j2)
-    implementation("org.apache.logging.log4j", "log4j-api", Versions.log4j2)
-    implementation("org.apache.logging.log4j", "log4j-core", Versions.log4j2)
+    implementation(libs.slf4j)
+    implementation(libs.log4j.slf4j.impl)
+    implementation(libs.log4j.api)
+    implementation(libs.log4j.core)
 
-    implementation("com.zaxxer", "HikariCP", "4.0.3")
-    testCompileOnly("mysql", "mysql-connector-java", Versions.mysql80)
-    testCompileOnly("org.postgresql", "postgresql", Versions.postgre)
-    testCompileOnly("com.impossibl.pgjdbc-ng", "pgjdbc-ng", Versions.postgreNG)
-    compileOnly("com.h2database", "h2", Versions.h2)
-    testCompileOnly("org.xerial", "sqlite-jdbc", Versions.sqlLite3)
-    testImplementation("io.github.hakky54:logcaptor:2.9.0")
+    implementation(libs.hikariCP)
+    testCompileOnly(libs.mysql)
+    testCompileOnly(libs.postgre)
+    testCompileOnly(libs.pgjdbc.ng)
+    testCompileOnly(libs.mssql)
+    compileOnly(libs.h2)
+    testCompileOnly(libs.sqlite.jdbc)
+    testImplementation(libs.logcaptor)
 }
 
 tasks.withType<Test>().configureEach {

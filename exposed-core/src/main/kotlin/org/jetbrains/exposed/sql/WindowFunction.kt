@@ -154,6 +154,7 @@ class WindowFrameClause(
     /** Returns frame end bound. */
     private val end: WindowFrameBound? = null
 ) {
+    /** Appends the SQL representation of this window function clause to the specified [queryBuilder]. */
     fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         append(unit.name, " ")
 
@@ -170,8 +171,13 @@ class WindowFrameClause(
 
 /** Represents an SQL window function frame unit (also called mode). */
 enum class WindowFrameUnit {
+    /** A frame unit based on a fixed amount of rows before and/or after the current row. */
     ROWS,
+
+    /** A frame unit consisting of a logical range of rows, based on their value compared to the current row value. */
     RANGE,
+
+    /** A frame unit based on a logical range of rows around the current row, but with a distinct value count. */
     GROUPS
 }
 
@@ -214,6 +220,7 @@ sealed interface WindowFrameBound {
         }
     }
 
+    /** Appends the SQL representation of this window function clause to the specified [queryBuilder]. */
     fun toQueryBuilder(queryBuilder: QueryBuilder)
 }
 
@@ -277,7 +284,10 @@ object CurrentRowWindowFrameBound : WindowFrameBound, CurrentOrPreceding, Curren
 
 /** Represents window function frame bound direction. */
 enum class WindowFrameBoundDirection {
+    /** Gets rows before the current row. */
     PRECEDING,
+
+    /** Gets rows after the current row. */
     FOLLOWING
 }
 

@@ -1,3 +1,5 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
@@ -9,6 +11,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.util.*
+import kotlin.internal.LowPriorityInOverloadResolution
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
@@ -18,6 +21,9 @@ import kotlin.reflect.full.primaryConstructor
 
 /** Pair of expressions used to match rows from two joined tables. */
 typealias JoinCondition = Pair<Expression<*>, Expression<*>>
+
+/** Represents a subset of fields from a given source. */
+typealias Select = Slice
 
 /**
  * Represents a set of expressions, contained in the given column set.
@@ -96,11 +102,39 @@ abstract class ColumnSet : FieldSet {
     /** Creates a cross join relation with [otherTable]. */
     abstract fun crossJoin(otherTable: ColumnSet): Join
 
-    /** Specifies a subset of [columns] of this [ColumnSet]. */
+    @Deprecated(
+        message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+        replaceWith = ReplaceWith("select(column, *columns)"),
+        level = DeprecationLevel.WARNING
+    )
     fun slice(column: Expression<*>, vararg columns: Expression<*>): FieldSet = Slice(this, listOf(column) + columns)
 
-    /** Specifies a subset of [columns] of this [ColumnSet]. */
+    @Deprecated(
+        message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+        replaceWith = ReplaceWith("select(columns)"),
+        level = DeprecationLevel.WARNING
+    )
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
+
+    /**
+     * Creates a `SELECT` [Query] by selecting either a single [column], or a subset of [columns], from this [ColumnSet].
+     *
+     * The column set selected from may be either a [Table] or a [Join].
+     * Arguments provided to [column] and [columns] may be table object columns or function expressions.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
+     */
+    @LowPriorityInOverloadResolution
+    fun select(column: Expression<*>, vararg columns: Expression<*>): Query =
+        Query(Select(this, listOf(column) + columns), null)
+
+    /**
+     * Creates a `SELECT` [Query] using a list of [columns] or expressions from this [ColumnSet].
+     *
+     * The column set selected from may be either a [Table] or a [Join].
+     */
+    @LowPriorityInOverloadResolution
+    fun select(columns: List<Expression<*>>): Query = Query(Select(this, columns), null)
 }
 
 /** Creates an inner join relation with [otherTable] using [onColumn] and [otherColumn] as the join condition. */
@@ -287,10 +321,15 @@ class Join(
     /** Return `true` if the specified [table] is already in this join, `false` otherwise. */
     fun alreadyInJoin(table: Table): Boolean = joinParts.any { it.joinPart == table }
 
+    /** Represents a component of an existing join relation. */
     internal class JoinPart(
+        /** The column set `JOIN` type. */
         val joinType: JoinType,
+        /** The column set to join to other components of the relation. */
         val joinPart: ColumnSet,
+        /** The [JoinCondition] expressions used to match rows from two joined tables. */
         val conditions: List<JoinCondition>,
+        /** The conditions used to join tables, placed in the `ON` clause. */
         val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
     ) {
         init {
@@ -299,6 +338,7 @@ class Join(
             ) { "Missing join condition on $${this.joinPart}" }
         }
 
+        /** Appends the SQL representation of this join component to the specified [QueryBuilder]. */
         fun describe(transaction: Transaction, builder: QueryBuilder) = with(builder) {
             append(" $joinType JOIN ")
             val isJoin = joinPart is Join
@@ -315,6 +355,7 @@ class Join(
             }
         }
 
+        /** Appends the SQL representation of the conditions in the `ON` clause to the specified [QueryBuilder]. */
         fun appendConditions(builder: QueryBuilder) = builder {
             conditions.appendTo(this, " AND ") { (pkColumn, fkColumn) -> append(pkColumn, " = ", fkColumn) }
             if (additionalConstraint != null) {
@@ -345,15 +386,40 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         else -> javaClass.name.removePrefix("${javaClass.`package`.name}.").substringAfter('$').removeSuffix("Table")
     }
 
-    /** Returns the schema name, or null if one does not exist for this table. */
-    val schemaName: String? = if (name.contains(".")) name.substringBeforeLast(".") else null
+    /** Returns the schema name, or null if one does not exist for this table.
+     *
+     * If the table is quoted, a dot in the name is considered part of the table name and the whole string is taken to
+     * be the table name as is, so there would be no schema. If it is not quoted, whatever is after the dot is
+     * considered to be the table name, and whatever is before the dot is considered to be the schema.
+     */
+    val schemaName: String? = if (name.contains(".") && !name.isAlreadyQuoted()) {
+        name.substringBeforeLast(".")
+    } else {
+        null
+    }
 
-    internal val tableNameWithoutScheme: String get() = tableName.substringAfterLast(".")
+    /**
+     * Returns the table name without schema.
+     *
+     * If the table is quoted, a dot in the name is considered part of the table name and the whole string is taken to
+     * be the table name as is. If it is not quoted, whatever is after the dot is considered to be the table name.
+     */
+    internal val tableNameWithoutScheme: String
+        get() = if (!tableName.isAlreadyQuoted()) tableName.substringAfterLast(".") else tableName
 
-    // Table name may contain quotes, remove those before appending
-    internal val tableNameWithoutSchemeSanitized: String get() = tableNameWithoutScheme
-        .replace("\"", "")
-        .replace("'", "")
+    /**
+     * Returns the table name without schema, with all quotes removed.
+     *
+     * Used for two purposes:
+     * 1. Forming primary and foreign key names
+     * 2. Comparing table names from database metadata (except MySQL and MariaDB)
+     * @see org.jetbrains.exposed.sql.vendors.VendorDialect.metadataMatchesTable
+     */
+    internal val tableNameWithoutSchemeSanitized: String
+        get() = tableNameWithoutScheme
+            .replace("\"", "")
+            .replace("'", "")
+            .replace("`", "")
 
     private val _columns = mutableListOf<Column<*>>()
 
@@ -430,6 +496,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         type
     ).also { _columns.addColumn(it) }
 
+    /** Adds all wrapped column components of a [CompositeColumn] to the table. */
     fun <R, T : CompositeColumn<R>> registerCompositeColumn(column: T): T = column.apply {
         getRealColumns().forEach {
             _columns.addColumn(
@@ -486,8 +553,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /**
      * Returns the primary key of the table if present, `null` otherwise.
      *
-     * You have to define it explicitly by overriding that val instead or use one of predefined
-     * table types like [IntIdTable], [LongIdTable], or [UUIDIdTable]
+     * The primary key can be defined explicitly by overriding the property directly or by using one of the predefined
+     * table types like `IntIdTable`, `LongIdTable`, or `UUIDIdTable`.
      */
     open val primaryKey: PrimaryKey? = null
 
@@ -772,7 +839,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         defaultValueFun = defaultValue
     }
 
-    // Potential names: readOnly, generatable, dbGeneratable, dbGenerated, generated, generatedDefault, generatedInDb
+    /**
+     * Marks a column as `databaseGenerated` if the default value of the column is not known at the time of table creation
+     * and/or if it depends on other columns. It makes it possible to omit setting it when inserting a new record,
+     * without getting an error.
+     * The value for the column can be set by creating a TRIGGER or with a DEFAULT clause, for example.
+     */
     fun <T> Column<T>.databaseGenerated(): Column<T> = apply {
         isDatabaseGenerated = true
     }
@@ -1004,6 +1076,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         return replaceColumn(this, newColumn)
     }
 
+    /** Marks this [CompositeColumn] as nullable. */
     @Suppress("UNCHECKED_CAST")
     fun <T : Any, C : CompositeColumn<T>> C.nullable(): CompositeColumn<T?> = apply {
         nullable = true
@@ -1192,8 +1265,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this
         is ColumnType -> {
+            val q = if (tableName.contains('.')) "\"" else ""
+            val fallbackSeqName = "$q${tableName.replace("\"", "")}_${name}_seq$q"
             this.withColumnType(
-                AutoIncColumnType(columnType, idSeqName, "${tableName?.replace("\"", "")}_${name}_seq")
+                AutoIncColumnType(columnType, idSeqName, fallbackSeqName)
             )
         }
 
@@ -1214,21 +1289,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         }
     }
 
-    @Deprecated(
-        message = "This will be removed in future releases when the check becomes default in IdentifierManagerApi",
-        level = DeprecationLevel.WARNING
-    )
-    private fun String.warnIfUnflaggedKeyword() {
-        val warn = TransactionManager.currentOrNull()?.db?.identifierManager?.isUnflaggedKeyword(this) == true
-        if (warn) {
-            exposedLogger.warn(
-                "Keyword identifier used: '$this'. Case sensitivity may not be kept when quoted by default: '${inProperCase()}'. " +
-                    "To keep case sensitivity, opt-in and set 'preserveKeywordCasing' to true in DatabaseConfig block."
-            )
-        }
-    }
-
-    @Suppress("CyclomaticComplexMethod")
     override fun createStatement(): List<String> {
         val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
             Sequence(
@@ -1248,10 +1308,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table).also { tableName.warnIfUnflaggedKeyword() })
+            append(TransactionManager.current().identity(this@Table))
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { column ->
-                    column.descriptionDdl(false).also { column.name.warnIfUnflaggedKeyword() }
+                    column.descriptionDdl(false)
                 }
 
                 if (columns.any { it.isPrimaryConstraintWillBeDefined }) {
@@ -1324,6 +1384,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     override fun hashCode(): Int = tableName.hashCode()
 
+    /**
+     * Represents a special dummy `DUAL` table that is accessible by all users.
+     *
+     * This can be useful when needing to execute queries that do not rely on a specific table object.
+     * **Note:** `DUAL` tables are only automatically supported by Oracle. Please check the documentation.
+     */
     object Dual : Table("dual")
 }
 
@@ -1335,3 +1401,8 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
     else -> error("No target provided for update")
 }
+
+private fun String.isAlreadyQuoted(): Boolean =
+    listOf("\"", "'", "`").any { quoteString ->
+        startsWith(quoteString) && endsWith(quoteString)
+    }

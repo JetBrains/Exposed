@@ -25,7 +25,7 @@ class H2Tests : DatabaseTestsBase() {
                 it[Testing.string] = "one"
             }
 
-            assertEquals("one", Testing.select { Testing.id.eq(1) }.single()[Testing.string])
+            assertEquals("one", Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.string])
         }
     }
 
@@ -39,7 +39,7 @@ class H2Tests : DatabaseTestsBase() {
                 it[string] = "one"
             }
 
-            assertEquals("one", Testing.select { Testing.id.eq(1) }.single()[Testing.string])
+            assertEquals("one", Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.string])
         }
     }
 

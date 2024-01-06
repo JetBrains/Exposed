@@ -7,22 +7,30 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicReference
 
+/** Represents a unit block of work that is performed on a database. */
 interface TransactionInterface {
-
+    /** The database on which the transaction tasks are performed. */
     val db: Database
 
+    /** The database connection used by the transaction. */
     val connection: ExposedConnection<*>
 
+    /** The transaction isolation level of the transaction, which may differ from the set database level. */
     val transactionIsolation: Int
 
+    /** Whether the transaction is in read-only mode. */
     val readOnly: Boolean
 
+    /** The parent transaction of a nested transaction; otherwise, `null` if the transaction is a top-level instance. */
     val outerTransaction: Transaction?
 
+    /** Saves all changes since the last commit or rollback operation. */
     fun commit()
 
+    /** Reverts all changes since the last commit or rollback operation, or to the last set savepoint, if applicable. */
     fun rollback()
 
+    /** Closes the transaction and releases any savepoints. */
     fun close()
 }
 
@@ -47,31 +55,52 @@ private object NotInitializedManager : TransactionManager {
     }
 }
 
+/**
+ * Represents the manager registered to a database, which is responsible for creating new transactions
+ * and storing data related to the database and its transactions.
+ */
 interface TransactionManager {
-
+    /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
     var defaultIsolationLevel: Int
 
+    /** Whether transactions should be performed in read-only mode. Unless specified, the database default will be used. */
     var defaultReadOnly: Boolean
 
+    /** The default number of retries that will be performed in a transaction if an exception is thrown. */
     var defaultRepetitionAttempts: Int
 
+    /** The default minimum number of milliseconds to wait before retrying a transaction if an exception is thrown. */
     var defaultMinRepetitionDelay: Long
 
+    /** The default maximum number of milliseconds to wait before retrying a transaction if an exception is thrown. */
     var defaultMaxRepetitionDelay: Long
 
+    /**
+     * Returns a [Transaction] instance.
+     *
+     * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
+     * an existing transaction with the database not configured to [useNestedTransactions].
+     */
     fun newTransaction(
         isolation: Int = defaultIsolationLevel,
         readOnly: Boolean = defaultReadOnly,
         outerTransaction: Transaction? = null
     ): Transaction
 
+    /** Returns the current [Transaction], or `null` if none exists. */
     fun currentOrNull(): Transaction?
 
+    /** Sets the current thread's copy of the manager's thread-local variable to the specified [transaction]. */
     fun bindTransactionToThread(transaction: Transaction?)
 
     companion object {
         internal val currentDefaultDatabase = AtomicReference<Database>()
 
+        /**
+         * The database to use by default in all transactions.
+         *
+         * **Note** If this value is not set, the last [Database] instance created will be used.
+         */
         @Suppress("SpacingBetweenDeclarationsWithAnnotations")
         var defaultDatabase: Database?
             @Synchronized get() = currentDefaultDatabase.get() ?: databases.firstOrNull()
@@ -83,7 +112,9 @@ interface TransactionManager {
 
         private val registeredDatabases = ConcurrentHashMap<Database, TransactionManager>()
 
-        @Synchronized fun registerManager(database: Database, manager: TransactionManager) {
+        /** Associates the provided [database] with a specific [manager]. */
+        @Synchronized
+        fun registerManager(database: Database, manager: TransactionManager) {
             if (defaultDatabase == null) {
                 currentThreadManager.remove()
             }
@@ -94,7 +125,12 @@ interface TransactionManager {
             registeredDatabases[database] = manager
         }
 
-        @Synchronized fun closeAndUnregister(database: Database) {
+        /**
+         * Clears any association between the provided [database] and its [TransactionManager],
+         * and ensures that the [database] instance will not be available for use in future transactions.
+         */
+        @Synchronized
+        fun closeAndUnregister(database: Database) {
             val manager = registeredDatabases[database]
             manager?.let {
                 registeredDatabases.remove(database)
@@ -106,6 +142,13 @@ interface TransactionManager {
             }
         }
 
+        /**
+         * Returns the [TransactionManager] instance that is associated with the provided [database],
+         * or `null` if  a manager has not been registered for the [database].
+         *
+         * **Note** If the provided [database] is `null`, this will return the current thread's [TransactionManager]
+         * instance, which may not be initialized if `Database.connect()` was not called at some point previously.
+         */
         fun managerFor(database: Database?) = if (database != null) registeredDatabases[database] else manager
 
         private class TransactionManagerThreadLocal : ThreadLocal<TransactionManager>() {
@@ -133,19 +176,29 @@ interface TransactionManager {
 
         private val currentThreadManager = TransactionManagerThreadLocal()
 
+        /** The current thread's [TransactionManager] instance. */
         val manager: TransactionManager
             get() = currentThreadManager.get()
 
+        /** Sets the current thread's copy of the [TransactionManager] instance to the specified [manager]. */
         fun resetCurrent(manager: TransactionManager?) {
             manager?.let { currentThreadManager.set(it) } ?: currentThreadManager.remove()
         }
 
+        /** Returns the current [Transaction], or creates a new transaction with the provided [isolation] level. */
         fun currentOrNew(isolation: Int): Transaction = currentOrNull() ?: manager.newTransaction(isolation)
 
+        /** Returns the current [Transaction], or `null` if none exists. */
         fun currentOrNull(): Transaction? = manager.currentOrNull()
 
+        /**
+         * Returns the current [Transaction].
+         *
+         * @throws [IllegalStateException] If no transaction exists.
+         */
         fun current(): Transaction = currentOrNull() ?: error("No transaction in context.")
 
+        /** Whether any [TransactionManager] instance has been initialized by a database. */
         fun isInitialized(): Boolean = defaultDatabase != null
     }
 }
@@ -168,7 +221,12 @@ internal inline fun TransactionInterface.closeLoggingException(log: (Exception) 
     }
 }
 
+/**
+ * The [TransactionManager] instance that is associated with [this] database.
+ *
+ * @throws [RuntimeException] If a manager has not been registered for the database.
+ */
 @Suppress("TooGenericExceptionThrown")
 val Database?.transactionManager: TransactionManager
     get() = TransactionManager.managerFor(this)
-        ?: throw RuntimeException("database $this don't have any transaction manager")
+        ?: throw RuntimeException("Database $this does not have any transaction manager")

@@ -18,17 +18,17 @@
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-core</artifactId>
-      <version>0.44.0</version>
+      <version>0.45.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-dao</artifactId>
-      <version>0.44.0</version>
+      <version>0.45.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-jdbc</artifactId>
-      <version>0.44.0</version>
+      <version>0.45.0</version>
     </dependency>
 </dependencies>
 ]]>
@@ -37,7 +37,7 @@
     <tab title="Gradle Kotlin Script">
         <code-block lang="kotlin">
 <![CDATA[
-val exposedVersion: String = "0.44.0"
+val exposedVersion: String = "0.45.0"
 
 dependencies {
 implementation("org.jetbrains.exposed:exposed-core", exposedVersion)
@@ -85,6 +85,17 @@ transaction {
     addLogger(StdOutSqlLogger)
 }
 ```
+
+To log database calls when using Exposed with a **Spring Boot** application, add the following property to the `application.properties` file:
+
+```properties
+spring.exposed.show-sql=true
+```
+
+The `exposed-spring-boot-starter` [README](https://github.com/JetBrains/Exposed/tree/main/exposed-spring-boot-starter#configuring-exposed) 
+covers the necessary steps to configure Exposed to use this and any [other properties](https://github.com/JetBrains/Exposed/tree/main/exposed-spring-boot-starter#automatic-schema-creation).
+
+Alternatively, the `SpringTransactionManager` class has the parameter `showSql`, which can be set to `true` if a transaction manager bean is defined manually.
 
 ## Access Layers
 

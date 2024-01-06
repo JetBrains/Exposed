@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.*
 
 /**
- * Represents the SQL command that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
+ * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
  *
  * @param table Table to either insert values into or update values from.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,

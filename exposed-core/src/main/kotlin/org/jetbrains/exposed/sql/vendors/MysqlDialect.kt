@@ -285,9 +285,10 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override val supportsSetDefaultReferenceOption: Boolean = false
 
+    /** Returns `true` if the MySQL JDBC connector version is greater than or equal to 5.6. */
     fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
 
-    // Available from MySQL 8.0.19
+    /** Returns `true` if a MySQL JDBC connector is being used and its version is greater than or equal to 8.0. */
     fun isTimeZoneOffsetSupported(): Boolean = (currentDialect !is MariaDBDialect) && isMysql8
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
@@ -388,7 +389,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
         return when {
             schema.isEmpty() -> this == table.nameInDatabaseCaseUnquoted()
             else -> {
-                val sanitizedTableName = table.tableNameWithoutScheme
+                val sanitizedTableName = table.tableNameWithoutScheme.replace("`", "")
                 val nameInDb = "$schema.$sanitizedTableName".inProperCase()
                 this == nameInDb
             }

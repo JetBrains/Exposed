@@ -6,18 +6,15 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.lang.StringBuilder
 
 /**
- * Database Schema
+ * Represents a database schema.
  *
- * @param name the schema name
- * @param authorization owner_name Specifies the name of the database-level
- * principal that will own the schema.
- * @param password used only for oracle schema.
- * @param defaultTablespace used only for oracle schema.
- * @param temporaryTablespace used only for oracle schema.
- * @param quota used only for oracle schema.
- * @param on used only for oracle schema.
- *
- *
+ * @param name The schema name.
+ * @param authorization Specifies the name of the database-level principal that will own the schema.
+ * @param password Used only for Oracle schema.
+ * @param defaultTablespace Used only for Oracle schema.
+ * @param temporaryTablespace Used only for Oracle schema.
+ * @param quota Used only for Oracle schema.
+ * @param on Used only for Oracle schema.
  */
 data class Schema(
     private val name: String,
@@ -28,9 +25,11 @@ data class Schema(
     val quota: String? = null,
     val on: String? = null
 ) {
+    /** This schema's name in proper database casing. */
+    val identifier
+        get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
 
-    val identifier get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
-
+    /** The SQL statements that create this schema. */
     val ddl: List<String>
         get() = createStatement()
 
@@ -39,6 +38,7 @@ data class Schema(
      */
     fun exists(): Boolean = currentDialect.schemaExists(this)
 
+    /** Returns the SQL statements that create this schema. */
     fun createStatement(): List<String> {
         if (!currentDialect.supportsCreateSchema) {
             throw UnsupportedByDialectException("The current dialect doesn't support create schema statement", currentDialect)
@@ -47,6 +47,7 @@ data class Schema(
         return listOf(currentDialect.createSchema(this))
     }
 
+    /** Returns the SQL statements that drop this schema, as well as all its objects if [cascade] is `true`. */
     fun dropStatement(cascade: Boolean): List<String> {
         if (!currentDialect.supportsCreateSchema) {
             throw UnsupportedByDialectException("The current dialect doesn't support drop schema statement", currentDialect)
@@ -55,6 +56,7 @@ data class Schema(
         return listOf(currentDialect.dropSchema(this, cascade))
     }
 
+    /** Returns the SQL statements that set this schema as the current schema. */
     fun setSchemaStatement(): List<String> {
         if (!currentDialect.supportsCreateSchema) {
             throw UnsupportedByDialectException("The current dialect doesn't support schemas", currentDialect)

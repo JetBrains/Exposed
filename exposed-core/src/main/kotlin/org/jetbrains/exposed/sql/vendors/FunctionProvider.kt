@@ -389,7 +389,7 @@ abstract class FunctionProvider {
      * @param ignore Whether to ignore errors or not.
      * @param table Table to insert the new row into.
      * @param columns Columns to insert the values into.
-     * @param expr Expresion with the values to insert.
+     * @param expr Expression with the values to insert.
      * @param transaction Transaction where the operation is executed.
      */
     open fun insert(
@@ -539,7 +539,7 @@ abstract class FunctionProvider {
         val autoIncColumn = table.autoIncColumn
         val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression
         val dataColumnsWithoutAutoInc = autoIncColumn?.let { dataColumns - autoIncColumn } ?: dataColumns
-        val updateColumns = dataColumns.filter { it !in keyColumns }
+        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
 
         return with(QueryBuilder(true)) {
             +"MERGE INTO "
@@ -641,7 +641,7 @@ abstract class FunctionProvider {
      *
      * @param ignore Whether to ignore errors or not.
      * @param table Table to delete rows from.
-     * @param where Condition that decides the rows to update.
+     * @param where Condition that decides the rows to delete.
      * @param limit Maximum number of rows to delete.
      * @param transaction Transaction where the operation is executed.
      */

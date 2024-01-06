@@ -89,6 +89,7 @@ abstract class DataTypeProvider {
     /** Binary type for storing [UUID]. */
     open fun uuidType(): String = "BINARY(16)"
 
+    /** Returns a database-compatible object from the specified UUID [value]. */
     @Suppress("MagicNumber")
     open fun uuidToDB(value: UUID): Any =
         ByteBuffer.allocate(16).putLong(value.mostSignificantBits).putLong(value.leastSignificantBits).array()
@@ -127,6 +128,11 @@ abstract class DataTypeProvider {
     open fun jsonBType(): String =
         throw UnsupportedByDialectException("This vendor does not support binary JSON data type", currentDialect)
 
+    /** Data type for arrays with no specified size or element type, used only as types of [QueryParameter]s for PostgreSQL and H2.
+     * An array with no element type cannot be used for storing arrays in a column in either PostgreSQL or H2. */
+    open fun untypedAndUnsizedArrayType(): String =
+        throw UnsupportedByDialectException("This vendor does not support array data type", currentDialect)
+
     // Misc.
 
     /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */
@@ -144,6 +150,7 @@ abstract class DataTypeProvider {
         else -> "($e)"
     }
 
+    /** Returns the SQL representation of the specified [expression], to be used in an ORDER BY clause. */
     open fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
         queryBuilder.append((expression as? ExpressionAlias<*>)?.alias ?: expression, " ", sortOrder.code)
     }

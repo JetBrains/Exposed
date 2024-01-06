@@ -1,7 +1,5 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.hamcrest.MatcherAssert
-import org.hamcrest.Matchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -13,6 +11,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 import java.sql.SQLTransientException
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -76,7 +75,7 @@ class ConnectionExceptions {
             }
             fail("Should have thrown an exception")
         } catch (e: SQLException) {
-            MatcherAssert.assertThat(e.toString(), Matchers.containsString("BROKEN_SQL_THAT_CAUSES_EXCEPTION"))
+            assertContains(e.toString(), "BROKEN_SQL_THAT_CAUSES_EXCEPTION", ignoreCase = false)
             assertEquals(5, wrappingDataSource.connections.size)
             wrappingDataSource.connections.forEach {
                 assertFalse(it.commitCalled)

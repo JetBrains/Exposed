@@ -27,14 +27,14 @@ jobs:
       - name: "changed-files"
         run: |
           git fetch origin main:refs/remotes/origin/main
-          CHANGED_FILES=$(git --no-pager diff --name-only --diff-filter=dr origin/main HEAD -- . ':!exposed-tests' | grep '\(.*.kt\|.*.kts\)$' | tr '\n' , | rev | cut -c 2- | rev)
+          CHANGED_FILES=$(git --no-pager diff --name-only --diff-filter=dr origin/main HEAD | grep '\(.*.kt\|.*.kts\)$' | tr '\n' , | rev | cut -c 2- | rev)
           echo "Changed files: $CHANGED_FILES"
           echo "CHANGED_FILES=$CHANGED_FILES" >> "$GITHUB_ENV"
       # Resolves and installs a specific version of detekt on to a GitHub Actions Runner if not already present in the tool cache
       - name: "set-up-detekt"
         uses: peter-murray/setup-detekt@v2
         with:
-          detekt_version: 1.23.1
+          detekt_version: 1.23.4
       # Runs detekt on changed files
       - name: "run-detekt"
         run: |
@@ -45,7 +45,7 @@ jobs:
           fi
           
           echo "Running detekt check..."
-          DETEKT_ISSUES=$(detekt-cli --build-upon-default-config --config detekt/detekt-config.yml --plugins detekt/detekt-formatting-1.23.1.jar --input $CHANGED_FILES)
+          DETEKT_ISSUES=$(detekt-cli --build-upon-default-config --config detekt/detekt-config.yml --plugins detekt/detekt-formatting-1.23.4.jar --input $CHANGED_FILES)
           if [ -n "$DETEKT_ISSUES" ]; then
             echo "***********************************************"
             echo "$DETEKT_ISSUES"

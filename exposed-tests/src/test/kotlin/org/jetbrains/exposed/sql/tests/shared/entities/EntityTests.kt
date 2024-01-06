@@ -2,7 +2,10 @@ package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
-import org.jetbrains.exposed.dao.id.*
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
@@ -12,11 +15,15 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 object EntityTestsData {
 
@@ -88,6 +95,7 @@ object EntityTestsData {
     }
 }
 
+@Suppress("LargeClass")
 class EntityTests : DatabaseTestsBase() {
     @Test
     fun testDefaults01() {
@@ -483,7 +491,7 @@ class EntityTests : DatabaseTestsBase() {
         withTables(SelfReferenceTable) {
             val ref1 = SelfReferencedEntity.new { }
             ref1.parent = ref1.id
-            val refRow = SelfReferenceTable.select { SelfReferenceTable.id eq ref1.id }.single()
+            val refRow = SelfReferenceTable.selectAll().where { SelfReferenceTable.id eq ref1.id }.single()
             assertEquals(ref1.id._value, refRow[SelfReferenceTable.parentId]!!.value)
         }
     }
@@ -507,7 +515,7 @@ class EntityTests : DatabaseTestsBase() {
 
             assertEquals(2L, Post.all().count())
             assertEquals(2L, category1.posts.count())
-            assertEquals(2L, Posts.select { Posts.optCategory eq category1.uniqueId }.count())
+            assertEquals(2L, Posts.selectAll().where { Posts.optCategory eq category1.uniqueId }.count())
         }
     }
 
@@ -1483,7 +1491,7 @@ class EntityTests : DatabaseTestsBase() {
             }.value
             assertEquals(
                 10000uL,
-                CreditCards.select { CreditCards.id eq creditCardId }.single()[CreditCards.spendingLimit]
+                CreditCards.selectAll().where { CreditCards.id eq creditCardId }.single()[CreditCards.spendingLimit]
             )
 
             val creditCard = CreditCard.new {
@@ -1492,6 +1500,139 @@ class EntityTests : DatabaseTestsBase() {
                 flush()
             }
             assertEquals(10000uL, creditCard.spendingLimit)
+        }
+    }
+
+    object Countries : IdTable<String>("Countries") {
+        override val id = varchar("id", 3).uniqueIndex().entityId()
+        var name = text("name")
+    }
+
+    class Country(id: EntityID<String>) : Entity<String>(id) {
+        var name by Countries.name
+        val dishes by Dish referrersOn Dishes.country
+
+        companion object : EntityClass<String, Country>(Countries)
+    }
+
+    object Dishes : IntIdTable("Dishes") {
+        var name = text("name")
+        val country = reference("country_id", Countries)
+    }
+
+    class Dish(id: EntityID<Int>) : IntEntity(id) {
+        var name by Dishes.name
+        var country by Country referencedOn Dishes.country
+
+        companion object : IntEntityClass<Dish>(Dishes)
+    }
+
+    @Test
+    fun testEagerLoadingWithStringParentId() {
+        withDb { testDb ->
+            val db = testDb.connect {
+                keepLoadedReferencesOutOfTransaction = true
+            }
+            transaction(db) {
+                try {
+                    SchemaUtils.drop(Dishes, Countries)
+                    SchemaUtils.create(Countries, Dishes)
+
+                    val lebanonId = Countries.insertAndGetId {
+                        it[id] = "LB"
+                        it[name] = "Lebanon"
+                    }
+                    val lebanon = Country.findById(lebanonId)!!
+
+                    Dish.new {
+                        name = "Kebbeh"
+                        country = lebanon
+                    }
+
+                    Dish.new {
+                        name = "Mjaddara"
+                        country = lebanon
+                    }
+
+                    Dish.new {
+                        name = "Fatteh"
+                        country = lebanon
+                    }
+
+                    Country.all().with(Country::dishes)
+                } finally {
+                    SchemaUtils.drop(Dishes, Countries)
+                }
+            }
+        }
+    }
+
+    object Customers : IntIdTable("Customers") {
+        val emailAddress = varchar("emailAddress", 30).uniqueIndex()
+        val fullName = text("fullName")
+    }
+
+    class Customer(id: EntityID<Int>) : IntEntity(id) {
+        var emailAddress by Customers.emailAddress
+        var name by Customers.fullName
+
+        val orders by Order referrersOn Orders.customer
+
+        companion object : IntEntityClass<Customer>(Customers)
+    }
+
+    object Orders : IntIdTable("Orders") {
+        var orderName = text("orderName")
+        val customer = reference("customer", Customers.emailAddress)
+    }
+
+    class Order(id: EntityID<Int>) : IntEntity(id) {
+        var name by Orders.orderName
+        var customer by Customer referencedOn Orders.customer
+
+        companion object : IntEntityClass<Order>(Orders)
+    }
+
+    /**
+     * This test is for the case when a child references a parent but not using the parent's id column, but rather
+     * another column that is a unique index.
+     */
+    @Test
+    fun testEagerLoadingWithReferenceDifferentFromParentId() {
+        withDb { testDb ->
+            val db = testDb.connect {
+                keepLoadedReferencesOutOfTransaction = true
+            }
+            transaction(db) {
+                try {
+                    SchemaUtils.drop(Orders, Customers)
+                    SchemaUtils.create(Customers, Orders)
+
+                    val customer1 = Customer.new {
+                        emailAddress = "customer1@testing.com"
+                        name = "Customer1"
+                    }
+
+                    val order1 = Order.new {
+                        name = "Order1"
+                        customer = customer1
+                    }
+
+                    val order2 = Order.new {
+                        name = "Order2"
+                        customer = customer1
+                    }
+
+                    Customer.all().with(Customer::orders)
+
+                    val cache = this.entityCache
+
+                    assertEquals(true, cache.getReferrers<Order>(customer1.id, Orders.customer)?.contains(order1))
+                    assertEquals(true, cache.getReferrers<Order>(customer1.id, Orders.customer)?.contains(order2))
+                } finally {
+                    SchemaUtils.drop(Orders, Customers)
+                }
+            }
         }
     }
 }

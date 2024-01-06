@@ -134,7 +134,6 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
         var p2: EntityTests.Post by Delegates.notNull()
         executeOnH2(EntityTests.Boards, EntityTests.Posts) {
             transaction(db) {
-
                 b1 = EntityTests.Board.new {
                     name = "test-board"
                 }

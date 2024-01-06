@@ -53,6 +53,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
     }
 
     @Test
+    @Suppress("UseCheckOrError")
     fun `test outer transaction restored after nested transaction failed`() {
         withTables(DMLTestsData.Cities) {
             assertNotNull(TransactionManager.currentOrNull())

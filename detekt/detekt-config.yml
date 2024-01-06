@@ -33,6 +33,9 @@ formatting:
         maxLineLength: 166
 
 style:
+    DestructuringDeclarationWithTooManyEntries:
+        active: true
+        maxDestructuringEntries: 4
     MaxLineLength:
         active: false
         maxLineLength: 166

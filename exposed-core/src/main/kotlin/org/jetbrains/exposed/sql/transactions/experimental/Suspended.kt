@@ -56,10 +56,13 @@ internal class TransactionCoroutineElement(
 }
 
 /**
- * Creates a new `TransactionScope` then calls the specified suspending [statement], suspends until it completes, and returns the result.
+ * Creates a new `TransactionScope` then calls the specified suspending [statement], suspends until it completes,
+ * and returns the result.
  *
  * The `TransactionScope` is derived from a new `Transaction` and a given coroutine [context],
- * or the current `coroutineContext` if no [context] is provided.
+ * or the current [CoroutineContext] if no [context] is provided.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.CoroutineTests.suspendedTx
  */
 suspend fun <T> newSuspendedTransaction(
     context: CoroutineContext? = null,
@@ -74,8 +77,10 @@ suspend fun <T> newSuspendedTransaction(
 /**
  * Calls the specified suspending [statement], suspends until it completes, and returns the result.
  *
- * The resulting `TransactionScope` is derived from the current `coroutineContext` if the latter already holds [this] `Transaction`;
- * otherwise, a new scope is created using [this] `Transaction` and a given coroutine [context].
+ * The resulting `TransactionScope` is derived from the current [CoroutineContext] if the latter already holds
+ * [this] `Transaction`; otherwise, a new scope is created using [this] `Transaction` and a given coroutine [context].
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.CoroutineTests.suspendedTx
  */
 suspend fun <T> Transaction.withSuspendTransaction(
     context: CoroutineContext? = null,
@@ -86,10 +91,12 @@ suspend fun <T> Transaction.withSuspendTransaction(
     }
 
 /**
- * Creates a new `TransactionScope` and returns its future result as an implementation of `Deferred`.
+ * Creates a new `TransactionScope` and returns its future result as an implementation of [Deferred].
  *
  * The `TransactionScope` is derived from a new `Transaction` and a given coroutine [context],
- * or the current `coroutineContext` if no [context] is provided.
+ * or the current [CoroutineContext] if no [context] is provided.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.CoroutineTests.suspendTxAsync
  */
 suspend fun <T> suspendedTransactionAsync(
     context: CoroutineContext? = null,

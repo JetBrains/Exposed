@@ -49,7 +49,7 @@ Releases of Exposed are available in the Maven Central repository. You can decla
 
 #### Gradle Groovy and Kotlin DSL
 
-**Warning:** You might need to set your Kotlin JVM target to 8 and when using Spring to 17 in order for it to work properly
+**Warning:** You might need to set your Kotlin JVM target to 8, and when using Spring to 17, in order for this to work properly:
 
 ```kotlin
 repositories {
@@ -81,52 +81,52 @@ repositories {
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-core</artifactId>
-        <version>0.44.0</version>
+        <version>0.45.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-crypt</artifactId>
-        <version>0.44.0</version>
+        <version>0.45.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-dao</artifactId>
-        <version>0.44.0</version>
+        <version>0.45.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-java-time</artifactId>
-        <version>0.44.0</version>
+        <version>0.45.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-jdbc</artifactId>
-        <version>0.44.0</version>
+        <version>0.45.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-jodatime</artifactId>
-        <version>0.44.0</version>
+        <version>0.45.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-json</artifactId>
-        <version>0.44.0</version>
+        <version>0.45.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-kotlin-datetime</artifactId>
-        <version>0.44.0</version>
+        <version>0.45.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-money</artifactId>
-        <version>0.44.0</version>
+        <version>0.45.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-spring-boot-starter</artifactId>
-        <version>0.44.0</version>
+        <version>0.45.0</version>
     </dependency>
 </dependencies>
 
@@ -136,20 +136,20 @@ repositories {
 
 ```groovy
 dependencies {
-    implementation 'org.jetbrains.exposed:exposed-core:0.44.0'
-    implementation 'org.jetbrains.exposed:exposed-crypt:0.44.0'
-    implementation 'org.jetbrains.exposed:exposed-dao:0.44.0'
-    implementation 'org.jetbrains.exposed:exposed-jdbc:0.44.0'
+    implementation 'org.jetbrains.exposed:exposed-core:0.45.0'
+    implementation 'org.jetbrains.exposed:exposed-crypt:0.45.0'
+    implementation 'org.jetbrains.exposed:exposed-dao:0.45.0'
+    implementation 'org.jetbrains.exposed:exposed-jdbc:0.45.0'
     
-    implementation 'org.jetbrains.exposed:exposed-jodatime:0.44.0'
+    implementation 'org.jetbrains.exposed:exposed-jodatime:0.45.0'
     // or
-    implementation 'org.jetbrains.exposed:exposed-java-time:0.44.0'
+    implementation 'org.jetbrains.exposed:exposed-java-time:0.45.0'
     // or
-    implementation 'org.jetbrains.exposed:exposed-kotlin-datetime:0.44.0'
+    implementation 'org.jetbrains.exposed:exposed-kotlin-datetime:0.45.0'
     
-    implementation 'org.jetbrains.exposed:exposed-json:0.44.0'
-    implementation 'org.jetbrains.exposed:exposed-money:0.44.0'
-    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.44.0'
+    implementation 'org.jetbrains.exposed:exposed-json:0.45.0'
+    implementation 'org.jetbrains.exposed:exposed-money:0.45.0'
+    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.45.0'
 }
 ```
 
@@ -180,7 +180,7 @@ dependencies {
 and in `gradle.properties`
 
 ```
-exposedVersion=0.44.0
+exposedVersion=0.45.0
 ```
 
 ## Samples
@@ -264,7 +264,7 @@ fun main() {
             it.update(name, stringLiteral("   Prague   ").trim().substring(1, 2))
         }[Cities.id]
 
-        val pragueName = Cities.select { Cities.id eq pragueId }.single()[Cities.name]
+        val pragueName = Cities.selectAll().where { Cities.id eq pragueId }.single()[Cities.name]
         println("pragueName = $pragueName")
 
         Users.insert {
@@ -312,8 +312,8 @@ fun main() {
         println("Manual join:")
         
         (Users innerJoin Cities)
-            .slice(Users.name, Cities.name)
-            .select {
+            .select(Users.name, Cities.name)
+            .where {
                 (Users.id.eq("andrey") or Users.name.eq("Sergey")) and
                     Users.id.eq("sergey") and Users.cityId.eq(Cities.id)
             }.forEach { 
@@ -323,8 +323,8 @@ fun main() {
         println("Join with foreign key:")
 
         (Users innerJoin Cities)
-            .slice(Users.name, Users.cityId, Cities.name)
-            .select { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
+            .select(Users.name, Users.cityId, Cities.name)
+            .where { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
             .forEach { 
                 if (it[Users.cityId] != null) { 
                     println("${it[Users.name]} lives in ${it[Cities.name]}") 
@@ -337,8 +337,7 @@ fun main() {
         println("Functions and group by:")
 
         ((Cities innerJoin Users)
-            .slice(Cities.name, Users.id.count())
-            .selectAll()
+            .select(Cities.name, Users.id.count())
             .groupBy(Cities.name)
             ).forEach {
                 val cityName = it[Cities.name]

@@ -70,10 +70,10 @@ class OrderByTests : DatabaseTestsBase() {
     @Test
     fun testOrderBy04() {
         withCitiesAndUsers { cities, users, _ ->
-            val r = (cities innerJoin users).slice(
+            val r = (cities innerJoin users).select(
                 cities.name,
                 users.id.count()
-            ).selectAll().groupBy(cities.name).orderBy(cities.name).toList()
+            ).groupBy(cities.name).orderBy(cities.name).toList()
             assertEquals(2, r.size)
             assertEquals("Munich", r[0][cities.name])
             assertEquals(2, r[0][users.id.count()])
@@ -119,10 +119,8 @@ class OrderByTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, _ ->
             val expression = wrapAsExpression<Int>(
                 users
-                    .slice(users.id.count())
-                    .select {
-                        cities.id eq users.cityId
-                    }
+                    .select(users.id.count())
+                    .where { cities.id eq users.cityId }
             )
 
             val result = cities

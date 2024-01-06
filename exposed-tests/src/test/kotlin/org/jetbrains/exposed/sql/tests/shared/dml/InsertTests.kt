@@ -56,7 +56,7 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    private val insertIgnoreUnsupportedDB = TestDB.values().toList() -
+    private val insertIgnoreUnsupportedDB = TestDB.entries -
         listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
 
     @Test
@@ -178,18 +178,21 @@ class InsertTests : DatabaseTestsBase() {
             }
 
             assertEquals(userNamesWithCityIds.size, generatedIds.size)
-            assertEquals(userNamesWithCityIds.size.toLong(), users.select { users.name inList userNamesWithCityIds.map { it.first } }.count())
+            assertEquals(
+                userNamesWithCityIds.size.toLong(),
+                users.selectAll().where { users.name inList userNamesWithCityIds.map { it.first } }.count()
+            )
         }
     }
 
     @Test
-    fun `batchInserting using a sequence should work`() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
+    fun testBatchInsertWithSequence() {
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
             val names = List(25) { UUID.randomUUID().toString() }.asSequence()
-            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+            cities.batchInsert(names) { name -> this[cities.name] = name }
 
-            val batchesSize = Cities.selectAll().count()
+            val batchesSize = cities.selectAll().count()
 
             assertEquals(25, batchesSize)
         }
@@ -197,12 +200,12 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun `batchInserting using empty sequence should work`() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
             val names = emptySequence<String>()
-            Cities.batchInsert(names) { name -> this[Cities.name] = name }
+            cities.batchInsert(names) { name -> this[cities.name] = name }
 
-            val batchesSize = Cities.selectAll().count()
+            val batchesSize = cities.selectAll().count()
 
             assertEquals(0, batchesSize)
         }
@@ -267,10 +270,10 @@ class InsertTests : DatabaseTestsBase() {
             }
 
             assertEquals(id1, entityID)
-            val row1 = stringTable.select { stringTable.id eq entityID }.singleOrNull()
+            val row1 = stringTable.selectAll().where { stringTable.id eq entityID }.singleOrNull()
             assertEquals(row1?.get(stringTable.id), entityID)
 
-            val row2 = stringTable.select { stringTable.id like "id%" }.singleOrNull()
+            val row2 = stringTable.selectAll().where { stringTable.id like "id%" }.singleOrNull()
             assertEquals(row2?.get(stringTable.id), entityID)
         }
     }
@@ -284,7 +287,7 @@ class InsertTests : DatabaseTestsBase() {
         fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
 
         fun verify(value: String) {
-            val row = tbl.select { tbl.string eq value }.single()
+            val row = tbl.selectAll().where { tbl.string eq value }.single()
             assertEquals(row[tbl.string], value)
         }
 
@@ -320,7 +323,7 @@ class InsertTests : DatabaseTestsBase() {
         }
 
         fun verify(value: String) {
-            val row = tbl2.select { tbl2.string2 eq value }.single()
+            val row = tbl2.selectAll().where { tbl2.string2 eq value }.single()
             assertEquals(row[tbl2.string2], value)
         }
 
@@ -331,7 +334,7 @@ class InsertTests : DatabaseTestsBase() {
 
             val expr1 = tbl1.string1.trim().substring(2, 4)
             tbl2.insert {
-                it[string2] = wrapAsExpression(tbl1.slice(expr1).select { tbl1.id eq id })
+                it[string2] = wrapAsExpression(tbl1.select(expr1).where { tbl1.id eq id })
             }
 
             verify("exp1")
@@ -429,33 +432,33 @@ class InsertTests : DatabaseTestsBase() {
             tab2.insert { it[id] = "bar" }
 
             // Use sub query in an insert
-            tab1.insert { it[id] = tab2.slice(tab2.id).select { tab2.id eq "foo" } }
+            tab1.insert { it[id] = tab2.select(tab2.id).where { tab2.id eq "foo" } }
 
             // Check inserted data
-            val insertedId = tab1.slice(tab1.id).selectAll().single()[tab1.id]
+            val insertedId = tab1.select(tab1.id).single()[tab1.id]
             assertEquals("foo", insertedId)
 
             // Use sub query in an update
-            tab1.update({ tab1.id eq "foo" }) { it[id] = tab2.slice(tab2.id).select { tab2.id eq "bar" } }
+            tab1.update({ tab1.id eq "foo" }) { it[id] = tab2.select(tab2.id).where { tab2.id eq "bar" } }
 
             // Check updated data
-            val updatedId = tab1.slice(tab1.id).selectAll().single()[tab1.id]
+            val updatedId = tab1.select(tab1.id).single()[tab1.id]
             assertEquals("bar", updatedId)
         }
     }
 
     @Test fun testGeneratedKey04() {
-        val CharIdTable = object : IdTable<String>("charId") {
+        val charIdTable = object : IdTable<String>("charId") {
             override val id = varchar("id", 50)
-                    .clientDefault { UUID.randomUUID().toString() }
-                    .entityId()
+                .clientDefault { UUID.randomUUID().toString() }
+                .entityId()
             val foo = integer("foo")
 
             override val primaryKey: PrimaryKey = PrimaryKey(id)
         }
-        withTables(CharIdTable) {
-            val id = CharIdTable.insertAndGetId {
-                it[CharIdTable.foo] = 5
+        withTables(charIdTable) {
+            val id = charIdTable.insertAndGetId {
+                it[charIdTable.foo] = 5
             }
             assertNotNull(id.value)
         }
@@ -539,7 +542,7 @@ class InsertTests : DatabaseTestsBase() {
                 it[category] = null
             }
 
-            val inserted1 = EntityTests.Posts.select { EntityTests.Posts.id eq id1 }.single()
+            val inserted1 = EntityTests.Posts.selectAll().where { EntityTests.Posts.id eq id1 }.single()
             assertNull(inserted1[EntityTests.Posts.board])
             assertNull(inserted1[EntityTests.Posts.category])
 

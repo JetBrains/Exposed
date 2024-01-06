@@ -48,7 +48,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
 
     @Test
     fun testReadOnly() {
-        //Explanation: MariaDB driver never set readonly to true, MSSQL silently ignores the call, SQLLite does not
+        // Explanation: MariaDB driver never set readonly to true, MSSQL silently ignores the call, SQLLite does not
         // promise anything, H2 has very limited functionality
         val excludeSettings = TestDB.allH2TestDB + listOf(
             TestDB.MARIADB, TestDB.SQLITE,

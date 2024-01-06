@@ -48,7 +48,7 @@ enum class TestDB(
         connection = {
             "jdbc:mysql://127.0.0.1:3001/testdb?useSSL=false&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
         },
-        driver = "com.mysql.jdbc.Driver"
+        driver = "com.mysql.cj.jdbc.Driver"
     ),
     POSTGRESQL(
         { "jdbc:postgresql://127.0.0.1:3004/postgres?lc_messages=en_US.UTF-8" },
@@ -72,6 +72,8 @@ enum class TestDB(
         )
         transaction(Connection.TRANSACTION_READ_COMMITTED, db = tmp) {
             repetitionAttempts = 1
+
+            @Suppress("SwallowedException", "TooGenericExceptionCaught")
             try {
                 exec("DROP USER ExposedTest CASCADE")
             } catch (e: Exception) { // ignore
@@ -109,6 +111,7 @@ enum class TestDB(
     companion object {
         val allH2TestDB = listOf(H2, H2_MYSQL, H2_PSQL, H2_MARIADB, H2_ORACLE, H2_SQLSERVER)
         val mySqlRelatedDB = listOf(MYSQL, MARIADB, H2_MYSQL, H2_MARIADB)
+        val postgreSQLRelatedDB = listOf(POSTGRESQL, POSTGRESQLNG)
 
         fun enabledDialects(): Set<TestDB> {
             if (TEST_DIALECTS.isEmpty()) {

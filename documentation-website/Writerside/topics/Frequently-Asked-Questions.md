@@ -6,7 +6,7 @@ A: [Ilya Ryzhenkov](https://github.com/orangy/) (Squash maintainer) answers:
 
 ### Q: Can I use multiple Database Connections?
 
-A: Yes. See [[Working with a multiple databases|Transactions#working-with-a-multiple-databases]]
+A: Yes. See [[Working with multiple databases|Transactions#working-with-multiple-databases]]
 
 ### Q: Is `Array` column type supported?
 
@@ -25,7 +25,7 @@ A: Yes. See [[How to use Json and JsonB types|DataTypes#how-to-use-json-and-json
 
 A:
 ```kotlin
-val plainSQL = FooTable.select {}.prepareSQL(QueryBuilder(false)) 
+val plainSQL = FooTable.selectAll().where {}.prepareSQL(QueryBuilder(false)) 
 ```
 Use QueryBuiler with `false` - if you want to inline statement arguments, `true` - to see '?' in query.
 

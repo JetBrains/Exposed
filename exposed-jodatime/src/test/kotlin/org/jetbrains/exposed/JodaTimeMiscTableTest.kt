@@ -218,25 +218,25 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
                 it[dc] = dec
             }
 
-            tbl.checkRowFull(tbl.select { tbl.n.eq(42) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.nn.isNull() }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.nn.eq(null as Int?) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.n.eq(42) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.nn.isNull() }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.nn.eq(null as Int?) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
 
-            tbl.checkRowFull(tbl.select { tbl.d.eq(date) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.dn.isNull() }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.dn.eq(null as DateTime?) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.d.eq(date) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.dn.isNull() }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.dn.eq(null as DateTime?) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
 
-            tbl.checkRowFull(tbl.select { tbl.t.eq(time) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.tn.isNull() }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.tn.eq(null as DateTime?) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.t.eq(time) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.tn.isNull() }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.tn.eq(null as DateTime?) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
 
-            tbl.checkRowFull(tbl.select { tbl.e.eq(MiscTable.E.ONE) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.en.isNull() }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.en.eq(null as MiscTable.E?) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.e.eq(MiscTable.E.ONE) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.en.isNull() }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.en.eq(null as MiscTable.E?) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
 
-            tbl.checkRowFull(tbl.select { tbl.s.eq(sTest) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.sn.isNull() }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
-            tbl.checkRowFull(tbl.select { tbl.sn.eq(null as String?) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.s.eq(sTest) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.sn.isNull() }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.sn.eq(null as String?) }.single(), 13, null, -10, null, 42, null, date, null, time, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null, sTest, null, sTest, null, dec, null, null, null)
         }
     }
 
@@ -274,20 +274,20 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
                 it[dblcn] = 567.89
             }
 
-            tbl.checkRowFull(tbl.select { tbl.nn.eq(42) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRowFull(tbl.select { tbl.nn.neq<Int?>(null) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.nn.eq(42) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.nn.neq(null) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
 
-            tbl.checkRowFull(tbl.select { tbl.dn.eq(date) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRowFull(tbl.select { tbl.dn.isNotNull() }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.dn.eq(date) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.dn.isNotNull() }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
 
-            tbl.checkRowFull(tbl.select { tbl.t.eq(time) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRowFull(tbl.select { tbl.tn.isNotNull() }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.t.eq(time) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.tn.isNotNull() }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
 
-            tbl.checkRowFull(tbl.select { tbl.en.eq(eOne) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRowFull(tbl.select { tbl.en.isNotNull() }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.en.eq(eOne) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.en.isNotNull() }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
 
-            tbl.checkRowFull(tbl.select { tbl.sn.eq(sTest) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
-            tbl.checkRowFull(tbl.select { tbl.sn.isNotNull() }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.sn.eq(sTest) }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
+            tbl.checkRowFull(tbl.selectAll().where { tbl.sn.isNotNull() }.single(), 13, 13, -10, -10, 42, 42, date, date, time, time, eOne, eOne, eOne, eOne, sTest, sTest, sTest, sTest, dec, dec, 239.42f, 567.89)
         }
     }
 
@@ -371,7 +371,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
                 it.update(sn, tbl.s.substring(3, 255))
             }
 
-            val row = tbl.select { tbl.n eq 101 }.single()
+            val row = tbl.selectAll().where { tbl.n eq 101 }.single()
             tbl.checkRowFull(row, 13, null, -10, null, 101, null, date, null, time, null, eOne, null, eOne, null, "1234", "1234", "23456789", "3456789", dec, null, null, null)
         }
     }

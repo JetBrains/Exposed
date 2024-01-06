@@ -46,6 +46,11 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     return DateTimeFormat.forPattern(newFormat)
 }
 
+/**
+ * Column for storing dates, as [DateTime]. If [time] is set to `true`, both date and time data is stored.
+ *
+ * @sample org.jetbrains.exposed.sql.jodatime.datetime
+ */
 class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = time
     override fun sqlType(): String = if (time) {
@@ -84,6 +89,7 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
                 else -> DEFAULT_DATE_STRING_FORMATTER.parseDateTime(value)
             }
             is java.time.LocalDateTime -> DateTime.parse(value.toString())
+            is java.time.OffsetDateTime -> valueFromDB(value.toLocalDateTime()) as DateTime
             else -> valueFromDB(value.toString()) as DateTime
         }
         return when (time) {
@@ -94,10 +100,12 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
         // Since MySQL ConnectorJ 8.0.23, driver returns LocalDateTime instead of String for DateTime columns.
-        return if (time && currentDialect is MysqlDialect) {
-            rs.getObject(index, java.time.LocalDateTime::class.java)
-        } else {
-            super.readObject(rs, index)
+        return when {
+            time && currentDialect is MysqlDialect -> {
+                rs.getObject(index, java.time.LocalDateTime::class.java)
+            }
+            time && currentDialect is OracleDialect -> rs.getObject(index, java.sql.Timestamp::class.java)
+            else -> super.readObject(rs, index)
         }
     }
 
@@ -126,6 +134,11 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times with time zone, as [DateTime].
+ *
+ * @sample org.jetbrains.exposed.sql.jodatime.timestampWithTimeZone
+ */
 class DateTimeWithTimeZoneColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
 

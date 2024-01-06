@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.constraintNamePart
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.insertAndWait
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -273,7 +274,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
             val id1 = testTable.insertAndGetId { }
 
-            val row1 = testTable.select { testTable.id eq id1 }.single()
+            val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
             assertEquals("test", row1[testTable.s])
             assertEquals("testNullable", row1[testTable.sn])
             assertEquals(42, row1[testTable.l])
@@ -308,7 +309,7 @@ class DefaultsTest : DatabaseTestsBase() {
             val id = foo.insertAndGetId {
                 it[foo.name] = "bar"
             }
-            val result = foo.select { foo.id eq id }.single()
+            val result = foo.selectAll().where { foo.id eq id }.single()
 
             assertEquals(today, result[foo.defaultDateTime].toLocalDate())
             assertEquals(today, result[foo.defaultDate])
@@ -331,7 +332,7 @@ class DefaultsTest : DatabaseTestsBase() {
                 it[foo.defaultDateTime] = nonDefaultDate
             }
 
-            val result = foo.select { foo.id eq id }.single()
+            val result = foo.selectAll().where { foo.id eq id }.single()
 
             assertEquals("bar", result[foo.name])
             assertEqualDateTime(nonDefaultDate, result[foo.defaultDateTime])
@@ -340,7 +341,7 @@ class DefaultsTest : DatabaseTestsBase() {
                 it[foo.name] = "baz"
             }
 
-            val result2 = foo.select { foo.id eq id }.single()
+            val result2 = foo.selectAll().where { foo.id eq id }.single()
             assertEquals("baz", result2[foo.name])
             assertEqualDateTime(nonDefaultDate, result2[foo.defaultDateTime])
         }
@@ -357,7 +358,7 @@ class DefaultsTest : DatabaseTestsBase() {
             foo.insert { it[dt] = LocalDateTime.of(2019, 1, 1, 1, 1) }
             foo.insert { it[dt] = dt2020 }
             foo.insert { it[dt] = LocalDateTime.of(2021, 1, 1, 1, 1) }
-            val count = foo.select { foo.dt.between(dt2020.minusWeeks(1), dt2020.plusWeeks(1)) }.count()
+            val count = foo.selectAll().where { foo.dt.between(dt2020.minusWeeks(1), dt2020.plusWeeks(1)) }.count()
             assertEquals(1, count)
         }
     }
@@ -442,10 +443,39 @@ class DefaultsTest : DatabaseTestsBase() {
 
                 val id1 = testTable.insertAndGetId { }
 
-                val row1 = testTable.select { testTable.id eq id1 }.single()
+                val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
             }
+        }
+    }
+
+    @Test
+    fun testDefaultCurrentDateTime() {
+        val testDate = object : IntIdTable("TestDate") {
+            val time = datetime("time").defaultExpression(CurrentDateTime)
+        }
+
+        fun LocalDateTime.millis(): Long = this.toEpochSecond(ZoneOffset.UTC) * 1000
+
+        withTables(testDate) {
+            val duration: Long = 2000
+
+            repeat(2) {
+                testDate.insertAndWait(duration)
+            }
+
+            Thread.sleep(duration)
+
+            repeat(2) {
+                testDate.insertAndWait(duration)
+            }
+
+            val sortedEntries: List<LocalDateTime> = testDate.selectAll().map { it[testDate.time] }.sorted()
+
+            assertTrue(sortedEntries[1].millis() - sortedEntries[0].millis() >= 2000)
+            assertTrue(sortedEntries[2].millis() - sortedEntries[0].millis() >= 6000)
+            assertTrue(sortedEntries[3].millis() - sortedEntries[0].millis() >= 8000)
         }
     }
 }

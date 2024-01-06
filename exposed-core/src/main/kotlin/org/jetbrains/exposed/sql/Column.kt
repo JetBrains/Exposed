@@ -23,6 +23,7 @@ class Column<T>(
     /** Data type of the column. */
     override val columnType: IColumnType
 ) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
+    /** The foreign key constraint on this column, or `null` if the column is not referencing. */
     var foreignKey: ForeignKeyConstraint? = null
 
     /** Returns the column that this column references. */
@@ -37,6 +38,7 @@ class Column<T>(
     var defaultValueFun: (() -> T)? = null
     internal var dbDefaultValue: Expression<T>? = null
 
+    /** Returns the default value for this column on the database-side. */
     fun defaultValueInDb() = dbDefaultValue
 
     internal var isDatabaseGenerated: Boolean = false
@@ -82,6 +84,7 @@ class Column<T>(
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
+    /** Returns the SQL statements that modify this column according to differences in the provided [ColumnDiff]. */
     fun modifyStatements(columnDiff: ColumnDiff): List<String> = currentDialect.modifyColumn(this, columnDiff)
 
     override fun modifyStatement(): List<String> = currentDialect.modifyColumn(this, ColumnDiff.AllChanged)

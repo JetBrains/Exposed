@@ -112,12 +112,14 @@ class AutoIncColumnType(
         if (delegate is IntegerColumnType) sequence.nextIntVal() else sequence.nextLongVal()
     }
 
-    /** Returns the name of the sequence used to generate new values for this auto-increment column. */
+    /** The name of the sequence used to generate new values for this auto-increment column. */
     val autoincSeq: String?
         get() = _autoincSeq.takeIf { currentDialect.supportsCreateSequence }
             ?: fallbackSeqName.takeIf { currentDialect.needsSequenceToAutoInc }
 
-    val nextValExpression: NextVal<*>? get() = nextValValue.takeIf { autoincSeq != null }
+    /** The SQL expression that advances the sequence of this auto-increment column. */
+    val nextValExpression: NextVal<*>?
+        get() = nextValValue.takeIf { autoincSeq != null }
 
     private fun resolveAutoIncType(columnType: IColumnType): String = when {
         columnType is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
@@ -172,7 +174,13 @@ internal fun IColumnType.rawSqlType(): IColumnType = when {
     else -> this
 }
 
-class EntityIDColumnType<T : Comparable<T>>(val idColumn: Column<T>) : ColumnType() {
+/**
+ * Identity column type for storing unique [EntityID] values.
+ */
+class EntityIDColumnType<T : Comparable<T>>(
+    /** The underlying wrapped column storing the identity values. */
+    val idColumn: Column<T>
+) : ColumnType() {
 
     init {
         require(idColumn.table is IdTable<*>) { "EntityId supported only for IdTables" }
@@ -519,7 +527,7 @@ class CharacterColumnType : ColumnType() {
     override fun sqlType(): String = "CHAR"
     override fun valueFromDB(value: Any): Char = when (value) {
         is Char -> value
-        is Number -> value.toChar()
+        is Number -> value.toInt().toChar()
         is String -> value.single()
         else -> error("Unexpected value of type Char: $value of ${value::class.qualifiedName}")
     }
@@ -537,6 +545,12 @@ abstract class StringColumnType(
 ) : ColumnType() {
     /** Returns the specified [value] with special characters escaped. */
     protected fun escape(value: String): String = value.map { charactersToEscape[it] ?: it }.joinToString("")
+
+    /** Returns the specified [value] with special characters escaped and wrapped in quotations, if necessary. */
+    protected fun escapeAndQuote(value: String): String = when (currentDialect) {
+        is PostgreSQLDialect -> "\"${escape(value)}\""
+        else -> escape(value)
+    }
 
     override fun valueFromDB(value: Any): Any = when (value) {
         is Clob -> value.characterStream.readText()
@@ -589,7 +603,7 @@ open class CharColumnType(
     override fun sqlType(): String = buildString {
         append("CHAR($colLength)")
         if (collate != null) {
-            append(" COLLATE ${escape(collate)}")
+            append(" COLLATE ${escapeAndQuote(collate)}")
         }
     }
 
@@ -635,7 +649,7 @@ open class VarCharColumnType(
     override fun sqlType(): String = buildString {
         append(preciseType())
         if (collate != null) {
-            append(" COLLATE ${escape(collate)}")
+            append(" COLLATE ${escapeAndQuote(collate)}")
         }
     }
 
@@ -669,15 +683,19 @@ open class VarCharColumnType(
 
 /**
  * Character column for storing strings of arbitrary length using the specified [collate] type.
- * [eagerLoading] means what content will be loaded immediately when data loaded from database.
  */
-open class TextColumnType(collate: String? = null, val eagerLoading: Boolean = false) : StringColumnType(collate) {
+open class TextColumnType(
+    collate: String? = null,
+    /** Whether content will be loaded immediately when data is retrieved from the database. */
+    val eagerLoading: Boolean = false
+) : StringColumnType(collate) {
+    /** The exact SQL type representing this character type. */
     open fun preciseType() = currentDialect.dataTypeProvider.textType()
 
     override fun sqlType(): String = buildString {
         append(preciseType())
         if (collate != null) {
-            append(" COLLATE ${escape(collate)}")
+            append(" COLLATE ${escapeAndQuote(collate)}")
         }
     }
 
@@ -983,6 +1001,18 @@ class CustomEnumerationColumnType<T : Enum<T>>(
     override fun notNullValueToDB(value: Any): Any = toDb(value as T)
 
     override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
+}
+
+/**
+ * Array column for storing arrays of any size and type.
+ *
+ * This column type only exists to allow registering an array as a valid SQL type for statement clauses generated
+ * using `anyFrom(array)` and `allFrom(array)`. It does not correctly process arrays for use in `nonNullValueToString()`
+ * and will be replaced with a full implementation of ArrayColumnType.
+ */
+internal object UntypedAndUnsizedArrayColumnType : ColumnType() {
+    override fun sqlType(): String =
+        currentDialect.dataTypeProvider.untypedAndUnsizedArrayType()
 }
 
 // Date/Time columns

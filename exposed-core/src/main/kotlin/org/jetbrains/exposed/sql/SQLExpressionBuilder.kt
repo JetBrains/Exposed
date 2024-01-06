@@ -5,10 +5,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.ops.InListOrNotInListBaseOp
-import org.jetbrains.exposed.sql.ops.PairInListOp
-import org.jetbrains.exposed.sql.ops.SingleValueInListOp
-import org.jetbrains.exposed.sql.ops.TripleInListOp
+import org.jetbrains.exposed.sql.ops.*
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
@@ -25,12 +22,28 @@ fun <T : String?> Expression<T>.lowerCase(): LowerCase<T> = LowerCase(this)
 /** Converts this string expression to upper case. */
 fun <T : String?> Expression<T>.upperCase(): UpperCase<T> = UpperCase(this)
 
+/**
+ * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
+ *
+ * When [distinct] is set to `true`, duplicate values will be eliminated.
+ * [orderBy] can be used to sort values in the concatenated string.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupConcat
+ */
 fun <T : String?> Expression<T>.groupConcat(
     separator: String? = null,
     distinct: Boolean = false,
     orderBy: Pair<Expression<*>, SortOrder>
 ): GroupConcat<T> = GroupConcat(this, separator, distinct, orderBy)
 
+/**
+ * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
+ *
+ * When [distinct] is set to `true`, duplicate values will be eliminated.
+ * [orderBy] can be used to sort values in the concatenated string by one or more expressions.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupConcat
+ */
 fun <T : String?> Expression<T>.groupConcat(
     separator: String? = null,
     distinct: Boolean = false,
@@ -96,6 +109,26 @@ fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = V
  */
 fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
 
+// Array Comparisons
+
+/** Returns this subquery wrapped in the `ANY` operator. This function is not supported by the SQLite dialect. */
+fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, subQuery)
+
+/** Returns this array of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <T> anyFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(true, array)
+
+/** Returns this table wrapped in the `ANY` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
+fun <T> anyFrom(table: Table): Op<T> = AllAnyFromTableOp(true, table)
+
+/** Returns this subquery wrapped in the `ALL` operator. This function is not supported by the SQLite dialect. */
+fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false, subQuery)
+
+/** Returns this array of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <T> allFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(false, array)
+
+/** Returns this table wrapped in the `ALL` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
+fun <T> allFrom(table: Table): Op<T> = AllAnyFromTableOp(false, table)
+
 // Sequence Manipulation Functions
 
 /** Advances this sequence and returns the new value. */
@@ -134,8 +167,11 @@ fun CustomLongFunction(
     vararg params: Expression<*>
 ): CustomFunction<Long?> = CustomFunction(functionName, LongColumnType(), *params)
 
+/** Represents a pattern used for the comparison of string expressions. */
 data class LikePattern(
+    /** The string representation of a pattern to match. */
     val pattern: String,
+    /** The special character to use as the escape character. */
     val escapeChar: Char? = null
 ) {
 
@@ -149,6 +185,7 @@ data class LikePattern(
     }
 
     companion object {
+        /** Creates a [LikePattern] from the provided [text], with any special characters escaped using [escapeChar]. */
         fun ofLiteral(text: String, escapeChar: Char = '\\'): LikePattern {
             val likePatternSpecialChars = currentDialect.likePatternSpecialChars
             val nextExpectedPatternQueue = arrayListOf<Char>()
@@ -182,6 +219,7 @@ data class LikePattern(
     }
 }
 
+/** Represents all the operators available when building SQL expressions. */
 @Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions")
 interface ISqlExpressionBuilder {
 
@@ -312,6 +350,30 @@ interface ISqlExpressionBuilder {
 
     /** Adds the [other] expression to this expression. */
     infix operator fun <T, S : T> ExpressionWithColumnType<T>.plus(other: Expression<S>): PlusOp<T, S> = PlusOp(this, other, columnType)
+
+    /**
+     * Concatenate the value to the input expression.
+     *
+     * @param value The string value to be concatenated.
+     * @return The concatenated expression.
+     */
+    infix operator fun Expression<String>.plus(value: String): Concat = concat(this, stringLiteral(value))
+
+    /**
+     * Concatenate the value to the input expression.
+     *
+     * @param value The string value to be concatenated.
+     * @return The concatenated expression.
+     */
+    infix operator fun Expression<String>.plus(value: Expression<String>): Concat = concat(this, value)
+
+    /**
+     * Concatenate the value to the input expression.
+     *
+     * @param value The string value to be concatenated.
+     * @return The concatenated expression.
+     */
+    infix operator fun String.plus(value: Expression<String>): Concat = concat(stringLiteral(this), value)
 
     /** Subtracts the [t] value from this expression. */
     infix operator fun <T> ExpressionWithColumnType<T>.minus(t: T): MinusOp<T, T> = MinusOp(this, wrap(t), columnType)
@@ -560,6 +622,13 @@ interface ISqlExpressionBuilder {
         vararg others: A
     ): Coalesce<T?, S, R> = Coalesce(expr, alternate, others = others)
 
+    /**
+     * Compares [value] against any chained conditional expressions.
+     *
+     * If [value] is `null`, chained conditionals will be evaluated separately until the first is evaluated as `true`.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.ConditionsTests.nullOpInCaseTest
+     */
     fun case(value: Expression<*>? = null): Case = Case(value)
 
     // Subquery Expressions
@@ -578,7 +647,7 @@ interface ISqlExpressionBuilder {
 
     // Array Comparisons
 
-    /** Checks if this expression is equals to any element from [list]. */
+    /** Checks if this expression is equal to any element from [list]. */
     infix fun <T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): InListOrNotInListBaseOp<T> = SingleValueInListOp(this, list, isInList = true)
 
     /**
@@ -634,6 +703,22 @@ interface ISqlExpressionBuilder {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
     }
+
+    // "IN (TABLE ...)" comparisons
+
+    /**
+     * Checks if this expression is equal to any element from the column of [table] with only a single column.
+     *
+     * **Note** This function is only supported by MySQL, PostgreSQL, and H2 dialects.
+     */
+    infix fun <T> ExpressionWithColumnType<T>.inTable(table: Table): InTableOp = InTableOp(this, table, true)
+
+    /**
+     * Checks if this expression is **not** equal to any element from the column of [table] with only a single column.
+     *
+     * **Note** This function is only supported by MySQL, PostgreSQL, and H2 dialects.
+     */
+    infix fun <T> ExpressionWithColumnType<T>.notInTable(table: Table): InTableOp = InTableOp(this, table, false)
 
     // Misc.
 

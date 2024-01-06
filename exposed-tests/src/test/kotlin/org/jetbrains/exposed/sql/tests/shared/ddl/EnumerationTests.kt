@@ -27,7 +27,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 "enumColumn", sql,
                 { value ->
                     when {
-                        currentDialectTest is H2Dialect && value is Int -> DDLTests.Foo.values()[value]
+                        currentDialectTest is H2Dialect && value is Int -> DDLTests.Foo.entries[value]
                         else -> DDLTests.Foo.valueOf(value as String)
                     }
                 },
@@ -54,7 +54,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 var enum by EnumTable.enumColumn
             }
 
-            val EnumClass = object : IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
+            val enumClass = object : IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
 
             try {
                 if (currentDialectTest is PostgreSQLDialect) {
@@ -76,16 +76,16 @@ class EnumerationTests : DatabaseTestsBase() {
                     it[enumColumn] = DDLTests.Foo.Baz
                 }
 
-                val entity = EnumClass.new {
+                val entity = enumClass.new {
                     enum = DDLTests.Foo.Baz
                 }
                 assertEquals(DDLTests.Foo.Baz, entity.enum)
                 entity.id.value // flush entity
                 assertEquals(DDLTests.Foo.Baz, entity.enum)
-                assertEquals(DDLTests.Foo.Baz, EnumClass.reload(entity)!!.enum)
+                assertEquals(DDLTests.Foo.Baz, enumClass.reload(entity)!!.enum)
                 entity.enum = DDLTests.Foo.Bar
 //                flushCache()
-                assertEquals(DDLTests.Foo.Bar, EnumClass.reload(entity, true)!!.enum)
+                assertEquals(DDLTests.Foo.Bar, enumClass.reload(entity, true)!!.enum)
             } finally {
                 try {
                     SchemaUtils.drop(EnumTable)

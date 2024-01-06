@@ -4,6 +4,8 @@ import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
@@ -210,7 +212,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
 
     open fun searchQuery(op: Op<Boolean>): Query =
-        dependsOnTables.slice(dependsOnColumns).select { op }.setForUpdateStatus()
+        dependsOnTables.select(dependsOnColumns).where { op }.setForUpdateStatus()
 
     /**
      * Count the amount of entities that conform to the [op] statement.
@@ -221,7 +223,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      */
     fun count(op: Op<Boolean>? = null): Long {
         val countExpression = table.id.count()
-        val query = table.slice(countExpression).selectAll().notForUpdate()
+        val query = table.select(countExpression).notForUpdate()
         op?.let { query.adjustWhere { op } }
         return query.first()[countExpression]
     }
@@ -472,7 +474,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
                 distinctRefIds.forEach { id ->
                     cache.getOrPutReferrers(id, refColumn) { result[id]?.let { SizedCollection(it) } ?: emptySized() }.also {
                         if (keepLoadedReferenceOutOfTransaction) {
-                            findById(id)?.storeReferenceInCache(refColumn, it)
+                            val childEntity = find { refColumn eq id }.firstOrNull()
+                            childEntity?.storeReferenceInCache(refColumn, it)
                         }
                     }
                 }
@@ -484,17 +487,21 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             val finalQuery = if (parentTable.id in baseQuery.set.fields) {
                 baseQuery
             } else {
-                baseQuery.adjustSlice { slice(this.fields + parentTable.id) }
+                baseQuery.adjustSelect { select(fields + parentTable.id) }
                     .adjustColumnSet { innerJoin(parentTable, { refColumn }, { refColumn.referee!! }) }
             }
 
             val findQuery = wrapRows(finalQuery)
             val entities = getEntities(forUpdate, findQuery).distinct()
 
-            entities.groupBy { it.readValues[parentTable.id] }.forEach { (id, values) ->
-                cache.getOrPutReferrers(id, refColumn) { SizedCollection(values) }.also {
+            entities.groupBy { it.readValues[refColumn] }.forEach { (id, values) ->
+                val parentEntityId: EntityID<*> = parentTable.selectAll().where { refColumn.referee as Column<SID> eq id }
+                    .single()[parentTable.id]
+
+                cache.getOrPutReferrers(parentEntityId, refColumn) { SizedCollection(values) }.also {
                     if (keepLoadedReferenceOutOfTransaction) {
-                        findById(id as EntityID<ID>)?.storeReferenceInCache(refColumn, it)
+                        val childEntity = find { refColumn eq id }.firstOrNull()
+                        childEntity?.storeReferenceInCache(refColumn, it)
                     }
                 }
             }
@@ -532,7 +539,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
                 else -> (dependsOnColumns + linkTable.columns + sourceRefColumn).distinct()
             }
 
-            val query = entityTables.slice(columns).select { sourceRefColumn inList idsToLoad }
+            val query = entityTables.select(columns).where { sourceRefColumn inList idsToLoad }
             val targetEntities = mutableMapOf<EntityID<ID>, T>()
             val entitiesWithRefs = when (forUpdate) {
                 true -> query.forUpdate()

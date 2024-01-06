@@ -14,6 +14,15 @@ import org.springframework.core.type.filter.RegexPatternTypeFilter
 import org.springframework.transaction.annotation.Transactional
 import java.util.regex.Pattern
 
+/**
+ * Base class responsible for the automatic creation of a database schema, using the results of [discoverExposedTables].
+ *
+ * If more than just table creation is required, a derived class can be implemented to override the transactional
+ * function, [run], so that other schema operations can be performed when initialized.
+ *
+ * @property applicationContext The Spring ApplicationContext container responsible for managing beans.
+ * @property excludedPackages List of packages to exclude, so that their contained tables are not auto-created.
+ */
 open class DatabaseInitializer(private val applicationContext: ApplicationContext, private val excludedPackages: List<String>) :
     ApplicationRunner, Ordered {
     override fun getOrder(): Int = DATABASE_INITIALIZER_ORDER
@@ -34,6 +43,10 @@ open class DatabaseInitializer(private val applicationContext: ApplicationContex
     }
 }
 
+/**
+ * Returns a list of identified tables that extend Exposed's base [Table] class, without searching any packages
+ * in [excludedPackages].
+ */
 fun discoverExposedTables(applicationContext: ApplicationContext, excludedPackages: List<String>): List<Table> {
     val provider = ClassPathScanningCandidateComponentProvider(false)
     provider.addIncludeFilter(AssignableTypeFilter(Table::class.java))

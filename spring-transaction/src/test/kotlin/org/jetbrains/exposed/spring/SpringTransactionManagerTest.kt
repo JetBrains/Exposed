@@ -71,7 +71,7 @@ class SpringTransactionManagerTest {
         val tm = SpringTransactionManager(ds1)
         tm.executeAssert()
 
-        assertTrue(con1.verifyCallOrder("setReadOnly", "setAutoCommit", "commit", "close"))
+        assertTrue(con1.verifyCallOrder("setAutoCommit", "commit", "close"))
         assertEquals(1, con1.commitCallCount)
         assertEquals(1, con1.closeCallCount)
     }
@@ -178,7 +178,7 @@ class SpringTransactionManagerTest {
         val tm = SpringTransactionManager(transactionAwareDs)
         tm.executeAssert()
 
-        assertTrue(con1.verifyCallOrder("setReadOnly", "setAutoCommit", "commit"))
+        assertTrue(con1.verifyCallOrder("setAutoCommit", "commit"))
         assertEquals(1, con1.commitCallCount)
         assertTrue(con1.closeCallCount > 0)
     }
@@ -196,7 +196,7 @@ class SpringTransactionManagerTest {
             assertEquals(ex, e)
         }
 
-        assertTrue(con1.verifyCallOrder("setReadOnly", "setAutoCommit", "rollback"))
+        assertTrue(con1.verifyCallOrder("setAutoCommit", "rollback"))
         assertEquals(1, con1.rollbackCallCount)
         assertTrue(con1.closeCallCount > 0)
     }
@@ -211,7 +211,7 @@ class SpringTransactionManagerTest {
             tm.executeAssert()
         }
 
-        assertTrue(con1.verifyCallOrder("setReadOnly", "setAutoCommit", "commit", "isClosed", "rollback", "close"))
+        assertTrue(con1.verifyCallOrder("setAutoCommit", "commit", "isClosed", "rollback", "close"))
         assertEquals(1, con1.commitCallCount)
         assertEquals(1, con1.rollbackCallCount)
         assertEquals(1, con1.closeCallCount)
@@ -230,7 +230,7 @@ class SpringTransactionManagerTest {
             }
         }
 
-        assertTrue(con1.verifyCallOrder("setReadOnly", "setAutoCommit", "isClosed", "rollback", "close"))
+        assertTrue(con1.verifyCallOrder("setAutoCommit", "isClosed", "rollback", "close"))
         assertEquals(1, con1.rollbackCallCount)
         assertEquals(1, con1.closeCallCount)
     }
@@ -367,13 +367,34 @@ class SpringTransactionManagerTest {
         assertEquals(0, con1.closeCallCount)
     }
 
+    @Test
+    fun `transaction timeout`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert(initializeConnection = true, timeout = 1) {
+            assertEquals(1, TransactionManager.current().queryTimeout)
+        }
+    }
+
+    @Test
+    fun `transaction timeout propagation`() {
+        val tm = SpringTransactionManager(ds1)
+        tm.executeAssert(initializeConnection = true, timeout = 1) {
+            tm.executeAssert(initializeConnection = true, timeout = 2) {
+                assertEquals(1, TransactionManager.current().queryTimeout)
+            }
+            assertEquals(1, TransactionManager.current().queryTimeout)
+        }
+    }
+
     private fun SpringTransactionManager.executeAssert(
         initializeConnection: Boolean = true,
         propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
+        timeout: Int? = null,
         body: (TransactionStatus) -> Unit = {}
     ) {
         val tt = TransactionTemplate(this)
         tt.propagationBehavior = propagationBehavior
+        if (timeout != null) tt.timeout = timeout
         tt.executeWithoutResult {
             assertEquals(
                 TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),

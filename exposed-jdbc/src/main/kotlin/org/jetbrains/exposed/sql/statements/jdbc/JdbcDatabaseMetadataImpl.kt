@@ -11,6 +11,9 @@ import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Class responsible for retrieving and storing information about the JDBC driver and underlying DBMS, using [metadata].
+ */
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
     override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion") }
@@ -114,7 +117,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
-    /** Returns a list of existing schema names. */
     override val schemaNames: List<String> get() = schemaNames()
 
     /** Returns a list of existing schema names. */
@@ -129,10 +131,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    /**
-     * Returns the default schema name and a list of its existing table names, as [SchemaMetadata],
-     * found either by reading metadata or from a cache of previously read metadata.
-     */
     override fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata {
         val tablesInSchema = (tableNamesCache ?: tableNames).getValue(currentSchema!!)
         return SchemaMetadata(currentSchema!!, tablesInSchema)

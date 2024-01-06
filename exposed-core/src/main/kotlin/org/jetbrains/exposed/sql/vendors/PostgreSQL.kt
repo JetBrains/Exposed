@@ -21,6 +21,8 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun jsonBType(): String = "JSONB"
 
+    override fun untypedAndUnsizedArrayType(): String = "ARRAY"
+
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && e.columnType is JsonColumnMarker && (currentDialect as? H2Dialect) == null -> {
             val cast = if (e.columnType.usesBinaryFormat) "::jsonb" else "::json"
@@ -249,7 +251,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("UPSERT requires a unique key or constraint as a conflict target")
         }
 
-        val updateColumns = data.unzip().first.filter { it !in keyColumns }
+        val dataColumns = data.unzip().first
+        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
 
         return with(QueryBuilder(true)) {
             appendInsertToUpsertClause(table, data, transaction)

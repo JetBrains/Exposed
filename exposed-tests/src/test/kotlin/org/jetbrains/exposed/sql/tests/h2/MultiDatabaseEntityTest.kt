@@ -24,14 +24,20 @@ import kotlin.test.assertNull
 class MultiDatabaseEntityTest {
 
     private val db1 by lazy {
-        Database.connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "", databaseConfig = DatabaseConfig {
-            defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
-        })
+        Database.connect(
+            "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "",
+            databaseConfig = DatabaseConfig {
+                defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+            }
+        )
     }
     private val db2 by lazy {
-        Database.connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "", databaseConfig = DatabaseConfig {
-            defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
-        })
+        Database.connect(
+            "jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "",
+            databaseConfig = DatabaseConfig {
+                defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+            }
+        )
     }
     private var currentDB: Database? = null
 

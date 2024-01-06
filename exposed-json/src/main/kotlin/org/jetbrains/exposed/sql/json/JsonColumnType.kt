@@ -15,11 +15,13 @@ import org.postgresql.util.PGobject
 
 /**
  * Column for storing JSON data, either in non-binary text format or the vendor's default JSON type format.
+ *
+ * @sample json
  */
 open class JsonColumnType<T : Any>(
-    /** Returns the function that encodes an object of type [T] to a JSON String. */
+    /** Encode an object of type [T] to a JSON String. */
     val serialize: (T) -> String,
-    /** Returns the function that decodes a JSON String to an object of type [T]. */
+    /** Decode a JSON String to an object of type [T]. */
     val deserialize: (String) -> T
 ) : ColumnType(), JsonColumnMarker {
     override val usesBinaryFormat: Boolean = false
@@ -92,6 +94,7 @@ fun <T : Any> Table.json(
  * @param jsonConfig Configured instance of the `Json` class
  * @param kSerializer Serializer responsible for the representation of a serial form of type [T].
  * Defaults to a generic serializer for type [T]
+ * @sample org.jetbrains.exposed.sql.json.JsonColumnTests.testLoggerWithJsonCollections
  */
 inline fun <reified T : Any> Table.json(
     name: String,

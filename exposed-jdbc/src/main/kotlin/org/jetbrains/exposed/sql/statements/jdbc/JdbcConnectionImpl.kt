@@ -12,6 +12,9 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.Connection
 import java.sql.PreparedStatement
 
+/**
+ * Class representing a wrapped database [connection].
+ */
 class JdbcConnectionImpl(override val connection: Connection) : ExposedConnection<Connection> {
 
     // Oracle driver could throw exception on catalog
@@ -91,7 +94,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
     override fun executeInBatch(sqls: List<String>) {
         val types = sqls.map { stmt ->
-            StatementType.values().find {
+            StatementType.entries.find {
                 stmt.startsWith(it.name, true)
             } ?: StatementType.OTHER
         }

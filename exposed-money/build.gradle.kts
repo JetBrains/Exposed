@@ -13,10 +13,10 @@ kotlin {
 dependencies {
     api(project(":exposed-core"))
     api(project(":exposed-dao"))
-    api("javax.money", "money-api", "1.1")
+    api(libs.javax.money)
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
-    testImplementation("junit", "junit", "4.12")
+    testImplementation(libs.junit)
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.javamoney", "moneta", "1.3")
+    testImplementation(libs.moneta)
 }
