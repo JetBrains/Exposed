@@ -127,7 +127,7 @@ fun StatementContext.expandArgs(transaction: Transaction): String {
             when {
                 char == '?' && quoteStack.isEmpty() -> {
                     if (sql.getOrNull(i + 1) == '?') {
-                        ++i
+                        i.inc()
                         continue
                     }
                     append(sql.substring(lastPos, i))

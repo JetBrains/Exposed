@@ -17,9 +17,7 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 interface StatementInterceptor {
     /** Performs steps before a statement, from the provided [context], is executed in a [transaction]. */
     fun beforeExecution(transaction: Transaction, context: StatementContext) {}
-    
-    fun afterStatementPrepared(transaction: Transaction, preparedStatement: PreparedStatementApi) {}
-    
+
     /**
      * Performs steps after [preparedStatement] has been created in a [transaction], but before the statement
      * has been executed.
