@@ -61,5 +61,4 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         }
         if (args.isNotEmpty()) listOf(args) else emptyList()
     }
-
 }

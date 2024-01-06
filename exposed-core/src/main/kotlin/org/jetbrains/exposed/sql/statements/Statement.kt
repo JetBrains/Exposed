@@ -151,7 +151,6 @@ fun StatementContext.expandArgs(transaction: Transaction): String {
     }
 }
 
-
 /** Represents the groups that are used to classify the purpose of an SQL statement. */
 enum class StatementGroup {
     /** Data definition language group. */
