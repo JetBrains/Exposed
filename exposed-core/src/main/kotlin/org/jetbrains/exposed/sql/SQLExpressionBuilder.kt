@@ -244,7 +244,7 @@ interface ISqlExpressionBuilder {
         else -> EqOp(this, other)
     }
 
-    /** Checks if this expression is equal to some [t] value. */
+    /** Checks if this [EntityID] expression is equal to some [t] value. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> {
         if (t == null) return isNull()
 
@@ -254,13 +254,18 @@ interface ISqlExpressionBuilder {
         return EqOp(this, wrap(entityID))
     }
 
-    /** Checks if this expression is equal to some [other] expression. */
+    /** Checks if this [EntityID] expression is equal to some [other] expression. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(
         other: Expression<in V>
     ): Op<Boolean> = when (other as Expression<*>) {
         is Op.NULL -> isNull()
         else -> EqOp(this, other)
     }
+
+    /** Checks if this expression is equal to some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.eq(
+        other: ExpressionWithColumnType<in E>
+    ): Op<Boolean> = other eq this
 
     // NOT EQUAL
 
@@ -274,7 +279,7 @@ interface ISqlExpressionBuilder {
         else -> NeqOp(this, other)
     }
 
-    /** Checks if this expression is not equal to some [t] value. */
+    /** Checks if this [EntityID] expression is not equal to some [t] value. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> {
         if (t == null) return isNotNull()
         @Suppress("UNCHECKED_CAST")
@@ -283,15 +288,18 @@ interface ISqlExpressionBuilder {
         return NeqOp(this, wrap(entityID))
     }
 
-    /** Checks if this expression is not equal to some [other] expression. */
+    /** Checks if this [EntityID] expression is not equal to some [other] expression. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(
         other: Expression<in V>
-    ): Op<Boolean> {
-        return when (other as Expression<*>) {
-            is Op.NULL -> isNotNull()
-            else -> NeqOp(this, other)
-        }
+    ): Op<Boolean> = when (other as Expression<*>) {
+        is Op.NULL -> isNotNull()
+        else -> NeqOp(this, other)
     }
+
+    /** Checks if this expression is not equal to some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.neq(
+        other: ExpressionWithColumnType<in E>
+    ): Op<Boolean> = other neq this
 
     // LESS THAN
 
@@ -302,13 +310,18 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is less than some [other] expression. */
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.less(other: Expression<in S>): LessOp = LessOp(this, other)
 
-    /** Checks if this expression is less than some [t] value. */
+    /** Checks if this [EntityID] expression is less than some [t] value. */
     @JvmName("lessEntityID")
     infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.less(t: T): LessOp = LessOp(this, wrap(t))
 
-    /** Checks if this expression is less than some [other] expression. */
+    /** Checks if this [EntityID] expression is less than some [other] expression. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.less(
         other: Expression<in V>
+    ): LessOp = LessOp(this, other)
+
+    /** Checks if this expression is less than some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.less(
+        other: ExpressionWithColumnType<in E>
     ): LessOp = LessOp(this, other)
 
     // LESS THAN OR EQUAL
@@ -320,13 +333,18 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is less than or equal to some [other] expression */
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.lessEq(other: Expression<in S>): LessEqOp = LessEqOp(this, other)
 
-    /** Checks if this expression is less than or equal to some [t] value */
+    /** Checks if this [EntityID] expression is less than or equal to some [t] value */
     @JvmName("lessEqEntityID")
     infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.lessEq(t: T): LessEqOp = LessEqOp(this, wrap(t))
 
-    /** Checks if this expression is less than or equal to some [other] expression */
+    /** Checks if this [EntityID] expression is less than or equal to some [other] expression */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.lessEq(
         other: Expression<in V>
+    ): LessEqOp = LessEqOp(this, other)
+
+    /** Checks if this expression is less than or equal to some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.lessEq(
+        other: ExpressionWithColumnType<in E>
     ): LessEqOp = LessEqOp(this, other)
 
     // GREATER THAN
@@ -338,13 +356,18 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is greater than some [other] expression. */
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.greater(other: Expression<in S>): GreaterOp = GreaterOp(this, other)
 
-    /** Checks if this expression is greater than some [t] value. */
+    /** Checks if this [EntityID] expression is greater than some [t] value. */
     @JvmName("greaterEntityID")
     infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greater(t: T): GreaterOp = GreaterOp(this, wrap(t))
 
-    /** Checks if this expression is greater than some [other] expression. */
+    /** Checks if this [EntityID] expression is greater than some [other] expression. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.greater(
         other: Expression<in V>
+    ): GreaterOp = GreaterOp(this, other)
+
+    /** Checks if this expression is greater than some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greater(
+        other: ExpressionWithColumnType<in E>
     ): GreaterOp = GreaterOp(this, other)
 
     // GREATER THAN OR EQUAL
@@ -356,13 +379,18 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is greater than or equal to some [other] expression */
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.greaterEq(other: Expression<in S>): GreaterEqOp = GreaterEqOp(this, other)
 
-    /** Checks if this expression is greater than or equal to some [t] value */
+    /** Checks if this [EntityID] expression is greater than or equal to some [t] value */
     @JvmName("greaterEqEntityID")
     infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greaterEq(t: T): GreaterEqOp = GreaterEqOp(this, wrap(t))
 
-    /** Checks if this expression is greater than or equal to some [other] expression */
+    /** Checks if this [EntityID] expression is greater than or equal to some [other] expression */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.greaterEq(
         other: Expression<in V>
+    ): GreaterEqOp = GreaterEqOp(this, other)
+
+    /** Checks if this expression is greater than or equal to some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greaterEq(
+        other: ExpressionWithColumnType<in E>
     ): GreaterEqOp = GreaterEqOp(this, other)
 
     // Comparison Predicates

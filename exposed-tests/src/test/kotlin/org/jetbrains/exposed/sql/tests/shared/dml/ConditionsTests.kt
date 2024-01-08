@@ -84,7 +84,6 @@ class ConditionsTests : DatabaseTestsBase() {
 
         // SQL Server doesn't support an explicit id for auto-increment table
         withTables(excludeSettings = listOf(TestDB.SQLSERVER), longTable) {
-            addLogger(StdOutSqlLogger)
             val id1 = longTable.insertAndGetId {
                 it[id] = 1
                 it[amount] = 9999
@@ -100,12 +99,31 @@ class ConditionsTests : DatabaseTestsBase() {
 
             // the incorrect overload operator would previously throw an exception and
             // a warning would show about 'Type argument ... cannot be inferred ... incompatible upper bounds'
-            assertEqualLists(listOf(id2), selectIdWhere { longTable.id eq longTable.amount })
-            assertEqualLists(listOf(id1, id3), selectIdWhere { longTable.id neq longTable.amount })
-            assertEqualLists(listOf(id1), selectIdWhere { longTable.id less longTable.amount })
-            assertEqualLists(listOf(id1, id2), selectIdWhere { longTable.id lessEq longTable.amount })
-            assertEqualLists(listOf(id3), selectIdWhere { longTable.id greater longTable.amount })
-            assertEqualLists(listOf(id2, id3), selectIdWhere { longTable.id greaterEq longTable.amount })
+            val id2Only = listOf(id2)
+            assertEqualLists(id2Only, selectIdWhere { longTable.id eq longTable.amount })
+
+            val id1AndId3 = listOf(id1, id3)
+            assertEqualLists(id1AndId3, selectIdWhere { longTable.id neq longTable.amount })
+
+            val id1Only = listOf(id1)
+            assertEqualLists(id1Only, selectIdWhere { longTable.id less longTable.amount })
+
+            val id1AndId2 = listOf(id1, id2)
+            assertEqualLists(id1AndId2, selectIdWhere { longTable.id lessEq longTable.amount })
+
+            val id3Only = listOf(id3)
+            assertEqualLists(id3Only, selectIdWhere { longTable.id greater longTable.amount })
+
+            val id2AndId3 = listOf(id2, id3)
+            assertEqualLists(id2AndId3, selectIdWhere { longTable.id greaterEq longTable.amount })
+
+            // symmetric operators (EntityID value on right) should not show a warning either
+            assertEqualLists(id2Only, selectIdWhere { longTable.amount eq longTable.id })
+            assertEqualLists(id1AndId3, selectIdWhere { longTable.amount neq longTable.id })
+            assertEqualLists(id3Only, selectIdWhere { longTable.amount less longTable.id })
+            assertEqualLists(id2AndId3, selectIdWhere { longTable.amount lessEq longTable.id })
+            assertEqualLists(id1Only, selectIdWhere { longTable.amount greater longTable.id })
+            assertEqualLists(id1AndId2, selectIdWhere { longTable.amount greaterEq longTable.id })
         }
     }
 
