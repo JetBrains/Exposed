@@ -45,16 +45,19 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
     }
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
-        if (targetsSet is Join && currentDialect is OracleDialect) {
-            where?.toQueryBuilder(this)
-            values.forEach {
-                registerArgument(it.key, it.value)
+        when {
+            targetsSet is Join && currentDialect is OracleDialect -> {
+                where?.toQueryBuilder(this)
+                values.forEach {
+                    registerArgument(it.key, it.value)
+                }
             }
-        } else {
-            values.forEach {
-                registerArgument(it.key, it.value)
+            else -> {
+                values.forEach {
+                    registerArgument(it.key, it.value)
+                }
+                where?.toQueryBuilder(this)
             }
-            where?.toQueryBuilder(this)
         }
         if (args.isNotEmpty()) listOf(args) else emptyList()
     }

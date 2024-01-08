@@ -115,18 +115,19 @@ class StatementContext(val statement: Statement<*>, val args: Iterable<Pair<ICol
 fun StatementContext.expandArgs(transaction: Transaction): String {
     val sql = sql(transaction)
     val iterator = args.iterator()
+
     if (!iterator.hasNext()) return sql
 
     return buildString {
         val quoteStack = Stack<Char>()
         var lastPos = 0
-        var i = -1
-        while (++i < sql.length) {
+
+        for (i in sql.indices) {
             val char = sql[i]
-            if (char == '?') {
-                if (quoteStack.isEmpty()) {
+            when {
+                char == '?' && quoteStack.isEmpty() -> {
                     if (sql.getOrNull(i + 1) == '?') {
-                        ++i
+                        i.inc()
                         continue
                     }
                     append(sql.substring(lastPos, i))
@@ -134,15 +135,11 @@ fun StatementContext.expandArgs(transaction: Transaction): String {
                     val (col, value) = iterator.next()
                     append(col.valueToString(value))
                 }
-            } else if (char == '\'' || char == '\"') {
-                if (quoteStack.isEmpty()) {
-                    quoteStack.push(char)
-                } else {
-                    val currentQuote = quoteStack.peek()
-                    if (currentQuote == char) {
-                        quoteStack.pop()
-                    } else {
-                        quoteStack.push(char)
+                char == '\'' || char == '\"' -> {
+                    when {
+                        quoteStack.isEmpty() -> quoteStack.push(char)
+                        quoteStack.peek() == char -> quoteStack.pop()
+                        else -> quoteStack.push(char)
                     }
                 }
             }
