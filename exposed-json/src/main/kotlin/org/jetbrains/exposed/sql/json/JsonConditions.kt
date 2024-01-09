@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.asLiteral
+import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 // Operator Classes
@@ -66,8 +67,10 @@ fun ExpressionWithColumnType<*>.contains(candidate: Expression<*>, path: String?
  * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
  * @sample org.jetbrains.exposed.sql.json.JsonColumnTests.testJsonContains
  */
-fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null): Contains =
-    Contains(this, asLiteral(candidate), path, columnType)
+fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null): Contains = when (candidate) {
+    is Iterable<*>, is Array<*> -> Contains(this, stringLiteral(asLiteral(candidate).toString()), path, columnType)
+    else -> Contains(this, asLiteral(candidate), path, columnType)
+}
 
 /**
  * Checks whether data exists within [this] JSON expression at the specified [path].
