@@ -53,7 +53,7 @@ val movies = StarWarsFilm.all()
 val movies = StarWarsFilm.find { StarWarsFilms.sequelId eq 8 }
 val movie = StarWarsFilm.findById(5)
 ```
-* For a list of available predicates see [DSL Where expression](https://github.com/JetBrains/Exposed/wiki/DSL#where-expression).  
+* For a list of available predicates, see [DSL Where expression](Deep-Dive-into-DSL.md#where-expression).  
   Read a value from a property similar to any property in a Kotlin class:
 ```kotlin
 val name = movie.name
@@ -68,11 +68,11 @@ Descending order:
 val movies = StarWarsFilm.all().sortedByDescending{ it.sequelId }
 ```
 ### Update
-Update a value of a property similar to any property in a Kotlin class:
+Update the value of a property similar to any property in a Kotlin class:
 ```kotlin
 movie.name = "Episode VIII – The Last Jedi"
 ```
-* Note: Exposed doesn't make an immediate update when you set a new value for Entity, it just stores it on the inner map. "Flushing" values to the database occurs at the end of the transaction or before next `select *` from the database.
+* Note: Exposed doesn't make an immediate update when you set a new value for Entity, it just stores it on the inner map. "Flushing" values to the database occurs at the end of the transaction, or before the next ` select *` from the database.
 
 Search for an entity by its id and apply an update:
 ```kotlin
@@ -259,7 +259,7 @@ Similarly you can eager load references on Collections of DAO's such as Lists an
 ```kotlin
 StarWarsFilm.all().with(StarWarsFilm::actors)
 ```
-NOTE: References that are eagerly loaded are stored inside the transaction cache; this means that they are not available in other transactions and thus must be loaded and referenced inside the same transaction. As of [0.35.1](https://github.com/JetBrains/Exposed/blob/master/docs/ChangeLog.md#0351:~:text=References%20can%20be%20stored%20within%20an%20Entity%20with%20enabled%20keepLoadedReferencesOutOfTransaction%20config%20parameter.%20It%20will%20allow%20getting%20referenced%20values%20outside%20the%20transaction%20block.), however, enabling `keepLoadedReferencesOutOfTransaction` in `DatabaseConfig` will allow getting referenced values outside the transaction block.
+NOTE: References that are eagerly loaded are stored inside the transaction cache; this means that they are not available in other transactions and thus must be loaded and referenced inside the same transaction. As of [0.35.1](https://github.com/JetBrains/Exposed/blob/master/docs/ChangeLog.md#0351:~:text=References%20can%20be%20stored%20within%20an%20Entity%20with%20enabled%20keepLoadedReferencesOutOfTransaction%20config%20parameter.%20It%20will%20allow%20getting%20referenced%20values%20outside%20the%20transaction%20block.). However, enabling `keepLoadedReferencesOutOfTransaction` in `DatabaseConfig` will allow getting referenced values outside the transaction block.
 
 #### Eager loading for Text Fields
 Some database drivers do not load text content immediately (for performance and memory reasons) which means that you can obtain the column value only within the open transaction.

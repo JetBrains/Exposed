@@ -1,0 +1,101 @@
+<!DOCTYPE html SYSTEM "about:legacy-compat">
+<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2024-03-27T11:54:52.914212"><title>Working with Database and DataSource | Exposed</title><script type="application/json" id="virtual-toc-data">[{"id":"datasource","level":0,"title":"DataSource","anchor":"#datasource"}]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.6.6-b224/app.css" rel="stylesheet"><link rel="manifest" href="site.webmanifest"><meta name="msapplication-TileColor" content="#000000"><link rel="apple-touch-icon" sizes="180x180" href="https://jetbrains.com/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://jetbrains.com/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://jetbrains.com/favicon-16x16.png"><meta name="msapplication-TileImage" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-144x144.png"><meta name="msapplication-square70x70logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-70x70.png"><meta name="msapplication-square150x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-150x150.png"><meta name="msapplication-wide310x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x150.png"><meta name="msapplication-square310x310logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x310.png"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="Working with Database and DataSource | Exposed"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="Exposed Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/docs/1.0/database-and-datasource.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="Working with Database and DataSource | Exposed"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
+    "@context": "http://schema.org",
+    "@type": "WebPage",
+    "@id": "writerside-documentation/docs/1.0/database-and-datasource.html#webpage",
+    "url": "writerside-documentation/docs/1.0/database-and-datasource.html",
+    "name": "Working with Database and DataSource | Exposed",
+    "description": "",
+    "image": "",
+    "inLanguage":"en-US"
+}</script><!-- End Schema.org --><!-- Schema.org WebSite --><script type="application/ld+json">{
+    "@type": "WebSite",
+    "@id": "writerside-documentation/docs/#website",
+    "url": "writerside-documentation/docs/",
+    "name": "Exposed Help"
+}</script><!-- End Schema.org --></head><body data-id="Database-and-DataSource" data-main-title="Working with Database and DataSource" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs=""><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 1.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="Database-and-DataSource" id="Database-and-DataSource.md">Working with Database and DataSource</h1><p id="i8lyo7u_2312">Every database access using Exposed is started by obtaining a connection and creating a transaction. <br> First of all, you have to tell Exposed how to connect to a database by using the <code class="code" id="i8lyo7u_2314">Database.connect</code> function. It won't create a real database connection but will only provide a descriptor for future usage.</p><p id="i8lyo7u_2315">A real connection will be instantiated later by calling the <code class="code" id="i8lyo7u_2316">transaction</code> lambda (see <a href="transactions.html" id="i8lyo7u_2317" data-tooltip="CRUD operations in Exposed must be called from within a transaction. Transactions encapsulate a set of DSL operations. To create and execute a transaction with default parameters, simply pass a function block to the transaction function:">Transactions</a> for more details).</p><p id="i8lyo7u_2318">Use the following to get a Database instance by simply providing connection parameters:</p><div class="code-block" data-lang="kotlin">
+val db = Database.connect(&quot;jdbc:h2:mem:test&quot;, driver = &quot;org.h2.Driver&quot;)
+</div><p id="i8lyo7u_2320">It is also possible to provide <code class="code" id="i8lyo7u_2321">javax.sql.DataSource</code> for advanced behaviors such as connection pooling (see the <a href="#hikaricp" id="i8lyo7u_2322" data-tooltip="To use a JDBC connection pool like HikariCP, first set up a HikariConfig class. This example uses the MySQL JDBC driver (see the official reference for MySQL configuration details):">HikariCP section</a>):</p><div class="code-block" data-lang="kotlin">
+val db = Database.connect(dataSource)
+</div><ul class="list _bullet" id="i8lyo7u_2324"><li class="list__item" id="i8lyo7u_2325"><p>Note: Executing this code more than once per database will create leaks in your application, hence it is recommended to store it for later use:</p></li></ul><div class="code-block" data-lang="kotlin">
+object DbSettings {
+   val db by lazy { 
+       Database.connect(/* setup connection */)
+   }
+}
+</div><section class="chapter"><h2 id="datasource" data-toc="datasource">DataSource</h2><ul class="list _bullet" id="i8lyo7u_2327"><li class="list__item" id="i8lyo7u_2328"><p>PostgresSQL</p></li></ul><div class="code-block" data-lang="kotlin">
+Database.connect(&quot;jdbc:postgresql://localhost:12346/test&quot;, driver = &quot;org.postgresql.Driver&quot;, 
+                 user = &quot;root&quot;, password = &quot;your_pwd&quot;)  
+// Gradle
+implementation(&quot;org.postgresql:postgresql:42.7.1&quot;)  
+</div><ul class="list _bullet" id="i8lyo7u_2330"><li class="list__item" id="i8lyo7u_2331"><p>PostgresSQL using the pgjdbc-ng JDBC driver</p></li></ul><div class="code-block" data-lang="kotlin">
+Database.connect(&quot;jdbc:pgsql://localhost:12346/test&quot;, driver = &quot;com.impossibl.postgres.jdbc.PGDriver&quot;, 
+                 user = &quot;root&quot;, password = &quot;your_pwd&quot;)  
+// Gradle
+implementation(&quot;com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9&quot;)  
+</div><ul class="list _bullet" id="i8lyo7u_2333"><li class="list__item" id="i8lyo7u_2334"><p>MySQL</p></li></ul><div class="code-block" data-lang="kotlin">
+Database.connect(&quot;jdbc:mysql://localhost:3306/test&quot;, driver = &quot;com.mysql.cj.jdbc.Driver&quot;, 
+                 user = &quot;root&quot;, password = &quot;your_pwd&quot;)  
+// Gradle
+implementation(&quot;mysql:mysql-connector-java:8.0.33&quot;)
+</div><ul class="list _bullet" id="i8lyo7u_2336"><li class="list__item" id="i8lyo7u_2337"><p>MariaDB</p></li></ul><div class="code-block" data-lang="kotlin">
+Database.connect(&quot;jdbc:mariadb://localhost:3306/test&quot;, driver = &quot;org.mariadb.jdbc.Driver&quot;, 
+                 user = &quot;root&quot;, password = &quot;your_pwd&quot;)  
+// Gradle
+implementation(&quot;org.mariadb.jdbc:mariadb-java-client:3.3.1&quot;)
+</div><ul class="list _bullet" id="i8lyo7u_2339"><li class="list__item" id="i8lyo7u_2340"><p>Oracle</p></li></ul><div class="code-block" data-lang="kotlin">
+Database.connect(&quot;jdbc:oracle:thin:@//localhost:1521/test&quot;, driver = &quot;oracle.jdbc.OracleDriver&quot;, 
+                 user = &quot;root&quot;, password = &quot;your_pwd&quot;)  
+// Gradle
+// Oracle jdbc-driver should be obtained from Oracle maven repo: https://blogs.oracle.com/dev2dev/get-oracle-jdbc-drivers-and-ucp-from-oracle-maven-repository-without-ides
+</div><ul class="list _bullet" id="i8lyo7u_2342"><li class="list__item" id="i8lyo7u_2343"><p>SQLite</p></li></ul><div class="code-block" data-lang="kotlin">
+// In file
+Database.connect(&quot;jdbc:sqlite:/data/data.db&quot;, &quot;org.sqlite.JDBC&quot;)  
+// In memory
+Database.connect(&quot;jdbc:sqlite:file:test?mode=memory&amp;cache=shared&quot;, &quot;org.sqlite.JDBC&quot;)  
+// For both: set SQLite compatible isolation level, see 
+// https://github.com/JetBrains/Exposed/wiki/FAQ
+TransactionManager.manager.defaultIsolationLevel = 
+    Connection.TRANSACTION_SERIALIZABLE
+    // or Connection.TRANSACTION_READ_UNCOMMITTED
+// Gradle
+implementation(&quot;org.xerial:sqlite-jdbc:3.44.1.0&quot;)  
+</div><ul class="list _bullet" id="i8lyo7u_2345"><li class="list__item" id="i8lyo7u_2346"><p>H2</p></li></ul><div class="code-block" data-lang="kotlin">
+// Database in file, needs full path or relative path starting with ./
+Database.connect(&quot;jdbc:h2:./myh2file&quot;, &quot;org.h2.Driver&quot;)
+// In memory
+Database.connect(&quot;jdbc:h2:mem:regular&quot;, &quot;org.h2.Driver&quot;)  
+// In memory / keep alive between connections/transactions
+Database.connect(&quot;jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;&quot;, &quot;org.h2.Driver&quot;)  
+// Gradle
+implementation(&quot;com.h2database:h2:2.2.224&quot;)  
+</div><ul class="list _bullet" id="i8lyo7u_2348"><li class="list__item" id="i8lyo7u_2349"><p>SQL Server</p></li></ul><div class="code-block" data-lang="kotlin">
+Database.connect(&quot;jdbc:sqlserver://localhost:32768;databaseName=test&quot;, &quot;com.microsoft.sqlserver.jdbc.SQLServerDriver&quot;, 
+                 user = &quot;root&quot;, password = &quot;your_pwd&quot;)  
+// Gradle
+implementation(&quot;com.microsoft.sqlserver:mssql-jdbc:9.4.1.jre8&quot;)  
+</div><section class="chapter"><h3 id="hikaricp" data-toc="hikaricp">HikariCP</h3><p id="i8lyo7u_2351">To use a JDBC connection pool like <a href="https://github.com/brettwooldridge/HikariCP" id="i8lyo7u_2352" data-external="true" rel="noopener noreferrer">HikariCP</a>, first set up a <code class="code" id="i8lyo7u_2353">HikariConfig</code> class. This example uses the MySQL JDBC driver (see the official reference for <a href="https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration" id="i8lyo7u_2354" data-external="true" rel="noopener noreferrer">MySQL configuration</a> details):</p><div class="code-block" data-lang="kotlin">
+val config = HikariConfig().apply {
+    jdbcUrl = &quot;jdbc:mysql://localhost/dbname&quot;
+    driverClassName = &quot;com.mysql.cj.jdbc.Driver&quot;
+    username = &quot;username&quot;
+    password = &quot;password&quot;
+    maximumPoolSize = 6
+    // as of version 0.46.0, if these options are set here, they do not need to be duplicated in DatabaseConfig
+    isReadOnly = false
+    transactionIsolation = &quot;TRANSACTION_SERIALIZABLE&quot;
+}
+
+// Gradle
+implementation &quot;mysql:mysql-connector-java:8.0.33&quot;
+implementation &quot;com.zaxxer:HikariCP:4.0.3&quot;
+</div><p id="i8lyo7u_2356">Then instantiate a <code class="code" id="i8lyo7u_2357">HikariDataSource</code> with this configuration class and provide it to <code class="code" id="i8lyo7u_2358">Database.connect()</code>:</p><div class="code-block" data-lang="kotlin">
+val dataSource = HikariDataSource(config)
+
+Database.connect(
+    datasource = dataSource,
+    databaseConfig = DatabaseConfig {
+        // set other parameters here
+    }
+)
+</div><p id="i8lyo7u_2360">**Note: ** Since version 0.46.0, when configured directly in the <code class="code" id="i8lyo7u_2361">HikariConfig</code> class, values like <code class="code" id="i8lyo7u_2362">transactionIsolation</code> and <code class="code" id="i8lyo7u_2363">isReadOnly</code> will be used by Exposed when creating transactions. If they are duplicated or new values are set in <code class="code" id="i8lyo7u_2364">DatabaseConfig</code>, the latter will be treated as an override in the same way that setting these parameters on an individual transaction block overrides the default settings. It is therefore recommended to not set these values in <code class="code" id="i8lyo7u_2365">DatabaseConfig</code> unless the intention is for the new value to override the Hikari settings.</p></section></section><div class="last-modified">Last modified: 27 March 2024</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="getting-started-with-exposed.html" class="navigation-links__prev">Getting Started with Exposed</a><a href="transactions.html" class="navigation-links__next">Transactions</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.6.6-b224/app.js"></script></body></html>

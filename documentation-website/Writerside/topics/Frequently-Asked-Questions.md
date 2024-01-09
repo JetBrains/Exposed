@@ -6,20 +6,20 @@ A: [Ilya Ryzhenkov](https://github.com/orangy/) (Squash maintainer) answers:
 
 ### Q: Can I use multiple Database Connections?
 
-A: Yes. See [[Working with multiple databases|Transactions#working-with-multiple-databases]]
+A: Yes. See [Transactions](Transactions.md#working-with-multiple-databases)
 
 ### Q: Is `Array` column type supported?
 
 A: Not at the moment. More info here: https://github.com/JetBrains/Exposed/issues/150  
-The complete list of supported data types can be found here: [[Data Types|DataTypes]].
+The complete list of supported data types can be found here: [Data Types](Data-Types.md).
 
 ### Q: Is `upsert` supported?
 
-A: Yes. See [[Insert Or Update|DSL#insert-or-update]]
+A: Yes. See [Insert Or Update](Deep-Dive-into-DSL.md#insert-or-update)
 
 ### Q: Is `json` type supported?
 
-A: Yes. See [[How to use Json and JsonB types|DataTypes#how-to-use-json-and-jsonb-types]]
+A: Yes. See [JSON](Data-Types.md#how-to-use-json-and-jsonb-types)
 
 ### Q: How to get a plain SQL query which will be executed?
 
@@ -31,7 +31,7 @@ Use QueryBuiler with `false` - if you want to inline statement arguments, `true`
 
 ### Q: Is it possible to use native sql / sql as a string?
 
-A: It is not supported as part of the library but it is possible to implement on top of it and use it like this:
+A: It is not supported as part of the library, but it is possible to implement on top of it and use it like this:
 ```kotlin
 fun <T:Any> String.execAndMap(transform : (ResultSet) -> T) : List<T> {
      val result = arrayListOf<T>()

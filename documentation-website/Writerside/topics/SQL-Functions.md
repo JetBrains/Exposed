@@ -1,4 +1,4 @@
-# Functions
+# SQL Functions
 
 Exposed provides basic support for classic SQL functions. This topic consists of definitions for those functions, and their 
 usage examples. It also explains how to define [custom functions](#custom-functions).
@@ -55,7 +55,7 @@ val nameLengths = FooTable.select(nameLength).map { it[nameLength] }
 ```
 
 ## Aggregating functions
-These functions should be used in queries with [[groupBy|DSL#group-by]].
+These functions should be used in queries with [groupBy](Deep-Dive-into-DSL.md#group-by).
 ### Min/Max/Average
 Returns minimum/maximum/average value and can be applied to any comparable expression:
 ```kotlin

@@ -2,6 +2,11 @@
 <buildprofiles xsi:noNamespaceSchemaLocation="https://helpserver.labs.jb.gg/help/schemas/mvp/build-profiles.xsd"
                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-    <variables></variables><build-profile instance="hi"><variables><noindex-content>true</noindex-content></variables></build-profile>
+    <variables></variables>
+    <build-profile instance="hi">
+        <variables>
+            <noindex-content>true</noindex-content>
+        </variables>
+    </build-profile>
 
 </buildprofiles>
