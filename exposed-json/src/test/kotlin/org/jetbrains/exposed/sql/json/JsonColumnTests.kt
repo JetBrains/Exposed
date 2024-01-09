@@ -6,6 +6,8 @@ import kotlinx.serialization.builtins.ArraySerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -14,6 +16,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
@@ -264,6 +267,39 @@ class JsonColumnTests : DatabaseTestsBase() {
 
             val hasAtLeast3Numbers = tester.numbers.exists("[2]", optional = optional)
             assertEquals(tripleId, tester.selectAll().where { hasAtLeast3Numbers }.single()[tester.id])
+        }
+    }
+
+    @Test
+    fun testJsonContainsWithIterables() {
+        val iterables = object : IntIdTable("iterables") {
+            val userList = json<List<User>>("user_list", Json.Default)
+            val userSet = json<Set<User>>("user_set", Json.Default)
+            val userArray = json<Array<User>>("user_array", Json.Default)
+        }
+
+        fun selectIdWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<EntityID<Int>> {
+            val query = iterables.select(iterables.id).where(SqlExpressionBuilder.condition())
+            return query.map { it[iterables.id] }
+        }
+
+        withTables(excludeSettings = jsonContainsNotSupported, iterables) {
+            val user1 = User("A", "Team A")
+            val user2 = User("B", "Team B")
+            val id1 = iterables.insertAndGetId {
+                it[userList] = listOf(user1, user2)
+                it[userSet] = setOf(user1)
+                it[userArray] = arrayOf(user1, user2)
+            }
+            val id2 = iterables.insertAndGetId {
+                it[userList] = listOf(user2)
+                it[userSet] = setOf(user2)
+                it[userArray] = arrayOf(user1, user2)
+            }
+
+            assertEqualLists(listOf(id1), selectIdWhere { iterables.userList.contains(listOf(user1)) })
+            assertEqualLists(listOf(id2), selectIdWhere { iterables.userSet.contains(setOf(user2)) })
+            assertEqualLists(listOf(id1, id2), selectIdWhere { iterables.userArray.contains(arrayOf(user1, user2)) })
         }
     }
 
