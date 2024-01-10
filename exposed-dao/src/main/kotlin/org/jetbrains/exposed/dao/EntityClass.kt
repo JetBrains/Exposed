@@ -58,7 +58,6 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     fun findByIdAndUpdate(id: ID, block: (it: T) -> Unit): T? {
         val result = find(table.id eq id).forUpdate().singleOrNull() ?: return null
         block(result)
-        invalidateEntityInCache(result)
         return result
     }
 
@@ -73,21 +72,6 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     fun findSingleByAndUpdate(op: Op<Boolean>, block: (it: T) -> Unit): T? {
         val result = find(op).forUpdate().singleOrNull() ?: return null
         block(result)
-        invalidateEntityInCache(result)
-        return result
-    }
-
-    /**
-     * Find many entities that conform to the [op] statement.
-     *
-     * @param op The statement to select the entities for. The statement must be of boolean type.
-     * @param block Lambda that contains the entity updates
-     *
-     * @return All the updated entities that conform to the [op] statement.
-     */
-    fun findManyByAndUpdate(op: Op<Boolean>, block: (it: T) -> Unit): SizedIterable<T> {
-        val result = find(op).forUpdate().mapLazy { it.apply { block(this) } }
-        result.mapLazy { entity -> invalidateEntityInCache(entity) }
         return result
     }
 
@@ -119,17 +103,17 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
         val entityAlreadyFlushed = o.id._value != null
         val sameDatabase = TransactionManager.current().db == o.db
-        if (entityAlreadyFlushed && sameDatabase) {
-            val currentEntityInCache = testCache(o.id)
-            if (currentEntityInCache == null) {
-                get(o.id) // Check that entity is still exists in database
-                warmCache().store(o)
-            } else if (currentEntityInCache !== o) {
-                exposedLogger.error(
-                    "Entity instance in cache differs from the provided: ${o::class.simpleName} with ID ${o.id.value}. " +
-                        "Changes on entity could be missed."
-                )
-            }
+        if (!entityAlreadyFlushed || !sameDatabase) return
+
+        val currentEntityInCache = testCache(o.id)
+        if (currentEntityInCache == null) {
+            get(o.id) // Check that entity is still exists in database
+            warmCache().store(o)
+        } else if (currentEntityInCache !== o) {
+            exposedLogger.error(
+                "Entity instance in cache differs from the provided: ${o::class.simpleName} with ID ${o.id.value}. " +
+                    "Changes on entity could be missed."
+            )
         }
     }
 

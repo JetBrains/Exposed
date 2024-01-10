@@ -23,6 +23,7 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 object EntityTestsData {
@@ -452,13 +453,16 @@ class EntityTests : DatabaseTestsBase() {
             val updatedItem = Item.findByIdAndUpdate(item.id.value) {
                 it.price = newPrice
             }
+
+            assertSame(updatedItem, item)
+
             assertNotNull(updatedItem)
             assertEquals(newPrice, updatedItem.price)
-            assertNull(Item.testCache(item.id))
+            assertNotNull(Item.testCache(item.id))
 
-            assertEquals(oldPrice, item.price)
-            item.refresh(flush = false)
             assertEquals(newPrice, item.price)
+            item.refresh(flush = false)
+            assertEquals(oldPrice, item.price)
             assertNotNull(Item.testCache(item.id))
         }
     }
@@ -478,54 +482,17 @@ class EntityTests : DatabaseTestsBase() {
             val updatedItem = Item.findSingleByAndUpdate(Items.name eq "Item A") {
                 it.price = newPrice
             }
+
+            assertSame(updatedItem, item)
+
             assertNotNull(updatedItem)
             assertEquals(newPrice, updatedItem.price)
-            assertNull(Item.testCache(item.id))
-
-            assertEquals(oldPrice, item.price)
-            item.refresh(flush = false)
-            assertEquals(newPrice, item.price)
             assertNotNull(Item.testCache(item.id))
-        }
-    }
 
-    @Test
-    fun testDaoFindManyByAndUpdate() {
-        withTables(Items) {
-            val itemA = Item.new {
-                name = "New item"
-                price = 20.0
-            }
-            assertEquals(20.0, itemA.price)
-            assertNotNull(Item.testCache(itemA.id))
-            val itemB = Item.new {
-                name = "New item"
-                price = 30.0
-            }
-            assertEquals(30.0, itemB.price)
-            assertNotNull(Item.testCache(itemB.id))
-
-            val newPrice = 50.0
-            val updatedItems = Item.findManyByAndUpdate(Items.name eq "New item") {
-                it.price = newPrice
-            }
-            assertEquals(2, updatedItems.count())
-            updatedItems.mapLazy {
-                assert(listOf(itemA.id.value, itemB.id.value).contains(it.id.value))
-                assertEquals(newPrice, it.price)
-                assertEquals("New item", it.name)
-            }
-
-            assertNull(Item.testCache(itemA.id))
-            assertNull(Item.testCache(itemB.id))
-            assertEquals(20.0, itemA.price)
-            assertEquals(30.0, itemB.price)
-            itemA.refresh(flush = false)
-            itemB.refresh(flush = false)
-            assertEquals(newPrice, itemA.price)
-            assertEquals(newPrice, itemB.price)
-            assertNotNull(Item.testCache(itemA.id))
-            assertNotNull(Item.testCache(itemB.id))
+            assertEquals(newPrice, item.price)
+            item.refresh(flush = false)
+            assertEquals(oldPrice, item.price)
+            assertNotNull(Item.testCache(item.id))
         }
     }
 
