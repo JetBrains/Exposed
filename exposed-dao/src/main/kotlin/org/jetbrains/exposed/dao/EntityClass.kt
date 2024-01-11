@@ -5,7 +5,6 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
@@ -49,6 +48,35 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     fun findById(id: ID): T? = findById(DaoEntityID(id, table))
 
     /**
+     * Get an entity by its [id] and update the entity.
+     *
+     * @param id The id of the entity
+     * @param block Lambda that contains entity updates
+     *
+     * @return The updated entity that has this id or null if no entity was found.
+     */
+    fun findByIdAndUpdate(id: ID, block: (it: T) -> Unit): T? {
+        val result = find(table.id eq id).forUpdate().singleOrNull() ?: return null
+        block(result)
+        return result
+    }
+
+    /**
+     * Find a single entity that conforms to the [op] statement.
+     *
+     * @param op The statement to select the entity for. The statement must be of boolean type.
+     * @param block Lambda that contains entity updates
+     *
+     * @return The updated entity that conforms to this op or null if no entity was found.
+     * It also returns [null] if more than one entity conforms to the op.
+     */
+    fun findSingleByAndUpdate(op: Op<Boolean>, block: (it: T) -> Unit): T? {
+        val result = find(op).forUpdate().singleOrNull() ?: return null
+        block(result)
+        return result
+    }
+
+    /**
      * Get an entity by its [id].
      *
      * @param id The id of the entity
@@ -76,17 +104,17 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
         val entityAlreadyFlushed = o.id._value != null
         val sameDatabase = TransactionManager.current().db == o.db
-        if (entityAlreadyFlushed && sameDatabase) {
-            val currentEntityInCache = testCache(o.id)
-            if (currentEntityInCache == null) {
-                get(o.id) // Check that entity is still exists in database
-                warmCache().store(o)
-            } else if (currentEntityInCache !== o) {
-                exposedLogger.error(
-                    "Entity instance in cache differs from the provided: ${o::class.simpleName} with ID ${o.id.value}. " +
-                        "Changes on entity could be missed."
-                )
-            }
+        if (!entityAlreadyFlushed || !sameDatabase) return
+
+        val currentEntityInCache = testCache(o.id)
+        if (currentEntityInCache == null) {
+            get(o.id) // Check that entity is still exists in database
+            warmCache().store(o)
+        } else if (currentEntityInCache !== o) {
+            exposedLogger.error(
+                "Entity instance in cache differs from the provided: ${o::class.simpleName} with ID ${o.id.value}. " +
+                    "Changes on entity could be missed."
+            )
         }
     }
 
@@ -173,6 +201,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
                     }
                     column to value
                 }
+
                 exp is Column && exp.table == table -> null
                 else -> exp to value
             }
@@ -641,6 +670,7 @@ abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID
                     tr.getUserData(cacheLoadingState) != null -> {
                         return transactionCache // prevent recursive call to warmCache() in .all()
                     }
+
                     else -> {
                         tr.putUserData(cacheLoadingState, this)
                         super.all().toList() // force iteration to initialize lazy collection

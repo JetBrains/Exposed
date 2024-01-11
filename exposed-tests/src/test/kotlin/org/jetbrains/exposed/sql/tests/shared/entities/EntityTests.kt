@@ -23,6 +23,7 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 object EntityTestsData {
@@ -434,6 +435,64 @@ class EntityTests : DatabaseTestsBase() {
                 assertEquals(newPricePlusExtra, itemA.price)
                 assertNotNull(Item.testCache(itemA.id))
             }
+        }
+    }
+
+    @Test
+    fun testDaoFindByIdAndUpdate() {
+        withTables(Items) {
+            val oldPrice = 20.0
+            val item = Item.new {
+                name = "Item A"
+                price = oldPrice
+            }
+            assertEquals(oldPrice, item.price)
+            assertNotNull(Item.testCache(item.id))
+
+            val newPrice = 50.0
+            val updatedItem = Item.findByIdAndUpdate(item.id.value) {
+                it.price = newPrice
+            }
+
+            assertSame(updatedItem, item)
+
+            assertNotNull(updatedItem)
+            assertEquals(newPrice, updatedItem.price)
+            assertNotNull(Item.testCache(item.id))
+
+            assertEquals(newPrice, item.price)
+            item.refresh(flush = false)
+            assertEquals(oldPrice, item.price)
+            assertNotNull(Item.testCache(item.id))
+        }
+    }
+
+    @Test
+    fun testDaoFindSingleByAndUpdate() {
+        withTables(Items) {
+            val oldPrice = 20.0
+            val item = Item.new {
+                name = "Item A"
+                price = oldPrice
+            }
+            assertEquals(oldPrice, item.price)
+            assertNotNull(Item.testCache(item.id))
+
+            val newPrice = 50.0
+            val updatedItem = Item.findSingleByAndUpdate(Items.name eq "Item A") {
+                it.price = newPrice
+            }
+
+            assertSame(updatedItem, item)
+
+            assertNotNull(updatedItem)
+            assertEquals(newPrice, updatedItem.price)
+            assertNotNull(Item.testCache(item.id))
+
+            assertEquals(newPrice, item.price)
+            item.refresh(flush = false)
+            assertEquals(oldPrice, item.price)
+            assertNotNull(Item.testCache(item.id))
         }
     }
 
