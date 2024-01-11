@@ -88,13 +88,6 @@ val updatedMovie2 = StarWarsFilm.findSingleByAndUpdate(StarWarsFilms.name eq "Th
 }
 ```
 
-Search for multiple entities by a query and apply an update to all entities:
-```kotlin
-val updatedMovies = StarWarsFilm.findManyByAndUpdate(StarWarsFilms.director eq "George Lucas") {
-    it.director = "Lucas, George"
-}
-```
-
 ### Delete
 ```kotlin
 movie.delete() 

@@ -68,6 +68,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @param block Lambda that contains entity updates
      *
      * @return The updated entity that conforms to this op or null if no entity was found.
+     * It also returns [null] if more than one entity conforms to the op.
      */
     fun findSingleByAndUpdate(op: Op<Boolean>, block: (it: T) -> Unit): T? {
         val result = find(op).forUpdate().singleOrNull() ?: return null
@@ -200,6 +201,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
                     }
                     column to value
                 }
+
                 exp is Column && exp.table == table -> null
                 else -> exp to value
             }
@@ -668,6 +670,7 @@ abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID
                     tr.getUserData(cacheLoadingState) != null -> {
                         return transactionCache // prevent recursive call to warmCache() in .all()
                     }
+
                     else -> {
                         tr.putUserData(cacheLoadingState, this)
                         super.all().toList() // force iteration to initialize lazy collection

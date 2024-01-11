@@ -125,7 +125,6 @@ public abstract class org/jetbrains/exposed/dao/EntityClass {
 	public final fun findById (Ljava/lang/Comparable;)Lorg/jetbrains/exposed/dao/Entity;
 	public fun findById (Lorg/jetbrains/exposed/dao/id/EntityID;)Lorg/jetbrains/exposed/dao/Entity;
 	public final fun findByIdAndUpdate (Ljava/lang/Comparable;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
-	public final fun findManyByAndUpdate (Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public final fun findSingleByAndUpdate (Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
 	public final fun findWithCacheCondition (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lkotlin/sequences/Sequence;
 	public fun forEntityIds (Ljava/util/List;)Lorg/jetbrains/exposed/sql/SizedIterable;
