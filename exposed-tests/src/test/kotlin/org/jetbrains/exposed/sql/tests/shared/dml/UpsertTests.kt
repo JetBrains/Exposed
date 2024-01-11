@@ -6,11 +6,14 @@ import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.statements.BatchUpsertStatement
 import org.jetbrains.exposed.sql.tests.*
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.entities.UUIDTables.Addresses.address
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import java.util.*
@@ -380,6 +383,38 @@ class UpsertTests : DatabaseTestsBase() {
             assertEquals(unchanged[tester.address], unchangedResult[tester.address])
             val updatedResult = tester.selectAll().where { tester.id eq id1 }.single()
             assertEquals(updatedAge, updatedResult[tester.age])
+        }
+    }
+
+    @Test
+    fun testUpsertWithWhereParameterized() {
+        val tester = object : IntIdTable("tester") {
+            val name = varchar("name", 64).uniqueIndex()
+            val age = integer("age")
+        }
+
+        withTables(excludeSettings = TestDB.mySqlRelatedDB + upsertViaMergeDB, tester) {
+            val id1 = tester.upsert {
+                it[name] = "Anya"
+                it[age] = 10
+            } get tester.id
+            tester.upsert {
+                it[name] = "Anna"
+                it[age] = 50
+            }
+
+            val nameStartsWithA = tester.name like "A%"
+            val nameEndsWithA = tester.name like stringLiteral("%a")
+            val nameIsNotAnna = tester.name neq stringParam("Anna")
+            val updatedAge = 20
+            tester.upsert(tester.name, where = { nameStartsWithA and nameEndsWithA and nameIsNotAnna }) {
+                it[name] = "Anya"
+                it[age] = updatedAge
+            }
+
+            assertEquals(2, tester.selectAll().count())
+            val updatedResult = tester.selectAll().where { tester.age eq updatedAge }.single()
+            assertEquals(id1, updatedResult[tester.id])
         }
     }
 

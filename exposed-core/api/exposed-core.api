@@ -2963,6 +2963,8 @@ public class org/jetbrains/exposed/sql/statements/UpdateStatement : org/jetbrain
 
 public class org/jetbrains/exposed/sql/statements/UpsertStatement : org/jetbrains/exposed/sql/statements/InsertStatement {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Lorg/jetbrains/exposed/sql/Op;)V
+	public synthetic fun arguments ()Ljava/lang/Iterable;
+	public fun arguments ()Ljava/util/List;
 	public final fun getKeys ()[Lorg/jetbrains/exposed/sql/Column;
 	public final fun getOnUpdate ()Ljava/util/List;
 	public final fun getWhere ()Lorg/jetbrains/exposed/sql/Op;

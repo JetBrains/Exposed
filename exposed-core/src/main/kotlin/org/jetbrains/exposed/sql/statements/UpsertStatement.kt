@@ -30,4 +30,17 @@ open class UpsertStatement<Key : Any>(
         }
         return functionProvider.upsert(table, arguments!!.first(), onUpdate, where, transaction, keys = keys)
     }
+
+    override fun arguments(): List<Iterable<Pair<IColumnType, Any?>>> {
+        return arguments!!.map { args ->
+            val builder = QueryBuilder(true)
+            args.filter { (_, value) ->
+                value != DefaultValueMarker
+            }.forEach { (column, value) ->
+                builder.registerArgument(column, value)
+            }
+            where?.toQueryBuilder(builder)
+            builder.args
+        }
+    }
 }
