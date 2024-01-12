@@ -32,7 +32,7 @@ open class UpsertStatement<Key : Any>(
     }
 
     override fun arguments(): List<Iterable<Pair<IColumnType, Any?>>> {
-        return arguments!!.map { args ->
+        return arguments?.map { args ->
             val builder = QueryBuilder(true)
             args.filter { (_, value) ->
                 value != DefaultValueMarker
@@ -41,6 +41,6 @@ open class UpsertStatement<Key : Any>(
             }
             where?.toQueryBuilder(builder)
             builder.args
-        }
+        } ?: emptyList()
     }
 }
