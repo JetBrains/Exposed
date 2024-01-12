@@ -209,7 +209,7 @@ open class InsertStatement<Key : Any>(
         }
 
     override fun arguments(): List<Iterable<Pair<IColumnType, Any?>>> {
-        return arguments!!.map { args ->
+        return arguments?.map { args ->
             val builder = QueryBuilder(true)
             args.filter { (_, value) ->
                 value != DefaultValueMarker
@@ -217,6 +217,6 @@ open class InsertStatement<Key : Any>(
                 builder.registerArgument(column, value)
             }
             builder.args
-        }
+        } ?: emptyList()
     }
 }
