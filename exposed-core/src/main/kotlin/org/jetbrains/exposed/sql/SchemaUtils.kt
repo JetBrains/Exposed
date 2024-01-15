@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
+import java.io.File
 import java.math.BigDecimal
 
 /** Utility functions that assist with creating, altering, and dropping database schema objects. */
@@ -513,56 +514,97 @@ object SchemaUtils {
      */
     fun checkMappingConsistence(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (withLogs) {
-            checkExcessiveIndices(tables = tables)
+            checkExcessiveForeignKeyConstraints(tables = tables, withLogs = true)
+            checkExcessiveIndices(tables = tables, withLogs = true)
         }
         return checkMissingIndices(tables = tables, withLogs).flatMap { it.createStatement() }
     }
 
     /**
-     * Checks all [tables] for any that have more than one defined foreign key constraint or index and
-     * logs the findings.
-     *
-     * If found, this function also logs the SQL statements that can be used to drop these constraints.
+     * Log Exposed table mappings <-> real database mapping problems and returns DDL Statements to fix them, including
+     * DROP/DELETE statements (unlike [checkMappingConsistence])
      */
-    fun checkExcessiveIndices(vararg tables: Table) {
-        val excessiveConstraints = currentDialect.columnConstraints(*tables).filter { it.value.size > 1 }
+    private fun mappingConsistenceRequiredStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
+        return checkMissingIndices(tables = tables, withLogs).flatMap { it.createStatement() } +
+            checkExcessiveForeignKeyConstraints(tables = tables, withLogs).flatMap { it.dropStatement() } +
+            checkExcessiveIndices(tables = tables, withLogs).flatMap { it.dropStatement() }
+    }
 
-        if (excessiveConstraints.isNotEmpty()) {
-            exposedLogger.warn("List of excessive foreign key constraints:")
-            excessiveConstraints.forEach { (pair, fk) ->
-                val constraint = fk.first()
-                val fkPartToLog = fk.joinToString(", ") { it.fkName }
-                exposedLogger.warn(
-                    "\t\t\t'${pair.first}'.'${pair.second}' -> '${constraint.fromTableName}':\t$fkPartToLog"
-                )
-            }
-
-            exposedLogger.info("SQL Queries to remove excessive keys:")
-            excessiveConstraints.forEach { (_, value) ->
-                value.take(value.size - 1).forEach {
-                    exposedLogger.info("\t\t\t${it.dropStatement()};")
-                }
-            }
-        }
+    /**
+     * Checks all [tables] for any that have more than one defined index and logs the findings.
+     *
+     * If found, this function also logs and returns the SQL statements that can be used to drop these constraints.
+     */
+    @Suppress("NestedBlockDepth")
+    private fun checkExcessiveIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
+        val toDrop = HashSet<Index>()
 
         val excessiveIndices =
-            currentDialect.existingIndices(*tables).flatMap {
-                it.value
-            }.groupBy { Triple(it.table, it.unique, it.columns.joinToString { it.name }) }
-                .filter { it.value.size > 1 }
+            currentDialect.existingIndices(*tables).flatMap { (_, indices) ->
+                indices
+            }.groupBy { index -> Triple(index.table, index.unique, index.columns.joinToString { column -> column.name }) }
+                .filter { (_, indices) -> indices.size > 1 }
         if (excessiveIndices.isNotEmpty()) {
-            exposedLogger.warn("List of excessive indices:")
-            excessiveIndices.forEach { (triple, indices) ->
-                val indexNames = indices.joinToString(", ") { it.indexName }
-                exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> $indexNames")
+            if (withLogs) {
+                exposedLogger.warn("List of excessive indices:")
+                excessiveIndices.forEach { (triple, indices) ->
+                    val indexNames = indices.joinToString(", ") { index -> index.indexName }
+                    exposedLogger.warn("\t\t\t'${triple.first.tableName}'.'${triple.third}' -> $indexNames")
+                }
+
+                exposedLogger.info("SQL Queries to remove excessive indices:")
             }
-            exposedLogger.info("SQL Queries to remove excessive indices:")
-            excessiveIndices.forEach {
-                it.value.take(it.value.size - 1).forEach {
-                    exposedLogger.info("\t\t\t${it.dropStatement()};")
+
+            excessiveIndices.forEach { (_, indices) ->
+                indices.take(indices.size - 1).forEach { index ->
+                    toDrop.add(index)
+
+                    if (withLogs) {
+                        exposedLogger.info("\t\t\t${index.dropStatement()};")
+                    }
                 }
             }
         }
+
+        return toDrop.toList()
+    }
+
+    /**
+     * Checks all [tables] for any that have more than one defined foreign key constraint and logs the findings.
+     *
+     * If found, this function also logs and returns the SQL statements that can be used to drop these constraints.
+     */
+    @Suppress("NestedBlockDepth")
+    private fun checkExcessiveForeignKeyConstraints(vararg tables: Table, withLogs: Boolean): List<ForeignKeyConstraint> {
+        val toDrop = HashSet<ForeignKeyConstraint>()
+
+        val excessiveConstraints = currentDialect.columnConstraints(*tables).filter { (_, fkConstraints) -> fkConstraints.size > 1 }
+        if (excessiveConstraints.isNotEmpty()) {
+            if (withLogs) {
+                exposedLogger.warn("List of excessive foreign key constraints:")
+                excessiveConstraints.forEach { (table, columns), fkConstraints ->
+                    val constraint = fkConstraints.first()
+                    val fkPartToLog = fkConstraints.joinToString(", ") { fkConstraint -> fkConstraint.fkName }
+                    exposedLogger.warn(
+                        "\t\t\t'$table'.'$columns' -> '${constraint.fromTableName}':\t$fkPartToLog"
+                    )
+                }
+
+                exposedLogger.info("SQL Queries to remove excessive keys:")
+            }
+
+            excessiveConstraints.forEach { (_, fkConstraints) ->
+                fkConstraints.take(fkConstraints.size - 1).forEach { fkConstraint ->
+                    toDrop.add(fkConstraint)
+
+                    if (withLogs) {
+                        exposedLogger.info("\t\t\t${fkConstraint.dropStatement()};")
+                    }
+                }
+            }
+        }
+
+        return toDrop.toList()
     }
 
     /** Returns list of indices missed in database **/
@@ -622,6 +664,72 @@ object SchemaUtils {
             indexes.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '$name':")
         }
         return toCreate.toList()
+    }
+
+    /**
+     * @param scriptName The name to be used for the generated migration script.
+     * @param scriptDirectory The directory in which to create the migration script.
+     * @param withLogs By default, a description for each intermediate step, as well as its execution time, is logged at
+     * the INFO level. This can be disabled by setting [withLogs] to `false`.
+     *
+     * @return The generated migration script.
+     *
+     * This function simply generates the migration script without applying the migration. The purpose of it is to show
+     * the user what the migration script will look like before applying the migration.
+     */
+    @ExperimentalDatabaseMigrationApi
+    fun generateMigrationScript(vararg tables: Table, scriptDirectory: String, scriptName: String, withLogs: Boolean = true): File {
+        val allStatements = statementsRequiredForDatabaseMigration(*tables, withLogs = withLogs)
+
+        val migrationScript = File("$scriptDirectory/$scriptName.sql")
+        val migrationScriptExists = if (migrationScript.exists()) true else migrationScript.createNewFile()
+        if (migrationScriptExists) {
+            // Clear existing content
+            migrationScript.writeText("")
+
+            // Append statements
+            allStatements.forEach { statement ->
+                // Add semicolon only if it's not already there
+                val conditionalSemicolon = if (statement.last() == ';') "" else ";"
+
+                migrationScript.appendText("$statement$conditionalSemicolon\n")
+            }
+        } else {
+            throw NoSuchFileException(migrationScript, reason = "Failed to create/find migration script")
+        }
+
+        return migrationScript
+    }
+
+    /**
+     * Returns the SQL statements that need to be executed to make the existing database schema compatible with
+     * the table objects defined using Exposed. Unlike [statementsRequiredToActualizeScheme], DROP/DELETE statements are
+     * included.
+     *
+     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ADD COLUMN` syntax completely,
+     * which restricts the behavior when adding some missing columns. Please check the documentation.
+     *
+     * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
+     * This can be disabled by setting [withLogs] to `false`.
+     */
+    fun statementsRequiredForDatabaseMigration(vararg tables: Table, withLogs: Boolean = true): List<String> {
+        val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() }
+        val createStatements = logTimeSpent("Preparing create tables statements", withLogs) {
+            createStatements(tables = tablesToCreate.toTypedArray())
+        }
+        val alterStatements = logTimeSpent("Preparing alter table statements", withLogs) {
+            addMissingColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs)
+        }
+
+        val modifyTablesStatements = logTimeSpent("Checking mapping consistence", withLogs) {
+            mappingConsistenceRequiredStatements(
+                tables = tables,
+                withLogs
+            ).filter { it !in (createStatements + alterStatements) }
+        }
+
+        val allStatements = createStatements + alterStatements + modifyTablesStatements
+        return allStatements
     }
 
     /**
@@ -745,3 +853,11 @@ object SchemaUtils {
         }
     }
 }
+
+@RequiresOptIn(
+    message = "This database migration API is experimental. " +
+        "Its usage must be marked with '@OptIn(org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi::class)' " +
+        "or '@org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi'."
+)
+@Target(AnnotationTarget.FUNCTION)
+annotation class ExperimentalDatabaseMigrationApi

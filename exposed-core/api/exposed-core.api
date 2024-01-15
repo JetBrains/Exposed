@@ -752,6 +752,9 @@ public final class org/jetbrains/exposed/sql/Exists : org/jetbrains/exposed/sql/
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
+public abstract interface annotation class org/jetbrains/exposed/sql/ExperimentalDatabaseMigrationApi : java/lang/annotation/Annotation {
+}
+
 public abstract interface annotation class org/jetbrains/exposed/sql/ExperimentalKeywordApi : java/lang/annotation/Annotation {
 }
 
@@ -1843,7 +1846,6 @@ public final class org/jetbrains/exposed/sql/SchemaUtils {
 	public final fun addMissingColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public static synthetic fun addMissingColumnsStatements$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
 	public final fun checkCycle ([Lorg/jetbrains/exposed/sql/Table;)Z
-	public final fun checkExcessiveIndices ([Lorg/jetbrains/exposed/sql/Table;)V
 	public final fun checkMappingConsistence ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public static synthetic fun checkMappingConsistence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
 	public final fun create ([Lorg/jetbrains/exposed/sql/Table;Z)V
@@ -1867,11 +1869,15 @@ public final class org/jetbrains/exposed/sql/SchemaUtils {
 	public static synthetic fun dropSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Schema;ZZILjava/lang/Object;)V
 	public final fun dropSequence ([Lorg/jetbrains/exposed/sql/Sequence;Z)V
 	public static synthetic fun dropSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZILjava/lang/Object;)V
+	public final fun generateMigrationScript ([Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Z)Ljava/io/File;
+	public static synthetic fun generateMigrationScript$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
 	public final fun listDatabases ()Ljava/util/List;
 	public final fun listTables ()Ljava/util/List;
 	public final fun setSchema (Lorg/jetbrains/exposed/sql/Schema;Z)V
 	public static synthetic fun setSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;Lorg/jetbrains/exposed/sql/Schema;ZILjava/lang/Object;)V
 	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;
+	public final fun statementsRequiredForDatabaseMigration ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
+	public static synthetic fun statementsRequiredForDatabaseMigration$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
 	public final fun statementsRequiredToActualizeScheme ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public static synthetic fun statementsRequiredToActualizeScheme$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
 	public final fun withDataBaseLock (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/jvm/functions/Function0;)V
