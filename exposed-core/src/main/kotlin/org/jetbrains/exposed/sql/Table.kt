@@ -140,6 +140,8 @@ abstract class ColumnSet : FieldSet {
 /**
  * Creates an inner join relation with [otherTable] using [onColumn] and [otherColumn] equality
  * and/or [additionalConstraint] as the join condition.
+ *
+ * @throws IllegalStateException if the join cannot be performed. See the exception message for more details.
  */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.innerJoin(
     otherTable: C2,
@@ -151,6 +153,8 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.innerJoin(
 /**
  * Creates a left outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
  * and/or [additionalConstraint] as the join condition.
+ *
+ * @throws IllegalStateException if the join cannot be performed. See the exception message for more details.
  */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.leftJoin(
     otherTable: C2,
@@ -162,6 +166,8 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.leftJoin(
 /**
  * Creates a right outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
  * and/or [additionalConstraint] as the join condition.
+ *
+ * @throws IllegalStateException if the join cannot be performed. See the exception message for more details.
  */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.rightJoin(
     otherTable: C2,
@@ -173,6 +179,8 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.rightJoin(
 /**
  * Creates a full outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
  * and/or [additionalConstraint] as the join condition.
+ *
+ * @throws IllegalStateException if the join cannot be performed. See the exception message for more details.
  */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.fullJoin(
     otherTable: C2,
@@ -184,6 +192,8 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.fullJoin(
 /**
  * Creates a cross join relation with [otherTable] using [onColumn] and [otherColumn] equality
  * and/or [additionalConstraint] as the join condition.
+ *
+ * @throws IllegalStateException if the join cannot be performed. See the exception message for more details.
  */
 fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
     otherTable: C2,
