@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assume
 import org.junit.Test
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class TransactionExecTests : DatabaseTestsBase() {
     object ExecTable : Table("exec_table") {
@@ -124,5 +125,49 @@ class TransactionExecTests : DatabaseTestsBase() {
         }
         assertNotNull(result)
         assertEquals(2, result)
+    }
+
+    @Test
+    fun testExecWithNullableAndEmptyResultSets() {
+        val tester = object : Table("tester") {
+            val id = integer("id")
+            val title = varchar("title", 32)
+        }
+
+        withTables(tester) { testDb ->
+            tester.insert {
+                it[id] = 1
+                it[title] = "Exposed"
+            }
+
+            val (table, id, title) = listOf(tester.tableName, tester.id.name, tester.title.name).map { it.inProperCase() }
+
+            val stringResult = exec("""SELECT $title FROM $table WHERE $id = 1""") { rs ->
+                rs.next()
+                rs.getString(title)
+            }
+            assertNotNull(stringResult)
+            assertEquals("Exposed", stringResult)
+
+            // no record exists for id = 999, but result set returns single nullable column due to subquery alias
+            val dualExtra = if (testDb == TestDB.ORACLE) " FROM DUAL" else ""
+            val nullColumnResult = exec(
+                """SELECT (SELECT $title FROM $table WHERE $id = 999) AS sub$dualExtra"""
+            ) { rs ->
+                rs.next()
+                rs.getString("sub")
+            }
+            assertNull(nullColumnResult)
+
+            // no record exists for id = 999, so result set is empty and rs.next() is false
+            val nullTransformResult = exec("""SELECT $title FROM $table WHERE $id = 999""") { rs ->
+                if (rs.next()) {
+                    rs.getString(title)
+                } else {
+                    null
+                }
+            }
+            assertNull(nullTransformResult)
+        }
     }
 }
