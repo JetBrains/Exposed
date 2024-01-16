@@ -5,6 +5,7 @@ import kotlinx.serialization.builtins.ArraySerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -19,6 +20,8 @@ import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class JsonBColumnTests : DatabaseTestsBase() {
     private val binaryJsonNotSupportedDB = listOf(TestDB.SQLITE, TestDB.SQLSERVER) + TestDB.ORACLE
@@ -303,6 +306,34 @@ class JsonBColumnTests : DatabaseTestsBase() {
                 assertContentEquals(integerArray, result[iterables.intArray])
 
                 SchemaUtils.drop(iterables)
+            }
+        }
+    }
+
+    @Test
+    fun testJsonBWithNullableColumn() {
+        val tester = object : IntIdTable("nullable_tester") {
+            val user = jsonb<User>("user", Json.Default).nullable()
+        }
+
+        withDb(excludeSettings = binaryJsonNotSupportedDB) { testDb ->
+            excludingH2Version1(testDb) {
+                SchemaUtils.create(tester)
+
+                val nullId = tester.insertAndGetId {
+                    it[user] = null
+                }
+                val nonNullId = tester.insertAndGetId {
+                    it[user] = User("A", "Team A")
+                }
+
+                val result1 = tester.select(tester.user).where { tester.id eq nullId }.single()
+                assertNull(result1[tester.user])
+
+                val result2 = tester.select(tester.user).where { tester.id eq nonNullId }.single()
+                assertNotNull(result2[tester.user])
+
+                SchemaUtils.drop(tester)
             }
         }
     }

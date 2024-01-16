@@ -25,6 +25,8 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class JsonColumnTests : DatabaseTestsBase() {
     @Test
@@ -374,6 +376,34 @@ class JsonColumnTests : DatabaseTestsBase() {
                 assertContentEquals(integerArray, result[iterables.intArray])
 
                 SchemaUtils.drop(iterables)
+            }
+        }
+    }
+
+    @Test
+    fun testJsonWithNullableColumn() {
+        val tester = object : IntIdTable("nullable_tester") {
+            val user = json<User>("user", Json.Default).nullable()
+        }
+
+        withDb { testDb ->
+            excludingH2Version1(testDb) {
+                SchemaUtils.create(tester)
+
+                val nullId = tester.insertAndGetId {
+                    it[user] = null
+                }
+                val nonNullId = tester.insertAndGetId {
+                    it[user] = User("A", "Team A")
+                }
+
+                val result1 = tester.select(tester.user).where { tester.id eq nullId }.single()
+                assertNull(result1[tester.user])
+
+                val result2 = tester.select(tester.user).where { tester.id eq nonNullId }.single()
+                assertNotNull(result2[tester.user])
+
+                SchemaUtils.drop(tester)
             }
         }
     }
