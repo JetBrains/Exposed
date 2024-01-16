@@ -149,11 +149,9 @@ class TransactionExecTests : DatabaseTestsBase() {
             assertNotNull(stringResult)
             assertEquals("Exposed", stringResult)
 
-            // no record exists for id = 999, but result set returns single nullable column due to subquery alias
+            // no record exists for id = 999, but result set returns single nullable column value due to subquery alias
             val dualExtra = if (testDb == TestDB.ORACLE) " FROM DUAL" else ""
-            val nullColumnResult = exec(
-                """SELECT (SELECT $title FROM $table WHERE $id = 999) AS sub$dualExtra"""
-            ) { rs ->
+            val nullColumnResult = exec("""SELECT (SELECT $title FROM $table WHERE $id = 999) AS sub$dualExtra""") { rs ->
                 rs.next()
                 rs.getString("sub")
             }
