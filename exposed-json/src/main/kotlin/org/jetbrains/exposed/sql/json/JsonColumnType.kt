@@ -54,11 +54,13 @@ open class JsonColumnType<T : Any>(
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         val parameterValue = when (currentDialect) {
-            is PostgreSQLDialect -> PGobject().apply {
-                type = sqlType()
-                this.value = value as String?
+            is PostgreSQLDialect -> value?.let {
+                PGobject().apply {
+                    type = sqlType()
+                    this.value = value as? String
+                }
             }
-            is H2Dialect -> (value as String).encodeToByteArray()
+            is H2Dialect -> (value as? String)?.encodeToByteArray()
             else -> value
         }
         super.setParameter(stmt, index, parameterValue)
