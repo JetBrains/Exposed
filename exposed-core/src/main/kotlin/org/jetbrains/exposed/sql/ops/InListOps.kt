@@ -4,6 +4,8 @@ import org.jetbrains.exposed.sql.ComplexExpression
 import org.jetbrains.exposed.sql.ExpressionWithColumnType
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 
 /**
  * Represents an SQL operator that checks if [expr] is equals to any element from [list].
@@ -38,7 +40,7 @@ abstract class InListOrNotInListBaseOp<V> (
 
             val firstValue = iterator.next()
 
-            if (!iterator.hasNext()) {
+            if (!iterator.hasNext() && currentDialectIfAvailable !is OracleDialect) {
                 when {
                     isInList -> append(" = ")
                     else -> append(" != ")
