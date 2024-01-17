@@ -91,6 +91,29 @@ class H2Tests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testH2V1WithBigDecimalFunctionThatReturnsShort() {
+        val testTable = object : Table("test_table") {
+            val number = short("number")
+        }
+
+        withDb(TestDB.allH2TestDB) {
+            try {
+                SchemaUtils.create(testTable)
+
+                testTable.batchInsert(listOf<Short>(2, 4, 6, 8, 10)) { n ->
+                    this[testTable.number] = n
+                }
+
+                val average = testTable.number.avg()
+                val result = testTable.select(average).single()[average]
+                assertEquals("6.00".toBigDecimal(), result)
+            } finally {
+                SchemaUtils.drop(testTable)
+            }
+        }
+    }
+
     class WrappedTransactionManager(val transactionManager: TransactionManager) :
         TransactionManager by transactionManager
 
