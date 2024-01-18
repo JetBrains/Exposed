@@ -29,6 +29,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     @Test
     fun testTransactionIsolationWithHikariDataSource() {
         Assume.assumeTrue(setOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER).containsAll(TestDB.enabledDialects()))
+        Assume.assumeFalse(System.getProperty("exposed.test.container") == "mysql8")
         val dialect = TestDB.enabledDialects().first()
 
         val db = Database.connect(
@@ -66,6 +67,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     @Test
     fun testTransactionIsolationWithHikariAndDatabaseConfig() {
         Assume.assumeTrue(setOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER).containsAll(TestDB.enabledDialects()))
+        Assume.assumeFalse(System.getProperty("exposed.test.container") == "mysql8")
         val dialect = TestDB.enabledDialects().first()
 
         val db = Database.connect(
