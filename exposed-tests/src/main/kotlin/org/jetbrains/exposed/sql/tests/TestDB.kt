@@ -48,8 +48,21 @@ enum class TestDB(
         connection = {
             val container = System.getProperty("exposed.test.container")
             when (container) {
-                "mysql" -> "jdbc:mysql://127.0.0.1:3001/testdb?useSSL=false&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
-                else -> "jdbc:mysql://127.0.0.1:3002/testdb?useSSL=false&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowPublicKeyRetrieval=true&useSSL=false"
+                "mysql" ->
+                    "jdbc:mysql://127.0.0.1:3001/" +
+                        "testdb" +
+                        "?useSSL=false" +
+                        "&characterEncoding=UTF-8" +
+                        "&zeroDateTimeBehavior=convertToNull"
+
+                else ->
+                    "jdbc:mysql://127.0.0.1:3002/" +
+                        "testdb" +
+                        "?useSSL=false" +
+                        "&characterEncoding=UTF-8" +
+                        "&zeroDateTimeBehavior=convertToNull" +
+                        "&allowPublicKeyRetrieval=true" +
+                        "&useSSL=false"
             }
         },
         driver = "com.mysql.cj.jdbc.Driver"
@@ -119,10 +132,10 @@ enum class TestDB(
 
         fun enabledDialects(): Set<TestDB> {
             if (TEST_DIALECTS.isEmpty()) {
-                return values().toSet()
+                return entries.toSet()
             }
 
-            return values().filterTo(enumSetOf()) { it.name in TEST_DIALECTS }
+            return entries.filterTo(enumSetOf()) { it.name in TEST_DIALECTS }
         }
     }
 }
