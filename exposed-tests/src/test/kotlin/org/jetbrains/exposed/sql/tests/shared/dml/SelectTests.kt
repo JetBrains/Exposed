@@ -172,7 +172,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList04() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
             val r = users.selectAll().where { users.id to users.name inList listOf("andrey" to "Andrey") }.toList()
 
             assertEquals(1, r.size)
@@ -182,7 +182,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList05() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
             val r = users.selectAll().where { users.id to users.name inList emptyList() }.toList()
 
             assertEquals(0, r.size)
@@ -191,7 +191,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList06() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
             val r = users.selectAll().where { users.id to users.name notInList emptyList() }.toList()
 
             assertEquals(users.selectAll().count().toInt(), r.size)
@@ -200,7 +200,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList07() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)) { _, users, _ ->
+        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
             val r = users.selectAll().where {
                 Triple(users.id, users.name, users.cityId) notInList listOf(Triple("alex", "Alex", null))
             }.toList()
