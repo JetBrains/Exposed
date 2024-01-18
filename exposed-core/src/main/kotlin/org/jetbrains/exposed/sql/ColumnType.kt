@@ -490,6 +490,7 @@ class DecimalColumnType(
         }
         is Long -> value.toBigDecimal()
         is Int -> value.toBigDecimal()
+        is Short -> value.toLong().toBigDecimal()
         else -> error("Unexpected value of type Decimal: $value of ${value::class.qualifiedName}")
     }.setScale(scale, RoundingMode.HALF_EVEN)
 
