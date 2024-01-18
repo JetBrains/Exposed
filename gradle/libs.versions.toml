@@ -87,3 +87,4 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 docker-compose = { id = "com.avast.gradle.docker-compose", version.ref = "docker-compose" }
+gradle-doctor = { id = "com.osacky.doctor", version = "0.9.1" }
