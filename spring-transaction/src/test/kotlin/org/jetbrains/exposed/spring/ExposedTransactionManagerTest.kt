@@ -321,7 +321,8 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
                SELECT N+1 FROM T WHERE N<10000000
                )
                SELECT * FROM T;
-                    """.trimIndent(), explicitStatementType = StatementType.SELECT
+                    """.trimIndent(),
+                    explicitStatementType = StatementType.SELECT
                 )
                 fail("Should have thrown a timeout exception")
             } catch (cause: ExposedSQLException) {

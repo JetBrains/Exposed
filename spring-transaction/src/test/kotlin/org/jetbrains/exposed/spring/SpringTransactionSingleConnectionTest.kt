@@ -90,4 +90,3 @@ open class SingleConnectionH2TestConfig {
         @Qualifier("singleConnectionH2DataSource") dataSource: DataSource
     ): PlatformTransactionManager = SpringTransactionManager(dataSource = dataSource, DatabaseConfig { useNestedTransactions = true })
 }
-

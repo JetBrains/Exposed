@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.jdbc.datasource.DataSourceUtils
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
@@ -20,8 +19,6 @@ import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.annotation.TransactionManagementConfigurer
 import org.springframework.transaction.support.TransactionTemplate
-import java.sql.Connection
-import javax.sql.DataSource
 
 @Configuration
 @EnableTransactionManagement
@@ -54,9 +51,6 @@ abstract class SpringTransactionTestBase {
 
     @Autowired
     lateinit var transactionManager: PlatformTransactionManager
-
-    @Autowired
-    lateinit var dataSource: DataSource
 }
 
 fun PlatformTransactionManager.execute(
