@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.jdbc.datasource.DataSourceUtils
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
@@ -19,6 +20,8 @@ import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.annotation.TransactionManagementConfigurer
 import org.springframework.transaction.support.TransactionTemplate
+import java.sql.Connection
+import javax.sql.DataSource
 
 @Configuration
 @EnableTransactionManagement
@@ -31,10 +34,7 @@ open class TestConfig : TransactionManagementConfigurer {
     ).setType(EmbeddedDatabaseType.H2).build()
 
     @Bean
-    override fun annotationDrivenTransactionManager(): PlatformTransactionManager = SpringTransactionManager(
-        ds(),
-        DatabaseConfig { useNestedTransactions = true }
-    )
+    override fun annotationDrivenTransactionManager(): PlatformTransactionManager = SpringTransactionManager(ds(), DatabaseConfig { useNestedTransactions = true })
 
     @Bean
     open fun service(): Service = Service()
@@ -54,11 +54,15 @@ abstract class SpringTransactionTestBase {
 
     @Autowired
     lateinit var transactionManager: PlatformTransactionManager
+
+    @Autowired
+    lateinit var dataSource: DataSource
 }
 
 fun PlatformTransactionManager.execute(
     propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
     isolationLevel: Int = TransactionDefinition.ISOLATION_DEFAULT,
+    readOnly: Boolean = false,
     timeout: Int? = null,
     block: (TransactionStatus) -> Unit
 ) {
@@ -66,6 +70,7 @@ fun PlatformTransactionManager.execute(
     val tt = TransactionTemplate(this)
     tt.propagationBehavior = propagationBehavior
     tt.isolationLevel = isolationLevel
+    if (readOnly) tt.isReadOnly = true
     if (timeout != null) tt.timeout = timeout
     tt.executeWithoutResult {
         block(it)
