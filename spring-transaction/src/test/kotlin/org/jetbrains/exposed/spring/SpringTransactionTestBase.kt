@@ -14,8 +14,11 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.TransactionDefinition
+import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.annotation.TransactionManagementConfigurer
+import org.springframework.transaction.support.TransactionTemplate
 
 @Configuration
 @EnableTransactionManagement
@@ -51,4 +54,20 @@ abstract class SpringTransactionTestBase {
 
     @Autowired
     lateinit var transactionManager: PlatformTransactionManager
+}
+
+fun PlatformTransactionManager.execute(
+    propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
+    isolationLevel: Int = TransactionDefinition.ISOLATION_DEFAULT,
+    timeout: Int? = null,
+    block: (TransactionStatus) -> Unit
+) {
+    if (this !is SpringTransactionManager) error("Wrong txManager instance: ${this.javaClass.name}")
+    val tt = TransactionTemplate(this)
+    tt.propagationBehavior = propagationBehavior
+    tt.isolationLevel = isolationLevel
+    if (timeout != null) tt.timeout = timeout
+    tt.executeWithoutResult {
+        block(it)
+    }
 }
