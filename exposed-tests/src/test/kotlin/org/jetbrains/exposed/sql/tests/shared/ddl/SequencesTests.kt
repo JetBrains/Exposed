@@ -86,7 +86,6 @@ class SequencesTests : DatabaseTestsBase() {
     fun `test insert LongIdTable with auth-increment with sequence`() {
         withDb {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
-                addLogger(StdOutSqlLogger)
                 try {
                     SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
                     val developerId = DeveloperWithAutoIncrementBySequence.insertAndGetId {

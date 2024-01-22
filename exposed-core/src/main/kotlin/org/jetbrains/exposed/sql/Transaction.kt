@@ -206,7 +206,11 @@ open class Transaction(
 
             override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = stmt
 
-            override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = listOf(args)
+            override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = listOf(
+                args.map { (columnType, value) ->
+                    columnType.apply { nullable = true } to value
+                }
+            )
         })
     }
 
