@@ -10,10 +10,11 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assume
 import org.junit.Test
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class ParameterizationTests : DatabaseTestsBase() {
     object TempTable : Table("tmp") {
-        val name = varchar("foo", 50)
+        val name = varchar("foo", 50).nullable()
     }
 
     private val supportMultipleStatements by lazy {
@@ -145,5 +146,20 @@ class ParameterizationTests : DatabaseTestsBase() {
         }
 
         TransactionManager.closeAndUnregister(db)
+    }
+
+    @Test
+    fun testNullParameterWithLogger() {
+        withTables(TempTable) {
+            // the logger is left in to test that it does not throw IllegalStateException with null parameter arg
+            addLogger(StdOutSqlLogger)
+
+            exec(
+                stmt = "INSERT INTO ${TempTable.tableName} (${TempTable.name.name}) VALUES (?)",
+                args = listOf(VarCharColumnType() to null)
+            )
+
+            assertNull(TempTable.selectAll().single()[TempTable.name])
+        }
     }
 }
