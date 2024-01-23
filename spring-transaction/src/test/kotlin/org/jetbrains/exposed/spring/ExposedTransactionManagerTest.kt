@@ -8,17 +8,15 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.springframework.test.annotation.Commit
 import org.springframework.test.annotation.Repeat
 import org.springframework.transaction.IllegalTransactionStateException
-import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionDefinition
-import org.springframework.transaction.TransactionStatus
+import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.transaction.support.TransactionTemplate
 import java.sql.SQLTimeoutException
 import java.util.*
 import kotlin.test.AfterTest
@@ -39,20 +37,6 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         }
     }
 
-    private fun PlatformTransactionManager.execute(
-        propagationBehavior: Int = TransactionDefinition.PROPAGATION_REQUIRED,
-        timeout: Int? = null,
-        block: (TransactionStatus) -> Unit
-    ) {
-        if (this !is SpringTransactionManager) error("Wrong txManager instance: ${this.javaClass.name}")
-        val tt = TransactionTemplate(this)
-        tt.propagationBehavior = propagationBehavior
-        if (timeout != null) tt.timeout = timeout
-        tt.executeWithoutResult {
-            block(it)
-        }
-    }
-
     @BeforeTest
     fun beforeTest() {
         transactionManager.execute {
@@ -66,7 +50,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Repeat(5)
     open fun testConnection() {
         T1.insertRandom()
-        Assert.assertEquals(1, T1.selectAll().count())
+        assertEquals(1, T1.selectAll().count())
     }
 
     @Test
@@ -78,7 +62,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         T1.insert {
             it[c1] = rnd
         }
-        Assert.assertEquals(rnd, T1.selectAll().single()[T1.c1])
+        assertEquals(rnd, T1.selectAll().single()[T1.c1])
     }
 
     @Test
@@ -90,11 +74,11 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
             T1.insert {
                 it[c1] = rnd
             }
-            Assert.assertEquals(rnd, T1.selectAll().single()[T1.c1])
+            assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
             transactionManager.execute {
                 T1.insertRandom()
-                Assert.assertEquals(2, T1.selectAll().count())
+                assertEquals(2, T1.selectAll().count())
             }
         }
     }
@@ -108,16 +92,16 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         T1.insert {
             it[c1] = rnd
         }
-        Assert.assertEquals(rnd, T1.selectAll().single()[T1.c1])
+        assertEquals(rnd, T1.selectAll().single()[T1.c1])
 
         transaction {
             T1.insertRandom()
-            Assert.assertEquals(2, T1.selectAll().count())
+            assertEquals(2, T1.selectAll().count())
         }
     }
 
     /**
-     * Test For Propagation.NESTED
+     * Test for Propagation.NESTED
      * Execute within a nested transaction if a current transaction exists, behave like REQUIRED otherwise.
      */
     @Test
@@ -125,16 +109,16 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Transactional
     open fun testConnectionWithNestedTransactionCommit() {
         T1.insertRandom()
-        Assert.assertEquals(1, T1.selectAll().count())
+        assertEquals(1, T1.selectAll().count())
         transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
             T1.insertRandom()
-            Assert.assertEquals(2, T1.selectAll().count())
+            assertEquals(2, T1.selectAll().count())
         }
-        Assert.assertEquals(2, T1.selectAll().count())
+        assertEquals(2, T1.selectAll().count())
     }
 
     /**
-     * Test For Propagation.NESTED with inner roll-back
+     * Test for Propagation.NESTED with inner roll-back
      * The nested transaction will be roll-back only inner transaction when the transaction marks as rollback.
      */
     @Test
@@ -142,17 +126,17 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Transactional
     open fun testConnectionWithNestedTransactionInnerRollback() {
         T1.insertRandom()
-        Assert.assertEquals(1, T1.selectAll().count())
+        assertEquals(1, T1.selectAll().count())
         transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) { status ->
             T1.insertRandom()
-            Assert.assertEquals(2, T1.selectAll().count())
+            assertEquals(2, T1.selectAll().count())
             status.setRollbackOnly()
         }
-        Assert.assertEquals(1, T1.selectAll().count())
+        assertEquals(1, T1.selectAll().count())
     }
 
     /**
-     * Test For Propagation.NESTED with outer roll-back
+     * Test for Propagation.NESTED with outer roll-back
      * The nested transaction will be roll-back entire transaction when the transaction marks as rollback.
      */
     @Test
@@ -160,23 +144,23 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     fun testConnectionWithNestedTransactionOuterRollback() {
         transactionManager.execute {
             T1.insertRandom()
-            Assert.assertEquals(1, T1.selectAll().count())
+            assertEquals(1, T1.selectAll().count())
             it.setRollbackOnly()
 
             transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
                 T1.insertRandom()
-                Assert.assertEquals(2, T1.selectAll().count())
+                assertEquals(2, T1.selectAll().count())
             }
-            Assert.assertEquals(2, T1.selectAll().count())
+            assertEquals(2, T1.selectAll().count())
         }
 
         transactionManager.execute {
-            Assert.assertEquals(0, T1.selectAll().count())
+            assertEquals(0, T1.selectAll().count())
         }
     }
 
     /**
-     * Test For Propagation.REQUIRES_NEW
+     * Test for Propagation.REQUIRES_NEW
      * Create a new transaction, and suspend the current transaction if one exists.
      */
     @Test
@@ -184,17 +168,17 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     @Transactional
     open fun testConnectionWithRequiresNew() {
         T1.insertRandom()
-        Assert.assertEquals(1, T1.selectAll().count())
+        assertEquals(1, T1.selectAll().count())
         transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
-            Assert.assertEquals(0, T1.selectAll().count())
+            assertEquals(0, T1.selectAll().count())
             T1.insertRandom()
-            Assert.assertEquals(1, T1.selectAll().count())
+            assertEquals(1, T1.selectAll().count())
         }
-        Assert.assertEquals(2, T1.selectAll().count())
+        assertEquals(2, T1.selectAll().count())
     }
 
     /**
-     * Test For Propagation.REQUIRES_NEW with inner transaction roll-back
+     * Test for Propagation.REQUIRES_NEW with inner transaction roll-back
      * The inner transaction will be roll-back only inner transaction when the transaction marks as rollback.
      * And since isolation level is READ_COMMITTED, the inner transaction can't see the changes of outer transaction.
      */
@@ -203,22 +187,22 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     fun testConnectionWithRequiresNewWithInnerTransactionRollback() {
         transactionManager.execute {
             T1.insertRandom()
-            Assert.assertEquals(1, T1.selectAll().count())
+            assertEquals(1, T1.selectAll().count())
             transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
                 T1.insertRandom()
-                Assert.assertEquals(1, T1.selectAll().count())
+                assertEquals(1, T1.selectAll().count())
                 it.setRollbackOnly()
             }
-            Assert.assertEquals(1, T1.selectAll().count())
+            assertEquals(1, T1.selectAll().count())
         }
 
         transactionManager.execute {
-            Assert.assertEquals(1, T1.selectAll().count())
+            assertEquals(1, T1.selectAll().count())
         }
     }
 
     /**
-     * Test For Propagation.NEVER
+     * Test for Propagation.NEVER
      * Execute non-transactionally, throw an exception if a transaction exists.
      */
     @Test
@@ -231,7 +215,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     }
 
     /**
-     * Test For Propagation.NEVER
+     * Test for Propagation.NEVER
      * Throw an exception cause outer transaction exists.
      */
     @Test
@@ -247,7 +231,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     }
 
     /**
-     * Test For Propagation.MANDATORY
+     * Test for Propagation.MANDATORY
      * Support a current transaction, throw an exception if none exists.
      */
     @Test
@@ -261,7 +245,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     }
 
     /**
-     * Test For Propagation.MANDATORY
+     * Test for Propagation.MANDATORY
      * Throw an exception cause no transaction exists.
      */
     @Test
@@ -275,7 +259,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     }
 
     /**
-     * Test For Propagation.SUPPORTS
+     * Test for Propagation.SUPPORTS
      * Support a current transaction, execute non-transactionally if none exists.
      */
     @Test
@@ -289,7 +273,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     }
 
     /**
-     * Test For Propagation.SUPPORTS
+     * Test for Propagation.SUPPORTS
      * Execute non-transactionally if none exists.
      */
     @Test
@@ -300,6 +284,23 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
                 T1.insertRandom()
             }
         }
+    }
+
+    /**
+     * Test for Isolation Level
+     */
+    @Test
+    @Repeat(5)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    open fun testIsolationLevelReadUncommitted() {
+        assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED)
+        T1.insertRandom()
+        val count = T1.selectAll().count()
+        transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW, TransactionDefinition.ISOLATION_READ_UNCOMMITTED) {
+            assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_UNCOMMITTED)
+            assertEquals(count, T1.selectAll().count())
+        }
+        assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED)
     }
 
     /**
@@ -335,5 +336,10 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         transactionManager.execute {
             SchemaUtils.drop(T1)
         }
+    }
+
+    private fun assertTransactionIsolationLevel(expected: Int) {
+        val connection = TransactionManager.current().connection
+        assertEquals(expected, connection.transactionIsolation)
     }
 }
