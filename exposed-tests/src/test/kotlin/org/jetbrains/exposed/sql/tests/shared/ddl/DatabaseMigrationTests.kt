@@ -26,7 +26,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         val noPKTable = object : Table(tableName) {
             val bar = integer("bar")
         }
-
         val singlePKTable = object : Table(tableName) {
             val bar = integer("bar")
 
@@ -53,6 +52,51 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 }
             } finally {
                 assertTrue(File("$scriptDirectory/$scriptName.sql").delete())
+                SchemaUtils.drop(noPKTable)
+            }
+        }
+    }
+
+    @Test
+    fun testMigrationScriptOverwrittenIfAlreadyExists() {
+        val tableName = "tester"
+        val noPKTable = object : Table(tableName) {
+            val bar = integer("bar")
+        }
+        val singlePKTable = object : Table(tableName) {
+            val bar = integer("bar")
+
+            override val primaryKey = PrimaryKey(bar)
+        }
+
+        val directory = "src/test/resources"
+        val name = "V2__Test"
+
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+            try {
+                SchemaUtils.create(noPKTable)
+
+                // Create initial script
+                val initialScript = File("$directory/$name.sql")
+                initialScript.createNewFile()
+                val statements = SchemaUtils.statementsRequiredForDatabaseMigration(noPKTable)
+                statements.forEach {
+                    initialScript.appendText(it)
+                }
+
+                // Generate script with the same name of initial script
+                val newScript = SchemaUtils.generateMigrationScript(singlePKTable, scriptDirectory = directory, scriptName = name)
+
+                val expectedStatements: List<String> = SchemaUtils.statementsRequiredForDatabaseMigration(singlePKTable)
+                assertEquals(1, expectedStatements.size)
+
+                val fileStatements: List<String> = newScript.bufferedReader().readLines().map { it.trimEnd(';') }
+                expectedStatements.zip(fileStatements).forEach { (expected, actual) ->
+                    assertEquals(expected, actual)
+                }
+            } finally {
+                assertTrue(File("$directory/$name.sql").delete())
+                SchemaUtils.drop(noPKTable)
             }
         }
     }

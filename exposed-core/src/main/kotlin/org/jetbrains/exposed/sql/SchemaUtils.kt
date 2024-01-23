@@ -668,34 +668,32 @@ object SchemaUtils {
 
     /**
      * @param scriptName The name to be used for the generated migration script.
-     * @param scriptDirectory The directory in which to create the migration script.
+     * @param scriptDirectory The directory (path from repository root) in which to create the migration script.
      * @param withLogs By default, a description for each intermediate step, as well as its execution time, is logged at
      * the INFO level. This can be disabled by setting [withLogs] to `false`.
      *
      * @return The generated migration script.
      *
-     * This function simply generates the migration script without applying the migration. The purpose of it is to show
-     * the user what the migration script will look like before applying the migration.
+     * This function simply generates the migration script without applying the migration. Its purpose is to show what
+     * the migration script will look like before applying the migration.
+     * If a migration script with the same name already exists, its content will be overwritten.
      */
     @ExperimentalDatabaseMigrationApi
     fun generateMigrationScript(vararg tables: Table, scriptDirectory: String, scriptName: String, withLogs: Boolean = true): File {
         val allStatements = statementsRequiredForDatabaseMigration(*tables, withLogs = withLogs)
 
         val migrationScript = File("$scriptDirectory/$scriptName.sql")
-        val migrationScriptExists = if (migrationScript.exists()) true else migrationScript.createNewFile()
-        if (migrationScriptExists) {
-            // Clear existing content
-            migrationScript.writeText("")
+        migrationScript.createNewFile()
 
-            // Append statements
-            allStatements.forEach { statement ->
-                // Add semicolon only if it's not already there
-                val conditionalSemicolon = if (statement.last() == ';') "" else ";"
+        // Clear existing content
+        migrationScript.writeText("")
 
-                migrationScript.appendText("$statement$conditionalSemicolon\n")
-            }
-        } else {
-            throw NoSuchFileException(migrationScript, reason = "Failed to create/find migration script")
+        // Append statements
+        allStatements.forEach { statement ->
+            // Add semicolon only if it's not already there
+            val conditionalSemicolon = if (statement.last() == ';') "" else ";"
+
+            migrationScript.appendText("$statement$conditionalSemicolon\n")
         }
 
         return migrationScript
