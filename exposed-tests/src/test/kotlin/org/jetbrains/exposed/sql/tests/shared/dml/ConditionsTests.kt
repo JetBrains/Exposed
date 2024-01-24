@@ -307,7 +307,7 @@ class ConditionsTests : DatabaseTestsBase() {
             }
         }
     }
-    
+
     @Test
     fun selectAliasedComparisonResult() {
         val table = object : IntIdTable("foo") {
