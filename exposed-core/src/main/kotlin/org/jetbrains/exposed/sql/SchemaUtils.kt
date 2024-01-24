@@ -538,14 +538,17 @@ object SchemaUtils {
      */
     @Suppress("NestedBlockDepth")
     fun checkExcessiveIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
-        val toDrop = HashSet<Index>()
-
         val excessiveIndices =
             currentDialect.existingIndices(*tables).flatMap { (_, indices) ->
                 indices
             }.groupBy { index -> Triple(index.table, index.unique, index.columns.joinToString { column -> column.name }) }
                 .filter { (_, indices) -> indices.size > 1 }
-        if (excessiveIndices.isNotEmpty()) {
+
+        return if (excessiveIndices.isEmpty()) {
+            emptyList()
+        } else {
+            val toDrop = HashSet<Index>()
+
             if (withLogs) {
                 exposedLogger.warn("List of excessive indices:")
                 excessiveIndices.forEach { (triple, indices) ->
@@ -565,9 +568,9 @@ object SchemaUtils {
                     }
                 }
             }
-        }
 
-        return toDrop.toList()
+            toDrop.toList()
+        }
     }
 
     /**
@@ -578,10 +581,13 @@ object SchemaUtils {
      */
     @Suppress("NestedBlockDepth")
     fun checkExcessiveForeignKeyConstraints(vararg tables: Table, withLogs: Boolean): List<ForeignKeyConstraint> {
-        val toDrop = HashSet<ForeignKeyConstraint>()
-
         val excessiveConstraints = currentDialect.columnConstraints(*tables).filter { (_, fkConstraints) -> fkConstraints.size > 1 }
-        if (excessiveConstraints.isNotEmpty()) {
+
+        return if (excessiveConstraints.isEmpty()) {
+            emptyList()
+        } else {
+            val toDrop = HashSet<ForeignKeyConstraint>()
+
             if (withLogs) {
                 exposedLogger.warn("List of excessive foreign key constraints:")
                 excessiveConstraints.forEach { (table, columns), fkConstraints ->
@@ -604,9 +610,9 @@ object SchemaUtils {
                     }
                 }
             }
-        }
 
-        return toDrop.toList()
+            toDrop.toList()
+        }
     }
 
     /** Returns list of indices missed in database **/
