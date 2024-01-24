@@ -12,6 +12,12 @@ import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
 
+/**
+ * [TransactionManager] implementation registered to the provided database value [db].
+ *
+ * [setupTxConnection] can be provided to override the default configuration of transaction settings when a
+ * connection is retrieved from the database.
+ */
 class ThreadLocalTransactionManager(
     private val db: Database,
     private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null
@@ -37,19 +43,42 @@ class ThreadLocalTransactionManager(
     @Volatile
     override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
         get() {
-            if (field == -1) {
-                field = Database.getDefaultIsolationLevel(db)
+            when {
+                field == -1 -> {
+                    if (db.connectsViaDataSource) loadDataSourceIsolationLevel = true
+                    field = Database.getDefaultIsolationLevel(db)
+                }
+                db.connectsViaDataSource && loadDataSourceIsolationLevel -> {
+                    if (db.dataSourceIsolationLevel != -1) {
+                        loadDataSourceIsolationLevel = false
+                        field = db.dataSourceIsolationLevel
+                    }
+                }
             }
             return field
         }
+
         @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel")
         @TestOnly
         set
 
+    /**
+     * Whether the transaction isolation level of the underlying DataSource should be retrieved from the database.
+     *
+     * This should only be set to `true` if [Database.connectsViaDataSource] has also been set to `true` and if
+     * an initial connection to the database has not already been made.
+     */
+    private var loadDataSourceIsolationLevel = false
+
     @Volatile
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
+    /** A thread local variable storing the current transaction. */
     val threadLocal = ThreadLocal<Transaction>()
+
+    override fun toString(): String {
+        return "ThreadLocalTransactionManager[${hashCode()}](db=$db)"
+    }
 
     override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
         val transaction = outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
@@ -59,7 +88,8 @@ class ThreadLocalTransactionManager(
                 transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
                 setupTxConnection = setupTxConnection,
                 threadLocal = threadLocal,
-                outerTransaction = outerTransaction
+                outerTransaction = outerTransaction,
+                loadDataSourceIsolationLevel = loadDataSourceIsolationLevel,
             )
         )
 
@@ -82,22 +112,35 @@ class ThreadLocalTransactionManager(
         override val transactionIsolation: Int,
         override val readOnly: Boolean,
         val threadLocal: ThreadLocal<Transaction>,
-        override val outerTransaction: Transaction?
+        override val outerTransaction: Transaction?,
+        private val loadDataSourceIsolationLevel: Boolean
     ) : TransactionInterface {
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
                 setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
                     // The order of setters here is important.
-                    // Transaction isolation should go first as the readOnly or autoCommit can start transaction with wrong isolation level
+                    // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
                     // Some drivers start a transaction right after `setAutoCommit(false)`,
                     // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                    transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
-                    readOnly = this@ThreadLocalTransaction.readOnly
+                    if (db.connectsViaDataSource && loadDataSourceIsolationLevel && db.dataSourceIsolationLevel == -1) {
+                        // retrieves the setting of the datasource connection & caches it
+                        db.dataSourceIsolationLevel = transactionIsolation
+                        db.dataSourceReadOnly = readOnly
+                    } else if (
+                        !db.connectsViaDataSource ||
+                        db.dataSourceIsolationLevel != this@ThreadLocalTransaction.transactionIsolation ||
+                        db.dataSourceReadOnly != this@ThreadLocalTransaction.readOnly
+                    ) {
+                        // only set the level if there is no cached datasource value or if the value differs
+                        transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                        readOnly = this@ThreadLocalTransaction.readOnly
+                    }
                     autoCommit = false
                 }
             }
         }
+
         override val connection: ExposedConnection<*>
             get() = connectionLazy.value
 
@@ -153,6 +196,15 @@ class ThreadLocalTransactionManager(
     }
 }
 
+/**
+ * Creates a transaction then calls the [statement] block with this transaction as its receiver and returns the result.
+ *
+ * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
+ * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ *
+ * @return The final result of the [statement] block.
+ * @sample org.jetbrains.exposed.sql.tests.h2.MultiDatabaseTest.testTransactionWithDatabase
+ */
 fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
     transaction(
         db.transactionManager.defaultIsolationLevel,
@@ -161,53 +213,74 @@ fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
         statement
     )
 
+/**
+ * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
+ * the [statement] block with this transaction as its receiver and returns the result.
+ *
+ * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
+ * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ *
+ * @return The final result of the [statement] block.
+ * @sample org.jetbrains.exposed.sql.tests.shared.ConnectionTimeoutTest.testTransactionRepetitionWithDefaults
+ */
 fun <T> transaction(
     transactionIsolation: Int,
     readOnly: Boolean = false,
     db: Database? = null,
     statement: Transaction.() -> T
-): T =
-    keepAndRestoreTransactionRefAfterRun(db) {
-        val outer = TransactionManager.currentOrNull()
+): T = keepAndRestoreTransactionRefAfterRun(db) {
+    val outer = TransactionManager.currentOrNull()
 
-        if (outer != null && (db == null || outer.db == db)) {
-            val outerManager = outer.db.transactionManager
+    if (outer != null && (db == null || outer.db == db)) {
+        val outerManager = outer.db.transactionManager
 
-            val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
+        val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
+        try {
+            transaction.statement().also {
+                if (outer.db.useNestedTransactions) {
+                    transaction.commit()
+                }
+            }
+        } finally {
+            TransactionManager.resetCurrent(outerManager)
+        }
+    } else {
+        val existingForDb = db?.transactionManager
+        existingForDb?.currentOrNull()?.let { transaction ->
+            val currentManager = outer?.db.transactionManager
             try {
+                TransactionManager.resetCurrent(existingForDb)
                 transaction.statement().also {
-                    if (outer.db.useNestedTransactions) {
+                    if (db.useNestedTransactions) {
                         transaction.commit()
                     }
                 }
             } finally {
-                TransactionManager.resetCurrent(outerManager)
+                TransactionManager.resetCurrent(currentManager)
             }
-        } else {
-            val existingForDb = db?.transactionManager
-            existingForDb?.currentOrNull()?.let { transaction ->
-                val currentManager = outer?.db.transactionManager
-                try {
-                    TransactionManager.resetCurrent(existingForDb)
-                    transaction.statement().also {
-                        if (db.useNestedTransactions) {
-                            transaction.commit()
-                        }
-                    }
-                } finally {
-                    TransactionManager.resetCurrent(currentManager)
-                }
-            } ?: inTopLevelTransaction(
-                transactionIsolation,
-                readOnly,
-                db,
-                null,
-                statement
-            )
-        }
+        } ?: inTopLevelTransaction(
+            transactionIsolation,
+            readOnly,
+            db,
+            null,
+            statement
+        )
     }
+}
 
-@Suppress("LongParameterList")
+/**
+ * Creates a transaction with the specified [transactionIsolation] and [readOnly] settings, then calls
+ * the [statement] block with this transaction as its receiver and returns the result.
+ *
+ * **Note** All changes in this transaction will be committed at the end of the [statement] block, even if
+ * it is nested and even if `DatabaseConfig.useNestedTransactions` is set to `false`.
+ *
+ * **Note** If the database value [db] is not set, the value used will be either the last [Database] instance created
+ * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
+ *
+ * @return The final result of the [statement] block.
+ * @sample org.jetbrains.exposed.sql.tests.shared.RollbackTransactionTest.testRollbackWithoutSavepoints
+ */
 fun <T> inTopLevelTransaction(
     transactionIsolation: Int,
     readOnly: Boolean = false,
@@ -250,6 +323,7 @@ fun <T> inTopLevelTransaction(
                         intermediateDelay += retryInterval * repetitions
                         ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
                     }
+
                     transaction.minRepetitionDelay == transaction.maxRepetitionDelay -> transaction.minRepetitionDelay
                     else -> 0
                 }

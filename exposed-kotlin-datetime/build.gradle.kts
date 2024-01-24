@@ -3,26 +3,31 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     kotlin("jvm") apply true
-    kotlin("plugin.serialization") apply true
-    id("testWithDBs")
+    alias(libs.plugins.serialization)
 }
 
 repositories {
     mavenCentral()
 }
 
+kotlin {
+    jvmToolchain(8)
+}
+
 dependencies {
     api(project(":exposed-core"))
-    api("org.jetbrains.kotlinx", "kotlinx-datetime-jvm", "0.4.0")
+    api(libs.kotlinx.jvm.datetime)
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
-    testImplementation("junit", "junit", "4.12")
+    testImplementation(project(":exposed-json"))
+    testImplementation(libs.junit)
     testImplementation(kotlin("test-junit"))
 }
 
 tasks.withType<Test>().configureEach {
-    if (JavaVersion.VERSION_1_8 > JavaVersion.current())
+    if (JavaVersion.VERSION_1_8 > JavaVersion.current()) {
         jvmArgs = listOf("-XX:MaxPermSize=256m")
+    }
     testLogging {
         events.addAll(listOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED))
         showStandardStreams = true

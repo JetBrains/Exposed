@@ -9,6 +9,12 @@ import org.jetbrains.exposed.sql.isAutoInc
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
+/**
+ * Base class representing the SQL statement that batch inserts new rows into a table.
+ *
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
+ * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ */
 abstract class BaseBatchInsertStatement(
     table: Table,
     ignore: Boolean,
@@ -18,7 +24,7 @@ abstract class BaseBatchInsertStatement(
 
     internal val data = ArrayList<MutableMap<Column<*>, Any?>>()
 
-    private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null
+    private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null || isDatabaseGenerated
 
     override operator fun <S> set(column: Column<S>, value: S) {
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
@@ -28,6 +34,12 @@ abstract class BaseBatchInsertStatement(
         super.set(column, value)
     }
 
+    /**
+     * Adds the most recent batch to the current list of insert statements.
+     *
+     * This function uses the mapping of columns scheduled for change with their new values, which is
+     * provided by the implementing `BatchInsertStatement` instance.
+     */
     fun addBatch() {
         if (data.isNotEmpty()) {
             validateLastBatch()
@@ -88,7 +100,10 @@ abstract class BaseBatchInsertStatement(
     override fun valuesAndDefaults(values: Map<Column<*>, Any?>) = arguments!!.first().toMap()
 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
-        return if (!shouldReturnGeneratedValues) transaction.connection.prepareStatement(sql, false)
-        else super.prepared(transaction, sql)
+        return if (!shouldReturnGeneratedValues) {
+            transaction.connection.prepareStatement(sql, false)
+        } else {
+            super.prepared(transaction, sql)
+        }
     }
 }

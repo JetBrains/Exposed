@@ -11,6 +11,7 @@ import javax.money.Monetary
  *
  * @author Vladislav Kisel
  */
+@Suppress("MagicNumber")
 class CurrencyColumnType : VarCharColumnType(3) {
 
     override fun notNullValueToDB(value: Any): Any {
@@ -30,4 +31,5 @@ class CurrencyColumnType : VarCharColumnType(3) {
     }
 }
 
+/** Creates a character column, with the specified [name], for storing currency (as javax.money.CurrencyUnit). */
 fun Table.currency(name: String): Column<CurrencyUnit> = registerColumn(name, CurrencyColumnType())

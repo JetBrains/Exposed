@@ -24,7 +24,7 @@ object Cities : Table() {
 }
 
 fun main() {
-    Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+    Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {
@@ -44,7 +44,7 @@ fun main() {
             it.update(name, stringLiteral("   Prague   ").trim().substring(1, 2))
         }[Cities.id]
 
-        val pragueName = Cities.select { Cities.id eq pragueId }.single()[Cities.name]
+        val pragueName = Cities.selectAll().where { Cities.id eq pragueId }.single()[Cities.name]
         assertEquals(pragueName, "Pr")
 
         Users.insert {
@@ -91,8 +91,8 @@ fun main() {
 
         println("Manual join:")
         (Users innerJoin Cities)
-            .slice(Users.name, Cities.name)
-            .select {
+            .select(Users.name, Cities.name)
+            .where {
                 (Users.id.eq("andrey") or Users.name.eq("Sergey")) and
                     Users.id.eq("sergey") and Users.cityId.eq(Cities.id)
             }.forEach {
@@ -102,8 +102,8 @@ fun main() {
         println("Join with foreign key:")
 
         (Users innerJoin Cities)
-            .slice(Users.name, Users.cityId, Cities.name)
-            .select { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
+            .select(Users.name, Users.cityId, Cities.name)
+            .where { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
             .forEach {
                 if (it[Users.cityId] != null) {
                     println("${it[Users.name]} lives in ${it[Cities.name]}")
@@ -114,20 +114,20 @@ fun main() {
 
         println("Functions and group by:")
 
-        ((Cities innerJoin Users)
-            .slice(Cities.name, Users.id.count())
-            .selectAll()
-            .groupBy(Cities.name)
+        (
+            (Cities innerJoin Users)
+                .select(Cities.name, Users.id.count())
+                .groupBy(Cities.name)
             ).forEach {
-                val cityName = it[Cities.name]
-                val userCount = it[Users.id.count()]
+            val cityName = it[Cities.name]
+            val userCount = it[Users.id.count()]
 
-                if (userCount > 0) {
-                    println("$userCount user(s) live(s) in $cityName")
-                } else {
-                    println("Nobody lives in $cityName")
-                }
+            if (userCount > 0) {
+                println("$userCount user(s) live(s) in $cityName")
+            } else {
+                println("Nobody lives in $cityName")
             }
+        }
 
         SchemaUtils.drop(Users, Cities)
     }

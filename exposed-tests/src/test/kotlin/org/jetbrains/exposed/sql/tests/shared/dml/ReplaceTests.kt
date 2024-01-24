@@ -12,7 +12,7 @@ import java.util.*
 class ReplaceTests : DatabaseTestsBase() {
 
     private val mysqlLikeDialects = listOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.H2_MYSQL, TestDB.H2_MARIADB)
-    private val replaceNotSupported = TestDB.values().toList() - mysqlLikeDialects - TestDB.SQLITE
+    private val replaceNotSupported = TestDB.entries - mysqlLikeDialects - TestDB.SQLITE
 
     private object NewAuth : Table("new_auth") {
         val username = varchar("username", 16)
@@ -27,7 +27,7 @@ class ReplaceTests : DatabaseTestsBase() {
     fun testReplaceWithPKConflict() {
         withTables(replaceNotSupported, NewAuth) {
             val (name1, session1) = "username" to "session"
-            NewAuth.replace {  // replace, like any insert, should accept defaults
+            NewAuth.replace { // replace, like any insert, should accept defaults
                 it[username] = name1
                 it[session] = session1.toByteArray()
             }
@@ -71,23 +71,23 @@ class ReplaceTests : DatabaseTestsBase() {
             assertEquals(0, tester.selectAll().single()[tester.replaced])
 
             val timeNow = System.currentTimeMillis()
-            tester.replace {// insert because only 1 constraint is equal
+            tester.replace { // insert because only 1 constraint is equal
                 it[key1] = id1
                 it[key2] = "$id2 2"
                 it[replaced] = timeNow
             }
 
             assertEquals(2, tester.selectAll().count())
-            assertEquals(0, tester.select { tester.key2 eq id2 }.single()[tester.replaced])
+            assertEquals(0, tester.selectAll().where { tester.key2 eq id2 }.single()[tester.replaced])
 
-            tester.replace {  // delete & insert because both constraints match
+            tester.replace { // delete & insert because both constraints match
                 it[key1] = id1
                 it[key2] = id2
                 it[replaced] = timeNow
             }
 
             assertEquals(2, tester.selectAll().count())
-            assertEquals(timeNow, tester.select { tester.key2 eq id2 }.single()[tester.replaced])
+            assertEquals(timeNow, tester.selectAll().where { tester.key2 eq id2 }.single()[tester.replaced])
         }
     }
 
@@ -122,8 +122,8 @@ class ReplaceTests : DatabaseTestsBase() {
     @Test
     fun testBatchReplace01() {
         withCitiesAndUsers(replaceNotSupported) { cities, users, userData ->
-            val (munichId, pragueId, saintPetersburgId) = cities.slice(cities.id)
-                .select { cities.name inList listOf("Munich", "Prague", "St. Petersburg") }
+            val (munichId, pragueId, saintPetersburgId) = cities.select(cities.id)
+                .where { cities.name inList listOf("Munich", "Prague", "St. Petersburg") }
                 .orderBy(cities.name).map { it[cities.id] }
 
             // replace is implemented as delete-then-insert on conflict, which breaks foreign key constraints,
@@ -142,8 +142,8 @@ class ReplaceTests : DatabaseTestsBase() {
                 this[cities.name] = it.second
             }
 
-            val cityNames = cities.slice(cities.name)
-                .select { cities.id inList cityUpdates.unzip().first }
+            val cityNames = cities.select(cities.name)
+                .where { cities.id inList cityUpdates.unzip().first }
                 .orderBy(cities.name).toCityNameList()
 
             assertEqualLists(cityUpdates.unzip().second, cityNames)
@@ -152,28 +152,28 @@ class ReplaceTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchReplaceWithSequence() {
-        val Cities = DMLTestsData.Cities
-        withTables(replaceNotSupported, Cities) {
+        val cities = DMLTestsData.Cities
+        withTables(replaceNotSupported, cities) {
             val amountOfNames = 25
             val names = List(amountOfNames) { index -> index + 1 to UUID.randomUUID().toString() }.asSequence()
 
-            Cities.batchReplace(names) { (index, name) ->
-                this[Cities.id] = index
-                this[Cities.name] = name
+            cities.batchReplace(names) { (index, name) ->
+                this[cities.id] = index
+                this[cities.name] = name
             }
 
-            val namesFromDB1 = Cities.selectAll().toCityNameList()
+            val namesFromDB1 = cities.selectAll().toCityNameList()
             assertEquals(amountOfNames, namesFromDB1.size)
             assertEqualLists(names.unzip().second, namesFromDB1)
 
             val namesToReplace = List(amountOfNames) { index -> index + 1 to UUID.randomUUID().toString() }.asSequence()
 
-            Cities.batchReplace(namesToReplace) { (index, name) ->
-                this[Cities.id] = index
-                this[Cities.name] = name
+            cities.batchReplace(namesToReplace) { (index, name) ->
+                this[cities.id] = index
+                this[cities.name] = name
             }
 
-            val namesFromDB2 = Cities.selectAll().toCityNameList()
+            val namesFromDB2 = cities.selectAll().toCityNameList()
             assertEquals(amountOfNames, namesFromDB2.size)
             assertEqualLists(namesToReplace.unzip().second, namesFromDB2)
         }
@@ -181,12 +181,12 @@ class ReplaceTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchReplaceWithEmptySequence() {
-        val Cities = DMLTestsData.Cities
-        withTables(Cities) {
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
             val names = emptySequence<String>()
-            Cities.batchReplace(names) { name -> this[Cities.name] = name }
+            cities.batchReplace(names) { name -> this[cities.name] = name }
 
-            val batchesSize = Cities.selectAll().count()
+            val batchesSize = cities.selectAll().count()
 
             assertEquals(0, batchesSize)
         }

@@ -1,11 +1,14 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.statements.BatchUpsertStatement
 import org.jetbrains.exposed.sql.tests.*
@@ -14,6 +17,7 @@ import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import java.util.*
 import kotlin.properties.Delegates
+import kotlin.test.assertNotNull
 
 // Upsert implementation does not support H2 version 1
 // https://youtrack.jetbrains.com/issue/EXPOSED-30/Phase-Out-Support-for-H2-Version-1.x
@@ -39,7 +43,7 @@ class UpsertTests : DatabaseTestsBase() {
                 }
 
                 assertEquals(2, AutoIncTable.selectAll().count())
-                val updatedResult = AutoIncTable.select { AutoIncTable.id eq id1 }.single()
+                val updatedResult = AutoIncTable.selectAll().where { AutoIncTable.id eq id1 }.single()
                 assertEquals("C", updatedResult[AutoIncTable.name])
             }
         }
@@ -63,25 +67,65 @@ class UpsertTests : DatabaseTestsBase() {
                     it[name] = "A"
                 }
 
-                tester.upsert {  // insert because only 1 constraint is equal
+                tester.upsert { // insert because only 1 constraint is equal
                     it[idA] = 7
                     it[idB] = insertStmt get tester.idB
                     it[name] = "B"
                 }
-                tester.upsert {  // insert because both constraints differ
+                tester.upsert { // insert because both constraints differ
                     it[idA] = 99
                     it[idB] = 99
                     it[name] = "C"
                 }
-                tester.upsert {  // update because both constraints match
+                tester.upsert { // update because both constraints match
                     it[idA] = insertStmt get tester.idA
                     it[idB] = insertStmt get tester.idB
                     it[name] = "D"
                 }
 
                 assertEquals(3, tester.selectAll().count())
-                val updatedResult = tester.select { tester.idA eq insertStmt[tester.idA] }.single()
+                val updatedResult = tester.selectAll().where { tester.idA eq insertStmt[tester.idA] }.single()
                 assertEquals("D", updatedResult[tester.name])
+            }
+        }
+    }
+
+    @Test
+    fun testUpsertWithAllColumnsInPK() {
+        val tester = object : Table("tester") {
+            val userId = varchar("user_id", 32)
+            val keyId = varchar("key_id", 32)
+            override val primaryKey = PrimaryKey(userId, keyId)
+        }
+
+        fun upsertOnlyKeyColumns(values: Pair<String, String>) {
+            tester.upsert {
+                it[userId] = values.first
+                it[keyId] = values.second
+            }
+        }
+
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val primaryKeyValues = Pair("User A", "Key A")
+                if (testDb == TestDB.ORACLE) {
+                    // Oracle explicitly prohibits using key columns in update clause
+                    // throws 'ORA-38104: Columns referenced in the ON Clause cannot be updated'
+                    expectException<ExposedSQLException> {
+                        upsertOnlyKeyColumns(primaryKeyValues)
+                    }
+                } else {
+                    // insert new row
+                    upsertOnlyKeyColumns(primaryKeyValues)
+                    // 'update' existing row to have identical values
+                    upsertOnlyKeyColumns(primaryKeyValues)
+
+                    val result = tester.selectAll().singleOrNull()
+                    assertNotNull(result)
+
+                    val resultValues = Pair(result[tester.userId], result[tester.keyId])
+                    assertEquals(primaryKeyValues, resultValues)
+                }
             }
         }
     }
@@ -104,7 +148,7 @@ class UpsertTests : DatabaseTestsBase() {
                 }
 
                 assertEquals(2, Words.selectAll().count())
-                val updatedResult = Words.select { Words.word eq wordA }.single()
+                val updatedResult = Words.selectAll().where { Words.word eq wordA }.single()
                 assertEquals(9, updatedResult[Words.count])
             }
         }
@@ -153,6 +197,32 @@ class UpsertTests : DatabaseTestsBase() {
                     assertEquals(newIdB, result[tester.idB])
                     assertEquals("D", result[tester.name])
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testUpsertWithUUIDKeyConflict() {
+        val tester = object : Table("tester") {
+            val id = uuid("id").autoGenerate()
+            val title = text("title")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                val uuid1 = tester.upsert {
+                    it[title] = "A"
+                } get tester.id
+                tester.upsert {
+                    it[id] = uuid1
+                    it[title] = "B"
+                }
+
+                val result = tester.selectAll().single()
+                assertEquals(uuid1, result[tester.id])
+                assertEquals("B", result[tester.title])
             }
         }
     }
@@ -226,7 +296,7 @@ class UpsertTests : DatabaseTestsBase() {
                     it[losses] = 0
                 }
 
-                val insertResult = tester.select { tester.item neq itemA }.single()
+                val insertResult = tester.selectAll().where { tester.item neq itemA }.single()
                 assertEquals(200, insertResult[tester.gains])
                 assertEquals(0, insertResult[tester.losses])
 
@@ -236,7 +306,7 @@ class UpsertTests : DatabaseTestsBase() {
                     it[losses] = 0
                 }
 
-                val updateResult = tester.select { tester.item eq itemA }.single()
+                val updateResult = tester.selectAll().where { tester.item eq itemA }.single()
                 assertEquals(125, updateResult[tester.gains])
                 assertEquals(75, updateResult[tester.losses])
             }
@@ -254,22 +324,22 @@ class UpsertTests : DatabaseTestsBase() {
         withTables(tester) { testDb ->
             excludingH2Version1(testDb) {
                 val testWord = "Test"
-                tester.upsert {  // default expression in insert
+                tester.upsert { // default expression in insert
                     it[word] = testWord
                 }
                 assertEquals("Phrase", tester.selectAll().single()[tester.phrase])
 
                 val phraseConcat = concat(" - ", listOf(tester.word, tester.phrase))
-                tester.upsert(onUpdate = listOf(tester.phrase to phraseConcat)) {  // expression in update
+                tester.upsert(onUpdate = listOf(tester.phrase to phraseConcat)) { // expression in update
                     it[word] = testWord
                 }
                 assertEquals("$testWord - $defaultPhrase", tester.selectAll().single()[tester.phrase])
 
-                tester.upsert {  // provided expression in insert
+                tester.upsert { // provided expression in insert
                     it[word] = "$testWord 2"
                     it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar"))
                 }
-                assertEquals("foobar", tester.select { tester.word eq "$testWord 2" }.single()[tester.phrase])
+                assertEquals("foobar", tester.selectAll().where { tester.word eq "$testWord 2" }.single()[tester.phrase])
             }
         }
     }
@@ -308,10 +378,42 @@ class UpsertTests : DatabaseTestsBase() {
             }
 
             assertEquals(2, tester.selectAll().count())
-            val unchangedResult = tester.select { tester.id eq unchanged[tester.id] }.single()
+            val unchangedResult = tester.selectAll().where { tester.id eq unchanged[tester.id] }.single()
             assertEquals(unchanged[tester.address], unchangedResult[tester.address])
-            val updatedResult = tester.select { tester.id eq id1 }.single()
+            val updatedResult = tester.selectAll().where { tester.id eq id1 }.single()
             assertEquals(updatedAge, updatedResult[tester.age])
+        }
+    }
+
+    @Test
+    fun testUpsertWithWhereParameterized() {
+        val tester = object : IntIdTable("tester") {
+            val name = varchar("name", 64).uniqueIndex()
+            val age = integer("age")
+        }
+
+        withTables(excludeSettings = TestDB.mySqlRelatedDB + upsertViaMergeDB, tester) {
+            val id1 = tester.upsert {
+                it[name] = "Anya"
+                it[age] = 10
+            } get tester.id
+            tester.upsert {
+                it[name] = "Anna"
+                it[age] = 50
+            }
+
+            val nameStartsWithA = tester.name like "A%"
+            val nameEndsWithA = tester.name like stringLiteral("%a")
+            val nameIsNotAnna = tester.name neq stringParam("Anna")
+            val updatedAge = 20
+            tester.upsert(tester.name, where = { nameStartsWithA and nameEndsWithA and nameIsNotAnna }) {
+                it[name] = "Anya"
+                it[age] = updatedAge
+            }
+
+            assertEquals(2, tester.selectAll().count())
+            val updatedResult = tester.selectAll().where { tester.age eq updatedAge }.single()
+            assertEquals(id1, updatedResult[tester.id])
         }
     }
 
@@ -333,14 +435,14 @@ class UpsertTests : DatabaseTestsBase() {
                     it[name] = "bar"
                 }
 
-                val query1 = tester1.slice(tester1.name).select { tester1.id eq id1 }
+                val query1 = tester1.select(tester1.name).where { tester1.id eq id1 }
                 val id3 = tester2.upsert {
                     if (testDb in upsertViaMergeDB) it[id] = 1
                     it[name] = query1
                 } get tester2.id
                 assertEquals("foo", tester2.selectAll().single()[tester2.name])
 
-                val query2 = tester1.slice(tester1.name).select { tester1.id eq id2 }
+                val query2 = tester1.select(tester1.name).where { tester1.id eq id2 }
                 tester2.upsert {
                     it[id] = id3
                     it[name] = query2

@@ -5,12 +5,13 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -39,6 +40,11 @@ class OrderDAO(id: EntityID<UUID>) : UUIDEntity(id) {
 @org.springframework.stereotype.Service
 @Transactional
 open class Service {
+
+    open fun init() {
+        SchemaUtils.create(CustomerTable, OrderTable)
+    }
+
     open fun createCustomer(name: String): CustomerDAO {
         return CustomerDAO.new {
             this.name = name
@@ -59,6 +65,14 @@ open class Service {
     open fun findOrderByProduct(product: String): OrderDAO? {
         return OrderDAO.find { OrderTable.product eq product }.singleOrNull()
     }
+
+    open fun transaction(block: () -> Unit) {
+        block()
+    }
+
+    open fun cleanUp() {
+        SchemaUtils.drop(CustomerTable, OrderTable)
+    }
 }
 
 open class SpringTransactionEntityTest : SpringTransactionTestBase() {
@@ -66,29 +80,36 @@ open class SpringTransactionEntityTest : SpringTransactionTestBase() {
     @Autowired
     lateinit var service: Service
 
-    @Test @Commit
-    open fun test01() {
-        transaction {
-            SchemaUtils.create(CustomerTable, OrderTable)
-        }
+    @BeforeTest
+    open fun beforeTest() {
+        service.init()
+    }
 
+    @Test
+    @Commit
+    open fun test01() {
         val customer = service.createCustomer("Alice1")
         service.createOrder(customer, "Product1")
         val order = service.findOrderByProduct("Product1")
         assertNotNull(order)
-        transaction {
+        service.transaction {
             assertEquals("Alice1", order.customer.name)
         }
     }
 
-    @Test @Commit
+    @Test
+    @Commit
     fun test02() {
         service.doBoth("Bob", "Product2")
         val order = service.findOrderByProduct("Product2")
         assertNotNull(order)
-        transaction {
+        service.transaction {
             assertEquals("Bob", order.customer.name)
-            SchemaUtils.drop(CustomerTable, OrderTable)
         }
+    }
+
+    @AfterTest
+    fun afterTest() {
+        service.cleanUp()
     }
 }

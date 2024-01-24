@@ -2,6 +2,12 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 
+/**
+ * A configuration class for a [Database].
+ *
+ * Parameters set in this class apply to all transactions that use the [Database] instance,
+ * unless an applicable override is specified in an individual transaction block.
+ */
 @Suppress("LongParameterList")
 class DatabaseConfig private constructor(
     val sqlLogger: SqlLogger,
@@ -17,7 +23,8 @@ class DatabaseConfig private constructor(
     val keepLoadedReferencesOutOfTransaction: Boolean,
     val explicitDialect: DatabaseDialect?,
     val defaultSchema: Schema?,
-    val logTooMuchResultSetsThreshold: Int
+    val logTooMuchResultSetsThreshold: Int,
+    val preserveKeywordCasing: Boolean,
 ) {
 
     class Builder(
@@ -85,19 +92,16 @@ class DatabaseConfig private constructor(
          * Useful when [eager loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading) is used.
          */
         var keepLoadedReferencesOutOfTransaction: Boolean = false,
-
         /**
          * Set the explicit dialect for a database.
          * This can be useful when working with unsupported dialects which have the same behavior as the one that
          * Exposed supports.
          */
         var explicitDialect: DatabaseDialect? = null,
-
         /**
          * Set the default schema for a database.
          */
         var defaultSchema: Schema? = null,
-
         /**
          * Log too much result sets opened in parallel.
          * The error log will contain the stacktrace of the place in the code where a new result set occurs, and it
@@ -105,11 +109,18 @@ class DatabaseConfig private constructor(
          * 0 value means no log needed.
          */
         var logTooMuchResultSetsThreshold: Int = 0,
+        /**
+         * Toggle whether table and column identifiers that are also keywords should retain their case sensitivity.
+         * Keeping user-defined case sensitivity (value set to `true`) is the default setting.
+         */
+        @ExperimentalKeywordApi
+        var preserveKeywordCasing: Boolean = true,
     )
 
     companion object {
         operator fun invoke(body: Builder.() -> Unit = {}): DatabaseConfig {
             val builder = Builder().apply(body)
+            @OptIn(ExperimentalKeywordApi::class)
             return DatabaseConfig(
                 sqlLogger = builder.sqlLogger ?: Slf4jSqlDebugLogger,
                 useNestedTransactions = builder.useNestedTransactions,
@@ -124,8 +135,17 @@ class DatabaseConfig private constructor(
                 keepLoadedReferencesOutOfTransaction = builder.keepLoadedReferencesOutOfTransaction,
                 explicitDialect = builder.explicitDialect,
                 defaultSchema = builder.defaultSchema,
-                logTooMuchResultSetsThreshold = builder.logTooMuchResultSetsThreshold
+                logTooMuchResultSetsThreshold = builder.logTooMuchResultSetsThreshold,
+                preserveKeywordCasing = builder.preserveKeywordCasing,
             )
         }
     }
 }
+
+@RequiresOptIn(
+    message = "This API is experimental and the behavior defined by setting this value to 'true' is now the default. " +
+        "Its usage must be marked with '@OptIn(org.jetbrains.exposed.sql.ExperimentalKeywordApi::class)' " +
+        "or '@org.jetbrains.exposed.sql.ExperimentalKeywordApi'."
+)
+@Target(AnnotationTarget.PROPERTY)
+annotation class ExperimentalKeywordApi

@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Assume
@@ -57,6 +56,20 @@ class SchemaTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testDropSchemaWithCascade() {
+        withDb {
+            if (currentDialect.supportsCreateSchema) {
+                val schema = Schema("TEST_SCHEMA")
+                SchemaUtils.createSchema(schema)
+                assertTrue(schema.exists())
+
+                SchemaUtils.dropSchema(schema, cascade = true)
+                assertFalse(schema.exists())
+            }
+        }
+    }
+
+    @Test
     fun `table references table with same name in other database in mysql`() {
         withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
             val schema = Schema("MYSCHEMA")
@@ -65,8 +78,10 @@ class SchemaTests : DatabaseTestsBase() {
 
                 val firstCatalogName = connection.catalog
 
+                exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT PRIMARY KEY)")
                 SchemaUtils.setSchema(schema)
+                exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT REFERENCES $firstCatalogName.test(id))")
 
                 val catalogName = connection.catalog
@@ -119,13 +134,13 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `test default schema`() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
         val schema = Schema("schema")
         TestDB.H2.connect()
 
         transaction {
             connection.metadata {
-                assertEquals("PUBLIC", currentScheme)
+                assertEquals("PUBLIC", tableNamesByCurrentSchema(null).schemaName)
             }
         }
 
@@ -139,13 +154,17 @@ class SchemaTests : DatabaseTestsBase() {
 
         transaction(db) {
             connection.metadata {
-                val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(currentScheme)
+                val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(
+                    tableNamesByCurrentSchema(null).schemaName
+                )
                 assertEquals(schema.identifier, currentScheme)
             }
             // Nested transaction
             transaction(db) {
                 connection.metadata {
-                    val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(currentScheme)
+                    val currentScheme = db.identifierManager.cutIfNecessaryAndQuote(
+                        tableNamesByCurrentSchema(null).schemaName
+                    )
                     assertEquals(schema.identifier, currentScheme)
                 }
             }

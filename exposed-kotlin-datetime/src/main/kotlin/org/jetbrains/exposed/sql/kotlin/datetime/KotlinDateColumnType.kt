@@ -1,5 +1,3 @@
-@file:Suppress("PrivatePropertyName")
-
 package org.jetbrains.exposed.sql.kotlin.datetime
 
 import kotlinx.datetime.*
@@ -9,11 +7,13 @@ import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import java.sql.ResultSet
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -50,6 +50,34 @@ private val DEFAULT_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
 
+// Example result: 2023-07-07 14:42:29.343+02:00 or 2023-07-07 12:42:29.343Z
+internal val SQLITE_OFFSET_DATE_TIME_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSS[XXX]",
+        Locale.ROOT
+    )
+}
+
+// For UTC time zone, MySQL rejects the 'Z' and will only accept the offset '+00:00'
+internal val MYSQL_OFFSET_DATE_TIME_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSSSSS[xxx]",
+        Locale.ROOT
+    )
+}
+
+// Example result: 2023-07-07 14:42:29.343789 +02:00
+internal val ORACLE_OFFSET_DATE_TIME_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSSSSS [xxx]",
+        Locale.ROOT
+    )
+}
+
+internal val DEFAULT_OFFSET_DATE_TIME_FORMATTER by lazy {
+    DateTimeFormatter.ISO_OFFSET_DATE_TIME.withLocale(Locale.ROOT)
+}
+
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     val baseFormat = "yyyy-MM-d HH:mm:ss"
@@ -63,6 +91,11 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
 
 private val LocalDate.millis get() = this.atStartOfDayIn(TimeZone.currentSystemDefault()).epochSeconds * MILLIS_IN_SECOND
 
+/**
+ * Column for storing dates, as [LocalDate].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.date
+ */
 class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = false
 
@@ -106,6 +139,11 @@ class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times without time zone, as [LocalDateTime].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.datetime
+ */
 class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
@@ -137,6 +175,7 @@ class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         is Long -> longToLocalDateTime(value)
         is java.time.LocalDateTime -> value.toKotlinLocalDateTime()
         is String -> java.time.LocalDateTime.parse(value, formatterForDateString(value)).toKotlinLocalDateTime()
+        is OffsetDateTime -> value.toLocalDateTime().toKotlinLocalDateTime()
         else -> valueFromDB(value.toString())
     }
 
@@ -150,6 +189,14 @@ class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         else -> value
     }
 
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        return if (currentDialect is OracleDialect) {
+            rs.getObject(index, java.sql.Timestamp::class.java)
+        } else {
+            super.readObject(rs, index)
+        }
+    }
+
     private fun longToLocalDateTime(millis: Long) = Instant.fromEpochMilliseconds(millis).toLocalDateTime(DEFAULT_TIME_ZONE)
     private fun longToLocalDateTime(seconds: Long, nanos: Long) = Instant.fromEpochSeconds(seconds, nanos).toLocalDateTime(DEFAULT_TIME_ZONE)
 
@@ -158,6 +205,11 @@ class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing times, as [LocalTime].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.time
+ */
 class KotlinLocalTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
 
@@ -209,6 +261,11 @@ class KotlinLocalTimeColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times without time zone, as [Instant].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.timestamp
+ */
 class KotlinInstantColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
@@ -251,6 +308,66 @@ class KotlinInstantColumnType : ColumnType(), IDateColumnType {
     }
 }
 
+/**
+ * Column for storing dates and times with time zone, as [OffsetDateTime].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.timestampWithTimeZone
+ */
+class KotlinOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
+    override val hasTimePart: Boolean = true
+
+    override fun sqlType(): String = currentDialect.dataTypeProvider.timestampWithTimeZoneType()
+
+    override fun nonNullValueToString(value: Any): String = when (value) {
+        is OffsetDateTime -> {
+            when (currentDialect) {
+                is SQLiteDialect -> "'${value.format(SQLITE_OFFSET_DATE_TIME_FORMATTER)}'"
+                is MysqlDialect -> "'${value.format(MYSQL_OFFSET_DATE_TIME_FORMATTER)}'"
+                is OracleDialect -> "'${value.format(ORACLE_OFFSET_DATE_TIME_FORMATTER)}'"
+                else -> "'${value.format(DEFAULT_OFFSET_DATE_TIME_FORMATTER)}'"
+            }
+        }
+        else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+    }
+
+    override fun valueFromDB(value: Any): OffsetDateTime = when (value) {
+        is OffsetDateTime -> value
+        is String -> {
+            if (currentDialect is SQLiteDialect) {
+                OffsetDateTime.parse(value, SQLITE_OFFSET_DATE_TIME_FORMATTER)
+            } else {
+                OffsetDateTime.parse(value)
+            }
+        }
+        else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
+        is SQLiteDialect -> super.readObject(rs, index)
+        else -> rs.getObject(index, OffsetDateTime::class.java)
+    }
+
+    override fun notNullValueToDB(value: Any): Any = when (value) {
+        is OffsetDateTime -> {
+            when (currentDialect) {
+                is SQLiteDialect -> value.format(SQLITE_OFFSET_DATE_TIME_FORMATTER)
+                is MysqlDialect -> value.format(MYSQL_OFFSET_DATE_TIME_FORMATTER)
+                else -> value
+            }
+        }
+        else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+    }
+
+    companion object {
+        internal val INSTANCE = KotlinOffsetDateTimeColumnType()
+    }
+}
+
+/**
+ * Column for storing time-based amounts of time, as [Duration].
+ *
+ * @sample org.jetbrains.exposed.sql.kotlin.datetime.duration
+ */
 class KotlinDurationColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
 
@@ -298,7 +415,7 @@ class KotlinDurationColumnType : ColumnType() {
 fun Table.date(name: String): Column<LocalDate> = registerColumn(name, KotlinLocalDateColumnType())
 
 /**
- * A datetime column to store both a date and a time.
+ * A datetime column to store both a date and a time without time zone.
  *
  * @param name The column name
  */
@@ -314,11 +431,22 @@ fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, K
 fun Table.time(name: String): Column<LocalTime> = registerColumn(name, KotlinLocalTimeColumnType())
 
 /**
- * A timestamp column to store both a date and a time.
+ * A timestamp column to store both a date and a time without time zone.
  *
  * @param name The column name
  */
 fun Table.timestamp(name: String): Column<Instant> = registerColumn(name, KotlinInstantColumnType())
+
+/**
+ * A timestamp column to store both a date and a time with time zone.
+ *
+ * Note: PostgreSQL and MySQL always store the timestamp in UTC, thereby losing the original time zone. To preserve the
+ * original time zone, store the time zone information in a separate column.
+ *
+ * @param name The column name
+ */
+fun Table.timestampWithTimeZone(name: String): Column<OffsetDateTime> =
+    registerColumn(name, KotlinOffsetDateTimeColumnType())
 
 /**
  * A date column to store a duration.

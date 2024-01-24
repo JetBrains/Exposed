@@ -1,15 +1,12 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
-import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.jetbrains.exposed.sql.vendors.inProperCase
-import java.sql.DatabaseMetaData
 
 /**
  * Common interface for database objects that can be created, modified and dropped.
@@ -26,36 +23,32 @@ interface DdlAware {
 }
 
 /**
- * Represents reference constraint actions.
- * Read [Referential actions](https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html#foreign-key-referential-actions) from MySQL docs
- * or on [StackOverflow](https://stackoverflow.com/a/6720458/813981)
+ * Represents referential actions used by `ON UPDATE` or `ON DELETE` subclauses of a `FOREIGN KEY` constraint clause.
  */
 enum class ReferenceOption {
+    /** Updates/deletes the referenced parent row, in addition to any rows in the referencing child table. */
     CASCADE,
+
+    /** Updates/deletes the referenced parent row, and sets the column in the referencing child table to `NULL`. */
     SET_NULL,
+
+    /** Prevents updating/deleting the referenced parent row. */
     RESTRICT,
+
+    /** In some, but not all, databases, this action is equivalent to `RESTRICT`. Please check the documentation. */
     NO_ACTION,
+
+    /** Updates/deletes the referenced parent row, and sets the column in the referencing child table to its default value. */
     SET_DEFAULT;
 
     override fun toString(): String = name.replace("_", " ")
-
-    companion object {
-        /** Returns the corresponding [ReferenceOption] for the specified [refOption] from JDBC. */
-        fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption = when (refOption) {
-            DatabaseMetaData.importedKeyCascade -> CASCADE
-            DatabaseMetaData.importedKeySetNull -> SET_NULL
-            DatabaseMetaData.importedKeyRestrict -> RESTRICT
-            DatabaseMetaData.importedKeyNoAction -> NO_ACTION
-            DatabaseMetaData.importedKeySetDefault -> SET_DEFAULT
-            else -> currentDialect.defaultReferenceOption
-        }
-    }
 }
 
 /**
  * Represents a foreign key constraint.
  */
 data class ForeignKeyConstraint(
+    /** Mapping of referenced parent table columns to the foreign key columns in their child tables. */
     val references: Map<Column<*>, Column<*>>,
     private val onUpdate: ReferenceOption?,
     private val onDelete: ReferenceOption?,
@@ -72,8 +65,10 @@ data class ForeignKeyConstraint(
     private val tx: Transaction
         get() = TransactionManager.current()
 
+    /** The columns of the referencing child table. */
     val target: LinkedHashSet<Column<*>> = LinkedHashSet(references.values)
 
+    /** The referencing child table. */
     val targetTable: Table = target.first().table
 
     /** Name of the child table. */
@@ -84,8 +79,10 @@ data class ForeignKeyConstraint(
     private val targetColumns: String
         get() = target.joinToString { tx.identity(it) }
 
+    /** The columns of the referenced parent table. */
     val from: LinkedHashSet<Column<*>> = LinkedHashSet(references.keys)
 
+    /** The referenced parent table. */
     val fromTable: Table = from.first().table
 
     /** Name of the parent table. */
@@ -104,7 +101,7 @@ data class ForeignKeyConstraint(
     val deleteRule: ReferenceOption?
         get() = onDelete ?: currentDialectIfAvailable?.defaultReferenceOption
 
-    /** Custom foreign key name if was provided */
+    /** Custom foreign key name, if provided. */
     val customFkName: String?
         get() = name
 
@@ -123,38 +120,36 @@ data class ForeignKeyConstraint(
                 append("CONSTRAINT $fkName ")
             }
             append("FOREIGN KEY ($fromColumns) REFERENCES $targetTableName($targetColumns)")
+
             if (deleteRule != ReferenceOption.NO_ACTION) {
-                if (deleteRule == ReferenceOption.SET_DEFAULT) {
-                    when (currentDialect) {
-                        is MariaDBDialect -> exposedLogger.warn(
-                            "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        is MysqlDialect -> exposedLogger.warn(
-                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        else -> append(" ON DELETE $deleteRule")
-                    }
+                if (deleteRule == ReferenceOption.RESTRICT && !currentDialect.supportsRestrictReferenceOption) {
+                    exposedLogger.warn(
+                        "${currentDialect.name} doesn't support FOREIGN KEY with RESTRICT reference option with ON DELETE clause. " +
+                            "Please check your $fromTableName table."
+                    )
+                } else if (deleteRule == ReferenceOption.SET_DEFAULT && !currentDialect.supportsSetDefaultReferenceOption) {
+                    exposedLogger.warn(
+                        "${currentDialect.name} doesn't support FOREIGN KEY with SET DEFAULT reference option with ON DELETE clause. " +
+                            "Please check your $fromTableName table."
+                    )
                 } else {
                     append(" ON DELETE $deleteRule")
                 }
             }
+
             if (updateRule != ReferenceOption.NO_ACTION) {
-                if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-                    exposedLogger.warn("Oracle doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
-                } else if (updateRule == ReferenceOption.SET_DEFAULT) {
-                    when (currentDialect) {
-                        is MariaDBDialect -> exposedLogger.warn(
-                            "MariaDB doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        is MysqlDialect -> exposedLogger.warn(
-                            "MySQL doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
-                                "Please check your $fromTableName table."
-                        )
-                        else -> append(" ON UPDATE $updateRule")
-                    }
+                if (!currentDialect.supportsOnUpdate) {
+                    exposedLogger.warn("${currentDialect.name} doesn't support FOREIGN KEY with ON UPDATE clause. Please check your $fromTableName table.")
+                } else if (updateRule == ReferenceOption.RESTRICT && !currentDialect.supportsRestrictReferenceOption) {
+                    exposedLogger.warn(
+                        "${currentDialect.name} doesn't support FOREIGN KEY with RESTRICT reference option with ON UPDATE clause. " +
+                            "Please check your $fromTableName table."
+                    )
+                } else if (updateRule == ReferenceOption.SET_DEFAULT && !currentDialect.supportsSetDefaultReferenceOption) {
+                    exposedLogger.warn(
+                        "${currentDialect.name} doesn't support FOREIGN KEY with SET DEFAULT reference option with ON UPDATE clause. " +
+                            "Please check your $fromTableName table."
+                    )
                 } else {
                     append(" ON UPDATE $updateRule")
                 }
@@ -173,6 +168,7 @@ data class ForeignKeyConstraint(
         return listOf("ALTER TABLE $fromTableName DROP $constraintType $fkName")
     }
 
+    /** Returns the child table column that is referencing the provided column in the parent table. */
     fun targetOf(from: Column<*>): Column<*>? = references[from]
 
     operator fun plus(other: ForeignKeyConstraint): ForeignKeyConstraint {
@@ -196,9 +192,12 @@ data class CheckConstraint(
 
     internal val checkPart = "CONSTRAINT $checkName CHECK ($checkOp)"
 
+    private val DatabaseDialect.cannotAlterCheckConstraint: Boolean
+        get() = this is SQLiteDialect || (this as? MysqlDialect)?.isMysql8 == false
+
     override fun createStatement(): List<String> {
-        return if (currentDialect is MysqlDialect) {
-            exposedLogger.warn("Creation of CHECK constraints is not currently supported by MySQL")
+        return if (currentDialect.cannotAlterCheckConstraint) {
+            exposedLogger.warn("Creation of CHECK constraints is not currently supported by ${currentDialect.name}")
             listOf()
         } else {
             listOf("ALTER TABLE $tableName ADD $checkPart")
@@ -208,8 +207,8 @@ data class CheckConstraint(
     override fun modifyStatement(): List<String> = dropStatement() + createStatement()
 
     override fun dropStatement(): List<String> {
-        return if (currentDialect is MysqlDialect) {
-            exposedLogger.warn("Deletion of CHECK constraints is not currently supported by MySQL")
+        return if (currentDialect.cannotAlterCheckConstraint) {
+            exposedLogger.warn("Deletion of CHECK constraints is not currently supported by ${currentDialect.name}")
             listOf()
         } else {
             listOf("ALTER TABLE $tableName DROP CONSTRAINT $checkName")
@@ -228,6 +227,7 @@ data class CheckConstraint(
     }
 }
 
+/** A conditional expression used as a filter when creating a partial index. */
 typealias FilterCondition = (SqlExpressionBuilder.() -> Op<Boolean>)?
 
 /**
@@ -255,17 +255,17 @@ data class Index(
     /** Name of the index. */
     val indexName: String
         get() = customName ?: buildString {
-            append(table.nameInDatabaseCase())
+            append(table.nameInDatabaseCaseUnquoted())
             append('_')
-            append(columns.joinToString("_") { it.name }.inProperCase())
+            append(columns.joinToString("_") { it.name })
             functions?.let { f ->
                 if (columns.isNotEmpty()) append('_')
-                append(f.joinToString("_") { it.toString().substringBefore("(").lowercase() }.inProperCase())
+                append(f.joinToString("_") { it.toString().substringBefore("(").lowercase() })
             }
             if (unique) {
-                append("_unique".inProperCase())
+                append("_unique")
             }
-        }
+        }.inProperCase()
 
     init {
         require(columns.isNotEmpty() || functions?.isNotEmpty() == true) { "At least one column or function is required to create an index" }
@@ -273,7 +273,9 @@ data class Index(
             val table = columns.distinctBy { it.table }.singleOrNull()?.table
             requireNotNull(table) { "Columns from different tables can't persist in one index" }
             table
-        } else null
+        } else {
+            null
+        }
         if (functions?.isNotEmpty() == true) {
             requireNotNull(functionsTable) { "functionsTable argument must also be provided if functions are defined to create an index" }
         }

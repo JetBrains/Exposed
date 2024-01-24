@@ -6,7 +6,7 @@ A: [Ilya Ryzhenkov](https://github.com/orangy/) (Squash maintainer) answers:
 
 ### Q: Can I use multiple Database Connections?
 
-A: Yes. See [[Working with a multiple databases|Transactions#working-with-a-multiple-databases]]
+A: Yes. See [[Working with multiple databases|Transactions#working-with-multiple-databases]]
 
 ### Q: Is `Array` column type supported?
 
@@ -15,18 +15,17 @@ The complete list of supported data types can be found here: [[Data Types|DataTy
 
 ### Q: Is `upsert` supported?
 
-A: Upsert is an instruction to the Database to insert a new row or update existing row based on a table key. It is not supported as part of the library but it is possible to implement on top of it. See this issue: https://github.com/JetBrains/Exposed/issues/167 and example here: https://medium.com/@OhadShai/first-steps-with-kotlin-exposed-cb361a9bf5ac
+A: Yes. See [[Insert Or Update|DSL#insert-or-update]]
 
 ### Q: Is `json` type supported?
 
-A: Not at the moment. Here is the issue: https://github.com/JetBrains/Exposed/issues/127  
-The complete list of supported data types can be found here: [[Data Types|DataTypes]].
+A: Yes. See [[How to use Json and JsonB types|DataTypes#how-to-use-json-and-jsonb-types]]
 
 ### Q: How to get a plain SQL query which will be executed?
 
 A:
 ```kotlin
-val plainSQL = FooTable.select {}.prepareSQL(QueryBuilder(false)) 
+val plainSQL = FooTable.selectAll().where {}.prepareSQL(QueryBuilder(false)) 
 ```
 Use QueryBuiler with `false` - if you want to inline statement arguments, `true` - to see '?' in query.
 

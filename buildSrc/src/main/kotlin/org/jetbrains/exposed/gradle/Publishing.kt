@@ -1,14 +1,16 @@
-@file:Suppress("UnstableApiUsage")
-
 package org.jetbrains.exposed.gradle
 
 import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.plugins.signing.SigningExtension
-import org.gradle.api.plugins.JavaPluginExtension
 
 infix fun <T> Property<T>.by(value: T) {
     set(value)
@@ -55,10 +57,54 @@ fun MavenPublication.signPublicationIfKeyPresent(project: Project) {
     }
 }
 
-fun Project._publishing(configure: PublishingExtension.() -> Unit) {
+fun Project.publishing(configure: PublishingExtension.() -> Unit) {
     extensions.configure("publishing", configure)
 }
 
-fun Project._java(configure: JavaPluginExtension.() -> Unit) {
+fun Project.java(configure: JavaPluginExtension.() -> Unit) {
     extensions.configure("java", configure)
+}
+
+fun Project.configurePublishing() {
+    apply(plugin = "java-library")
+    apply(plugin = "maven-publish")
+    apply(plugin = "signing")
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
+
+    val version: String by rootProject
+
+    publishing {
+        publications {
+            create<MavenPublication>("exposed") {
+                groupId = "org.jetbrains.exposed"
+                artifactId = project.name
+
+                setVersion(version)
+
+                from(components["java"])
+                pom {
+                    configureMavenCentralMetadata(project)
+                }
+                signPublicationIfKeyPresent(project)
+            }
+        }
+
+        val publishingUsername: String? = System.getenv("PUBLISHING_USERNAME")
+        val publishingPassword: String? = System.getenv("PUBLISHING_PASSWORD")
+
+        repositories {
+            maven {
+                name = "Exposed"
+                url = uri("https://maven.pkg.jetbrains.space/public/p/exposed/release")
+                credentials {
+                    username = publishingUsername
+                    password = publishingPassword
+                }
+            }
+        }
+    }
 }

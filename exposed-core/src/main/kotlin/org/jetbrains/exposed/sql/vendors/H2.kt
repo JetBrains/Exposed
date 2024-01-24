@@ -4,6 +4,7 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.util.*
 
 internal object H2DataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String {
@@ -12,9 +13,13 @@ internal object H2DataTypeProvider : DataTypeProvider() {
     }
 
     override fun uuidType(): String = "UUID"
+    override fun uuidToDB(value: UUID): Any = value.toString()
     override fun dateTimeType(): String = "DATETIME(9)"
 
+    override fun timestampWithTimeZoneType(): String = "TIMESTAMP(9) WITH TIME ZONE"
+
     override fun jsonBType(): String = "JSON"
+    override fun untypedAndUnsizedArrayType(): String = "ARRAY[]"
 
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
@@ -118,6 +123,9 @@ internal object H2FunctionProvider : FunctionProvider() {
  * H2 dialect implementation.
  */
 open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2FunctionProvider) {
+
+    override fun toString(): String = "H2Dialect[$dialectName, $h2Mode]"
+
     internal enum class H2MajorVersion {
         One, Two
     }
@@ -134,14 +142,17 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         }
     }
 
+    /** Indicates whether the H2 Database Engine version is greater than or equal to 2.0. */
     val isSecondVersion get() = majorVersion == H2MajorVersion.Two
 
     private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata { databaseProductVersion.substringBefore(" (") }
 
+    /** H2 database compatibility modes that emulate the behavior of other specific databases. */
     enum class H2CompatibilityMode {
         MySQL, MariaDB, SQLServer, Oracle, PostgreSQL
     }
 
+    /** The specific database name that an H2 compatibility mode delegates to. */
     val delegatedDialectNameProvider: DialectNameProvider? by lazy {
         when (h2Mode) {
             H2CompatibilityMode.MySQL -> MysqlDialect
@@ -156,30 +167,34 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     private var delegatedDialect: DatabaseDialect? = null
 
     private fun resolveDelegatedDialect(): DatabaseDialect? {
-        return delegatedDialect ?: delegatedDialectNameProvider?.dialectName?.let {
+        return delegatedDialect ?: delegatedDialectNameProvider?.dialectName?.lowercase()?.let {
             val dialect = Database.dialects[it]?.invoke() ?: error("Can't resolve dialect for $it")
             delegatedDialect = dialect
             dialect
         }
     }
 
+    /** The regular H2 mode implementation of [FunctionProvider] instead of a delegated mode implementation. */
     val originalFunctionProvider: FunctionProvider = H2FunctionProvider
 
     override val functionProvider: FunctionProvider by lazy {
         resolveDelegatedDialect()?.takeIf { it !is MysqlDialect }?.functionProvider ?: originalFunctionProvider
     }
 
+    /** The regular H2 mode implementation of [DataTypeProvider] instead of a delegated mode implementation. */
     val originalDataTypeProvider: DataTypeProvider = H2DataTypeProvider
 
     override val dataTypeProvider: DataTypeProvider by lazy {
         resolveDelegatedDialect()?.takeIf { it !is MysqlDialect }?.dataTypeProvider ?: originalDataTypeProvider
     }
 
+    /** The H2 database compatibility mode retrieved from metadata. */
     val h2Mode: H2CompatibilityMode? by lazy {
         val (settingNameField, settingValueField) = when (majorVersion) {
             H2MajorVersion.One -> "NAME" to "VALUE"
             H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
         }
+
         @Language("H2")
         val fetchModeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
         val modeValue = TransactionManager.current().exec(fetchModeQuery) { rs ->
@@ -210,7 +225,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsCreateSequence: Boolean by lazy { resolveDelegatedDialect()?.supportsCreateSequence ?: super.supportsCreateSequence }
     override val needsSequenceToAutoInc: Boolean by lazy { resolveDelegatedDialect()?.needsSequenceToAutoInc ?: super.needsSequenceToAutoInc }
     override val defaultReferenceOption: ReferenceOption by lazy { resolveDelegatedDialect()?.defaultReferenceOption ?: super.defaultReferenceOption }
-//    override val needsQuotesWhenSymbolsInNames: Boolean by lazy { resolveDelegatedDialect()?.needsQuotesWhenSymbolsInNames ?: super.needsQuotesWhenSymbolsInNames }
     override val supportsSequenceAsGeneratedKeys: Boolean by lazy {
         resolveDelegatedDialect()?.supportsSequenceAsGeneratedKeys ?: super.supportsSequenceAsGeneratedKeys
     }
@@ -255,12 +269,15 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override fun createDatabase(name: String) = "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
 
+    override fun listDatabases(): String = "SHOW SCHEMAS"
+
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
         super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
     override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
 
-    companion object : DialectNameProvider("h2")
+    companion object : DialectNameProvider("H2")
 }
 
+/** The current H2 database compatibility mode or `null` if the current database is not H2. */
 val DatabaseDialect.h2Mode: H2Dialect.H2CompatibilityMode? get() = (this as? H2Dialect)?.h2Mode

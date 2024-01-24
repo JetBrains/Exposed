@@ -19,8 +19,18 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun blobType(): String = "bytea"
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
-    override fun ubyteType(): String = "SMALLINT"
     override fun jsonBType(): String = "JSONB"
+
+    override fun untypedAndUnsizedArrayType(): String = "ARRAY"
+
+    override fun processForDefaultValue(e: Expression<*>): String = when {
+        e is LiteralOp<*> && e.columnType is JsonColumnMarker && (currentDialect as? H2Dialect) == null -> {
+            val cast = if (e.columnType.usesBinaryFormat) "::jsonb" else "::json"
+            "${super.processForDefaultValue(e)}$cast"
+        }
+        else -> super.processForDefaultValue(e)
+    }
+
     override fun hexToDb(hexString: String): String = """E'\\x$hexString'"""
 }
 
@@ -135,7 +145,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         path?.let {
             TransactionManager.current().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
-        val isNotJsonB = jsonType !is JsonBColumnType<*>
+        val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
             append(target)
             if (isNotJsonB) append("::jsonb")
@@ -154,7 +164,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         if (path.size > 1) {
             TransactionManager.current().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
         }
-        val isNotJsonB = jsonType !is JsonBColumnType<*>
+        val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
             append("JSONB_PATH_EXISTS(")
             if (isNotJsonB) {
@@ -241,7 +251,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("UPSERT requires a unique key or constraint as a conflict target")
         }
 
-        val updateColumns = data.unzip().first.filter { it !in keyColumns }
+        val dataColumns = data.unzip().first
+        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
 
         return with(QueryBuilder(true)) {
             appendInsertToUpsertClause(table, data, transaction)
@@ -279,7 +290,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
 /**
  * PostgreSQL dialect implementation.
  */
-open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
+open class PostgreSQLDialect(override val name: String = dialectName) : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
     override val supportsOrderByNullsFirstLast: Boolean = true
 
     override val requiresAutoCommitOnCreateDrop: Boolean = true
@@ -316,6 +327,8 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
+    override fun listDatabases(): String = "SELECT datname FROM pg_database"
+
     override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
 
     override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"
@@ -332,7 +345,7 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
         }
     }
 
-    companion object : DialectNameProvider("postgresql")
+    companion object : DialectNameProvider("PostgreSQL")
 }
 
 /**
@@ -340,8 +353,8 @@ open class PostgreSQLDialect : VendorDialect(dialectName, PostgreSQLDataTypeProv
  *
  * The driver accepts basic URLs in the following format : jdbc:pgsql://localhost:5432/db
  */
-open class PostgreSQLNGDialect : PostgreSQLDialect() {
+open class PostgreSQLNGDialect : PostgreSQLDialect(dialectName) {
     override val requiresAutoCommitOnCreateDrop: Boolean = true
 
-    companion object : DialectNameProvider("pgsql")
+    companion object : DialectNameProvider("PostgreSQLNG")
 }

@@ -73,7 +73,9 @@ class Random(
 class CharLength<T : String?>(
     val expr: Expression<T>
 ) : Function<Int?>(IntegerColumnType()) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.charLength(expr, queryBuilder)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        currentDialect.functionProvider.charLength(expr, queryBuilder)
+    }
 }
 
 /**
@@ -105,7 +107,9 @@ class Concat(
     /** Returns the expressions being concatenated. */
     vararg val expr: Expression<*>
 ) : Function<String>(TextColumnType()) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.concat(separator, queryBuilder, expr = expr)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        currentDialect.functionProvider.concat(separator, queryBuilder, expr = expr)
+    }
 }
 
 /**
@@ -121,7 +125,9 @@ class GroupConcat<T : String?>(
     /** Returns the order in which the elements of each group are sorted. */
     vararg val orderBy: Pair<Expression<*>, SortOrder>
 ) : Function<T>(TextColumnType()) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.groupConcat(this, queryBuilder)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        currentDialect.functionProvider.groupConcat(this, queryBuilder)
+    }
 }
 
 /**
@@ -133,7 +139,9 @@ class Substring<T : String?>(
     /** Returns the length of the substring. */
     val length: Expression<Int>
 ) : Function<T>(TextColumnType()) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.substring(expr, start, length, queryBuilder)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        currentDialect.functionProvider.substring(expr, start, length, queryBuilder)
+    }
 }
 
 /**
@@ -335,27 +343,6 @@ class VarSamp<T>(
     }
 }
 
-// JSON Functions
-
-/**
- * Represents an SQL function that returns extracted data from a JSON object at the specified [path],
- * either as a JSON representation or as a scalar value.
- */
-class JsonExtract<T>(
-    /** Returns the expression from which to extract JSON subcomponents matched by [path]. */
-    val expression: Expression<*>,
-    /** Returns array of Strings representing JSON path/keys that match fields to be extracted. */
-    vararg val path: String,
-    /** Returns whether the extracted result should be a scalar or text value; if `false`, result will be a JSON object. */
-    val toScalar: Boolean,
-    /** Returns the column type of [expression] to check, if casting to JSONB is required. */
-    val jsonType: IColumnType,
-    columnType: IColumnType
-) : Function<T>(columnType) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) =
-        currentDialect.functionProvider.jsonExtract(expression, path = path, toScalar, jsonType, queryBuilder)
-}
-
 // Sequence Manipulation Functions
 
 /**
@@ -367,49 +354,84 @@ sealed class NextVal<T>(
     columnType: IColumnType
 ) : Function<T>(columnType) {
 
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.nextVal(seq, queryBuilder)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        currentDialect.functionProvider.nextVal(seq, queryBuilder)
+    }
 
     class IntNextVal(seq: Sequence) : NextVal<Int>(seq, IntegerColumnType())
     class LongNextVal(seq: Sequence) : NextVal<Long>(seq, LongColumnType())
 }
 
 // Conditional Expressions
+
+/**
+ * Represents an SQL function that allows the comparison of [value] to chained conditional clauses.
+ *
+ * If [value] is not provided, each chained conditional will be evaluated independently.
+ */
 @Suppress("FunctionNaming")
-class Case(val value: Expression<*>? = null) {
+class Case(
+    /** The value that is compared against every conditional expression. */
+    val value: Expression<*>? = null
+) {
+    /** Adds a conditional expression with a [result] if the expression evaluates to `true`. */
     fun <T> When(cond: Expression<Boolean>, result: Expression<T>): CaseWhen<T> = CaseWhen<T>(value).When(cond, result)
 }
 
+/**
+ * Represents an SQL function that allows the comparison of [value] to chained conditional clauses.
+ *
+ * If [value] is not provided, each chained conditional will be evaluated independently.
+ */
 @Suppress("FunctionNaming")
-class CaseWhen<T>(val value: Expression<*>?) {
+class CaseWhen<T>(
+    /** The value that is compared against every conditional expression. */
+    val value: Expression<*>?
+) {
+    /** The boolean conditions to check and their resulting expressions if the condition is met. */
     val cases: MutableList<Pair<Expression<Boolean>, Expression<out T>>> = mutableListOf()
 
+    /** Adds a conditional expression with a [result] if the expression evaluates to `true`. */
     @Suppress("UNCHECKED_CAST")
     fun <R : T> When(cond: Expression<Boolean>, result: Expression<R>): CaseWhen<R> {
         cases.add(cond to result)
         return this as CaseWhen<R>
     }
 
-    fun <R : T> Else(e: Expression<R>): Expression<R> = CaseWhenElse(this, e)
+    /** Adds an expression that will be used as the function result if all [cases] evaluate to `false`. */
+    fun <R : T> Else(e: Expression<R>): ExpressionWithColumnType<R> = CaseWhenElse(this, e)
 }
 
-class CaseWhenElse<T, R : T>(val caseWhen: CaseWhen<T>, val elseResult: Expression<R>) : ExpressionWithColumnType<R>(), ComplexExpression {
+/**
+ * Represents an SQL function that steps through conditions, and either returns a value when the first condition is met
+ * or returns [elseResult] if all conditions are `false`.
+ */
+class CaseWhenElse<T, R : T>(
+    /** The conditions to check and their results if met. */
+    val caseWhen: CaseWhen<T>,
+    /** The result if none of the conditions checked are found to be `true`. */
+    val elseResult: Expression<R>
+) : ExpressionWithColumnType<R>(), ComplexExpression {
 
     override val columnType: IColumnType =
         (elseResult as? ExpressionWithColumnType<R>)?.columnType
             ?: caseWhen.cases.map { it.second }.filterIsInstance<ExpressionWithColumnType<*>>().firstOrNull()?.columnType
             ?: BooleanColumnType.INSTANCE
 
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        append("CASE ")
-        if (caseWhen.value != null) {
-            +caseWhen.value
-        }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            append("CASE")
+            if (caseWhen.value != null) {
+                +" "
+                +caseWhen.value
+            }
 
-        for ((first, second) in caseWhen.cases) {
-            append(" WHEN ", first, " THEN ", second)
-        }
+            for ((first, second) in caseWhen.cases) {
+                append(" WHEN ", first, " THEN ", second)
+            }
 
-        append(" ELSE ", elseResult, " END")
+            append(" ELSE ", elseResult, " END")
+        }
     }
 }
 
@@ -440,5 +462,7 @@ class Cast<T>(
     val expr: Expression<*>,
     columnType: IColumnType
 ) : Function<T>(columnType) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = currentDialect.functionProvider.cast(expr, columnType, queryBuilder)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        currentDialect.functionProvider.cast(expr, columnType, queryBuilder)
+    }
 }

@@ -18,7 +18,6 @@ class H2Tests : DatabaseTestsBase() {
     @Test
     fun insertInH2() {
         withDb(listOf(TestDB.H2_MYSQL, TestDB.H2)) {
-
             SchemaUtils.drop(Testing)
             SchemaUtils.create(Testing)
             Testing.insert {
@@ -26,14 +25,13 @@ class H2Tests : DatabaseTestsBase() {
                 it[Testing.string] = "one"
             }
 
-            assertEquals("one", Testing.select { Testing.id.eq(1) }.single()[Testing.string])
+            assertEquals("one", Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.string])
         }
     }
 
     @Test
     fun replaceAsInsertInH2() {
         withDb(listOf(TestDB.H2_MYSQL, TestDB.H2_MARIADB)) {
-
             SchemaUtils.drop(Testing)
             SchemaUtils.create(Testing)
             Testing.replace {
@@ -41,7 +39,7 @@ class H2Tests : DatabaseTestsBase() {
                 it[string] = "one"
             }
 
-            assertEquals("one", Testing.select { Testing.id.eq(1) }.single()[Testing.string])
+            assertEquals("one", Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.string])
         }
     }
 
@@ -76,13 +74,42 @@ class H2Tests : DatabaseTestsBase() {
         withDb(listOf(TestDB.H2, TestDB.H2_MYSQL)) {
             try {
                 SchemaUtils.createMissingTablesAndColumns(initialTable)
-                assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}", t.id.ddl.first())
-                assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD CONSTRAINT pk_$tableName PRIMARY KEY (${"id".inProperCase()})", t.id.ddl[1])
+                assertEquals(
+                    "ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}",
+                    t.id.ddl.first()
+                )
+                assertEquals(
+                    "ALTER TABLE ${tableName.inProperCase()} ADD CONSTRAINT pk_$tableName PRIMARY KEY (${"id".inProperCase()})",
+                    t.id.ddl[1]
+                )
                 assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
                 SchemaUtils.createMissingTablesAndColumns(t)
                 assertEquals(2, currentDialectTest.tableColumns(t)[t]!!.size)
             } finally {
                 SchemaUtils.drop(t)
+            }
+        }
+    }
+
+    @Test
+    fun testH2V1WithBigDecimalFunctionThatReturnsShort() {
+        val testTable = object : Table("test_table") {
+            val number = short("number")
+        }
+
+        withDb(TestDB.allH2TestDB) {
+            try {
+                SchemaUtils.create(testTable)
+
+                testTable.batchInsert(listOf<Short>(2, 4, 6, 8, 10)) { n ->
+                    this[testTable.number] = n
+                }
+
+                val average = testTable.number.avg()
+                val result = testTable.select(average).single()[average]
+                assertEquals("6.00".toBigDecimal(), result)
+            } finally {
+                SchemaUtils.drop(testTable)
             }
         }
     }

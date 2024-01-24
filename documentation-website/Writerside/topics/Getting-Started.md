@@ -1,6 +1,6 @@
 # Getting Started
 
-## Adding Dependency
+## Adding the Exposed dependency
 
 <tabs>
     <tab title="Maven">
@@ -18,38 +18,38 @@
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-core</artifactId>
-      <version>0.40.1</version>
+      <version>0.46.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-dao</artifactId>
-      <version>0.40.1</version>
+      <version>0.46.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-jdbc</artifactId>
-      <version>0.40.1</version>
+      <version>0.46.0</version>
     </dependency>
 </dependencies>
 ]]>
-        </code-block>
+</code-block>
     </tab>
     <tab title="Gradle Kotlin Script">
         <code-block lang="kotlin">
 <![CDATA[
-val exposedVersion: String = "0.40.1"
+val exposedVersion: String = "0.46.0"
 
 dependencies {
-  implementation("org.jetbrains.exposed:exposed-core", exposedVersion)
-  implementation("org.jetbrains.exposed:exposed-dao", exposedVersion)
-  implementation("org.jetbrains.exposed:exposed-jdbc", exposedVersion)
+implementation("org.jetbrains.exposed:exposed-core", exposedVersion)
+implementation("org.jetbrains.exposed:exposed-dao", exposedVersion)
+implementation("org.jetbrains.exposed:exposed-jdbc", exposedVersion)
 }
 ]]>
-        </code-block>
+</code-block>
     </tab>
 </tabs>
 
-- Note: There are another modules. Detailed information located in [Modules Documentation](Modules-Documentation.md) section.
+- Note: There are other modules. Detailed information is located in [Modules Documentation](Modules-Documentation.md) section.
 
 ## Starting a transaction
 
@@ -67,100 +67,214 @@ It is also possible to provide `javax.sql.DataSource` for advanced behaviors suc
 Database.connect(dataSource)
 ```
 
-More details on [Database and DataSource](Database-and-DataSource.md)
+More details in [Databases](Databases.md)
 
-After obtaining a connection all SQL statements should be placed inside a transaction:
-
-```kotlin
-transaction {
-  // Statements here
-}
-```
-
-To see the actual DB calls, add a logger:
+After obtaining a connection, all SQL statements should be placed inside a transaction:
 
 ```kotlin
 transaction {
-  // print sql to std-out
-  addLogger(StdOutSqlLogger)
+    // Statements here
 }
 ```
 
-### DSL & DAO
-
-Exposed comes in two flavors: DSL (Domain Specific Language) and DAO (Data Access Object).  
-On a high level, DSL means type-safe syntax that is similar to SQL whereas DAO means doing CRUD operations on entities.  
-Observe the below examples and head on to the specific section of each API for more details.
-
-### Your first Exposed DSL
+To see the actual database calls, add a logger:
 
 ```kotlin
-
-
-fun main(args: Array<String>) {
-  //an example connection to H2 DB
-  Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
-
-  transaction {
-    // print sql to std-out
+transaction {
+    // print SQL to stdout
     addLogger(StdOutSqlLogger)
-
-    SchemaUtils.create (Cities)
-
-    // insert new city. SQL: INSERT INTO Cities (name) VALUES ('St. Petersburg')
-    val stPeteId = Cities.insert {
-      it[name] = "St. Petersburg"
-    } get Cities.id
-
-    // 'select *' SQL: SELECT Cities.id, Cities.name FROM Cities
-    println("Cities: ${Cities.selectAll()}")
-  }
 }
-
-object Cities: IntIdTable() {
-    val name = varchar("name", 50)
-}
-
 ```
 
-More on [DSL API](DSL-API.md)
+To log database calls when using Exposed with a **Spring Boot** application, add the following property to the `application.properties` file:
 
-### Your first Exposed DAO
+```properties
+spring.exposed.show-sql=true
+```
 
-```kotlin
+The `exposed-spring-boot-starter` [README](https://github.com/JetBrains/Exposed/tree/main/exposed-spring-boot-starter#configuring-exposed) 
+covers the necessary steps to configure Exposed to use this and any [other properties](https://github.com/JetBrains/Exposed/tree/main/exposed-spring-boot-starter#automatic-schema-creation).
 
+Alternatively, the `SpringTransactionManager` class has the parameter `showSql`, which can be set to `true` if a transaction manager bean is defined manually.
 
-fun main(args: Array<String>) {
-  //an example connection to H2 DB
-  Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
+## Access Layers
 
-  transaction {
-    // print sql to std-out
-    addLogger(StdOutSqlLogger)
+Exposed comes in two flavors: DSL and DAO.
 
-    SchemaUtils.create (Cities)
+- DSL stands for Domain-Specific Language, and for Exposed it means type-safe syntax similar to SQL statements to access a database. For more
+  information, see [Deep Dive into DSL](Deep-Dive-into-DSL.md).
 
-    // insert new city. SQL: INSERT INTO Cities (name) VALUES ('St. Petersburg')
-    val stPete = City.new {
-            name = "St. Petersburg"
+- DAO means Data Access Object, and it allows treating the data from database as entities and performing CRUD operations. For more information, see
+  [Deep Dive into DAO](Deep-Dive-into-DAO.md).
+
+To get an idea of the difference, compare the following code samples and corresponding SQL outputs:
+
+<tabs>
+<tab title="DSL">
+<code-block lang="kotlin">
+<![CDATA[
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
+
+// a table Cities with integer IDs and three fields:
+// String name, Int population, and Enum country
+object Cities : IntIdTable() {
+val name = varchar("name", 50).default("Unknown")
+val population = integer("population").nullable()
+val country = customEnumeration(
+"country",
+"ENUM('RUSSIA', 'CHINA', 'USA')",
+{ Country.values()[it as Int] },
+{ it.name }
+).nullable()
+override val primaryKey = PrimaryKey(id, name = "Cities_ID")
+}
+
+enum class Country {
+RUSSIA, CHINA, USA
+}
+
+fun init() {
+Database.connect(
+"jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
+driver = "org.h2.Driver"
+)
+
+    transaction {
+        // print sql to std-out
+        addLogger(StdOutSqlLogger)
+
+        // create table Cities
+        SchemaUtils.create(Cities)
+
+        // insert new city and return id to nyId
+        val nyId = Cities.insert {
+            it[name] = "New York"
+            it[country] = Country.USA
+            it[population] = 1000
+        } get Cities.id
+
+        // insert new city and return id to moscId
+        val mosId = Cities.insertAndGetId {
+            it[name] = "Moscow"
+            it[country] = Country.RUSSIA
+            it[population] = 500
+        }
+
+        // insert new city and return id to stPetId
+        val stPetId = Cities.insertAndGetId {
+            it[name] = "St. Petersburg"
+            it[country] = Country.RUSSIA
+            it[population] = 300
+        }
     }
 
-    // 'select *' SQL: SELECT Cities.id, Cities.name FROM Cities
-    println("Cities: ${City.all()}")
-  }
 }
 
-object Cities: IntIdTable() {
-    val name = varchar("name", 50)
+fun main() {
+init()
 }
+]]>
+</code-block>
+</tab>
+<tab title="DAO">
+<code-block lang="kotlin">
+<![CDATA[
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.transactions.transaction
 
+
+// a table Cities with integer IDs
+object Cities : IntIdTable() {
+val name = varchar("name", 50).default("Unknown")
+val population: Column<Int> = integer("population").uniqueIndex()
+val country = Cities.customEnumeration(
+"country",
+"ENUM('RUSSIA', 'CHINA', 'USA', 'UNKNOWN')",
+{ Country.values()[it as Int] },
+{ it.name }
+).default(Country.UNKNOWN)
+override val primaryKey = PrimaryKey(id, name = "Cities_ID")
+}
 class City(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<City>(Cities)
+companion object : IntEntityClass<City>(Cities)
 
     var name by Cities.name
+    var country by Cities.country
+    var population by Cities.population
+
 }
-```
 
-More information: [DAO API](DAO-API.md)
+enum class Country {
+RUSSIA, CHINA, USA, UNKNOWN
+}
 
-Read Next [Database and DataSource](Database-and-DataSource.md)
+fun init() {
+Database.connect(
+"jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
+driver = "org.h2.Driver"
+)
+
+    transaction {
+        // print sql calls to stdout
+        addLogger(StdOutSqlLogger)
+
+        // create a table Cities
+        SchemaUtils.create(Cities)
+
+        // insert a new city
+        val ny = City.new {
+            name = "New York"
+            country = Country.USA
+            population = 1000
+        }
+
+        // insert a new city
+        val mos = City.new {
+            name = "Moscow"
+            country = Country.RUSSIA
+            population = 500
+        }
+
+        // insert a new city
+        val stPet = City.new {
+            name = "St. Petersburg"
+            country = Country.RUSSIA
+            population = 300
+        }
+    }
+
+}
+
+fun main() {
+init()
+}
+]]>
+</code-block>
+</tab>
+</tabs>
+
+SQL output:
+
+<code-block lang="sql">
+SQL: SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'
+SQL: CREATE TABLE IF NOT EXISTS CITIES (
+    ID INT AUTO_INCREMENT,
+    "NAME" VARCHAR(50) DEFAULT 'Unknown' NOT NULL,
+    POPULATION INT NULL,
+    COUNTRY ENUM('RUSSIA', 'CHINA', 'USA') NULL,
+    CONSTRAINT Cities_ID PRIMARY KEY (ID)
+)
+SQL: INSERT INTO CITIES (COUNTRY, "NAME", POPULATION) VALUES ('USA', 'New York', 1000)
+SQL: INSERT INTO CITIES (COUNTRY, "NAME", POPULATION) VALUES ('RUSSIA', 'Moscow', 500)
+SQL: INSERT INTO CITIES (COUNTRY, "NAME", POPULATION) VALUES ('RUSSIA', 'St. Petersburg', 300)
+</code-block>
+
+More on [DSL](Deep-Dive-into-DSL.md) and [DAO](Deep-Dive-into-DAO.md).

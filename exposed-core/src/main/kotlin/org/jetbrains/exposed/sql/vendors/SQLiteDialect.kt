@@ -15,6 +15,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun floatType(): String = "SINGLE"
     override fun binaryType(): String = "BLOB"
     override fun dateTimeType(): String = "TEXT"
+    override fun timestampWithTimeZoneType(): String = "TEXT"
     override fun dateType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun jsonType(): String = "TEXT"
@@ -215,7 +216,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         }
 
         +" DO"
-        val updateColumns = data.unzip().first.filter { it !in keyColumns }
+        val dataColumns = data.unzip().first
+        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
         appendUpdateToUpsertClause(table, updateColumns, onUpdate, transaction, isAliasNeeded = false)
 
         where?.let {
@@ -272,9 +274,11 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
 
     override fun createDatabase(name: String) = "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"
 
+    override fun listDatabases(): String = "SELECT name FROM pragma_database_list"
+
     override fun dropDatabase(name: String) = "DETACH DATABASE ${name.inProperCase()}"
 
-    companion object : DialectNameProvider("sqlite") {
+    companion object : DialectNameProvider("SQLite") {
         val ENABLE_UPDATE_DELETE_LIMIT by lazy {
             var conn: Connection? = null
             var stmt: Statement? = null

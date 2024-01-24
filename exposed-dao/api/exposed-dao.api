@@ -106,6 +106,7 @@ public final class org/jetbrains/exposed/dao/EntityChangeType : java/lang/Enum {
 	public static final field Created Lorg/jetbrains/exposed/dao/EntityChangeType;
 	public static final field Removed Lorg/jetbrains/exposed/dao/EntityChangeType;
 	public static final field Updated Lorg/jetbrains/exposed/dao/EntityChangeType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/dao/EntityChangeType;
 	public static fun values ()[Lorg/jetbrains/exposed/dao/EntityChangeType;
 }
@@ -123,6 +124,8 @@ public abstract class org/jetbrains/exposed/dao/EntityClass {
 	public final fun find (Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public final fun findById (Ljava/lang/Comparable;)Lorg/jetbrains/exposed/dao/Entity;
 	public fun findById (Lorg/jetbrains/exposed/dao/id/EntityID;)Lorg/jetbrains/exposed/dao/Entity;
+	public final fun findByIdAndUpdate (Ljava/lang/Comparable;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
+	public final fun findSingleByAndUpdate (Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
 	public final fun findWithCacheCondition (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lkotlin/sequences/Sequence;
 	public fun forEntityIds (Ljava/util/List;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public final fun forIds (Ljava/util/List;)Lorg/jetbrains/exposed/sql/SizedIterable;
@@ -185,10 +188,8 @@ public final class org/jetbrains/exposed/dao/EntityHookKt {
 
 public final class org/jetbrains/exposed/dao/EntityLifecycleInterceptor : org/jetbrains/exposed/sql/statements/GlobalStatementInterceptor {
 	public fun <init> ()V
-	public synthetic fun afterCommit ()V
 	public fun afterCommit (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public fun afterExecution (Lorg/jetbrains/exposed/sql/Transaction;Ljava/util/List;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
-	public synthetic fun afterRollback ()V
 	public fun afterRollback (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public fun afterStatementPrepared (Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public fun beforeCommit (Lorg/jetbrains/exposed/sql/Transaction;)V

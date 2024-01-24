@@ -1,13 +1,19 @@
 package org.jetbrains.exposed.sql
 
+/** Represents a temporary SQL identifier, [alias], for a [delegate] table. */
 class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
 
     override val tableName: String get() = alias
 
+    /** The table name along with its [alias]. */
     val tableNameWithAlias: String = "${delegate.tableName} $alias"
 
     private fun <T : Any?> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
 
+    /**
+     * Returns the original column from the [delegate] table, or `null` if the [column] is not associated
+     * with this table alias.
+     */
     fun <R> originalColumn(column: Column<R>): Column<R>? {
         @Suppress("UNCHECKED_CAST")
         return if (column.table == this) {
@@ -40,9 +46,11 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
             ?: error("Column not found in original table")
 }
 
+/** Represents a temporary SQL identifier, [alias], for a [delegate] expression. */
 class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expression<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(delegate).append(" $alias") }
 
+    /** Returns an [Expression] containing only the string representation of this [alias]. */
     fun aliasOnlyExpression(): Expression<T> {
         return if (delegate is ExpressionWithColumnType<T>) {
             object : Function<T>(delegate.columnType) {
@@ -56,6 +64,7 @@ class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expre
     }
 }
 
+/** Represents a temporary SQL identifier, [alias], for a [query]. */
 class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
 
     override fun describe(s: Transaction, queryBuilder: QueryBuilder) = queryBuilder {
@@ -75,7 +84,6 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
         query.set.source.columns.find { it == original }?.clone() as? Column<T>
             ?: error("Column not found in original table")
 
-    @Suppress("UNCHECKED_CAST")
     operator fun <T : Any?> get(original: Expression<T>): Expression<T> {
         val aliases = query.set.fields.filterIsInstance<ExpressionAlias<T>>()
         return aliases.find { it == original }?.let {
@@ -106,20 +114,73 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
     private fun <T : Any?> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
 }
 
+/**
+ * Creates a temporary identifier, [alias], for [this] table.
+ *
+ * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
+ * instead of [this] table object.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.JoinTests.testJoinWithAlias01
+ */
 fun <T : Table> T.alias(alias: String) = Alias(this, alias)
+
+/**
+ * Creates a temporary identifier, [alias], for [this] query.
+ *
+ * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
+ * instead of [this] query object.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
+ */
 fun <T : AbstractQuery<*>> T.alias(alias: String) = QueryAlias(this, alias)
+
+/**
+ * Creates a temporary identifier, [alias], for [this] expression.
+ *
+ * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
+ * instead of [this] expression object.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
+ */
 fun <T> Expression<T>.alias(alias: String) = ExpressionAlias(this, alias)
 
+/**
+ * Creates a join relation with a query.
+ *
+ * @param on The condition to join that will be placed in the `ON` clause.
+ * @param joinType The `JOIN` clause type used to combine rows. Defaults to [JoinType.INNER].
+ * @param joinPart The query to join with.
+ * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery02
+ */
 fun Join.joinQuery(on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> AbstractQuery<*>): Join {
     val qAlias = joinPart().alias("q${joinParts.count { it.joinPart is QueryAlias }}")
     return join(qAlias, joinType, additionalConstraint = { on(qAlias) })
 }
 
+/**
+ * Creates a join relation between [this] table and a query.
+ *
+ * @param on The condition to join that will be placed in the `ON` clause.
+ * @param joinType The `JOIN` clause type used to combine rows. Defaults to [JoinType.INNER].
+ * @param joinPart The query to join with.
+ */
 fun Table.joinQuery(on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> AbstractQuery<*>) =
     Join(this).joinQuery(on, joinType, joinPart)
 
-val Join.lastQueryAlias: QueryAlias? get() = joinParts.map { it.joinPart as? QueryAlias }.firstOrNull()
+/**
+ * Returns the most recent [QueryAlias] instance used to create this join relation, or `null` if a query was not joined.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery02
+ */
+val Join.lastQueryAlias: QueryAlias?
+    get() = joinParts.map { it.joinPart as? QueryAlias }.firstOrNull()
 
+/**
+ * Wraps a [query] as an [Expression] so that it can be used as part of an SQL statement or in another query clause.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.OrderByTests.testOrderByExpressions
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertWithColumnExpression
+ */
 fun <T : Any> wrapAsExpression(query: AbstractQuery<*>) = object : Expression<T?>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         append("(")

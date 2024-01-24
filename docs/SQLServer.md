@@ -1,13 +1,10 @@
-## SQL Server dialect  
+## SQL Server dialect
 
 ### Running tests locally with Gradle
-* Run `sqlServerTest` gradle task  
+
+* Run `testSqlserver` gradle task
 
 ### Running tests locally with Docker
-* Run SQL Server locally, e.g. with Docker image with command like
-`docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=yourStrong(!)Password' -p 1433:1433 -d microsoft/mssql-server-linux`
-or use `docker-compose -f docker-compose-sqlserver.yml up` 
 
-* Run tests with `-Dexposed.test.dialects=sqlserver`, 
-(optionally you may need to provide `-Dexposed.test.sqlserver.host=_YOUR_DOCKER_HOST_ -exposed.test.sqlserver.port=_SQLSERVER_SERVER_EXPOSED_PORT_`)
-
+* Run SQL Server locally with gradle task `sqlserverComposeUp`
+* Run tests with `testSqlserver` gradle task

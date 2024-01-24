@@ -12,7 +12,7 @@ import java.sql.Types
 class ConnectionTests : DatabaseTestsBase() {
 
     object People : LongIdTable() {
-        val name = varchar("name", 80).nullable()
+        val firstName = varchar("firstname", 80).nullable()
         val lastName = varchar("lastname", 42).default("Doe")
         val age = integer("age").default(18)
     }
@@ -28,13 +28,13 @@ class ConnectionTests : DatabaseTestsBase() {
             val expected = when ((db.dialect as H2Dialect).isSecondVersion) {
                 false -> setOf(
                     ColumnMetadata("ID", Types.BIGINT, false, 19, true, null),
-                    ColumnMetadata("NAME", Types.VARCHAR, true, 80, false, null),
+                    ColumnMetadata("FIRSTNAME", Types.VARCHAR, true, 80, false, null),
                     ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, false, "Doe"),
                     ColumnMetadata("AGE", Types.INTEGER, false, 10, false, "18"),
                 )
                 true -> setOf(
                     ColumnMetadata("ID", Types.BIGINT, false, 64, true, null),
-                    ColumnMetadata("NAME", Types.VARCHAR, true, 80, false, null),
+                    ColumnMetadata("FIRSTNAME", Types.VARCHAR, true, 80, false, null),
                     ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, false, "Doe"),
                     ColumnMetadata("AGE", Types.INTEGER, false, 32, false, "18"),
                 )
@@ -45,7 +45,6 @@ class ConnectionTests : DatabaseTestsBase() {
 
     // GitHub issue #838
     @Test
-    @Suppress("unused")
     fun testTableConstraints() {
         val parent = object : LongIdTable("parent") {
             val scale = integer("scale").uniqueIndex()

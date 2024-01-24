@@ -28,7 +28,7 @@ class UpdateTests : DatabaseTestsBase() {
     fun testUpdate01() {
         withCitiesAndUsers { _, users, _ ->
             val alexId = "alex"
-            val alexName = users.slice(users.name).select { users.id.eq(alexId) }.first()[users.name]
+            val alexName = users.select(users.name).where { users.id.eq(alexId) }.first()[users.name]
             assertEquals("Alex", alexName)
 
             val newName = "Alexey"
@@ -36,7 +36,7 @@ class UpdateTests : DatabaseTestsBase() {
                 it[users.name] = newName
             }
 
-            val alexNewName = users.slice(users.name).select { users.id.eq(alexId) }.first()[users.name]
+            val alexNewName = users.select(users.name).where { users.id.eq(alexId) }.first()[users.name]
             assertEquals(newName, alexNewName)
         }
     }
@@ -44,15 +44,15 @@ class UpdateTests : DatabaseTestsBase() {
     @Test
     fun testUpdateWithLimit01() {
         withCitiesAndUsers(exclude = notSupportLimit) { _, users, _ ->
-            val aNames = users.slice(users.name).select { users.id like "a%" }.map { it[users.name] }
+            val aNames = users.select(users.name).where { users.id like "a%" }.map { it[users.name] }
             assertEquals(2, aNames.size)
 
             users.update({ users.id like "a%" }, 1) {
                 it[users.id] = "NewName"
             }
 
-            val unchanged = users.slice(users.name).select { users.id like "a%" }.count()
-            val changed = users.slice(users.name).select { users.id eq "NewName" }.count()
+            val unchanged = users.select(users.name).where { users.id like "a%" }.count()
+            val changed = users.select(users.name).where { users.id eq "NewName" }.count()
             assertEquals(1, unchanged)
             assertEquals(1, changed)
         }
@@ -60,7 +60,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithLimit02() {
-        val dialects = TestDB.values().toList() - notSupportLimit
+        val dialects = TestDB.entries - notSupportLimit
         withCitiesAndUsers(dialects) { _, users, _ ->
             expectException<UnsupportedByDialectException> {
                 users.update({ users.id like "a%" }, 1) {
@@ -85,6 +85,7 @@ class UpdateTests : DatabaseTestsBase() {
             }
         }
     }
+
     @Test
     fun testUpdateWithJoin02() {
         withCitiesAndUsers(exclude = TestDB.allH2TestDB + TestDB.SQLITE) { cities, users, userData ->
@@ -111,7 +112,7 @@ class UpdateTests : DatabaseTestsBase() {
             val tableAId = reference("table_a_id", tableA)
         }
 
-        val supportWhere = TestDB.values().toList() - TestDB.allH2TestDB - TestDB.SQLITE + TestDB.H2_ORACLE
+        val supportWhere = TestDB.entries - TestDB.allH2TestDB - TestDB.SQLITE + TestDB.H2_ORACLE
 
         withTables(tableA, tableB) { testingDb ->
             val aId = tableA.insertAndGetId { it[foo] = "foo" }
@@ -194,9 +195,9 @@ class UpdateTests : DatabaseTestsBase() {
                 it[address] = updatedAddress
             }
 
-            assertEquals(updatedName, stringTable.select { stringTable.id eq id }.single()[stringTable.name])
-            assertEquals(updatedCity, String(stringTable.select { stringTable.id eq id }.single()[stringTable.city]))
-            assertEquals(updatedAddress, stringTable.select { stringTable.id eq id }.single()[stringTable.address])
+            assertEquals(updatedName, stringTable.selectAll().where { stringTable.id eq id }.single()[stringTable.name])
+            assertEquals(updatedCity, String(stringTable.selectAll().where { stringTable.id eq id }.single()[stringTable.city]))
+            assertEquals(updatedAddress, stringTable.selectAll().where { stringTable.id eq id }.single()[stringTable.address])
         }
     }
 }

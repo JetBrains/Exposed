@@ -47,7 +47,7 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
     }
 
     private fun executeOnH2(vararg tables: Table, body: () -> Unit) {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
         var testWasStarted = false
         transaction(db) {
             SchemaUtils.create(*tables)
@@ -134,7 +134,6 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
         var p2: EntityTests.Post by Delegates.notNull()
         executeOnH2(EntityTests.Boards, EntityTests.Posts) {
             transaction(db) {
-
                 b1 = EntityTests.Board.new {
                     name = "test-board"
                 }

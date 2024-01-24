@@ -10,13 +10,15 @@ import org.jetbrains.exposed.sql.jodatime.*
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.constraintNamePart
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.insertAndWait
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
@@ -45,7 +47,9 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         val clientDefault by TableWithDBDefault.clientDefault
 
         override fun equals(other: Any?): Boolean {
-            return (other as? DBDefault)?.let { id == it.id && field == it.field && equalDateTime(t1, it.t1) && equalDateTime(t2, it.t2) } ?: false
+            return (other as? DBDefault)?.let {
+                id == it.id && field == it.field && equalDateTime(t1, it.t1) && equalDateTime(t2, it.t2)
+            } ?: false
         }
 
         override fun hashCode(): Int = id.value.hashCode()
@@ -168,6 +172,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         fun Expression<*>.itOrNull() = when {
             currentDialectTest.isAllowedAsColumnDefault(this) ->
                 "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+
             else -> "NULL"
         }
 
@@ -178,18 +183,21 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
                 "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                "${"s".inProperCase()} $varCharType DEFAULT 'test' NOT NULL, " +
-                "${"sn".inProperCase()} $varCharType DEFAULT 'testNullable' NULL, " +
-                "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()} DEFAULT 42 NOT NULL, " +
-                "$q${"c".inProperCase()}$q CHAR DEFAULT 'X' NOT NULL, " +
-                "${"t1".inProperCase()} $dtType ${currentDT.itOrNull()}, " +
-                "${"t2".inProperCase()} $dtType ${nowExpression.itOrNull()}, " +
-                "${"t3".inProperCase()} $dtType ${dtLiteral.itOrNull()}, " +
-                "${"t4".inProperCase()} DATE ${dtLiteral.itOrNull()}" +
+                "${"s".inProperCase()} $varCharType${testTable.s.constraintNamePart()} DEFAULT 'test' NOT NULL, " +
+                "${"sn".inProperCase()} $varCharType${testTable.sn.constraintNamePart()} DEFAULT 'testNullable' NULL, " +
+                "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()}${testTable.l.constraintNamePart()} DEFAULT 42 NOT NULL, " +
+                "$q${"c".inProperCase()}$q CHAR${testTable.c.constraintNamePart()} DEFAULT 'X' NOT NULL, " +
+                "${"t1".inProperCase()} $dtType${testTable.t1.constraintNamePart()} ${currentDT.itOrNull()}, " +
+                "${"t2".inProperCase()} $dtType${testTable.t2.constraintNamePart()} ${nowExpression.itOrNull()}, " +
+                "${"t3".inProperCase()} $dtType${testTable.t3.constraintNamePart()} ${dtLiteral.itOrNull()}, " +
+                "${"t4".inProperCase()} DATE${testTable.t4.constraintNamePart()} ${dtLiteral.itOrNull()}" +
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-                arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
+                arrayListOf(
+                    "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
+                    baseExpression
+                )
             } else {
                 arrayListOf(baseExpression)
             }
@@ -198,7 +206,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             val id1 = testTable.insertAndGetId { }
 
-            val row1 = testTable.select { testTable.id eq id1 }.single()
+            val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
             assertEquals("test", row1[testTable.s])
             assertEquals("testNullable", row1[testTable.sn])
             assertEquals(42, row1[testTable.l])
@@ -208,13 +216,12 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
             val id2 = testTable.insertAndGetId { it[testTable.sn] = null }
 
-            testTable.select { testTable.id eq id2 }.single()
+            testTable.selectAll().where { testTable.id eq id2 }.single()
         }
     }
 
     @Test
     fun testDefaultExpressions01() {
-
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
 
@@ -232,7 +239,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             val id = foo.insertAndGetId {
                 it[foo.name] = "bar"
             }
-            val result = foo.select { foo.id eq id }.single()
+            val result = foo.selectAll().where { foo.id eq id }.single()
 
             assertEquals(today, result[foo.defaultDateTime].withTimeAtStartOfDay())
             assertEquals(today, result[foo.defaultDate])
@@ -257,7 +264,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 it[foo.defaultDate] = nonDefaultDate
             }
 
-            val result = foo.select { foo.id eq id }.single()
+            val result = foo.selectAll().where { foo.id eq id }.single()
 
             assertEquals("bar", result[foo.name])
             assertEqualDateTime(nonDefaultDate, result[foo.defaultDateTime])
@@ -267,7 +274,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 it[foo.name] = "baz"
             }
 
-            val result2 = foo.select { foo.id eq id }.single()
+            val result2 = foo.selectAll().where { foo.id eq id }.single()
             assertEquals("baz", result2[foo.name])
             assertEqualDateTime(nonDefaultDate, result2[foo.defaultDateTime])
             assertEqualDateTime(nonDefaultDate, result[foo.defaultDate])
@@ -275,32 +282,28 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     }
 
     @Test
-    fun defaultCurrentDateTimeTest() {
+    fun testDefaultCurrentDateTime() {
         val testDate = object : IntIdTable("TestDate") {
             val time = datetime("time").defaultExpression(CurrentDateTime)
         }
 
-        withTables(testDate) {
-            val duration: Long = 2_000
+        withTables(testDate) { testDb ->
+            val duration: Long = 2000
 
-            val before = currentDateTime()
-            Thread.sleep(duration)
+            // insert only default values
+            testDate.insertAndWait(duration)
+
+            // an epsilon value for SQL Server, which has been flaky with average results +/- 10 compared to expected
+            if (testDb == TestDB.SQLSERVER) Thread.sleep(1000L)
+
             repeat(2) {
                 testDate.insertAndWait(duration)
             }
-            val middle = currentDateTime()
-            Thread.sleep(duration)
-            repeat(2) {
-                testDate.insertAndWait(duration)
-            }
-            val after = currentDateTime()
 
-            assertEquals(0, testDate.select { testDate.time less before }.count())
-            assertEquals(4, testDate.select { testDate.time greater before }.count())
-            assertEquals(2, testDate.select { testDate.time less middle }.count())
-            assertEquals(2, testDate.select { testDate.time greater middle }.count())
-            assertEquals(4, testDate.select { testDate.time less after }.count())
-            assertEquals(0, testDate.select { testDate.time greater after }.count())
+            val sortedEntries = testDate.selectAll().map { it[testDate.time] }.sorted()
+
+            assertTrue(sortedEntries[1].millis - sortedEntries[0].millis >= 2000)
+            assertTrue(sortedEntries[2].millis - sortedEntries[0].millis >= 4000)
         }
     }
 
@@ -323,7 +326,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 val hour = testDate.time.hour()
                 val minute = testDate.time.minute()
 
-                val result = testDate.slice(year, month, day, hour, minute).selectAll().single()
+                val result = testDate.select(year, month, day, hour, minute).single()
 
                 val now = DateTime.now()
                 assertEquals(now.year, result[year])
@@ -359,12 +362,79 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         assertEquals("test1", list1?.get(testData.name))
         assertEquals(date.millis, list1?.get(testData.dateTime)?.millis)
     }
-}
 
-fun Table.insertAndWait(duration: Long) {
-    this.insert { }
-    TransactionManager.current().commit()
-    Thread.sleep(duration)
-}
+    @Test
+    fun testTimestampWithTimeZoneDefaults() {
+        // UTC time zone
+        DateTimeZone.setDefault(DateTimeZone.UTC)
+        assertEquals("UTC", DateTimeZone.getDefault().id)
 
-fun currentDateTime(): DateTime = DateTime.now().withZone(DateTimeZone.getDefault())
+        val nowWithTimeZone = DateTime.now()
+        val timestampWithTimeZoneLiteral = timestampWithTimeZoneLiteral(nowWithTimeZone)
+
+        val testTable = object : IntIdTable("t") {
+            val t1 = timestampWithTimeZone("t1").default(nowWithTimeZone)
+            val t2 = timestampWithTimeZone("t2").defaultExpression(timestampWithTimeZoneLiteral)
+        }
+
+        fun Expression<*>.itOrNull() = when {
+            currentDialectTest.isAllowedAsColumnDefault(this) ->
+                "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+
+            else -> "NULL"
+        }
+
+        withDb(excludeSettings = listOf(TestDB.SQLITE, TestDB.MARIADB)) {
+            if (!isOldMySql()) {
+                SchemaUtils.create(testTable)
+
+                val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
+
+                val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
+                    "${"t".inProperCase()} (" +
+                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                    "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
+                    "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}" +
+                    ")"
+
+                val expected = if (currentDialectTest is OracleDialect ||
+                    currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+                ) {
+                    arrayListOf(
+                        "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
+                        baseExpression
+                    )
+                } else {
+                    arrayListOf(baseExpression)
+                }
+
+                assertEqualLists(expected, testTable.ddl)
+
+                val id1 = testTable.insertAndGetId { }
+
+                val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
+                assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
+                assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
+            }
+        }
+    }
+
+    @Test
+    fun testConsistentSchemeWithFunctionAsDefaultExpression() {
+        val foo = object : IntIdTable("foo") {
+            val name = text("name")
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
+        }
+
+        withDb {
+            try {
+                SchemaUtils.create(foo)
+
+                val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
+                assertTrue(actual.isEmpty())
+            } finally {
+                SchemaUtils.drop(foo)
+            }
+        }
+    }
+}

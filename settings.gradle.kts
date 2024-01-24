@@ -11,10 +11,33 @@ include("exposed-money")
 include("exposed-bom")
 include("exposed-kotlin-datetime")
 include("exposed-crypt")
+include("exposed-json")
 
 pluginManagement {
-    plugins {
-        id("org.jetbrains.kotlin.jvm") version "1.9.0"
-        id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver") version "0.8.0"
+}
+
+toolchainManagement {
+    jvm {
+        javaRepositories {
+            repository("foojay") {
+                resolverClass.set(org.gradle.toolchains.foojay.FoojayToolchainResolver::class.java)
+            }
+        }
     }
 }

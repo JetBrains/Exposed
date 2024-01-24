@@ -6,6 +6,13 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
+    override fun ubyteType(): String {
+        return if ((currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
+            "SMALLINT"
+        } else {
+            "TINYINT"
+        }
+    }
     override fun integerAutoincType(): String = "INT IDENTITY(1,1)"
     override fun longAutoincType(): String = "BIGINT IDENTITY(1,1)"
     override fun binaryType(): String {
@@ -17,6 +24,12 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun uuidType(): String = "uniqueidentifier"
     override fun uuidToDB(value: UUID): Any = value.toString()
     override fun dateTimeType(): String = "DATETIME2"
+    override fun timestampWithTimeZoneType(): String =
+        if ((currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
+            "TIMESTAMP(9) WITH TIME ZONE"
+        } else {
+            "DATETIMEOFFSET"
+        }
     override fun booleanType(): String = "BIT"
     override fun booleanToStatementString(bool: Boolean): String = if (bool) "1" else "0"
 
@@ -230,6 +243,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     override val needsQuotesWhenSymbolsInNames: Boolean = false
     override val supportsSequenceAsGeneratedKeys: Boolean = false
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
+    override val supportsRestrictReferenceOption: Boolean = false
 
     private val nonAcceptableDefaults = arrayOf("DEFAULT")
 
@@ -238,12 +252,59 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return columnDefault !in nonAcceptableDefaults
     }
 
-    // TODO: Fix changing default value on column as it requires to drop/create constraint
-    // https://stackoverflow.com/questions/15547210/modify-default-value-in-sql-server
-    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
-        super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        val transaction = TransactionManager.current()
+
+        val alterTablePart = "ALTER TABLE ${transaction.identity(column.table)} "
+
+        val statements = mutableListOf<String>()
+
+        statements.add(
+            buildString {
+                append(alterTablePart + "ALTER COLUMN ${transaction.identity(column)} ${column.columnType.sqlType()}")
+
+                if (columnDiff.nullability) {
+                    val defaultValue = column.dbDefaultValue
+                    val isPKColumn = column.table.primaryKey?.columns?.contains(column) == true
+
+                    if (column.columnType.nullable ||
+                        (defaultValue != null && column.defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))
+                    ) {
+                        append(" NULL")
+                    } else if (!isPKColumn) {
+                        append(" NOT NULL")
+                    }
+                }
+            }
+        )
+
+        if (columnDiff.defaults) {
+            val tableName = column.table.tableName
+            val columnName = column.name
+            val constraintName = "DF_${tableName}_$columnName"
+
+            val dropConstraint = "DROP CONSTRAINT IF EXISTS $constraintName"
+
+            statements.add(
+                buildString {
+                    column.dbDefaultValue?.let {
+                        append(alterTablePart + dropConstraint)
+                        append("; ")
+                        append(
+                            alterTablePart +
+                                "ADD CONSTRAINT $constraintName DEFAULT ${SQLServerDataTypeProvider.processForDefaultValue(it)} for ${transaction.identity(column)}"
+                        )
+                    } ?: append(alterTablePart + dropConstraint)
+                }
+            )
+        }
+
+        return statements
+    }
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
+
+    override fun listDatabases(): String = "SELECT name FROM sys.databases"
 
     override fun dropDatabase(name: String) = "DROP DATABASE ${name.inProperCase()}"
 
@@ -254,13 +315,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         appendIfNotNull(" AUTHORIZATION ", schema.authorization)
     }
 
-    override fun dropSchema(schema: Schema, cascade: Boolean): String = buildString {
-        append("DROP SCHEMA ", schema.identifier)
-
-        if (cascade) {
-            append(" CASCADE")
-        }
-    }
+    override fun dropSchema(schema: Schema, cascade: Boolean): String = "DROP SCHEMA ${schema.identifier}"
 
     override fun createIndex(index: Index): String {
         if (index.functions != null) {
@@ -272,7 +327,13 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return super.createIndex(index)
     }
 
-    override fun createIndexWithType(name: String, table: String, columns: String, type: String, filterCondition: String): String {
+    override fun createIndexWithType(
+        name: String,
+        table: String,
+        columns: String,
+        type: String,
+        filterCondition: String
+    ): String {
         return "CREATE $type INDEX $name ON $table $columns$filterCondition"
     }
 
@@ -287,7 +348,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     // https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql?redirectedfrom=MSDN&view=sql-server-ver15#arguments
     override val likePatternSpecialChars = sqlServerLikePatternSpecialChars
 
-    companion object : DialectNameProvider("sqlserver") {
+    companion object : DialectNameProvider("SQLServer") {
         private val sqlServerLikePatternSpecialChars = mapOf('%' to null, '_' to null, '[' to ']')
     }
 }

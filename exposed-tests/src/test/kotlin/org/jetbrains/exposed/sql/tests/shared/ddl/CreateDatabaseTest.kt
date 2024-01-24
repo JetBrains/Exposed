@@ -3,20 +3,22 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.junit.Test
 import java.sql.SQLException
+import kotlin.test.assertFailsWith
 
 class CreateDatabaseTest : DatabaseTestsBase() {
 
     @Test
-    fun `create database test`() {
-        // PostgreSQL will be tested in the next test function
-        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+    @Suppress("SwallowedException")
+    fun testCreateAndDropDatabase() {
+        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)) {
             val dbName = "jetbrains"
             try {
                 SchemaUtils.dropDatabase(dbName)
-            } catch (e: SQLException) {
-                //ignore
+            } catch (cause: SQLException) {
+                // ignore
             }
             SchemaUtils.createDatabase(dbName)
             SchemaUtils.dropDatabase(dbName)
@@ -24,7 +26,54 @@ class CreateDatabaseTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun `create database test in postgreSQL`() {
+    fun testListDatabasesOracle() {
+        withDb(TestDB.ORACLE) {
+            assertFailsWith<IllegalStateException> {
+                SchemaUtils.listDatabases()
+            }
+        }
+    }
+
+    @Test
+    fun testListDatabasesWithAutoCommit() {
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLSERVER)) {
+            connection.autoCommit = true
+            val dbName = "jetbrains"
+            val initial = SchemaUtils.listDatabases()
+            if (dbName in initial) {
+                SchemaUtils.dropDatabase(dbName)
+            }
+
+            SchemaUtils.createDatabase(dbName)
+            val created = SchemaUtils.listDatabases()
+            assertTrue(dbName in created)
+            SchemaUtils.dropDatabase(dbName)
+            val deleted = SchemaUtils.listDatabases()
+            assertTrue(dbName !in deleted)
+            connection.autoCommit = false
+        }
+    }
+
+    @Test
+    fun testListDatabases() {
+        withDb(excludeSettings = listOf(TestDB.ORACLE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLSERVER)) {
+            val dbName = "jetbrains"
+            val initial = SchemaUtils.listDatabases()
+            if (dbName in initial) {
+                SchemaUtils.dropDatabase(dbName)
+            }
+
+            SchemaUtils.createDatabase(dbName)
+            val created = SchemaUtils.listDatabases()
+            assertTrue(dbName in created)
+            SchemaUtils.dropDatabase(dbName)
+            val deleted = SchemaUtils.listDatabases()
+            assertTrue(dbName !in deleted)
+        }
+    }
+
+    @Test
+    fun testCreateAndDropDatabaseWithAutoCommit() {
         // PostgreSQL needs auto commit to be "ON" to allow create database statement
         withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
             connection.autoCommit = true

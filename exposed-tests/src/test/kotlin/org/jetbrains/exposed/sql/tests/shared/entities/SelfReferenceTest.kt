@@ -9,8 +9,7 @@ import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-@Suppress("unused")
-class SortByReferenceTest {
+class SelfReferenceTest {
 
     @Test
     fun simpleTest() {
@@ -73,9 +72,23 @@ class SortByReferenceTest {
 
     @Test
     fun cycleReferencesCheckTest() {
-        val original = listOf(TestTables.cities, TestTables.users, TestTables.strangeTable, TestTables.noRefereeTable, TestTables.refereeTable, TestTables.referencedTable)
+        val original = listOf(
+            TestTables.cities,
+            TestTables.users,
+            TestTables.strangeTable,
+            TestTables.noRefereeTable,
+            TestTables.refereeTable,
+            TestTables.referencedTable
+        )
         val sortedTables = SchemaUtils.sortTablesByReferences(original)
-        val expected = listOf(TestTables.users, TestTables.strangeTable, TestTables.cities, TestTables.noRefereeTable, TestTables.refereeTable, TestTables.referencedTable)
+        val expected = listOf(
+            TestTables.users,
+            TestTables.strangeTable,
+            TestTables.cities,
+            TestTables.noRefereeTable,
+            TestTables.refereeTable,
+            TestTables.referencedTable
+        )
 
         assertEqualLists(expected, sortedTables)
     }

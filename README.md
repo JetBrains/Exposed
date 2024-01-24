@@ -16,19 +16,176 @@ Exposed has two flavors of database access: typesafe SQL wrapping DSL and lightw
 With Exposed, you have two ways for database access: wrapping DSL and a lightweight DAO. Our official mascot is the cuttlefish, which is well-known for its outstanding mimicry ability that enables it to blend seamlessly into any environment.
 Similar to our mascot, Exposed can be used to mimic a variety of database engines and help you build applications without dependencies on any specific database engine and switch between them with very little or no changes.
 
+## Supported Databases
+
+- H2 (versions 2.x; 1.x version is deprecated and will be removed in future releases)
+- ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
+- ![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
+- [Oracle](docs/ORACLE.md)
+- ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) (Also, PostgreSQL using
+  the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver)
+- [SQL Server](docs/SQLServer.md)
+- ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
+
+## Dependencies
+
+### Maven Central configuration
+
+Releases of Exposed are available in the Maven Central repository. You can declare this repository in your build script as follows:
+
+#### Maven
+
+```xml
+<!-- Versions after 0.30.1 -->
+<!-- Versions before 0.30.1 is unavailable for now-->
+<repositories>
+    <repository>
+        <id>mavenCentral</id>
+        <name>mavenCentral</name>
+        <url>https://repo1.maven.org/maven2/</url>
+    </repository>
+</repositories>
+```
+
+#### Gradle Groovy and Kotlin DSL
+
+**Warning:** You might need to set your Kotlin JVM target to 8, and when using Spring to 17, in order for this to work properly:
+
+```kotlin
+repositories {
+    // Versions after 0.30.1
+    // Versions before 0.30.1 is unavailable for now
+    mavenCentral()
+}
+```
+
+### Exposed modules
+
+`Exposed` consists of the following modules:
+
+* exposed-core - base module, which contains both DSL api along with mapping
+* exposed-crypt - provides additional column types to store encrypted data in DB and encode/decode it on client-side
+* exposed-dao - DAO api
+* exposed-java-time - date-time extensions based on Java8 Time API
+* exposed-jdbc - transport level implementation based on Java JDBC API
+* exposed-jodatime - date-time extensions based on JodaTime library
+* exposed-json - JSON and JSONB data type extensions
+* exposed-kotlin-datetime - date-time extensions based on kotlinx-datetime
+* exposed-money - extensions to support MonetaryAmount from "javax.money:money-api"
+* exposed-spring-boot-starter - a starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM instead
+  of [Hibernate](https://hibernate.org/)
+
+```xml
+
+<dependencies>
+    <dependency>
+        <groupId>org.jetbrains.exposed</groupId>
+        <artifactId>exposed-core</artifactId>
+        <version>0.46.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.jetbrains.exposed</groupId>
+        <artifactId>exposed-crypt</artifactId>
+        <version>0.46.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.jetbrains.exposed</groupId>
+        <artifactId>exposed-dao</artifactId>
+        <version>0.46.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.jetbrains.exposed</groupId>
+        <artifactId>exposed-java-time</artifactId>
+        <version>0.46.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.jetbrains.exposed</groupId>
+        <artifactId>exposed-jdbc</artifactId>
+        <version>0.46.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.jetbrains.exposed</groupId>
+        <artifactId>exposed-jodatime</artifactId>
+        <version>0.46.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.jetbrains.exposed</groupId>
+        <artifactId>exposed-json</artifactId>
+        <version>0.46.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.jetbrains.exposed</groupId>
+        <artifactId>exposed-kotlin-datetime</artifactId>
+        <version>0.46.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.jetbrains.exposed</groupId>
+        <artifactId>exposed-money</artifactId>
+        <version>0.46.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.jetbrains.exposed</groupId>
+        <artifactId>exposed-spring-boot-starter</artifactId>
+        <version>0.46.0</version>
+    </dependency>
+</dependencies>
+
+```
+
+#### Gradle Groovy
+
+```groovy
+dependencies {
+    implementation 'org.jetbrains.exposed:exposed-core:0.46.0'
+    implementation 'org.jetbrains.exposed:exposed-crypt:0.46.0'
+    implementation 'org.jetbrains.exposed:exposed-dao:0.46.0'
+    implementation 'org.jetbrains.exposed:exposed-jdbc:0.46.0'
+    
+    implementation 'org.jetbrains.exposed:exposed-jodatime:0.46.0'
+    // or
+    implementation 'org.jetbrains.exposed:exposed-java-time:0.46.0'
+    // or
+    implementation 'org.jetbrains.exposed:exposed-kotlin-datetime:0.46.0'
+    
+    implementation 'org.jetbrains.exposed:exposed-json:0.46.0'
+    implementation 'org.jetbrains.exposed:exposed-money:0.46.0'
+    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.46.0'
+}
+```
+
+#### Gradle Kotlin DSL
+
+In `build.gradle.kts`:
+
+```kotlin
+val exposedVersion: String by project
+dependencies {
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-crypt:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    
+    implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVersion")
+    // or
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    // or
+    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
+    
+    implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-money:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")
+}
+```
+
+and in `gradle.properties`
+
+```
+exposedVersion=0.46.0
+```
+
 ## Samples
 
 Check out the [samples](samples/README.md) for a quick start.
-
-## Supported Databases
-
--   ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) (Also, PostgreSQL using the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver)
--   ![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
--   ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
--   ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
--   H2 (versions 2.x; 1.x version is deprecated and will be removed in future releases)
--   [Oracle](docs/ORACLE.md)
--   [SQL Server](docs/SQLServer.md)
 
 ## Links
 
@@ -39,13 +196,14 @@ For more information visit the links below:
 -   [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs
 -   [Roadmap](docs/ROADMAP.md) to see what's coming next
 -   [Change log](docs/ChangeLog.md) of improvements and bug fixes
+-   [Breaking changes](docs/BREAKING_CHANGES.md) and any migration details
 -   [Slack Channel](https://kotlinlang.slack.com/archives/C0CG7E0A1)
 -   [Issue Tracker](https://youtrack.jetbrains.com/issues/EXPOSED)
 <br><br>
 
 ## Filing issues
 
-Please note that we are moving away from GitHub Issues for reporting of bugs and features. Please log any new requests on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED). 
+Please note that we are moving away from GitHub Issues for reporting of bugs and features. Please log any new requests on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED). You must be logged in to view and log issues, otherwise you will be met with a 404.
 
 ## Community
 
@@ -106,7 +264,7 @@ fun main() {
             it.update(name, stringLiteral("   Prague   ").trim().substring(1, 2))
         }[Cities.id]
 
-        val pragueName = Cities.select { Cities.id eq pragueId }.single()[Cities.name]
+        val pragueName = Cities.selectAll().where { Cities.id eq pragueId }.single()[Cities.name]
         println("pragueName = $pragueName")
 
         Users.insert {
@@ -154,8 +312,8 @@ fun main() {
         println("Manual join:")
         
         (Users innerJoin Cities)
-            .slice(Users.name, Cities.name)
-            .select {
+            .select(Users.name, Cities.name)
+            .where {
                 (Users.id.eq("andrey") or Users.name.eq("Sergey")) and
                     Users.id.eq("sergey") and Users.cityId.eq(Cities.id)
             }.forEach { 
@@ -165,8 +323,8 @@ fun main() {
         println("Join with foreign key:")
 
         (Users innerJoin Cities)
-            .slice(Users.name, Users.cityId, Cities.name)
-            .select { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
+            .select(Users.name, Users.cityId, Cities.name)
+            .where { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
             .forEach { 
                 if (it[Users.cityId] != null) { 
                     println("${it[Users.name]} lives in ${it[Cities.name]}") 
@@ -179,8 +337,7 @@ fun main() {
         println("Functions and group by:")
 
         ((Cities innerJoin Users)
-            .slice(Cities.name, Users.id.count())
-            .selectAll()
+            .select(Cities.name, Users.id.count())
             .groupBy(Cities.name)
             ).forEach {
                 val cityName = it[Cities.name]

@@ -21,7 +21,8 @@ class RepeatableTestRule : TestRule {
         val repeatAnnotation = description.annotations.filterIsInstance<RepeatableTest>().singleOrNull()
         return if (repeatAnnotation != null) {
             RepeatableStatement(repeatAnnotation.times, base)
-        } else
+        } else {
             base
+        }
     }
 }

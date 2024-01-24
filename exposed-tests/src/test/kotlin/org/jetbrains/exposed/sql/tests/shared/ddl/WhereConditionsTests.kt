@@ -2,7 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.upperCase
@@ -24,7 +24,7 @@ class WhereConditionsTests : DatabaseTestsBase() {
             User.insert {
                 it[name] = "HICHEM"
             }
-            val namesResult = User.select {
+            val namesResult = User.selectAll().where {
                 User.name like stringLiteral("Hich%").upperCase()
             }.map { it[User.name] }
 
@@ -39,7 +39,7 @@ class WhereConditionsTests : DatabaseTestsBase() {
             User.insert {
                 it[name] = "HICHEM"
             }
-            val namesResult = User.select {
+            val namesResult = User.selectAll().where {
                 User.name notLike stringLiteral("Hich%").upperCase()
             }.map { it }
 

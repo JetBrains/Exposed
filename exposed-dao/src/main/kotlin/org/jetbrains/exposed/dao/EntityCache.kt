@@ -24,7 +24,6 @@ class EntityCache(private val transaction: Transaction) {
      * Amount of entities to keep in a cache per an Entity class.
      * On setting a new value all data stored in cache will be adjusted to a new size
      */
-    @Suppress("MemberVisibilityCanBePrivate")
     var maxEntitiesToStore = transaction.db.config.maxEntitiesToStoreInCachePerEntity
         set(value) {
             val diff = value - field
@@ -108,21 +107,25 @@ class EntityCache(private val transaction: Transaction) {
     }
 
     private fun updateEntities(idTable: IdTable<*>) {
-        updates.remove(idTable)?.takeIf { it.isNotEmpty() }?.let {
-            val updatedEntities = HashSet<Entity<*>>()
-            val batch = EntityBatchUpdate(it.first().klass)
-            for (entity in it) {
-                if (entity.flush(batch)) {
-                    check(entity.klass !is ImmutableEntityClass<*, *>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
-                    updatedEntities.add(entity)
-                }
+        val update = updates.remove(idTable) ?: return
+        if (update.isEmpty()) return
+
+        val updatedEntities = HashSet<Entity<*>>()
+        val batch = EntityBatchUpdate(update.first().klass)
+
+        for (entity in update) {
+            if (entity.flush(batch)) {
+                check(entity.klass !is ImmutableEntityClass<*, *>) { "Update on immutable entity ${entity.javaClass.simpleName} ${entity.id}" }
+                updatedEntities.add(entity)
             }
-            executeAsPartOfEntityLifecycle {
-                batch.execute(transaction)
-            }
-            updatedEntities.forEach {
-                transaction.registerChange(it.klass, it.id, EntityChangeType.Updated)
-            }
+        }
+
+        executeAsPartOfEntityLifecycle {
+            batch.execute(transaction)
+        }
+
+        updatedEntities.forEach {
+            transaction.registerChange(it.klass, it.id, EntityChangeType.Updated)
         }
     }
 

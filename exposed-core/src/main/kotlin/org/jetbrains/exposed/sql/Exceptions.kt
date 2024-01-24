@@ -1,4 +1,5 @@
 @file:Suppress("PackageDirectoryMismatch", "InvalidPackageDeclaration")
+
 package org.jetbrains.exposed.exceptions
 
 import org.jetbrains.exposed.sql.AbstractQuery
@@ -9,7 +10,15 @@ import org.jetbrains.exposed.sql.statements.expandArgs
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import java.sql.SQLException
 
-class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext>, private val transaction: Transaction) : SQLException(cause) {
+/**
+ * An exception that provides information about a database access error,
+ * within the [contexts] of the executed statements that caused the exception.
+ */
+class ExposedSQLException(
+    cause: Throwable?,
+    val contexts: List<StatementContext>,
+    private val transaction: Transaction
+) : SQLException(cause) {
     fun causedByQueries(): List<String> = contexts.map {
         try {
             if (transaction.debug) {
@@ -35,8 +44,13 @@ class ExposedSQLException(cause: Throwable?, val contexts: List<StatementContext
     override fun toString() = "${super.toString()}\nSQL: ${causedByQueries()}"
 }
 
-@Suppress("MaximumLineLength")
-class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDialect) : UnsupportedOperationException(baseMessage + ", dialect: ${dialect.name}.")
+/**
+ * An exception that provides information about an operation that is not supported by
+ * the provided [dialect].
+ */
+class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDialect) : UnsupportedOperationException(
+    baseMessage + ", dialect: ${dialect.name}."
+)
 
 /**
  * DuplicateColumnException is thrown :
@@ -46,8 +60,9 @@ class UnsupportedByDialectException(baseMessage: String, val dialect: DatabaseDi
  *
  * @param columnName the duplicated column name
  */
-@Suppress("MaximumLineLength")
-class DuplicateColumnException(columnName: String, tableName: String) : ExceptionInInitializerError("Duplicate column name \"$columnName\" in table \"$tableName\"")
+class DuplicateColumnException(columnName: String, tableName: String) : ExceptionInInitializerError(
+    "Duplicate column name \"$columnName\" in table \"$tableName\""
+)
 
 /**
  * LongQueryException is thrown:
@@ -58,4 +73,7 @@ class DuplicateColumnException(columnName: String, tableName: String) : Exceptio
  */
 class LongQueryException : RuntimeException("Long query was executed")
 
-internal fun Transaction.throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(message, db.dialect)
+internal fun Transaction.throwUnsupportedException(message: String): Nothing = throw UnsupportedByDialectException(
+    message,
+    db.dialect
+)

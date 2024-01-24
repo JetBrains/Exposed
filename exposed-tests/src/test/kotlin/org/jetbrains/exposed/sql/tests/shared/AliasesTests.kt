@@ -14,34 +14,33 @@ import kotlin.test.assertNull
 class AliasesTests : DatabaseTestsBase() {
     @Test
     fun `test_github_issue_379_count_alias_ClassCastException`() {
-        val Stables = object : UUIDTable("Stables") {
+        val stables = object : UUIDTable("Stables") {
             val name = varchar("name", 256).uniqueIndex()
         }
 
-        val Facilities = object : UUIDTable("Facilities") {
-            val stableId = reference("stable_id", Stables)
+        val facilities = object : UUIDTable("Facilities") {
+            val stableId = reference("stable_id", stables)
             val name = varchar("name", 256)
         }
 
-        withTables(Facilities, Stables) {
-            val stable1Id = Stables.insertAndGetId {
-                it[Stables.name] = "Stables1"
+        withTables(facilities, stables) {
+            val stable1Id = stables.insertAndGetId {
+                it[stables.name] = "Stables1"
             }
-            Stables.insertAndGetId {
-                it[Stables.name] = "Stables2"
+            stables.insertAndGetId {
+                it[stables.name] = "Stables2"
             }
-            Facilities.insertAndGetId {
-                it[Facilities.stableId] = stable1Id
-                it[Facilities.name] = "Facility1"
+            facilities.insertAndGetId {
+                it[facilities.stableId] = stable1Id
+                it[facilities.name] = "Facility1"
             }
-            val fcAlias = Facilities.name.count().alias("fc")
-            val fAlias = Facilities.slice(Facilities.stableId, fcAlias).selectAll().groupBy(Facilities.stableId).alias("f")
-            val sliceColumns = Stables.columns + fAlias[fcAlias]
-            val stats = Stables.join(fAlias, JoinType.LEFT, Stables.id, fAlias[Facilities.stableId])
-                .slice(sliceColumns)
-                .selectAll()
+            val fcAlias = facilities.name.count().alias("fc")
+            val fAlias = facilities.select(facilities.stableId, fcAlias).groupBy(facilities.stableId).alias("f")
+            val sliceColumns = stables.columns + fAlias[fcAlias]
+            val stats = stables.join(fAlias, JoinType.LEFT, stables.id, fAlias[facilities.stableId])
+                .select(sliceColumns)
                 .groupBy(*sliceColumns.toTypedArray()).map {
-                    it[Stables.name] to it[fAlias[fcAlias]]
+                    it[stables.name] to it[fAlias[fcAlias]]
                 }.toMap()
             assertEquals(2, stats.size)
             assertEquals(1, stats["Stables1"])
@@ -53,7 +52,7 @@ class AliasesTests : DatabaseTestsBase() {
     fun testJoinSubQuery01() {
         withCitiesAndUsers { cities, users, userData ->
             val expAlias = users.name.max().alias("m")
-            val usersAlias = users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId).alias("u2")
+            val usersAlias = users.select(users.cityId, expAlias).groupBy(users.cityId).alias("u2")
             val resultRows = Join(users).join(usersAlias, JoinType.INNER, usersAlias[expAlias], users.name).selectAll().toList()
             assertEquals(3, resultRows.size)
         }
@@ -65,13 +64,13 @@ class AliasesTests : DatabaseTestsBase() {
             val expAlias = users.name.max().alias("m")
 
             val query = Join(users).joinQuery(on = { it[expAlias].eq(users.name) }) {
-                users.slice(users.cityId, expAlias).selectAll().groupBy(users.cityId)
+                users.select(users.cityId, expAlias).groupBy(users.cityId)
             }
             val innerExp = query.lastQueryAlias!![expAlias]
 
             assertEquals("q0", query.lastQueryAlias?.alias)
             assertEquals(3L, query.selectAll().count())
-            assertNotNull(query.slice(users.columns + innerExp).selectAll().first()[innerExp])
+            assertNotNull(query.select(users.columns + innerExp).first()[innerExp])
         }
     }
 
@@ -120,8 +119,7 @@ class AliasesTests : DatabaseTestsBase() {
             }
             val aliasedExpression = EntityTestsData.XTable.id.max().alias("maxId")
             val aliasedQuery = EntityTestsData.XTable
-                .slice(EntityTestsData.XTable.b1, aliasedExpression)
-                .selectAll()
+                .select(EntityTestsData.XTable.b1, aliasedExpression)
                 .groupBy(EntityTestsData.XTable.b1)
                 .alias("maxBoolean")
 
@@ -131,8 +129,7 @@ class AliasesTests : DatabaseTestsBase() {
 
             val resultQuery = aliasedQuery
                 .leftJoin(EntityTestsData.XTable, { this[aliasedExpression] }, { id })
-                .slice(aliasedBool, expressionToCheck)
-                .selectAll()
+                .select(aliasedBool, expressionToCheck)
 
             val result = resultQuery.map {
                 it[aliasedBool] to it[expressionToCheck]!!.value
@@ -146,11 +143,11 @@ class AliasesTests : DatabaseTestsBase() {
         withTables(EntityTestsData.XTable) {
             val table1Count = EntityTestsData.XTable.id.max().alias("t1max")
             val table2Count = EntityTestsData.XTable.id.max().alias("t2max")
-            val t1Alias = EntityTestsData.XTable.slice(table1Count).selectAll().groupBy(EntityTestsData.XTable.b1).alias("t1")
-            val t2Alias = EntityTestsData.XTable.slice(table2Count).selectAll().groupBy(EntityTestsData.XTable.b1).alias("t2")
+            val t1Alias = EntityTestsData.XTable.select(table1Count).groupBy(EntityTestsData.XTable.b1).alias("t1")
+            val t2Alias = EntityTestsData.XTable.select(table2Count).groupBy(EntityTestsData.XTable.b1).alias("t2")
             t1Alias.join(t2Alias, JoinType.INNER) {
                 t1Alias[table1Count] eq t2Alias[table2Count]
-            }.slice(t1Alias[table1Count]).selectAll().toList()
+            }.select(t1Alias[table1Count]).toList()
         }
     }
 }

@@ -20,7 +20,7 @@ class CreateIndexTests : DatabaseTestsBase() {
 
     @Test
     fun createStandardIndex() {
-        val TestTable = object : Table("test_table") {
+        val testTable = object : Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
 
@@ -28,16 +28,16 @@ class CreateIndexTests : DatabaseTestsBase() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(TestTable)) {
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertTrue(TestTable.exists())
-            SchemaUtils.drop(TestTable)
+        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(testTable)) {
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertTrue(testTable.exists())
+            SchemaUtils.drop(testTable)
         }
     }
 
     @Test
     fun createHashIndex() {
-        val TestTable = object : Table("test_table") {
+        val testTable = object : Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
 
@@ -45,15 +45,18 @@ class CreateIndexTests : DatabaseTestsBase() {
             val byNameHash = index("test_table_by_name", isUnique = false, name, indexType = "HASH")
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE), tables = arrayOf(TestTable)) {
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertTrue(TestTable.exists())
+        withTables(
+            excludeSettings = listOf(TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE),
+            tables = arrayOf(testTable)
+        ) {
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertTrue(testTable.exists())
         }
     }
 
     @Test
     fun createNonClusteredSQLServerIndex() {
-        val TestTable = object : Table("test_table") {
+        val testTable = object : Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
 
@@ -62,17 +65,18 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withDb(TestDB.SQLSERVER) {
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertTrue(TestTable.exists())
-            SchemaUtils.drop(TestTable)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertTrue(testTable.exists())
+            SchemaUtils.drop(testTable)
         }
     }
 
     @Test
-    fun `test possibility to create indexes when table exists in different schemas`() {
-        val TestTable = object : Table("test_table") {
+    fun testCreateIndexWithTableInDifferentSchemas() {
+        val testTable = object : Table("test_table") {
             val id = integer("id").uniqueIndex()
             val name = varchar("name", length = 42).index("test_index")
+
             init {
                 index(false, id, name)
             }
@@ -81,15 +85,14 @@ class CreateIndexTests : DatabaseTestsBase() {
         val schema2 = Schema("Schema2")
         withSchemas(listOf(TestDB.SQLITE, TestDB.SQLSERVER), schema1, schema2) {
             SchemaUtils.setSchema(schema1)
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertEquals(true, TestTable.exists())
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertEquals(true, testTable.exists())
             SchemaUtils.setSchema(schema2)
-            assertEquals(false, TestTable.exists())
-            SchemaUtils.createMissingTablesAndColumns(TestTable)
-            assertEquals(true, TestTable.exists())
+            assertEquals(false, testTable.exists())
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertEquals(true, testTable.exists())
         }
     }
-
 
     @Test
     fun testCreateAndDropPartialIndexWithPostgres() {
@@ -98,6 +101,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             val value = integer("value")
             val anotherValue = integer("anotherValue")
             val flag = bool("flag")
+
             init {
                 index("flag_index", columns = arrayOf(flag, name)) {
                     flag eq true
@@ -127,7 +131,10 @@ class CreateIndexTests : DatabaseTestsBase() {
                     val filter = it.getString("FILTER_CONDITION")
 
                     when (it.getString("INDEX_NAME")) {
-                        "partialindextabletest_value_name" -> assertEquals(filter, "(((name)::text = 'aaa'::text) AND (value >= 6))")
+                        "partialindextabletest_value_name" -> assertEquals(
+                            filter,
+                            "(((name)::text = 'aaa'::text) AND (value >= 6))"
+                        )
                         "flag_index" -> assertEquals(filter, "(flag = true)")
                         "partialindextabletest_anothervalue_unique" -> assertTrue(filter.startsWith(" UNIQUE INDEX "))
                     }
@@ -135,10 +142,22 @@ class CreateIndexTests : DatabaseTestsBase() {
                 kotlin.test.assertEquals(totalIndexCount, 3, "Indexes expected to be created")
             }
 
-            val dropIndex = Index(columns = listOf(partialIndexTable.value, partialIndexTable.name), unique = false).dropStatement().first()
-            kotlin.test.assertTrue(dropIndex.startsWith("DROP INDEX "), "Unique partial index must be created and dropped as index")
-            val dropUniqueConstraint = Index(columns = listOf(partialIndexTable.anotherValue), unique = true).dropStatement().first()
-            kotlin.test.assertTrue(dropUniqueConstraint.startsWith("ALTER TABLE "), "Unique index must be created and dropped as constraint")
+            val dropIndex = Index(
+                columns = listOf(partialIndexTable.value, partialIndexTable.name),
+                unique = false
+            ).dropStatement().first()
+            kotlin.test.assertTrue(
+                dropIndex.startsWith("DROP INDEX "),
+                "Unique partial index must be created and dropped as index"
+            )
+            val dropUniqueConstraint = Index(
+                columns = listOf(partialIndexTable.anotherValue),
+                unique = true
+            ).dropStatement().first()
+            kotlin.test.assertTrue(
+                dropUniqueConstraint.startsWith("ALTER TABLE "),
+                "Unique index must be created and dropped as constraint"
+            )
 
             execInBatch(listOf(dropUniqueConstraint, dropIndex))
 
@@ -178,7 +197,13 @@ class CreateIndexTests : DatabaseTestsBase() {
             var indices = getIndices(tester)
             assertEquals(3, indices.size)
 
-            val uniqueWithPartial = Index(listOf(tester.team), true, "team_only_index", null, Op.TRUE).dropStatement().first()
+            val uniqueWithPartial = Index(
+                listOf(tester.team),
+                true,
+                "team_only_index",
+                null,
+                Op.TRUE
+            ).dropStatement().first()
             val dropStatements = indices.map { it.dropStatement().first() }
             expect(Unit) { execInBatch(dropStatements + uniqueWithPartial) }
 
@@ -192,7 +217,11 @@ class CreateIndexTests : DatabaseTestsBase() {
                 else -> null
             }
             val typedPartialIndex = Index(
-                listOf(tester.name), false, "name_only_index", type, tester.name neq "Default"
+                listOf(tester.name),
+                false,
+                "name_only_index",
+                type,
+                tester.name neq "Default"
             )
             val createdIndex = SchemaUtils.createIndex(typedPartialIndex).single()
             assertTrue(createdIndex.startsWith("CREATE "))

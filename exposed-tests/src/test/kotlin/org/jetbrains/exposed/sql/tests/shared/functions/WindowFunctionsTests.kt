@@ -415,8 +415,7 @@ class WindowFunctionsTests : DatabaseTestsBase() {
         definition: WindowFunctionDefinition<T>,
         expectedResult: List<T>
     ) {
-        val result = slice(definition)
-            .selectAll()
+        val result = select(definition)
             .orderBy(
                 year to SortOrder.ASC,
                 month to SortOrder.ASC,

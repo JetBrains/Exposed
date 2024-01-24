@@ -9,7 +9,13 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.math.ceil
 
+/**
+ * Symmetric-key block ciphers for performing encryption and decryption.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testEncryptedColumnTypeWithAString
+ */
 object Algorithms {
+    @Suppress("MagicNumber")
     private fun base64EncodedLength(byteSize: Int): Int = ceil(byteSize.toDouble() / 3).toInt() * 4
     private fun paddingLen(len: Int, blockSize: Int): Int = if (len % blockSize == 0) 0 else blockSize - len % blockSize
     private val base64Decoder = Base64.getDecoder()
@@ -17,9 +23,10 @@ object Algorithms {
 
     private const val AES_256_GCM_BLOCK_LENGTH = 16
     private const val AES_256_GCM_TAG_LENGTH = 16
+
+    /** Returns an [Encryptor] that uses AES encryption with its cipher algorithm set to GCM mode. */
     @Suppress("FunctionNaming")
     fun AES_256_PBE_GCM(password: CharSequence, salt: CharSequence): Encryptor {
-
         return AesBytesEncryptor(
             password.toString(),
             salt,
@@ -37,9 +44,10 @@ object Algorithms {
     }
 
     private const val AES_256_CBC_BLOCK_LENGTH = 16
+
+    /** Returns an [Encryptor] that uses AES encryption with its cipher algorithm set to CBC mode. */
     @Suppress("FunctionNaming")
     fun AES_256_PBE_CBC(password: CharSequence, salt: CharSequence): Encryptor {
-
         return AesBytesEncryptor(
             password.toString(),
             salt,
@@ -57,6 +65,8 @@ object Algorithms {
     }
 
     private const val BLOW_FISH_BLOCK_LENGTH = 8
+
+    /** Returns an [Encryptor] that uses a Blowfish algorithm. */
     @Suppress("FunctionNaming")
     fun BLOW_FISH(key: CharSequence): Encryptor {
         val ks = SecretKeySpec(key.toString().toByteArray(), "Blowfish")
@@ -82,7 +92,9 @@ object Algorithms {
 
     private const val TRIPLE_DES_KEY_LENGTH = 24
     private const val TRIPLE_DES_BLOCK_LENGTH = 8
-    @Suppress("FunctionNaming")
+
+    /** Returns an [Encryptor] that uses a Triple DES algorithm. */
+    @Suppress("FunctionNaming", "UseRequire")
     fun TRIPLE_DES(secretKey: CharSequence): Encryptor {
         if (secretKey.toString().toByteArray().size != TRIPLE_DES_KEY_LENGTH) {
             throw IllegalArgumentException("secretKey must have 24 bytes")

@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
@@ -16,31 +18,36 @@ enum class SortOrder(val code: String) {
     DESC_NULLS_LAST(code = "DESC NULLS LAST")
 }
 
+/** Class representing an SQL `SELECT` statement on which query clauses can be built. */
 open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuery<Query>(set.source.targetTables()) {
+    /** Whether only distinct results should be retrieved by this `SELECT` query. */
     var distinct: Boolean = false
         protected set
 
+    /** The stored list of columns for a `GROUP BY` clause in this `SELECT` query. */
     var groupedByColumns: List<Expression<*>> = mutableListOf()
         private set
 
+    /** The stored condition for a `HAVING` clause in this `SELECT` query. */
     var having: Op<Boolean>? = null
         private set
 
     private var forUpdate: ForUpdateOption? = null
 
-    // private set
+    /** The stored condition for a `WHERE` clause in this `SELECT` query. */
     var where: Op<Boolean>? = where
         private set
 
     override val queryToExecute: Statement<ResultSet> get() {
         val distinctExpressions = set.fields.distinct()
         return if (distinctExpressions.size < set.fields.size) {
-            copy().adjustSlice { slice(distinctExpressions) }
+            copy().adjustSelect { select(distinctExpressions) }
         } else {
             this
         }
     }
 
+    /** Creates a new [Query] instance using all stored properties of this `SELECT` query. */
     override fun copy(): Query = Query(set, where).also { copy ->
         copyTo(copy)
         copy.distinct = distinct
@@ -63,37 +70,58 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         distinct = value
     }
 
-    /**
-     * Changes [set.fields] field of a Query, [set.source] will be preserved
-     * @param body builder for new column set, current [set.source] used as a receiver and current [set] as an argument, you are expected to slice it
-     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
-     */
+    @Deprecated(
+        message = "As part of SELECT DSL design changes, this will be removed in future releases.",
+        replaceWith = ReplaceWith("adjustSelect { body.invoke() }"),
+        level = DeprecationLevel.WARNING
+    )
     fun adjustSlice(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
 
     /**
-     * Changes [set.source] field of a Query, [set.fields] will be preserved
-     * @param body builder for new column set, previous value used as a receiver
+     * Assigns a new selection of columns, by changing the `fields` property of this query's [set],
+     * while preserving its `source` property.
+     *
+     * @param body Builder for the new column set defined using `select()`, with the current [set]'s `source`
+     * property used as the receiver and the current [set] as an argument.
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
+     */
+    fun adjustSelect(body: ColumnSet.(FieldSet) -> Query): Query = apply { set = set.source.body(set).set }
+
+    /**
+     * Assigns a new column set, either a [Table] or a [Join], by changing the `source` property of this query's [set],
+     * while preserving its `fields` property.
+     *
+     * @param body Builder for the new column set, with the previous column set value as the receiver.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
      */
     fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
-        return adjustSlice { oldSlice -> body().slice(oldSlice.fields) }
+        return adjustSelect { oldSlice -> body().select(oldSlice.fields) }
     }
 
     /**
-     * Changes [where] field of a Query.
-     * @param body new WHERE condition builder, previous value used as a receiver
+     * Changes the [where] field of this query.
+     *
+     * @param body Builder for the new `WHERE` condition, with the previous value used as the receiver.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
      */
     fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
 
     /**
-     * Changes [having] field of a Query.
-     * @param body new HAVING condition builder, previous value used as a receiver
+     * Changes the [having] field of this query.
+     *
+     * @param body Builder for the new `HAVING` condition, with the previous value used as the receiver.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryHaving
      */
     fun adjustHaving(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { having = having.body() }
 
+    /** Whether this `SELECT` query already has a stored value option for performing locking reads. */
     fun hasCustomForUpdateState() = forUpdate != null
+
+    /**
+     * Whether this `SELECT` query will perform a locking read.
+     *
+     * **Note:** `SELECT FOR UPDATE` is not supported by all vendors. Please check the documentation.
+     */
     fun isForUpdate() = (forUpdate?.let { it != ForUpdateOption.NoForUpdateOption } ?: false) && currentDialect.supportsSelectForUpdate()
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet? {
@@ -105,6 +133,8 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     }
 
     override fun prepareSQL(builder: QueryBuilder): String {
+        require(set.fields.isNotEmpty()) { "Can't prepare SELECT statement without columns or expressions to retrieve" }
+
         builder {
             append("SELECT ")
 
@@ -161,6 +191,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         return builder.toString()
     }
 
+    /**
+     * Appends a `GROUP BY` clause with the specified [columns] to this `SELECT` query.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupBy02
+     */
     fun groupBy(vararg columns: Expression<*>): Query {
         for (column in columns) {
             (groupedByColumns as MutableList).add(column)
@@ -168,6 +203,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         return this
     }
 
+    /**
+     * Appends a `HAVING` clause with the specified [op] condition to this `SELECT` query.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupBy02
+     */
     fun having(op: SqlExpressionBuilder.() -> Op<Boolean>): Query {
         val oop = SqlExpressionBuilder.op()
         if (having != null) {
@@ -177,6 +217,87 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         return this
     }
 
+    /**
+     * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testSelect
+     */
+    fun where(predicate: SqlExpressionBuilder.() -> Op<Boolean>): Query = where(SqlExpressionBuilder.predicate())
+
+    /**
+     * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.ExistsTests.testExists01
+     */
+    fun where(predicate: Op<Boolean>): Query {
+        where?.let {
+            error("WHERE clause is specified twice. Old value = '$it', new value = '$predicate'")
+        }
+        where = predicate
+        return this
+    }
+
+    /**
+     * Iterates over multiple executions of this `SELECT` query with its `LIMIT` clause set to [batchSize]
+     * until the amount of results retrieved from the database is less than [batchSize].
+     *
+     * This query's [FieldSet] will be ordered by the first auto-increment column.
+     *
+     * @param batchSize Size of each sub-collection to return.
+     * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectBatchedTests.testFetchBatchedResultsWithWhereAndSetBatchSize
+     */
+    fun fetchBatchedResults(batchSize: Int = 1000): Iterable<Iterable<ResultRow>> {
+        require(batchSize > 0) { "Batch size should be greater than 0." }
+        require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
+        require(orderByExpressions.isEmpty()) {
+            "A manual `ORDER BY` clause should not be set. By default, the auto-incrementing column will be used."
+        }
+
+        val autoIncColumn = try {
+            set.source.columns.first { it.columnType.isAutoInc }
+        } catch (_: NoSuchElementException) {
+            throw UnsupportedOperationException("Batched select only works on tables with an auto-incrementing column")
+        }
+        limit = batchSize
+        (orderByExpressions as MutableList).add(autoIncColumn to SortOrder.ASC)
+        val whereOp = where ?: Op.TRUE
+
+        return object : Iterable<Iterable<ResultRow>> {
+            override fun iterator(): Iterator<Iterable<ResultRow>> {
+                return iterator {
+                    var lastOffset = 0L
+                    while (true) {
+                        val query = this@Query.copy().adjustWhere {
+                            whereOp and (autoIncColumn greater lastOffset)
+                        }
+
+                        val results = query.iterator().asSequence().toList()
+
+                        if (results.isNotEmpty()) {
+                            yield(results)
+                        }
+
+                        if (results.size < batchSize) break
+
+                        lastOffset = toLong(results.last()[autoIncColumn]!!)
+                    }
+                }
+            }
+
+            private fun toLong(autoIncVal: Any): Long = when (autoIncVal) {
+                is EntityID<*> -> toLong(autoIncVal.value)
+                is Int -> autoIncVal.toLong()
+                else -> autoIncVal as Long
+            }
+        }
+    }
+
+    /**
+     * Returns the number of results retrieved after query execution.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertSelectTests.testInsertSelect02
+     */
     override fun count(): Long {
         return if (distinct || groupedByColumns.isNotEmpty() || limit != null) {
             fun Column<*>.makeAlias() =
@@ -185,8 +306,8 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             val originalSet = set
             try {
                 var expInx = 0
-                adjustSlice {
-                    slice(
+                adjustSelect {
+                    select(
                         originalSet.fields.map {
                             it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
                         }
@@ -210,6 +331,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         }
     }
 
+    /**
+     * Returns whether any results were retrieved by query execution.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testSizedIterable
+     */
     override fun empty(): Boolean {
         val oldLimit = limit
         try {
@@ -228,8 +354,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
  */
 fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { andPart() }
-    if (this == null) expr
-    else this and expr
+    if (this == null) expr else this and expr
 }
 
 /**
@@ -238,8 +363,7 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
  */
 fun Query.orWhere(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
     val expr = Op.build { orPart() }
-    if (this == null) expr
-    else this or expr
+    if (this == null) expr else this or expr
 }
 
 /**
@@ -248,8 +372,7 @@ fun Query.orWhere(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere 
  */
 fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
     val expr = Op.build { andPart() }
-    if (this == null) expr
-    else this and expr
+    if (this == null) expr else this and expr
 }
 
 /**
@@ -258,6 +381,5 @@ fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHav
  */
 fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
     val expr = Op.build { orPart() }
-    if (this == null) expr
-    else this or expr
+    if (this == null) expr else this or expr
 }

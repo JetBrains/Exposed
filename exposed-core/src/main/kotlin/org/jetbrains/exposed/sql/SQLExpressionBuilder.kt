@@ -2,15 +2,10 @@
 
 package org.jetbrains.exposed.sql
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.ops.InListOrNotInListBaseOp
-import org.jetbrains.exposed.sql.ops.PairInListOp
-import org.jetbrains.exposed.sql.ops.SingleValueInListOp
-import org.jetbrains.exposed.sql.ops.TripleInListOp
+import org.jetbrains.exposed.sql.ops.*
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
@@ -27,12 +22,28 @@ fun <T : String?> Expression<T>.lowerCase(): LowerCase<T> = LowerCase(this)
 /** Converts this string expression to upper case. */
 fun <T : String?> Expression<T>.upperCase(): UpperCase<T> = UpperCase(this)
 
+/**
+ * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
+ *
+ * When [distinct] is set to `true`, duplicate values will be eliminated.
+ * [orderBy] can be used to sort values in the concatenated string.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupConcat
+ */
 fun <T : String?> Expression<T>.groupConcat(
     separator: String? = null,
     distinct: Boolean = false,
     orderBy: Pair<Expression<*>, SortOrder>
 ): GroupConcat<T> = GroupConcat(this, separator, distinct, orderBy)
 
+/**
+ * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
+ *
+ * When [distinct] is set to `true`, duplicate values will be eliminated.
+ * [orderBy] can be used to sort values in the concatenated string by one or more expressions.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupConcat
+ */
 fun <T : String?> Expression<T>.groupConcat(
     separator: String? = null,
     distinct: Boolean = false,
@@ -98,39 +109,27 @@ fun <T : Any?> ExpressionWithColumnType<T>.varPop(scale: Int = 2): VarPop<T> = V
  */
 fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> = VarSamp(this, scale)
 
-// JSON Functions
+// Array Comparisons
 
-/**
- * Returns the extracted data from a JSON object at the specified [path], either as a JSON representation or as a scalar value.
- *
- * @param path String(s) representing JSON path/keys that match fields to be extracted.
- * If none are provided, the root context item `'$'` will be used by default.
- * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
- * @param toScalar If `true`, the extracted result is a scalar or text value; otherwise, it is a JSON object.
- */
-inline fun <reified T : Any> ExpressionWithColumnType<*>.jsonExtract(vararg path: String, toScalar: Boolean = true): JsonExtract<T> {
-    val columnType = when (T::class) {
-        String::class -> TextColumnType()
-        Boolean::class -> BooleanColumnType()
-        Long::class -> LongColumnType()
-        Int::class -> IntegerColumnType()
-        Short::class -> ShortColumnType()
-        Byte::class -> ByteColumnType()
-        Double::class -> DoubleColumnType()
-        Float::class -> FloatColumnType()
-        ByteArray::class -> BasicBinaryColumnType()
-        else -> {
-            JsonColumnType({ Json.Default.encodeToString(serializer<T>(), it) }, { Json.Default.decodeFromString(serializer<T>(), it) })
-        }
-    }
-    return JsonExtract(this, path = path, toScalar, this.columnType, columnType)
-}
+/** Returns this subquery wrapped in the `ANY` operator. This function is not supported by the SQLite dialect. */
+fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, subQuery)
+
+/** Returns this array of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <T> anyFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(true, array)
+
+/** Returns this table wrapped in the `ANY` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
+fun <T> anyFrom(table: Table): Op<T> = AllAnyFromTableOp(true, table)
+
+/** Returns this subquery wrapped in the `ALL` operator. This function is not supported by the SQLite dialect. */
+fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false, subQuery)
+
+/** Returns this array of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <T> allFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(false, array)
+
+/** Returns this table wrapped in the `ALL` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
+fun <T> allFrom(table: Table): Op<T> = AllAnyFromTableOp(false, table)
 
 // Sequence Manipulation Functions
-
-/** Advances this sequence and returns the new value. */
-@Deprecated("Please use [nextIntVal] or [nextLongVal] functions", ReplaceWith("nextIntVal()"), DeprecationLevel.HIDDEN)
-fun Sequence.nextVal(): NextVal<Int> = nextIntVal()
 
 /** Advances this sequence and returns the new value. */
 fun Sequence.nextIntVal(): NextVal<Int> = NextVal.IntNextVal(this)
@@ -168,8 +167,11 @@ fun CustomLongFunction(
     vararg params: Expression<*>
 ): CustomFunction<Long?> = CustomFunction(functionName, LongColumnType(), *params)
 
+/** Represents a pattern used for the comparison of string expressions. */
 data class LikePattern(
+    /** The string representation of a pattern to match. */
     val pattern: String,
+    /** The special character to use as the escape character. */
     val escapeChar: Char? = null
 ) {
 
@@ -183,6 +185,7 @@ data class LikePattern(
     }
 
     companion object {
+        /** Creates a [LikePattern] from the provided [text], with any special characters escaped using [escapeChar]. */
         fun ofLiteral(text: String, escapeChar: Char = '\\'): LikePattern {
             val likePatternSpecialChars = currentDialect.likePatternSpecialChars
             val nextExpectedPatternQueue = arrayListOf<Char>()
@@ -216,19 +219,18 @@ data class LikePattern(
     }
 }
 
-@Deprecated("Implement interface ISqlExpressionBuilder directly instead", level = DeprecationLevel.HIDDEN)
-open class SqlExpressionBuilderClass : ISqlExpressionBuilder
-
+/** Represents all the operators available when building SQL expressions. */
 @Suppress("INAPPLICABLE_JVM_NAME", "TooManyFunctions")
 interface ISqlExpressionBuilder {
 
     // Comparison Operators
+    // EQUAL
 
-    /** Checks if this expression is equals to some [t] value. */
+    /** Checks if this expression is equal to some [t] value. */
     @LowPriorityInOverloadResolution
     infix fun <T> ExpressionWithColumnType<T>.eq(t: T): Op<Boolean> = if (t == null) isNull() else EqOp(this, wrap(t))
 
-    /** Checks if this expression is equals to some [t] value. */
+    /** Checks if this expression is equal to some [t] value. */
     infix fun <T> CompositeColumn<T>.eq(t: T): Op<Boolean> {
         // For the composite column, create "EqOps" for each real column and combine it using "and" operator
         return this.getRealColumnsWithValues(t).entries
@@ -236,13 +238,13 @@ interface ISqlExpressionBuilder {
             .compoundAnd()
     }
 
-    /** Checks if this expression is equals to some [other] expression. */
+    /** Checks if this expression is equal to some [other] expression. */
     infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): Op<Boolean> = when (other as Expression<*>) {
         is Op.NULL -> isNull()
         else -> EqOp(this, other)
     }
 
-    /** Checks if this expression is equals to some [t] value. */
+    /** Checks if this [EntityID] expression is equal to some [t] value. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> {
         if (t == null) return isNull()
 
@@ -252,17 +254,32 @@ interface ISqlExpressionBuilder {
         return EqOp(this, wrap(entityID))
     }
 
-    /** Checks if this expression is not equals to some [other] value. */
+    /** Checks if this [EntityID] expression is equal to some [other] expression. */
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(
+        other: Expression<in V>
+    ): Op<Boolean> = when (other as Expression<*>) {
+        is Op.NULL -> isNull()
+        else -> EqOp(this, other)
+    }
+
+    /** Checks if this expression is equal to some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.eq(
+        other: ExpressionWithColumnType<in E>
+    ): Op<Boolean> = other eq this
+
+    // NOT EQUAL
+
+    /** Checks if this expression is not equal to some [other] value. */
     @LowPriorityInOverloadResolution
     infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> = if (other == null) isNotNull() else NeqOp(this, wrap(other))
 
-    /** Checks if this expression is not equals to some [other] expression. */
+    /** Checks if this expression is not equal to some [other] expression. */
     infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.neq(other: Expression<in S2>): Op<Boolean> = when (other as Expression<*>) {
         is Op.NULL -> isNotNull()
         else -> NeqOp(this, other)
     }
 
-    /** Checks if this expression is not equals to some [t] value. */
+    /** Checks if this [EntityID] expression is not equal to some [t] value. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> {
         if (t == null) return isNotNull()
         @Suppress("UNCHECKED_CAST")
@@ -271,45 +288,110 @@ interface ISqlExpressionBuilder {
         return NeqOp(this, wrap(entityID))
     }
 
+    /** Checks if this [EntityID] expression is not equal to some [other] expression. */
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(
+        other: Expression<in V>
+    ): Op<Boolean> = when (other as Expression<*>) {
+        is Op.NULL -> isNotNull()
+        else -> NeqOp(this, other)
+    }
+
+    /** Checks if this expression is not equal to some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.neq(
+        other: ExpressionWithColumnType<in E>
+    ): Op<Boolean> = other neq this
+
+    // LESS THAN
+
     /** Checks if this expression is less than some [t] value. */
+    @LowPriorityInOverloadResolution
     infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.less(t: T): LessOp = LessOp(this, wrap(t))
 
     /** Checks if this expression is less than some [other] expression. */
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.less(other: Expression<in S>): LessOp = LessOp(this, other)
 
-    /** Checks if this expression is less than some [t] value. */
+    /** Checks if this [EntityID] expression is less than some [t] value. */
     @JvmName("lessEntityID")
     infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.less(t: T): LessOp = LessOp(this, wrap(t))
 
+    /** Checks if this [EntityID] expression is less than some [other] expression. */
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.less(
+        other: Expression<in V>
+    ): LessOp = LessOp(this, other)
+
+    /** Checks if this expression is less than some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.less(
+        other: ExpressionWithColumnType<in E>
+    ): LessOp = LessOp(this, other)
+
+    // LESS THAN OR EQUAL
+
     /** Checks if this expression is less than or equal to some [t] value */
+    @LowPriorityInOverloadResolution
     infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.lessEq(t: T): LessEqOp = LessEqOp(this, wrap(t))
 
     /** Checks if this expression is less than or equal to some [other] expression */
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.lessEq(other: Expression<in S>): LessEqOp = LessEqOp(this, other)
 
-    /** Checks if this expression is less than or equal to some [t] value */
+    /** Checks if this [EntityID] expression is less than or equal to some [t] value */
     @JvmName("lessEqEntityID")
     infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.lessEq(t: T): LessEqOp = LessEqOp(this, wrap(t))
 
+    /** Checks if this [EntityID] expression is less than or equal to some [other] expression */
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.lessEq(
+        other: Expression<in V>
+    ): LessEqOp = LessEqOp(this, other)
+
+    /** Checks if this expression is less than or equal to some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.lessEq(
+        other: ExpressionWithColumnType<in E>
+    ): LessEqOp = LessEqOp(this, other)
+
+    // GREATER THAN
+
     /** Checks if this expression is greater than some [t] value. */
+    @LowPriorityInOverloadResolution
     infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greater(t: T): GreaterOp = GreaterOp(this, wrap(t))
 
     /** Checks if this expression is greater than some [other] expression. */
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.greater(other: Expression<in S>): GreaterOp = GreaterOp(this, other)
 
-    /** Checks if this expression is greater than some [t] value. */
+    /** Checks if this [EntityID] expression is greater than some [t] value. */
     @JvmName("greaterEntityID")
     infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greater(t: T): GreaterOp = GreaterOp(this, wrap(t))
 
+    /** Checks if this [EntityID] expression is greater than some [other] expression. */
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.greater(
+        other: Expression<in V>
+    ): GreaterOp = GreaterOp(this, other)
+
+    /** Checks if this expression is greater than some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greater(
+        other: ExpressionWithColumnType<in E>
+    ): GreaterOp = GreaterOp(this, other)
+
+    // GREATER THAN OR EQUAL
+
     /** Checks if this expression is greater than or equal to some [t] value */
+    @LowPriorityInOverloadResolution
     infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.greaterEq(t: T): GreaterEqOp = GreaterEqOp(this, wrap(t))
 
     /** Checks if this expression is greater than or equal to some [other] expression */
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.greaterEq(other: Expression<in S>): GreaterEqOp = GreaterEqOp(this, other)
 
-    /** Checks if this expression is greater than or equal to some [t] value */
+    /** Checks if this [EntityID] expression is greater than or equal to some [t] value */
     @JvmName("greaterEqEntityID")
     infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greaterEq(t: T): GreaterEqOp = GreaterEqOp(this, wrap(t))
+
+    /** Checks if this [EntityID] expression is greater than or equal to some [other] expression */
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.greaterEq(
+        other: Expression<in V>
+    ): GreaterEqOp = GreaterEqOp(this, other)
+
+    /** Checks if this expression is greater than or equal to some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greaterEq(
+        other: ExpressionWithColumnType<in E>
+    ): GreaterEqOp = GreaterEqOp(this, other)
 
     // Comparison Predicates
 
@@ -349,6 +431,30 @@ interface ISqlExpressionBuilder {
 
     /** Adds the [other] expression to this expression. */
     infix operator fun <T, S : T> ExpressionWithColumnType<T>.plus(other: Expression<S>): PlusOp<T, S> = PlusOp(this, other, columnType)
+
+    /**
+     * Concatenate the value to the input expression.
+     *
+     * @param value The string value to be concatenated.
+     * @return The concatenated expression.
+     */
+    infix operator fun Expression<String>.plus(value: String): Concat = concat(this, stringLiteral(value))
+
+    /**
+     * Concatenate the value to the input expression.
+     *
+     * @param value The string value to be concatenated.
+     * @return The concatenated expression.
+     */
+    infix operator fun Expression<String>.plus(value: Expression<String>): Concat = concat(this, value)
+
+    /**
+     * Concatenate the value to the input expression.
+     *
+     * @param value The string value to be concatenated.
+     * @return The concatenated expression.
+     */
+    infix operator fun String.plus(value: Expression<String>): Concat = concat(stringLiteral(this), value)
 
     /** Subtracts the [t] value from this expression. */
     infix operator fun <T> ExpressionWithColumnType<T>.minus(t: T): MinusOp<T, T> = MinusOp(this, wrap(t), columnType)
@@ -588,40 +694,6 @@ interface ISqlExpressionBuilder {
      */
     fun <T> ExpressionWithColumnType<T>.nthValue(n: ExpressionWithColumnType<Int>): NthValue<T> = NthValue(this, n)
 
-    // JSON Conditions
-
-    /**
-     * Checks whether a [candidate] expression is contained within [this] JSON expression.
-     *
-     * @param candidate Expression to search for in [this] JSON expression.
-     * @param path String representing JSON path/keys that match specific fields to search for [candidate].
-     * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
-     */
-    fun ExpressionWithColumnType<*>.jsonContains(candidate: Expression<*>, path: String? = null): JsonContains =
-        JsonContains(this, candidate, path, columnType)
-
-    /**
-     * Checks whether a [candidate] value is contained within [this] JSON expression.
-     *
-     * @param candidate Value to search for in [this] JSON expression.
-     * @param path String representing JSON path/keys that match specific fields to search for [candidate].
-     * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
-     */
-    fun <T> ExpressionWithColumnType<*>.jsonContains(candidate: T, path: String? = null): JsonContains =
-        JsonContains(this, asLiteral(candidate), path, columnType)
-
-    /**
-     * Checks whether data exists within [this] JSON expression at the specified [path].
-     *
-     * @param path String(s) representing JSON path/keys that match fields to check for existing data.
-     * If none are provided, the root context item `'$'` will be used by default.
-     * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
-     * @param optional String representing any optional vendor-specific clause or argument.
-     * **Note:** [optional] function arguments are not supported by all vendors; please check the documentation.
-     */
-    fun ExpressionWithColumnType<*>.jsonExists(vararg path: String, optional: String? = null): JsonExists =
-        JsonExists(this, path = path, optional, columnType)
-
     // Conditional Expressions
 
     /** Returns the first of its arguments that is not null. */
@@ -631,6 +703,13 @@ interface ISqlExpressionBuilder {
         vararg others: A
     ): Coalesce<T?, S, R> = Coalesce(expr, alternate, others = others)
 
+    /**
+     * Compares [value] against any chained conditional expressions.
+     *
+     * If [value] is `null`, chained conditionals will be evaluated separately until the first is evaluated as `true`.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.ConditionsTests.nullOpInCaseTest
+     */
     fun case(value: Expression<*>? = null): Case = Case(value)
 
     // Subquery Expressions
@@ -649,7 +728,7 @@ interface ISqlExpressionBuilder {
 
     // Array Comparisons
 
-    /** Checks if this expression is equals to any element from [list]. */
+    /** Checks if this expression is equal to any element from [list]. */
     infix fun <T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): InListOrNotInListBaseOp<T> = SingleValueInListOp(this, list, isInList = true)
 
     /**
@@ -706,6 +785,22 @@ interface ISqlExpressionBuilder {
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
     }
 
+    // "IN (TABLE ...)" comparisons
+
+    /**
+     * Checks if this expression is equal to any element from the column of [table] with only a single column.
+     *
+     * **Note** This function is only supported by MySQL, PostgreSQL, and H2 dialects.
+     */
+    infix fun <T> ExpressionWithColumnType<T>.inTable(table: Table): InTableOp = InTableOp(this, table, true)
+
+    /**
+     * Checks if this expression is **not** equal to any element from the column of [table] with only a single column.
+     *
+     * **Note** This function is only supported by MySQL, PostgreSQL, and H2 dialects.
+     */
+    infix fun <T> ExpressionWithColumnType<T>.notInTable(table: Table): InTableOp = InTableOp(this, table, false)
+
     // Misc.
 
     /** Returns the specified [value] as a query parameter of type [T]. */
@@ -727,7 +822,7 @@ interface ISqlExpressionBuilder {
     } as QueryParameter<T>
 
     /** Returns the specified [value] as a literal of type [T]. */
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST", "ComplexMethod")
     fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
         is Boolean -> booleanLiteral(value)
         is Byte -> byteLiteral(value)

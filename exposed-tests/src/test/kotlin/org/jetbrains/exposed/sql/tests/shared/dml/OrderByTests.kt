@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.H2Dialect
@@ -39,8 +38,11 @@ class OrderByTests : DatabaseTestsBase() {
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
-            val expected = if (isNullFirst()) usersWithoutCities + otherUsers
-            else otherUsers + usersWithoutCities
+            val expected = if (isNullFirst()) {
+                usersWithoutCities + otherUsers
+            } else {
+                otherUsers + usersWithoutCities
+            }
             expected.forEachIndexed { index, e ->
                 assertEquals(e, r[index][users.id])
             }
@@ -54,8 +56,11 @@ class OrderByTests : DatabaseTestsBase() {
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
-            val expected = if (isNullFirst()) usersWithoutCities + otherUsers
-            else otherUsers + usersWithoutCities
+            val expected = if (isNullFirst()) {
+                usersWithoutCities + otherUsers
+            } else {
+                otherUsers + usersWithoutCities
+            }
             expected.forEachIndexed { index, e ->
                 assertEquals(e, r[index][users.id])
             }
@@ -65,7 +70,10 @@ class OrderByTests : DatabaseTestsBase() {
     @Test
     fun testOrderBy04() {
         withCitiesAndUsers { cities, users, _ ->
-            val r = (cities innerJoin users).slice(cities.name, users.id.count()).selectAll().groupBy(cities.name).orderBy(cities.name).toList()
+            val r = (cities innerJoin users).select(
+                cities.name,
+                users.id.count()
+            ).groupBy(cities.name).orderBy(cities.name).toList()
             assertEquals(2, r.size)
             assertEquals("Munich", r[0][cities.name])
             assertEquals(2, r[0][users.id.count()])
@@ -81,8 +89,11 @@ class OrderByTests : DatabaseTestsBase() {
             assertEquals(5, r.size)
             val usersWithoutCities = listOf("alex", "smth")
             val otherUsers = listOf("eugene", "sergey", "andrey")
-            val expected = if (isNullFirst()) usersWithoutCities + otherUsers
-            else otherUsers + usersWithoutCities
+            val expected = if (isNullFirst()) {
+                usersWithoutCities + otherUsers
+            } else {
+                otherUsers + usersWithoutCities
+            }
             expected.forEachIndexed { index, e ->
                 assertEquals(e, r[index][users.id])
             }
@@ -108,10 +119,8 @@ class OrderByTests : DatabaseTestsBase() {
         withCitiesAndUsers { cities, users, _ ->
             val expression = wrapAsExpression<Int>(
                 users
-                    .slice(users.id.count())
-                    .select {
-                        cities.id eq users.cityId
-                    }
+                    .select(users.id.count())
+                    .where { cities.id eq users.cityId }
             )
 
             val result = cities

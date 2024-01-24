@@ -30,7 +30,7 @@ class EntityCacheTests : DatabaseTestsBase() {
 
     @Test
     fun testGlobalEntityCacheLimit() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
         val entitiesCount = 25
         val cacheSize = 10
         val db = TestDB.H2.connect {
@@ -60,7 +60,7 @@ class EntityCacheTests : DatabaseTestsBase() {
 
     @Test
     fun testGlobalEntityCacheLimitZero() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledInTests())
+        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
         val entitiesCount = 25
         val db = TestDB.H2.connect()
         val dbNoCache = TestDB.H2.connect {
@@ -160,7 +160,7 @@ class EntityCacheTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `EntityCache should not be cleaned on explicit commit` () {
+    fun `EntityCache should not be cleaned on explicit commit`() {
         withTables(TestTable) {
             val entity = TestEntity.new {
                 value = Random.nextInt()

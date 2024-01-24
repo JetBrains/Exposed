@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 enum class EntityChangeType {
     Created,
     Updated,
-    Removed;
+    Removed
 }
 
 data class EntityChange(
@@ -25,7 +25,6 @@ fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(): T? = (entityC
 
 fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(klass: EntityClass<ID, T>): T? {
     if (!entityClass.isAssignableTo(klass)) return null
-    @Suppress("UNCHECKED_CAST")
     return toEntity<ID, T>()
 }
 

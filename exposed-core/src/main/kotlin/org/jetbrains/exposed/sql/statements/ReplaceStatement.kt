@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
 import org.jetbrains.exposed.sql.vendors.h2Mode
 
 /**
- * Represents the SQL command that either inserts a new row into a table, or, if insertion would violate a unique constraint,
+ * Represents the SQL statement that either inserts a new row into a table, or, if insertion would violate a unique constraint,
  * first deletes the existing row before inserting a new row.
  *
  * @param table Table to either insert values into or delete values from then insert into.

@@ -16,7 +16,9 @@ class ExistsTests : DatabaseTestsBase() {
     @Test
     fun testExists01() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select { exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) }.toList()
+            val r = users.selectAll().where {
+                exists(userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%here%")))
+            }.toList()
             assertEquals(1, r.size)
             assertEquals("Something", r[0][users.name])
         }
@@ -25,18 +27,22 @@ class ExistsTests : DatabaseTestsBase() {
     @Test
     fun testExistsInASlice() {
         withCitiesAndUsers { _, users, userData ->
-            var exists: Expression<Boolean> = exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))
+            var exists: Expression<Boolean> = exists(
+                userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%here%"))
+            )
             if (currentDialectTest is OracleDialect || currentDialect is SQLServerDialect) {
                 exists = case().When(exists, booleanLiteral(true)).Else(booleanLiteral(false))
             }
-            val r1 = users.slice(exists).selectAll().first()
+            val r1 = users.select(exists).first()
             assertEquals(false, r1[exists])
 
-            var notExists: Expression<Boolean> = notExists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%")))
+            var notExists: Expression<Boolean> = notExists(
+                userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%here%"))
+            )
             if (currentDialectTest is OracleDialect || currentDialect is SQLServerDialect) {
                 notExists = case().When(notExists, booleanLiteral(true)).Else(booleanLiteral(false))
             }
-            val r2 = users.slice(notExists).selectAll().first()
+            val r2 = users.select(notExists).first()
             assertEquals(true, r2[notExists])
         }
     }
@@ -44,7 +50,15 @@ class ExistsTests : DatabaseTestsBase() {
     @Test
     fun testExists02() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select { exists(userData.select((userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey")))) }
+            val r = users
+                .selectAll()
+                .where {
+                    exists(
+                        userData.selectAll().where(
+                            (userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey"))
+                        )
+                    )
+                }
                 .orderBy(users.id).toList()
             assertEquals(2, r.size)
             assertEquals("Sergey", r[0][users.name])
@@ -55,9 +69,9 @@ class ExistsTests : DatabaseTestsBase() {
     @Test
     fun testExists03() {
         withCitiesAndUsers { cities, users, userData ->
-            val r = users.select {
-                exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
-                    exists(userData.select((userData.user_id eq users.id) and (userData.comment like "%Sergey")))
+            val r = users.selectAll().where {
+                exists(userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
+                    exists(userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%Sergey")))
             }
                 .orderBy(users.id).toList()
             assertEquals(2, r.size)

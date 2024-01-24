@@ -44,6 +44,7 @@ class StatisticsFunctionTests : DatabaseTestsBase() {
     private object SampleTestTable : Table("sample_table") {
         val number = integer("number").nullable()
     }
+
     private val data: List<Int?> = listOf(4, null, 5, null, 6)
     private val scale = 4
 
@@ -58,12 +59,43 @@ class StatisticsFunctionTests : DatabaseTestsBase() {
     }
 
     private fun Transaction.assertExpressionEqual(expected: BigDecimal, expression: Function<BigDecimal?>) {
-        val result = SampleTestTable.slice(expression).selectAll().first()[expression]
+        val result = SampleTestTable.select(expression).first()[expression]
         assertEquals(expected, result?.setScale(expected.scale(), RoundingMode.HALF_EVEN))
     }
 
     private fun calculateStandardDeviation(isPopulation: Boolean): BigDecimal {
-        return calculateVariance(isPopulation).sqrt(MathContext(scale, RoundingMode.HALF_EVEN))
+        return calculateVariance(isPopulation).simpleSqrt()
+    }
+
+    fun BigDecimal.simpleSqrt(): BigDecimal {
+        if (this < BigDecimal.ZERO) throw ArithmeticException("Square root of negative number")
+        if (this == BigDecimal.ZERO) return BigDecimal.ZERO
+
+        val two = BigDecimal(2)
+        val epsilon = BigDecimal(0.1).pow(scale)
+
+        var low = BigDecimal.ZERO
+        var high = max(BigDecimal.ONE)
+        var result = (low + high).divide(two)
+
+        while (true) {
+            val square = result.multiply(result)
+            val diff = square.subtract(this).abs()
+            if (diff < epsilon) {
+                break
+            }
+
+            if (result.multiply(result) < this) {
+                low = result
+            } else {
+                high = result
+            }
+            result = (low + high).divide(two)
+        }
+
+        result = result.round(MathContext(scale, RoundingMode.HALF_EVEN))
+        result = result.setScale(scale)
+        return result
     }
 
     private fun calculateVariance(isPopulation: Boolean): BigDecimal {

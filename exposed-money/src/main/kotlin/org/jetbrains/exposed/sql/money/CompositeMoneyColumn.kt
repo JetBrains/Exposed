@@ -14,7 +14,6 @@ import javax.money.MonetaryAmount
  *
  * @author Vladislav Kisel
  */
-
 class CompositeMoneyColumn<T1 : BigDecimal?, T2 : CurrencyUnit?, R : MonetaryAmount?>(val amount: Column<T1>, val currency: Column<T2>) :
     BiCompositeColumn<T1, T2, R>(
         column1 = amount,
@@ -40,6 +39,7 @@ class CompositeMoneyColumn<T1 : BigDecimal?, T2 : CurrencyUnit?, R : MonetaryAmo
         }
     )
 
+@Suppress("FunctionNaming")
 fun CompositeMoneyColumn(table: Table, precision: Int, scale: Int, amountName: String, currencyName: String) =
     CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount>(
         amount = Column(table, amountName, DecimalColumnType(precision, scale)),

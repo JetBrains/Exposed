@@ -11,11 +11,17 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import java.sql.ResultSet
 
+/**
+ * Represents an SQL operation that combines the results of multiple queries into a single result.
+ *
+ * @param secondStatement The SQL statement on the right-hand side of the set operator.
+ */
 sealed class SetOperation(
     operationName: String,
     _firstStatement: AbstractQuery<*>,
     val secondStatement: AbstractQuery<*>
 ) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()) {
+    /** The SQL statement on the left-hand side of the set operator. */
     val firstStatement: AbstractQuery<*> = when (_firstStatement) {
         is Query -> {
             val newSlice = _firstStatement.set.fields.mapIndexed { index, expression ->
@@ -24,7 +30,7 @@ sealed class SetOperation(
                     else -> expression.alias("exp$index")
                 }
             }
-            _firstStatement.copy().adjustSlice { slice(newSlice) }
+            _firstStatement.copy().adjustSelect { select(newSlice) }
         }
         is SetOperation -> _firstStatement
         else -> error("Unsupported statement type ${_firstStatement::class.simpleName} in $operationName")
@@ -47,8 +53,10 @@ sealed class SetOperation(
 
     override val queryToExecute: Statement<ResultSet> get() = this
 
+    /** The SQL keyword representing the set operation. */
     open val operationName = operationName
 
+    /** Returns the number of results retrieved after query execution. */
     override fun count(): Long {
         try {
             count = true
@@ -63,6 +71,7 @@ sealed class SetOperation(
         }
     }
 
+    /** Returns whether any results were retrieved by query execution. */
     override fun empty(): Boolean {
         val oldLimit = limit
         try {
@@ -116,7 +125,11 @@ sealed class SetOperation(
     }
 }
 
-class Union(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>) : SetOperation("UNION", firstStatement, secondStatement) {
+/** Represents an SQL operation that combines all results from two queries, without any duplicates. */
+class Union(
+    firstStatement: AbstractQuery<*>,
+    secondStatement: AbstractQuery<*>
+) : SetOperation("UNION", firstStatement, secondStatement) {
     override fun withDistinct(value: Boolean): SetOperation {
         return if (!value) {
             UnionAll(firstStatement, secondStatement).also {
@@ -132,7 +145,11 @@ class Union(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>)
     }
 }
 
-class UnionAll(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>) : SetOperation("UNION ALL", firstStatement, secondStatement) {
+/** Represents an SQL operation that combines all results from two queries, with duplicates included. */
+class UnionAll(
+    firstStatement: AbstractQuery<*>,
+    secondStatement: AbstractQuery<*>
+) : SetOperation("UNION ALL", firstStatement, secondStatement) {
 
     override fun withDistinct(value: Boolean): SetOperation {
         return if (value) {
@@ -147,7 +164,11 @@ class UnionAll(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<
     }
 }
 
-class Intersect(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>) : SetOperation("INTERSECT", firstStatement, secondStatement) {
+/** Represents an SQL operation that returns only the common rows from two query results, without any duplicates. */
+class Intersect(
+    firstStatement: AbstractQuery<*>,
+    secondStatement: AbstractQuery<*>
+) : SetOperation("INTERSECT", firstStatement, secondStatement) {
     override fun copy() = Intersect(firstStatement, secondStatement).also {
         copyTo(it)
     }
@@ -163,7 +184,13 @@ class Intersect(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery
     }
 }
 
-class Except(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>) : SetOperation("EXCEPT", firstStatement, secondStatement) {
+/**
+ * Represents an SQL operation that returns the distinct results of [firstStatement] that are not common to [secondStatement].
+ */
+class Except(
+    firstStatement: AbstractQuery<*>,
+    secondStatement: AbstractQuery<*>
+) : SetOperation("EXCEPT", firstStatement, secondStatement) {
 
     override val operationName: String get() = when {
         currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> "MINUS"
@@ -185,10 +212,30 @@ class Except(firstStatement: AbstractQuery<*>, secondStatement: AbstractQuery<*>
     }
 }
 
+/**
+ * Combines all results from [this] query with the results of [other], WITHOUT including duplicates.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UnionTests.testUnionWithLimit
+ */
 fun AbstractQuery<*>.union(other: Query): Union = Union(this, other)
 
+/**
+ * Combines all results from [this] query with the results of [other], WITH duplicates included.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UnionTests.testUnionWithAllResults
+ */
 fun AbstractQuery<*>.unionAll(other: Query): UnionAll = UnionAll(this, other)
 
+/**
+ * Returns only results from [this] query that are common to the results of [other], WITHOUT including any duplicates.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UnionTests.testIntersectWithThreeQueries
+ */
 fun AbstractQuery<*>.intersect(other: Query): Intersect = Intersect(this, other)
 
+/**
+ * Returns only distinct results from [this] query that are NOT common to the results of [other].
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UnionTests.testExceptWithTwoQueries
+ */
 fun AbstractQuery<*>.except(other: Query): Except = Except(this, other)

@@ -2,10 +2,11 @@ package org.jetbrains.exposed.spring
 
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.scheduling.annotation.EnableAsync
 
 @EnableAsync
-@SpringBootApplication
+@SpringBootApplication(exclude = [DataSourceTransactionManagerAutoConfiguration::class])
 open class Application {
 
     open fun main(args: Array<String>) {

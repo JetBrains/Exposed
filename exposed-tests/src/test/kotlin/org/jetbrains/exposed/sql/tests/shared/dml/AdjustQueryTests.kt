@@ -1,13 +1,14 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
-import org.hamcrest.Matchers
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -17,19 +18,29 @@ class AdjustQueryTests : DatabaseTestsBase() {
     fun testAdjustQuerySlice() {
         withCitiesAndUsers { cities, users, _ ->
             val queryAdjusted = (users innerJoin cities)
-                .slice(users.name)
-                .select(predicate)
+                .select(users.name)
+                .where(predicate)
 
-            fun Query.sliceIt(): FieldSet = this.set.source.slice(users.name, cities.name)
+            fun Query.sliceIt(): FieldSet = this.set.source.select(users.name, cities.name).set
             val oldSlice = queryAdjusted.set.fields
             val expectedSlice = queryAdjusted.sliceIt().fields
-            queryAdjusted.adjustSlice { slice(users.name, cities.name) }
+            queryAdjusted.adjustSelect { select(users.name, cities.name) }
             val actualSlice = queryAdjusted.set.fields
-            fun containsInAnyOrder(list: List<*>) = Matchers.containsInAnyOrder(*list.toTypedArray())
 
-            Assert.assertThat(oldSlice, Matchers.not(containsInAnyOrder(actualSlice)))
-            Assert.assertThat(actualSlice, containsInAnyOrder(expectedSlice))
+            assertFalse { oldSlice.size == actualSlice.size && oldSlice.all { it in actualSlice } }
+            assertEqualLists(expectedSlice, actualSlice)
             assertQueryResultValid(queryAdjusted)
+        }
+    }
+
+    @Test
+    fun testAdjustQuerySliceWithEmptyListThrows() {
+        withCitiesAndUsers { cities, _, _ ->
+            val originalQuery = cities.select(cities.name)
+
+            assertFailsWith<IllegalArgumentException> {
+                originalQuery.adjustSelect { select(emptyList()) }.toList()
+            }
         }
     }
 
@@ -37,8 +48,8 @@ class AdjustQueryTests : DatabaseTestsBase() {
     fun testAdjustQueryColumnSet() {
         withCitiesAndUsers { cities, users, _ ->
             val queryAdjusted = users
-                .slice(users.name, cities.name)
-                .select(predicate)
+                .select(users.name, cities.name)
+                .where(predicate)
             val oldColumnSet = queryAdjusted.set.source
             val expectedColumnSet = users innerJoin cities
             queryAdjusted.adjustColumnSet { innerJoin(cities) }
@@ -61,8 +72,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
     fun testAdjustQueryWhere() {
         withCitiesAndUsers { cities, users, _ ->
             val queryAdjusted = (users innerJoin cities)
-                .slice(users.name, cities.name)
-                .selectAll()
+                .select(users.name, cities.name)
             queryAdjusted.adjustWhere {
                 assertNull(this)
                 predicate
@@ -78,8 +88,8 @@ class AdjustQueryTests : DatabaseTestsBase() {
     fun testQueryAndWhere() {
         withCitiesAndUsers { cities, users, _ ->
             val queryAdjusted = (users innerJoin cities)
-                .slice(users.name, cities.name)
-                .select { predicate }
+                .select(users.name, cities.name)
+                .where { predicate }
 
             queryAdjusted.andWhere {
                 predicate
@@ -95,8 +105,8 @@ class AdjustQueryTests : DatabaseTestsBase() {
     fun testQueryOrWhere() {
         withCitiesAndUsers { cities, users, _ ->
             val queryAdjusted = (users innerJoin cities)
-                .slice(users.name, cities.name)
-                .select { predicate }
+                .select(users.name, cities.name)
+                .where { predicate }
 
             queryAdjusted.orWhere {
                 predicate
@@ -116,8 +126,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
             }
 
             val queryAdjusted = (cities innerJoin users)
-                .slice(cities.name)
-                .selectAll()
+                .select(cities.name)
                 .groupBy(cities.name)
             queryAdjusted.adjustHaving {
                 assertNull(this)
@@ -141,8 +150,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
             }
 
             val queryAdjusted = (cities innerJoin users)
-                .slice(cities.name)
-                .selectAll()
+                .select(cities.name)
                 .groupBy(cities.name)
                 .having { predicateHaving }
 
@@ -168,8 +176,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
             }
 
             val queryAdjusted = (cities innerJoin users)
-                .slice(cities.name)
-                .selectAll()
+                .select(cities.name)
                 .groupBy(cities.name)
                 .having { predicateHaving }
 

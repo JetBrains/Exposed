@@ -1,3 +1,234 @@
+# 0.46.0
+Infrastructure:
+* Kotlinx Datetime JVM 0.5.0
+* Joda Time 2.12.5
+* Kotlinx Serialization Json 1.6.2
+* log4j2 2.22.0
+* slf4j 2.0.9
+* MariaDB (V3) driver 3.3.1
+* PostgreSQL driver 42.7.1
+* h2-database (V2) driver 2.2.224
+* SQLite driver 3.44.1.0
+* Spring Framework 6.1.2
+* Spring Boot 3.2.0
+* Spring Security Crypto 5.8.8
+
+Breaking changes:
+* chore!: EXPOSED-239 Set `preserveKeywordCasing` flag to true by default by @bog-walk in https://github.com/JetBrains/Exposed/pull/1948
+* More details at [Breaking changes](BREAKING_CHANGES.md#0460)
+
+Features:
+* feat: EXPOSED-65 Design query DSL consistent with SQL language by @bog-walk in https://github.com/JetBrains/Exposed/pull/1916
+* More details in the [Migration guide](MIGRATION_GUIDE.md#migrating-from-0450-to-0460)
+
+Bug fixes:
+* perf: EXPOSED-204 Performance problem with getConnection() by @bog-walk in https://github.com/JetBrains/Exposed/pull/1943
+* fix: EXPOSED-242 [PostgreSQL] Cannot change connection setting in middle of a transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/1949
+
+Build:
+* build: Add dependencies to Version Catalog by @pank-su in https://github.com/JetBrains/Exposed/pull/1887
+
+Docs:
+* docs: Add KDoc for `databaseGenerated` feature by @joc-a in https://github.com/JetBrains/Exposed/pull/1904
+* WRS-3621 Update project configuration by @e5l in https://github.com/JetBrains/Exposed/pull/1911
+* docs: Add missing Wiki documentation by @bog-walk in https://github.com/JetBrains/Exposed/pull/1910
+* docs: Apply query DSL changes to writerside docs by @bog-walk in https://github.com/JetBrains/Exposed/pull/1926
+* docs: Add missing KDocs for exposed-core queries API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1941
+* docs: Add missing KDocs for exposed-core database API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1945
+* docs: Add missing KDocs for exposed-core table API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1946
+* docs: Add MIGRATION_GUIDE by @bog-walk in https://github.com/JetBrains/Exposed/pull/1933
+
+# 0.45.0
+Infrastructure:
+* Kotlin 1.9.21
+
+Features:
+* feat: EXPOSED-220 Support multiple statements returning a result in exec() by @bog-walk in https://github.com/JetBrains/Exposed/pull/1888
+* feat: EXPOSED-224 Add query timeout at Transaction by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1890
+* feat: EXPOSED-225 Support transaction timeout in SpringTransactionManager by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1897
+
+Bug fixes:
+* fix: EXPOSED-93 Error when using `with` by @joc-a in https://github.com/JetBrains/Exposed/pull/1891
+* fix: EXPOSED-227 Slice() with empty list creates invalid SQL by @bog-walk in https://github.com/JetBrains/Exposed/pull/1899
+* fix: EXPOSED-226 Upsert fails with only key columns in update by @bog-walk in https://github.com/JetBrains/Exposed/pull/1900
+* fix: Error when using `with` when the child references a parent but not using the parent's id column, but rather another column that is a unique index. by @joc-a in https://github.com/JetBrains/Exposed/pull/1902
+
+Docs:
+* docs: Add missing KDocs for exposed-core statements API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1893
+* docs: Add missing KDocs for exposed-core vendors API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1892
+* docs: Add missing KDocs for exposed-core api package by @bog-walk in https://github.com/JetBrains/Exposed/pull/1896
+* docs: Add missing KDocs for exposed-core transactions API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1898
+
+# 0.44.1
+Infrastructure:
+* MySQL driver 8.0.33
+
+Bug fixes:
+* [MySQL] Fix bug when inserted ids are not returned if `rewriteBatchedStatements` property set to true by @Tapac in https://github.com/JetBrains/Exposed/pull/1873
+* fix: Incorrect SQL statements when creating a table with a dot in its name by @joc-a in https://github.com/JetBrains/Exposed/pull/1871
+* fix: Parsing failure when selecting CURRENT_TIMESTAMP using CurrentDateTime function by @joc-a in https://github.com/JetBrains/Exposed/pull/1879
+
+Deprecations:
+* deprecate: Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/1872
+* deprecate: Raise deprecation level of currentScheme property by @bog-walk in https://github.com/JetBrains/Exposed/pull/1874
+
+Docs:
+* Version Notice for JVM by @adambrangenberg in https://github.com/JetBrains/Exposed/pull/1858
+* docs: Add missing KDocs in all modules except core and dao by @bog-walk in https://github.com/JetBrains/Exposed/pull/1876
+* docs: EXPOSED-199 Update configuration section in spring-boot-starter README by @bog-walk in https://github.com/JetBrains/Exposed/pull/1878
+
+# 0.44.0
+Infrastructure:
+* Kotlin 1.9.10
+* Kotlin Coroutines 1.7.3
+* log4j2 2.20.0
+* h2-database driver 2.2.220
+* MariaDB driver 2.7.9 and 3.1.4
+* MySQL driver 8.0.30
+* PostgreSQL driver 42.6.0
+* SQLite driver 3.43.0.0
+* Spring Framework 6.0.11
+* Spring Boot 3.1.3
+
+Breaking changes:
+* `SpringTransactionManager` no longer extends `DataSourceTransactionManager`; instead, it directly extends `AbstractPlatformTransactionManager`.
+  The class also no longer implements the Exposed interface `TransactionManager`, as transaction operations are instead delegated to Spring.
+* `spring-transaction` and `exposed-spring-boot-starter` modules now use Spring Framework 6.0 and Spring Boot 3.0, which require Java 17 as a minimum version.
+* A table that is created with a keyword identifier now logs a warning that the identifier's case may be lost when it is automatically quoted in generated SQL.
+  `DatabaseConfig` now includes the property `preserveKeywordCasing`, which can be set to `true` to remove these warnings and to ensure that the identifier matches the exact case used.
+* More details at [Breaking changes](BREAKING_CHANGES.md#0440)
+
+Features:
+* feat!: EXPOSED-109 Improve implementation of Spring transaction manager by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1840
+* feat: EXPOSED-78 Support database-generated values for columns by @joc-a in https://github.com/JetBrains/Exposed/pull/1844
+* feat: EXPOSED-188 Support Propagation in SpringTransactionManager by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1867
+
+Bug fixes:
+* docs: EXPOSED-159 Add KDocs for EntityClass reference functions by @bog-walk in https://github.com/JetBrains/Exposed/pull/1848
+* fix: EXPOSED-158 avoid SQL syntax error of CASE WHEN using nested CASE by @ymotchi in https://github.com/JetBrains/Exposed/pull/1847
+* Fix how changes are calculated for non-default schema table by @AlexeySoshin in https://github.com/JetBrains/Exposed/pull/1678
+* fix: Fix tables creation depending on each other via foreignKey constraint by @naftalmm in https://github.com/JetBrains/Exposed/pull/1649
+* fix: Verbose logging in test module by @Hakky54 in https://github.com/JetBrains/Exposed/pull/1852
+* fix: EXPOSED-161 SQL Server syntax incorrectly allows CASCADE with dropSchema by @bog-walk in https://github.com/JetBrains/Exposed/pull/1850
+* chore: Reuse Containers in tests; Add Test parameters by @e5l in https://github.com/JetBrains/Exposed/pull/1853
+* docs: EXPOSED-124 Add Spring Boot samples by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1826
+* fix: EXPOSED-117 Set jvmToolchain to 8 for all modules by @e5l in https://github.com/JetBrains/Exposed/pull/1855
+* chore: Adjust test md files by @joc-a in https://github.com/JetBrains/Exposed/pull/1857
+* fix: EXPOSED-162 SQLite generatedKeys exception by @joc-a in https://github.com/JetBrains/Exposed/pull/1854
+* fix: Unable to download required toolchain on MAC by @joc-a in https://github.com/JetBrains/Exposed/pull/1859
+* fix: EXPOSED-171 Switch from spring.factories to AutoConfiguration.imports by @rbraeunlich in https://github.com/JetBrains/Exposed/pull/1645
+* fix: EXPOSED-179 Unsigned column check constraint is not unique to table by @bog-walk in https://github.com/JetBrains/Exposed/pull/1860
+* fix: EXPOSED-182 Schema name breaks Create Table with default column in SQLServer by @bog-walk in https://github.com/JetBrains/Exposed/pull/1861
+* fix: Exception when using RESTRICT reference option by @joc-a in https://github.com/JetBrains/Exposed/pull/1862
+* fix!: EXPOSED-150 Auto-quoted column names change case across databases by @bog-walk in https://github.com/JetBrains/Exposed/pull/1841
+* docs: EXPOSED-132 Add annotations to spring-boot-starter README samples by @bog-walk in https://github.com/JetBrains/Exposed/pull/1856
+* fix: EXPOSED-173 UPDATE_RULE read incorrectly for Oracle by @joc-a in https://github.com/JetBrains/Exposed/pull/1865
+* chore: EXPOSED-186 Replace JDK 1.7 support in exposed-jodatime classes by @bog-walk in https://github.com/JetBrains/Exposed/pull/1866
+* fix: EXPOSED-178 DELETE_RULE read incorrectly for Oracle by @joc-a in https://github.com/JetBrains/Exposed/pull/1868
+
+# 0.43.0
+Infrastructure:
+* Kotlin 1.9.10
+
+Features:
+* feat: EXPOSED-85 Add support for changing default value in SQL Server by @joc-a in https://github.com/JetBrains/Exposed/pull/1812
+
+Bug fixes:
+* fix: EXPOSED-107 Inaccurate UByte column type mapping by @bog-walk in https://github.com/JetBrains/Exposed/pull/1808
+* fix: EXPOSED-108 Incorrect mapping for UInt data type by @bog-walk in https://github.com/JetBrains/Exposed/pull/1809
+* fix: Inaccurate drop database statement in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1807
+* test: Fix failing datetime comparison tests in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1813
+* fix: EXPOSED-111 Allow check constraint statements in MySQL8 by @bog-walk in https://github.com/JetBrains/Exposed/pull/1817
+* fix: EXPOSED-116 UUID conversion error with upsert in H2 by @bog-walk in https://github.com/JetBrains/Exposed/pull/1823
+* fix: EXPOSED-112 SchemaUtils fails to compare default CURRENT_TIMESTAMP by @bog-walk in https://github.com/JetBrains/Exposed/pull/1819
+* fix: EXPOSED-123 ExposedBlob.getBytes() fails on Oracle with IOException by @bog-walk in https://github.com/JetBrains/Exposed/pull/1824
+* fix: EXPOSED-128 Update with Join and Where clause fails in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1825
+* fix: EXPOSED-135 Oracle does not use setSchema value as currentScheme by @bog-walk in https://github.com/JetBrains/Exposed/pull/1828
+* fix: EXPOSED-122 Fix timestampWithTimeZone tests in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1829
+* fix: EXPOSED-137 SET DEFAULT reference option should not be supported in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1830
+* test: Fix failing Oracle tests in exposed-tests by @bog-walk in https://github.com/JetBrains/Exposed/pull/1831
+* fix: EXPOSED-127 Default values for JSON columns are not quoted by @bog-walk in https://github.com/JetBrains/Exposed/pull/1827
+* fix: EXPOSED-145 Quoted table name breaks CREATE SEQUENCE in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1836
+* fix: EXPOSED-130 Logger throws ClassCastException with JSON and ListSerializer by @bog-walk in https://github.com/JetBrains/Exposed/pull/1835
+* fix: EXPOSED-133 Suspend transactions blocking Hikari connection pool by @bog-walk in https://github.com/JetBrains/Exposed/pull/1837
+* fix: EXPOSED-151 Quoted identifiers cause incorrect schema validation by @bog-walk in https://github.com/JetBrains/Exposed/pull/1842
+* fix: Remove false warning log by @joc-a in https://github.com/JetBrains/Exposed/pull/1843
+
+Breaking changes:
+* [Breaking changes](BREAKING_CHANGES.md)
+
+# 0.42.1
+Infrastructure:
+* Kotlin 1.9.0
+
+Bug fixes:
+* fix: exposed-bom module missing when publishing by @joc-a in https://github.com/JetBrains/Exposed/pull/1818
+
+# 0.42.0
+Infrastructure:
+* Kotlin 1.9.0
+
+Deprecations:
+* deprecate: EXPOSED-84 Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/1771
+
+Breaking changes:
+* [Breaking changes](BREAKING_CHANGES.md)
+
+Features:
+* Add CHARINDEX function for sqlserver by @eukleshnin in https://github.com/JetBrains/Exposed/pull/1675
+* feat: EXPOSED-32 Support string function CHAR_LENGTH by @bog-walk in https://github.com/JetBrains/Exposed/pull/1737
+* feat: EXPOSED-37 Support null-safe equality comparison by @bog-walk in https://github.com/JetBrains/Exposed/pull/1739
+* feat: EXPOSED-45 Support single statement UPSERT by @bog-walk in https://github.com/JetBrains/Exposed/pull/1743
+* feat: EXPOSED-52 Support batch UPSERT by @bog-walk in https://github.com/JetBrains/Exposed/pull/1749
+* feat: EXPOSED-47 Add support for SET DEFAULT reference option by @joc-a in https://github.com/JetBrains/Exposed/pull/1744
+* control whether arguments should be inlined or passed in. by @lure in https://github.com/JetBrains/Exposed/pull/1621
+* feat: Add partial index support (Postgres only) by @lure in https://github.com/JetBrains/Exposed/pull/1748
+* add afterStatementPrepared method to StatementInterceptor by @lure in https://github.com/JetBrains/Exposed/pull/1622
+* feat: EXPOSED-60 Support json/json(b) column types by @bog-walk in https://github.com/JetBrains/Exposed/pull/1762
+* feat: EXPOSED-66 Extend partial index to SQLServer and SQLite by @bog-walk in https://github.com/JetBrains/Exposed/pull/1763
+* [EXPOSED-46] Add a possibility to set a delay for the repetition attempts by @mgrati in https://github.com/JetBrains/Exposed/pull/1742
+* feat: EXPOSED-69 Extend json support to H2, Oracle (text) and DAO by @bog-walk in https://github.com/JetBrains/Exposed/pull/1766
+* feat: EXPOSED-68 Add more json/json(b) column functions by @bog-walk in https://github.com/JetBrains/Exposed/pull/1770
+* #623 Add support of window functions in Exposed DSL by @Legohuman in https://github.com/JetBrains/Exposed/pull/1651
+* feat: EXPOSED-89 Support functions in Create Index by @bog-walk in https://github.com/JetBrains/Exposed/pull/1788
+* feat: Add spring mutli container support by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1781
+* feat: EXPOSED-43 Add support for timestamp with time zone by @joc-a in https://github.com/JetBrains/Exposed/pull/1787
+
+Bug fixes:
+* Fix an error when updating an entity with a foreign key id (issue 880) by @forketyfork in https://github.com/JetBrains/Exposed/pull/1668
+* EXPOSED-15 Fix running mysql tests on M1 by @e5l in https://github.com/JetBrains/Exposed/pull/1719
+* Fix grammar in error message by @micheljung in https://github.com/JetBrains/Exposed/pull/1717
+* Fix: PostgreSQLDialect.modifyColumn is not able to drop default values by @michael-markl in https://github.com/JetBrains/Exposed/pull/1716
+* Fix UInt value out of bounds by @keta1 in https://github.com/JetBrains/Exposed/pull/1709
+* fix: EXPOSED-16 Failed tests in KotlinTimeTests by @joc-a in https://github.com/JetBrains/Exposed/pull/1724
+* EXPOSED-21 Primary key constraint not created by @bog-walk in https://github.com/JetBrains/Exposed/pull/1728
+* EXPOSED-19 Max timestamp in SQLite not working by @joc-a in https://github.com/JetBrains/Exposed/pull/1725
+* fix: EXPOSED-27 Id is not in record set by @joc-a in https://github.com/JetBrains/Exposed/pull/1731
+* fix: EXPOSED-28 Update with join fails on H2 in MySql mode by @bog-walk in https://github.com/JetBrains/Exposed/pull/1732
+* fix: EXPOSED-29 Cannot set nullable composite column in InsertStatement by @joc-a in https://github.com/JetBrains/Exposed/pull/1733
+* fix: EXPOSED-23 H2 unsupported indexing behavior by @bog-walk in https://github.com/JetBrains/Exposed/pull/1734
+* fix: EXPOSED-31 Landing Readme links and demo code by @bog-walk in https://github.com/JetBrains/Exposed/pull/1736
+* fix: EXPOSED-36 LocalDate comparison in SQLite by @bog-walk in https://github.com/JetBrains/Exposed/pull/1741
+* fix: EXPOSED-42 Can't create BLOB column with default value by @joc-a in https://github.com/JetBrains/Exposed/pull/1740
+* fix: EXPOSED-49 Replace statement defined as upsert statement by @bog-walk in https://github.com/JetBrains/Exposed/pull/1747
+* fix: EXPOSED-48 Incorrect statistics aggregate functions by @bog-walk in https://github.com/JetBrains/Exposed/pull/1745
+* Sum batch results for inserts by @johnzeringue in https://github.com/JetBrains/Exposed/pull/1641
+* fix: EXPOSED-57 BatchInsertStatement can't be used with MySQL upsert by @bog-walk in https://github.com/JetBrains/Exposed/pull/1754
+* fix: EXPOSED-50 customEnumeration reference column error by @bog-walk in https://github.com/JetBrains/Exposed/pull/1785
+* fix: EXPOSED-91 NPE in existingIndices() with function index by @bog-walk in https://github.com/JetBrains/Exposed/pull/1791
+* fix: SQLServerException: The port number -1 is not valid. by @joc-a in https://github.com/JetBrains/Exposed/pull/1789
+* fix: EXPOSED-80 Set repetition policy for suspended transactions by @bog-walk in https://github.com/JetBrains/Exposed/pull/1774
+* fix: Exclude deleted and renamed files from detekt GitHub Action by @joc-a in https://github.com/JetBrains/Exposed/pull/1795
+* fix: EXPOSED-97 Unsigned column types truncate MySQL values by @bog-walk in https://github.com/JetBrains/Exposed/pull/1796
+* fix: EXPOSED-98: Add instructions to log-in to see and log issues by @jasonjmcghee in https://github.com/JetBrains/Exposed/pull/1798
+* fix: EXPOSED-83 createMissingTablesAndColumns not detecting missing PK by @bog-walk in https://github.com/JetBrains/Exposed/pull/1797
+* test: Fix failing exposed-tests in SQL Server by @bog-walk in https://github.com/JetBrains/Exposed/pull/1801
+* fix: EXPOSED-54 CaseWhen.Else returns narrow Expression<R> by @bog-walk in https://github.com/JetBrains/Exposed/pull/1800
+* fix: EXPOSED-99 SchemaUtils incorrectly compares datetime defaults by @bog-walk in https://github.com/JetBrains/Exposed/pull/1802
+* test: Fix failing exposed-tests in Oracle by @bog-walk in https://github.com/JetBrains/Exposed/pull/1803
+* fix: EXPOSED-82 Inaccurate UShort column type mapping by @bog-walk in https://github.com/JetBrains/Exposed/pull/1799
+* test: Fix failing datetime tests in MariaDB by @bog-walk in https://github.com/JetBrains/Exposed/pull/1805
+
 # 0.41.1
 Infrastructure:
 * Kotlin 1.7.21 

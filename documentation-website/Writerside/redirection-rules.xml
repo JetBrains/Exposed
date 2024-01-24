@@ -8,4 +8,37 @@
         <description>Created after removal of "Introduction" from Exposed Documentation</description>
         <accepts>Introduction.html</accepts>
     </rule>
+    <rule id="26523343">
+        <description>Created after removal of "Working with Database" from Exposed Documentation</description>
+        <accepts>Working-with-databases.html</accepts>
+    </rule>
+    <rule id="4bb974bd">
+        <description>Created after removal of "Working with DataSource" from Exposed Documentation</description>
+        <accepts>Working-with-data-sources.html</accepts>
+    </rule>
+    <rule id="2ce4908b">
+        <description>Created after removal of "Working with Transaction" from Exposed Documentation</description>
+        <accepts>Working-with-transactions.html</accepts>
+    </rule>
+    <rule id="66de3a7c">
+        <description><![CDATA[Created after removal of "<Samples-md.md>" from Exposed Documentation]]></description>
+        <accepts>Samples-md.html</accepts>
+    </rule>
+    <rule id="42666d4f">
+        <description>Created after removal of "Transactions" from Exposed Documentation</description>
+        <accepts>Transactions.html</accepts>
+    </rule>
+    <rule id="29b5804e">
+        <description>
+            <![CDATA[Created after removal of "<Working-with-Coroutines.md>" from Exposed Documentation]]></description>
+        <accepts>Working-with-Coroutines.html</accepts>
+    </rule>
+    <rule id="78f4505">
+        <description>Created after removal of "DAO API" from Exposed Documentation</description>
+        <accepts>DAO-API.html</accepts>
+    </rule>
+    <rule id="30ea6632">
+        <description>Created after removal of "DSL API" from Exposed Documentation</description>
+        <accepts>DSL-API.html</accepts>
+    </rule>
 </rules>

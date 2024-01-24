@@ -1,0 +1,57 @@
+# This workflow performs a static analysis of your Kotlin source code using detekt.
+#
+# Scans are triggered on every pull request targeting the main branch.
+
+name: detekt
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Triggers the workflow on pull request events targeting the main branch
+  pull_request:
+    branches:
+      - main
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "detekt"
+  detekt:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    steps:
+      # Checks out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: "checkout"
+        uses: actions/checkout@v2
+      # Determines changed files
+      - name: "changed-files"
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          CHANGED_FILES=$(git --no-pager diff --name-only --diff-filter=dr origin/main HEAD | grep '\(.*.kt\|.*.kts\)$' | tr '\n' , | rev | cut -c 2- | rev)
+          echo "Changed files: $CHANGED_FILES"
+          echo "CHANGED_FILES=$CHANGED_FILES" >> "$GITHUB_ENV"
+      # Resolves and installs a specific version of detekt on to a GitHub Actions Runner if not already present in the tool cache
+      - name: "set-up-detekt"
+        uses: peter-murray/setup-detekt@v2
+        with:
+          detekt_version: 1.23.4
+      # Runs detekt on changed files
+      - name: "run-detekt"
+        run: |
+          if [ -z "$CHANGED_FILES" ]
+          then
+            echo "No changed Kotlin files found."
+            exit 0
+          fi
+          
+          echo "Running detekt check..."
+          DETEKT_ISSUES=$(detekt-cli --build-upon-default-config --config detekt/detekt-config.yml --plugins detekt/detekt-formatting-1.23.4.jar --input $CHANGED_FILES)
+          if [ -n "$DETEKT_ISSUES" ]; then
+            echo "***********************************************"
+            echo "$DETEKT_ISSUES"
+            echo "***********************************************"
+            echo "                 detekt failed                 "
+            echo "        Please fix the above issues            "
+            echo "***********************************************"
+            exit 1
+          fi

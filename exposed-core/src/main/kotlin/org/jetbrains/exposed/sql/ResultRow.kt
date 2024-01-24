@@ -4,7 +4,9 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.withDialect
 import java.sql.ResultSet
 
+/** A row of data representing a single record retrieved from a database result set. */
 class ResultRow(
+    /** Mapping of the expressions stored on this row to their index positions. */
     val fieldIndex: Map<Expression<*>, Int>,
     private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
 ) {
@@ -12,34 +14,21 @@ class ResultRow(
     private val lookUpCache = HashMap<Expression<*>, Any?>()
 
     /**
-     * Retrieves value of a given expression on this row.
+     * Retrieves the value of a given expression on this row.
      *
      * @param expression expression to evaluate
      * @throws IllegalStateException if expression is not in record set or if result value is uninitialized
      *
      * @see [getOrNull] to get null in the cases an exception would be thrown
      */
-    operator fun <T> get(expression: Expression<T>): T {
-        if (expression in lookUpCache) return lookUpCache[expression] as T
+    operator fun <T> get(expression: Expression<T>): T = getInternal(expression, checkNullability = true)
 
-        val d = getRaw(expression)
-
-        if (d == null && expression is Column<*> && expression.dbDefaultValue != null && !expression.columnType.nullable) {
-            exposedLogger.warn(
-                "Column ${TransactionManager.current().fullIdentity(expression)} is marked as not null, " +
-                    "has default db value, but returns null. Possible have to re-read it from DB."
-            )
-        }
-
-        val result = database?.dialect?.let {
-            withDialect(it) {
-                rawToColumnValue(d, expression)
-            }
-        } ?: rawToColumnValue(d, expression)
-        lookUpCache[expression] = result
-        return result
-    }
-
+    /**
+     * Sets the value of a given expression on this row.
+     *
+     * @param expression expression for which to set the value
+     * @param value value to be set for the given expression
+     */
     operator fun <T> set(expression: Expression<out T>, value: T) {
         setInternal(expression, value)
         lookUpCache.remove(expression)
@@ -50,9 +39,39 @@ class ResultRow(
         data[index] = value
     }
 
+    /** Whether the given [expression] has been initialized with a value on this row. */
     fun <T> hasValue(expression: Expression<T>): Boolean = fieldIndex[expression]?.let { data[it] != NotInitializedValue } ?: false
 
-    fun <T> getOrNull(expression: Expression<T>): T? = if (hasValue(expression)) get(expression) else null
+    /**
+     * Retrieves the value of a given expression on this row.
+     * Returns null in the cases an exception would be thrown in [get].
+     *
+     * @param expression expression to evaluate
+     */
+    fun <T> getOrNull(expression: Expression<T>): T? = if (hasValue(expression)) getInternal(expression, checkNullability = false) else null
+
+    private fun <T> getInternal(expression: Expression<T>, checkNullability: Boolean): T {
+        if (expression in lookUpCache) return lookUpCache[expression] as T
+
+        val d = getRaw(expression)
+
+        if (checkNullability) {
+            if (d == null && expression is Column<*> && expression.dbDefaultValue != null && !expression.columnType.nullable) {
+                exposedLogger.warn(
+                    "Column ${TransactionManager.current().fullIdentity(expression)} is marked as not null, " +
+                        "has default db value, but returns null. Possible have to re-read it from DB."
+                )
+            }
+        }
+
+        val result = database?.dialect?.let {
+            withDialect(it) {
+                rawToColumnValue(d, expression)
+            }
+        } ?: rawToColumnValue(d, expression)
+        lookUpCache[expression] = result
+        return result
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> rawToColumnValue(raw: T?, expression: Expression<T>): T {
@@ -102,7 +121,7 @@ class ResultRow(
     internal object NotInitializedValue
 
     companion object {
-
+        /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [ResultSet]. */
         fun create(rs: ResultSet, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             return ResultRow(fieldsIndex).apply {
                 fieldsIndex.forEach { (field, index) ->
@@ -117,6 +136,7 @@ class ResultRow(
             }
         }
 
+        /** Creates a [ResultRow] using the expressions and values provided by [data]. */
         fun createAndFillValues(data: Map<Expression<*>, Any?>): ResultRow {
             val fieldIndex = HashMap<Expression<*>, Int>(data.size)
             val values = arrayOfNulls<Any?>(data.size)
@@ -128,6 +148,7 @@ class ResultRow(
             return ResultRow(fieldIndex, values)
         }
 
+        /** Creates a [ResultRow] storing [columns] with their default or nullable values. */
         fun createAndFillDefaults(columns: List<Column<*>>): ResultRow =
             ResultRow(columns.withIndex().associate { it.value to it.index }).apply {
                 columns.forEach {

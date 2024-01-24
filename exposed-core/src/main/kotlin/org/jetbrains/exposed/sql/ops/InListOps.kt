@@ -4,6 +4,8 @@ import org.jetbrains.exposed.sql.ComplexExpression
 import org.jetbrains.exposed.sql.ExpressionWithColumnType
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 
 /**
  * Represents an SQL operator that checks if [expr] is equals to any element from [list].
@@ -13,7 +15,7 @@ abstract class InListOrNotInListBaseOp<V> (
     val expr: Any,
     /** Returns the query to check against. */
     val list: Iterable<V>,
-    /** Returns `true` if the check is inverted, `false` otherwise. */
+    /** Returns `false` if the check is inverted, `true` otherwise. */
     val isInList: Boolean = true
 ) : Op<Boolean>(), ComplexExpression {
 
@@ -38,7 +40,7 @@ abstract class InListOrNotInListBaseOp<V> (
 
             val firstValue = iterator.next()
 
-            if (!iterator.hasNext()) {
+            if (!iterator.hasNext() && currentDialectIfAvailable !is OracleDialect) {
                 when {
                     isInList -> append(" = ")
                     else -> append(" != ")
@@ -74,6 +76,11 @@ abstract class InListOrNotInListBaseOp<V> (
     }
 }
 
+/**
+ * Represents an SQL operator that checks if a single-value [expr] is equal to any element from [list].
+ *
+ * To inverse the operator and check if [expr] is **not** in [list], set [isInList] to `false`.
+ */
 class SingleValueInListOp<T>(
     expr: ExpressionWithColumnType<out T>,
     list: Iterable<T>,
@@ -84,6 +91,11 @@ class SingleValueInListOp<T>(
     override fun extractValues(value: T): List<Any?> = listOf(value)
 }
 
+/**
+ * Represents an SQL operator that checks if both values of a `Pair` [expr] match any element from [list].
+ *
+ * To inverse the operator and check if the `Pair` is **not** in [list], set [isInList] to `false`.
+ */
 class PairInListOp<T1, T2>(
     expr: Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>,
     list: Iterable<Pair<T1, T2>>,
@@ -94,6 +106,11 @@ class PairInListOp<T1, T2>(
     override fun extractValues(value: Pair<T1, T2>): List<Any?> = listOf(value.first, value.second)
 }
 
+/**
+ * Represents an SQL operator that checks if all values of a `Triple` [expr] match any element from [list].
+ *
+ * To inverse the operator and check if the `Triple` is **not** in [list], set [isInList] to `false`.
+ */
 class TripleInListOp<T1, T2, T3>(
     expr: Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>,
     list: Iterable<Triple<T1, T2, T3>>,
