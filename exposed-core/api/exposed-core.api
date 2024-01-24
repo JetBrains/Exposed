@@ -1846,6 +1846,8 @@ public final class org/jetbrains/exposed/sql/SchemaUtils {
 	public final fun addMissingColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public static synthetic fun addMissingColumnsStatements$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
 	public final fun checkCycle ([Lorg/jetbrains/exposed/sql/Table;)Z
+	public final fun checkExcessiveForeignKeyConstraints ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
+	public final fun checkExcessiveIndices ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public final fun checkMappingConsistence ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public static synthetic fun checkMappingConsistence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
 	public final fun create ([Lorg/jetbrains/exposed/sql/Table;Z)V

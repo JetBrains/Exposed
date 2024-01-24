@@ -531,12 +531,13 @@ object SchemaUtils {
     }
 
     /**
-     * Checks all [tables] for any that have more than one defined index and logs the findings.
+     * Checks all [tables] for any that have more than one defined index and logs the findings. If found, this function
+     * also logs the SQL statements that can be used to drop these indices.
      *
-     * If found, this function also logs and returns the SQL statements that can be used to drop these constraints.
+     * @return List of indices that are excessive and can be dropped.
      */
     @Suppress("NestedBlockDepth")
-    private fun checkExcessiveIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
+    fun checkExcessiveIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
         val toDrop = HashSet<Index>()
 
         val excessiveIndices =
@@ -570,12 +571,13 @@ object SchemaUtils {
     }
 
     /**
-     * Checks all [tables] for any that have more than one defined foreign key constraint and logs the findings.
+     * Checks all [tables] for any that have more than one defined foreign key constraint and logs the findings. If
+     * found, this function also logs the SQL statements that can be used to drop these foreign key constraints.
      *
-     * If found, this function also logs and returns the SQL statements that can be used to drop these constraints.
+     * @return List of foreign key constraints that are excessive and can be dropped.
      */
     @Suppress("NestedBlockDepth")
-    private fun checkExcessiveForeignKeyConstraints(vararg tables: Table, withLogs: Boolean): List<ForeignKeyConstraint> {
+    fun checkExcessiveForeignKeyConstraints(vararg tables: Table, withLogs: Boolean): List<ForeignKeyConstraint> {
         val toDrop = HashSet<ForeignKeyConstraint>()
 
         val excessiveConstraints = currentDialect.columnConstraints(*tables).filter { (_, fkConstraints) -> fkConstraints.size > 1 }
