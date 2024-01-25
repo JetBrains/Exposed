@@ -331,22 +331,22 @@ class ConditionsTests : DatabaseTestsBase() {
             val c1LtC2 = table.c1.less(table.c2).alias("c1ltc2")
             assertEqualLists(
                 listOf(false, true, false),
-                table.slice(table.c1, c1LtC2).selectAll().orderBy(table.c1).map { it[c1LtC2] }
+                table.select(table.c1, c1LtC2).orderBy(table.c1).map { it[c1LtC2] }
             )
             val c1LteC2 = table.c1.lessEq(table.c2).alias("c1ltec2")
             assertEqualLists(
                 listOf(true, true, false),
-                table.slice(table.c1, c1LteC2).selectAll().orderBy(table.c1).map { it[c1LteC2] }
+                table.select(table.c1, c1LteC2).orderBy(table.c1).map { it[c1LteC2] }    
             )
             val c1GtC2 = table.c1.greater(table.c2).alias("c1gt2")
             assertEqualLists(
                 listOf(false, false, true),
-                table.slice(table.c1, c1GtC2).selectAll().orderBy(table.c1).map { it[c1GtC2] }
+                table.select(table.c1, c1GtC2).orderBy(table.c1).map { it[c1GtC2] }
             )
             val c1GteC2 = table.c1.greaterEq(table.c2).alias("c1gtec2")
             assertEqualLists(
                 listOf(true, false, true),
-                table.slice(table.c1, c1GteC2).selectAll().orderBy(table.c1).map { it[c1GteC2] }
+                table.select(table.c1, c1GteC2).orderBy(table.c1).map { it[c1GteC2] }
             )
         }
     }
