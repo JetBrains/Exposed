@@ -29,7 +29,7 @@ joda-time = "2.12.6"
 junit = "4.13.2"
 kotlinx-datetime = "0.5.0"
 javax-money = "1.1"
-moneta = "1.4.2"
+moneta = "1.4.3"
 hikariCP = "4.0.3"
 logcaptor = "2.9.2"
 
