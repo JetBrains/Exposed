@@ -1,5 +1,10 @@
 # Breaking Changes
 
+## 0.47.0
+
+The function `SchemaUtils.checkExcessiveIndices` used to check both excessive indices and excessive foreign key constraints. It now has a different behaviour and
+deals with excessive indices only. A new function, `SchemaUtils.checkExcessiveForeignKeyConstraints`, deals with excessive foreign key constraints.
+
 ## 0.46.0
 
 * When an Exposed table object is created with a keyword identifier (a table or column name) it now retains the exact case used before being automatically quoted in generated SQL.
