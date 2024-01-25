@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
 import org.junit.Test
 import java.io.File
@@ -97,6 +98,15 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             } finally {
                 assertTrue(File("$directory/$name.sql").delete())
                 SchemaUtils.drop(noPKTable)
+            }
+        }
+    }
+
+    @Test
+    fun testNoTablesPassedWhenGeneratingMigrationScript() {
+        withDb {
+            expectException<IllegalArgumentException> {
+                SchemaUtils.generateMigrationScript(scriptDirectory = "src/test/resources", scriptName = "V2__Test")
             }
         }
     }
