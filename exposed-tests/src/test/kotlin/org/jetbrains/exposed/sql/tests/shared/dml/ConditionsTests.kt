@@ -336,7 +336,7 @@ class ConditionsTests : DatabaseTestsBase() {
             val c1LteC2 = table.c1.lessEq(table.c2).alias("c1ltec2")
             assertEqualLists(
                 listOf(true, true, false),
-                table.select(table.c1, c1LteC2).orderBy(table.c1).map { it[c1LteC2] }    
+                table.select(table.c1, c1LteC2).orderBy(table.c1).map { it[c1LteC2] }
             )
             val c1GtC2 = table.c1.greater(table.c2).alias("c1gt2")
             assertEqualLists(
