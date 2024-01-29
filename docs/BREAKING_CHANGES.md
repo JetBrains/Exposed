@@ -2,8 +2,10 @@
 
 ## 0.47.0
 
-The function `SchemaUtils.checkExcessiveIndices` used to check both excessive indices and excessive foreign key constraints. It now has a different behaviour and
-deals with excessive indices only. A new function, `SchemaUtils.checkExcessiveForeignKeyConstraints`, deals with excessive foreign key constraints.
+The function `SchemaUtils.checkExcessiveIndices` used to check both excessive indices and excessive foreign key
+constraints. It now has a different behaviour and deals with excessive indices only. Also, its return type is now
+`List<Index>` instead of `Unit`. A new function, `SchemaUtils.checkExcessiveForeignKeyConstraints`, deals with excessive
+foreign key constraints and has a return type `List<ForeignKeyConstraint>`.
 
 ## 0.46.0
 
