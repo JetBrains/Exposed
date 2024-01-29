@@ -33,12 +33,11 @@ moneta = "1.4.3"
 hikariCP = "4.0.3"
 logcaptor = "2.9.2"
 
-
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
 docker-compose = { group = "com.avast.gradle", name = "gradle-docker-compose-plugin", version.ref = "docker-compose" }
 detekt = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
-detekt-formatting = {group = "io.gitlab.arturbosch.detekt", name="detekt-formatting", version.ref="detekt"}
+detekt-formatting = { group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version.ref = "detekt" }
 
 kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
 kotlinx-coroutines-debug = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-debug", version.ref = "kotlinCoroutines" }
