@@ -1,3 +1,37 @@
+# 0.47.0
+Infrastructure:
+* Joda Time 2.12.6
+* Spring Framework 6.1.3
+* Foojay Toolchains Plugin 0.8.0
+* Java Money Moneta 1.4.4
+
+Breaking changes:
+* [Breaking changes](BREAKING_CHANGES.md#0470)
+
+Features:
+* feat: Add `ALL` and `ANY` operators accepting array, subquery, or table parameters by @ShreckYe in https://github.com/JetBrains/Exposed/pull/1886
+* feat: Add findByIdAndUpdate functions to DAO API by @reidbuzby in https://github.com/JetBrains/Exposed/pull/1773
+* In the convenience methods for `join`, make column equality optional by @yeogai in https://github.com/JetBrains/Exposed/pull/1692
+* feat: EXPOSED-255 Generate database migration script that can be used with any migration tool by @joc-a in https://github.com/JetBrains/Exposed/pull/1968
+
+Bug fixes:
+* fix: EXPOSED-244 [PostgreSQL] Collate option on column not recognized by @bog-walk in https://github.com/JetBrains/Exposed/pull/1956
+* Use concat when strings are added by @e5l in https://github.com/JetBrains/Exposed/pull/1958
+* fix: EXPOSED-114 Type parameter can't be inferred for EntityID with eq/neq op by @bog-walk in https://github.com/JetBrains/Exposed/pull/1961
+* fix: EXPOSED-252 Json contains() throws with iterable as argument by @bog-walk in https://github.com/JetBrains/Exposed/pull/1963
+* fix: EXPOSED-257 Upsert incorrectly parameterizes non-literal WHERE arguments by @bog-walk in https://github.com/JetBrains/Exposed/pull/1965
+* fix: Allow exec() transform block to return null if ResultSet is empty by @micheljung in https://github.com/JetBrains/Exposed/pull/1696
+* fix: EXPOSED-261 [H2] JSON column throws when setting nullable parameters by @bog-walk in https://github.com/JetBrains/Exposed/pull/1969
+* fix: Support Short type for BigDecimal conversion functions by @timeking in https://github.com/JetBrains/Exposed/pull/1746
+* fix: EXPOSED-260 [Oracle] Pair.inList() fails if list contains single element by @bog-walk in https://github.com/JetBrains/Exposed/pull/1970
+* fix: EXPOSED-263 Null arg parameter in exec() throws if logger enabled by @bog-walk in https://github.com/JetBrains/Exposed/pull/1973
+* fix: EXPOSED-270 Crash when `Duration.INFINITE` is used for duration column type by @winkey728 in https://github.com/JetBrains/Exposed/pull/1975
+
+Docs:
+* docs: [SQL Server, Oracle] Edit KDocs for Op.TRUE/FALSE by @bog-walk in https://github.com/JetBrains/Exposed/pull/1957
+* chore: Add Kdocs and update DSL for AllAnyFromBaseOp feature by @bog-walk in https://github.com/JetBrains/Exposed/pull/1960
+* docs: Add details about @EnableTransactionManagement to spring-boot-starter docs by @bog-walk in https://github.com/JetBrains/Exposed/pull/1959
+
 # 0.46.0
 Infrastructure:
 * Kotlinx Datetime JVM 0.5.0

@@ -18,17 +18,17 @@
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-core</artifactId>
-      <version>0.46.0</version>
+      <version>0.47.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-dao</artifactId>
-      <version>0.46.0</version>
+      <version>0.47.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-jdbc</artifactId>
-      <version>0.46.0</version>
+      <version>0.47.0</version>
     </dependency>
 </dependencies>
 ]]>
@@ -37,7 +37,7 @@
     <tab title="Gradle Kotlin Script">
         <code-block lang="kotlin">
 <![CDATA[
-val exposedVersion: String = "0.46.0"
+val exposedVersion: String = "0.47.0"
 
 dependencies {
 implementation("org.jetbrains.exposed:exposed-core", exposedVersion)
