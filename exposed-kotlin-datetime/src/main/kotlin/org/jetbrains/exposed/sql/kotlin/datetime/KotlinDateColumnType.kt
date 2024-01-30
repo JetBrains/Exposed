@@ -384,6 +384,7 @@ class KotlinDurationColumnType : ColumnType() {
     }
 
     override fun valueFromDB(value: Any): Duration = when (value) {
+        Duration.INFINITE.inWholeNanoseconds -> Duration.INFINITE
         is Long -> value.nanoseconds
         is Number -> value.toLong().nanoseconds
         is String -> Duration.parse(value)

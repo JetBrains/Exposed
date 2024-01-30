@@ -26,6 +26,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlin.test.assertEquals
+import kotlin.time.Duration
 
 open class KotlinTimeBaseTest : DatabaseTestsBase() {
 
@@ -462,6 +463,20 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             fakeTestTable.insert {}
 
             currentDbDateTime()
+        }
+    }
+
+    @Test
+    fun testInfiniteDuration() {
+        val tester = object : Table("tester") {
+            val duration = duration("duration")
+        }
+        withTables(tester) {
+            tester.insert {
+                it[duration] = Duration.INFINITE
+            }
+            val row = tester.selectAll().where { tester.duration eq Duration.INFINITE }.single()
+            assertEquals(Duration.INFINITE, row[tester.duration])
         }
     }
 }
