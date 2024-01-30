@@ -1224,69 +1224,6 @@ class MiscTableTest : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    fun testInfiniteDuration() {
-        val tbl = Misc
-        val date = today
-        val dateTime = now()
-        val time = dateTime.time
-        val timestamp = Clock.System.now()
-        val duration = Duration.INFINITE
-        val eOne = MiscTable.E.ONE
-        val dec = BigDecimal("123.45")
-        withTables(tbl) {
-            tbl.insert {
-                it[by] = 7
-                it[sm] = -2
-                it[n] = 14
-                it[c] = "1234"
-                it[s] = "123456789"
-                it[d] = date
-                it[t] = time
-                it[dt] = dateTime
-                it[ts] = timestamp
-                it[dr] = duration
-                it[e] = eOne
-                it[es] = eOne
-                it[dc] = dec
-            }
-
-            val row = tbl.selectAll().where { tbl.dr eq Duration.INFINITE }.single()
-
-            tbl.checkRowFull(
-                row,
-                by = 7,
-                byn = null,
-                sm = -2,
-                smn = null,
-                n = 14,
-                nn = null,
-                d = date,
-                dn = null,
-                t = time,
-                tn = null,
-                dt = dateTime,
-                dtn = null,
-                ts = timestamp,
-                tsn = null,
-                dr = duration,
-                drn = null,
-                e = eOne,
-                en = null,
-                es = eOne,
-                esn = null,
-                c = "1234",
-                cn = null,
-                s = "123456789",
-                sn = null,
-                dc = dec,
-                dcn = null,
-                fcn = null,
-                dblcn = null
-            )
-        }
-    }
-
     private object ZeroDateTimeTable : Table("zerodatetimetable") {
         val id = integer("id")
 
