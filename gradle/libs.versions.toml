@@ -1,7 +1,7 @@
 [versions]
 kotlin = "1.9.21"
 detekt = "1.23.4"
-binary-compatibility-validator = "0.13.2"
+binary-compatibility-validator = "0.14.0"
 docker-compose = "0.17.5"
 kotlinCoroutines = "1.7.3"
 kotlinxSerialization = "1.6.2"
