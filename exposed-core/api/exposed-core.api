@@ -160,6 +160,7 @@ public final class org/jetbrains/exposed/sql/ArrayColumnType : org/jetbrains/exp
 	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/ColumnType;
 	public final fun getDelegateType ()Ljava/lang/String;
 	public final fun getMaximumCardinality ()Ljava/lang/Integer;
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
@@ -176,6 +177,7 @@ public final class org/jetbrains/exposed/sql/AutoIncColumnType : org/jetbrains/e
 	public final fun getNextValExpression ()Lorg/jetbrains/exposed/sql/NextVal;
 	public fun getNullable ()Z
 	public fun hashCode ()I
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
@@ -183,6 +185,7 @@ public final class org/jetbrains/exposed/sql/AutoIncColumnType : org/jetbrains/e
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public fun valueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
@@ -427,6 +430,7 @@ public abstract class org/jetbrains/exposed/sql/ColumnType : org/jetbrains/expos
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getNullable ()Z
 	public fun hashCode ()I
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
@@ -434,6 +438,7 @@ public abstract class org/jetbrains/exposed/sql/ColumnType : org/jetbrains/expos
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun toString ()Ljava/lang/String;
 	public fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public fun valueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
@@ -879,6 +884,7 @@ public final class org/jetbrains/exposed/sql/GroupConcat : org/jetbrains/exposed
 
 public abstract interface class org/jetbrains/exposed/sql/IColumnType {
 	public abstract fun getNullable ()Z
+	public abstract fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public abstract fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public abstract fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
@@ -886,17 +892,20 @@ public abstract interface class org/jetbrains/exposed/sql/IColumnType {
 	public abstract fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public abstract fun sqlType ()Ljava/lang/String;
 	public abstract fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public abstract fun valueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public abstract fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun valueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/IColumnType$DefaultImpls {
+	public static fun nonNullValueAsDefaultString (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/String;
 	public static fun nonNullValueToString (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/String;
 	public static fun notNullValueToDB (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun readObject (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public static fun setParameter (Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public static fun validateValueBeforeUpdate (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)V
+	public static fun valueAsDefaultString (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/String;
 	public static fun valueFromDB (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun valueToDB (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun valueToString (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/String;

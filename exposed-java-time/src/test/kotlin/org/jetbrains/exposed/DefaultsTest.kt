@@ -478,4 +478,20 @@ class DefaultsTest : DatabaseTestsBase() {
             assertTrue(sortedEntries[3].millis() - sortedEntries[0].millis() >= 8000)
         }
     }
+
+    @Test
+    fun testTimestampDefaultDoesNotTriggerAlterStatement() {
+        val instant = Instant.parse("2023-05-04T05:04:00.700Z") // In UTC
+
+        val tester = object : Table("tester") {
+            val timestampWithDefault = timestamp("timestampWithDefault").default(instant)
+            val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp())
+        }
+
+        // SQLite does not support ALTER TABLE on a column that has a default value
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            assertEquals(0, statements.size)
+        }
+    }
 }
