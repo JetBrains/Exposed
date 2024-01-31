@@ -4,12 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.h2Mode
+import org.jetbrains.exposed.sql.vendors.*
 import java.sql.ResultSet
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -24,6 +19,12 @@ internal val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy {
 internal val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
         "yyyy-MM-dd HH:mm:ss.SSS",
+        Locale.ROOT
+    ).withZone(ZoneId.systemDefault())
+}
+private val MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSSSSS",
         Locale.ROOT
     ).withZone(ZoneId.systemDefault())
 }
@@ -272,6 +273,8 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
         return when {
             currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                 "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ->
+                "'${MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER.format(instant)}'"
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
     }
@@ -292,6 +295,19 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
         value is Instant ->
             java.sql.Timestamp.from(value)
         else -> value
+    }
+
+    override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
+        is Instant -> {
+            when {
+                currentDialect is PostgreSQLDialect ->
+                    "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
+                currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                    "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'"
+                else -> super.nonNullValueAsDefaultString(value)
+            }
+        }
+        else -> super.nonNullValueAsDefaultString(value)
     }
 
     companion object {

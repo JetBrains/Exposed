@@ -59,6 +59,7 @@ complexity:
         thresholdInClasses: 40
         thresholdInFiles: 100
         thresholdInObjects: 26
+        thresholdInInterfaces: 12
     CyclomaticComplexMethod:
         threshold: 26
     LongMethod:

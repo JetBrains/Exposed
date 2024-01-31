@@ -152,7 +152,7 @@ abstract class DataTypeProvider {
             "'$e'"
         }
 
-        e is LiteralOp<*> -> "$e"
+        e is LiteralOp<*> -> e.columnType.valueAsDefaultString(e.value)
         e is Function<*> -> "$e"
         currentDialect is MysqlDialect -> "$e"
         currentDialect is SQLServerDialect -> "$e"

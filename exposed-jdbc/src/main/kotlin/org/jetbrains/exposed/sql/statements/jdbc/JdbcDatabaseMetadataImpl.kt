@@ -184,7 +184,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val h2Mode = dialect.h2Mode
         return when {
             dialect is SQLServerDialect -> defaultValue.trim('(', ')', '\'')
-            dialect is OracleDialect || h2Mode == H2CompatibilityMode.Oracle -> defaultValue.trim().trim('\'')
+            dialect is OracleDialect || h2Mode == H2CompatibilityMode.Oracle -> defaultValue.trim().let {
+                if (it.startsWith('\'') && it.endsWith('\'')) it.trim('\'') else it
+            }
             dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL || h2Mode == H2CompatibilityMode.MariaDB -> defaultValue.substringAfter(
                 "b'"
             ).trim('\'')

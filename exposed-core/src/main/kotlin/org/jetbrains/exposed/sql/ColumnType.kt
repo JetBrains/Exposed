@@ -45,6 +45,7 @@ interface IColumnType {
     /**
      * Returns the SQL representation of the specified [value], for this column type.
      * If the value is `null` and the column is not nullable, an exception will be thrown.
+     * Used when generating an SQL statement and when logging that statement.
      */
     fun valueToString(value: Any?): String = when (value) {
         null -> {
@@ -58,6 +59,26 @@ interface IColumnType {
 
     /** Returns the SQL representation of the specified **non-null** [value], for this column type. */
     fun nonNullValueToString(value: Any): String = notNullValueToDB(value).toString()
+
+    /**
+     * Returns the String representation of the specified [value] when [value] is set as the default for
+     * the column.
+     * If the value is `null` and the column is not nullable, an exception will be thrown.
+     * Used for metadata default value comparison.
+     */
+    fun valueAsDefaultString(value: Any?): String = when (value) {
+        null -> {
+            check(nullable) { "NULL in non-nullable column" }
+            "NULL"
+        }
+        else -> nonNullValueAsDefaultString(value)
+    }
+
+    /**
+     * Returns the String representation of the specified **non-null** [value] when [value] is set as the default for
+     * the column.
+     */
+    fun nonNullValueAsDefaultString(value: Any): String = nonNullValueToString(value)
 
     /** Returns the object at the specified [index] in the [rs]. */
     fun readObject(rs: ResultSet, index: Int): Any? = rs.getObject(index)
@@ -1052,11 +1073,16 @@ class ArrayColumnType(
     }
 
     override fun valueToString(value: Any?): String = when {
+        value is List<*> -> nonNullValueToString(value)
+        else -> super.valueToString(value)
+    }
+
+    override fun nonNullValueToString(value: Any): String = when {
         value is List<*> -> {
             val prefix = if (currentDialect is H2Dialect) "ARRAY [" else "ARRAY["
             value.joinToString(",", prefix, "]") { delegate.valueToString(it) }
         }
-        else -> super.valueToString(value)
+        else -> super.nonNullValueToString(value)
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? = rs.getArray(index)

@@ -145,7 +145,7 @@ object SchemaUtils {
     /** Returns the SQL statements that create the provided [index]. */
     fun createIndex(index: Index): List<String> = index.createStatement()
 
-    @Suppress("NestedBlockDepth", "ComplexMethod")
+    @Suppress("NestedBlockDepth", "ComplexMethod", "LongMethod")
     private fun DataTypeProvider.dbDefaultToString(column: Column<*>, exp: Expression<*>): String {
         return when (exp) {
             is LiteralOp<*> -> {
@@ -218,6 +218,14 @@ object SchemaUtils {
                                         }
                                         "ARRAY$processed"
                                     } ?: processForDefaultValue(exp)
+                            }
+                            column.columnType is IDateColumnType -> {
+                                val processed = processForDefaultValue(exp)
+                                if (processed.startsWith('\'') && processed.endsWith('\'')) {
+                                    processed.trim('\'')
+                                } else {
+                                    processed
+                                }
                             }
                             else -> processForDefaultValue(exp)
                         }
