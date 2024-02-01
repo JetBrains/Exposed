@@ -894,6 +894,7 @@ public abstract interface class org/jetbrains/exposed/sql/IDateColumnType {
 
 public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder {
 	public abstract fun asLiteral (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public abstract fun between (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Between;
 	public abstract fun between (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Between;
 	public abstract fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/AndBitOp;
 	public abstract fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/AndBitOp;
@@ -1014,6 +1015,7 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 
 public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls {
 	public static fun asLiteral (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public static fun between (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Between;
 	public static fun between (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Between;
 	public static fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/AndBitOp;
 	public static fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/AndBitOp;
@@ -1988,6 +1990,7 @@ public final class org/jetbrains/exposed/sql/SortOrder : java/lang/Enum {
 public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrains/exposed/sql/ISqlExpressionBuilder {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/SqlExpressionBuilder;
 	public fun asLiteral (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public fun between (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Between;
 	public fun between (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Between;
 	public fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/AndBitOp;
 	public fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/AndBitOp;
