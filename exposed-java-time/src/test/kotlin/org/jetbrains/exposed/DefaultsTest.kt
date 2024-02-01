@@ -525,4 +525,19 @@ class DefaultsTest : DatabaseTestsBase() {
             assertEquals(0, statements.size)
         }
     }
+
+    @Test
+    fun testTimeDefaultDoesNotTriggerAlterStatement() {
+        val time = LocalDateTime.now(ZoneId.of("Japan")).toLocalTime()
+
+        val tester = object : Table("tester") {
+            val timeWithDefault = time("timeWithDefault").default(time)
+        }
+
+        // SQLite does not support ALTER TABLE on a column that has a default value
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            assertEquals(0, statements.size)
+        }
+    }
 }

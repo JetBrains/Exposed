@@ -47,6 +47,13 @@ private val ORACLE_TIME_STRING_FORMATTER by lazy {
     ).withZone(ZoneId.of("UTC"))
 }
 
+private val MYSQL_TIME_AS_DEFAULT_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "HH:mm:ss",
+        Locale.ROOT
+    ).withZone(ZoneId.systemDefault())
+}
+
 private val DEFAULT_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
@@ -275,6 +282,17 @@ class KotlinLocalTimeColumnType : ColumnType(), IDateColumnType {
     override fun notNullValueToDB(value: Any): Any = when (value) {
         is LocalTime -> java.sql.Time.valueOf(value.toJavaLocalTime())
         else -> value
+    }
+
+    override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
+        is LocalTime -> {
+            when (currentDialect) {
+                is PostgreSQLDialect -> "${nonNullValueToString(value)}::time without time zone"
+                is MysqlDialect -> "'${MYSQL_TIME_AS_DEFAULT_STRING_FORMATTER.format(value.toJavaLocalTime())}'"
+                else -> super.nonNullValueAsDefaultString(value)
+            }
+        }
+        else -> super.nonNullValueAsDefaultString(value)
     }
 
     private fun longToLocalTime(millis: Long) = Instant.fromEpochMilliseconds(millis).toLocalDateTime(DEFAULT_TIME_ZONE).time
