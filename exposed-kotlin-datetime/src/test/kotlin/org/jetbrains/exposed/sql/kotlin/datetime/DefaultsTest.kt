@@ -359,8 +359,8 @@ class DefaultsTest : DatabaseTestsBase() {
         withTables(foo) {
             val d2020 = LocalDate(2020, 1, 1)
             val dt2020 = d2020.atTime(0, 0, 0)
-            val dt2020m1w = d2020.minus(DateTimeUnit.WEEK).atTime(0, 0, 0)
-            val dt2020p1w = d2020.plus(DateTimeUnit.WEEK).atTime(0, 0, 0)
+            val dt2020m1w = d2020.minus(1, DateTimeUnit.WEEK).atTime(0, 0, 0)
+            val dt2020p1w = d2020.plus(1, DateTimeUnit.WEEK).atTime(0, 0, 0)
 
             foo.insert { it[dt] = LocalDateTime(2019, 1, 1, 1, 1) }
             foo.insert { it[dt] = dt2020 }
