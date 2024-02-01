@@ -300,7 +300,6 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withDb {
-            SchemaUtils.drop(uIntTester, uLongTester)
             SchemaUtils.create(uIntTester, uLongTester)
 
             uIntTester.insert { }
@@ -308,6 +307,8 @@ class DDLTests : DatabaseTestsBase() {
 
             uLongTester.insert { }
             assertEquals(1u, uLongTester.selectAll().single()[uLongTester.id])
+
+            SchemaUtils.drop(uIntTester, uLongTester)
         }
     }
 
