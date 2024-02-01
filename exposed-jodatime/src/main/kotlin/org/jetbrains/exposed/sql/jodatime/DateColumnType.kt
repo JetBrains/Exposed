@@ -4,8 +4,10 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.joda.time.DateTime
@@ -17,7 +19,8 @@ import java.sql.ResultSet
 import java.util.*
 
 private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT)
-private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
+private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS").withLocale(Locale.ROOT)
+private val MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
 private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS")
 private val SQLITE_DATE_STRING_FORMATTER = ISODateTimeFormat.yearMonthDay()
 
@@ -40,6 +43,7 @@ private val DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
 private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(
     date.substringAfterLast('.', "").length
 )
+
 private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     val baseFormat = "YYYY-MM-dd HH:mm:ss"
     val newFormat = baseFormat + if (fraction in 1..9) ".${"S".repeat(fraction)}" else ""
@@ -70,7 +74,11 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
         }
 
         return if (time) {
-            "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
+            when {
+                (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ->
+                    "'${MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
+                else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
+            }
         } else {
             "'${DEFAULT_DATE_STRING_FORMATTER.print(dateTime)}'"
         }
@@ -115,6 +123,22 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
         value is DateTime && currentDialect is SQLiteDialect -> DEFAULT_DATE_STRING_FORMATTER.print(value)
         value is DateTime -> java.sql.Date(value.millis)
         else -> value
+    }
+
+    override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
+        is DateTime -> {
+            when (time) {
+                true -> when {
+                    currentDialect is PostgreSQLDialect ->
+                        "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
+                    (currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                        "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}'"
+                    else -> super.nonNullValueAsDefaultString(value)
+                }
+                false -> super.nonNullValueAsDefaultString(value)
+            }
+        }
+        else -> super.nonNullValueAsDefaultString(value)
     }
 
     override fun equals(other: Any?): Boolean {

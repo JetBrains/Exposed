@@ -154,6 +154,7 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         return when {
             dialect is SQLiteDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
             dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "'${MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER.format(instant)}'"
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
     }
@@ -185,6 +186,19 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         } else {
             super.readObject(rs, index)
         }
+    }
+
+    override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
+        is LocalDateTime -> {
+            when {
+                currentDialect is PostgreSQLDialect ->
+                    "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
+                (currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                    "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'"
+                else -> super.nonNullValueAsDefaultString(value)
+            }
+        }
+        else -> super.nonNullValueAsDefaultString(value)
     }
 
     private fun longToLocalDateTime(millis: Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
