@@ -127,15 +127,22 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
 
     override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
         is DateTime -> {
-            when (time) {
-                true -> when {
-                    currentDialect is PostgreSQLDialect ->
+            when {
+                currentDialect is PostgreSQLDialect -> {
+                    if (time) {
                         "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
-                    (currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
-                        "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}'"
-                    else -> super.nonNullValueAsDefaultString(value)
+                    } else {
+                        "'${DEFAULT_DATE_STRING_FORMATTER.print(value)}'::date"
+                    }
                 }
-                false -> super.nonNullValueAsDefaultString(value)
+                (currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
+                    if (time) {
+                        "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}'"
+                    } else {
+                        super.nonNullValueAsDefaultString(value)
+                    }
+                }
+                else -> super.nonNullValueAsDefaultString(value)
             }
         }
         else -> super.nonNullValueAsDefaultString(value)
