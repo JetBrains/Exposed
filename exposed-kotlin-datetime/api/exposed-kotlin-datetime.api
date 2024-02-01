@@ -122,6 +122,7 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateColu
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateColumnType$Companion;
 	public fun <init> ()V
 	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;

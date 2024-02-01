@@ -124,6 +124,11 @@ class JavaLocalDateColumnType : ColumnType(), IDateColumnType {
         else -> value
     }
 
+    override fun nonNullValueAsDefaultString(value: Any): String = when (currentDialect) {
+        is PostgreSQLDialect -> "${nonNullValueToString(value)}::date"
+        else -> super.nonNullValueAsDefaultString(value)
+    }
+
     private fun longToLocalDate(instant: Long) = Instant.ofEpochMilli(instant).atZone(ZoneId.systemDefault()).toLocalDate()
 
     companion object {

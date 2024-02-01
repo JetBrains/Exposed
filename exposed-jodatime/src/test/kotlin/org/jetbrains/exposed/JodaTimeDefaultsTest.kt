@@ -453,4 +453,19 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             assertEquals(0, statements.size)
         }
     }
+
+    @Test
+    fun testDateDefaultDoesNotTriggerAlterStatement() {
+        val date = DateTime.now(DateTimeZone.forID("Japan"))
+
+        val tester = object : Table("tester") {
+            val dateWithDefault = date("dateWithDefault").default(date)
+        }
+
+        // SQLite does not support ALTER TABLE on a column that has a default value
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            assertEquals(0, statements.size)
+        }
+    }
 }

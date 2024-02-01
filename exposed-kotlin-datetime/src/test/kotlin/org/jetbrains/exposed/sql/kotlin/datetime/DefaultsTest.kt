@@ -503,6 +503,21 @@ class DefaultsTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun testDateDefaultDoesNotTriggerAlterStatement() {
+        val date = LocalDate(2024, 2, 1)
+
+        val tester = object : Table("tester") {
+            val dateWithDefault = date("dateWithDefault").default(date)
+        }
+
+        // SQLite does not support ALTER TABLE on a column that has a default value
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            assertEquals(0, statements.size)
+        }
+    }
+
+    @Test
     fun testTimestampDefaultDoesNotTriggerAlterStatement() {
         val instant = Instant.parse("2023-05-04T05:04:00.700Z") // In UTC
 
