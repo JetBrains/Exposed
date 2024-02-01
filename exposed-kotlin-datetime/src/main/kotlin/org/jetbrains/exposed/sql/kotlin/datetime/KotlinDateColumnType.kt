@@ -147,6 +147,7 @@ class KotlinLocalDateColumnType : ColumnType(), IDateColumnType {
  */
 class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
     override val hasTimePart: Boolean = true
+
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
 
     override fun nonNullValueToString(value: Any): String {
@@ -164,6 +165,8 @@ class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
             dialect is SQLiteDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
             dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                 "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
+            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ->
+                "'${MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
         }
     }
@@ -196,6 +199,20 @@ class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         } else {
             super.readObject(rs, index)
         }
+    }
+
+    override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
+        is LocalDateTime -> {
+            val instant = value.toInstant(DEFAULT_TIME_ZONE).toJavaInstant()
+            when {
+                currentDialect is PostgreSQLDialect ->
+                    "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
+                currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                    "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant).trimEnd('0').trimEnd('.')}'"
+                else -> super.nonNullValueAsDefaultString(value)
+            }
+        }
+        else -> super.nonNullValueAsDefaultString(value)
     }
 
     private fun longToLocalDateTime(millis: Long) = Instant.fromEpochMilliseconds(millis).toLocalDateTime(DEFAULT_TIME_ZONE)

@@ -20,6 +20,7 @@ public final class org/jetbrains/exposed/sql/jodatime/DateColumnType : org/jetbr
 	public fun getHasTimePart ()Z
 	public final fun getTime ()Z
 	public fun hashCode ()I
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
