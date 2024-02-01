@@ -32,7 +32,11 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
 
     override fun uintegerType(): String = "INT UNSIGNED"
 
+    override fun uintegerAutoincType(): String = "INT UNSIGNED AUTO_INCREMENT"
+
     override fun ulongType(): String = "BIGINT UNSIGNED"
+
+    override fun ulongAutoincType(): String = "BIGINT UNSIGNED AUTO_INCREMENT"
 
     override fun textType(): String = "text"
 

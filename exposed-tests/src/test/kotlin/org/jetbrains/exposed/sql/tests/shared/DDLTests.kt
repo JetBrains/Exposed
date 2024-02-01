@@ -288,6 +288,30 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testAutoIncrementOnUnsignedColumns() {
+        // separate tables are necessary as some db only allow a single column to be auto-incrementing
+        val uIntTester = object : Table("u_int_tester") {
+            var id = uinteger("id").autoIncrement()
+            override val primaryKey = PrimaryKey(id)
+        }
+        val uLongTester = object : Table("u_long_tester") {
+            val id = ulong("id").autoIncrement()
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withDb {
+            SchemaUtils.drop(uIntTester, uLongTester)
+            SchemaUtils.create(uIntTester, uLongTester)
+
+            uIntTester.insert { }
+            assertEquals(1u, uIntTester.selectAll().single()[uIntTester.id])
+
+            uLongTester.insert { }
+            assertEquals(1u, uLongTester.selectAll().single()[uLongTester.id])
+        }
+    }
+
+    @Test
     fun tableWithMultiPKandAutoIncrement() {
         val foo = object : IdTable<Long>("FooTable") {
             val bar = integer("bar")

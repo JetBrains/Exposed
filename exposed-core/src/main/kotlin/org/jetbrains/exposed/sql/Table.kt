@@ -814,11 +814,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     // Auto-generated values
 
     /**
-     * Make @receiver column an auto-increment to generate its values in a database.
-     * Only integer and long columns supported.
-     * Some databases like a PostgreSQL supports auto-increment via sequences.
-     * In that case you should provide a name with [idSeqName] param and Exposed will create a sequence for you.
-     * If you already have a sequence in a database just use its name in [idSeqName].
+     * Make @receiver column an auto-increment column to generate its values in a database.
+     * **Note:** Only integer and long columns are supported (signed and unsigned types).
+     * Some databases, like PostgreSQL, support auto-increment via sequences.
+     * In this case a name should be provided using the [idSeqName] param and Exposed will create a sequence.
+     * If a sequence already exists in the database just use its name in [idSeqName].
      *
      * @param idSeqName an optional parameter to provide a sequence name
      */
@@ -826,11 +826,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         cloneWithAutoInc(idSeqName).also { replaceColumn(this, it) }
 
     /**
-     * Make @receiver column an auto-increment to generate its values in a database.
-     * Only integer and long columns supported.
-     * Some databases like a PostgreSQL supports auto-increment via sequences.
-     * In that case you should provide a name with [idSeqName] param and Exposed will create a sequence for you.
-     * If you already have a sequence in a database just use its name in [idSeqName].
+     * Make @receiver column an auto-increment column to generate its values in a database.
+     * **Note:** Only integer and long columns are supported (signed and unsigned types).
+     * Some databases, like PostgreSQL, support auto-increment via sequences.
+     * In this case a name should be provided using the [idSeqName] param and Exposed will create a sequence.
+     * If a sequence already exists in the database just use its name in [idSeqName].
      *
      * @param idSeqName an optional parameter to provide a sequence name
      */

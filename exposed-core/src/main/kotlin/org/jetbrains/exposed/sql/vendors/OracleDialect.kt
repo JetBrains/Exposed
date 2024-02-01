@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.DatabaseMetaData
 import java.util.*
 
+@Suppress("TooManyFunctions")
 internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = "SMALLINT"
     override fun ubyteType(): String = "NUMBER(4)"
@@ -13,9 +14,11 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun integerType(): String = "NUMBER(12)"
     override fun integerAutoincType(): String = "NUMBER(12)"
     override fun uintegerType(): String = "NUMBER(13)"
+    override fun uintegerAutoincType(): String = "NUMBER(13)"
     override fun longType(): String = "NUMBER(19)"
     override fun longAutoincType(): String = "NUMBER(19)"
     override fun ulongType(): String = "NUMBER(20)"
+    override fun ulongAutoincType(): String = "NUMBER(20)"
     override fun varcharType(colLength: Int): String = "VARCHAR2($colLength CHAR)"
     override fun textType(): String = "CLOB"
     override fun mediumTextType(): String = textType()
