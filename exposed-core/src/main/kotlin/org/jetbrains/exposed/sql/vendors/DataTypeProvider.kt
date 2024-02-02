@@ -45,6 +45,12 @@ abstract class DataTypeProvider {
     /** Numeric type for storing 4-byte integers, marked as auto-increment. */
     open fun integerAutoincType(): String = "INT AUTO_INCREMENT"
 
+    /** Numeric type for storing 4-byte unsigned integers, marked as auto-increment.
+     *
+     * **Note:** If the database being used is not MySQL or MariaDB, this will represent the 8-byte integer type.
+     */
+    open fun uintegerAutoincType(): String = "BIGINT AUTO_INCREMENT"
+
     /** Numeric type for storing 8-byte integers. */
     open fun longType(): String = "BIGINT"
 
@@ -53,6 +59,9 @@ abstract class DataTypeProvider {
 
     /** Numeric type for storing 8-byte integers, and marked as auto-increment. */
     open fun longAutoincType(): String = "BIGINT AUTO_INCREMENT"
+
+    /** Numeric type for storing 8-byte unsigned integers, marked as auto-increment. */
+    open fun ulongAutoincType(): String = "BIGINT AUTO_INCREMENT"
 
     /** Numeric type for storing 4-byte (single precision) floating-point numbers. */
     open fun floatType(): String = "FLOAT"

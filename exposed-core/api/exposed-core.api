@@ -3251,7 +3251,9 @@ public abstract class org/jetbrains/exposed/sql/vendors/DataTypeProvider {
 	public fun timeType ()Ljava/lang/String;
 	public fun timestampWithTimeZoneType ()Ljava/lang/String;
 	public fun ubyteType ()Ljava/lang/String;
+	public fun uintegerAutoincType ()Ljava/lang/String;
 	public fun uintegerType ()Ljava/lang/String;
+	public fun ulongAutoincType ()Ljava/lang/String;
 	public fun ulongType ()Ljava/lang/String;
 	public fun untypedAndUnsizedArrayType ()Ljava/lang/String;
 	public fun ushortType ()Ljava/lang/String;
