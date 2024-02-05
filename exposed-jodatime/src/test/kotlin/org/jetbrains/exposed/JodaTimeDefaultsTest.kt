@@ -468,4 +468,29 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             assertEquals(0, statements.size)
         }
     }
+
+    @Test
+    fun testTimestampWithTimeZoneDefaultDoesNotTriggerAlterStatement() {
+        val dateTime = DateTime.parse("2024-02-08T20:48:04.700").withZone(DateTimeZone.forID("Japan"))
+
+        val tester = object : Table("tester") {
+            val timestampWithTimeZoneWithDefault = timestampWithTimeZone("timestampWithTimeZoneWithDefault").default(dateTime)
+        }
+
+        // SQLite does not support ALTER TABLE on a column that has a default value
+        // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
+        val unsupportedDatabases = listOf(TestDB.SQLITE, TestDB.MARIADB)
+        withDb(excludeSettings = unsupportedDatabases) {
+            if (!isOldMySql()) {
+                try {
+                    SchemaUtils.drop(tester)
+                    SchemaUtils.create(tester)
+                    val statements = SchemaUtils.addMissingColumnsStatements(tester)
+                    assertEquals(0, statements.size)
+                } finally {
+                    SchemaUtils.drop(tester)
+                }
+            }
+        }
+    }
 }

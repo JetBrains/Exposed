@@ -82,6 +82,21 @@ internal val ORACLE_OFFSET_DATE_TIME_FORMATTER by lazy {
     )
 }
 
+// Example result: 2023-07-07 14:42:29.343
+internal val POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSS",
+        Locale.ROOT
+    )
+}
+
+internal val MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSSSSS",
+        Locale.ROOT
+    ).withZone(ZoneId.of("UTC"))
+}
+
 internal val DEFAULT_OFFSET_DATE_TIME_FORMATTER by lazy {
     DateTimeFormatter.ISO_OFFSET_DATE_TIME.withLocale(Locale.ROOT)
 }
@@ -413,6 +428,20 @@ class KotlinOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
             }
         }
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+    }
+
+    override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
+        is OffsetDateTime -> {
+            when {
+                currentDialect is PostgreSQLDialect -> // +00 appended because PostgreSQL stores it in UTC time zone
+                    "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER).trimEnd('0').trimEnd('.')}+00'::timestamp with time zone"
+                currentDialect is H2Dialect && currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                    "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER).trimEnd('0').trimEnd('.')}'"
+                currentDialect is MysqlDialect -> "'${value.format(MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
+                else -> super.nonNullValueAsDefaultString(value)
+            }
+        }
+        else -> super.nonNullValueAsDefaultString(value)
     }
 
     companion object {
