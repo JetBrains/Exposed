@@ -97,8 +97,8 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             val dateTime = Instant.parse("2023-05-04T05:04:00.000Z") // has 0 nanoseconds
             val nanos = DateTimeUnit.NANOSECOND * 111111
             // insert 2 separate constants to ensure test's rounding mode matches DB precision
-            val dateTimeWithFewNanos = dateTime.plus(nanos).toLocalDateTime(TimeZone.currentSystemDefault())
-            val dateTimeWithManyNanos = dateTime.plus(nanos * 7).toLocalDateTime(TimeZone.currentSystemDefault())
+            val dateTimeWithFewNanos = dateTime.plus(1, nanos).toLocalDateTime(TimeZone.currentSystemDefault())
+            val dateTimeWithManyNanos = dateTime.plus(7, nanos).toLocalDateTime(TimeZone.currentSystemDefault())
             testDate.insert {
                 it[testDate.time] = dateTimeWithFewNanos
             }
