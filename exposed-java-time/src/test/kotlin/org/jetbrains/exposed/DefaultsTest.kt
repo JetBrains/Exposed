@@ -540,4 +540,29 @@ class DefaultsTest : DatabaseTestsBase() {
             assertEquals(0, statements.size)
         }
     }
+
+    @Test
+    fun testTimestampWithTimeZoneDefaultDoesNotTriggerAlterStatement() {
+        val offsetDateTime = OffsetDateTime.parse("2024-02-08T20:48:04.700+09:00")
+
+        val tester = object : Table("tester") {
+            val timestampWithTimeZoneWithDefault = timestampWithTimeZone("timestampWithTimeZoneWithDefault").default(offsetDateTime)
+        }
+
+        // SQLite does not support ALTER TABLE on a column that has a default value
+        // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
+        val unsupportedDatabases = listOf(TestDB.SQLITE, TestDB.MARIADB)
+        withDb(excludeSettings = unsupportedDatabases) {
+            if (!isOldMySql()) {
+                try {
+                    SchemaUtils.drop(tester)
+                    SchemaUtils.create(tester)
+                    val statements = SchemaUtils.addMissingColumnsStatements(tester)
+                    assertEquals(0, statements.size)
+                } finally {
+                    SchemaUtils.drop(tester)
+                }
+            }
+        }
+    }
 }

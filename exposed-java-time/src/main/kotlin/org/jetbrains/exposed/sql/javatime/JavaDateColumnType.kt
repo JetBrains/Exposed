@@ -8,6 +8,9 @@ import org.jetbrains.exposed.sql.vendors.*
 import java.sql.ResultSet
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
+import java.time.format.DateTimeFormatter.ISO_LOCAL_TIME
+import java.time.format.DateTimeFormatterBuilder
 import java.util.*
 
 internal val DEFAULT_DATE_STRING_FORMATTER by lazy {
@@ -69,6 +72,23 @@ internal val ORACLE_OFFSET_DATE_TIME_FORMATTER by lazy {
         "yyyy-MM-dd HH:mm:ss.SSSSSS [xxx]",
         Locale.ROOT
     )
+}
+
+// Example result: 2023-07-07 14:42:29.343
+internal val POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
+    DateTimeFormatterBuilder()
+        .parseCaseInsensitive()
+        .append(ISO_LOCAL_DATE)
+        .appendLiteral(' ')
+        .append(ISO_LOCAL_TIME)
+        .toFormatter(Locale.ROOT)
+}
+
+internal val MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSSSSS",
+        Locale.ROOT
+    ).withZone(ZoneId.of("UTC"))
 }
 
 internal val DEFAULT_OFFSET_DATE_TIME_FORMATTER by lazy {
@@ -400,6 +420,20 @@ class JavaOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
             }
         }
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+    }
+
+    override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
+        is OffsetDateTime -> {
+            when {
+                currentDialect is PostgreSQLDialect -> // +00 appended because PostgreSQL stores it in UTC time zone
+                    "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}+00'::timestamp with time zone"
+                currentDialect is H2Dialect && currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                    "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
+                currentDialect is MysqlDialect -> "'${value.format(MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
+                else -> super.nonNullValueAsDefaultString(value)
+            }
+        }
+        else -> super.nonNullValueAsDefaultString(value)
     }
 
     companion object {

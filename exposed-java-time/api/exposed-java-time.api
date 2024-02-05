@@ -146,6 +146,7 @@ public final class org/jetbrains/exposed/sql/javatime/JavaOffsetDateTimeColumnTy
 	public static final field Companion Lorg/jetbrains/exposed/sql/javatime/JavaOffsetDateTimeColumnType$Companion;
 	public fun <init> ()V
 	public fun getHasTimePart ()Z
+	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;

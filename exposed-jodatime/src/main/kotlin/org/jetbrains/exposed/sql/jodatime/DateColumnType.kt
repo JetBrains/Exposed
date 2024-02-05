@@ -36,6 +36,11 @@ private val ORACLE_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
     DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSS ZZ").withLocale(Locale.ROOT)
 }
 
+internal val MYSQL_DATE_TIME_WITH_TIME_ZONE_AS_DEFAULT_FORMATTER by lazy {
+    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
+        .withLocale(Locale.ROOT)
+}
+
 private val DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
     ISODateTimeFormat.dateTime().withLocale(Locale.ROOT)
 }
@@ -215,6 +220,20 @@ class DateTimeWithTimeZoneColumnType : ColumnType(), IDateColumnType {
             }
         }
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
+    }
+
+    override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
+        is DateTime -> {
+            when {
+                currentDialect is PostgreSQLDialect ->
+                    "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0')}+00'::timestamp with time zone"
+                (currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                    "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0')}'"
+                currentDialect is MysqlDialect -> "'${MYSQL_DATE_TIME_WITH_TIME_ZONE_AS_DEFAULT_FORMATTER.print(value)}'"
+                else -> super.nonNullValueAsDefaultString(value)
+            }
+        }
+        else -> super.nonNullValueAsDefaultString(value)
     }
 }
 
