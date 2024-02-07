@@ -5,11 +5,14 @@ import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.append
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.h2Mode
 
 /**
  * Represents an SQL function that returns the array element stored at the one-based [index] position,
- * or `null` if the stored array itself is null or if [index] is out of bounds.
+ * or `null` if the stored array itself is null.
  */
 class ArrayElementAt<E, T : List<E>?>(
     /** The array expression that is accessed. */
@@ -39,6 +42,10 @@ class ArraySlice<E, T : List<E>?>(
     columnType: IColumnType
 ) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-        currentDialect.functionProvider.arraySlice(expression, lower, upper, queryBuilder)
+        val functionProvider = when (currentDialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.PostgreSQL -> H2FunctionProvider
+            else -> currentDialect.functionProvider
+        }
+        functionProvider.arraySlice(expression, lower, upper, queryBuilder)
     }
 }
