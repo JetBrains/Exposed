@@ -64,6 +64,9 @@ interface PreparedStatementApi {
     /** Sets the statement parameter at the [index] position to the provided [inputStream]. */
     fun setInputStream(index: Int, inputStream: InputStream)
 
+    /** Sets the statement parameter at the [index] position to the provided [array] of SQL [type]. */
+    fun setArray(index: Int, type: String, array: Array<*>)
+
     /** Closes the statement, if still open, and releases any of its database and/or driver resources. */
     fun closeIfPossible()
 

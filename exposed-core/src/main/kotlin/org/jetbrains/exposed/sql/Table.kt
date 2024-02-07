@@ -811,6 +811,21 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         toDb: (T) -> Any
     ): Column<T> = registerColumn(name, CustomEnumerationColumnType(name, sql, fromDb, toDb))
 
+    // Array columns
+
+    /**
+     * Creates an array column, with the specified [name], for storing elements of a `List` using a base [columnType].
+     *
+     * **Note** This column type is only supported by H2 and PostgreSQL dialects.
+     *
+     * @param name Name of the column.
+     * @param columnType Base column type for the individual elements.
+     * @param maximumCardinality The maximum amount of allowed elements. **Note** Providing an array size limit
+     * when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
+     */
+    fun <T> array(name: String, columnType: ColumnType, maximumCardinality: Int? = null): Column<List<T>> =
+        registerColumn(name, ArrayColumnType(columnType.apply { nullable = true }, maximumCardinality))
+
     // Auto-generated values
 
     /**

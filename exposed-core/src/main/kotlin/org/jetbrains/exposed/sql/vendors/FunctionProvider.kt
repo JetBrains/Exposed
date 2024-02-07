@@ -309,6 +309,24 @@ abstract class FunctionProvider {
         append("VAR_SAMP(", expression, ")")
     }
 
+    // Array Functions
+
+    /**
+     * SQL function that returns a subarray of elements stored from between [lower] and [upper] bounds (inclusive),
+     * or `null` if the stored array itself is null.
+     *
+     * @param expression Array expression from which the subarray is returned.
+     * @param lower Lower bounds (inclusive) of a subarray.
+     * @param upper Upper bounds (inclusive) of a subarray.
+     * **Note** If either bounds is left `null`, the database will use the stored array's respective lower or upper limit.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+    open fun <T> arraySlice(expression: Expression<T>, lower: Int?, upper: Int?, queryBuilder: QueryBuilder) {
+        throw UnsupportedByDialectException(
+            "There's no generic SQL for ARRAY_SLICE. There must be a vendor specific implementation", currentDialect
+        )
+    }
+
     // JSON Functions
 
     /**

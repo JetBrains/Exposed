@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.asLiteral
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.io.File
@@ -202,6 +203,20 @@ object SchemaUtils {
                                 is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\"
                                 else -> processed.trim('\'')
                             }
+                        } else if (column.columnType is ArrayColumnType && dialect is PostgreSQLDialect) {
+                            (value as List<*>)
+                                .takeIf { it.isNotEmpty() }
+                                ?.run {
+                                    val delegate = column.withColumnType(column.columnType.delegate)
+                                    val processed = map {
+                                        if (delegate.columnType is StringColumnType) {
+                                            "'$it'::text"
+                                        } else {
+                                            dbDefaultToString(delegate, delegate.asLiteral(it))
+                                        }
+                                    }
+                                    "ARRAY$processed"
+                                } ?: processForDefaultValue(exp)
                         } else {
                             processForDefaultValue(exp)
                         }

@@ -682,6 +682,10 @@ fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(TextColumnType()
 /** Returns the specified [value] as a decimal literal. */
 fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value)
 
+/** Returns the specified [value] as an array literal, with elements parsed by the [delegateType]. */
+fun <T> arrayLiteral(value: List<T>, delegateType: ColumnType): LiteralOp<List<T>> =
+    LiteralOp(ArrayColumnType(delegateType), value)
+
 // Query Parameters
 
 /**
@@ -741,6 +745,10 @@ fun decimalParam(value: BigDecimal): Expression<BigDecimal> = QueryParameter(val
 
 /** Returns the specified [value] as a blob query parameter. */
 fun blobParam(value: ExposedBlob): Expression<ExposedBlob> = QueryParameter(value, BlobColumnType())
+
+/** Returns the specified [value] as an array query parameter, with elements parsed by the [delegateType]. */
+fun <T> arrayParam(value: List<T>, delegateType: ColumnType): Expression<List<T>> =
+    QueryParameter(value, ArrayColumnType(delegateType))
 
 // Misc.
 

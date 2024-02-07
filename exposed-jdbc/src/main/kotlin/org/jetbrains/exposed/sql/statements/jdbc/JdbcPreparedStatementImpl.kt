@@ -83,6 +83,10 @@ class JdbcPreparedStatementImpl(
         statement.setBinaryStream(index, inputStream, inputStream.available())
     }
 
+    override fun setArray(index: Int, type: String, array: Array<*>) {
+        statement.setArray(index, statement.connection.createArrayOf(type, array))
+    }
+
     override fun closeIfPossible() {
         if (!statement.isClosed) statement.close()
     }

@@ -36,6 +36,12 @@ internal object H2FunctionProvider : FunctionProvider() {
             }
         }
 
+    override fun <T> arraySlice(expression: Expression<T>, lower: Int?, upper: Int?, queryBuilder: QueryBuilder) {
+        queryBuilder {
+            append("ARRAY_SLICE(", expression, ",$lower,$upper)")
+        }
+    }
+
     override fun insert(
         ignore: Boolean,
         table: Table,
