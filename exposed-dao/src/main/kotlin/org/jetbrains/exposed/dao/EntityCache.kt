@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.dao.id.CompositeID
+import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
@@ -260,10 +262,15 @@ class EntityCache(private val transaction: Transaction) {
             }
 
             for ((entry, genValues) in toFlush.zip(ids)) {
-                if (entry.id._value == null) {
+                if (entry.id._value == null || (table is CompositeIdTable && (entry.id._value as CompositeID).values.any { it == null })) {
                     val id = genValues[table.id]
                     entry.id._value = id._value
-                    entry.writeValues[entry.klass.table.id as Column<Any?>] = id
+                    when (val ekt = entry.klass.table) {
+                        is CompositeIdTable -> ekt.idColumns.forEach { column ->
+                            entry.writeValues[column as Column<Any?>] = id
+                        }
+                        else -> entry.writeValues[ekt.id as Column<Any?>] = id
+                    }
                 }
                 genValues.fieldIndex.keys.forEach { key ->
                     entry.writeValues[key as Column<Any?>] = genValues[key]

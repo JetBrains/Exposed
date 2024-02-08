@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.dao.id
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.*
 import java.util.*
+import kotlin.collections.HashSet
 
 /** Base class representing a producer of [EntityID] instances.  */
 interface EntityIDFactory {
@@ -34,6 +34,23 @@ object EntityIDFunctionProvider {
 abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
     /** The identity column of this [IdTable], for storing values of type [T] wrapped as [EntityID] instances. */
     abstract val id: Column<EntityID<T>>
+}
+
+abstract class CompositeIdTable(name: String = "") : IdTable<CompositeID>(name) {
+    val idColumns = HashSet<Column<out Comparable<*>>>()
+
+    fun compositeEntityId(
+        firstColumn: Column<out Comparable<*>>,
+        vararg columns: Column<out Comparable<*>>
+    ): Column<EntityID<CompositeID>> {
+        idColumns.addAll(arrayOf(firstColumn) + columns)
+        return Column<EntityID<CompositeID>>(this, "id", EntityIDColumnType(firstColumn as Column<out Comparable<Any>>)).also {
+            val compositeID = CompositeID().apply {
+                idColumns.forEach { column -> put(column, column.defaultValueFun?.let { it() }) }
+            }
+            it.defaultValueFun = { EntityIDFunctionProvider.createEntityID(compositeID, this) }
+        }
+    }
 }
 
 /**

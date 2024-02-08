@@ -7,6 +7,15 @@ public class org/jetbrains/exposed/dao/ColumnWithTransform {
 	public final fun getToReal ()Lkotlin/jvm/functions/Function1;
 }
 
+public abstract class org/jetbrains/exposed/dao/CompositeEntity : org/jetbrains/exposed/dao/Entity {
+	public fun <init> (Lorg/jetbrains/exposed/dao/id/EntityID;)V
+}
+
+public abstract class org/jetbrains/exposed/dao/CompositeEntityClass : org/jetbrains/exposed/dao/EntityClass {
+	public fun <init> (Lorg/jetbrains/exposed/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
 public final class org/jetbrains/exposed/dao/DaoEntityID : org/jetbrains/exposed/dao/id/EntityID {
 	public fun <init> (Ljava/lang/Comparable;Lorg/jetbrains/exposed/dao/id/IdTable;)V
 }
