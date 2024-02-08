@@ -262,15 +262,10 @@ class EntityCache(private val transaction: Transaction) {
             }
 
             for ((entry, genValues) in toFlush.zip(ids)) {
-                if (entry.id._value == null || (table is CompositeIdTable && (entry.id._value as CompositeID).values.any { it == null })) {
+                if (entry.id.valueIsNotInitialized()) {
                     val id = genValues[table.id]
                     entry.id._value = id._value
-                    when (val ekt = entry.klass.table) {
-                        is CompositeIdTable -> ekt.idColumns.forEach { column ->
-                            entry.writeValues[column as Column<Any?>] = id
-                        }
-                        else -> entry.writeValues[ekt.id as Column<Any?>] = id
-                    }
+                    entry.writeIdColumnValue(entry.klass.table, id)
                 }
                 genValues.fieldIndex.keys.forEach { key ->
                     entry.writeValues[key as Column<Any?>] = genValues[key]

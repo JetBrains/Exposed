@@ -27,18 +27,21 @@ class ResultRow(
     operator fun <T> get(expression: Expression<T>): T {
         val column = expression as? Column<*>
         return when {
-            column?.columnType is EntityIDColumnType<*> && column.table is CompositeIdTable -> getDeconstructedID(column.table.idColumns)
+            column?.columnType is EntityIDColumnType<*> && column.table is CompositeIdTable -> getIdComponents(column.table)
             else -> getInternal(expression, checkNullability = true)
         }
     }
 
-    private fun <T> getDeconstructedID(columns: Set<Column<*>>): T {
-        val compositeID = CompositeID().apply {
-            columns.forEach { column ->
-                put(column, getInternal(column, checkNullability = true) as Comparable<*>)
-            }
+    /**
+     * Retrieves the value for each component column from the specified [table] `id` column and returns the
+     * collective values as an [EntityID] value.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> getIdComponents(table: CompositeIdTable): T {
+        val resultMap = table.idColumns.associateWith { column ->
+            getInternal(column, checkNullability = true)
         }
-        return EntityID(compositeID, columns.first().table as CompositeIdTable) as T
+        return EntityID(CompositeID(resultMap), table) as T
     }
 
     /**

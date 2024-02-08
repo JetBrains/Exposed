@@ -1,7 +1,5 @@
 package org.jetbrains.exposed.dao.id
 
-import org.jetbrains.exposed.sql.Column
-
 /**
  * Class representing a wrapper for a stored identity value of type [T].
  *
@@ -45,31 +43,4 @@ open class EntityID<T : Comparable<T>> protected constructor(val table: IdTable<
     }
 
     override fun compareTo(other: EntityID<T>): Int = value.compareTo(other.value)
-}
-
-class CompositeID : HashMap<Column<*>, Comparable<*>?>(), Comparable<CompositeID> {
-    override fun toString(): String = "CompositeID(${entries.joinToString { "${it.key.name}=${it.value}" }})"
-
-    override fun hashCode(): Int = values.fold(0) { acc, id ->
-        (acc * 31) + id.hashCode()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (other !is CompositeID) return false
-        val s = hashMapOf(1 to 3)
-
-        return super.equals(other)
-    }
-
-    override fun compareTo(other: CompositeID): Int {
-        val compareSize = compareValues(other.size, size)
-        if (compareSize != 0) return compareSize
-
-        entries.forEach { (column, id) ->
-            compareValues(id, other[column]).let {
-                if (it != 0) return it
-            }
-        }
-        return 0
-    }
 }
