@@ -120,7 +120,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testSelectUsingArrayElementAt() {
+    fun testSelectUsingArrayGet() {
         withTables(excludeSettings = arrayTypeUnsupportedDb, ArrayTestTable) {
             val numInput = listOf(1, 2, 3)
             ArrayTestTable.insert {
@@ -134,7 +134,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             val result1 = ArrayTestTable.select(secondNumber).single()[secondNumber]
             assertEquals(numInput[1], result1)
 
-            val result2 = ArrayTestTable.selectAll().where { ArrayTestTable.strings.elementAt(2) eq "hello" }
+            val result2 = ArrayTestTable.selectAll().where { ArrayTestTable.strings[2] eq "hello" }
             assertNull(result2.single()[ArrayTestTable.doubles])
 
             val result3 = ArrayTestTable.selectAll().where {
@@ -142,7 +142,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             }
             assertTrue(result3.toList().isEmpty())
 
-            val nullArray = ArrayTestTable.doubles.elementAt(1)
+            val nullArray = ArrayTestTable.doubles[2]
             val result4 = ArrayTestTable.select(nullArray).single()[nullArray]
             assertNull(result4)
         }

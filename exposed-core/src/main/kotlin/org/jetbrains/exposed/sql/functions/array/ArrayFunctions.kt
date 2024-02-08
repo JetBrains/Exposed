@@ -14,7 +14,7 @@ import org.jetbrains.exposed.sql.vendors.h2Mode
  * Represents an SQL function that returns the array element stored at the one-based [index] position,
  * or `null` if the stored array itself is null.
  */
-class ArrayElementAt<E, T : List<E>?>(
+class ArrayGet<E, T : List<E>?>(
     /** The array expression that is accessed. */
     val expression: Expression<T>,
     /** The one-based index position at which the stored array is accessed. */

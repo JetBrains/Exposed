@@ -1801,9 +1801,8 @@ public final class org/jetbrains/exposed/sql/SQLExpressionBuilderKt {
 	public static final fun charLength (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CharLength;
 	public static final fun count (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Count;
 	public static final fun countDistinct (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Count;
-	public static final fun elementAt (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/functions/array/ArrayElementAt;
 	public static final fun function (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/CustomFunction;
-	public static final fun get (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/functions/array/ArrayElementAt;
+	public static final fun get (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/functions/array/ArrayGet;
 	public static final fun groupConcat (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;ZLkotlin/Pair;)Lorg/jetbrains/exposed/sql/GroupConcat;
 	public static final fun groupConcat (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;Z[Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/GroupConcat;
 	public static synthetic fun groupConcat$default (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;ZLkotlin/Pair;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/GroupConcat;
@@ -2590,7 +2589,7 @@ public final class org/jetbrains/exposed/sql/XorBitOp : org/jetbrains/exposed/sq
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/functions/array/ArrayElementAt : org/jetbrains/exposed/sql/Function {
+public final class org/jetbrains/exposed/sql/functions/array/ArrayGet : org/jetbrains/exposed/sql/Function {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;ILorg/jetbrains/exposed/sql/IColumnType;)V
 	public final fun getExpression ()Lorg/jetbrains/exposed/sql/Expression;
 	public final fun getIndex ()I
