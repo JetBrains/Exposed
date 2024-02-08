@@ -188,37 +188,38 @@ object SchemaUtils {
                     }
 
                     else -> {
-                        if (column.columnType is JsonColumnMarker) {
-                            val processed = processForDefaultValue(exp)
-                            when (dialect) {
-                                is PostgreSQLDialect -> {
-                                    if (column.columnType.usesBinaryFormat) {
-                                        processed.replace(Regex("(\"|})(:|,)(\\[|\\{|\")"), "$1$2 $3")
-                                    } else {
-                                        processed
-                                    }
-                                }
-
-                                is MariaDBDialect -> processed.trim('\'')
-                                is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\"
-                                else -> processed.trim('\'')
-                            }
-                        } else if (column.columnType is ArrayColumnType && dialect is PostgreSQLDialect) {
-                            (value as List<*>)
-                                .takeIf { it.isNotEmpty() }
-                                ?.run {
-                                    val delegate = column.withColumnType(column.columnType.delegate)
-                                    val processed = map {
-                                        if (delegate.columnType is StringColumnType) {
-                                            "'$it'::text"
+                        when {
+                            column.columnType is JsonColumnMarker -> {
+                                val processed = processForDefaultValue(exp)
+                                when (dialect) {
+                                    is PostgreSQLDialect -> {
+                                        if (column.columnType.usesBinaryFormat) {
+                                            processed.replace(Regex("(\"|})(:|,)(\\[|\\{|\")"), "$1$2 $3")
                                         } else {
-                                            dbDefaultToString(delegate, delegate.asLiteral(it))
+                                            processed
                                         }
                                     }
-                                    "ARRAY$processed"
-                                } ?: processForDefaultValue(exp)
-                        } else {
-                            processForDefaultValue(exp)
+                                    is MariaDBDialect -> processed.trim('\'')
+                                    is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\"
+                                    else -> processed.trim('\'')
+                                }
+                            }
+                            column.columnType is ArrayColumnType && dialect is PostgreSQLDialect -> {
+                                (value as List<*>)
+                                    .takeIf { it.isNotEmpty() }
+                                    ?.run {
+                                        val delegate = column.withColumnType(column.columnType.delegate)
+                                        val processed = map {
+                                            if (delegate.columnType is StringColumnType) {
+                                                "'$it'::text"
+                                            } else {
+                                                dbDefaultToString(delegate, delegate.asLiteral(it))
+                                            }
+                                        }
+                                        "ARRAY$processed"
+                                    } ?: processForDefaultValue(exp)
+                            }
+                            else -> processForDefaultValue(exp)
                         }
                     }
                 }

@@ -130,7 +130,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             }
 
             // SQL array indexes are one-based
-            val secondNumber = ArrayTestTable.numbers.elementAt(2)
+            val secondNumber = ArrayTestTable.numbers[2]
             val result1 = ArrayTestTable.select(secondNumber).single()[secondNumber]
             assertEquals(numInput[1], result1)
 
@@ -138,7 +138,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             assertNull(result2.single()[ArrayTestTable.doubles])
 
             val result3 = ArrayTestTable.selectAll().where {
-                ArrayTestTable.numbers.elementAt(1) greaterEq ArrayTestTable.numbers.elementAt(3)
+                ArrayTestTable.numbers[1] greaterEq ArrayTestTable.numbers[3]
             }
             assertTrue(result3.toList().isEmpty())
 

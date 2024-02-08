@@ -1803,6 +1803,7 @@ public final class org/jetbrains/exposed/sql/SQLExpressionBuilderKt {
 	public static final fun countDistinct (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Count;
 	public static final fun elementAt (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/functions/array/ArrayElementAt;
 	public static final fun function (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/CustomFunction;
+	public static final fun get (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/functions/array/ArrayElementAt;
 	public static final fun groupConcat (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;ZLkotlin/Pair;)Lorg/jetbrains/exposed/sql/GroupConcat;
 	public static final fun groupConcat (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;Z[Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/GroupConcat;
 	public static synthetic fun groupConcat$default (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;ZLkotlin/Pair;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/GroupConcat;

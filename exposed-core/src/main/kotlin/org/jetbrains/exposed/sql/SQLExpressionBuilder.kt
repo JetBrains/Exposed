@@ -140,6 +140,14 @@ fun <E, T : List<E>?> ExpressionWithColumnType<T>.elementAt(index: Int): ArrayEl
     ArrayElementAt(this, index, (this.columnType as ArrayColumnType).delegate)
 
 /**
+ * Returns the array element stored at the one-based [index] position, or `null` if the stored array itself is null.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArrayElementAt
+ */
+infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int): ArrayElementAt<E, T> =
+    ArrayElementAt(this, index, (this.columnType as ArrayColumnType).delegate)
+
+/**
  * Returns a subarray of elements stored from between [lower] and [upper] bounds (inclusive),
  * or `null` if the stored array itself is null.
  * **Note** If either bounds is left `null`, the database will use the stored array's respective lower or upper limit.
