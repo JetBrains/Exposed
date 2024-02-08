@@ -383,15 +383,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         prototype.klass = this
         prototype.db = TransactionManager.current().db
         prototype._readValues = ResultRow.createAndFillDefaults(dependsOnColumns)
-        if (entityId._value != null || table is CompositeIdTable) {
-            when (table) {
-                is CompositeIdTable -> (entityId._value as CompositeID).forEach { (column, idValue) ->
-                    idValue?.let {
-                        prototype.writeValues[column as Column<Any?>] = it
-                    }
-                }
-                else -> prototype.writeValues[table.id as Column<Any?>] = entityId
-            }
+        if (entityId._value != null) {
+            prototype.writeIdColumnValue(table, entityId)
         }
         try {
             entityCache.addNotInitializedEntityToQueue(prototype)
@@ -399,7 +392,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         } finally {
             entityCache.finishEntityInitialization(prototype)
         }
-        if (entityId._value == null || (table is CompositeIdTable && (entityId._value as CompositeID).values.any { it == null })) {
+        if (entityId.valueIsNotInitialized()) {
             val readValues = prototype._readValues!!
             val writeValues = prototype.writeValues
             table.columns.filter { col ->

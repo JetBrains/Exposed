@@ -1,7 +1,10 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
+import org.jetbrains.exposed.dao.id.CompositeID
+import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -367,4 +370,32 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         // clear write values
         writeValues.clear()
     }
+
+    /**
+     * Stores a [value] for a [table] `id` column in this Entity's [writeValues] map.
+     * If the `id` column wraps a composite value, each non-null component value is stored for its component column.
+     */
+    @Suppress("UNCHECKED_CAST")
+    internal fun writeIdColumnValue(table: IdTable<*>, value: EntityID<*>) {
+        if (table is CompositeIdTable) {
+            val compositeID = value._value as CompositeID
+            table.idColumns.forEach { column ->
+                compositeID[column]?.let {
+                    writeValues[column as Column<Any?>] = it
+                }
+            }
+        } else {
+            writeValues[table.id as Column<Any?>] = value
+        }
+    }
+}
+
+/**
+ * Returns whether an [EntityID]'s wrapped value has not been assigned an actual value other than `null`.
+ * If [this] wraps a composite value, `true` is returned if any component is still assigned to `null`.
+ */
+internal fun EntityID<*>.valueIsNotInitialized(): Boolean = if (table is CompositeIdTable) {
+    (_value as CompositeID).values.any { it == null }
+} else {
+    _value == null
 }
