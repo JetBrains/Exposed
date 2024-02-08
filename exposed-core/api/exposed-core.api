@@ -1,3 +1,43 @@
+public final class org/jetbrains/exposed/dao/id/CompositeID : java/util/HashMap, java/lang/Comparable {
+	public fun <init> ()V
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun compareTo (Lorg/jetbrains/exposed/dao/id/CompositeID;)I
+	public final fun containsKey (Ljava/lang/Object;)Z
+	public fun containsKey (Lorg/jetbrains/exposed/sql/Column;)Z
+	public fun containsValue (Ljava/lang/Comparable;)Z
+	public final fun containsValue (Ljava/lang/Object;)Z
+	public final fun entrySet ()Ljava/util/Set;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun get (Ljava/lang/Object;)Ljava/lang/Comparable;
+	public final synthetic fun get (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun get (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Comparable;
+	public fun getEntries ()Ljava/util/Set;
+	public fun getKeys ()Ljava/util/Set;
+	public final fun getOrDefault (Ljava/lang/Object;Ljava/lang/Comparable;)Ljava/lang/Comparable;
+	public final synthetic fun getOrDefault (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun getOrDefault (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Ljava/lang/Comparable;
+	public fun getSize ()I
+	public fun getValues ()Ljava/util/Collection;
+	public fun hashCode ()I
+	public final fun keySet ()Ljava/util/Set;
+	public final fun remove (Ljava/lang/Object;)Ljava/lang/Comparable;
+	public final synthetic fun remove (Ljava/lang/Object;)Ljava/lang/Object;
+	public final fun remove (Ljava/lang/Object;Ljava/lang/Object;)Z
+	public fun remove (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Comparable;
+	public fun remove (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Z
+	public final fun size ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun values ()Ljava/util/Collection;
+}
+
+public abstract class org/jetbrains/exposed/dao/id/CompositeIdTable : org/jetbrains/exposed/dao/id/IdTable {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun compositeEntityId (Lorg/jetbrains/exposed/sql/Column;[Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun getIdColumns ()Ljava/util/HashSet;
+}
+
 public class org/jetbrains/exposed/dao/id/EntityID : java/lang/Comparable {
 	public fun <init> (Ljava/lang/Comparable;Lorg/jetbrains/exposed/dao/id/IdTable;)V
 	protected fun <init> (Lorg/jetbrains/exposed/dao/id/IdTable;Ljava/lang/Comparable;)V
