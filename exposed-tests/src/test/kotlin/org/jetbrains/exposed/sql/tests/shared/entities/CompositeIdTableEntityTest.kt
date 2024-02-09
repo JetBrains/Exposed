@@ -17,6 +17,8 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+// SQLite excluded from all tests as it only allows auto-increment on single column PKs.
+// SQL Server is sometimes excluded because it doesn't allow inserting explicit values for identity columns.
 class CompositeIdTableEntityTest : DatabaseTestsBase() {
     object Publishers : CompositeIdTable("publishers") {
         val pubId = uuid("pub_id").autoGenerate().compositeEntityId()
@@ -32,11 +34,9 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         var name by Publishers.name
     }
 
-    // SQLite excluded as only allows auto-increment on single column PKs
-    // SQL Server doesn't allow inserting explicit value for identity columns
     @Test
     fun testCreateAndDropCompositeIdTable() {
-        withDb(excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER)) {
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
             try {
                 SchemaUtils.create(Publishers)
                 assertTrue(Publishers.exists())
