@@ -116,8 +116,14 @@ fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> =
 /** Returns this subquery wrapped in the `ANY` operator. This function is not supported by the SQLite dialect. */
 fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, subQuery)
 
-/** Returns this array of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects. */
-fun <T> anyFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(true, array)
+/**
+ * Returns this array of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects.
+ *
+ * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
+ * resolved according to the internal mapping of the element's type in [resolveColumnType].
+ */
+inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> =
+    AllAnyFromArrayOp(true, array, T::class, delegateType)
 
 /** Returns this table wrapped in the `ANY` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
 fun <T> anyFrom(table: Table): Op<T> = AllAnyFromTableOp(true, table)
@@ -128,8 +134,14 @@ fun <E, T : List<E>?> anyFrom(expression: Expression<T>): Op<E> = AllAnyFromExpr
 /** Returns this subquery wrapped in the `ALL` operator. This function is not supported by the SQLite dialect. */
 fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false, subQuery)
 
-/** Returns this array of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects. */
-fun <T> allFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(false, array)
+/**
+ * Returns this array of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects.
+ *
+ * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
+ * resolved according to the internal mapping of the element's type in [resolveColumnType].
+ */
+inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> =
+    AllAnyFromArrayOp(false, array, T::class, delegateType)
 
 /** Returns this table wrapped in the `ALL` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
 fun <T> allFrom(table: Table): Op<T> = AllAnyFromTableOp(false, table)

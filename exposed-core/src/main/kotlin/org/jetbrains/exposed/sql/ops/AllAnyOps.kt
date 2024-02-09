@@ -1,11 +1,7 @@
 package org.jetbrains.exposed.sql.ops
 
-import org.jetbrains.exposed.sql.AbstractQuery
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.UntypedAndUnsizedArrayColumnType
+import org.jetbrains.exposed.sql.*
+import kotlin.reflect.KClass
 
 /**
  * Represents an SQL operator that checks a value, based on the preceding comparison operator,
@@ -47,9 +43,18 @@ class AllAnyFromSubQueryOp<T>(
  *
  * **Note** This operation is only supported by PostgreSQL and H2 dialects.
  */
-class AllAnyFromArrayOp<T>(isAny: Boolean, array: Array<T>) : AllAnyFromBaseOp<T, Array<T>>(isAny, array) {
-    override fun QueryBuilder.registerSubSearchArgument(subSearch: Array<T>) =
-        registerArgument(UntypedAndUnsizedArrayColumnType, subSearch)
+class AllAnyFromArrayOp<T : Any>(
+    isAny: Boolean,
+    array: Array<T>,
+    private val klass: KClass<T>,
+    private val delegateType: ColumnType? = null
+) : AllAnyFromBaseOp<T, Array<T>>(isAny, array) {
+    override fun QueryBuilder.registerSubSearchArgument(subSearch: Array<T>) {
+        registerArgument(
+            ArrayColumnType(delegateType ?: resolveColumnType(klass, TextColumnType())),
+            subSearch
+        )
+    }
 }
 
 /**

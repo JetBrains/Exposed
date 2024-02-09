@@ -684,9 +684,14 @@ fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(TextColumnType()
 /** Returns the specified [value] as a decimal literal. */
 fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value)
 
-/** Returns the specified [value] as an array literal, with elements parsed by the [delegateType]. */
-fun <T> arrayLiteral(value: List<T>, delegateType: ColumnType): LiteralOp<List<T>> =
-    LiteralOp(ArrayColumnType(delegateType), value)
+/**
+ * Returns the specified [value] as an array literal, with elements parsed by the [delegateType] if provided.
+ *
+ * **Note** If [delegateType] is left `null`, the associated column type will be resolved according to the
+ * internal mapping of the element's type in [resolveColumnType].
+ */
+inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnType? = null): LiteralOp<List<T>> =
+    LiteralOp(ArrayColumnType(resolveColumnType(T::class, delegateType)), value)
 
 // Query Parameters
 
@@ -754,9 +759,14 @@ fun decimalParam(value: BigDecimal): Expression<BigDecimal> = QueryParameter(val
 fun blobParam(value: ExposedBlob, useObjectIdentifier: Boolean = false): Expression<ExposedBlob> =
     QueryParameter(value, BlobColumnType(useObjectIdentifier))
 
-/** Returns the specified [value] as an array query parameter, with elements parsed by the [delegateType]. */
-fun <T> arrayParam(value: List<T>, delegateType: ColumnType): Expression<List<T>> =
-    QueryParameter(value, ArrayColumnType(delegateType))
+/**
+ * Returns the specified [value] as an array query parameter, with elements parsed by the [delegateType] if provided.
+ *
+ * **Note** If [delegateType] is left `null`, the associated column type will be resolved according to the
+ * internal mapping of the element's type in [resolveColumnType].
+ */
+inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType? = null): Expression<List<T>> =
+    QueryParameter(value, ArrayColumnType(resolveColumnType(T::class, delegateType)))
 
 // Misc.
 

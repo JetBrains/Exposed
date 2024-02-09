@@ -201,14 +201,14 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             assertEquals(id1, result1.single()[ArrayTestTable.id])
 
             val result2 = ArrayTestTable.select(ArrayTestTable.id).where {
-                ArrayTestTable.doubles eq arrayParam(doublesInput, DoubleColumnType())
+                ArrayTestTable.doubles eq arrayParam(doublesInput)
             }
             assertEquals(id1, result2.single()[ArrayTestTable.id])
 
             if (currentDialectTest is PostgreSQLDialect) {
                 val lastStrings = ArrayTestTable.strings.slice(lower = 4) // strings[4:]
                 val result3 = ArrayTestTable.select(ArrayTestTable.id).where {
-                    lastStrings eq arrayLiteral(listOf("hello"), TextColumnType())
+                    lastStrings eq arrayLiteral(listOf("hello"))
                 }
                 assertEquals(id1, result3.single()[ArrayTestTable.id])
             }
@@ -282,6 +282,11 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
                 ArrayTestTable.id lessEq allFrom(ArrayTestTable.numbers)
             }
             assertEquals(id1, result3.single()[ArrayTestTable.id])
+
+            val result4 = ArrayTestTable.select(ArrayTestTable.id).where {
+                ArrayTestTable.id greater allFrom(arrayParam(numInput))
+            }
+            assertTrue(result4.toList().isEmpty())
         }
     }
 }

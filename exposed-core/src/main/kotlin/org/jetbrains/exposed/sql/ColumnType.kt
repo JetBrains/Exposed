@@ -1036,18 +1036,6 @@ class CustomEnumerationColumnType<T : Enum<T>>(
 // Array columns
 
 /**
- * Array column for storing arrays of any size and type.
- *
- * This column type only exists to allow registering an array as a valid SQL type for statement clauses generated
- * using `anyFrom(array)` and `allFrom(array)`. It does not correctly process arrays for use in `nonNullValueToString()`
- * and will be replaced with a full implementation of ArrayColumnType.
- */
-internal object UntypedAndUnsizedArrayColumnType : ColumnType() {
-    override fun sqlType(): String =
-        currentDialect.dataTypeProvider.untypedAndUnsizedArrayType()
-}
-
-/**
  * Array column for storing a collection of elements.
  */
 class ArrayColumnType(
@@ -1078,8 +1066,9 @@ class ArrayColumnType(
         else -> value
     }
 
-    override fun valueToString(value: Any?): String = when {
-        value is List<*> -> nonNullValueToString(value)
+    override fun valueToString(value: Any?): String = when (value) {
+        is List<*> -> nonNullValueToString(value)
+        is Array<*> -> nonNullValueToString(value.toList())
         else -> super.valueToString(value)
     }
 
@@ -1117,4 +1106,32 @@ interface IDateColumnType {
  */
 interface JsonColumnMarker {
     val usesBinaryFormat: Boolean
+}
+
+/**
+ * Returns the [ColumnType] commonly associated with storing values of type [T], or the [defaultType] if a mapping
+ * does not exist for type [T].
+ *
+ * @throws IllegalStateException If no column type mapping is found and a [defaultType] is not provided.
+ */
+fun <T : Any> resolveColumnType(
+    klass: KClass<T>,
+    defaultType: ColumnType? = null
+): ColumnType = when (klass) {
+    Boolean::class -> BooleanColumnType()
+    Byte::class -> ByteColumnType()
+    UByte::class -> UByteColumnType()
+    Short::class -> ShortColumnType()
+    UShort::class -> UShortColumnType()
+    Int::class -> IntegerColumnType()
+    UInt::class -> UIntegerColumnType()
+    Long::class -> LongColumnType()
+    ULong::class -> ULongColumnType()
+    Float::class -> FloatColumnType()
+    Double::class -> DoubleColumnType()
+    String::class -> TextColumnType()
+    ByteArray::class -> BasicBinaryColumnType()
+    else -> defaultType ?: error(
+        "A column type could not be associated with ${klass.qualifiedName}. Provide an explicit column type argument."
+    )
 }
