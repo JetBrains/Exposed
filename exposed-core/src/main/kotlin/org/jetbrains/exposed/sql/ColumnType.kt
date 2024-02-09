@@ -1006,6 +1006,8 @@ class CustomEnumerationColumnType<T : Enum<T>>(
     override fun nonNullValueToString(value: Any): String = super.nonNullValueToString(notNullValueToDB(value))
 }
 
+// Array columns
+
 /**
  * Array column for storing arrays of any size and type.
  *
@@ -1016,6 +1018,55 @@ class CustomEnumerationColumnType<T : Enum<T>>(
 internal object UntypedAndUnsizedArrayColumnType : ColumnType() {
     override fun sqlType(): String =
         currentDialect.dataTypeProvider.untypedAndUnsizedArrayType()
+}
+
+/**
+ * Array column for storing a collection of elements.
+ */
+class ArrayColumnType(
+    /** Returns the base column type of this array column's individual elements. */
+    val delegate: ColumnType,
+    /** Returns the maximum amount of allowed elements in this array column. */
+    val maximumCardinality: Int? = null
+) : ColumnType() {
+    override fun sqlType(): String = buildString {
+        append(delegate.sqlType())
+        when {
+            currentDialect is H2Dialect -> append(" ARRAY", maximumCardinality?.let { "[$it]" } ?: "")
+            else -> append("[", maximumCardinality?.toString() ?: "", "]")
+        }
+    }
+
+    /** The base SQL type of this array column's individual elements without extra column identifiers. */
+    val delegateType: String
+        get() = delegate.sqlType().substringBefore('(')
+
+    override fun valueFromDB(value: Any): Any = when {
+        value is java.sql.Array -> (value.array as Array<*>).map { e -> e?.let { delegate.valueFromDB(it) } }
+        else -> value
+    }
+
+    override fun notNullValueToDB(value: Any): Any = when {
+        value is List<*> -> value.map { e -> e?.let { delegate.notNullValueToDB(it) } }.toTypedArray()
+        else -> value
+    }
+
+    override fun valueToString(value: Any?): String = when {
+        value is List<*> -> {
+            val prefix = if (currentDialect is H2Dialect) "ARRAY [" else "ARRAY["
+            value.joinToString(",", prefix, "]") { delegate.valueToString(it) }
+        }
+        else -> super.valueToString(value)
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? = rs.getArray(index)
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        when {
+            value is Array<*> -> stmt.setArray(index, delegateType, value)
+            else -> super.setParameter(stmt, index, value)
+        }
+    }
 }
 
 // Date/Time columns

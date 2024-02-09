@@ -28,6 +28,15 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
             val cast = if (e.columnType.usesBinaryFormat) "::jsonb" else "::json"
             "${super.processForDefaultValue(e)}$cast"
         }
+        e is LiteralOp<*> && e.columnType is ArrayColumnType -> {
+            val processed = super.processForDefaultValue(e)
+            processed
+                .takeUnless { it == "ARRAY[]" }
+                ?: run {
+                    val cast = e.columnType.delegateType.lowercase()
+                    "$processed::$cast[]"
+                }
+        }
         else -> super.processForDefaultValue(e)
     }
 
@@ -119,6 +128,16 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         append("Extract(SECOND FROM ")
         append(expr)
         append(")")
+    }
+
+    override fun <T> arraySlice(expression: Expression<T>, lower: Int?, upper: Int?, queryBuilder: QueryBuilder) {
+        queryBuilder {
+            append(expression, "[")
+            lower?.let { +it.toString() }
+            +":"
+            upper?.let { +it.toString() }
+            +"]"
+        }
     }
 
     override fun <T> jsonExtract(

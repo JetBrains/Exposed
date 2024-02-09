@@ -5,6 +5,8 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.functions.array.ArrayGet
+import org.jetbrains.exposed.sql.functions.array.ArraySlice
 import org.jetbrains.exposed.sql.ops.*
 import org.jetbrains.exposed.sql.vendors.FunctionProvider
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -128,6 +130,24 @@ fun <T> allFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(false, array)
 
 /** Returns this table wrapped in the `ALL` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
 fun <T> allFrom(table: Table): Op<T> = AllAnyFromTableOp(false, table)
+
+/**
+ * Returns the array element stored at the one-based [index] position, or `null` if the stored array itself is null.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArrayGet
+ */
+infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int): ArrayGet<E, T> =
+    ArrayGet(this, index, (this.columnType as ArrayColumnType).delegate)
+
+/**
+ * Returns a subarray of elements stored from between [lower] and [upper] bounds (inclusive),
+ * or `null` if the stored array itself is null.
+ * **Note** If either bounds is left `null`, the database will use the stored array's respective lower or upper limit.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArraySlice
+ */
+fun <E, T : List<E>?> ExpressionWithColumnType<T>.slice(lower: Int? = null, upper: Int? = null): ArraySlice<E, T> =
+    ArraySlice(this, lower, upper, ArrayColumnType((this.columnType as ArrayColumnType).delegate))
 
 // Sequence Manipulation Functions
 
