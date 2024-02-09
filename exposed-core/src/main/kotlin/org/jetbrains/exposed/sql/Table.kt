@@ -836,7 +836,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * **Note** The base column type associated with storing elements of type [T] will be resolved according to
      * the internal mapping in [resolveColumnType]. To avoid this type reflection, or if a mapping does not exist
-     * for the elements being stored, please provide an explicit column type to the [array] overload.
+     * for the elements being stored, please provide an explicit column type to the [array] overload. If the elements
+     * to be stored are nullable, an explicit column type will also need to be provided.
      *
      * @param name Name of the column.
      * @param maximumCardinality The maximum amount of allowed elements. **Note** Providing an array size limit

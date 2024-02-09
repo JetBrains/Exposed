@@ -691,7 +691,7 @@ fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(Decimal
  * internal mapping of the element's type in [resolveColumnType].
  */
 inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnType? = null): LiteralOp<List<T>> =
-    LiteralOp(ArrayColumnType(resolveColumnType(T::class, delegateType)), value)
+    LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class)), value)
 
 // Query Parameters
 
@@ -766,7 +766,7 @@ fun blobParam(value: ExposedBlob, useObjectIdentifier: Boolean = false): Express
  * internal mapping of the element's type in [resolveColumnType].
  */
 inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType? = null): Expression<List<T>> =
-    QueryParameter(value, ArrayColumnType(resolveColumnType(T::class, delegateType)))
+    QueryParameter(value, ArrayColumnType(delegateType ?: resolveColumnType(T::class)))
 
 // Misc.
 

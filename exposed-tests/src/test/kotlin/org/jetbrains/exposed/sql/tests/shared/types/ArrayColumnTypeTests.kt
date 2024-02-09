@@ -23,9 +23,9 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
     private val arrayTypeUnsupportedDb = TestDB.entries - (TestDB.postgreSQLRelatedDB + TestDB.H2 + TestDB.H2_PSQL).toSet()
 
     object ArrayTestTable : IntIdTable("array_test_table") {
-        val numbers = array<Int>("numbers", IntegerColumnType()).default(listOf(5))
+        val numbers = array<Int>("numbers").default(listOf(5))
         val strings = array<String?>("strings", TextColumnType()).default(emptyList())
-        val doubles = array<Double>("doubles", DoubleColumnType()).nullable()
+        val doubles = array<Double>("doubles").nullable()
     }
 
     @Test

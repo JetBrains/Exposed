@@ -50,8 +50,10 @@ class AllAnyFromArrayOp<T : Any>(
     private val delegateType: ColumnType? = null
 ) : AllAnyFromBaseOp<T, Array<T>>(isAny, array) {
     override fun QueryBuilder.registerSubSearchArgument(subSearch: Array<T>) {
+        // emptyArray() without type info generates ARRAY[]
+        val default = if (subSearch.isEmpty()) TextColumnType() else null
         registerArgument(
-            ArrayColumnType(delegateType ?: resolveColumnType(klass, TextColumnType())),
+            ArrayColumnType(delegateType ?: resolveColumnType(klass, default)),
             subSearch
         )
     }
