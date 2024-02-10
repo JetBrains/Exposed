@@ -71,18 +71,3 @@ class AllAnyFromTableOp<T>(isAny: Boolean, table: Table) : AllAnyFromBaseOp<T, T
         +subSearch.tableName
     }
 }
-
-/**
- * Represents an SQL operator that checks a value, based on the preceding comparison operator,
- * against a collection of values returned by the provided expression.
- *
- * **Note** This operation is only supported by PostgreSQL and H2 dialects.
- */
-class AllAnyFromExpressionOp<E, T : List<E>?>(
-    isAny: Boolean,
-    expression: Expression<T>
-) : AllAnyFromBaseOp<E, Expression<T>>(isAny, expression) {
-    override fun QueryBuilder.registerSubSearchArgument(subSearch: Expression<T>) {
-        append(subSearch)
-    }
-}

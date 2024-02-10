@@ -1130,7 +1130,10 @@ fun <T : Any> resolveColumnType(
     Float::class -> FloatColumnType()
     Double::class -> DoubleColumnType()
     String::class -> TextColumnType()
+    Char::class -> CharacterColumnType()
     ByteArray::class -> BasicBinaryColumnType()
+    BigDecimal::class -> DecimalColumnType.INSTANCE
+    UUID::class -> UUIDColumnType()
     else -> defaultType ?: error(
         "A column type could not be associated with ${klass.qualifiedName}. Provide an explicit column type argument."
     )
