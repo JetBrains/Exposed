@@ -122,6 +122,9 @@ fun <T> anyFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(true, array)
 /** Returns this table wrapped in the `ANY` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
 fun <T> anyFrom(table: Table): Op<T> = AllAnyFromTableOp(true, table)
 
+/** Returns this expression wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <E, T : List<E>?> anyFrom(expression: Expression<T>): Op<E> = AllAnyFromExpressionOp(true, expression)
+
 /** Returns this subquery wrapped in the `ALL` operator. This function is not supported by the SQLite dialect. */
 fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false, subQuery)
 
@@ -130,6 +133,9 @@ fun <T> allFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(false, array)
 
 /** Returns this table wrapped in the `ALL` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
 fun <T> allFrom(table: Table): Op<T> = AllAnyFromTableOp(false, table)
+
+/** Returns this expression wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <E, T : List<E>?> allFrom(expression: Expression<T>): Op<E> = AllAnyFromExpressionOp(false, expression)
 
 /**
  * Returns the array element stored at the one-based [index] position, or `null` if the stored array itself is null.
