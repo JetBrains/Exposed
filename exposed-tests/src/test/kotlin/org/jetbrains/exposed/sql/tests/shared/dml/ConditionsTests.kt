@@ -29,7 +29,7 @@ class ConditionsTests : DatabaseTestsBase() {
             val number2 = integer("number_2").nullable()
         }
         // remove SQL Server exclusion once test container supports SQL Server 2022
-        withTables(excludeSettings = listOf(TestDB.SQLSERVER), table) {
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), table) { testDb ->
             val sameNumberId = table.insert {
                 it[number1] = 0
                 it[number2] = 0
@@ -68,6 +68,20 @@ class ConditionsTests : DatabaseTestsBase() {
                 table.selectAll().where { table.number1 isDistinctFrom table.number2 }.map { it[table.id] },
                 listOf(differentNumberId, oneNullId)
             )
+
+            // Oracle does not support complex expressions in DECODE()
+            if (testDb != TestDB.ORACLE) {
+                // (number1 is not null) != (number2 is null) returns true when both are null or neither is null
+                assertEqualLists(
+                    table.selectAll().where { table.number1.isNotNull() isDistinctFrom table.number2.isNull() }.map { it[table.id] },
+                    listOf(sameNumberId, differentNumberId, bothNullId)
+                )
+                // (number1 is not null) == (number2 is null) returns true when only 1 is null
+                assertEqualLists(
+                    table.selectAll().where { table.number1.isNotNull() isNotDistinctFrom table.number2.isNull() }.map { it[table.id] },
+                    listOf(oneNullId)
+                )
+            }
         }
     }
 

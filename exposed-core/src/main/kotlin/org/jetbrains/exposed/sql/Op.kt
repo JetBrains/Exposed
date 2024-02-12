@@ -190,9 +190,7 @@ abstract class ComparisonOp(
     val opSign: String
 ) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
-        appendExpression(expr1)
-        append(" $opSign ")
-        appendExpression(expr2)
+        appendComparison(expr1, expr2, opSign)
     }
 }
 
@@ -270,10 +268,10 @@ class IsNotDistinctFromOp(
 ) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         when (currentDialectIfAvailable) {
-            is MariaDBDialect, is MysqlDialect -> append(expression1, " <=> ", expression2)
+            is MariaDBDialect, is MysqlDialect -> appendComparison(expression1, expression2, "<=>")
             is OracleDialect -> append("DECODE(", expression1, ", ", expression2, ", 1, 0) = 1")
-            is SQLiteDialect -> append(expression1, " IS ", expression2)
-            else -> append(expression1, " IS NOT DISTINCT FROM ", expression2)
+            is SQLiteDialect -> appendComparison(expression1, expression2, "IS")
+            else -> appendComparison(expression1, expression2, "IS NOT DISTINCT FROM")
         }
     }
 }
@@ -288,10 +286,14 @@ class IsDistinctFromOp(
 ) : Op<Boolean>(), ComplexExpression, Op.OpBoolean {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         when (currentDialectIfAvailable) {
-            is MariaDBDialect, is MysqlDialect -> append("NOT (", expression1, " <=> ", expression2, ")")
+            is MariaDBDialect, is MysqlDialect -> {
+                +"NOT("
+                appendComparison(expression1, expression2, "<=>")
+                +")"
+            }
             is OracleDialect -> append("DECODE(", expression1, ", ", expression2, ", 1, 0) = 0")
-            is SQLiteDialect -> append(expression1, " IS NOT ", expression2)
-            else -> append(expression1, " IS DISTINCT FROM ", expression2)
+            is SQLiteDialect -> appendComparison(expression1, expression2, "IS NOT")
+            else -> appendComparison(expression1, expression2, "IS DISTINCT FROM")
         }
     }
 }
@@ -764,10 +766,21 @@ class NoOpConversion<T, S>(
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +expr }
 }
 
+/** Appends an expression that is wrapped in parentheses (if necessary by [ComplexExpression]). */
 private fun QueryBuilder.appendExpression(expr: Expression<*>) {
     if (expr is ComplexExpression) {
         append("(", expr, ")")
     } else {
         append(expr)
     }
+}
+
+/**
+ * Appends a comparison string between [expr1] and [expr2] using the given SQL [op], for when an operator class
+ * cannot directly extend the [ComparisonOp] class.
+ */
+private fun QueryBuilder.appendComparison(expr1: Expression<*>, expr2: Expression<*>, op: String) {
+    appendExpression(expr1)
+    +" $op "
+    appendExpression(expr2)
 }
