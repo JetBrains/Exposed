@@ -2,7 +2,6 @@
 
 package org.jetbrains.exposed.sql
 
-import kotlinx.coroutines.scheduling.DefaultIoScheduler.default
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
