@@ -4,9 +4,10 @@ package org.jetbrains.exposed.dao.id
  * Class representing a wrapper for a stored identity value of type [T].
  *
  * The class constructor could be useful, for example, if needing to manually provide an identity value to a column
- * default function or when manually inserting into identity columns using any DSL insert functions.
+ * default function or when manually inserting into identity columns using any DSL insert function.
  *
  * @param table The [IdTable] that stores the identity value.
+ * @param id The value of type [T] to store.
  * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.YTable
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertWithPredefinedId
  */
