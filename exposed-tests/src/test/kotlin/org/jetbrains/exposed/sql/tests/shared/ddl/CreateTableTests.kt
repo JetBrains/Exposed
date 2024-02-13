@@ -605,7 +605,6 @@ class CreateTableTests : DatabaseTestsBase() {
                 assertEquals(false, OneOneTable.exists())
                 SchemaUtils.createSchema(one)
                 SchemaUtils.create(OneOneTable)
-                println("${currentDialect.name}: ${currentDialectTest.allTablesNames()}")
                 assertEquals(true, OneTable.exists())
                 assertEquals(true, OneOneTable.exists())
             } finally {
