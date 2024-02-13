@@ -8,14 +8,21 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
+/**
+ * Class responsible for enabling entity field transformations, which may be useful when advanced database
+ * type conversions are necessary for entity mappings.
+ */
 open class ColumnWithTransform<TColumn, TReal>(
+    /** The original column type used in the transformation. */
     val column: Column<TColumn>,
+    /** The function used to convert transformed values to values that can be stored in the original column type. */
     val toColumn: (TReal) -> TColumn,
     toReal: (TColumn) -> TReal,
     protected val cacheResult: Boolean = false
 ) {
     private var cache: Pair<TColumn, TReal>? = null
 
+    /** The function used to convert values stored in the original column type. */
     val toReal: (TColumn) -> TReal = { columnValue ->
         if (cacheResult) {
             val localCache = cache
@@ -30,18 +37,23 @@ open class ColumnWithTransform<TColumn, TReal>(
     }
 }
 
+/** Class responsible for mapping to a row in a database. */
 open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
+    /** The associated [EntityClass] of this [Entity] instance. */
     var klass: EntityClass<ID, Entity<ID>> by Delegates.notNull()
         internal set
 
+    /** The [Database] associated with record mapped to this [Entity] instance. */
     var db: Database by Delegates.notNull()
         internal set
 
+    /** The initial column-value mapping for this [Entity] instance before being flushed. */
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
 
     @Suppress("VariableNaming")
     var _readValues: ResultRow? = null
 
+    /** The final column-value mapping for this [Entity] instance after being flushed and retrieved from the database. */
     val readValues: ResultRow
         get() = _readValues ?: run {
             val table = klass.table
@@ -182,6 +194,12 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         return this.restoreValueFromParts(values)
     }
 
+    /**
+     * Checks if [this][Column] has been assigned a value retrieved from the database and calls the [found] block
+     * with this value as its argument and returns its result.
+     *
+     * If a column-value mapping has not been assigned, the result of calling the [notFound] block is returned instead.
+     */
     fun <T, R : Any> Column<T>.lookupInReadValues(found: (T?) -> R?, notFound: () -> R?): R? =
         if (_readValues?.hasValue(this) == true) {
             found(readValues[this])
@@ -189,6 +207,12 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
             notFound()
         }
 
+    /**
+     * Returns the value assigned to [this][Column] mapping.
+     *
+     * Depending on the state of this entity instance, the value returned may be a property assignment, the
+     * column's defautl value, or the value retrieved from the database.
+     */
     @Suppress("UNCHECKED_CAST", "USELESS_CAST")
     fun <T> Column<T>.lookup(): T = when {
         writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
@@ -231,9 +255,34 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         column.setValue(o, desc, toColumn(value))
     }
 
+    /**
+     * Registers a reference as a field of the child entity class, which returns a parent object of this `EntityClass`,
+     * for use in many-to-many relations.
+     *
+     * The reference should have been defined by the creation of a column using `reference()` on an intermediate table.
+     *
+     * @param table The intermediate table containing reference columns to both child and parent objects.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.User
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.City
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.UsersToCities
+     */
     infix fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(table: Table): InnerTableLink<ID, Entity<ID>, TID, Target> =
         InnerTableLink(table, this@Entity.id.table, this@via)
 
+    /**
+     * Registers a reference as a field of the child entity class, which returns a parent object of this `EntityClass`,
+     * for use in many-to-many relations.
+     *
+     * The reference should have been defined by the creation of a column using `reference()` on an intermediate table.
+     * This  should be used as the [targetColumn], while the id column of the table
+     * associated with this `EntityClass` should be used
+     *
+     * @param sourceColumn The intermediate table's reference column.
+     * @param targetColumn The id column of this [EntityClass.table].
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.User
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.City
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.UsersToCities
+     */
     fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(
         sourceColumn: Column<EntityID<ID>>,
         targetColumn: Column<EntityID<TID>>
@@ -255,6 +304,11 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         klass.removeFromCache(this)
     }
 
+    /**
+     * Sends all cached inserts or updates to the database and returns `true`.
+     *
+     * If no column-value mapping has been provided to [writeValues], this function returns `false`.
+     */
     open fun flush(batch: EntityBatchUpdate? = null): Boolean {
         if (isNewEntity()) {
             TransactionManager.current().entityCache.flushInserts(this.klass.table)
@@ -290,6 +344,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         return false
     }
 
+    /** Transfers column-value mappings from [writeValues] to [readValues] and clears the former once complete. */
     fun storeWrittenValues() {
         // move write values to read values
         if (_readValues != null) {
