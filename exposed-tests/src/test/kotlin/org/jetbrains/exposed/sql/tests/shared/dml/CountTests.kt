@@ -24,7 +24,7 @@ class CountTests : DatabaseTestsBase() {
 
     @Test
     fun `test that count() returns right value for Query with group by`() {
-        withCitiesAndUsers { _, user, userData ->
+        withCitiesAndUsers { _, _, userData ->
             val uniqueUsersInData = userData.select(userData.user_id).withDistinct().count()
             val sameQueryWithGrouping = userData.select(userData.value.max()).groupBy(userData.user_id).count()
             assertEquals(uniqueUsersInData, sameQueryWithGrouping)

@@ -446,6 +446,8 @@ class DefaultsTest : DatabaseTestsBase() {
                 val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
+
+                SchemaUtils.drop(testTable)
             }
         }
     }

@@ -169,5 +169,9 @@ class SchemaTests : DatabaseTestsBase() {
                 }
             }
         }
+
+        transaction {
+            SchemaUtils.dropSchema(schema)
+        }
     }
 }

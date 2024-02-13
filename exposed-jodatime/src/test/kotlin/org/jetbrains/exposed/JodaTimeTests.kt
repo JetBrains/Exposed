@@ -337,6 +337,8 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
                     // Assert equivalence in UTC when the same record is retrieved in different time zones
                     assertEqualDateTime(cairoNowRetrievedInUTCTimeZone, cairoNowRetrievedInTokyoTimeZone)
                 }
+
+                SchemaUtils.drop(testTable)
             }
         }
     }

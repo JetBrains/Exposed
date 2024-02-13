@@ -40,6 +40,8 @@ class ConnectionTests : DatabaseTestsBase() {
                 )
             }
             assertEquals(expected, columnMetadata)
+
+            SchemaUtils.drop(People)
         }
     }
 

@@ -50,7 +50,7 @@ class AliasesTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinSubQuery01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val expAlias = users.name.max().alias("m")
             val usersAlias = users.select(users.cityId, expAlias).groupBy(users.cityId).alias("u2")
             val resultRows = Join(users).join(usersAlias, JoinType.INNER, usersAlias[expAlias], users.name).selectAll().toList()
@@ -60,7 +60,7 @@ class AliasesTests : DatabaseTestsBase() {
 
     @Test
     fun testJoinSubQuery02() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val expAlias = users.name.max().alias("m")
 
             val query = Join(users).joinQuery(on = { it[expAlias].eq(users.name) }) {
@@ -76,7 +76,7 @@ class AliasesTests : DatabaseTestsBase() {
 
     @Test
     fun `test wrap row with Aliased table`() {
-        withTables(EntityTestsData.XTable) {
+        withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val entity1 = EntityTestsData.XEntity.new {
                 this.b1 = false
             }
@@ -94,7 +94,7 @@ class AliasesTests : DatabaseTestsBase() {
 
     @Test
     fun `test wrap row with Aliased query`() {
-        withTables(EntityTestsData.XTable) {
+        withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val entity1 = EntityTestsData.XEntity.new {
                 this.b1 = false
             }
@@ -112,7 +112,7 @@ class AliasesTests : DatabaseTestsBase() {
 
     @Test
     fun `test aliased expression with aliased query`() {
-        withTables(EntityTestsData.XTable) {
+        withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val dataToInsert = listOf(true, true, false, true)
             EntityTestsData.XTable.batchInsert(dataToInsert) {
                 this[EntityTestsData.XTable.b1] = it
@@ -140,7 +140,7 @@ class AliasesTests : DatabaseTestsBase() {
     }
 
     @Test fun `test alias for same table with join`() {
-        withTables(EntityTestsData.XTable) {
+        withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val table1Count = EntityTestsData.XTable.id.max().alias("t1max")
             val table2Count = EntityTestsData.XTable.id.max().alias("t2max")
             val t1Alias = EntityTestsData.XTable.select(table1Count).groupBy(EntityTestsData.XTable.b1).alias("t1")

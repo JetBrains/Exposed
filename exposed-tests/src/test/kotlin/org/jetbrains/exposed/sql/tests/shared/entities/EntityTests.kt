@@ -269,7 +269,7 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertChildWithoutFlush() {
-        withTables(Boards, Posts) {
+        withTables(Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title" } }
             Post.new { this.parent = parent } // first flush before referencing
             assertEquals(2L, Post.all().count())
@@ -278,7 +278,7 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertNonChildWithoutFlush() {
-        withTables(Boards, Posts) {
+        withTables(Boards, Posts, Categories) {
             val board = Board.new { name = "irrelevant" }
             Post.new { this.board = board } // first flush before referencing
             assertEquals(1, flushCache().size)
@@ -287,7 +287,7 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testThatQueriesWithinOtherQueryIteratorWorksFine() {
-        withTables(Boards, Posts) {
+        withTables(Boards, Posts, Categories) {
             val board1 = Board.new { name = "irrelevant" }
             val board2 = Board.new { name = "relevant" }
             val post1 = Post.new { board = board1 }
@@ -301,7 +301,7 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertChildWithFlush() {
-        withTables(Boards, Posts) {
+        withTables(Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title" } }
             flushCache()
             assertNotNull(parent.id._value)
@@ -312,7 +312,7 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertChildWithChild() {
-        withTables(Boards, Posts) {
+        withTables(Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title1" } }
             val child1 = Post.new {
                 this.parent = parent
@@ -325,7 +325,7 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testOptionalReferrersWithDifferentKeys() {
-        withTables(Boards, Posts) {
+        withTables(Boards, Posts, Categories) {
             val board = Board.new { name = "irrelevant" }
             val post1 = Post.new {
                 this.board = board
@@ -557,7 +557,7 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testNonEntityIdReference() {
-        withTables(Posts) {
+        withTables(Posts, Boards, Categories) {
             val category1 = Category.new {
                 title = "cat1"
             }
@@ -581,7 +581,7 @@ class EntityTests : DatabaseTestsBase() {
     // https://github.com/JetBrains/Exposed/issues/439
     @Test
     fun callLimitOnRelationDoesntMutateTheCachedValue() {
-        withTables(Posts) {
+        withTables(Posts, Boards, Categories) {
             val category1 = Category.new {
                 title = "cat1"
             }
@@ -621,7 +621,7 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun `test what update of inserted entities goes before an insert`() {
-        withTables(Categories, Posts) {
+        withTables(Categories, Posts, Boards) {
             val category1 = Category.new {
                 title = "category1"
             }

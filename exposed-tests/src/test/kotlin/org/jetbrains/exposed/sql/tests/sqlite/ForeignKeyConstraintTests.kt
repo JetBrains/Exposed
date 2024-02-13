@@ -40,7 +40,6 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     }
 
     private fun Transaction.testOnDeleteSetDefault() {
-        SchemaUtils.drop(Category, Item)
         SchemaUtils.create(Category, Item)
 
         Category.insert {
@@ -74,6 +73,8 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             DEFAULT_CATEGORY_ID,
             Item.selectAll().where { Item.id eq tabboulehId }.single()[Item.categoryId]
         )
+
+        SchemaUtils.drop(Category, Item)
     }
 
     @Test
@@ -141,7 +142,6 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        SchemaUtils.drop(country, city)
         SchemaUtils.create(country, city)
 
         val lebanonId = 0
@@ -168,6 +168,8 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
                 }
             }
         }
+
+        SchemaUtils.drop(country, city)
     }
 
     @Test

@@ -574,6 +574,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
             assertTrue(T1.exists())
             assertTrue(T2.exists())
+
+            SchemaUtils.drop(T1, T2)
         }
     }
 

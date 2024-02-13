@@ -432,6 +432,8 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
                 // Reset to original time zone as set up in DatabaseTestsBase init block
                 java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
                 assertEquals("UTC", ZoneId.systemDefault().id)
+
+                SchemaUtils.drop(testTable)
             }
         }
     }

@@ -31,7 +31,7 @@ class DeleteTests : DatabaseTestsBase() {
 
     @Test
     fun testDelete01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, userData ->
             userData.deleteAll()
             val userDataExists = userData.selectAll().any()
             assertEquals(false, userDataExists)

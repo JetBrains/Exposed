@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 class GroupByTests : DatabaseTestsBase() {
     @Test
     fun testGroupBy01() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, _ ->
             val cAlias = users.id.count().alias("c")
             ((cities innerJoin users).select(cities.name, users.id.count(), cAlias).groupBy(cities.name)).forEach {
                 val cityName = it[cities.name]
@@ -26,7 +26,7 @@ class GroupByTests : DatabaseTestsBase() {
                     "Munich" -> assertEquals(2, userCount)
                     "Prague" -> assertEquals(0, userCount)
                     "St. Petersburg" -> assertEquals(1, userCount)
-                    else -> error("Unknow city $cityName")
+                    else -> error("Unknown city $cityName")
                 }
                 assertEquals(userCount, userCountAlias)
             }
@@ -35,7 +35,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy02() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, _ ->
             val r = (cities innerJoin users).select(cities.name, users.id.count())
                 .groupBy(cities.name)
                 .having { users.id.count() eq 1 }
@@ -49,7 +49,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy03() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, _ ->
             val maxExpr = cities.id.max()
             val r = (cities innerJoin users).select(cities.name, users.id.count(), maxExpr)
                 .groupBy(cities.name)
@@ -77,7 +77,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy04() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, users, _ ->
             val r = (cities innerJoin users).select(cities.name, users.id.count(), cities.id.max())
                 .groupBy(cities.name)
                 .having { users.id.count() lessEq 42L }
@@ -100,7 +100,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy05() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { _, users, _ ->
             val maxNullableCityId = users.cityId.max()
 
             users.select(maxNullableCityId)
@@ -119,7 +119,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy06() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, _, _ ->
             val maxNullableId = cities.id.max()
 
             cities.select(maxNullableId)
@@ -138,7 +138,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupBy07() {
-        withCitiesAndUsers { cities, users, userData ->
+        withCitiesAndUsers { cities, _, _ ->
             val avgIdExpr = cities.id.avg()
             val avgId = BigDecimal.valueOf(cities.selectAll().map { it[cities.id] }.average())
 
