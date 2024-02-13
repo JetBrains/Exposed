@@ -258,4 +258,30 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             assertContentEquals(doublesInput, ArrayTestDao.all().single().doubles)
         }
     }
+
+    @Test
+    fun testArrayColumnWithAllAnyOps() {
+        withTables(excludeSettings = arrayTypeUnsupportedDb, ArrayTestTable) {
+            val numInput = listOf(1, 2, 3)
+            val id1 = ArrayTestTable.insertAndGetId {
+                it[numbers] = numInput
+                it[doubles] = null
+            }
+
+            val result1 = ArrayTestTable.select(ArrayTestTable.id).where {
+                ArrayTestTable.id eq anyFrom(ArrayTestTable.numbers)
+            }
+            assertEquals(id1, result1.single()[ArrayTestTable.id])
+
+            val result2 = ArrayTestTable.select(ArrayTestTable.id).where {
+                ArrayTestTable.id eq anyFrom(ArrayTestTable.numbers.slice(2, 3))
+            }
+            assertTrue(result2.toList().isEmpty())
+
+            val result3 = ArrayTestTable.select(ArrayTestTable.id).where {
+                ArrayTestTable.id lessEq allFrom(ArrayTestTable.numbers)
+            }
+            assertEquals(id1, result3.single()[ArrayTestTable.id])
+        }
+    }
 }

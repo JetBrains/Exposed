@@ -1790,9 +1790,11 @@ public final class org/jetbrains/exposed/sql/SQLExpressionBuilderKt {
 	public static final fun CustomLongFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
 	public static final fun CustomStringFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
 	public static final fun allFrom (Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/Op;
+	public static final fun allFrom (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun allFrom (Lorg/jetbrains/exposed/sql/Table;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun allFrom ([Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun anyFrom (Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/Op;
+	public static final fun anyFrom (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun anyFrom (Lorg/jetbrains/exposed/sql/Table;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun anyFrom ([Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun avg (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;I)Lorg/jetbrains/exposed/sql/Avg;
@@ -2689,6 +2691,12 @@ public abstract class org/jetbrains/exposed/sql/ops/AllAnyFromBaseOp : org/jetbr
 	public final fun isAny ()Z
 	public abstract fun registerSubSearchArgument (Lorg/jetbrains/exposed/sql/QueryBuilder;Ljava/lang/Object;)V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/sql/ops/AllAnyFromExpressionOp : org/jetbrains/exposed/sql/ops/AllAnyFromBaseOp {
+	public fun <init> (ZLorg/jetbrains/exposed/sql/Expression;)V
+	public synthetic fun registerSubSearchArgument (Lorg/jetbrains/exposed/sql/QueryBuilder;Ljava/lang/Object;)V
+	public fun registerSubSearchArgument (Lorg/jetbrains/exposed/sql/QueryBuilder;Lorg/jetbrains/exposed/sql/Expression;)V
 }
 
 public final class org/jetbrains/exposed/sql/ops/AllAnyFromSubQueryOp : org/jetbrains/exposed/sql/ops/AllAnyFromBaseOp {
