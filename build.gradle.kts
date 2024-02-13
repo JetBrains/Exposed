@@ -1,6 +1,6 @@
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.report.ReportMergeTask
-import org.jetbrains.exposed.gradle.*
+import org.jetbrains.exposed.gradle.configureDetekt
+import org.jetbrains.exposed.gradle.configurePublishing
+import org.jetbrains.exposed.gradle.testDb
 
 plugins {
     kotlin("jvm") apply true
@@ -15,8 +15,6 @@ repositories {
 }
 
 allprojects {
-    configureDetekt()
-
     if (this.name != "exposed-tests" && this.name != "exposed-bom" && this != rootProject) {
         configurePublishing()
     }
@@ -26,19 +24,11 @@ apiValidation {
     ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom"))
 }
 
-val reportMerge by tasks.registering(ReportMergeTask::class) {
-    output.set(rootProject.buildDir.resolve("reports/detekt/exposed.xml"))
-}
-
 subprojects {
+    configureDetekt()
+
     dependencies {
         detektPlugins(rootProject.libs.detekt.formatting)
-    }
-    tasks.withType<Detekt>().configureEach detekt@{
-        finalizedBy(reportMerge)
-        reportMerge.configure {
-            input.from(this@detekt.xmlReportFile)
-        }
     }
 }
 
