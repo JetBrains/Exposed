@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql.ops
 
 import org.jetbrains.exposed.sql.*
-import kotlin.reflect.KClass
 
 /**
  * Represents an SQL operator that checks a value, based on the preceding comparison operator,
@@ -46,16 +45,10 @@ class AllAnyFromSubQueryOp<T>(
 class AllAnyFromArrayOp<T : Any>(
     isAny: Boolean,
     array: Array<T>,
-    private val klass: KClass<T>,
-    private val delegateType: ColumnType? = null
+    private val delegateType: ColumnType
 ) : AllAnyFromBaseOp<T, Array<T>>(isAny, array) {
     override fun QueryBuilder.registerSubSearchArgument(subSearch: Array<T>) {
-        // emptyArray() without type info generates ARRAY[]
-        val default = if (subSearch.isEmpty()) TextColumnType() else null
-        registerArgument(
-            ArrayColumnType(delegateType ?: resolveColumnType(klass, default)),
-            subSearch
-        )
+        registerArgument(ArrayColumnType(delegateType), subSearch)
     }
 }
 
@@ -69,5 +62,20 @@ class AllAnyFromTableOp<T>(isAny: Boolean, table: Table) : AllAnyFromBaseOp<T, T
     override fun QueryBuilder.registerSubSearchArgument(subSearch: Table) {
         +"TABLE "
         +subSearch.tableName
+    }
+}
+
+/**
+ * Represents an SQL operator that checks a value, based on the preceding comparison operator,
+ * against a collection of values returned by the provided expression.
+ *
+ * **Note** This operation is only supported by PostgreSQL and H2 dialects.
+ */
+class AllAnyFromExpressionOp<E, T : List<E>?>(
+    isAny: Boolean,
+    expression: Expression<T>
+) : AllAnyFromBaseOp<E, Expression<T>>(isAny, expression) {
+    override fun QueryBuilder.registerSubSearchArgument(subSearch: Expression<T>) {
+        append(subSearch)
     }
 }

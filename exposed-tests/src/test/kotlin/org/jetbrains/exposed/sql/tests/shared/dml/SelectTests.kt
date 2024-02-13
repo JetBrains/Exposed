@@ -354,8 +354,7 @@ class SelectTests : DatabaseTestsBase() {
         withDb(testDBsSupportingAnyAndAllFromArrays) {
             withSales { _, sales ->
                 val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
-                val r = sales.selectAll()
-                    .where { sales.amount greaterEq anyFrom(amounts) }
+                val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
                     .orderBy(sales.amount)
                     .map { it[sales.product] }
                 assertEquals(6, r.size)
@@ -405,8 +404,7 @@ class SelectTests : DatabaseTestsBase() {
         withDb(testDBsSupportingAnyAndAllFromArrays) {
             withSales { _, sales ->
                 val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
-                val r = sales.selectAll()
-                    .where { sales.amount greaterEq allFrom(amounts) }.toList()
+                val r = sales.selectAll().where { sales.amount greaterEq allFrom(amounts) }.toList()
                 assertEquals(3, r.size)
                 r.forEach { assertEquals("coffee", it[sales.product]) }
             }

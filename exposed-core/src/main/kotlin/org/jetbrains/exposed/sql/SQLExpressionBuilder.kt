@@ -2,6 +2,7 @@
 
 package org.jetbrains.exposed.sql
 
+import kotlinx.coroutines.scheduling.DefaultIoScheduler.default
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
@@ -121,12 +122,20 @@ fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, 
  *
  * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
  * resolved according to the internal mapping of the element's type in [resolveColumnType].
+ *
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> =
-    AllAnyFromArrayOp(true, array, T::class, delegateType)
+inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> {
+    // emptyArray() without type info generates ARRAY[]
+    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
+    return AllAnyFromArrayOp(true, array, columnType)
+}
 
 /** Returns this table wrapped in the `ANY` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
 fun <T> anyFrom(table: Table): Op<T> = AllAnyFromTableOp(true, table)
+
+/** Returns this expression wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <E, T : List<E>?> anyFrom(expression: Expression<T>): Op<E> = AllAnyFromExpressionOp(true, expression)
 
 /** Returns this subquery wrapped in the `ALL` operator. This function is not supported by the SQLite dialect. */
 fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false, subQuery)
@@ -136,12 +145,20 @@ fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false,
  *
  * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
  * resolved according to the internal mapping of the element's type in [resolveColumnType].
+ *
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> =
-    AllAnyFromArrayOp(false, array, T::class, delegateType)
+inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> {
+    // emptyArray() without type info generates ARRAY[]
+    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
+    return AllAnyFromArrayOp(false, array, columnType)
+}
 
 /** Returns this table wrapped in the `ALL` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
 fun <T> allFrom(table: Table): Op<T> = AllAnyFromTableOp(false, table)
+
+/** Returns this expression wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects. */
+fun <E, T : List<E>?> allFrom(expression: Expression<T>): Op<E> = AllAnyFromExpressionOp(false, expression)
 
 /**
  * Returns the array element stored at the one-based [index] position, or `null` if the stored array itself is null.
