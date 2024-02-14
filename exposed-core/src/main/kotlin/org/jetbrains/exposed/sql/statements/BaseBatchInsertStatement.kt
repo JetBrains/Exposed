@@ -88,7 +88,9 @@ abstract class BaseBatchInsertStatement(
 
     override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
-            val nullableColumns by lazy { allColumnsInDataSet().filter { it.columnType.nullable } }
+            val nullableColumns by lazy {
+                allColumnsInDataSet().filter { it.columnType.nullable && !it.isDatabaseGenerated }
+            }
             data.map { single ->
                 val valuesAndDefaults = super.valuesAndDefaults(single) as MutableMap
                 val nullableMap = (nullableColumns - valuesAndDefaults.keys).associateWith { null }

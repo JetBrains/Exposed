@@ -201,7 +201,7 @@ open class InsertStatement<Key : Any>(
 
     protected open var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
-            val nullableColumns = table.columns.filter { it.columnType.nullable }
+            val nullableColumns = table.columns.filter { it.columnType.nullable && !it.isDatabaseGenerated }
             val valuesAndDefaults = valuesAndDefaults() as MutableMap
             valuesAndDefaults.putAll((nullableColumns - valuesAndDefaults.keys).associateWith { null })
             val result = valuesAndDefaults.toList().sortedBy { it.first }
