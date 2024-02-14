@@ -21,6 +21,7 @@ import java.util.*
 private val DEFAULT_DATE_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT) }
 private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS").withLocale(Locale.ROOT) }
 private val MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT) }
+private val MYSQL_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss").withLocale(Locale.ROOT) }
 private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS") }
 private val SQLITE_DATE_STRING_FORMATTER by lazy { ISODateTimeFormat.yearMonthDay() }
 
@@ -37,8 +38,7 @@ private val ORACLE_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
 }
 
 internal val MYSQL_DATE_TIME_WITH_TIME_ZONE_AS_DEFAULT_FORMATTER by lazy {
-    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
-        .withLocale(Locale.ROOT)
+    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSS").withLocale(Locale.ROOT)
 }
 
 private val DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
@@ -78,10 +78,13 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
+        val dialect = currentDialect
         return if (time) {
             when {
-                (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ->
+                (dialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ->
                     "'${MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
+                dialect is MysqlDialect ->
+                    "'${MYSQL_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
                 else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(dateTime.toDateTime(DateTimeZone.getDefault()))}'"
             }
         } else {
@@ -113,34 +116,39 @@ class DateColumnType(val time: Boolean) : ColumnType(), IDateColumnType {
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
         // Since MySQL ConnectorJ 8.0.23, driver returns LocalDateTime instead of String for DateTime columns.
+        val dialect = currentDialect
         return when {
-            time && currentDialect is MysqlDialect -> {
+            time && dialect is MysqlDialect -> {
                 rs.getObject(index, java.time.LocalDateTime::class.java)
             }
-            time && currentDialect is OracleDialect -> rs.getObject(index, java.sql.Timestamp::class.java)
+            time && dialect is OracleDialect -> rs.getObject(index, java.sql.Timestamp::class.java)
             else -> super.readObject(rs, index)
         }
     }
 
-    override fun notNullValueToDB(value: Any): Any = when {
-        value is DateTime && time && currentDialect is SQLiteDialect -> SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.print(value)
-        value is DateTime && time -> java.sql.Timestamp(value.millis)
-        value is DateTime && currentDialect is SQLiteDialect -> DEFAULT_DATE_STRING_FORMATTER.print(value)
-        value is DateTime -> java.sql.Date(value.millis)
-        else -> value
+    override fun notNullValueToDB(value: Any): Any {
+        val dialect = currentDialect
+        return when {
+            value is DateTime && time && dialect is SQLiteDialect -> SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.print(value)
+            value is DateTime && time -> java.sql.Timestamp(value.millis)
+            value is DateTime && dialect is SQLiteDialect -> DEFAULT_DATE_STRING_FORMATTER.print(value)
+            value is DateTime -> java.sql.Date(value.millis)
+            else -> value
+        }
     }
 
     override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
         is DateTime -> {
+            val dialect = currentDialect
             when {
-                currentDialect is PostgreSQLDialect -> {
+                dialect is PostgreSQLDialect -> {
                     if (time) {
                         "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
                     } else {
                         "'${DEFAULT_DATE_STRING_FORMATTER.print(value)}'::date"
                     }
                 }
-                (currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
+                (dialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
                     if (time) {
                         "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}'"
                     } else {
@@ -224,12 +232,13 @@ class DateTimeWithTimeZoneColumnType : ColumnType(), IDateColumnType {
 
     override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
         is DateTime -> {
+            val dialect = currentDialect
             when {
-                currentDialect is PostgreSQLDialect ->
+                dialect is PostgreSQLDialect ->
                     "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0')}+00'::timestamp with time zone"
-                (currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                (dialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                     "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0')}'"
-                currentDialect is MysqlDialect -> "'${MYSQL_DATE_TIME_WITH_TIME_ZONE_AS_DEFAULT_FORMATTER.print(value)}'"
+                dialect is MysqlDialect -> "'${MYSQL_DATE_TIME_WITH_TIME_ZONE_AS_DEFAULT_FORMATTER.print(value)}'"
                 else -> super.nonNullValueAsDefaultString(value)
             }
         }

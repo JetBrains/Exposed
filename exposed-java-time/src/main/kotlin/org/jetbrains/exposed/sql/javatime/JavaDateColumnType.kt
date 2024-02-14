@@ -31,6 +31,12 @@ private val MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER by lazy {
         Locale.ROOT
     ).withZone(ZoneId.systemDefault())
 }
+private val MYSQL_DATE_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss",
+        Locale.ROOT
+    ).withZone(ZoneId.systemDefault())
+}
 
 internal val ORACLE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
@@ -186,7 +192,8 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
         return when {
             dialect is SQLiteDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
             dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "'${MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            (dialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "'${MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            dialect is MysqlDialect -> "'${MYSQL_DATE_TIME_STRING_FORMATTER.format(instant)}'"
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
     }
@@ -222,10 +229,11 @@ class JavaLocalDateTimeColumnType : ColumnType(), IDateColumnType {
 
     override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
         is LocalDateTime -> {
+            val dialect = currentDialect
             when {
-                currentDialect is PostgreSQLDialect ->
+                dialect is PostgreSQLDialect ->
                     "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
-                (currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                (dialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                     "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'"
                 else -> super.nonNullValueAsDefaultString(value)
             }
@@ -261,7 +269,8 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
-        val formatter = if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+        val dialect = currentDialect
+        val formatter = if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
             ORACLE_TIME_STRING_FORMATTER
         } else {
             DEFAULT_TIME_STRING_FORMATTER
@@ -276,7 +285,8 @@ class JavaLocalTimeColumnType : ColumnType(), IDateColumnType {
         is Int -> longToLocalTime(value.toLong())
         is Long -> longToLocalTime(value)
         is String -> {
-            val formatter = if (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            val dialect = currentDialect
+            val formatter = if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
                 formatterForDateString(value)
             } else {
                 DEFAULT_TIME_STRING_FORMATTER
@@ -327,11 +337,14 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
             else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
         }
 
+        val dialect = currentDialect
         return when {
-            currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+            dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                 "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ->
+            (dialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ->
                 "'${MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            dialect is MysqlDialect ->
+                "'${MYSQL_DATE_TIME_STRING_FORMATTER.format(instant)}'"
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
     }
@@ -356,10 +369,11 @@ class JavaInstantColumnType : ColumnType(), IDateColumnType {
 
     override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
         is Instant -> {
+            val dialect = currentDialect
             when {
-                currentDialect is PostgreSQLDialect ->
+                dialect is PostgreSQLDialect ->
                     "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
-                currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                     "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'"
                 else -> super.nonNullValueAsDefaultString(value)
             }
@@ -424,12 +438,13 @@ class JavaOffsetDateTimeColumnType : ColumnType(), IDateColumnType {
 
     override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
         is OffsetDateTime -> {
+            val dialect = currentDialect
             when {
-                currentDialect is PostgreSQLDialect -> // +00 appended because PostgreSQL stores it in UTC time zone
+                dialect is PostgreSQLDialect -> // +00 appended because PostgreSQL stores it in UTC time zone
                     "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}+00'::timestamp with time zone"
-                currentDialect is H2Dialect && currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                dialect is H2Dialect && dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                     "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
-                currentDialect is MysqlDialect -> "'${value.format(MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
+                dialect is MysqlDialect -> "'${value.format(MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
                 else -> super.nonNullValueAsDefaultString(value)
             }
         }
