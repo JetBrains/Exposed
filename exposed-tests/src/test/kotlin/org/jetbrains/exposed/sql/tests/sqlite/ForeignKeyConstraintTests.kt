@@ -140,6 +140,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
+        SchemaUtils.drop(country, city)
         SchemaUtils.create(country, city)
 
         val lebanonId = 0
@@ -166,8 +167,6 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
                 }
             }
         }
-
-        SchemaUtils.drop(country, city)
     }
 
     @Test

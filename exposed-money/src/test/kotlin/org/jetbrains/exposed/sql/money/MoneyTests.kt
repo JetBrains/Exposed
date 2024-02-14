@@ -43,7 +43,7 @@ open class MoneyBaseTest : DatabaseTestsBase() {
         val toInsert = Money.of(BigDecimal.valueOf(12345678901), "CZK")
         withTables(excludeSettings = listOf(TestDB.SQLITE), Account) {
             expectException<ExposedSQLException> {
-                Account.insertAndGetId {
+                val accountID = Account.insertAndGetId {
                     it[composite_money] = toInsert
                 }
             }

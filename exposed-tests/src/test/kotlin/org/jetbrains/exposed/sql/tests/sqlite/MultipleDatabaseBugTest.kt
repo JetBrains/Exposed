@@ -39,7 +39,7 @@ class MultipleDatabaseBugTest {
         Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
         val filename = folder.newFile("foo.db").absolutePath
         val ds = SQLiteDataSource()
-        ds.url = "jdbc:sqlite:$filename"
+        ds.url = "jdbc:sqlite:" + filename
         db = Database.connect(ds)
 
         // SQLite supports only TRANSACTION_SERIALIZABLE and TRANSACTION_READ_UNCOMMITTED

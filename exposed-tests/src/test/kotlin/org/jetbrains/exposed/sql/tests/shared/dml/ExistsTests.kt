@@ -15,7 +15,7 @@ import org.junit.Test
 class ExistsTests : DatabaseTestsBase() {
     @Test
     fun testExists01() {
-        withCitiesAndUsers { _, users, userData ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().where {
                 exists(userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%here%")))
             }.toList()
@@ -49,7 +49,7 @@ class ExistsTests : DatabaseTestsBase() {
 
     @Test
     fun testExists02() {
-        withCitiesAndUsers { _, users, userData ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = users
                 .selectAll()
                 .where {
@@ -68,7 +68,7 @@ class ExistsTests : DatabaseTestsBase() {
 
     @Test
     fun testExists03() {
-        withCitiesAndUsers { _, users, userData ->
+        withCitiesAndUsers { cities, users, userData ->
             val r = users.selectAll().where {
                 exists(userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%here%"))) or
                     exists(userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%Sergey")))

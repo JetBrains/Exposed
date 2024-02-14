@@ -20,7 +20,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
                 assertTrue(DMLTestsData.Cities.selectAll().empty())
 
                 DMLTestsData.Cities.insert {
-                    it[name] = "city1"
+                    it[DMLTestsData.Cities.name] = "city1"
                 }
 
                 assertEquals(1L, DMLTestsData.Cities.selectAll().count())
@@ -29,13 +29,13 @@ class NestedTransactionsTest : DatabaseTestsBase() {
 
                 transaction {
                     DMLTestsData.Cities.insert {
-                        it[name] = "city2"
+                        it[DMLTestsData.Cities.name] = "city2"
                     }
                     assertEqualLists(listOf("city1", "city2"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
 
                     transaction {
                         DMLTestsData.Cities.insert {
-                            it[name] = "city3"
+                            it[DMLTestsData.Cities.name] = "city3"
                         }
                         assertEqualLists(listOf("city1", "city2", "city3"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
                     }

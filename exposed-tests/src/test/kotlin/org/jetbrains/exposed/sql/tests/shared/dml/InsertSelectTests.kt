@@ -10,7 +10,7 @@ import java.math.BigDecimal
 class InsertSelectTests : DatabaseTestsBase() {
     @Test
     fun testInsertSelect01() {
-        withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, _ ->
+        withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, userData ->
             val nextVal = cities.id.autoIncColumnType?.nextValExpression
             val substring = users.name.substring(1, 2)
             val slice = listOfNotNull(nextVal, substring)
@@ -25,7 +25,7 @@ class InsertSelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertSelect02() {
-        withCitiesAndUsers { _, _, userData ->
+        withCitiesAndUsers { cities, users, userData ->
             val allUserData = userData.selectAll().count()
             userData.insert(userData.select(userData.user_id, userData.comment, intParam(42)))
 
@@ -52,7 +52,7 @@ class InsertSelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertSelect04() {
-        withCitiesAndUsers { _, users, _ ->
+        withCitiesAndUsers { cities, users, userData ->
             val userCount = users.selectAll().count()
             users.insert(
                 users.select(stringParam("Foo"), Random().castTo<String>(VarCharColumnType()).substring(1, 10)),
@@ -65,7 +65,7 @@ class InsertSelectTests : DatabaseTestsBase() {
 
     @Test
     fun `insert-select with same columns in a query`() {
-        withCitiesAndUsers { _, users, _ ->
+        withCitiesAndUsers { cities, users, userData ->
             val fooParam = stringParam("Foo")
             users.insert(users.select(fooParam, fooParam).limit(1), columns = listOf(users.name, users.id))
             assertEquals(1, users.selectAll().where { users.name eq "Foo" }.count())
