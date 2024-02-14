@@ -162,6 +162,7 @@ class Column<T>(
         it.foreignKey = this.foreignKey
         it.defaultValueFun = this.defaultValueFun
         it.dbDefaultValue = this.dbDefaultValue
+        it.isDatabaseGenerated = this.isDatabaseGenerated
     }
 
     override fun compareTo(other: Column<*>): Int = comparator.compare(this, other)

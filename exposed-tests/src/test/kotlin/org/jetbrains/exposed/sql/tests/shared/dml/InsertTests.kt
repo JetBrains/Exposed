@@ -9,9 +9,11 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
+import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentTestDB
+import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
@@ -610,6 +612,66 @@ class InsertTests : DatabaseTestsBase() {
             }
 
             assertEquals(1, numInserted)
+        }
+    }
+
+    @Test
+    fun testInsertIntoNullableGeneratedColumn() {
+        val generatedTable = object : IntIdTable("generated_table") {
+            val amount = integer("amount").nullable()
+            val computedAmount = integer("computed_amount").nullable().databaseGenerated()
+        }
+
+        withDb { testDb ->
+            try {
+                if (testDb == TestDB.ORACLE || testDb == TestDB.H2_ORACLE) {
+                    // create sequence for primary key
+                    exec(generatedTable.ddl.first(), explicitStatementType = StatementType.CREATE)
+                }
+
+                // Exposed does not currently support creation of generated columns
+                val computedName = generatedTable.computedAmount.name.inProperCase()
+                val computedType = generatedTable.computedAmount.columnType.sqlType()
+                val computation = "${generatedTable.amount.name.inProperCase()} + 1"
+                val generatedColumnDescription = when (testDb) {
+                    TestDB.SQLSERVER -> "$computedName AS ($computation)"
+                    TestDB.ORACLE, in TestDB.allH2TestDB -> "$computedName $computedType GENERATED ALWAYS AS ($computation)"
+                    else -> "$computedName $computedType GENERATED ALWAYS AS ($computation) STORED"
+                }
+                exec(
+                    """CREATE TABLE ${addIfNotExistsIfSupported()}${generatedTable.tableName.inProperCase()} (
+                        ${generatedTable.id.descriptionDdl()},
+                        ${generatedTable.amount.descriptionDdl()},
+                        $generatedColumnDescription
+                        )
+                    """.trimIndent(),
+                    explicitStatementType = StatementType.CREATE
+                )
+
+                assertFailAndRollback("Generated columns are auto-derived and read-only") {
+                    generatedTable.insert {
+                        it[amount] = 99
+                        it[computedAmount] = 100
+                    }
+                }
+
+                generatedTable.insert {
+                    it[amount] = 99
+                }
+
+                val result1 = generatedTable.selectAll().single()
+                assertEquals(result1[generatedTable.amount]?.plus(1), result1[generatedTable.computedAmount])
+
+                generatedTable.insert {
+                    it[amount] = null
+                }
+
+                val result2 = generatedTable.selectAll().where { generatedTable.amount.isNull() }.single()
+                assertNull(result2[generatedTable.amount])
+                assertNull(result2[generatedTable.computedAmount])
+            } finally {
+                SchemaUtils.drop(generatedTable)
+            }
         }
     }
 }

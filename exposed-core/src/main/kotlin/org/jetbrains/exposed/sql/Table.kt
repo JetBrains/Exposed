@@ -1112,6 +1112,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         newColumn.defaultValueFun = defaultValueFun
         @Suppress("UNCHECKED_CAST")
         newColumn.dbDefaultValue = dbDefaultValue as Expression<T?>?
+        newColumn.isDatabaseGenerated = isDatabaseGenerated
         newColumn.columnType.nullable = true
         return replaceColumn(this, newColumn)
     }
