@@ -1446,7 +1446,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test explicit entity constructor`() {
+    fun testExplicitEntityConstructor() {
         var createBoardCalled = false
         fun createBoard(id: EntityID<Int>): Board {
             createBoardCalled = true
