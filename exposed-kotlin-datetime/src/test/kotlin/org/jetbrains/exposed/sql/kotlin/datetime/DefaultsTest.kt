@@ -33,7 +33,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 
 fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

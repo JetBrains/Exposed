@@ -1594,7 +1594,6 @@ class EntityTests : DatabaseTestsBase() {
             }
             transaction(db) {
                 try {
-                    SchemaUtils.drop(Dishes, Countries)
                     SchemaUtils.create(Countries, Dishes)
 
                     val lebanonId = Countries.insertAndGetId {
@@ -1664,7 +1663,6 @@ class EntityTests : DatabaseTestsBase() {
             }
             transaction(db) {
                 try {
-                    SchemaUtils.drop(Orders, Customers)
                     SchemaUtils.create(Customers, Orders)
 
                     val customer1 = Customer.new {

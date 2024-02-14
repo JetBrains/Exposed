@@ -664,7 +664,6 @@ class DDLTests : DatabaseTestsBase() {
                     }
                 }
                 else -> {
-                    SchemaUtils.drop(testTable)
                     SchemaUtils.create(testTable)
 
                     testTable.insert {
@@ -1139,14 +1138,12 @@ class DDLTests : DatabaseTestsBase() {
         val one = prepareSchemaForTest("one")
         val two = prepareSchemaForTest("two")
         withSchemas(two, one) {
-            SchemaUtils.drop(TableFromSchemeOne)
             SchemaUtils.create(TableFromSchemeOne)
 
             if (currentDialectTest is OracleDialect) {
                 exec("GRANT REFERENCES ON ${TableFromSchemeOne.tableName} to TWO")
             }
 
-            SchemaUtils.drop(TableFromSchemeTwo)
             SchemaUtils.create(TableFromSchemeTwo)
             val idFromOne = TableFromSchemeOne.insertAndGetId { }
 
