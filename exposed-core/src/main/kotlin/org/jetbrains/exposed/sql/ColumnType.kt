@@ -1080,6 +1080,15 @@ class ArrayColumnType(
         else -> super.nonNullValueToString(value)
     }
 
+    override fun nonNullValueAsDefaultString(value: Any): String = when (value) {
+        is List<*> -> {
+            val prefix = if (currentDialect is H2Dialect) "ARRAY [" else "ARRAY["
+            value.joinToString(",", prefix, "]") { delegate.valueAsDefaultString(it) }
+        }
+        is Array<*> -> nonNullValueAsDefaultString(value.toList())
+        else -> super.nonNullValueAsDefaultString(value)
+    }
+
     override fun readObject(rs: ResultSet, index: Int): Any? = rs.getArray(index)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
