@@ -302,6 +302,13 @@ StarWarsFilms.selectAll().where {
 
 `notInList` is available to check for expressions that are not equal to any elements in the provided collection.
 
+In addition to the `IN` operator, the `ANY` and `ALL` operators are available with any preceding comparison operator:
+```kotlin
+StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq anyFrom(arrayOf(6, 4)) }
+```
+
+`anyFrom()` and `allFrom()` also accept subqueries, tables, and array expressions as arguments.
+
 ## Count
 
 `count()` is a method of `Query` that is used like in the example below:
@@ -661,9 +668,9 @@ is no defined primary key, the first unique index is used. If there are no uniqu
 differently, so it is strongly advised that keys are defined to avoid unexpected results.
 
 <note>
-Databases that do not support a specific Insert or Update command implement the standard `MERGE INTO ... USING` statement with aliases and a derived table column list. 
+Databases that do not support a specific Insert or Update command implement the standard <code>MERGE INTO ... USING</code> statement with aliases and a derived table column list. 
 These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode). 
-Any columns defined as key constraints (to be used in the `ON` clause) must be included in the statement block to avoid throwing an error.
+Any columns defined as key constraints (to be used in the <code>ON</code> clause) must be included in the statement block to avoid throwing an error.
 </note>
 
 ## Replace
@@ -709,6 +716,6 @@ Also, the constraints used to assess a violation are limited to the primary key 
 The values specified in the statement block will be used for the insert statement and any omitted columns are set to their default values, if applicable.
 
 <note>
-In the example above, if the original row was inserted with a user-defined `rating`, then `replace()` was executed with a block that omitted the `rating` column, 
+In the example above, if the original row was inserted with a user-defined <code>rating</code>, then <code>replace()</code> was executed with a block that omitted the <code>rating</code> column, 
 the newly inserted row would store the default rating value. This is because the old row was completely deleted first.
 </note>
