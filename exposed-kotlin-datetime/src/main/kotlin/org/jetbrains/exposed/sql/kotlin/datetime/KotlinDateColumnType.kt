@@ -24,6 +24,7 @@ private val DEFAULT_TIME_ZONE by lazy {
 private val DEFAULT_DATE_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
+
 private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
@@ -52,6 +53,37 @@ private val ORACLE_TIME_STRING_FORMATTER by lazy {
         Locale.ROOT
     ).withZone(ZoneId.of("UTC"))
 }
+private val DEFAULT_TIME_STRING_FORMATTER by lazy {
+    DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
+}
+
+// Example result: 2023-07-07 14:42:29.343+02:00 or 2023-07-07 12:42:29.343Z
+private val SQLITE_OFFSET_DATE_TIME_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSS[XXX]",
+        Locale.ROOT
+    )
+}
+
+// For UTC time zone, MySQL rejects the 'Z' and will only accept the offset '+00:00'
+private val MYSQL_OFFSET_DATE_TIME_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSSSSS[xxx]",
+        Locale.ROOT
+    )
+}
+
+// Example result: 2023-07-07 14:42:29.343789 +02:00
+private val ORACLE_OFFSET_DATE_TIME_FORMATTER by lazy {
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss.SSSSSS [xxx]",
+        Locale.ROOT
+    )
+}
+
+private val DEFAULT_OFFSET_DATE_TIME_FORMATTER by lazy {
+    DateTimeFormatter.ISO_OFFSET_DATE_TIME.withLocale(Locale.ROOT)
+}
 
 private val MYSQL_TIME_AS_DEFAULT_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
@@ -60,51 +92,19 @@ private val MYSQL_TIME_AS_DEFAULT_STRING_FORMATTER by lazy {
     ).withZone(ZoneId.systemDefault())
 }
 
-private val DEFAULT_TIME_STRING_FORMATTER by lazy {
-    DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
-}
-
-// Example result: 2023-07-07 14:42:29.343+02:00 or 2023-07-07 12:42:29.343Z
-internal val SQLITE_OFFSET_DATE_TIME_FORMATTER by lazy {
-    DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss.SSS[XXX]",
-        Locale.ROOT
-    )
-}
-
-// For UTC time zone, MySQL rejects the 'Z' and will only accept the offset '+00:00'
-internal val MYSQL_OFFSET_DATE_TIME_FORMATTER by lazy {
-    DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss.SSSSSS[xxx]",
-        Locale.ROOT
-    )
-}
-
-// Example result: 2023-07-07 14:42:29.343789 +02:00
-internal val ORACLE_OFFSET_DATE_TIME_FORMATTER by lazy {
-    DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss.SSSSSS [xxx]",
-        Locale.ROOT
-    )
-}
-
 // Example result: 2023-07-07 14:42:29.343
-internal val POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
+private val POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
         "yyyy-MM-dd HH:mm:ss.SSS",
         Locale.ROOT
     )
 }
 
-internal val MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
+private val MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
         "yyyy-MM-dd HH:mm:ss.SSSSSS",
         Locale.ROOT
     ).withZone(ZoneId.of("UTC"))
-}
-
-internal val DEFAULT_OFFSET_DATE_TIME_FORMATTER by lazy {
-    DateTimeFormatter.ISO_OFFSET_DATE_TIME.withLocale(Locale.ROOT)
 }
 
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(date.substringAfterLast('.', "").length)
@@ -197,10 +197,10 @@ class KotlinLocalDateTimeColumnType : ColumnType(), IDateColumnType {
             dialect is SQLiteDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
             dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                 "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
-            (dialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ->
-                "'${MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
-            dialect is MysqlDialect ->
-                "'${MYSQL_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
+            dialect is MysqlDialect -> {
+                val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER else MYSQL_DATE_TIME_STRING_FORMATTER
+                "'${formatter.format(instant.toJavaInstant())}'"
+            }
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}'"
         }
     }
@@ -349,10 +349,10 @@ class KotlinInstantColumnType : ColumnType(), IDateColumnType {
         return when {
             dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                 "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-            (dialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ->
-                "'${MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-            dialect is MysqlDialect ->
-                "'${MYSQL_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            dialect is MysqlDialect -> {
+                val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER else MYSQL_DATE_TIME_STRING_FORMATTER
+                "'${formatter.format(instant)}'"
+            }
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
     }
