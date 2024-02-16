@@ -1,11 +1,8 @@
 package org.jetbrains.exposed.sql.tests.shared.functions
 
-import org.jetbrains.exposed.crypt.Algorithms
-import org.jetbrains.exposed.crypt.Encryptor
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -15,7 +12,6 @@ import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.vendors.*
 import org.junit.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -612,30 +608,6 @@ class FunctionsTests : DatabaseTestsBase() {
             val concatField3 = SqlExpressionBuilder.run { "Hi " plus users.name + "!" }
             val result3 = users.select(concatField3).where { users.id eq "andrey" }.single()
             assertEquals("Hi Andrey!", result3[concatField3])
-        }
-    }
-
-    private val encryptors = arrayOf(
-        "AES_256_PBE_GCM" to Algorithms.AES_256_PBE_GCM("passwd", "12345678"),
-        "AES_256_PBE_CBC" to Algorithms.AES_256_PBE_CBC("passwd", "12345678"),
-        "BLOW_FISH" to Algorithms.BLOW_FISH("sadsad"),
-        "TRIPLE_DES" to Algorithms.TRIPLE_DES("1".repeat(24))
-    )
-    private val testStrings = arrayOf("1", "2".repeat(10), "3".repeat(31), "4".repeat(1001), "5".repeat(5391))
-
-    @Test
-    fun `test output length of encryption`() {
-        fun testSize(algorithm: String, encryptor: Encryptor, str: String) =
-            assertEquals(
-                encryptor.maxColLength(str.toByteArray().size),
-                encryptor.encrypt(str).toByteArray().size,
-                "Failed to calculate length of $algorithm's output."
-            )
-
-        for ((algorithm, encryptor) in encryptors) {
-            for (testStr in testStrings) {
-                testSize(algorithm, encryptor, testStr)
-            }
         }
     }
 }

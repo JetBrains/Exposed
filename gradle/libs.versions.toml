@@ -24,7 +24,7 @@ sqlserver = "9.4.1.jre8"
 springFramework = "6.1.4"
 springBoot = "3.2.0"
 
-spring-security-crypto = "5.8.8"
+spring-security-crypto = "6.2.1"
 joda-time = "2.12.7"
 junit = "4.13.2"
 kotlinx-datetime = "0.5.0"
