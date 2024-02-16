@@ -13,6 +13,7 @@ class CompositeID(
     }
 
     override fun equals(other: Any?): Boolean {
+        if (other is EntityID<*>) return this == other._value
         if (other !is CompositeID) return false
 
         return super.equals(other)
