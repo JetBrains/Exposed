@@ -86,13 +86,12 @@ class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
 }
 
 object EnumTable : Table() {
-    val enumColumn = customEnumeration("enumColumn", "FooEnum", {value -> Foo.valueOf(value as String)}, { PGEnum("FooEnum", it) }
+    val enumColumn = customEnumeration("enumColumn", "FooEnum", {value -> Foo.valueOf(value as String)}, { PGEnum("FooEnum", it) })
 }
-...
+
 transaction {
    exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
    SchemaUtils.create(EnumTable)
-   ...
 }
 ```
 
