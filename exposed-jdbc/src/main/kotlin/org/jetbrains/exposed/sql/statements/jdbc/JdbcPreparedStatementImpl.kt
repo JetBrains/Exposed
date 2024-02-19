@@ -83,7 +83,7 @@ class JdbcPreparedStatementImpl(
         if (setAsBlobObject) {
             statement.setBlob(index, inputStream)
         } else {
-            statement.setBinaryStream(index, inputStream)
+            statement.setBinaryStream(index, inputStream, inputStream.available())
         }
     }
 
