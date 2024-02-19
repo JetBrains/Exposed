@@ -77,7 +77,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStateme
 	public fun set (ILjava/lang/Object;)V
 	public fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
 	public fun setFetchSize (Ljava/lang/Integer;)V
-	public fun setInputStream (ILjava/io/InputStream;)V
+	public fun setInputStream (ILjava/io/InputStream;Z)V
 	public fun setNull (ILorg/jetbrains/exposed/sql/IColumnType;)V
 	public fun setTimeout (Ljava/lang/Integer;)V
 }
