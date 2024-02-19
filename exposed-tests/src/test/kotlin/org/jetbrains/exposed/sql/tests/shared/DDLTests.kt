@@ -15,7 +15,6 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
-import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.H2Dialect
@@ -213,9 +212,6 @@ class DDLTests : DatabaseTestsBase() {
 
         withDb(TestDB.H2) {
             assertEquals("CREATE TABLE IF NOT EXISTS ${"test_named_table".inProperCase()}", testTable.ddl)
-            DMLTestsData.Users.selectAll().where {
-                exists(DMLTestsData.UserData.selectAll().where { DMLTestsData.Users.id eq DMLTestsData.UserData.user_id })
-            }
         }
     }
 
@@ -360,6 +356,7 @@ class DDLTests : DatabaseTestsBase() {
             if (h2Dialect.isSecondVersion && !isOracleMode) {
                 expect(Unit) {
                     SchemaUtils.create(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             } else {
                 expectException<ExposedSQLException> {
@@ -667,7 +664,6 @@ class DDLTests : DatabaseTestsBase() {
                     }
                 }
                 else -> {
-                    SchemaUtils.drop(testTable)
                     SchemaUtils.create(testTable)
 
                     testTable.insert {
@@ -938,6 +934,8 @@ class DDLTests : DatabaseTestsBase() {
             testTable.select(concat).forEach {
                 assertEquals(it[concat], "1txt 1TXTMED 1txtlong")
             }
+
+            SchemaUtils.drop(testTable)
         }
     }
 
@@ -1140,14 +1138,12 @@ class DDLTests : DatabaseTestsBase() {
         val one = prepareSchemaForTest("one")
         val two = prepareSchemaForTest("two")
         withSchemas(two, one) {
-            SchemaUtils.drop(TableFromSchemeOne)
             SchemaUtils.create(TableFromSchemeOne)
 
             if (currentDialectTest is OracleDialect) {
                 exec("GRANT REFERENCES ON ${TableFromSchemeOne.tableName} to TWO")
             }
 
-            SchemaUtils.drop(TableFromSchemeTwo)
             SchemaUtils.create(TableFromSchemeTwo)
             val idFromOne = TableFromSchemeOne.insertAndGetId { }
 

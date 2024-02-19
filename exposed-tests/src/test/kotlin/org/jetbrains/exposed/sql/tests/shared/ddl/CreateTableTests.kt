@@ -16,7 +16,6 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertFails
@@ -605,7 +604,6 @@ class CreateTableTests : DatabaseTestsBase() {
                 assertEquals(false, OneOneTable.exists())
                 SchemaUtils.createSchema(one)
                 SchemaUtils.create(OneOneTable)
-                println("${currentDialect.name}: ${currentDialectTest.allTablesNames()}")
                 assertEquals(true, OneTable.exists())
                 assertEquals(true, OneOneTable.exists())
             } finally {

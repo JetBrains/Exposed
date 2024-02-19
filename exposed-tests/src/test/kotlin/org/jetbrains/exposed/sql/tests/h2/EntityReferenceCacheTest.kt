@@ -99,7 +99,7 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
         var b1: EntityTests.Board by Delegates.notNull()
         var p1: EntityTests.Post by Delegates.notNull()
         var p2: EntityTests.Post by Delegates.notNull()
-        executeOnH2(EntityTests.Boards, EntityTests.Posts) {
+        executeOnH2(EntityTests.Boards, EntityTests.Posts, EntityTests.Categories) {
             transaction(db) {
                 b1 = EntityTests.Board.new {
                     name = "test-board"
@@ -132,7 +132,7 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
         var b1: EntityTests.Board by Delegates.notNull()
         var p1: EntityTests.Post by Delegates.notNull()
         var p2: EntityTests.Post by Delegates.notNull()
-        executeOnH2(EntityTests.Boards, EntityTests.Posts) {
+        executeOnH2(EntityTests.Boards, EntityTests.Posts, EntityTests.Categories) {
             transaction(db) {
                 b1 = EntityTests.Board.new {
                     name = "test-board"
@@ -169,7 +169,7 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
         var b1: EntityTests.Board by Delegates.notNull()
         var p1: EntityTests.Post by Delegates.notNull()
         var p2: EntityTests.Post by Delegates.notNull()
-        executeOnH2(EntityTests.Boards, EntityTests.Posts) {
+        executeOnH2(EntityTests.Boards, EntityTests.Posts, EntityTests.Categories) {
             transaction(db) {
                 b1 = EntityTests.Board.new {
                     name = "test-board"

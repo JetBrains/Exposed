@@ -114,7 +114,6 @@ class SelectTests : DatabaseTestsBase() {
         withCitiesAndUsers { _, users, _ ->
             users.selectAll().where { not(users.id.eq("andrey")) }.forEach {
                 val userId = it[users.id]
-                val userName = it[users.name]
                 if (userId == "andrey") {
                     error("Unexpected user $userId")
                 }
@@ -211,7 +210,7 @@ class SelectTests : DatabaseTestsBase() {
 
     @Test
     fun testInList08() {
-        withTables(EntityTests.Posts) {
+        withTables(EntityTests.Posts, EntityTests.Boards, EntityTests.Categories) {
             val board1 = EntityTests.Board.new {
                 this.name = "Board1"
             }

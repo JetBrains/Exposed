@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
@@ -126,12 +127,12 @@ class OrderByTests : DatabaseTestsBase() {
             val result = cities
                 .selectAll()
                 .orderBy(expression, SortOrder.DESC)
-                .toList()
+                .map { it[cities.name] }
 
             // Munich - 2 users
             // St. Petersburg - 1 user
             // Prague - 0 users
-            println(result)
+            assertEqualLists(result, listOf("Munich", "St. Petersburg", "Prague"))
         }
     }
 

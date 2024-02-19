@@ -40,7 +40,6 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
     }
 
     private fun Transaction.testOnDeleteSetDefault() {
-        SchemaUtils.drop(Category, Item)
         SchemaUtils.create(Category, Item)
 
         Category.insert {
@@ -63,9 +62,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
         assertEquals(
             saladsId,
-            Item.selectAll().where { Item.id eq tabboulehId }.single().also {
-                println("SELECT result = $it")
-            }[Item.categoryId]
+            Item.selectAll().where { Item.id eq tabboulehId }.single()[Item.categoryId]
         )
 
         Category.deleteWhere { id eq saladsId }
@@ -74,6 +71,8 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             DEFAULT_CATEGORY_ID,
             Item.selectAll().where { Item.id eq tabboulehId }.single()[Item.categoryId]
         )
+
+        SchemaUtils.drop(Category, Item)
     }
 
     @Test

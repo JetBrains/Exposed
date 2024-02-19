@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package org.jetbrains.exposed.sql.kotlin.datetime
 
 import kotlinx.datetime.*
@@ -35,7 +33,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 
 fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
@@ -453,6 +450,8 @@ class DefaultsTest : DatabaseTestsBase() {
                 val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
+
+                SchemaUtils.drop(testTable)
             }
         }
     }

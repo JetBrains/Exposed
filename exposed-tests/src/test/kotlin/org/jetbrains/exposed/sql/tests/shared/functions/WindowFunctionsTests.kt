@@ -28,12 +28,12 @@ import java.math.RoundingMode
 class WindowFunctionsTests : DatabaseTestsBase() {
 
     private val supportsCountDistinctAsWindowFunction = allH2TestDB + ORACLE
-    private val supportsStatisticsAggregateFunctions = values().toList() - listOf(SQLSERVER, SQLITE)
-    private val supportsNthValueFunction = values().toList() - listOf(SQLSERVER)
-    private val supportsExpressionsInWindowFunctionArguments = values().toList() - listOf(MYSQL)
-    private val supportsExpressionsInWindowFrameClause = values().toList() - listOf(MYSQL, SQLSERVER, MARIADB)
-    private val supportsDefaultValueInLeadLagFunctions = values().toList() - listOf(MARIADB)
-    private val supportsRangeModeWithOffsetFrameBound = values().toList() - listOf(SQLSERVER)
+    private val supportsStatisticsAggregateFunctions = entries - listOf(SQLSERVER, SQLITE)
+    private val supportsNthValueFunction = entries - listOf(SQLSERVER)
+    private val supportsExpressionsInWindowFunctionArguments = entries - listOf(MYSQL)
+    private val supportsExpressionsInWindowFrameClause = entries - listOf(MYSQL, SQLSERVER, MARIADB)
+    private val supportsDefaultValueInLeadLagFunctions = entries - listOf(MARIADB)
+    private val supportsRangeModeWithOffsetFrameBound = entries - listOf(SQLSERVER)
 
     @Suppress("LongMethod")
     @Test

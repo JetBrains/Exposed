@@ -18,21 +18,21 @@ class H2Tests : DatabaseTestsBase() {
     @Test
     fun insertInH2() {
         withDb(listOf(TestDB.H2_MYSQL, TestDB.H2)) {
-            SchemaUtils.drop(Testing)
             SchemaUtils.create(Testing)
             Testing.insert {
-                it[Testing.id] = 1
-                it[Testing.string] = "one"
+                it[id] = 1
+                it[string] = "one"
             }
 
             assertEquals("one", Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.string])
+
+            SchemaUtils.drop(Testing)
         }
     }
 
     @Test
     fun replaceAsInsertInH2() {
         withDb(listOf(TestDB.H2_MYSQL, TestDB.H2_MARIADB)) {
-            SchemaUtils.drop(Testing)
             SchemaUtils.create(Testing)
             Testing.replace {
                 it[id] = 1
@@ -40,6 +40,8 @@ class H2Tests : DatabaseTestsBase() {
             }
 
             assertEquals("one", Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.string])
+
+            SchemaUtils.drop(Testing)
         }
     }
 
