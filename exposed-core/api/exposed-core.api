@@ -1208,6 +1208,9 @@ public final class org/jetbrains/exposed/sql/IntegerColumnType : org/jetbrains/e
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
+public abstract interface annotation class org/jetbrains/exposed/sql/InternalApi : java/lang/annotation/Annotation {
+}
+
 public final class org/jetbrains/exposed/sql/Intersect : org/jetbrains/exposed/sql/SetOperation {
 	public fun <init> (Lorg/jetbrains/exposed/sql/AbstractQuery;Lorg/jetbrains/exposed/sql/AbstractQuery;)V
 	public fun copy ()Lorg/jetbrains/exposed/sql/Intersect;

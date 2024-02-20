@@ -692,8 +692,10 @@ fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(Decimal
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnType? = null): LiteralOp<List<T>> =
-    LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class)), value)
+inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnType? = null): LiteralOp<List<T>> {
+    @OptIn(InternalApi::class)
+    return LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class)), value)
+}
 
 // Query Parameters
 
@@ -769,8 +771,10 @@ fun blobParam(value: ExposedBlob, useObjectIdentifier: Boolean = false): Express
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType? = null): Expression<List<T>> =
-    QueryParameter(value, ArrayColumnType(delegateType ?: resolveColumnType(T::class)))
+inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType? = null): Expression<List<T>> {
+    @OptIn(InternalApi::class)
+    return QueryParameter(value, ArrayColumnType(delegateType ?: resolveColumnType(T::class)))
+}
 
 // Misc.
 

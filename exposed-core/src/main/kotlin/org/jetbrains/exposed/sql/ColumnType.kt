@@ -1114,6 +1114,7 @@ interface JsonColumnMarker {
  *
  * @throws IllegalStateException If no column type mapping is found and a [defaultType] is not provided.
  */
+@InternalApi
 fun <T : Any> resolveColumnType(
     klass: KClass<T>,
     defaultType: ColumnType? = null

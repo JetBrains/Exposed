@@ -44,6 +44,7 @@ inline fun <reified T : Any> ExpressionWithColumnType<*>.extract(
     vararg path: String,
     toScalar: Boolean = true
 ): Extract<T> {
+    @OptIn(InternalApi::class)
     val columnType = resolveColumnType(
         T::class,
         defaultType = JsonColumnType(

@@ -844,8 +844,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
      * @throws IllegalStateException If no column type mapping is found.
      */
-    inline fun <reified T : Any> array(name: String, maximumCardinality: Int? = null): Column<List<T>> =
-        array(name, resolveColumnType(T::class), maximumCardinality)
+    inline fun <reified T : Any> array(name: String, maximumCardinality: Int? = null): Column<List<T>> {
+        @OptIn(InternalApi::class)
+        return array(name, resolveColumnType(T::class), maximumCardinality)
+    }
 
     // Auto-generated values
 

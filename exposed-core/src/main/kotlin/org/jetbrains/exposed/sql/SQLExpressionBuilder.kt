@@ -126,6 +126,7 @@ fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, 
  */
 inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> {
     // emptyArray() without type info generates ARRAY[]
+    @OptIn(InternalApi::class)
     val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
     return AllAnyFromArrayOp(true, array, columnType)
 }
@@ -149,6 +150,7 @@ fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false,
  */
 inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> {
     // emptyArray() without type info generates ARRAY[]
+    @OptIn(InternalApi::class)
     val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
     return AllAnyFromArrayOp(false, array, columnType)
 }
