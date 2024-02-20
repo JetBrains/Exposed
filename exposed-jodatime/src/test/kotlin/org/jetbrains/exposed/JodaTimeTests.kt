@@ -17,6 +17,7 @@ import org.jetbrains.exposed.sql.json.jsonb
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
@@ -370,6 +371,38 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
             fakeTestTable.insert {}
 
             currentDbDateTime()
+        }
+    }
+
+    @Test
+    fun testDateTimeAsArray() {
+        val defaultDates = listOf(today)
+        val defaultDateTimes = listOf(DateTime.now())
+        val tester = object : Table("array_tester") {
+            val dates = array<DateTime>("dates", DateColumnType(false)).default(defaultDates)
+            val datetimes = array<DateTime>("datetimes", DateColumnType(true)).default(defaultDateTimes)
+        }
+
+        withTables(excludeSettings = TestDB.entries - TestDB.POSTGRESQL - TestDB.H2, tester) {
+            tester.insert { }
+            val result1 = tester.selectAll().single()
+            assertEqualLists(result1[tester.dates], defaultDates)
+            assertEqualLists(result1[tester.datetimes], defaultDateTimes)
+
+            val datesInput = List(3) { DateTime.parse("${2020 + it}-5-4") }
+            val datetimeInput = List(3) { DateTime(2020 + it, 5, 4, 9, 9, 9) }
+            tester.insert {
+                it[dates] = datesInput
+                it[datetimes] = datetimeInput
+            }
+
+            val lastDate = tester.dates[3]
+            val firstTwoDatetimes = tester.datetimes.slice(1, 2)
+            val result2 = tester.select(lastDate, firstTwoDatetimes).where {
+                tester.dates[1].year() eq 2020
+            }.single()
+            assertEqualDateTime(datesInput.last(), result2[lastDate])
+            assertEqualLists(result2[firstTwoDatetimes], datetimeInput.take(2))
         }
     }
 }
