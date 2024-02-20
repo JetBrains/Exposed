@@ -745,8 +745,14 @@ fun stringParam(value: String): Expression<String> = QueryParameter(value, TextC
 /** Returns the specified [value] as a decimal query parameter. */
 fun decimalParam(value: BigDecimal): Expression<BigDecimal> = QueryParameter(value, DecimalColumnType(value.precision(), value.scale()))
 
-/** Returns the specified [value] as a blob query parameter. */
-fun blobParam(value: ExposedBlob): Expression<ExposedBlob> = QueryParameter(value, BlobColumnType())
+/**
+ * Returns the specified [value] as a blob query parameter.
+ *
+ * Set [useObjectIdentifier] to `true` if the parameter should be processed using an OID column instead of a
+ * BYTEA column. This is only supported by PostgreSQL databases.
+ */
+fun blobParam(value: ExposedBlob, useObjectIdentifier: Boolean = false): Expression<ExposedBlob> =
+    QueryParameter(value, BlobColumnType(useObjectIdentifier))
 
 /** Returns the specified [value] as an array query parameter, with elements parsed by the [delegateType]. */
 fun <T> arrayParam(value: List<T>, delegateType: ColumnType): Expression<List<T>> =

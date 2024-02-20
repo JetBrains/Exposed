@@ -72,15 +72,19 @@ class JdbcPreparedStatementImpl(
     }
 
     override fun setNull(index: Int, columnType: IColumnType) {
-        if (columnType is BinaryColumnType || columnType is BlobColumnType) {
+        if (columnType is BinaryColumnType || (columnType is BlobColumnType && !columnType.useObjectIdentifier)) {
             statement.setNull(index, Types.LONGVARBINARY)
         } else {
             statement.setObject(index, null)
         }
     }
 
-    override fun setInputStream(index: Int, inputStream: InputStream) {
-        statement.setBinaryStream(index, inputStream, inputStream.available())
+    override fun setInputStream(index: Int, inputStream: InputStream, setAsBlobObject: Boolean) {
+        if (setAsBlobObject) {
+            statement.setBlob(index, inputStream)
+        } else {
+            statement.setBinaryStream(index, inputStream, inputStream.available())
+        }
     }
 
     override fun setArray(index: Int, type: String, array: Array<*>) {

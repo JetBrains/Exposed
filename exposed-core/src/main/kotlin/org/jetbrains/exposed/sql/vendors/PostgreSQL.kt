@@ -28,6 +28,9 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
             val cast = if (e.columnType.usesBinaryFormat) "::jsonb" else "::json"
             "${super.processForDefaultValue(e)}$cast"
         }
+        e is LiteralOp<*> && e.columnType is BlobColumnType && e.columnType.useObjectIdentifier && (currentDialect as? H2Dialect) == null -> {
+            "lo_from_bytea(0, ${super.processForDefaultValue(e)} :: bytea)"
+        }
         e is LiteralOp<*> && e.columnType is ArrayColumnType -> {
             val processed = super.processForDefaultValue(e)
             processed

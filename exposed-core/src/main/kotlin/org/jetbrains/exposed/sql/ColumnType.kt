@@ -809,12 +809,17 @@ open class BinaryColumnType(
 /**
  * Binary column for storing BLOBs.
  */
-class BlobColumnType : ColumnType() {
-    override fun sqlType(): String = currentDialect.dataTypeProvider.blobType()
-
+class BlobColumnType(
+    /** Returns whether an OID column should be used instead of BYTEA. This value only applies to PostgreSQL databases. */
+    val useObjectIdentifier: Boolean = false
+) : ColumnType() {
+    override fun sqlType(): String = when {
+        useObjectIdentifier && currentDialect is PostgreSQLDialect -> "oid"
+        useObjectIdentifier -> error("Storing BLOBs using OID columns is only supported by PostgreSQL")
+        else -> currentDialect.dataTypeProvider.blobType()
+    }
     override fun valueFromDB(value: Any): ExposedBlob = when (value) {
         is ExposedBlob -> value
-        is Blob -> ExposedBlob(value.binaryStream)
         is InputStream -> ExposedBlob(value)
         is ByteArray -> ExposedBlob(value)
         else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
@@ -838,12 +843,13 @@ class BlobColumnType : ColumnType() {
 
     override fun readObject(rs: ResultSet, index: Int) = when {
         currentDialect is SQLServerDialect -> rs.getBytes(index)?.let(::ExposedBlob)
+        currentDialect is PostgreSQLDialect && useObjectIdentifier -> rs.getBlob(index)?.binaryStream?.let(::ExposedBlob)
         else -> rs.getBinaryStream(index)?.let(::ExposedBlob)
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when (val toSetValue = (value as? ExposedBlob)?.inputStream ?: value) {
-            is InputStream -> stmt.setInputStream(index, toSetValue)
+            is InputStream -> stmt.setInputStream(index, toSetValue, useObjectIdentifier)
             null, is Op.NULL -> stmt.setNull(index, this)
             else -> super.setParameter(stmt, index, toSetValue)
         }

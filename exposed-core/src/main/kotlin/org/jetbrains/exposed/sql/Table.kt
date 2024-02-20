@@ -756,10 +756,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /**
      * Creates a binary column, with the specified [name], for storing BLOBs.
+     * If [useObjectIdentifier] is `true`, then the column will use the `OID` type on PostgreSQL
+     * for storing large binary objects. The parameter must not be `true` for other databases.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testBlob
      */
-    fun blob(name: String): Column<ExposedBlob> = registerColumn(name, BlobColumnType())
+    fun blob(name: String, useObjectIdentifier: Boolean = false): Column<ExposedBlob> =
+        registerColumn(name, BlobColumnType(useObjectIdentifier))
 
     /** Creates a binary column, with the specified [name], for storing UUIDs. */
     fun uuid(name: String): Column<UUID> = registerColumn(name, UUIDColumnType())
