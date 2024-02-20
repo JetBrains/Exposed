@@ -888,11 +888,3 @@ object SchemaUtils {
         }
     }
 }
-
-@RequiresOptIn(
-    message = "This database migration API is experimental. " +
-        "Its usage must be marked with '@OptIn(org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi::class)' " +
-        "or '@org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi'."
-)
-@Target(AnnotationTarget.FUNCTION)
-annotation class ExperimentalDatabaseMigrationApi

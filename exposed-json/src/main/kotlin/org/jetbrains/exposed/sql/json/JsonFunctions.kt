@@ -44,22 +44,13 @@ inline fun <reified T : Any> ExpressionWithColumnType<*>.extract(
     vararg path: String,
     toScalar: Boolean = true
 ): Extract<T> {
-    val columnType = when (T::class) {
-        String::class -> TextColumnType()
-        Boolean::class -> BooleanColumnType()
-        Long::class -> LongColumnType()
-        Int::class -> IntegerColumnType()
-        Short::class -> ShortColumnType()
-        Byte::class -> ByteColumnType()
-        Double::class -> DoubleColumnType()
-        Float::class -> FloatColumnType()
-        ByteArray::class -> BasicBinaryColumnType()
-        else -> {
-            JsonColumnType(
-                { Json.Default.encodeToString(serializer<T>(), it) },
-                { Json.Default.decodeFromString(serializer<T>(), it) }
-            )
-        }
-    }
+    @OptIn(InternalApi::class)
+    val columnType = resolveColumnType(
+        T::class,
+        defaultType = JsonColumnType(
+            { Json.Default.encodeToString(serializer<T>(), it) },
+            { Json.Default.decodeFromString(serializer<T>(), it) }
+        )
+    )
     return Extract(this, path = path, toScalar, this.columnType, columnType)
 }

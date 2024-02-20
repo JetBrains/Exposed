@@ -829,6 +829,26 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <T> array(name: String, columnType: ColumnType, maximumCardinality: Int? = null): Column<List<T>> =
         registerColumn(name, ArrayColumnType(columnType.apply { nullable = true }, maximumCardinality))
 
+    /**
+     * Creates an array column, with the specified [name], for storing elements of a `List`.
+     *
+     * **Note** This column type is only supported by H2 and PostgreSQL dialects.
+     *
+     * **Note** The base column type associated with storing elements of type [T] will be resolved according to
+     * the internal mapping in [resolveColumnType]. To avoid this type reflection, or if a mapping does not exist
+     * for the elements being stored, please provide an explicit column type to the [array] overload. If the elements
+     * to be stored are nullable, an explicit column type will also need to be provided.
+     *
+     * @param name Name of the column.
+     * @param maximumCardinality The maximum amount of allowed elements. **Note** Providing an array size limit
+     * when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
+     * @throws IllegalStateException If no column type mapping is found.
+     */
+    inline fun <reified T : Any> array(name: String, maximumCardinality: Int? = null): Column<List<T>> {
+        @OptIn(InternalApi::class)
+        return array(name, resolveColumnType(T::class), maximumCardinality)
+    }
+
     // Auto-generated values
 
     /**

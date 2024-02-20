@@ -141,11 +141,3 @@ class DatabaseConfig private constructor(
         }
     }
 }
-
-@RequiresOptIn(
-    message = "This API is experimental and the behavior defined by setting this value to 'true' is now the default. " +
-        "Its usage must be marked with '@OptIn(org.jetbrains.exposed.sql.ExperimentalKeywordApi::class)' " +
-        "or '@org.jetbrains.exposed.sql.ExperimentalKeywordApi'."
-)
-@Target(AnnotationTarget.PROPERTY)
-annotation class ExperimentalKeywordApi
