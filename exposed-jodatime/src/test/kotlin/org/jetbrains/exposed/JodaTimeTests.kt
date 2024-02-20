@@ -384,7 +384,6 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = TestDB.entries - TestDB.POSTGRESQL - TestDB.H2, tester) {
-            addLogger(StdOutSqlLogger)
             tester.insert { }
             val result1 = tester.selectAll().single()
             assertEqualLists(result1[tester.dates], defaultDates)
