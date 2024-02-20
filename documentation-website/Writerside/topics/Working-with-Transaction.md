@@ -27,8 +27,8 @@ val jamesList = transaction {
 ```
 
 <note>
-`Blob` and `text` fields won't be available outside of a transaction if you don't load them directly. For `text` fields you can also use
-the `eagerLoading` param when defining the Table to make the text fields available outside of the transaction.
+<code>Blob</code> and <code>text</code> fields won't be available outside of a transaction if you don't load them directly. For <code>text</code> fields you can also use
+the <code>eagerLoading</code> param when defining the Table to make the text fields available outside of the transaction.
 </note>
 
 ```kotlin
@@ -208,7 +208,7 @@ transaction {
 ```
 
 <note>
-As is the case for `transactionIsolation` and `readOnly` properties, this value is not directly managed by Exposed, but is simply relayed to the JDBC driver. 
+As is the case for <code>transactionIsolation</code> and <code>readOnly</code> properties, this value is not directly managed by Exposed, but is simply relayed to the JDBC driver. 
 Some drivers may not support implementing this limit.
 </note>
 

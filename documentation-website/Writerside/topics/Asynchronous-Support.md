@@ -70,7 +70,7 @@ This function will accept the same parameters as `newSuspendedTransaction()` abo
 which you could call `await` on to achieve your result.
 
 <note>
-`newSuspendedTransaction()` and `suspendedTransactionAsync()` are always executed in a new transaction to prevent concurrency issues when query 
-execution order could be changed by `CoroutineDispatcher`. 
-This means that nesting these suspend transactions may not result in the same behavior as nested `transaction`s (when `useNestedTransactions = false`).
+<code>newSuspendedTransaction()</code> and <code>suspendedTransactionAsync()</code> are always executed in a new transaction to prevent concurrency issues when query 
+execution order could be changed by <code>CoroutineDispatcher</code>. 
+This means that nesting these suspend transactions may not result in the same behavior as nested <code>transaction</code>s (when <code>useNestedTransactions = false</code>).
 </note>
