@@ -2,7 +2,6 @@
 
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
