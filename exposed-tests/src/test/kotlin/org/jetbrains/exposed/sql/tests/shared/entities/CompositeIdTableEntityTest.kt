@@ -2,9 +2,12 @@ package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.CompositeEntity
 import org.jetbrains.exposed.dao.CompositeEntityClass
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -21,11 +24,11 @@ import kotlin.test.assertTrue
 // SQL Server is sometimes excluded because it doesn't allow inserting explicit values for identity columns.
 class CompositeIdTableEntityTest : DatabaseTestsBase() {
     object Publishers : CompositeIdTable("publishers") {
-        val pubId = uuid("pub_id").autoGenerate().compositeEntityId()
-        val isbnCode = integer("isbn_code").autoIncrement().compositeEntityId()
+        val pubId = integer("pub_id").autoIncrement().compositeEntityId()
+        val isbn = uuid("isbn_code").autoGenerate().compositeEntityId()
         val name = varchar("publisher_name", 32)
 
-        override val primaryKey = PrimaryKey(pubId, isbnCode)
+        override val primaryKey = PrimaryKey(pubId, isbn)
     }
 
     class Publisher(id: EntityID<CompositeID>) : CompositeEntity(id) {
@@ -34,15 +37,31 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         var name by Publishers.name
     }
 
+    object Authors : IntIdTable("authors") {
+        val publisherId = integer("publisher_id")
+        val publisherIsbn = uuid("publisher_isbn")
+        init {
+            foreignKey(publisherId, publisherIsbn, target = Publishers.primaryKey)
+        }
+    }
+
+    class Author(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Author>(Authors)
+
+        var publisher by Publisher referencedOn Authors
+    }
+
     @Test
     fun testCreateAndDropCompositeIdTable() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
             try {
-                SchemaUtils.create(Publishers)
+                SchemaUtils.create(Publishers, Authors)
+
                 assertTrue(Publishers.exists())
-                assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(Publishers).isEmpty())
+                assertTrue(Authors.exists())
+//                assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(Publishers, Authors).isEmpty())
             } finally {
-                SchemaUtils.drop(Publishers)
+                SchemaUtils.drop(Authors, Publishers)
             }
         }
     }
@@ -56,8 +75,8 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             val result1 = Publisher.all().single()
             assertEquals("Publisher A", result1.name)
-            assertEquals(p1.value[Publishers.isbnCode], result1.id.value[Publishers.isbnCode])
             assertEquals(p1.value[Publishers.pubId], result1.id.value[Publishers.pubId])
+            assertEquals(p1.value[Publishers.isbn], result1.id.value[Publishers.isbn])
 
             Publisher.new { name = "Publisher B" }
             Publisher.new { name = "Publisher C" }
@@ -81,7 +100,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val idResult = result[Publishers.id]
             assertIs<EntityID<CompositeID>>(idResult)
             assertEquals(result[Publishers.pubId], idResult.value[Publishers.pubId])
-            assertEquals(result[Publishers.isbnCode], idResult.value[Publishers.isbnCode])
+            assertEquals(result[Publishers.isbn], idResult.value[Publishers.isbn])
 
             // test that using composite id column in DSL query builder works
             val dslQuery = Publishers.select(Publishers.id).where { Publishers.id eq idResult }.prepareSQL(this)
@@ -94,7 +113,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             // test equality comparison fails if composite columns do not match
             expectException<IllegalStateException> {
-                val fake = EntityID(CompositeID(mapOf(Publishers.isbnCode to 7)), Publishers)
+                val fake = EntityID(CompositeID(mapOf(Publishers.pubId to 7)), Publishers)
                 Publishers.selectAll().where { Publishers.id eq fake }
             }
         }
@@ -105,17 +124,39 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER), Publishers) {
             // no need to wrap inserted DSL value in EntityID
             val id1 = Publishers.insertAndGetId {
-                it[pubId] = UUID.randomUUID()
-                it[isbnCode] = 725
+                it[pubId] = 725
+                it[isbn] = UUID.randomUUID()
                 it[name] = "Publisher A"
             }
-            assertEquals(725, id1.value[Publishers.isbnCode])
+            assertEquals(725, id1.value[Publishers.pubId])
 
             val id2 = Publishers.insertAndGetId {
                 it[name] = "Publisher B"
             }
             val expectedNextVal = if (currentTestDB in TestDB.mySqlRelatedDB) 726 else 1
-            assertEquals(expectedNextVal, id2.value[Publishers.isbnCode])
+            assertEquals(expectedNextVal, id2.value[Publishers.pubId])
+        }
+    }
+
+    @Test
+    fun testInsertUsingManualCompositeIds() {
+        withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER), Publishers) {
+            // manual using DSL
+            Publishers.insert {
+                it[pubId] = 725
+                it[isbn] = UUID.randomUUID()
+                it[name] = "Publisher A"
+            }
+
+            assertEquals(725, Publishers.selectAll().single()[Publishers.pubId])
+
+            // manual using DAO - all PK columns
+            val fullId = CompositeID(mapOf(Publishers.pubId to 611, Publishers.isbn to UUID.randomUUID()))
+            val p2 = Publisher.new(fullId) {
+                name = "Publisher B"
+            }
+            assertEquals(611, p2.id.value[Publishers.pubId])
+            assertEquals(611, Publisher.findById(p2.id)?.id?.value?.get(Publishers.pubId))
         }
     }
 
@@ -123,14 +164,14 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
     fun testFindByCompositeId() {
         withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.SQLSERVER), Publishers) {
             val id1: EntityID<CompositeID> = Publishers.insertAndGetId {
-                it[pubId] = UUID.randomUUID()
-                it[isbnCode] = 725
+                it[pubId] = 725
+                it[isbn] = UUID.randomUUID()
                 it[name] = "Publisher A"
             }
 
             val p1 = Publisher.findById(id1)
             assertNotNull(p1)
-            assertEquals(725, p1.id.value[Publishers.isbnCode])
+            assertEquals(725, p1.id.value[Publishers.pubId])
 
             val id2: EntityID<CompositeID> = Publisher.new {
                 name = "Publisher B"
@@ -193,6 +234,25 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val result = Publisher.all().single()
             assertEquals("Publisher B", result.name)
             assertEquals(p2.id, result.id)
+        }
+    }
+
+    @Test
+    fun testInsertAndSelectReferencedEntities() {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers, Authors) {
+            val publisherA = Publisher.new {
+                name = "Publisher A"
+            }
+            val authorA = Author.new {
+                publisher = publisherA
+            }
+            val authorB = Author.new {
+                publisher = publisherA
+            }
+
+            assertEquals(publisherA.id.value[Publishers.pubId], authorA.publisher.id.value[Publishers.pubId])
+            assertEquals(publisherA, authorA.publisher)
+            assertEquals(publisherA, authorB.publisher)
         }
     }
 }

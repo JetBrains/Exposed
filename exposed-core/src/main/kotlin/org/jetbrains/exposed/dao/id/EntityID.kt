@@ -25,6 +25,11 @@ open class EntityID<T : Comparable<T>> protected constructor(val table: IdTable<
                 check(_value != null) { "Entity must be inserted" }
             }
 
+            if ((_value as? CompositeID)?.values?.any { it == null } == true) {
+                invokeOnNoValue()
+                check((_value as? CompositeID)?.values?.none { it == null } == true) { "Entity must be inserted" }
+            }
+
             @Suppress("UNCHECKED_CAST")
             return _value!! as T
         }
