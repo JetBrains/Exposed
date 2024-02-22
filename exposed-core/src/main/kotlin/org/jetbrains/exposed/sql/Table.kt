@@ -461,7 +461,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     private val _foreignKeys = mutableListOf<ForeignKeyConstraint>()
 
-    /** Returns all foreignKeys declared on the table. */
+    /** Returns all foreign key constraints declared on the table. */
     val foreignKeys: List<ForeignKeyConstraint> get() = columns.mapNotNull { it.foreignKey } + _foreignKeys
 
     private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
@@ -918,13 +918,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     // Column references
 
     /**
-     * Create reference from a @receiver column to [ref] column.
+     * Creates a reference from this @receiver column to a [ref] column.
      *
-     * It's a short infix version of [references] function with default onDelete and onUpdate behavior.
+     * This is a short infix version of `references()` with default `onDelete` and `onUpdate` behavior.
      *
-     * @receiver A column from current table where reference values will be stored
+     * @receiver A column from the current table where reference values will be stored.
      * @param ref A column from another table which will be used as a "parent".
-     * @see [references]
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.JoinTests.testJoin04
      */
     infix fun <T : Comparable<T>, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(
         ref,
@@ -934,15 +934,17 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     )
 
     /**
-     * Create reference from a @receiver column to [ref] column with [onDelete], [onUpdate], and [fkName] options.
-     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
-     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     * Creates a reference from this @receiver column to a [ref] column with [onDelete], [onUpdate], and [fkName] options.
+     * [onDelete] and [onUpdate] options describe the behavior for how links between tables will be checked when deleting
+     * or changing corresponding columns' values.
+     * Such a relationship will be represented as a FOREIGN KEY constraint on table creation.
      *
-     * @receiver A column from current table where reference values will be stored
+     * @receiver A column from the current table where reference values will be stored.
      * @param ref A column from another table which will be used as a "parent".
-     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted. See [ReferenceOption] documentation for details.
-     * @param onUpdate Optional reference option for cases when value in a referenced column had changed. See [ReferenceOption] documentation for details.
+     * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
+     * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
+     * @sample org.jetbrains.exposed.sql.tests.sqlite.ForeignKeyConstraintTests.testUpdateAndDeleteRulesReadCorrectlyWhenSpecifiedInChildTable
      */
     fun <T : Comparable<T>, S : T, C : Column<S>> C.references(
         ref: Column<T>,
@@ -960,15 +962,17 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /**
-     * Create reference from a @receiver column to [ref] column with [onDelete], [onUpdate], and [fkName] options.
-     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
-     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     * Creates a reference from this @receiver column to a [ref] column with [onDelete], [onUpdate], and [fkName] options.
+     * [onDelete] and [onUpdate] options describe the behavior for how links between tables will be checked when deleting
+     * or changing corresponding columns' values.
+     * Such a relationship will be represented as a FOREIGN KEY constraint on table creation.
      *
-     * @receiver A column from current table where reference values will be stored
+     * @receiver A column from the current table where reference values will be stored.
      * @param ref A column from another table which will be used as a "parent".
-     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted. See [ReferenceOption] documentation for details.
-     * @param onUpdate Optional reference option for cases when value in a referenced column had changed. See [ReferenceOption] documentation for details.
+     * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
+     * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
+     * @sample org.jetbrains.exposed.sql.tests.shared.ddl.CreateMissingTablesAndColumnsTests.ExplicitTable
      */
     @JvmName("referencesById")
     fun <T : Comparable<T>, S : T, C : Column<S>> C.references(
@@ -987,17 +991,18 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /**
-     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete], [onUpdate], and [fkName] options.
-     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
-     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete],
+     * [onUpdate], and [fkName] options.
+     * [onDelete] and [onUpdate] options describe the behavior for how links between tables will be checked when deleting
+     * or changing corresponding columns' values.
+     * Such a relationship will be represented as a FOREIGN KEY constraint on table creation.
      *
      * @param name Name of the column.
      * @param refColumn A column from another table which will be used as a "parent".
-     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
-     * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
+     * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     *
-     * @see ReferenceOption
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Orders
      */
     fun <T : Comparable<T>> reference(
         name: String,
@@ -1016,17 +1021,18 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /**
-     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete], [onUpdate], and [fkName] options.
-     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
-     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     * Creates a column with the specified [name] with a reference to the [refColumn] column and with [onDelete],
+     * [onUpdate], and [fkName] options.
+     * [onDelete] and [onUpdate] options describe the behavior for how links between tables will be checked when deleting
+     * or changing corresponding columns' values.
+     * Such a relationship will be represented as a FOREIGN KEY constraint on table creation.
      *
      * @param name Name of the column.
      * @param refColumn A column from another table which will be used as a "parent".
-     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
-     * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
+     * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     *
-     * @see ReferenceOption
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Schools
      */
     @Suppress("UNCHECKED_CAST")
     @JvmName("referenceByIdColumn")
@@ -1042,17 +1048,18 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /**
-     * Creates a column with the specified [name] with a reference to the `id` column in [foreign] table and with [onDelete], [onUpdate], and [fkName] options.
-     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
-     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     * Creates a column with the specified [name] with a reference to the `id` column in [foreign] table and with
+     * [onDelete], [onUpdate], and [fkName] options.
+     * [onDelete] and [onUpdate] options describe the behavior for how links between tables will be checked when deleting
+     * or changing corresponding columns' values.
+     * Such a relationship will be represented as a FOREIGN KEY constraint on table creation.
      *
      * @param name Name of the column.
      * @param foreign A table with an `id` column which will be used as a "parent".
-     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
-     * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
+     * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     *
-     * @see ReferenceOption
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Schools
      */
     fun <T : Comparable<T>> reference(
         name: String,
@@ -1064,16 +1071,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /**
      * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete], [onUpdate], and [fkName] options.
-     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
-     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     * [onDelete] and [onUpdate] options describe the behavior for how links between tables will be checked when deleting
+     * or changing corresponding columns' values.
+     * Such a relationship will be represented as a FOREIGN KEY constraint on table creation.
      *
      * @param name Name of the column.
      * @param refColumn A column from another table which will be used as a "parent".
-     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
-     * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
+     * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     *
-     * @see ReferenceOption
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Posts
      */
     fun <T : Comparable<T>> optReference(
         name: String,
@@ -1085,16 +1092,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /**
      * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete], [onUpdate], and [fkName] options.
-     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
-     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     * [onDelete] and [onUpdate] options describe the behavior for how links between tables will be checked when deleting
+     * or changing corresponding columns' values.
+     * Such a relationship will be represented as a FOREIGN KEY constraint on table creation.
      *
      * @param name Name of the column.
      * @param refColumn A column from another table which will be used as a "parent".
-     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
-     * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
-     * @param fkName Optional foreign key constraint name.
-     *
-     * @see ReferenceOption
+     * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
+     * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Posts
      */
     @JvmName("optReferenceByIdColumn")
     fun <T : Comparable<T>, E : EntityID<T>> optReference(
@@ -1107,16 +1113,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /**
      * Creates a column with the specified [name] with an optional reference to the `id` column in [foreign] table with [onDelete], [onUpdate], and [fkName] options.
-     * [onDelete] and [onUpdate] options describes behavior on how links between tables will be checked in case of deleting or changing corresponding columns' values.
-     * Such relationship will be represented as FOREIGN KEY constraint on a table creation.
+     * [onDelete] and [onUpdate] options describe the behavior for how links between tables will be checked when deleting
+     * or changing corresponding columns' values.
+     * Such a relationship will be represented as a FOREIGN KEY constraint on table creation.
      *
      * @param name Name of the column.
      * @param foreign A table with an `id` column which will be used as a "parent".
-     * @param onDelete Optional reference option for cases when linked row from a parent table will be deleted.
-     * @param onUpdate Optional reference option for cases when value in a referenced column had changed.
+     * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
+     * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     *
-     * @see ReferenceOption
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Schools
      */
     fun <T : Comparable<T>> optReference(
         name: String,
@@ -1235,11 +1241,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /**
      * Creates a composite foreign key.
      *
-     * @param from Columns that compose the foreign key. Their order should match the order of columns in referenced primary key.
-     * @param target Primary key of the referenced table.
-     * @param onUpdate Reference option when performing update operations.
-     * @param onUpdate Reference option when performing delete operations.
-     * @param name Custom foreign key name
+     * @param from Columns in this referencing child table that compose the foreign key.
+     * Their order should match the order of columns in the referenced parent table's primary key.
+     * @param target Primary key of the referenced parent table.
+     * @param onUpdate [ReferenceOption] when performing update operations.
+     * @param onUpdate [ReferenceOption] when performing delete operations.
+     * @param name Custom foreign key constraint name.
+     * @sample org.jetbrains.exposed.sql.tests.shared.ddl.CreateMissingTablesAndColumnsTests.CompositeForeignKeyTable
      */
     fun foreignKey(
         vararg from: Column<*>,
@@ -1258,13 +1266,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /**
      * Creates a composite foreign key.
      *
-     * @param references Pairs of columns that compose the foreign key.
-     * First value of pair is a column of referencing table, second value - a column of a referenced one.
+     * @param references Pairs of child table and parent table columns that compose the foreign key.
+     * The first value of each pair should be a column from this referencing child table,
+     * with the second value being a column from the referenced parent table.
      * All referencing columns must belong to this table.
      * All referenced columns must belong to the same table.
-     * @param onUpdate Reference option when performing update operations.
-     * @param onUpdate Reference option when performing delete operations.
-     * @param name Custom foreign key name
+     * @param onUpdate [ReferenceOption] when performing update operations.
+     * @param onUpdate [ReferenceOption] when performing delete operations.
+     * @param name Custom foreign key constraint name.
+     * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testCompositeFKReferencingUniqueIndex
      */
     fun foreignKey(
         vararg references: Pair<Column<*>, Column<*>>,
