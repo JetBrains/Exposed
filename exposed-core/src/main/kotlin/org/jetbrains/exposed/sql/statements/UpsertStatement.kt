@@ -11,12 +11,15 @@ import org.jetbrains.exposed.sql.vendors.*
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
  * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdateExclude Set of specific columns to exclude from updating.
+ * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found. This clause may not be supported by all vendors.
  */
 open class UpsertStatement<Key : Any>(
     table: Table,
     vararg val keys: Column<*>,
     val onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+    val onUpdateExclude: Set<Column<*>>?,
     val where: Op<Boolean>?
 ) : InsertStatement<Key>(table) {
 
@@ -28,7 +31,7 @@ open class UpsertStatement<Key : Any>(
             }
             else -> dialect.functionProvider
         }
-        return functionProvider.upsert(table, arguments!!.first(), onUpdate, where, transaction, keys = keys)
+        return functionProvider.upsert(table, arguments!!.first(), onUpdate, onUpdateExclude, where, transaction, keys = keys)
     }
 
     override fun arguments(): List<Iterable<Pair<IColumnType, Any?>>> {

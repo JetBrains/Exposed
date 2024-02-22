@@ -534,6 +534,7 @@ abstract class FunctionProvider {
      * @param table Table to either insert values into or update values from.
      * @param data Pairs of columns to use for insert or update and values to insert or update.
      * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
+     * @param onUpdateExclude Set of specific columns to exclude from updating.
      * @param where Condition that determines which rows to update, if a unique violation is found.
      * @param transaction Transaction where the operation is executed.
      */
@@ -541,6 +542,7 @@ abstract class FunctionProvider {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: Set<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
@@ -557,7 +559,7 @@ abstract class FunctionProvider {
         val autoIncColumn = table.autoIncColumn
         val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression
         val dataColumnsWithoutAutoInc = autoIncColumn?.let { dataColumns - autoIncColumn } ?: dataColumns
-        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
+        val updateColumns = getUpdateColumnsForUpsert(dataColumns, onUpdateExclude, keyColumns)
 
         return with(QueryBuilder(true)) {
             +"MERGE INTO "
@@ -604,6 +606,18 @@ abstract class FunctionProvider {
         return keys.toList().ifEmpty {
             table.primaryKey?.columns?.toList() ?: table.indices.firstOrNull { it.unique }?.columns
         }
+    }
+
+    /** Returns the columns to be used in the update clause of an upsert statement. */
+    protected fun getUpdateColumnsForUpsert(
+        dataColumns: List<Column<*>>,
+        toExclude: Set<Column<*>>?,
+        keyColumns: List<Column<*>>?
+    ): List<Column<*>> {
+        val updateColumns = toExclude?.let { dataColumns - it } ?: dataColumns
+        return keyColumns?.let { keys ->
+            updateColumns.filter { it !in keys }.ifEmpty { updateColumns }
+        } ?: updateColumns
     }
 
     /**
