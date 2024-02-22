@@ -4,6 +4,7 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.sql.DatabaseMetaData
 import java.util.*
 
 internal object H2DataTypeProvider : DataTypeProvider() {
@@ -280,6 +281,15 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
     override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
+
+    override fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption {
+        val modeDelegatesRefOption = h2Mode == H2CompatibilityMode.Oracle || h2Mode == H2CompatibilityMode.SQLServer
+        return when {
+            refOption == DatabaseMetaData.importedKeyRestrict && modeDelegatesRefOption -> ReferenceOption.NO_ACTION
+            refOption == DatabaseMetaData.importedKeyRestrict -> ReferenceOption.RESTRICT
+            else -> super.resolveRefOptionFromJdbc(refOption)
+        }
+    }
 
     companion object : DialectNameProvider("H2")
 }
