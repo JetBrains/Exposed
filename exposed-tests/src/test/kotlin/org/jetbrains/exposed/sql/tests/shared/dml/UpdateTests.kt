@@ -68,7 +68,7 @@ class UpdateTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testUpdateWithJoin01() {
+    fun testUpdateWithSingleJoin() {
         withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { _, users, userData ->
             val join = users.innerJoin(userData)
             join.update {
@@ -80,11 +80,22 @@ class UpdateTests : DatabaseTestsBase() {
                 assertEquals(it[users.name], it[userData.comment])
                 assertEquals(123, it[userData.value])
             }
+
+            val joinWithConstraint = users.innerJoin(userData, { users.id }, { userData.user_id }) { users.id eq "smth" }
+            joinWithConstraint.update {
+                it[userData.comment] = users.name
+                it[userData.value] = 0
+            }
+
+            joinWithConstraint.selectAll().forEach {
+                assertEquals(it[users.name], it[userData.comment])
+                assertEquals(0, it[userData.value])
+            }
         }
     }
 
     @Test
-    fun testUpdateWithJoin02() {
+    fun testUpdateWithMultipleJoins() {
         withCitiesAndUsers(exclude = TestDB.allH2TestDB + TestDB.SQLITE) { cities, users, userData ->
             val join = cities.innerJoin(users).innerJoin(userData)
             join.update {
@@ -109,7 +120,7 @@ class UpdateTests : DatabaseTestsBase() {
             val tableAId = reference("table_a_id", tableA)
         }
 
-        val supportWhere = TestDB.entries - TestDB.allH2TestDB - TestDB.SQLITE + TestDB.H2_ORACLE
+        val supportWhere = TestDB.entries - TestDB.allH2TestDB.toSet() - TestDB.SQLITE + TestDB.H2_ORACLE
 
         withTables(tableA, tableB) { testingDb ->
             val aId = tableA.insertAndGetId { it[foo] = "foo" }
@@ -119,6 +130,7 @@ class UpdateTests : DatabaseTestsBase() {
             }
 
             val join = tableA.innerJoin(tableB)
+            val joinWithConstraint = tableA.innerJoin(tableB, { tableA.id }, { tableB.tableAId }) { tableB.bar eq "foo" }
 
             if (testingDb in supportWhere) {
                 join.update({ tableA.foo eq "foo" }) {
@@ -127,6 +139,11 @@ class UpdateTests : DatabaseTestsBase() {
                 join.selectAll().single().also {
                     assertEquals("baz", it[tableB.bar])
                 }
+
+                joinWithConstraint.update({ tableA.foo eq "foo" }) {
+                    it[tableB.bar] = "baz"
+                }
+                assertEquals(0, joinWithConstraint.selectAll().count())
             } else {
                 expectException<UnsupportedByDialectException> {
                     join.update({ tableA.foo eq "foo" }) {
