@@ -668,7 +668,7 @@ then `onUpdateExclude` should be provided an argument with the specific columns 
 This parameter could also be used for the reverse case when only a small subset of columns should be updated but duplicating the insert values is tedious:
 ```kotlin
 // on conflict, all columns EXCEPT [director] are updated with values from the lambda block
-StarWarsFilms.upsert(onUpdateExclude = setOf(StarWarsFilms.director)) {
+StarWarsFilms.upsert(onUpdateExclude = listOf(StarWarsFilms.director)) {
     it[sequelId] = 9
     it[name] = "The Rise of Skywalker"
     it[director] = "JJ Abrams"
@@ -676,7 +676,7 @@ StarWarsFilms.upsert(onUpdateExclude = setOf(StarWarsFilms.director)) {
 
 // on conflict, ONLY column [director] is updated with value from the lambda block
 StarWarsFilms.upsert(
-    onUpdateExclude = StarWarsFilms.columns.toSet() - StarWarsFilms.director
+    onUpdateExclude = StarWarsFilms.columns - setOf(StarWarsFilms.director)
 ) {
     it[sequelId] = 9
     it[name] = "The Rise of Skywalker"

@@ -418,7 +418,7 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
  * If no columns are provided, primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
  * If left null, all columns will be updated with the values provided for the insert.
- * @param onUpdateExclude Set of specific columns to exclude from updating.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testUpsertWithUniqueIndexConflict
@@ -426,7 +426,7 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
 fun <T : Table> T.upsert(
     vararg keys: Column<*>,
     onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
-    onUpdateExclude: Set<Column<*>>? = null,
+    onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ) = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() }).apply {
@@ -445,7 +445,7 @@ fun <T : Table> T.upsert(
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
  * If left null, all columns will be updated with the values provided for the insert.
- * @param onUpdateExclude Set of specific columns to exclude from updating.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
@@ -455,11 +455,11 @@ fun <T : Table, E : Any> T.batchUpsert(
     data: Iterable<E>,
     vararg keys: Column<*>,
     onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
-    onUpdateExclude: Set<Column<*>>? = null,
+    onUpdateExclude: List<Column<*>>? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> {
-    return batchUpsert(data.iterator(), onUpdate, onUpdateExclude, shouldReturnGeneratedValues, body, keys = keys)
+    return batchUpsert(data.iterator(), onUpdate, onUpdateExclude, shouldReturnGeneratedValues, keys = keys, body = body)
 }
 
 /**
@@ -473,7 +473,7 @@ fun <T : Table, E : Any> T.batchUpsert(
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
  * If left null, all columns will be updated with the values provided for the insert.
- * @param onUpdateExclude Set of specific columns to exclude from updating.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
@@ -483,11 +483,11 @@ fun <T : Table, E : Any> T.batchUpsert(
     data: Sequence<E>,
     vararg keys: Column<*>,
     onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
-    onUpdateExclude: Set<Column<*>>? = null,
+    onUpdateExclude: List<Column<*>>? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> {
-    return batchUpsert(data.iterator(), onUpdate, onUpdateExclude, shouldReturnGeneratedValues, body, keys = keys)
+    return batchUpsert(data.iterator(), onUpdate, onUpdateExclude, shouldReturnGeneratedValues, keys = keys, body = body)
 }
 
 /**
@@ -501,7 +501,7 @@ fun <T : Table, E : Any> T.batchUpsert(
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
  * If left null, all columns will be updated with the values provided for the insert.
- * @param onUpdateExclude Set of specific columns to exclude from updating.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
@@ -510,10 +510,10 @@ fun <T : Table, E : Any> T.batchUpsert(
 private fun <T : Table, E> T.batchUpsert(
     data: Iterator<E>,
     onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
-    onUpdateExclude: Set<Column<*>>? = null,
+    onUpdateExclude: List<Column<*>>? = null,
     shouldReturnGeneratedValues: Boolean = true,
-    body: BatchUpsertStatement.(E) -> Unit,
-    vararg keys: Column<*>
+    vararg keys: Column<*>,
+    body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
     BatchUpsertStatement(this, *keys, onUpdate = onUpdate, onUpdateExclude = onUpdateExclude, shouldReturnGeneratedValues = shouldReturnGeneratedValues)
 }

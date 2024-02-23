@@ -388,7 +388,7 @@ class UpsertTests : DatabaseTestsBase() {
                     rollback()
                 }
 
-                tester.upsert(onUpdateExclude = setOf(tester.code, tester.gains)) {
+                tester.upsert(onUpdateExclude = listOf(tester.code, tester.gains)) {
                     it[item] = itemA
                     it[gains] = 200
                     it[losses] = 0

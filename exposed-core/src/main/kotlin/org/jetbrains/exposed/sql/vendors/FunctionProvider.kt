@@ -534,7 +534,7 @@ abstract class FunctionProvider {
      * @param table Table to either insert values into or update values from.
      * @param data Pairs of columns to use for insert or update and values to insert or update.
      * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
-     * @param onUpdateExclude Set of specific columns to exclude from updating.
+     * @param onUpdateExclude List of specific columns to exclude from updating.
      * @param where Condition that determines which rows to update, if a unique violation is found.
      * @param transaction Transaction where the operation is executed.
      */
@@ -542,7 +542,7 @@ abstract class FunctionProvider {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-        onUpdateExclude: Set<Column<*>>?,
+        onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
@@ -611,10 +611,10 @@ abstract class FunctionProvider {
     /** Returns the columns to be used in the update clause of an upsert statement. */
     protected fun getUpdateColumnsForUpsert(
         dataColumns: List<Column<*>>,
-        toExclude: Set<Column<*>>?,
+        toExclude: List<Column<*>>?,
         keyColumns: List<Column<*>>?
     ): List<Column<*>> {
-        val updateColumns = toExclude?.let { dataColumns - it } ?: dataColumns
+        val updateColumns = toExclude?.let { dataColumns - it.toSet() } ?: dataColumns
         return keyColumns?.let { keys ->
             updateColumns.filter { it !in keys }.ifEmpty { updateColumns }
         } ?: updateColumns

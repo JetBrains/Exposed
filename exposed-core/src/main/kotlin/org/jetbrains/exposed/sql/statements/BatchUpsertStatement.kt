@@ -19,7 +19,7 @@ import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
  * If left null, all columns will be updated with the values provided for the insert.
- * @param onUpdateExclude Set of specific columns to exclude from updating.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
@@ -28,7 +28,7 @@ open class BatchUpsertStatement(
     table: Table,
     vararg val keys: Column<*>,
     val onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-    val onUpdateExclude: Set<Column<*>>?,
+    val onUpdateExclude: List<Column<*>>?,
     shouldReturnGeneratedValues: Boolean = true
 ) : BaseBatchInsertStatement(table, ignore = false, shouldReturnGeneratedValues) {
 

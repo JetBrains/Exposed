@@ -230,7 +230,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-        onUpdateExclude: Set<Column<*>>?,
+        onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
