@@ -301,7 +301,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     override fun count(): Long {
         return if (distinct || groupedByColumns.isNotEmpty() || limit != null) {
             fun Column<*>.makeAlias() =
-                alias(transaction.db.identifierManager.quoteIfNecessary("${table.tableName}_$name"))
+                alias(transaction.db.identifierManager.quoteIfNecessary("${table.tableNameWithoutSchemeSanitized}_$name"))
 
             val originalSet = set
             try {

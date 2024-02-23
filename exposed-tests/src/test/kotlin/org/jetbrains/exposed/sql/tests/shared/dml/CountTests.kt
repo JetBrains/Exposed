@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.max
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.*
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 
 class CountTests : DatabaseTestsBase() {
@@ -24,7 +24,7 @@ class CountTests : DatabaseTestsBase() {
 
     @Test
     fun `test that count() returns right value for Query with group by`() {
-        withCitiesAndUsers { _, user, userData ->
+        withCitiesAndUsers { _, _, userData ->
             val uniqueUsersInData = userData.select(userData.user_id).withDistinct().count()
             val sameQueryWithGrouping = userData.select(userData.value.max()).groupBy(userData.user_id).count()
             assertEquals(uniqueUsersInData, sameQueryWithGrouping)
@@ -39,6 +39,31 @@ class CountTests : DatabaseTestsBase() {
             }
 
             assertEquals(1L, OrgMemberships.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testCountAliasWithTableSchema() {
+        val custom = prepareSchemaForTest("custom")
+        val tester = object : Table("custom.tester") {
+            val amount = integer("amount")
+        }
+
+        withSchemas(custom) {
+            SchemaUtils.create(tester)
+
+            repeat(3) {
+                tester.insert {
+                    it[amount] = 99
+                }
+            }
+
+            // count alias is generated for any query with distinct/groupBy/limit & throws if schema name included
+            assertEquals(1, tester.select(tester.amount).withDistinct().count())
+
+            if (currentDialectTest is SQLServerDialect) {
+                SchemaUtils.drop(tester)
+            }
         }
     }
 }
