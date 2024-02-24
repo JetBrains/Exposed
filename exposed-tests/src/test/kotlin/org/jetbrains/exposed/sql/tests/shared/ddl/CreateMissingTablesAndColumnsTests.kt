@@ -641,6 +641,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+            assertTrue(statements.isEmpty())
         }
     }
 
