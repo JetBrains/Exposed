@@ -11,6 +11,10 @@ class EncryptedBinaryColumnType(
     private val encryptor: Encryptor,
     length: Int
 ) : BinaryColumnType(length) {
+    override fun nonNullValueToString(value: Any): String {
+        return super.nonNullValueToString(notNullValueToDB(value))
+    }
+
     override fun notNullValueToDB(value: Any): Any {
         if (value !is ByteArray) {
             error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")

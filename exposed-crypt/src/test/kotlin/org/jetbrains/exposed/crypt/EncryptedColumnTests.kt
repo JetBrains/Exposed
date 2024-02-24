@@ -1,10 +1,13 @@
 package org.jetbrains.exposed.crypt
 
+import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.update
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -44,19 +47,32 @@ class EncryptedColumnTests : DatabaseTestsBase() {
         }
 
         withTables(stringTable) {
+            val logCaptor = LogCaptor.forName(exposedLogger.name)
+            logCaptor.setLogLevelToDebug()
+
+            val insertedStrings = listOf("testName", "testCity", "testAddress", "testAge")
+            val (insertedName, insertedCity, insertedAddress, insertedAge) = insertedStrings
             val id1 = stringTable.insertAndGetId {
-                it[name] = "testName"
-                it[city] = "testCity".toByteArray()
-                it[address] = "testAddress"
-                it[age] = "testAge"
+                it[name] = insertedName
+                it[city] = insertedCity.toByteArray()
+                it[address] = insertedAddress
+                it[age] = insertedAge
             }
+
+            val insertLog = logCaptor.debugLogs.single()
+            assertTrue(insertLog.startsWith("INSERT "))
+            assertTrue(insertedStrings.none { it in insertLog })
+
+            logCaptor.clearLogs()
+            logCaptor.resetLogLevel()
+            logCaptor.close()
 
             assertEquals(1L, stringTable.selectAll().count())
 
-            assertEquals("testName", stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.name])
-            assertEquals("testCity", String(stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.city]))
-            assertEquals("testAddress", stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.address])
-            assertEquals("testAge", stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.age])
+            assertEquals(insertedName, stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.name])
+            assertEquals(insertedCity, String(stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.city]))
+            assertEquals(insertedAddress, stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.address])
+            assertEquals(insertedAge, stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.age])
         }
     }
 
@@ -69,20 +85,38 @@ class EncryptedColumnTests : DatabaseTestsBase() {
         }
 
         withTables(stringTable) {
+            val logCaptor = LogCaptor.forName(exposedLogger.name)
+            logCaptor.setLogLevelToDebug()
+
+            val insertedStrings = listOf("TestName", "TestCity", "TestAddress")
+            val (insertedName, insertedCity, insertedAddress) = insertedStrings
             val id = stringTable.insertAndGetId {
-                it[name] = "TestName"
-                it[city] = "TestCity".toByteArray()
-                it[address] = "TestAddress"
+                it[name] = insertedName
+                it[city] = insertedCity.toByteArray()
+                it[address] = insertedAddress
             }
 
-            val updatedName = "TestName2"
-            val updatedCity = "TestCity2"
-            val updatedAddress = "TestAddress2"
+            val insertLog = logCaptor.debugLogs.single()
+            assertTrue(insertLog.startsWith("INSERT "))
+            assertTrue(insertedStrings.none { it in insertLog })
+
+            logCaptor.clearLogs()
+
+            val updatedStrings = listOf("TestName2", "TestCity2", "TestAddress2")
+            val (updatedName, updatedCity, updatedAddress) = updatedStrings
             stringTable.update({ stringTable.id eq id }) {
                 it[name] = updatedName
                 it[city] = updatedCity.toByteArray()
                 it[address] = updatedAddress
             }
+
+            val updateLog = logCaptor.debugLogs.single()
+            assertTrue(updateLog.startsWith("UPDATE "))
+            assertTrue(updatedStrings.none { it in updateLog })
+
+            logCaptor.clearLogs()
+            logCaptor.resetLogLevel()
+            logCaptor.close()
 
             assertEquals(updatedName, stringTable.selectAll().where { stringTable.id eq id }.single()[stringTable.name])
             assertEquals(updatedCity, String(stringTable.selectAll().where { stringTable.id eq id }.single()[stringTable.city]))
