@@ -12,6 +12,10 @@ class EncryptedVarCharColumnType(
     private val encryptor: Encryptor,
     colLength: Int,
 ) : VarCharColumnType(colLength) {
+    override fun nonNullValueToString(value: Any): String {
+        return super.nonNullValueToString(notNullValueToDB(value))
+    }
+
     override fun notNullValueToDB(value: Any): Any {
         return encryptor.encrypt(value.toString())
     }

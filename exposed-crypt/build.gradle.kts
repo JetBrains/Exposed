@@ -19,6 +19,7 @@ dependencies {
     testImplementation(project(":exposed-tests"))
     testImplementation(libs.junit)
     testImplementation(kotlin("test-junit"))
+    testImplementation(libs.logcaptor)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
