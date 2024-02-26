@@ -201,6 +201,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
@@ -216,8 +217,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         }
 
         +" DO"
-        val dataColumns = data.unzip().first
-        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
+        val updateColumns = getUpdateColumnsForUpsert(data.unzip().first, onUpdateExclude, keyColumns)
         appendUpdateToUpsertClause(table, updateColumns, onUpdate, transaction, isAliasNeeded = false)
 
         where?.let {

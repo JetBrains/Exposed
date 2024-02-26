@@ -663,6 +663,26 @@ StarWarsFilms.upsert(
     it[director] = "JJ Abrams"
 }
 ```
+If the update operation should be identical to the insert operation except for a few columns,
+then `onUpdateExclude` should be provided an argument with the specific columns to exclude.
+This parameter could also be used for the reverse case when only a small subset of columns should be updated but duplicating the insert values is tedious:
+```kotlin
+// on conflict, all columns EXCEPT [director] are updated with values from the lambda block
+StarWarsFilms.upsert(onUpdateExclude = listOf(StarWarsFilms.director)) {
+    it[sequelId] = 9
+    it[name] = "The Rise of Skywalker"
+    it[director] = "JJ Abrams"
+}
+
+// on conflict, ONLY column [director] is updated with value from the lambda block
+StarWarsFilms.upsert(
+    onUpdateExclude = StarWarsFilms.columns - setOf(StarWarsFilms.director)
+) {
+    it[sequelId] = 9
+    it[name] = "The Rise of Skywalker"
+    it[director] = "JJ Abrams"
+}
+```
 If a specific database supports user-defined key columns and none are provided, the table's primary key is used. If there 
 is no defined primary key, the first unique index is used. If there are no unique indices, each database handles this case 
 differently, so it is strongly advised that keys are defined to avoid unexpected results.

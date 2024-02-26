@@ -230,6 +230,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
@@ -256,7 +257,8 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
             onUpdate?.appendTo { (columnToUpdate, updateExpression) ->
                 append("${transaction.identity(columnToUpdate)}=$updateExpression")
             } ?: run {
-                data.unzip().first.appendTo { column ->
+                val updateColumns = getUpdateColumnsForUpsert(data.unzip().first, onUpdateExclude, null)
+                updateColumns.appendTo { column ->
                     val columnName = transaction.identity(column)
                     if (isAliasSupported) {
                         append("$columnName=NEW.$columnName")

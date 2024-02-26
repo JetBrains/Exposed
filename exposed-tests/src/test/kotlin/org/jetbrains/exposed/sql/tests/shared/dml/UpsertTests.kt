@@ -14,9 +14,11 @@ import org.jetbrains.exposed.sql.statements.BatchUpsertStatement
 import org.jetbrains.exposed.sql.tests.*
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import java.util.*
 import kotlin.properties.Delegates
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
 // Upsert implementation does not support H2 version 1
@@ -340,6 +342,66 @@ class UpsertTests : DatabaseTestsBase() {
                     it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar"))
                 }
                 assertEquals("foobar", tester.selectAll().where { tester.word eq "$testWord 2" }.single()[tester.phrase])
+            }
+        }
+    }
+
+    @Test
+    fun testUpsertWithUpdateExcludingColumns() {
+        val tester = object : Table("tester") {
+            val item = varchar("item", 64).uniqueIndex()
+            val code = uuid("code").clientDefault { UUID.randomUUID() }
+            val gains = integer("gains")
+            val losses = integer("losses")
+        }
+
+        withTables(tester) { testDb ->
+            excludingH2Version1(testDb) {
+                db.useNestedTransactions = true
+
+                val itemA = "Item A"
+                tester.upsert {
+                    it[item] = itemA
+                    it[gains] = 50
+                    it[losses] = 50
+                }
+
+                val (insertCode, insertGains, insertLosses) = tester.selectAll().single().let {
+                    Triple(it[tester.code], it[tester.gains], it[tester.losses])
+                }
+
+                transaction {
+                    // all fields get updated by default, including columns with default values
+                    tester.upsert {
+                        it[item] = itemA
+                        it[gains] = 200
+                        it[losses] = 0
+                    }
+
+                    val (updateCode, updateGains, updateLosses) = tester.selectAll().single().let {
+                        Triple(it[tester.code], it[tester.gains], it[tester.losses])
+                    }
+                    assertNotEquals(insertCode, updateCode)
+                    assertNotEquals(insertGains, updateGains)
+                    assertNotEquals(insertLosses, updateLosses)
+
+                    rollback()
+                }
+
+                tester.upsert(onUpdateExclude = listOf(tester.code, tester.gains)) {
+                    it[item] = itemA
+                    it[gains] = 200
+                    it[losses] = 0
+                }
+
+                val (updateCode, updateGains, updateLosses) = tester.selectAll().single().let {
+                    Triple(it[tester.code], it[tester.gains], it[tester.losses])
+                }
+                assertEquals(insertCode, updateCode)
+                assertEquals(insertGains, updateGains)
+                assertNotEquals(insertLosses, updateLosses)
+
+                db.useNestedTransactions = false
             }
         }
     }

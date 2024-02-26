@@ -216,12 +216,13 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
     ): String {
         // SQLSERVER MERGE statement must be terminated by a semi-colon (;)
-        return super.upsert(table, data, onUpdate, where, transaction, *keys) + ";"
+        return super.upsert(table, data, onUpdate, onUpdateExclude, where, transaction, *keys) + ";"
     }
 
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
