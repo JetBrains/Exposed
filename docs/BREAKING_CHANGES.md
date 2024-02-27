@@ -1,5 +1,17 @@
 # Breaking Changes
 
+# 0.48.0
+
+* In `nonNullValueToString` for `KotlinInstantColumnType` and `JavaDateColumnType`, the formatted String for MySQL did not match the format received from the metadata
+  when `isFractionDateTimeSupported` is true, so a new formatter specific to that is now used.
+* In `nonNullValueToString` for `KotlinLocalDateTimeColumnType`, the formatted String for MySQL did not match the format received from the metadata
+  when `isFractionDateTimeSupported` is true, so a new formatter specific to MySQL is now used.
+* In `nonNullValueToString` for `DateColumnType`, `JavaLocalDateTimeColumnType`, `JavaLocalTimeColumnType`, `JavaInstantColumnType`, `KotlinLocalDateTimeColumnType`,
+  `KotlinLocalTimeColumnType`, and `KotlinInstantColumnType`, the correct formatter for MySQL is used when the version (below 5.6) does not support fractional
+  seconds.
+* In `nonNullValueToString` for `DateColumnType` and `DateTimeWithTimeZoneColumnType`, the formatters used are changed to reflect the fact that Joda-Time stores
+  date/time values only down to the millisecond (up to SSS and not SSSSSS).
+
 ## 0.47.0
 
 The function `SchemaUtils.checkExcessiveIndices` used to check both excessive indices and excessive foreign key
