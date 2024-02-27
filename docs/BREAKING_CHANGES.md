@@ -1,6 +1,6 @@
 # Breaking Changes
 
-# 0.48.0
+## 0.48.0
 
 * In `nonNullValueToString` for `KotlinInstantColumnType` and `JavaDateColumnType`, the formatted String for MySQL did not match the format received from the metadata
   when `isFractionDateTimeSupported` is true, so a new formatter specific to that is now used.
@@ -11,6 +11,11 @@
   seconds.
 * In `nonNullValueToString` for `DateColumnType` and `DateTimeWithTimeZoneColumnType`, the formatters used are changed to reflect the fact that Joda-Time stores
   date/time values only down to the millisecond (up to SSS and not SSSSSS).
+* Functions `anyFrom(array)` and `allFrom(array)` now use `ArrayColumnType` to process the provided array argument when query building.
+  `ArrayColumnType` requires a base column type to process contents correctly and Exposed attempts to resolve the best match internally based on the array content type.
+  A specific column type argument should be provided to the function parameter `delegateType` if the content requires either an unsupported or custom column type, or
+  a column type not defined in the `exposed-core` module.
+* `exposed-crypt` module now uses Spring Security Crypto 6.+, which requires Java 17 as a minimum version.
 
 ## 0.47.0
 
