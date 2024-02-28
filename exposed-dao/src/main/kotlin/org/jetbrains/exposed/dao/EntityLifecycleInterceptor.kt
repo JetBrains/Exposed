@@ -22,7 +22,7 @@ internal fun <T> executeAsPartOfEntityLifecycle(body: () -> T): T {
 }
 
 /**
- * Represents a [StatementInterceptor] specifically for the statement lifecycle of [Entity] instances,
+ * Represents a [StatementInterceptor] specifically responsible for the statement lifecycle of [Entity] instances,
  * which is loaded whenever a [Transaction] instance is initialized.
  */
 class EntityLifecycleInterceptor : GlobalStatementInterceptor {
