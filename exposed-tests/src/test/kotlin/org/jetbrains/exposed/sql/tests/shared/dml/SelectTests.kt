@@ -325,11 +325,38 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testEqAnyFromList() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withCitiesAndUsers { _, users, _ ->
+                val r = users.selectAll().where {
+                    users.id eq anyFrom(listOf("andrey", "alex"))
+                }.orderBy(users.name).toList()
+
+                assertEquals(2, r.size)
+                assertEquals("Alex", r[0][users.name])
+                assertEquals("Andrey", r[1][users.name])
+            }
+        }
+    }
+
+    @Test
     fun testNeqAnyFromArray() {
         withDb(testDBsSupportingAnyAndAllFromArrays) {
             withCitiesAndUsers { _, users, _ ->
                 val r = users.selectAll().where {
                     users.id neq anyFrom(arrayOf("andrey"))
+                }.orderBy(users.name)
+                assertEquals(4, r.count())
+            }
+        }
+    }
+
+    @Test
+    fun testNeqAnyFromList() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withCitiesAndUsers { _, users, _ ->
+                val r = users.selectAll().where {
+                    users.id neq anyFrom(listOf("andrey"))
                 }.orderBy(users.name)
                 assertEquals(4, r.count())
             }
@@ -347,10 +374,35 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testNeqAnyFromEmptyList() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withCitiesAndUsers { _, users, _ ->
+                val r = users.selectAll().where { users.id neq anyFrom(emptyList()) }.orderBy(users.name)
+                assert(r.empty())
+            }
+        }
+    }
+
+    @Test
     fun testGreaterEqAnyFromArray() {
         withDb(testDBsSupportingAnyAndAllFromArrays) {
             withSales { _, sales ->
                 val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
+                val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
+                    .orderBy(sales.amount)
+                    .map { it[sales.product] }
+                assertEquals(6, r.size)
+                r.subList(0, 3).forEach { assertEquals("tea", it) }
+                r.subList(3, 6).forEach { assertEquals("coffee", it) }
+            }
+        }
+    }
+
+    @Test
+    fun testGreaterEqAnyFromList() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withSales { _, sales ->
+                val amounts = listOf(100, 1000).map { it.toBigDecimal() }
                 val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
                     .orderBy(sales.amount)
                     .map { it[sales.product] }
@@ -401,6 +453,18 @@ class SelectTests : DatabaseTestsBase() {
         withDb(testDBsSupportingAnyAndAllFromArrays) {
             withSales { _, sales ->
                 val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
+                val r = sales.selectAll().where { sales.amount greaterEq allFrom(amounts) }.toList()
+                assertEquals(3, r.size)
+                r.forEach { assertEquals("coffee", it[sales.product]) }
+            }
+        }
+    }
+
+    @Test
+    fun testGreaterEqAllFromList() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withSales { _, sales ->
+                val amounts = listOf(100, 1000).map { it.toBigDecimal() }
                 val r = sales.selectAll().where { sales.amount greaterEq allFrom(amounts) }.toList()
                 assertEquals(3, r.size)
                 r.forEach { assertEquals("coffee", it[sales.product]) }

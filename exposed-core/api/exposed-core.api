@@ -2696,9 +2696,9 @@ public final class org/jetbrains/exposed/sql/functions/math/TanFunction : org/je
 }
 
 public final class org/jetbrains/exposed/sql/ops/AllAnyFromArrayOp : org/jetbrains/exposed/sql/ops/AllAnyFromBaseOp {
-	public fun <init> (Z[Ljava/lang/Object;Lorg/jetbrains/exposed/sql/ColumnType;)V
+	public fun <init> (ZLjava/util/List;Lorg/jetbrains/exposed/sql/ColumnType;)V
 	public synthetic fun registerSubSearchArgument (Lorg/jetbrains/exposed/sql/QueryBuilder;Ljava/lang/Object;)V
-	public fun registerSubSearchArgument (Lorg/jetbrains/exposed/sql/QueryBuilder;[Ljava/lang/Object;)V
+	public fun registerSubSearchArgument (Lorg/jetbrains/exposed/sql/QueryBuilder;Ljava/util/List;)V
 }
 
 public abstract class org/jetbrains/exposed/sql/ops/AllAnyFromBaseOp : org/jetbrains/exposed/sql/Op {
