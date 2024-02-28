@@ -1,3 +1,53 @@
+# 0.48.0
+Infrastructure:
+* PostgreSQL driver 42.7.2
+* Joda Time 2.12.7
+* Kotlin Coroutines 1.8.0
+* log4j2 2.23.0
+* Kotlinx Serialization Json 1.6.3
+* Spring Framework 6.1.4
+* Spring Security Crypto 6.2.1
+
+Breaking changes:
+* `nonNullValueToString()` in some date/time column types now uses more appropriate string formatters.
+* `anyFrom(array)` and `allFrom(array)` may require an additional argument if a matching column type cannot be resolved for the array contents.
+* `exposed-crypt` module now uses Spring Security Crypto 6.+, which requires Java 17 as a minimum version.
+* More details at [Breaking changes](BREAKING_CHANGES.md#0480)
+
+Features:
+* feat: EXPOSED-248 Support array column type by @bog-walk in https://github.com/JetBrains/Exposed/pull/1986
+* feat: EXPOSED-290 Support ANY and ALL operators using array column expressions by @bog-walk in https://github.com/JetBrains/Exposed/pull/1988
+* EXPOSED-121, allowing option for "real" blobs in postgres by @elektro-wolle in https://github.com/JetBrains/Exposed/pull/1822
+* feat: EXPOSED-258 Enhance upsert to allow exclusion of columns set on conflict by @bog-walk in https://github.com/JetBrains/Exposed/pull/2006
+
+Bug fixes:
+* fix: EXPOSED-272 [MySQL, Oracle] Unsupported type BIGINT UNSIGNED for auto-increment by @bog-walk in https://github.com/JetBrains/Exposed/pull/1982
+* fix: EXPOSED-266 Between() accepts arguments of different type than column type by @bog-walk in https://github.com/JetBrains/Exposed/pull/1983
+* fix: EXPOSED-280 Comparison operators show incorrect compiler warning with datetime columns by @bog-walk in https://github.com/JetBrains/Exposed/pull/1984
+* fix: EXPOSED-287 Wrong parenthesis with advanced use of isDistinctFrom by @bog-walk in https://github.com/JetBrains/Exposed/pull/1990
+* fix: EXPOSED-282 Timestamp with timezone column default falsely triggers ALTER statement by @joc-a in https://github.com/JetBrains/Exposed/pull/1981
+* fix!: EXPOSED-282 Timestamp column default falsely triggers ALTER statement by @joc-a in https://github.com/JetBrains/Exposed/pull/1981
+* fix!: EXPOSED-284 Datetime column default falsely triggers ALTER statement by @joc-a in https://github.com/JetBrains/Exposed/pull/1981
+* fix: EXPOSED-285 Time column defaults falsely trigger ALTER statements by @joc-a in https://github.com/JetBrains/Exposed/pull/1981
+* fix: EXPOSED-256 Date column defaults falsely trigger ALTER statements by @joc-a in https://github.com/JetBrains/Exposed/pull/1981
+* fix: EXPOSED-292 Explicit nulls in insert with databaseGenerated() by @bog-walk in https://github.com/JetBrains/Exposed/pull/1993
+* fix!: Use correct formatter for MySQL when the version does not support fractional seconds by @joc-a in https://github.com/JetBrains/Exposed/pull/1997
+* fix!: Change formatters in DateColumnType to reflect the fact that Joda-Time stores date/time values only down to the millisecond by @joc-a in https://github.com/JetBrains/Exposed/pull/1997
+* fix!: EXPOSED-288 Extend ANY and ALL operators to use ArrayColumnType by @bog-walk in https://github.com/JetBrains/Exposed/pull/1992
+* fix: Add ArrayColumnType default override for datetime module types by @bog-walk in https://github.com/JetBrains/Exposed/pull/1995
+* fix: EXPOSED-299 [H2 modes] SchemaUtils drops and adds identical composite foreign key by @bog-walk in https://github.com/JetBrains/Exposed/pull/2005
+* fix: EXPOSED-301 Update with join throws if additionalConstraint provided by @bog-walk in https://github.com/JetBrains/Exposed/pull/2007
+* fix: EXPOSED-302 Count with alias fails if table name includes schema by @bog-walk in https://github.com/JetBrains/Exposed/pull/2008
+* fix: EXPOSED-293 Logger prints plaintext value of encryptedVarchar by @bog-walk in https://github.com/JetBrains/Exposed/pull/2009
+
+* Build:
+* build!: EXPOSED-234 Set exposed-crypt to jdk 17 & bump spring-security-crypto to 6.+ by @bog-walk in https://github.com/JetBrains/Exposed/pull/2001
+
+Docs:
+* docs: Add missing KDocs for EntityID and Entity subclasses API by @bog-walk in https://github.com/JetBrains/Exposed/pull/1991
+* docs: Add details about ArrayColumnType and ANY/ALL operators by @bog-walk in https://github.com/JetBrains/Exposed/pull/2000
+* docs: Fix foreign key KDocs that swap parent and child references by @bog-walk in https://github.com/JetBrains/Exposed/pull/2004
+
 # 0.47.0
 Infrastructure:
 * Joda Time 2.12.6
