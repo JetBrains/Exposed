@@ -2730,11 +2730,11 @@ public final class org/jetbrains/exposed/sql/ops/AllAnyFromTableOp : org/jetbrai
 public abstract class org/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/ComplexExpression {
 	public fun <init> (Ljava/lang/Object;Ljava/lang/Iterable;Z)V
 	public synthetic fun <init> (Ljava/lang/Object;Ljava/lang/Iterable;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	protected abstract fun extractValues (Ljava/lang/Object;)Ljava/util/List;
 	protected abstract fun getColumnTypes ()Ljava/util/List;
-	public final fun getExpr ()Ljava/lang/Object;
+	public fun getExpr ()Ljava/lang/Object;
 	public final fun getList ()Ljava/lang/Iterable;
 	public final fun isInList ()Z
+	protected abstract fun registerValues (Lorg/jetbrains/exposed/sql/QueryBuilder;Ljava/lang/Object;)V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
@@ -2750,18 +2750,24 @@ public final class org/jetbrains/exposed/sql/ops/InTableOp : org/jetbrains/expos
 public final class org/jetbrains/exposed/sql/ops/PairInListOp : org/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp {
 	public fun <init> (Lkotlin/Pair;Ljava/lang/Iterable;Z)V
 	public synthetic fun <init> (Lkotlin/Pair;Ljava/lang/Iterable;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun extractValues (Ljava/lang/Object;)Ljava/util/List;
+	public synthetic fun getExpr ()Ljava/lang/Object;
+	public fun getExpr ()Lkotlin/Pair;
+	public synthetic fun registerValues (Lorg/jetbrains/exposed/sql/QueryBuilder;Ljava/lang/Object;)V
 }
 
 public final class org/jetbrains/exposed/sql/ops/SingleValueInListOp : org/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Iterable;Z)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Iterable;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun getExpr ()Ljava/lang/Object;
+	public fun getExpr ()Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
 }
 
 public final class org/jetbrains/exposed/sql/ops/TripleInListOp : org/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp {
 	public fun <init> (Lkotlin/Triple;Ljava/lang/Iterable;Z)V
 	public synthetic fun <init> (Lkotlin/Triple;Ljava/lang/Iterable;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun extractValues (Ljava/lang/Object;)Ljava/util/List;
+	public synthetic fun getExpr ()Ljava/lang/Object;
+	public fun getExpr ()Lkotlin/Triple;
+	public synthetic fun registerValues (Lorg/jetbrains/exposed/sql/QueryBuilder;Ljava/lang/Object;)V
 }
 
 public abstract class org/jetbrains/exposed/sql/statements/BaseBatchInsertStatement : org/jetbrains/exposed/sql/statements/InsertStatement {
