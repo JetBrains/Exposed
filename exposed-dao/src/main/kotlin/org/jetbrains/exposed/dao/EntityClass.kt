@@ -461,14 +461,29 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     ) =
         registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
 
+    /**
+     * Returns a [ColumnWithTransform] delegate that transforms this stored [TColumn] value on every read.
+     *
+     * @param toColumn A pure function that converts a transformed value to a value that can be stored
+     * in this original column type.
+     * @param toReal A pure function that transforms a value stored in this original column type.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
+     */
     fun <TColumn : Any?, TReal : Any?> Column<TColumn>.transform(
         toColumn: (TReal) -> TColumn,
         toReal: (TColumn) -> TReal
     ): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, toColumn, toReal, false)
 
     /**
-     * Function will return [ColumnWithTransform] delegate that will cache value on read for the same [TColumn] value.
-     * @param toReal should be pure function
+     * Returns a [ColumnWithTransform] delegate that will cache the transformed value on first read of
+     * this same stored [TColumn] value.
+     *
+     * @param toColumn A pure function that converts a transformed value to a value that can be stored
+     * in this original column type.
+     * @param toReal A pure function that transforms a value stored in this original column type.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
     fun <TColumn : Any?, TReal : Any?> Column<TColumn>.memoizedTransform(
         toColumn: (TReal) -> TColumn,
