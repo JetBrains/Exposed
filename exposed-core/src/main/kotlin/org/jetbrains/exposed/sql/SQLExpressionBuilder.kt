@@ -207,7 +207,7 @@ infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int)
  * @sample org.jetbrains.exposed.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArraySlice
  */
 fun <E, T : List<E>?> ExpressionWithColumnType<T>.slice(lower: Int? = null, upper: Int? = null): ArraySlice<E, T> =
-    ArraySlice(this, lower, upper, ArrayColumnType((this.columnType as ArrayColumnType).delegate))
+    ArraySlice(this, lower, upper, this.columnType as ArrayColumnType)
 
 // Sequence Manipulation Functions
 
