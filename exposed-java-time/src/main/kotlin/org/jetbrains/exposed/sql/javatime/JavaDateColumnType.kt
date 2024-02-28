@@ -501,6 +501,36 @@ class JavaDurationColumnType : ColumnType() {
     }
 }
 
+class TstzRangeColumnType : ColumnType() {
+    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssXXX", Locale.ROOT)
+    override fun sqlType(): String = "tstzrange"
+
+    override fun valueFromDB(value: Any): Any {
+        if (value is String) {
+            // Remove the tstzrange specific characters
+            val trimmedValue = value.removeSurrounding("[", "]").removeSurrounding("(", ")")
+            // Split the string into start and end parts
+            val parts = trimmedValue.split(",").map { it.trim() }
+            if (parts.size == 2) {
+                // Parse the start and end timestamps
+                val start = ZonedDateTime.parse(parts[0], formatter)
+                val end = ZonedDateTime.parse(parts[1], formatter)
+                return Pair(start, end)
+            }
+        }
+        throw IllegalArgumentException("Unexpected value of type tstzrange: $value")
+    }
+
+    override fun nonNullValueToString(value: Any): String {
+        // Convert Kotlin type back to a string representation for PostgreSQL
+        if (value is Pair<*, *>) {
+            // Format the Pair<ZonedDateTime, ZonedDateTime> to tstzrange string format
+            return "'[${value.first}, ${value.second}]'::tstzrange"
+        }
+        throw IllegalArgumentException("Unexpected value: $value")
+    }
+}
+
 /**
  * A date column to store a date.
  *
@@ -549,3 +579,6 @@ fun Table.timestampWithTimeZone(name: String): Column<OffsetDateTime> =
  * @param name The column name
  */
 fun Table.duration(name: String): Column<Duration> = registerColumn(name, JavaDurationColumnType())
+
+fun Table.tstzrange(name: String): Column<Pair<ZonedDateTime, ZonedDateTime>> = registerColumn(name, TstzRangeColumnType())
+
