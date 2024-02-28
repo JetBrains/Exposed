@@ -128,6 +128,21 @@ inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType? 
     // emptyArray() without type info generates ARRAY[]
     @OptIn(InternalApi::class)
     val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
+    return AllAnyFromArrayOp(true, array.toList(), columnType)
+}
+
+/**
+ * Returns this list of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects.
+ *
+ * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
+ * resolved according to the internal mapping of the element's type in [resolveColumnType].
+ *
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
+ */
+inline fun <reified T : Any> anyFrom(array: List<T>, delegateType: ColumnType? = null): Op<T> {
+    // emptyList() without type info generates ARRAY[]
+    @OptIn(InternalApi::class)
+    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
     return AllAnyFromArrayOp(true, array, columnType)
 }
 
@@ -150,6 +165,21 @@ fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false,
  */
 inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> {
     // emptyArray() without type info generates ARRAY[]
+    @OptIn(InternalApi::class)
+    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
+    return AllAnyFromArrayOp(false, array.toList(), columnType)
+}
+
+/**
+ * Returns this list of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects.
+ *
+ * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
+ * resolved according to the internal mapping of the element's type in [resolveColumnType].
+ *
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
+ */
+inline fun <reified T : Any> allFrom(array: List<T>, delegateType: ColumnType? = null): Op<T> {
+    // emptyList() without type info generates ARRAY[]
     @OptIn(InternalApi::class)
     val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
     return AllAnyFromArrayOp(false, array, columnType)
