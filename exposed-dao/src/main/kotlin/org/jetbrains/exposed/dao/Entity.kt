@@ -18,7 +18,7 @@ open class ColumnWithTransform<TColumn, TReal>(
     /** The function used to convert a transformed value to a value that can be stored in the original column type. */
     val toColumn: (TReal) -> TColumn,
     toReal: (TColumn) -> TReal,
-    /** Whether the original and transformed value should be cached to avoid multiple conversion calls. */
+    /** Whether the original and transformed values should be cached to avoid multiple conversion calls. */
     protected val cacheResult: Boolean = false
 ) {
     private var cache: Pair<TColumn, TReal>? = null
@@ -282,8 +282,6 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
      * for use in many-to-many relations.
      *
      * The reference should have been defined by the creation of a column using `reference()` on an intermediate table.
-     * This should be used as the [targetColumn], while the id column of the table associated with
-     * this [EntityClass] should be used as the [sourceColumn].
      *
      * @param sourceColumn The intermediate table's reference column for the child entity class.
      * @param targetColumn The intermediate table's reference column for the parent entity class.
