@@ -885,6 +885,73 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testIterationOverSizedIterableWithPreload() {
+        fun HashMap<String, Pair<Int, Long>>.assertEachQueryExecutedOnlyOnce() {
+            forEach { (statement, stats) ->
+                val executionCount = stats.first
+                assertEquals(1, executionCount, "Statement executed more than once: $statement")
+            }
+        }
+
+        withTables(Regions, Schools) {
+            val region1 = Region.new {
+                name = "United Kingdom"
+            }
+            School.new {
+                name = "Eton"
+                region = region1
+            }
+            School.new {
+                name = "Harrow"
+                region = region1
+            }
+
+            commit()
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                debug = true // enables tracking of executed statements in this transaction
+
+                val allSchools = School.all().with(School::region).toList()
+
+                assertEquals(2, allSchools.size)
+                // expected: 1 query to select all School, and 1 query to select referenced Regions
+                assertEquals(2, statementCount)
+                assertEquals(statementCount, statementStats.size)
+                statementStats.assertEachQueryExecutedOnlyOnce()
+
+                // reset tracker
+                statementCount = 0
+                statementStats.clear()
+
+                val oneSchool = School.all().limit(1).with(School::region).toList()
+
+                assertEquals(1, oneSchool.size)
+                assertEquals(2, statementCount)
+                assertEquals(statementCount, statementStats.size)
+                statementStats.assertEachQueryExecutedOnlyOnce()
+
+                debug = false
+            }
+
+            // test that cached result doesn't propagate when SizedIterable query changes after loading
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                debug = true
+
+                val oneSchool = School.all().with(School::region).limit(1).toList()
+
+                assertEquals(1, oneSchool.size)
+                // expected: 1 query to select all School, 1 query to select the referenced Regions,
+                // then 1 new query to select only first School
+                assertEquals(3, statementCount)
+                assertEquals(statementCount, statementStats.size)
+                statementStats.assertEachQueryExecutedOnlyOnce()
+
+                debug = false
+            }
+        }
+    }
+
+    @Test
     fun preloadReferencesOnAnEntity() {
         withTables(Regions, Schools) {
             val region1 = Region.new {

@@ -2,6 +2,7 @@ package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.LazySizedIterable
 import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.emptySized
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -240,6 +241,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
 
 fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.with(vararg relations: KProperty1<out REF, Any?>): L {
     toList().apply {
+        (this@with as? LazySizedIterable<SRC>)?.loadedResult = this
         if (any { it.isNewEntity() }) {
             TransactionManager.current().flushCache()
         }
