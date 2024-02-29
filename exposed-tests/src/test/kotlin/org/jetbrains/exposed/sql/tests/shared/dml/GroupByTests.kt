@@ -53,7 +53,7 @@ class GroupByTests : DatabaseTestsBase() {
             val maxExpr = cities.id.max()
             val r = (cities innerJoin users).select(cities.name, users.id.count(), maxExpr)
                 .groupBy(cities.name)
-                .having { users.id.count().eq(maxExpr) }
+                .having { users.id.count().eq<Number, Long, Int>(maxExpr) }
                 .orderBy(cities.name)
                 .toList()
 

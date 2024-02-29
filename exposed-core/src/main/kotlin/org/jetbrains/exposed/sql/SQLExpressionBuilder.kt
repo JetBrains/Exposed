@@ -343,7 +343,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.eq(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.eq(
         other: ExpressionWithColumnType<E>
     ): Op<Boolean> = other eq this
 
@@ -377,7 +377,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is not equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.neq(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.neq(
         other: ExpressionWithColumnType<E>
     ): Op<Boolean> = other neq this
 
@@ -400,7 +400,7 @@ interface ISqlExpressionBuilder {
     ): LessOp = LessOp(this, other)
 
     /** Checks if this expression is less than some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.less(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.less(
         other: ExpressionWithColumnType<E>
     ): LessOp = LessOp(this, other)
 
@@ -423,7 +423,7 @@ interface ISqlExpressionBuilder {
     ): LessEqOp = LessEqOp(this, other)
 
     /** Checks if this expression is less than or equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.lessEq(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.lessEq(
         other: ExpressionWithColumnType<E>
     ): LessEqOp = LessEqOp(this, other)
 
@@ -446,7 +446,7 @@ interface ISqlExpressionBuilder {
     ): GreaterOp = GreaterOp(this, other)
 
     /** Checks if this expression is greater than some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.greater(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greater(
         other: ExpressionWithColumnType<E>
     ): GreaterOp = GreaterOp(this, other)
 
@@ -469,7 +469,7 @@ interface ISqlExpressionBuilder {
     ): GreaterEqOp = GreaterEqOp(this, other)
 
     /** Checks if this expression is greater than or equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.greaterEq(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greaterEq(
         other: ExpressionWithColumnType<E>
     ): GreaterEqOp = GreaterEqOp(this, other)
 
