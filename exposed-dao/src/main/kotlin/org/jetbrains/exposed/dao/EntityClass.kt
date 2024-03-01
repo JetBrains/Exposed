@@ -394,6 +394,10 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         return prototype
     }
 
+    /**
+     * Creates a [View] or subset of [Entity] instances, which are managed by this [EntityClass] and
+     * conform to the specified [op] conditional expression.
+     */
     inline fun view(op: SqlExpressionBuilder.() -> Op<Boolean>) = View(SqlExpressionBuilder.op(), this)
 
     private val refDefinitions = HashMap<Pair<Column<*>, KClass<*>>, Any>()
