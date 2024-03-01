@@ -129,7 +129,7 @@ class EntityCacheTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `change EntityCache maxEntitiesToStore in the middle of transaction`() {
+    fun changeEntityCacheMaxEntitiesToStoreInMiddleOfTransaction() {
         withTables(TestTable) {
             repeat(20) {
                 TestEntity.new {
