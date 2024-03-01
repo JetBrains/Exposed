@@ -419,7 +419,6 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Parent
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Children
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Child
-     *
      */
     infix fun <REF : Comparable<REF>> referencedOn(column: Column<REF>) = registerRefRule(column) { Reference(column, this) }
 

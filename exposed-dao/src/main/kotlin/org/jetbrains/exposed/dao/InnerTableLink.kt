@@ -9,6 +9,18 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
+/**
+ * Class responsible for implementing property delegates of the read-write properties involved in a many-to-many
+ * relation, which uses an intermediate (join) table.
+ *
+ * @param table The intermediate table containing reference columns to both child and parent entities.
+ * @param sourceTable The [IdTable] associated with the source child entity.
+ * @param target The [EntityClass] for the target parent entity.
+ * @param _sourceColumn The intermediate table's reference column for the child entity class. If left `null`,
+ * this will be inferred from the provided intermediate [table] columns.
+ * @param _targetColumn The intermediate table's reference column for the parent entity class. If left `null`,
+ * this will be inferred from the provided intermediate [table] columns.
+ */
 @Suppress("UNCHECKED_CAST")
 class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparable<ID>, Target : Entity<ID>>(
     val table: Table,
@@ -35,10 +47,12 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         }
     }
 
+    /** The reference identity column for the child entity class. */
     val sourceColumn = _sourceColumn
         ?: table.columns.singleOrNull { it.referee == sourceTable.id } as? Column<EntityID<SID>>
         ?: error("Table does not reference source")
 
+    /** The reference identity column for the parent entity class. */
     val targetColumn = _targetColumn
         ?: table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID<ID>>
         ?: error("Table does not reference target")
