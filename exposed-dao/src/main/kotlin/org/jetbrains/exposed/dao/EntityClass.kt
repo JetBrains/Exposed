@@ -36,24 +36,27 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
 
     operator fun get(id: ID): T = get(DaoEntityID(id, table))
 
+    /**
+     * Instantiates an [EntityCache] with the current [Transaction] if one does not already exist in the
+     * current transaction scope.
+     */
     protected open fun warmCache(): EntityCache = TransactionManager.current().entityCache
 
     /**
-     * Get an entity by its [id].
+     * Gets an [Entity] by its [id] value.
      *
-     * @param id The id of the entity
-     *
-     * @return The entity that has this id or null if no entity was found.
+     * @param id The id value of the entity.
+     * @return The entity that has this id value, or `null` if no entity was found.
      */
     fun findById(id: ID): T? = findById(DaoEntityID(id, table))
 
     /**
-     * Get an entity by its [id] and update the entity.
+     * Gets an [Entity] by its [id] value and updates the retrieved entity.
      *
-     * @param id The id of the entity
-     * @param block Lambda that contains entity updates
-     *
-     * @return The updated entity that has this id or null if no entity was found.
+     * @param id The id value of the entity.
+     * @param block Lambda that contains entity field updates.
+     * @return The updated entity that has this id value, or `null` if no entity was found.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.testDaoFindByIdAndUpdate
      */
     fun findByIdAndUpdate(id: ID, block: (it: T) -> Unit): T? {
         val result = find(table.id eq id).forUpdate().singleOrNull() ?: return null
@@ -62,13 +65,13 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     }
 
     /**
-     * Find a single entity that conforms to the [op] statement.
+     * Gets a single [Entity] that conforms to the [op] conditional expression and updates the retrieved entity.
      *
-     * @param op The statement to select the entity for. The statement must be of boolean type.
-     * @param block Lambda that contains entity updates
-     *
-     * @return The updated entity that conforms to this op or null if no entity was found.
-     * It also returns [null] if more than one entity conforms to the op.
+     * @param op The conditional expression to use when selecting the entity.
+     * @param block Lambda that contains entity field updates.
+     * @return The updated entity that conforms to this condition, or `null` if either no entity was found
+     * or if more than one entity conforms to the condition.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.testDaoFindSingleByAndUpdate
      */
     fun findSingleByAndUpdate(op: Op<Boolean>, block: (it: T) -> Unit): T? {
         val result = find(op).forUpdate().singleOrNull() ?: return null
@@ -77,17 +80,22 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     }
 
     /**
-     * Get an entity by its [id].
+     * Gets an [Entity] by its [EntityID] value.
      *
-     * @param id The id of the entity
-     *
-     * @return The entity that has this id or null if no entity was found.
+     * @param id The [EntityID] value of the entity.
+     * @return The entity that has this wrapped id value, or `null` if no entity was found.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityCacheNotUpdatedOnCommitIssue1380.testRegression
      */
     open fun findById(id: EntityID<ID>): T? = testCache(id) ?: find { table.id eq id }.firstOrNull()
 
     /**
-     * Reloads entity fields from database as new object.
-     * @param flush whether pending entity changes should be flushed previously
+     * Reloads the fields of an [entity] from the database and returns the [entity] as a new object.
+     *
+     * The original [entity] will also be removed from the current cache.
+     * @see removeFromCache
+     *
+     * @param flush Whether pending entity changes should be flushed prior to reloading.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.testThatUpdateOfInsertedEntitiesGoesBeforeAnInsert
      */
     fun reload(entity: Entity<ID>, flush: Boolean = false): T? {
         if (flush) {
@@ -118,10 +126,25 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         }
     }
 
+    /**
+     * Searches the current [EntityCache] for an [Entity] by its [EntityID] value.
+     *
+     * @return The entity that has this wrapped id value, or `null` if no entity was found.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.testCacheInvalidatedOnDSLDelete
+     */
     fun testCache(id: EntityID<ID>): T? = warmCache().find(this, id)
 
+    /**
+     * Searches the current [EntityCache] for all [Entity] instances that match the provided [cacheCheckCondition].
+     *
+     * @return A sequence of matching entities found.
+     */
     fun testCache(cacheCheckCondition: T.() -> Boolean): Sequence<T> = warmCache().findAll(this).asSequence().filter { it.cacheCheckCondition() }
 
+    /**
+     * Removes the specified [entity] from the current [EntityCache], as well as any stored references to
+     * or from the removed entity.
+     */
     fun removeFromCache(entity: Entity<ID>) {
         val cache = warmCache()
         cache.remove(table, entity)
@@ -136,6 +159,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         }
     }
 
+    /** Returns a [SizedIterable] containing all entities with [EntityID] values from the provided [ids] list. */
     open fun forEntityIds(ids: List<EntityID<ID>>): SizedIterable<T> {
         val distinctIds = ids.distinct()
         if (distinctIds.isEmpty()) return emptySized()
@@ -149,20 +173,35 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         return wrapRows(searchQuery(Op.build { table.id inList distinctIds }))
     }
 
+    /** Returns a [SizedIterable] containing all entities with id values from the provided [ids] list. */
     fun forIds(ids: List<ID>): SizedIterable<T> = forEntityIds(ids.map { DaoEntityID(it, table) })
 
+    /**
+     * Returns a [SizedIterable] containing entities generated using data retrieved from a database result set in [rows].
+     */
     fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> = rows mapLazy {
         wrapRow(it)
     }
 
+    /**
+     * Returns a [SizedIterable] containing entities generated using data retrieved from a database result set in [rows].
+     *
+     * An [alias] should be provided to adjust each [ResultRow] mapping, if necessary, before generating entities.
+     */
     fun wrapRows(rows: SizedIterable<ResultRow>, alias: Alias<IdTable<*>>) = rows mapLazy {
         wrapRow(it, alias)
     }
 
+    /**
+     * Returns a [SizedIterable] containing entities generated using data retrieved from a database result set in [rows].
+     *
+     * An [alias] should be provided to adjust each [ResultRow] mapping, if necessary, before generating entities.
+     */
     fun wrapRows(rows: SizedIterable<ResultRow>, alias: QueryAlias) = rows mapLazy {
         wrapRow(it, alias)
     }
 
+    /** Wraps the specified [ResultRow] data into an [Entity] instance. */
     @Suppress("MemberVisibilityCanBePrivate")
     fun wrapRow(row: ResultRow): T {
         val entity = wrap(row[table.id], row)
@@ -173,6 +212,13 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         return entity
     }
 
+    /**
+     * Wraps the specified [ResultRow] data into an [Entity] instance.
+     *
+     * The provided [alias] will be used to adjust the [ResultRow] mapping before returning the entity.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testWrapRowWithAliasedTable
+     */
     fun wrapRow(row: ResultRow, alias: Alias<IdTable<*>>): T {
         require(alias.delegate == table) { "Alias for a wrong table ${alias.delegate.tableName} while ${table.tableName} expected" }
         val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
@@ -188,6 +234,13 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         return wrapRow(ResultRow.createAndFillValues(newFieldsMapping))
     }
 
+    /**
+     * Wraps the specified [ResultRow] data into an [Entity] instance.
+     *
+     * The provided [alias] will be used to adjust the [ResultRow] mapping before returning the entity.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testWrapRowWithAliasedQuery
+     */
     fun wrapRow(row: ResultRow, alias: QueryAlias): T {
         require(alias.columns.any { (it.table as Alias<*>).delegate == table }) { "QueryAlias doesn't have any column from ${table.tableName} table" }
         val originalColumns = alias.query.set.source.columns
@@ -209,14 +262,18 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         return wrapRow(ResultRow.createAndFillValues(newFieldsMapping))
     }
 
+    /**
+     * Gets all the [Entity] instances associated with this [EntityClass].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.testNonEntityIdReference
+     */
     open fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
 
     /**
-     * Get all the entities that conform to the [op] statement.
+     * Gets all the [Entity] instances that conform to the [op] conditional expression.
      *
-     * @param op The statement to select the entities for. The statement must be of boolean type.
-     *
-     * @return All the entities that conform to the [op] statement.
+     * @param op The conditional expression to use when selecting the entity.
+     * @return A [SizedIterable] of all the entities that conform to this condition.
      */
     fun find(op: Op<Boolean>): SizedIterable<T> {
         warmCache()
@@ -224,31 +281,45 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     }
 
     /**
-     * Get all the entities that conform to the [op] statement.
+     * Gets all the [Entity] instances that conform to the [op] conditional expression.
      *
-     * @param op The statement to select the entities for. The statement must be of boolean type.
-     *
-     * @return All the entities that conform to the [op] statement.
+     * @param op The conditional expression to use when selecting the entity.
+     * @return A [SizedIterable] of all the entities that conform to this condition.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
      */
     fun find(op: SqlExpressionBuilder.() -> Op<Boolean>): SizedIterable<T> = find(SqlExpressionBuilder.op())
 
+    /**
+     * Searches the current [EntityCache] for all [Entity] instances that match the provided [cacheCheckCondition].
+     * If the cache returns no matches, entities that conform to the provided [op] conditional expression
+     * will be retrieved from the database.
+     *
+     * @return A sequence of matching entities found.
+     */
     fun findWithCacheCondition(cacheCheckCondition: T.() -> Boolean, op: SqlExpressionBuilder.() -> Op<Boolean>): Sequence<T> {
         val cached = testCache(cacheCheckCondition)
         return if (cached.any()) cached else find(op).asSequence()
     }
 
+    /** The [IdTable] that this [EntityClass] depends on when maintaining relations with managed [Entity] instances. */
     open val dependsOnTables: ColumnSet get() = table
+
+    /** The columns that this [EntityClass] depends on when maintaining relations with managed [Entity] instances. */
     open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
 
+    /**
+     * Returns a [Query] to select all columns in [dependsOnTables] with a WHERE clause that includes
+     * the provided [op] conditional expression.
+     */
     open fun searchQuery(op: Op<Boolean>): Query =
         dependsOnTables.select(dependsOnColumns).where { op }.setForUpdateStatus()
 
     /**
-     * Count the amount of entities that conform to the [op] statement.
+     * Counts the amount of [Entity] instances that conform to the [op] conditional expression.
      *
-     * @param op The statement to count the entities for. The statement must be of boolean type.
-     *
-     * @return The amount of entities that conform to the [op] statement.
+     * @param op The conditional expression to use when selecting the entity.
+     * @return The amount of entities that conform to this condition.
+     * @sample org.jetbrains.exposed.sql.tests.h2.MultiDatabaseEntityTest.crossReferencesProhibitedForEntitiesFromDifferentDB
      */
     fun count(op: Op<Boolean>? = null): Long {
         val countExpression = table.id.count()
@@ -257,8 +328,13 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         return query.first()[countExpression]
     }
 
+    /** Creates a new [Entity] instance with the provided [entityId] value. */
     protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?): T = entityCtor(entityId)
 
+    /**
+     * Returns an [Entity] with the provided [EntityID] value, or, if an entity was not found in the current
+     * [EntityCache], creates a new instance using the data in [row].
+     */
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
         val transaction = TransactionManager.current()
         return transaction.entityCache.find(this, id) ?: createInstance(id, row).also { new ->
@@ -269,21 +345,21 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     }
 
     /**
-     * Create a new entity with the fields that are set in the [init] block. The id will be automatically set.
+     * Creates a new [Entity] instance with the fields that are set in the [init] block. The id will be automatically set.
      *
-     * @param init The block where the entities' fields can be set.
-     *
+     * @param init The block where the entity's fields can be set.
      * @return The entity that has been created.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.testNonEntityIdReference
      */
     open fun new(init: T.() -> Unit) = new(null, init)
 
     /**
-     * Create a new entity with the fields that are set in the [init] block and with a set [id].
+     * Creates a new [Entity] instance with the fields that are set in the [init] block and with the provided [id].
      *
-     * @param id The id of the entity. Set this to null if it should be automatically generated.
-     * @param init The block where the entities' fields can be set.
-     *
+     * @param id The id of the entity. Set this to `null` if it should be automatically generated.
+     * @param init The block where the entity's fields can be set.
      * @return The entity that has been created.
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.testNewIdWithGet
      */
     open fun new(id: ID?, init: T.() -> Unit): T {
         val entityId = if (id == null && table.id.defaultValueFun != null) {
@@ -492,9 +568,27 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
 
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*, *>) this.notForUpdate() else this
 
+    /**
+     * Returns a list of retrieved [Entity] instances whose [refColumn] optionally matches any of the id values in [references].
+     *
+     * The [EntityCache] in the current transaction scope will be searched for matching entities, if appropriate
+     * for [refColumn]'s column type; otherwise, matching results will be queried from the database.
+     *
+     * Set [forUpdate] to `true` or `false` depending on whether a locking read should be placed or removed from the
+     * search query used. Leave the argument as `null` to use the query without any locking option.
+     */
     fun <SID> warmUpOptReferences(references: List<SID>, refColumn: Column<SID?>, forUpdate: Boolean? = null): List<T> =
         warmUpReferences(references, refColumn as Column<SID>, forUpdate)
 
+    /**
+     * Returns a list of retrieved [Entity] instances whose [refColumn] matches any of the id values in [references].
+     *
+     * The [EntityCache] in the current transaction scope will be searched for matching entities, if appropriate
+     * for [refColumn]'s column type; otherwise, matching results will be queried from the database.
+     *
+     * Set [forUpdate] to `true` or `false` depending on whether a locking read should be placed or removed from the
+     * search query used. Leave the argument as `null` to use the query without any locking option.
+     */
     fun <SID> warmUpReferences(references: List<SID>, refColumn: Column<SID>, forUpdate: Boolean? = null): List<T> {
         val parentTable = refColumn.referee?.table as? IdTable<*>
         requireNotNull(parentTable) { "RefColumn should have reference to IdTable" }
@@ -616,9 +710,18 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     }
 
     /**
-     * @param optimizedLoad will force to make to two queries to load ids and referenced entities separately.
-     * Can be useful when references target the same entities. That will prevent from loading them multiple times (per each reference row) and will require
-     * less memory/bandwidth for "heavy" entities (with a lot of columns or columns with huge data in it)
+     * Returns a list of retrieved [Entity] instances whose reference column matches any of the [EntityID] values
+     * in [references]. Both the entity's source and target reference columns should have been defined in [linkTable].
+     *
+     * The [EntityCache] in the current transaction scope will be searched for matching entities.
+     *
+     * Set [forUpdate] to `true` or `false` depending on whether a locking read should be placed or removed from the
+     * search query used. Leave the argument as `null` to use the query without any locking option.
+     *
+     * Set [optimizedLoad] to `true` to force two queries separately, one for loading ids and another for loading
+     * referenced entities. This could be useful when references target the same entities. This will prevent them from
+     * loading multiple times (per each reference row) and will require less memory/bandwidth for "heavy" entities
+     * (with a lot of columns and/or columns that store large data sizes).
      */
     fun <SID : Comparable<SID>> warmUpLinkedReferences(
         references: List<EntityID<SID>>,
@@ -636,6 +739,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         return warmUpLinkedReferences(references, sourceRefColumn, targetRefColumn, linkTable, forUpdate, optimizedLoad)
     }
 
+    /**
+     * Returns whether the [entityClass] type is equivalent to or a superclass of this [EntityClass] instance's [klass].
+     */
     fun <ID : Comparable<ID>, T : Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
 }
 
