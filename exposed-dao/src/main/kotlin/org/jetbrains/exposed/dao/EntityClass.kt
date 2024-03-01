@@ -416,7 +416,10 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      *
      * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
      *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Parent
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Children
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Child
+     *
      */
     infix fun <REF : Comparable<REF>> referencedOn(column: Column<REF>) = registerRefRule(column) { Reference(column, this) }
 
@@ -427,6 +430,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a [column] using either `optReference()` or
      * `reference().nullable()` on the child table.
      *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Board
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Posts
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Post
      */
     infix fun <REF : Comparable<REF>> optionalReferencedOn(column: Column<REF?>) = registerRefRule(column) { OptionalReference(column, this) }
@@ -438,6 +443,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.YEntity
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.XTable
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.BEntity
      */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(
         column: Column<REF>
@@ -450,6 +457,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.YEntity
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.XTable
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.BEntity
      */
     @JvmName("backReferencedOnOpt")
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(
@@ -464,6 +473,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * `reference().nullable()` on the child table.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Student
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.StudentBios
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.StudentBio
      */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(
         column: Column<REF>
@@ -478,6 +489,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * `reference().nullable()` on the child table.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Student
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.StudentBios
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.StudentBio
      */
     @JvmName("optionalBackReferencedOnOpt")
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(
@@ -494,6 +507,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * By default, this also stores the loaded entities to a cache.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.Country
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.Cities
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.City
      */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>) =
         registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
@@ -507,6 +522,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * Set [cache] to `true` to also store the loaded entities to a cache.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.School
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Students
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Student
      */
     fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(
         column: Column<REF>,
@@ -524,6 +541,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * By default, this also stores the loaded entities to a cache.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Category
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Posts
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Post
      */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(
         column: Column<REF?>
@@ -540,6 +559,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * Set [cache] to `true` to also store the loaded entities to a cache.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Student
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Detentions
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Detention
      */
     fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(
         column: Column<REF?>,

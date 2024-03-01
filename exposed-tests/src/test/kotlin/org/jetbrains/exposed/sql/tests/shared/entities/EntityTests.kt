@@ -89,7 +89,7 @@ object EntityTestsData {
 
     class YEntity(id: EntityID<String>) : Entity<String>(id) {
         var x by YTable.x
-        val b: BEntity? by BEntity.backReferencedOn(XTable.y1)
+        val b by BEntity.backReferencedOn(XTable.y1)
         var content by YTable.blob
 
         companion object : EntityClass<String, YEntity>(YTable)
