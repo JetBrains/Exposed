@@ -19,6 +19,13 @@ private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>) {
     }
 }
 
+/**
+ * Class representing a table relation between 2 [Entity] classes, which is responsible for
+ * retrieving the parent entity referenced by the child entity.
+ *
+ * @param reference The reference column defined on the child entity's associated table.
+ * @param factory The [EntityClass] associated with the parent entity referenced by the child entity.
+ */
 class Reference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<ID>>(
     val reference: Column<REF>,
     val factory: EntityClass<ID, Target>
@@ -28,6 +35,13 @@ class Reference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<
     }
 }
 
+/**
+ * Class representing an optional table relation between 2 [Entity] classes, which is responsible for
+ * retrieving the parent entity optionally referenced by the child entity.
+ *
+ * @param reference The nullable reference column defined on the child entity's associated table.
+ * @param factory The [EntityClass] associated with the parent entity optionally referenced by the child entity.
+ */
 class OptionalReference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<ID>>(
     val reference: Column<REF?>,
     val factory: EntityClass<ID, Target>
@@ -37,6 +51,13 @@ class OptionalReference<REF : Comparable<REF>, ID : Comparable<ID>, out Target :
     }
 }
 
+/**
+ * Class responsible for implementing property delegates of the read-only properties involved in a table
+ * relation between 2 [Entity] classes, which retrieves the child entity that references the parent entity.
+ *
+ * @param reference The reference column defined on the child entity's associated table.
+ * @param factory The [EntityClass] associated with the child entity that references the parent entity.
+ */
 internal class BackReference<ParentID : Comparable<ParentID>, out Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, in Child : Entity<ChildID>, REF>(
     reference: Column<REF>,
     factory: EntityClass<ParentID, Parent>
@@ -47,6 +68,13 @@ internal class BackReference<ParentID : Comparable<ParentID>, out Parent : Entit
         delegate.getValue(thisRef.apply { thisRef.id.value }, property).single() // flush entity before to don't miss newly created entities
 }
 
+/**
+ * Class responsible for implementing property delegates of the read-only properties involved in an optional table
+ * relation between 2 [Entity] classes, which retrieves the child entity that optionally references the parent entity.
+ *
+ * @param reference The nullable reference column defined on the child entity's associated table.
+ * @param factory The [EntityClass] associated with the child entity that optionally references the parent entity.
+ */
 class OptionalBackReference<ParentID : Comparable<ParentID>, out Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, in Child : Entity<ChildID>, REF>(
     reference: Column<REF?>,
     factory: EntityClass<ParentID, Parent>
@@ -57,6 +85,14 @@ class OptionalBackReference<ParentID : Comparable<ParentID>, out Parent : Entity
         delegate.getValue(thisRef.apply { thisRef.id.value }, property).singleOrNull() // flush entity before to don't miss newly created entities
 }
 
+/**
+ * Class responsible for implementing property delegates of the read-only properties involved in a one-to-many
+ * relation, which retrieves all child entities that reference the parent entity.
+ *
+ * @param reference The reference column defined on the child entity's associated table.
+ * @param factory The [EntityClass] associated with the child entity that references the parent entity.
+ * @param cache Whether loaded reference entities should be stored in the [EntityCache].
+ */
 class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
     val reference: Column<REF>,
     val factory: EntityClass<ChildID, Child>,
@@ -88,6 +124,14 @@ class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, C
     }
 }
 
+/**
+ * Class responsible for implementing property delegates of the read-only properties involved in an optional one-to-many
+ * relation, which retrieves all child entities that optionally reference the parent entity.
+ *
+ * @param reference The nullable reference column defined on the child entity's associated table.
+ * @param factory The [EntityClass] associated with the child entity that optionally references the parent entity.
+ * @param cache Whether loaded reference entities should be stored in the [EntityCache].
+ */
 class OptionalReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
     val reference: Column<REF?>,
     val factory: EntityClass<ChildID, Child>,
@@ -238,6 +282,14 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
     }
 }
 
+/**
+ * Eager loads references for all [Entity] instances in this collection and returns this collection.
+ *
+ * **See also:** [Eager Loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading)
+ *
+ * @param relations The reference fields of the entities, as [KProperty]s, which should be loaded.
+ * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.preloadRelationAtDepth
+ */
 fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.with(vararg relations: KProperty1<out REF, Any?>): L {
     toList().apply {
         if (any { it.isNewEntity() }) {
@@ -248,6 +300,14 @@ fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterab
     return this
 }
 
+/**
+ * Eager loads references for this [Entity] instance and returns this entity instance.
+ *
+ * **See also:** [Eager Loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading)
+ *
+ * @param relations The reference fields of this entity, as [KProperty]s, which should be loaded.
+ * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
+ */
 fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>): SRC = apply {
     listOf(this).with(*relations)
 }
