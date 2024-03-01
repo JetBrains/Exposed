@@ -15,15 +15,21 @@ import kotlin.sequences.Sequence
 import kotlin.sequences.any
 import kotlin.sequences.filter
 
+/**
+ * Base class responsible for the management of [Entity] instances and the maintenance of their relation
+ * to the provided [table].
+ *
+ * @param [table] The [IdTable] object that stores rows mapped to entities managed by this class.
+ * @param [entityType] The expected [Entity] class type. This can be left `null` if it is the class of type
+ * argument [T] provided to this [EntityClass] instance.
+ * @param [entityCtor] The function invoked to instantiate an [Entity] using a provided [EntityID] value. If a
+ * reference to a specific entity constructor or a custom function is not passed as an argument, reflection will
+ * be used to determine the primary constructor of the associated entity class on first access (which can be slower).
+ */
 @Suppress("UNCHECKED_CAST", "UnnecessaryAbstractClass", "TooManyFunctions")
 abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     val table: IdTable<ID>,
     entityType: Class<T>? = null,
-
-    /**
-     * A function that creates an entity instance; typically, you can pass a reference to the entity constructor.
-     * If not given, reflection will be used to create instances, which is somewhat slower, especially the first time.
-     */
     entityCtor: ((EntityID<ID>) -> T)? = null,
 ) {
     internal val klass: Class<*> = entityType ?: javaClass.enclosingClass as Class<T>
@@ -749,12 +755,32 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     fun <ID : Comparable<ID>, T : Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
 }
 
+/**
+ * Base class responsible for the management of immutable [Entity] instances and the maintenance of their relation
+ * to the provided [table].
+ *
+ * @param [table] The [IdTable] object that stores rows mapped to entities managed by this class.
+ * @param [entityType] The expected [Entity] class type. This can be left `null` if it is the class of type
+ * argument [T] provided to this [EntityClass] instance.
+ * @param [ctor] The function invoked to instantiate an [Entity] using a provided [EntityID] value. If a
+ * reference to a specific entity constructor or a custom function is not passed as an argument, reflection will
+ * be used to determine the primary constructor of the associated entity class on first access.
+ * @sample org.jetbrains.exposed.sql.tests.shared.entities.ImmutableEntityTest.Schema.Organization
+ * @sample org.jetbrains.exposed.sql.tests.shared.entities.ImmutableEntityTest.EOrganization
+ */
 abstract class ImmutableEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     table: IdTable<ID>,
     entityType: Class<T>? = null,
     ctor: ((EntityID<ID>) -> T)? = null
 ) :
     EntityClass<ID, T>(table, entityType, ctor) {
+    /**
+     * Updates an [entity] field directly in the database, then removes this entity from the [EntityCache] in
+     * the current transaction scope. This is useful when needing to ensure that an entity is only updated with
+     * data retrieved directly from a database query.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ImmutableEntityTest.immutableEntityReadAfterUpdate
+     */
     open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
         table.update({ table.id eq entity.id }) {
             it[column] = value
@@ -768,6 +794,21 @@ abstract class ImmutableEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     }
 }
 
+/**
+ * Base class responsible for the management of immutable [Entity] instances and the maintenance of their relation
+ * to the provided [table].
+ * An internal cache is used to store entity loading states by the associated database, in order to guarantee that
+ * that entity updates are synchronized with this class as the lock object.
+ *
+ * @param [table] The [IdTable] object that stores rows mapped to entities managed by this class.
+ * @param [entityType] The expected [Entity] class type. This can be left `null` if it is the class of type
+ * argument [T] provided to this [EntityClass] instance.
+ * @param [ctor] The function invoked to instantiate an [Entity] using a provided [EntityID] value. If a
+ * reference to a specific entity constructor or a custom function is not passed as an argument, reflection will
+ * be used to determine the primary constructor of the associated entity class on first access.
+ * @sample org.jetbrains.exposed.sql.tests.shared.entities.ImmutableEntityTest.Schema.Organization
+ * @sample org.jetbrains.exposed.sql.tests.shared.entities.ImmutableEntityTest.ECachedOrganization
+ */
 abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     table: IdTable<ID>,
     entityType: Class<T>? = null,
@@ -811,6 +852,10 @@ abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID
 
     override fun all(): SizedIterable<T> = SizedCollection(warmCache().findAll(this))
 
+    /**
+     * Clears either only values for the database associated with the current [Transaction] or
+     * the entire cache if a database transaction cannot be found.
+     */
     @Synchronized
     fun expireCache() {
         if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
