@@ -75,7 +75,7 @@ class AliasesTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test wrap row with Aliased table`() {
+    fun testWrapRowWithAliasedTable() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val entity1 = EntityTestsData.XEntity.new {
                 this.b1 = false
@@ -93,7 +93,7 @@ class AliasesTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test wrap row with Aliased query`() {
+    fun testWrapRowWithAliasedQuery() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val entity1 = EntityTestsData.XEntity.new {
                 this.b1 = false

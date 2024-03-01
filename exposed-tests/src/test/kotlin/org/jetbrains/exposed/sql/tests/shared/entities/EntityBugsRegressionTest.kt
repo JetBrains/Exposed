@@ -113,7 +113,7 @@ class `Text id loosed on insert issue 1379` : DatabaseTestsBase() {
     }
 }
 
-class `Entity Cache not Updated on Commit issue 1380` : DatabaseTestsBase() {
+class EntityCacheNotUpdatedOnCommitIssue1380 : DatabaseTestsBase() {
     object TestTable : IntIdTable() {
         val value = integer("value")
     }

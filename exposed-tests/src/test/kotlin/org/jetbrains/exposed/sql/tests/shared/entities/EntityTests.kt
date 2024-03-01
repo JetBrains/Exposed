@@ -620,7 +620,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test what update of inserted entities goes before an insert`() {
+    fun testThatUpdateOfInsertedEntitiesGoesBeforeAnInsert() {
         withTables(Categories, Posts, Boards) {
             val category1 = Category.new {
                 title = "category1"
@@ -675,7 +675,7 @@ class EntityTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test new(id) with get`() {
+    fun testNewIdWithGet() {
         // SQL Server doesn't support an explicit id for auto-increment table
         withTables(listOf(TestDB.SQLSERVER), Parents, Children) {
             val parentId = Parent.new {
