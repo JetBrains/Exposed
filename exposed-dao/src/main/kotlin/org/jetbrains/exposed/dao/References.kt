@@ -20,7 +20,7 @@ private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>) {
 }
 
 /**
- * Class representing a table relation between 2 [Entity] classes, which is responsible for
+ * Class representing a table relation between two [Entity] classes, which is responsible for
  * retrieving the parent entity referenced by the child entity.
  *
  * @param reference The reference column defined on the child entity's associated table.
@@ -36,7 +36,7 @@ class Reference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<
 }
 
 /**
- * Class representing an optional table relation between 2 [Entity] classes, which is responsible for
+ * Class representing an optional table relation between two [Entity] classes, which is responsible for
  * retrieving the parent entity optionally referenced by the child entity.
  *
  * @param reference The nullable reference column defined on the child entity's associated table.
@@ -53,7 +53,7 @@ class OptionalReference<REF : Comparable<REF>, ID : Comparable<ID>, out Target :
 
 /**
  * Class responsible for implementing property delegates of the read-only properties involved in a table
- * relation between 2 [Entity] classes, which retrieves the child entity that references the parent entity.
+ * relation between two [Entity] classes, which retrieves the child entity that references the parent entity.
  *
  * @param reference The reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that references the parent entity.
@@ -70,7 +70,7 @@ internal class BackReference<ParentID : Comparable<ParentID>, out Parent : Entit
 
 /**
  * Class responsible for implementing property delegates of the read-only properties involved in an optional table
- * relation between 2 [Entity] classes, which retrieves the child entity that optionally references the parent entity.
+ * relation between two [Entity] classes, which retrieves the child entity that optionally references the parent entity.
  *
  * @param reference The nullable reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that optionally references the parent entity.
