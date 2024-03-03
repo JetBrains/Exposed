@@ -237,8 +237,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in DELETE clause.")
         }
-        val def = super.delete(false, table, where, limit, transaction)
-        return if (ignore) def.replaceFirst("DELETE", "DELETE OR IGNORE") else def
+        return super.delete(ignore, table, where, limit, transaction)
     }
 }
 
