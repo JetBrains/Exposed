@@ -392,7 +392,7 @@ fun <T : Table> T.insertIgnore(
 fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
-    return query.execute(TransactionManager.current())!!
+    return query.execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -406,7 +406,7 @@ fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
 fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
-    return query.execute(TransactionManager.current())!!
+    return query.execute(TransactionManager.current()) ?: 0
 }
 
 /**

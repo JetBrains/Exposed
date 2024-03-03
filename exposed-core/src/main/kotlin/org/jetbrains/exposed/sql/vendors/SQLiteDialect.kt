@@ -239,6 +239,19 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         }
         return super.delete(ignore, table, where, limit, transaction)
     }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        if (analyze || options != null) {
+            transaction.throwUnsupportedException("SQLite does not support ANALYZE or other options in EXPLAIN queries.")
+        }
+        val sql = super.explain(false, null, internalStatement, transaction)
+        return sql.replaceFirst("EXPLAIN ", "EXPLAIN QUERY PLAN ")
+    }
 }
 
 /**

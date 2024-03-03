@@ -301,6 +301,17 @@ internal object OracleFunctionProvider : FunctionProvider() {
     override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
         return (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
     }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        transaction.throwUnsupportedException(
+            "EXPLAIN queries are not currently supported for Oracle. Please log a YouTrack feature extension request."
+        )
+    }
 }
 
 /**
