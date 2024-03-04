@@ -122,7 +122,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
     fun testAdjustQueryHaving() {
         withCitiesAndUsers { cities, users, _ ->
             val predicateHaving = Op.build {
-                DMLTestsData.Users.id.count() eq DMLTestsData.Cities.id.max()
+                DMLTestsData.Users.id.count().eq<Number, Long, Int>(DMLTestsData.Cities.id.max())
             }
 
             val queryAdjusted = (cities innerJoin users)
@@ -146,7 +146,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
     fun testQueryAndHaving() {
         withCitiesAndUsers { cities, users, _ ->
             val predicateHaving = Op.build {
-                DMLTestsData.Users.id.count() eq DMLTestsData.Cities.id.max()
+                DMLTestsData.Users.id.count().eq<Number, Long, Int>(DMLTestsData.Cities.id.max())
             }
 
             val queryAdjusted = (cities innerJoin users)
@@ -172,7 +172,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
     fun testQueryOrHaving() {
         withCitiesAndUsers { cities, users, _ ->
             val predicateHaving = Op.build {
-                DMLTestsData.Users.id.count() eq DMLTestsData.Cities.id.max()
+                DMLTestsData.Users.id.count().eq<Number, Long, Int>(DMLTestsData.Cities.id.max())
             }
 
             val queryAdjusted = (cities innerJoin users)
