@@ -1324,6 +1324,16 @@ public final class org/jetbrains/exposed/sql/LazySizedCollection : org/jetbrains
 	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/SizedIterable;
 }
 
+public abstract interface class org/jetbrains/exposed/sql/LazySizedIterable : org/jetbrains/exposed/sql/SizedIterable {
+	public abstract fun getLoadedResult ()Ljava/util/List;
+	public abstract fun setLoadedResult (Ljava/util/List;)V
+}
+
+public final class org/jetbrains/exposed/sql/LazySizedIterable$DefaultImpls {
+	public static fun forUpdate (Lorg/jetbrains/exposed/sql/LazySizedIterable;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
+	public static fun notForUpdate (Lorg/jetbrains/exposed/sql/LazySizedIterable;)Lorg/jetbrains/exposed/sql/SizedIterable;
+}
+
 public final class org/jetbrains/exposed/sql/Lead : org/jetbrains/exposed/sql/WindowFunction {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

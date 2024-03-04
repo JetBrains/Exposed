@@ -26,6 +26,12 @@ interface SizedIterable<out T> : Iterable<T> {
     fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SizedIterable<T>
 }
 
+/** Represents the iterable elements of a database result, which are stored once loaded on first access. */
+interface LazySizedIterable<T> : SizedIterable<T> {
+    /** The lazily loaded database result. */
+    var loadedResult: List<T>?
+}
+
 /** Returns an [EmptySizedIterable]. */
 fun <T> emptySized(): SizedIterable<T> = EmptySizedIterable()
 
@@ -146,7 +152,8 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
  */
 infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
     val source = this
-    return object : SizedIterable<R> {
+    return object : LazySizedIterable<R> {
+        override var loadedResult: List<R>? = null
         override fun limit(n: Int, offset: Long): SizedIterable<R> = source.copy().limit(n, offset).mapLazy(f)
         override fun forUpdate(option: ForUpdateOption): SizedIterable<R> = source.copy().forUpdate(option).mapLazy(f)
         override fun notForUpdate(): SizedIterable<R> = source.copy().notForUpdate().mapLazy(f)
@@ -157,6 +164,7 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
 
         @Suppress("IteratorNotThrowingNoSuchElementException")
         override operator fun iterator(): Iterator<R> {
+            loadedResult?.run { return iterator() }
             val sourceIterator = source.iterator()
             return object : Iterator<R> {
                 override operator fun next(): R = f(sourceIterator.next())
