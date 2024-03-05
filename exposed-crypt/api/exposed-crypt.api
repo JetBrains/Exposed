@@ -10,20 +10,28 @@ public final class org/jetbrains/exposed/crypt/EncryptedBinaryColumnType : org/j
 	public fun <init> (Lorg/jetbrains/exposed/crypt/Encryptor;I)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun validateValueBeforeUpdate (Ljava/lang/Object;)V
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString ([B)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB ([B)[B
+	public synthetic fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public fun validateValueBeforeUpdate ([B)V
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)[B
 }
 
 public final class org/jetbrains/exposed/crypt/EncryptedVarCharColumnType : org/jetbrains/exposed/sql/VarCharColumnType {
 	public fun <init> (Lorg/jetbrains/exposed/crypt/Encryptor;I)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun validateValueBeforeUpdate (Ljava/lang/Object;)V
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/String;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Ljava/lang/String;)Ljava/lang/String;
+	public synthetic fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public fun validateValueBeforeUpdate (Ljava/lang/String;)V
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/crypt/Encryptor {

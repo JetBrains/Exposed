@@ -64,16 +64,16 @@ fun <T : String?> Expression<T>.locate(substring: String): Locate<T> = Locate(th
 // General-Purpose Aggregate Functions
 
 /** Returns the minimum value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min<T, S>(this, this.columnType)
+fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min<T, S>(this, this.columnType as IColumnType<T>)
 
 /** Returns the maximum value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max<T, S>(this, this.columnType)
+fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max<T, S>(this, this.columnType as IColumnType<T>)
 
 /** Returns the average (arithmetic mean) value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.avg(scale: Int = 2): Avg<T, S> = Avg<T, S>(this, scale)
+fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<S>.avg(scale: Int = 2): Avg<T, S> = Avg<T, S>(this, scale)
 
 /** Returns the sum of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Any?> ExpressionWithColumnType<T>.sum(): Sum<T> = Sum(this, this.columnType)
+fun <T> ExpressionWithColumnType<T>.sum(): Sum<T> = Sum(this, this.columnType)
 
 /** Returns the number of input rows for which the value of this expression is not null. */
 fun ExpressionWithColumnType<*>.count(): Count = Count(this)
@@ -124,7 +124,7 @@ fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, 
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> {
+inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType<T>? = null): Op<T> {
     // emptyArray() without type info generates ARRAY[]
     @OptIn(InternalApi::class)
     val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
@@ -139,7 +139,7 @@ inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType? 
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> anyFrom(array: List<T>, delegateType: ColumnType? = null): Op<T> {
+inline fun <reified T : Any> anyFrom(array: List<T>, delegateType: ColumnType<T>? = null): Op<T> {
     // emptyList() without type info generates ARRAY[]
     @OptIn(InternalApi::class)
     val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
@@ -163,7 +163,7 @@ fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false,
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType? = null): Op<T> {
+inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType<T>? = null): Op<T> {
     // emptyArray() without type info generates ARRAY[]
     @OptIn(InternalApi::class)
     val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
@@ -178,7 +178,7 @@ inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType? 
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> allFrom(array: List<T>, delegateType: ColumnType? = null): Op<T> {
+inline fun <reified T : Any> allFrom(array: List<T>, delegateType: ColumnType<T>? = null): Op<T> {
     // emptyList() without type info generates ARRAY[]
     @OptIn(InternalApi::class)
     val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
@@ -197,7 +197,7 @@ fun <E, T : List<E>?> allFrom(expression: Expression<T>): Op<E> = AllAnyFromExpr
  * @sample org.jetbrains.exposed.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArrayGet
  */
 infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int): ArrayGet<E, T> =
-    ArrayGet(this, index, (this.columnType as ArrayColumnType).delegate)
+    ArrayGet(this, index, (this.columnType as ArrayColumnType<E>).delegate)
 
 /**
  * Returns a subarray of elements stored from between [lower] and [upper] bounds (inclusive),
@@ -207,7 +207,7 @@ infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int)
  * @sample org.jetbrains.exposed.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArraySlice
  */
 fun <E, T : List<E>?> ExpressionWithColumnType<T>.slice(lower: Int? = null, upper: Int? = null): ArraySlice<E, T> =
-    ArraySlice(this, lower, upper, this.columnType as ArrayColumnType)
+    ArraySlice(this, lower, upper, this.columnType)
 
 // Sequence Manipulation Functions
 
@@ -220,14 +220,14 @@ fun Sequence.nextLongVal(): NextVal<Long> = NextVal.LongNextVal(this)
 // Value Expressions
 
 /** Specifies a conversion from one data type to another. */
-fun <R> Expression<*>.castTo(columnType: IColumnType): ExpressionWithColumnType<R> = Cast(this, columnType)
+fun <R> Expression<*>.castTo(columnType: IColumnType<R & Any>): ExpressionWithColumnType<R> = Cast(this, columnType)
 
 // Misc.
 
 /**
  * Calls a custom SQL function with the specified [functionName] and passes this expression as its only argument.
  */
-fun <T : Any?> ExpressionWithColumnType<T>.function(functionName: String): CustomFunction<T?> = CustomFunction(functionName, columnType, this)
+fun <T> ExpressionWithColumnType<T>.function(functionName: String): CustomFunction<T?> = CustomFunction(functionName, columnType, this)
 
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a string, and passing [params] as its arguments.
@@ -780,11 +780,11 @@ interface ISqlExpressionBuilder {
     // Conditional Expressions
 
     /** Returns the first of its arguments that is not null. */
-    fun <T, S : T?, A : Expression<out T>, R : T> coalesce(
+    fun <T, S : T?> coalesce(
         expr: ExpressionWithColumnType<S>,
-        alternate: A,
-        vararg others: A
-    ): Coalesce<T?, S, R> = Coalesce(expr, alternate, others = others)
+        alternate: Expression<out T>,
+        vararg others: Expression<out T>
+    ): Coalesce<T?, S> = Coalesce(expr, alternate, others = others)
 
     /**
      * Compares [value] against any chained conditional expressions.
@@ -833,7 +833,7 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
-    infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
+    infix fun <T : Comparable<T>> Column<EntityID<T>?>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = true)
     }
@@ -863,7 +863,7 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is not equals to any element from [list]. */
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
-    infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
+    infix fun <T : Comparable<T>> Column<EntityID<T>?>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
     }
@@ -900,8 +900,8 @@ interface ISqlExpressionBuilder {
         is ULong -> ulongParam(value)
         is Float -> floatParam(value)
         is Double -> doubleParam(value)
-        is String -> QueryParameter(value, columnType) // String value should inherit from column
-        else -> QueryParameter(value, columnType)
+        is String -> QueryParameter(value, columnType as IColumnType<T & Any>) // String value should inherit from column
+        else -> QueryParameter(value, columnType as IColumnType<T & Any>)
     } as QueryParameter<T>
 
     /** Returns the specified [value] as a literal of type [T]. */
@@ -920,7 +920,7 @@ interface ISqlExpressionBuilder {
         is Double -> doubleLiteral(value)
         is String -> stringLiteral(value)
         is ByteArray -> stringLiteral(value.toString(Charsets.UTF_8))
-        else -> LiteralOp(columnType, value)
+        else -> LiteralOp(columnType as IColumnType<T & Any>, value)
     } as LiteralOp<T>
 
     fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> =

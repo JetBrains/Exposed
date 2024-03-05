@@ -8,7 +8,7 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
     /** The table name along with its [alias]. */
     val tableNameWithAlias: String = "${delegate.tableName} $alias"
 
-    private fun <T : Any?> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
+    private fun <T> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
 
     /**
      * Returns the original column from the [delegate] table, or `null` if the [column] is not associated
@@ -111,7 +111,7 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.CROSS)
 
-    private fun <T : Any?> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
+    private fun <T> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
 }
 
 /**

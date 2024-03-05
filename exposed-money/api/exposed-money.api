@@ -15,10 +15,23 @@ public final class org/jetbrains/exposed/sql/money/CompositeMoneyColumnTypeKt {
 	public static final fun compositeMoneyNullable (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/money/CompositeMoneyColumn;
 }
 
-public final class org/jetbrains/exposed/sql/money/CurrencyColumnType : org/jetbrains/exposed/sql/VarCharColumnType {
+public final class org/jetbrains/exposed/sql/money/CurrencyColumnType : org/jetbrains/exposed/sql/ColumnType {
+	public static final field Companion Lorg/jetbrains/exposed/sql/money/CurrencyColumnType$Companion;
 	public fun <init> ()V
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljavax/money/CurrencyUnit;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Ljavax/money/CurrencyUnit;)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public synthetic fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public fun validateValueBeforeUpdate (Ljavax/money/CurrencyUnit;)V
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Ljavax/money/CurrencyUnit;
+}
+
+public final class org/jetbrains/exposed/sql/money/CurrencyColumnType$Companion {
 }
 
 public final class org/jetbrains/exposed/sql/money/CurrencyColumnTypeKt {

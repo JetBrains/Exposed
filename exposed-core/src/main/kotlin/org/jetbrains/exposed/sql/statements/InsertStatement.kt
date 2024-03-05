@@ -208,7 +208,7 @@ open class InsertStatement<Key : Any>(
             listOf(result).apply { field = this }
         }
 
-    override fun arguments(): List<Iterable<Pair<IColumnType, Any?>>> {
+    override fun arguments(): List<Iterable<Pair<IColumnType<*>, Any?>>> {
         return arguments?.map { args ->
             val builder = QueryBuilder(true)
             args.filter { (_, value) ->

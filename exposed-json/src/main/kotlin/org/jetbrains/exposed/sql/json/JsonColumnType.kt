@@ -23,29 +23,29 @@ open class JsonColumnType<T : Any>(
     val serialize: (T) -> String,
     /** Decode a JSON String to an object of type [T]. */
     val deserialize: (String) -> T
-) : ColumnType(), JsonColumnMarker {
+) : ColumnType<T>(), JsonColumnMarker {
     override val usesBinaryFormat: Boolean = false
 
     override fun sqlType(): String = currentDialect.dataTypeProvider.jsonType()
 
-    override fun valueFromDB(value: Any): Any {
+    @Suppress("UNCHECKED_CAST")
+    override fun valueFromDB(value: Any): T {
         return when {
             currentDialect is PostgreSQLDialect && value is PGobject -> deserialize(value.value!!)
             value is String -> deserialize(value)
             value is ByteArray -> deserialize(value.decodeToString())
-            else -> value
+            else -> value as? T ?: error("Unexpected value $value of type ${value::class.qualifiedName}")
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    override fun notNullValueToDB(value: Any) = serialize(value as T)
+    override fun notNullValueToDB(value: T): Any = serialize(value)
 
-    override fun valueToString(value: Any?): String = when (value) {
+    override fun valueToString(value: T?): String = when (value) {
         is Iterable<*> -> nonNullValueToString(value)
         else -> super.valueToString(value)
     }
 
-    override fun nonNullValueToString(value: Any): String {
+    override fun nonNullValueToString(value: T): String {
         return when (currentDialect) {
             is H2Dialect -> "JSON '${notNullValueToDB(value)}'"
             else -> super.nonNullValueToString(value)

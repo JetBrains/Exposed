@@ -163,7 +163,7 @@ open class Transaction(
      */
     fun exec(
         @Language("sql") stmt: String,
-        args: Iterable<Pair<IColumnType, Any?>> = emptyList(),
+        args: Iterable<Pair<IColumnType<*>, Any?>> = emptyList(),
         explicitStatementType: StatementType? = null
     ) = exec(stmt, args, explicitStatementType) { }
 
@@ -185,7 +185,7 @@ open class Transaction(
      */
     fun <T : Any> exec(
         @Language("sql") stmt: String,
-        args: Iterable<Pair<IColumnType, Any?>> = emptyList(),
+        args: Iterable<Pair<IColumnType<*>, Any?>> = emptyList(),
         explicitStatementType: StatementType? = null,
         transform: (ResultSet) -> T?
     ): T? {
@@ -213,7 +213,7 @@ open class Transaction(
 
             override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = stmt
 
-            override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = listOf(
+            override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = listOf(
                 args.map { (columnType, value) ->
                     columnType.apply { nullable = true } to value
                 }

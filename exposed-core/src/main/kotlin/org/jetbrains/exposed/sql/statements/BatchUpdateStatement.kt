@@ -50,7 +50,7 @@ open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, 
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
 
-    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = data.map { (id, row) ->
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = data.map { (id, row) ->
         firstDataSet.map { it.first.columnType to row[it.first] } + (table.id.columnType to id)
     }
 }

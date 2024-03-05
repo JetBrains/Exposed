@@ -22,7 +22,7 @@ open class ExplainQuery(
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet = executeQuery()
 
-    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = internalStatement.arguments()
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = internalStatement.arguments()
 
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val internalSql = internalStatement.prepareSQL(transaction, prepared)

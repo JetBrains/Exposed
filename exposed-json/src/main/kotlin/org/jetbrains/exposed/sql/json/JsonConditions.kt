@@ -23,7 +23,7 @@ class Contains(
     /** An optional String representing JSON path/keys that match specific fields to search for [candidate]. */
     val path: String?,
     /** The column type of [target] to check, if casting to JSONB is required. */
-    val jsonType: IColumnType
+    val jsonType: IColumnType<*>
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) =
         currentDialect.functionProvider.jsonContains(target, candidate, path, jsonType, queryBuilder)
@@ -40,7 +40,7 @@ class Exists(
     /** An optional String representing any vendor-specific clause or argument. */
     val optional: String?,
     /** The column type of [expression] to check, if casting to JSONB is required. */
-    val jsonType: IColumnType
+    val jsonType: IColumnType<*>
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) =
         currentDialect.functionProvider.jsonExists(expression, path = path, optional, jsonType, queryBuilder)

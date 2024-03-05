@@ -32,7 +32,7 @@ open class DeleteStatement(
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String =
         transaction.db.dialect.functionProvider.delete(isIgnore, table, where?.let { QueryBuilder(prepared).append(it).toString() }, limit, transaction)
 
-    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = QueryBuilder(true).run {
         where?.toQueryBuilder(this)
         listOf(args)
     }

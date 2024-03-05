@@ -129,7 +129,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         if (toScalar) append("JSON_UNQUOTE(")
@@ -142,7 +142,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         target: Expression<*>,
         candidate: Expression<*>,
         path: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         append("JSON_CONTAINS(", target, ", ", candidate)
@@ -156,7 +156,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         expression: Expression<*>,
         vararg path: String,
         optional: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         val oneOrAll = optional?.lowercase()
@@ -186,7 +186,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         override fun sqlType(): String = "CHAR"
     }
 
-    override fun cast(expr: Expression<*>, type: IColumnType, builder: QueryBuilder) = when (type) {
+    override fun cast(expr: Expression<*>, type: IColumnType<*>, builder: QueryBuilder) = when (type) {
         is StringColumnType -> super.cast(expr, CharColumnType, builder)
         else -> super.cast(expr, type, builder)
     }

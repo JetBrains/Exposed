@@ -12,25 +12,20 @@ class EncryptedVarCharColumnType(
     private val encryptor: Encryptor,
     colLength: Int,
 ) : VarCharColumnType(colLength) {
-    override fun nonNullValueToString(value: Any): String {
+    override fun nonNullValueToString(value: String): String {
         return super.nonNullValueToString(notNullValueToDB(value))
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        return encryptor.encrypt(value.toString())
+    override fun notNullValueToDB(value: String): String {
+        return encryptor.encrypt(value)
     }
 
-    override fun valueFromDB(value: Any): Any {
+    override fun valueFromDB(value: Any): String {
         val encryptedStr = super.valueFromDB(value)
-
-        if (encryptedStr !is String) {
-            error("Unexpected value of type String: $value of ${value::class.qualifiedName}")
-        }
-
         return encryptor.decrypt(encryptedStr)
     }
 
-    override fun validateValueBeforeUpdate(value: Any?) {
+    override fun validateValueBeforeUpdate(value: String?) {
         if (value != null) {
             super.validateValueBeforeUpdate(notNullValueToDB(value))
         }

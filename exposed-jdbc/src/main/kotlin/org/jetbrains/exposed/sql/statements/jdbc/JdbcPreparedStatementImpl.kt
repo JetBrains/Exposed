@@ -69,7 +69,7 @@ class JdbcPreparedStatementImpl(
         statement.setObject(index, value)
     }
 
-    override fun setNull(index: Int, columnType: IColumnType) {
+    override fun setNull(index: Int, columnType: IColumnType<*>) {
         if (columnType is BinaryColumnType || (columnType is BlobColumnType && !columnType.useObjectIdentifier)) {
             statement.setNull(index, Types.LONGVARBINARY)
         } else {
