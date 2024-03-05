@@ -50,9 +50,14 @@ abstract class Statement<out T>(val type: StatementType, val targets: List<Table
 
     /**
      * Executes the SQL statement directly in the provided [transaction] and returns the generated result,
-     * or `null` if no result was retrieved.
+     * or `null` if either no result was retrieved or if the transaction blocked statement execution.
      */
-    fun execute(transaction: Transaction): T? = transaction.exec(this)
+    fun execute(transaction: Transaction): T? = if (transaction.blockStatementExecution) {
+        transaction.explainStatement = this
+        null
+    } else {
+        transaction.exec(this)
+    }
 
     internal fun executeIn(transaction: Transaction): Pair<T?, List<StatementContext>> {
         val arguments = arguments()

@@ -123,6 +123,18 @@ internal object H2FunctionProvider : FunctionProvider() {
     ) = queryBuilder {
         append("LOCATE(\'", substring, "\',", expr, ")")
     }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        if (options != null) {
+            transaction.throwUnsupportedException("H2 does not support options other than ANALYZE in EXPLAIN queries.")
+        }
+        return super.explain(analyze, null, internalStatement, transaction)
+    }
 }
 
 /**

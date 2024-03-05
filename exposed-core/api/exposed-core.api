@@ -783,6 +783,33 @@ public abstract interface annotation class org/jetbrains/exposed/sql/Experimenta
 public abstract interface annotation class org/jetbrains/exposed/sql/ExperimentalKeywordApi : java/lang/annotation/Annotation {
 }
 
+public class org/jetbrains/exposed/sql/ExplainQuery : org/jetbrains/exposed/sql/statements/Statement, java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
+	public fun <init> (ZLjava/lang/String;Lorg/jetbrains/exposed/sql/statements/Statement;)V
+	public fun arguments ()Ljava/lang/Iterable;
+	public synthetic fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/sql/ResultSet;
+	public final fun getAnalyze ()Z
+	public final fun getOptions ()Ljava/lang/String;
+	public fun iterator ()Ljava/util/Iterator;
+	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/sql/ExplainQueryKt {
+	public static final fun explain (Lorg/jetbrains/exposed/sql/Transaction;ZLjava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/ExplainQuery;
+	public static synthetic fun explain$default (Lorg/jetbrains/exposed/sql/Transaction;ZLjava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/ExplainQuery;
+}
+
+public final class org/jetbrains/exposed/sql/ExplainResultRow {
+	public static final field Companion Lorg/jetbrains/exposed/sql/ExplainResultRow$Companion;
+	public fun <init> (Ljava/util/Map;[Ljava/lang/Object;)V
+	public final fun getFieldIndex ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/sql/ExplainResultRow$Companion {
+	public final fun create (Ljava/sql/ResultSet;Ljava/util/Map;)Lorg/jetbrains/exposed/sql/ExplainResultRow;
+}
+
 public abstract class org/jetbrains/exposed/sql/Expression {
 	public static final field Companion Lorg/jetbrains/exposed/sql/Expression$Companion;
 	public fun <init> ()V
@@ -3532,6 +3559,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/FunctionProvider {
 	public fun <init> ()V
 	protected final fun appendInsertToUpsertClause (Lorg/jetbrains/exposed/sql/QueryBuilder;Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lorg/jetbrains/exposed/sql/Transaction;)V
 	protected final fun appendJoinPartForUpdateClause (Lorg/jetbrains/exposed/sql/QueryBuilder;Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Join;Lorg/jetbrains/exposed/sql/Transaction;)V
+	protected fun appendOptionsToExplain (Ljava/lang/StringBuilder;Ljava/lang/String;)V
 	protected final fun appendUpdateToUpsertClause (Lorg/jetbrains/exposed/sql/QueryBuilder;Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/sql/Transaction;Z)V
 	public fun arraySlice (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Integer;Ljava/lang/Integer;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun cast (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
@@ -3539,6 +3567,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/FunctionProvider {
 	public fun concat (Ljava/lang/String;Lorg/jetbrains/exposed/sql/QueryBuilder;[Lorg/jetbrains/exposed/sql/Expression;)V
 	public fun day (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun delete (ZLorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/Integer;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
+	public fun explain (ZLjava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
 	public fun getDEFAULT_VALUE_EXPRESSION ()Ljava/lang/String;
 	protected final fun getKeyColumnsForUpsert (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;)Ljava/util/List;
 	protected final fun getUpdateColumnsForUpsert (Ljava/util/List;Ljava/util/List;Ljava/util/List;)Ljava/util/List;

@@ -233,6 +233,17 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
         return (if (alreadyOrdered) "" else " ORDER BY(SELECT NULL)") + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
     }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        transaction.throwUnsupportedException(
+            "EXPLAIN queries are not currently supported for SQL Server. Please log a YouTrack feature extension request."
+        )
+    }
 }
 
 /**

@@ -305,6 +305,21 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
         return super.delete(ignore, table, where, limit, transaction)
     }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        return if (analyze && options != null) {
+            super.explain(false, "ANALYZE TRUE, $options", internalStatement, transaction)
+        } else {
+            super.explain(analyze, options, internalStatement, transaction)
+        }
+    }
+
+    override fun StringBuilder.appendOptionsToExplain(options: String) { append("($options) ") }
 }
 
 /**

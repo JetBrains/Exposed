@@ -714,4 +714,33 @@ abstract class FunctionProvider {
             append(" OFFSET $offset")
         }
     }
+
+    /**
+     * Returns the SQL command that obtains information about a statement execution plan.
+     *
+     * @param analyze Whether [internalStatement] should also be executed.
+     * @param options Optional string of comma-separated parameters specific to the database.
+     * @param internalStatement SQL string representing the statement to get information about.
+     * @param transaction Transaction where the operation is executed.
+     */
+    open fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        return buildString {
+            append("EXPLAIN ")
+            if (analyze) {
+                append("ANALYZE ")
+            }
+            options?.let {
+                appendOptionsToExplain(it)
+            }
+            append(internalStatement)
+        }
+    }
+
+    /** Appends optional parameters to an EXPLAIN query. */
+    protected open fun StringBuilder.appendOptionsToExplain(options: String) { append("$options ") }
 }
