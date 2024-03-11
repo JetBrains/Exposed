@@ -656,30 +656,33 @@ object SchemaUtils {
             }
         }
 
-        val isMysql = currentDialect is MysqlDialect
-        val isSQLite = currentDialect is SQLiteDialect
-        val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
+        val foreignKeyConstraints = currentDialect.columnConstraints(*tables).keys
         val existingIndices = currentDialect.existingIndices(*tables)
-        fun List<Index>.filterFKeys() = if (isMysql) {
-            filterNot { it.table to LinkedHashSet(it.columns) in fKeyConstraints }
+
+        fun List<Index>.filterForeignKeys() = if (currentDialect is MysqlDialect) {
+            filterNot { it.table to LinkedHashSet(it.columns) in foreignKeyConstraints }
         } else {
             this
         }
 
         // SQLite: indices whose names start with "sqlite_" are meant for internal use
-        fun List<Index>.filterInternalIndices() = if (isSQLite) {
+        fun List<Index>.filterInternalIndices() = if (currentDialect is SQLiteDialect) {
             filter { !it.indexName.startsWith("sqlite_") }
         } else {
             this
         }
 
+        fun Table.existingIndices() = existingIndices[this].orEmpty().filterForeignKeys().filterInternalIndices()
+
+        fun Table.mappedIndices() = this.indices.filterForeignKeys().filterInternalIndices()
+
         val missingIndices = HashSet<Index>()
         val notMappedIndices = HashMap<String, MutableSet<Index>>()
         val nameDiffers = HashSet<Index>()
 
-        for (table in tables) {
-            val existingTableIndices = existingIndices[table].orEmpty().filterFKeys().filterInternalIndices()
-            val mappedIndices = table.indices.filterFKeys().filterInternalIndices()
+        tables.forEach { table ->
+            val existingTableIndices = table.existingIndices()
+            val mappedIndices = table.mappedIndices()
 
             for (index in existingTableIndices) {
                 val mappedIndex = mappedIndices.firstOrNull { it.onlyNameDiffer(index) } ?: continue
@@ -720,29 +723,32 @@ object SchemaUtils {
             }
         }
 
-        val isMysql = currentDialect is MysqlDialect
-        val isSQLite = currentDialect is SQLiteDialect
         val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
         val existingIndices = currentDialect.existingIndices(*tables)
-        fun List<Index>.filterFKeys() = if (isMysql) {
+
+        fun List<Index>.filterForeignKeys() = if (currentDialect is MysqlDialect) {
             filterNot { it.table to LinkedHashSet(it.columns) in fKeyConstraints }
         } else {
             this
         }
 
         // SQLite: indices whose names start with "sqlite_" are meant for internal use
-        fun List<Index>.filterInternalIndices() = if (isSQLite) {
+        fun List<Index>.filterInternalIndices() = if (currentDialect is SQLiteDialect) {
             filter { !it.indexName.startsWith("sqlite_") }
         } else {
             this
         }
 
+        fun Table.existingIndices() = existingIndices[this].orEmpty().filterForeignKeys().filterInternalIndices()
+
+        fun Table.mappedIndices() = this.indices.filterForeignKeys().filterInternalIndices()
+
         val missingIndices = HashSet<Index>()
         val nameDiffers = HashSet<Index>()
 
-        for (table in tables) {
-            val existingTableIndices = existingIndices[table].orEmpty().filterFKeys().filterInternalIndices()
-            val mappedIndices = table.indices.filterFKeys().filterInternalIndices()
+        tables.forEach { table ->
+            val existingTableIndices = table.existingIndices()
+            val mappedIndices = table.mappedIndices()
 
             for (index in existingTableIndices) {
                 val mappedIndex = mappedIndices.firstOrNull { it.onlyNameDiffer(index) } ?: continue
@@ -776,29 +782,32 @@ object SchemaUtils {
             }
         }
 
-        val isMysql = currentDialect is MysqlDialect
-        val isSQLite = currentDialect is SQLiteDialect
-        val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
+        val foreignKeyConstraints = currentDialect.columnConstraints(*tables).keys
         val existingIndices = currentDialect.existingIndices(*tables)
-        fun List<Index>.filterFKeys() = if (isMysql) {
-            filterNot { it.table to LinkedHashSet(it.columns) in fKeyConstraints }
+
+        fun List<Index>.filterForeignKeys() = if (currentDialect is MysqlDialect) {
+            filterNot { it.table to LinkedHashSet(it.columns) in foreignKeyConstraints }
         } else {
             this
         }
 
         // SQLite: indices whose names start with "sqlite_" are meant for internal use
-        fun List<Index>.filterInternalIndices() = if (isSQLite) {
+        fun List<Index>.filterInternalIndices() = if (currentDialect is SQLiteDialect) {
             filter { !it.indexName.startsWith("sqlite_") }
         } else {
             this
         }
 
+        fun Table.existingIndices() = existingIndices[this].orEmpty().filterForeignKeys().filterInternalIndices()
+
+        fun Table.mappedIndices() = this.indices.filterForeignKeys().filterInternalIndices()
+
         val unmappedIndices = HashMap<String, MutableSet<Index>>()
         val nameDiffers = HashSet<Index>()
 
-        for (table in tables) {
-            val existingTableIndices = existingIndices[table].orEmpty().filterFKeys().filterInternalIndices()
-            val mappedIndices = table.indices.filterFKeys().filterInternalIndices()
+        tables.forEach { table ->
+            val existingTableIndices = table.existingIndices()
+            val mappedIndices = table.mappedIndices()
 
             for (index in existingTableIndices) {
                 val mappedIndex = mappedIndices.firstOrNull { it.onlyNameDiffer(index) } ?: continue
