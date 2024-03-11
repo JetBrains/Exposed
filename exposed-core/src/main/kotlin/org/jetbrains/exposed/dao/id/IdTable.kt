@@ -61,6 +61,18 @@ open class LongIdTable(name: String = "", columnName: String = "id") : IdTable<L
 }
 
 /**
+ * Identity table with a primary key consisting of an auto-incrementing `ULong` value.
+ *
+ * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
+ * @param columnName Name for the primary key column. By default, "id" is used.
+ */
+open class ULongIdTable(name: String = "", columnName: String = "id") : IdTable<ULong>(name) {
+    /** The identity column of this [ULongIdTable], for storing 8-byte unsigned integers wrapped as [EntityID] instances. */
+    final override val id: Column<EntityID<ULong>> = ulong(columnName).autoIncrement().entityId()
+    final override val primaryKey = PrimaryKey(id)
+}
+
+/**
  * Identity table with a primary key consisting of an auto-generating [UUID] value.
  *
  * **Note** The specific UUID column type used depends on the database.

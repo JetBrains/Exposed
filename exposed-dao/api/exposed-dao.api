@@ -285,6 +285,15 @@ public final class org/jetbrains/exposed/dao/Referrers : kotlin/properties/ReadO
 	public fun getValue (Lorg/jetbrains/exposed/dao/Entity;Lkotlin/reflect/KProperty;)Lorg/jetbrains/exposed/sql/SizedIterable;
 }
 
+public abstract class org/jetbrains/exposed/dao/ULongEntity : org/jetbrains/exposed/dao/Entity {
+	public fun <init> (Lorg/jetbrains/exposed/dao/id/EntityID;)V
+}
+
+public abstract class org/jetbrains/exposed/dao/ULongEntityClass : org/jetbrains/exposed/dao/EntityClass {
+	public fun <init> (Lorg/jetbrains/exposed/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
 public abstract class org/jetbrains/exposed/dao/UUIDEntity : org/jetbrains/exposed/dao/Entity {
 	public fun <init> (Lorg/jetbrains/exposed/dao/id/EntityID;)V
 }
