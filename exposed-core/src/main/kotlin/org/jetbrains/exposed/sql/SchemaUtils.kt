@@ -8,7 +8,7 @@ import java.io.File
 import java.math.BigDecimal
 
 /** Utility functions that assist with creating, altering, and dropping database schema objects. */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 object SchemaUtils {
     private inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
         return if (withLogs) {
@@ -541,7 +541,7 @@ object SchemaUtils {
             checkExcessiveForeignKeyConstraints(tables = tables, withLogs = true)
             checkExcessiveIndices(tables = tables, withLogs = true)
         }
-        return checkMissingIndices(tables = tables, withLogs).flatMap { it.createStatement() }
+        return checkMissingAndUnmappedIndices(tables = tables, withLogs).flatMap { it.createStatement() }
     }
 
     /**
@@ -550,6 +550,7 @@ object SchemaUtils {
      */
     private fun mappingConsistenceRequiredStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         return checkMissingIndices(tables = tables, withLogs).flatMap { it.createStatement() } +
+            checkUnmappedIndices(tables = tables, withLogs).flatMap { it.dropStatement() } +
             checkExcessiveForeignKeyConstraints(tables = tables, withLogs).flatMap { it.dropStatement() } +
             checkExcessiveIndices(tables = tables, withLogs).flatMap { it.dropStatement() }
     }
@@ -639,38 +640,49 @@ object SchemaUtils {
         }
     }
 
-    /** Returns list of indices missed in database **/
-    private fun checkMissingIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
+    /**
+     * Checks all [tables] for any that have indices that are missing in the database but are defined in the code. If
+     * found, this function also logs the SQL statements that can be used to create these indices.
+     * Checks all [tables] for any that have indices that exist in the database but are not mapped in the code. If
+     * found, this function only logs the SQL statements that can be used to drop these indices, but does not include
+     * them in the returned list.
+     *
+     * @return List of indices that are missing and can be created.
+     */
+    private fun checkMissingAndUnmappedIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
         fun Collection<Index>.log(mainMessage: String) {
             if (withLogs && isNotEmpty()) {
                 exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
             }
         }
 
-        val isMysql = currentDialect is MysqlDialect
-        val isSQLite = currentDialect is SQLiteDialect
-        val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
+        val foreignKeyConstraints = currentDialect.columnConstraints(*tables).keys
         val existingIndices = currentDialect.existingIndices(*tables)
-        fun List<Index>.filterFKeys() = if (isMysql) {
-            filterNot { it.table to LinkedHashSet(it.columns) in fKeyConstraints }
+
+        fun List<Index>.filterForeignKeys() = if (currentDialect is MysqlDialect) {
+            filterNot { it.table to LinkedHashSet(it.columns) in foreignKeyConstraints }
         } else {
             this
         }
 
         // SQLite: indices whose names start with "sqlite_" are meant for internal use
-        fun List<Index>.filterInternalIndices() = if (isSQLite) {
+        fun List<Index>.filterInternalIndices() = if (currentDialect is SQLiteDialect) {
             filter { !it.indexName.startsWith("sqlite_") }
         } else {
             this
         }
 
+        fun Table.existingIndices() = existingIndices[this].orEmpty().filterForeignKeys().filterInternalIndices()
+
+        fun Table.mappedIndices() = this.indices.filterForeignKeys().filterInternalIndices()
+
         val missingIndices = HashSet<Index>()
         val notMappedIndices = HashMap<String, MutableSet<Index>>()
         val nameDiffers = HashSet<Index>()
 
-        for (table in tables) {
-            val existingTableIndices = existingIndices[table].orEmpty().filterFKeys().filterInternalIndices()
-            val mappedIndices = table.indices.filterFKeys().filterInternalIndices()
+        tables.forEach { table ->
+            val existingTableIndices = table.existingIndices()
+            val mappedIndices = table.mappedIndices()
 
             for (index in existingTableIndices) {
                 val mappedIndex = mappedIndices.firstOrNull { it.onlyNameDiffer(index) } ?: continue
@@ -696,6 +708,127 @@ object SchemaUtils {
             indexes.subtract(nameDiffers).log("Indices exist in database and not mapped in code on class '$name':")
         }
         return toCreate.toList()
+    }
+
+    /**
+     * Checks all [tables] for any that have indices that are missing in the database but are defined in the code. If
+     * found, this function also logs the SQL statements that can be used to create these indices.
+     *
+     * @return List of indices that are missing and can be created.
+     */
+    private fun checkMissingIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
+        fun Collection<Index>.log(mainMessage: String) {
+            if (withLogs && isNotEmpty()) {
+                exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
+            }
+        }
+
+        val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
+        val existingIndices = currentDialect.existingIndices(*tables)
+
+        fun List<Index>.filterForeignKeys() = if (currentDialect is MysqlDialect) {
+            filterNot { it.table to LinkedHashSet(it.columns) in fKeyConstraints }
+        } else {
+            this
+        }
+
+        // SQLite: indices whose names start with "sqlite_" are meant for internal use
+        fun List<Index>.filterInternalIndices() = if (currentDialect is SQLiteDialect) {
+            filter { !it.indexName.startsWith("sqlite_") }
+        } else {
+            this
+        }
+
+        fun Table.existingIndices() = existingIndices[this].orEmpty().filterForeignKeys().filterInternalIndices()
+
+        fun Table.mappedIndices() = this.indices.filterForeignKeys().filterInternalIndices()
+
+        val missingIndices = HashSet<Index>()
+        val nameDiffers = HashSet<Index>()
+
+        tables.forEach { table ->
+            val existingTableIndices = table.existingIndices()
+            val mappedIndices = table.mappedIndices()
+
+            for (index in existingTableIndices) {
+                val mappedIndex = mappedIndices.firstOrNull { it.onlyNameDiffer(index) } ?: continue
+                if (withLogs) {
+                    exposedLogger.info(
+                        "Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${mappedIndex.indexName}"
+                    )
+                }
+                nameDiffers.add(index)
+                nameDiffers.add(mappedIndex)
+            }
+
+            missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
+        }
+
+        val toCreate = missingIndices.subtract(nameDiffers)
+        toCreate.log("Indices missed from database (will be created):")
+        return toCreate.toList()
+    }
+
+    /**
+     * Checks all [tables] for any that have indices that exist in the database but are not mapped in the code. If
+     * found, this function also logs the SQL statements that can be used to drop these indices.
+     *
+     * @return List of indices that are unmapped and can be dropped.
+     */
+    private fun checkUnmappedIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
+        fun Collection<Index>.log(mainMessage: String) {
+            if (withLogs && isNotEmpty()) {
+                exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
+            }
+        }
+
+        val foreignKeyConstraints = currentDialect.columnConstraints(*tables).keys
+        val existingIndices = currentDialect.existingIndices(*tables)
+
+        fun List<Index>.filterForeignKeys() = if (currentDialect is MysqlDialect) {
+            filterNot { it.table to LinkedHashSet(it.columns) in foreignKeyConstraints }
+        } else {
+            this
+        }
+
+        // SQLite: indices whose names start with "sqlite_" are meant for internal use
+        fun List<Index>.filterInternalIndices() = if (currentDialect is SQLiteDialect) {
+            filter { !it.indexName.startsWith("sqlite_") }
+        } else {
+            this
+        }
+
+        fun Table.existingIndices() = existingIndices[this].orEmpty().filterForeignKeys().filterInternalIndices()
+
+        fun Table.mappedIndices() = this.indices.filterForeignKeys().filterInternalIndices()
+
+        val unmappedIndices = HashMap<String, MutableSet<Index>>()
+        val nameDiffers = HashSet<Index>()
+
+        tables.forEach { table ->
+            val existingTableIndices = table.existingIndices()
+            val mappedIndices = table.mappedIndices()
+
+            for (index in existingTableIndices) {
+                val mappedIndex = mappedIndices.firstOrNull { it.onlyNameDiffer(index) } ?: continue
+                nameDiffers.add(index)
+                nameDiffers.add(mappedIndex)
+            }
+
+            unmappedIndices.getOrPut(table.nameInDatabaseCase()) {
+                hashSetOf()
+            }.addAll(existingTableIndices.subtract(mappedIndices))
+        }
+
+        val toDrop = mutableSetOf<Index>()
+        unmappedIndices.forEach { (name, indices) ->
+            toDrop.addAll(
+                indices.subtract(nameDiffers).also {
+                    it.log("Indices exist in database and not mapped in code on class '$name':")
+                }
+            )
+        }
+        return toDrop.toList()
     }
 
     /**

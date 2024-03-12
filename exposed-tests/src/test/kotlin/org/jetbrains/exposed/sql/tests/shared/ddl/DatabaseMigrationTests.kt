@@ -217,4 +217,34 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testDropUnmappedIndex() {
+        val testTableWithIndex = object : Table("test_table") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+            val byName = index("test_table_by_name", false, name)
+        }
+
+        val testTableWithoutIndex = object : Table("test_table") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(tables = arrayOf(testTableWithIndex)) {
+            try {
+                SchemaUtils.create(testTableWithIndex)
+                assertTrue(testTableWithIndex.exists())
+
+                val statements = SchemaUtils.statementsRequiredForDatabaseMigration(testTableWithoutIndex)
+                assertEquals(1, statements.size)
+            } finally {
+                SchemaUtils.drop(testTableWithIndex)
+            }
+        }
+    }
 }
