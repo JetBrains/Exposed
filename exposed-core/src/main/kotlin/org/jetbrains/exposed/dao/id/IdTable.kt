@@ -49,6 +49,18 @@ open class IntIdTable(name: String = "", columnName: String = "id") : IdTable<In
 }
 
 /**
+ * Identity table with a primary key consisting of an auto-incrementing `UInt` value.
+ *
+ * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
+ * @param columnName Name for the primary key column. By default, "id" is used.
+ */
+open class UIntIdTable(name: String = "", columnName: String = "id") : IdTable<UInt>(name) {
+    /** The identity column of this [IntIdTable], for storing 4-byte unsigned integers wrapped as [EntityID] instances. */
+    final override val id: Column<EntityID<UInt>> = uinteger(columnName).autoIncrement().entityId()
+    final override val primaryKey = PrimaryKey(id)
+}
+
+/**
  * Identity table with a primary key consisting of an auto-incrementing `Long` value.
  *
  * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
