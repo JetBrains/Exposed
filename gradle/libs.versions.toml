@@ -18,7 +18,7 @@ mysql80 = "8.0.33"
 oracle12 = "12.2.0.1"
 postgre = "42.7.3"
 postgreNG = "0.8.9"
-sqlLite3 = "3.44.1.0"
+sqlLite3 = "3.45.2.0"
 sqlserver = "9.4.1.jre8"
 
 springFramework = "6.1.5"
