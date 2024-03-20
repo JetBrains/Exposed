@@ -14,15 +14,7 @@ To use them you have to add appropriate dependency into your repositories mappin
     </code-block>
   </tab>
   <tab title="Maven">
-        <code-block lang="xml">
-          &lt;repositories&gt;
-              &lt;repository&gt;
-                  &lt;id&gt;mavenCentral&lt;/id&gt;
-                  &lt;name&gt;mavenCentral&lt;/name&gt;
-                  &lt;url&gt;https://repo1.maven.org/maven2/&lt;/url&gt;
-              &lt;/repository&gt;
-          &lt;/repositories&gt;
-          </code-block>
+    The Maven Central repository is enabled by default for Maven users.
   </tab>
   <tab title="Groovy Gradle">
     <code-block lang="groovy">

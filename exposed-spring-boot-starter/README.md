@@ -6,14 +6,6 @@ This is a starter for [Spring Boot](https://spring.io/projects/spring-boot) to u
 This starter will give you the latest version of [Exposed](https://github.com/JetBrains/Exposed) and its `spring-transaction` library along with the [Spring Boot Starter Data JDBC](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jdbc).
 ### Maven
 ```mxml
-<repositories>
-  <repository>
-    <id>mavenCentral</id>
-    <name>mavenCentral</name>
-    <url>https://repo1.maven.org/maven2/</url>
-  </repository>
-</repositories>
-
 <dependencies>
   <dependency>
     <groupId>org.jetbrains.exposed</groupId>

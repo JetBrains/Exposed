@@ -3,15 +3,6 @@ Bill of Materials for all Exposed modules
 
 # Maven
 ```xml
-<!-- Versions after 0.33.1 -->
-<repositories>
-    <repository>
-        <id>mavenCentral</id>
-        <name>mavenCentral</name>
-        <url>https://repo1.maven.org/maven2/</url>
-    </repository>
-</repositories>
-
 <dependencyManagement>
     <dependencies>
         <dependency>
@@ -28,17 +19,14 @@ Bill of Materials for all Exposed modules
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-core</artifactId>
-        <scope>provided</scope>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-dao</artifactId>
-        <scope>provided</scope>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-jdbc</artifactId>
-        <scope>provided</scope>
     </dependency>
 </dependencies>
 ```
