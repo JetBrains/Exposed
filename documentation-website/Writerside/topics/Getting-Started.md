@@ -6,29 +6,30 @@
     <tab title="Maven">
         <code-block lang="xml">
 <![CDATA[
-<repositories>
-    <repository>
-        <id>mavenCentral</id>
-        <name>mavenCentral</name>
-        <url>https://repo1.maven.org/maven2/</url>
-    </repository>
-</repositories>
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.jetbrains.exposed</groupId>
+      <artifactId>exposed-bom</artifactId>
+      <version>0.48.0</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
 
 <dependencies>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-core</artifactId>
-      <version>0.48.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-dao</artifactId>
-      <version>0.48.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-jdbc</artifactId>
-      <version>0.48.0</version>
     </dependency>
 </dependencies>
 ]]>

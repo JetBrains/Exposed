@@ -33,20 +33,6 @@ Similar to our mascot, Exposed can be used to mimic a variety of database engine
 
 Releases of Exposed are available in the Maven Central repository. You can declare this repository in your build script as follows:
 
-#### Maven
-
-```xml
-<!-- Versions after 0.30.1 -->
-<!-- Versions before 0.30.1 is unavailable for now-->
-<repositories>
-    <repository>
-        <id>mavenCentral</id>
-        <name>mavenCentral</name>
-        <url>https://repo1.maven.org/maven2/</url>
-    </repository>
-</repositories>
-```
-
 #### Gradle Groovy and Kotlin DSL
 
 **Warning:** You might need to set your Kotlin JVM target to 8, and when using Spring to 17, in order for this to work properly:
@@ -58,6 +44,10 @@ repositories {
     mavenCentral()
 }
 ```
+
+#### Maven
+
+The Maven Central repository is enabled by default for Maven users.
 
 ### Exposed modules
 
