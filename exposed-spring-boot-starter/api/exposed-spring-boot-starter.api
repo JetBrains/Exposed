@@ -13,6 +13,11 @@ public final class org/jetbrains/exposed/spring/DatabaseInitializerKt {
 	public static final fun discoverExposedTables (Lorg/springframework/context/ApplicationContext;Ljava/util/List;)Ljava/util/List;
 }
 
+public final class org/jetbrains/exposed/spring/ExposedHints : org/springframework/aot/hint/RuntimeHintsRegistrar {
+	public fun <init> ()V
+	public fun registerHints (Lorg/springframework/aot/hint/RuntimeHints;Ljava/lang/ClassLoader;)V
+}
+
 public class org/jetbrains/exposed/spring/autoconfigure/ExposedAutoConfiguration {
 	public fun <init> (Lorg/springframework/context/ApplicationContext;)V
 	public fun databaseConfig ()Lorg/jetbrains/exposed/sql/DatabaseConfig;

@@ -148,6 +148,34 @@ Instead of invoking `addLogger()` to log all database transaction statements, ad
 spring.exposed.show-sql=true
 ```
 
+## GraalVM Native Images
+Building a GraalVM native image of a Spring Boot application with this starter is possible by registering runtime hints provided by the `ExposedHints` class:
+```kotlin
+import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.runApplication
+import org.springframework.context.annotation.ImportRuntimeHints
+
+@ImportRuntimeHints(ExposedHints::class)
+@SpringBootApplication
+class MyApplication
+
+fun main(args: Array<String>) {
+    runApplication<MyApplication>(*args)
+}
+```
+
+It is also possible to register these hints as an entry in a `META-INF/spring/aot.factories` file:
+```properties
+org.springframework.aot.hint.RuntimeHintsRegistrar=org.jetbrains.exposed.spring.ExposedHints
+```
+
+**Note:** The [Spring AOT engine](https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html#native-image.introducing-graalvm-native-images.understanding-aot-processing) restricts the use of dynamic properties.
+This means that beans defined by `@ConditionalOnProperty` cannot change at runtime and are not supported,
+so setting the property `spring.exposed.generate-ddl=true` will not enable auto-creation of database schema.
+Instead, database schema should be manually generated, using for example `SchemaUtils.create()`.
+
+See the [official documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html) for more details about Spring Boot's GraalVM native image support.
+
 ## Sample
 
 Check out the [Exposed - Spring Boot sample](../samples/exposed-spring/README.md) for more details, for example:
