@@ -60,7 +60,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 }
 
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStatementImpl : org/jetbrains/exposed/sql/statements/api/PreparedStatementApi {
-	public fun <init> (Ljava/sql/PreparedStatement;ZZ)V
+	public fun <init> (Ljava/sql/PreparedStatement;Z)V
 	public fun addBatch ()V
 	public fun cancel ()V
 	public fun closeIfPossible ()V

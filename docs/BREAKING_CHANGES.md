@@ -1,5 +1,9 @@
 # Breaking Changes
 
+## 0.49.0
+
+For SQLite database, Exposed now requires bumping the SQLite JDBC driver version to a minimum of 3.45.0.0.
+
 ## 0.48.0
 
 * In `nonNullValueToString` for `KotlinInstantColumnType` and `JavaDateColumnType`, the formatted String for MySQL did not match the format received from the metadata
