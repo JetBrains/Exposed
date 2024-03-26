@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
@@ -22,7 +23,12 @@ class Date<T : Temporal?>(val expr: Expression<T>) : Function<LocalDate>(JavaLoc
 
 /** Represents an SQL function that extracts the time part from a given temporal [expr]. */
 class Time<T : Temporal?>(val expr: Expression<T>) : Function<LocalTime>(JavaLocalTimeColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("Time(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialect) {
+            is PostgreSQLDialect -> append(expr, "::time")
+            else -> append("Time(", expr, ")")
+        }
+    }
 }
 
 /**
