@@ -2,6 +2,7 @@
 
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
@@ -43,10 +44,15 @@ interface FieldSet {
             val unrolled = ArrayList<Expression<*>>(fields.size)
 
             fields.forEach {
-                if (it is CompositeColumn<*>) {
-                    unrolled.addAll(it.getRealColumns())
-                } else {
-                    unrolled.add(it)
+                when {
+                    it is CompositeColumn<*> -> unrolled.addAll(it.getRealColumns())
+                    (it as? Column<*>)?.columnType is EntityIDColumnType<*> -> {
+                        when (val table = (it as? Column<*>)?.table) {
+                            is CompositeIdTable -> unrolled.addAll(table.idColumns)
+                            else -> unrolled.add(it)
+                        }
+                    }
+                    else -> unrolled.add(it)
                 }
             }
 

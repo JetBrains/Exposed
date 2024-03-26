@@ -12,12 +12,13 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
-private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>) {
+private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>): Map<Column<*>, Column<*>> {
     val refColumn = reference.referee ?: error("Column $reference is not a reference")
     val targetTable = refColumn.table
     if (factoryTable != targetTable) {
         error("Column and factory point to different tables")
     }
+    return mapOf(reference to refColumn)
 }
 
 /**
@@ -29,11 +30,10 @@ private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>) {
  */
 class Reference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<ID>>(
     val reference: Column<REF>,
-    val factory: EntityClass<ID, Target>
+    val factory: EntityClass<ID, Target>,
+    references: Map<Column<*>, Column<*>>? = null
 ) {
-    init {
-        checkReference(reference, factory.table)
-    }
+    val allReferences = references ?: checkReference(reference, factory.table)
 }
 
 /**
