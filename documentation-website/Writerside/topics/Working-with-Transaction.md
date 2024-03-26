@@ -167,27 +167,28 @@ Much like with `transactionIsolation`, this value is not directly used by Expose
 **db**: This parameter is optional and is used to select the database where the transaction should be settled 
 ([see the section above](Transactions.md#working-with-multiple-databases)).
 
-**Transaction Repetition Attempts**
+**Transaction Maximum Attempts**
 
-Transactions also provide a property, `repetitionAttempts`, which sets the number of retries that should be made if an SQLException occurs inside the transaction block. 
+Transactions also provide a property, `maxAttempts`, which sets the number of attempts that should be made to perform a transaction block.
+If this value is set to 1 and an SQLException occurs inside the transaction block, the exception will throw without performing a retry.
 If this property is not set, any default value provided in `DatabaseConfig` will be used instead:
 
 ```kotlin
 val db = Database.connect(
     datasource = datasource,
     databaseConfig = DatabaseConfig {
-        defaultRepetitionAttempts = 3
+        defaultMaxAttempts = 3
     }
 )
 
 // property set in transaction block overrides default DatabaseConfig
 transaction(db = db) {
-    repetitionAttempts = 25
+    maxAttempts = 25
     // operation that may need multiple attempts
 }
 ```
 
-If this property is set to a value greater than 0, `minRepetitionDelay` and `maxRepetitionDelay` can also be set in the transaction block to indicate the minimum 
+If this property is set to a value greater than 1, `minRetryDelay` and `maxRetryDelay` can also be set in the transaction block to indicate the minimum 
 and maximum number of milliseconds to wait before retrying.
 
 **Transaction Query Timeout**

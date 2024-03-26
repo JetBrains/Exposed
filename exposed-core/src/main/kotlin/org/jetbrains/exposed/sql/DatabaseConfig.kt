@@ -14,8 +14,26 @@ class DatabaseConfig private constructor(
     val useNestedTransactions: Boolean,
     val defaultFetchSize: Int?,
     val defaultIsolationLevel: Int,
+    val defaultMaxAttempts: Int,
+    val defaultMinRetryDelay: Long,
+    val defaultMaxRetryDelay: Long,
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMaxAttempts"),
+        level = DeprecationLevel.WARNING
+    )
     val defaultRepetitionAttempts: Int,
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMinRetryDelay"),
+        level = DeprecationLevel.WARNING
+    )
     val defaultMinRepetitionDelay: Long,
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMaxRetryDelay"),
+        level = DeprecationLevel.WARNING
+    )
     val defaultMaxRepetitionDelay: Long,
     val defaultReadOnly: Boolean,
     val warnLongQueriesDuration: Long?,
@@ -48,25 +66,44 @@ class DatabaseConfig private constructor(
          */
         var defaultIsolationLevel: Int = -1,
         /**
-         * How many retries will be made inside any `transaction` block if SQLException happens.
-         * This can be overridden on a per-transaction level by specifying the `repetitionAttempts` property in a
+         * The maximum amount of attempts that will be made to perform any transaction block.
+         * If this value is set to 1 and an SQLException happens, the exception will be thrown without performing a retry.
+         * This can be overridden on a per-transaction level by specifying the `maxAttempts` property in a
          * `transaction` block.
-         * Default attempts are 3.
+         * Default amount of attempts is 3.
          */
-        var defaultRepetitionAttempts: Int = 3,
+        var defaultMaxAttempts: Int = 3,
         /**
-         * The minimum number of milliseconds to wait before retrying a transaction if SQLException happens.
-         * This can be overridden on a per-transaction level by specifying the `minRepetitionDelay` property in a
+         * The minimum number of milliseconds to wait before retrying a transaction if an SQLException happens.
+         * This can be overridden on a per-transaction level by specifying the `minRetryDelay` property in a
          * `transaction` block.
          * Default minimum delay is 0.
          */
-        var defaultMinRepetitionDelay: Long = 0,
+        var defaultMinRetryDelay: Long = 0,
         /**
-         * The maximum number of milliseconds to wait before retrying a transaction if SQLException happens.
-         * This can be overridden on a per-transaction level by specifying the `maxRepetitionDelay` property in a
+         * The maximum number of milliseconds to wait before retrying a transaction if an SQLException happens.
+         * This can be overridden on a per-transaction level by specifying the `maxRetryDelay` property in a
          * `transaction` block.
          * Default maximum delay is 0.
          */
+        var defaultMaxRetryDelay: Long = 0,
+        @Deprecated(
+            message = "This property will be removed in future releases",
+            replaceWith = ReplaceWith("defaultMaxAttempts"),
+            level = DeprecationLevel.WARNING
+        )
+        var defaultRepetitionAttempts: Int = 3,
+        @Deprecated(
+            message = "This property will be removed in future releases",
+            replaceWith = ReplaceWith("defaultMinRetryDelay"),
+            level = DeprecationLevel.WARNING
+        )
+        var defaultMinRepetitionDelay: Long = 0,
+        @Deprecated(
+            message = "This property will be removed in future releases",
+            replaceWith = ReplaceWith("defaultMaxRetryDelay"),
+            level = DeprecationLevel.WARNING
+        )
         var defaultMaxRepetitionDelay: Long = 0,
         /**
          * Should all connections/transactions be executed in read-only mode by default or not.
@@ -126,6 +163,9 @@ class DatabaseConfig private constructor(
                 useNestedTransactions = builder.useNestedTransactions,
                 defaultFetchSize = builder.defaultFetchSize,
                 defaultIsolationLevel = builder.defaultIsolationLevel,
+                defaultMaxAttempts = builder.defaultMaxAttempts.coerceAtLeast(1),
+                defaultMinRetryDelay = builder.defaultMinRetryDelay,
+                defaultMaxRetryDelay = builder.defaultMaxRetryDelay,
                 defaultRepetitionAttempts = builder.defaultRepetitionAttempts,
                 defaultMinRepetitionDelay = builder.defaultMinRepetitionDelay,
                 defaultMaxRepetitionDelay = builder.defaultMaxRepetitionDelay,

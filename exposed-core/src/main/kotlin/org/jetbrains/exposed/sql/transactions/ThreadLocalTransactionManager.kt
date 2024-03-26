@@ -22,23 +22,47 @@ class ThreadLocalTransactionManager(
     private val db: Database,
     private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null
 ) : TransactionManager {
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMaxAttempts"),
+        level = DeprecationLevel.WARNING
+    )
     @Volatile
     override var defaultRepetitionAttempts: Int = db.config.defaultRepetitionAttempts
-        @Deprecated("Use DatabaseConfig to define the defaultRepetitionAttempts")
+        @Deprecated("Use DatabaseConfig to define the defaultMaxAttempts", level = DeprecationLevel.WARNING)
         @TestOnly
         set
 
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMinRetryDelay"),
+        level = DeprecationLevel.WARNING
+    )
     @Volatile
     override var defaultMinRepetitionDelay: Long = db.config.defaultMinRepetitionDelay
-        @Deprecated("Use DatabaseConfig to define the defaultMinRepetitionDelay")
+        @Deprecated("Use DatabaseConfig to define the defaultMinRetryDelay", level = DeprecationLevel.WARNING)
+        @TestOnly
+        set
+
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMaxRetryDelay"),
+        level = DeprecationLevel.WARNING
+    )
+    @Volatile
+    override var defaultMaxRepetitionDelay: Long = db.config.defaultMaxRepetitionDelay
+        @Deprecated("Use DatabaseConfig to define the defaultMaxRetryDelay", level = DeprecationLevel.WARNING)
         @TestOnly
         set
 
     @Volatile
-    override var defaultMaxRepetitionDelay: Long = db.config.defaultMaxRepetitionDelay
-        @Deprecated("Use DatabaseConfig to define the defaultMaxRepetitionDelay")
-        @TestOnly
-        set
+    override var defaultMaxAttempts: Int = maxOf(db.config.defaultMaxAttempts, defaultRepetitionAttempts)
+
+    @Volatile
+    override var defaultMinRetryDelay: Long = minOf(db.config.defaultMinRetryDelay, defaultMinRepetitionDelay)
+
+    @Volatile
+    override var defaultMaxRetryDelay: Long = maxOf(db.config.defaultMaxRetryDelay, defaultMaxRepetitionDelay)
 
     @Volatile
     override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
@@ -289,7 +313,7 @@ fun <T> inTopLevelTransaction(
     statement: Transaction.() -> T
 ): T {
     fun run(): T {
-        var repetitions = 0
+        var attempts = 0
 
         val outerManager = outerTransaction?.db.transactionManager.takeIf { it.currentOrNull() != null }
 
@@ -307,24 +331,24 @@ fun <T> inTopLevelTransaction(
                 transaction.commit()
                 return answer
             } catch (cause: SQLException) {
-                handleSQLException(cause, transaction, repetitions)
-                repetitions++
-                if (repetitions >= transaction.repetitionAttempts) {
+                handleSQLException(cause, transaction, attempts)
+                attempts++
+                if (attempts >= transaction.maxAttempts) {
                     throw cause
                 }
 
                 if (retryInterval == null) {
                     retryInterval = transaction.getRetryInterval()
-                    intermediateDelay = transaction.minRepetitionDelay
+                    intermediateDelay = transaction.minRetryDelay
                 }
                 // set delay value with an exponential backoff time period.
                 val delay = when {
-                    transaction.minRepetitionDelay < transaction.maxRepetitionDelay -> {
-                        intermediateDelay += retryInterval * repetitions
+                    transaction.minRetryDelay < transaction.maxRetryDelay -> {
+                        intermediateDelay += retryInterval * attempts
                         ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
                     }
 
-                    transaction.minRepetitionDelay == transaction.maxRepetitionDelay -> transaction.minRepetitionDelay
+                    transaction.minRetryDelay == transaction.maxRetryDelay -> transaction.minRetryDelay
                     else -> 0
                 }
                 exposedLogger.warn("Wait $delay milliseconds before retrying")
@@ -364,10 +388,10 @@ private fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block
     }
 }
 
-internal fun handleSQLException(cause: SQLException, transaction: Transaction, repetitions: Int) {
+internal fun handleSQLException(cause: SQLException, transaction: Transaction, attempts: Int) {
     val exposedSQLException = cause as? ExposedSQLException
     val queriesToLog = exposedSQLException?.causedByQueries()?.joinToString(";\n") ?: "${transaction.currentStatement}"
-    val message = "Transaction attempt #$repetitions failed: ${cause.message}. Statement(s): $queriesToLog"
+    val message = "Transaction attempt #$attempts failed: ${cause.message}. Statement(s): $queriesToLog"
     exposedSQLException?.contexts?.forEach {
         transaction.interceptors.filterIsInstance<SqlLogger>().forEach { logger ->
             logger.log(it, transaction)

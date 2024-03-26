@@ -39,10 +39,31 @@ private object NotInitializedManager : TransactionManager {
 
     override var defaultReadOnly: Boolean = false
 
+    override var defaultMaxAttempts: Int = -1
+
+    override var defaultMinRetryDelay: Long = 0
+
+    override var defaultMaxRetryDelay: Long = 0
+
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMaxAttempts"),
+        level = DeprecationLevel.WARNING
+    )
     override var defaultRepetitionAttempts: Int = -1
 
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMinRetryDelay"),
+        level = DeprecationLevel.WARNING
+    )
     override var defaultMinRepetitionDelay: Long = 0
 
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMaxRetryDelay"),
+        level = DeprecationLevel.WARNING
+    )
     override var defaultMaxRepetitionDelay: Long = 0
 
     override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction =
@@ -66,13 +87,34 @@ interface TransactionManager {
     /** Whether transactions should be performed in read-only mode. Unless specified, the database default will be used. */
     var defaultReadOnly: Boolean
 
-    /** The default number of retries that will be performed in a transaction if an exception is thrown. */
-    var defaultRepetitionAttempts: Int
+    /** The default maximum amount of attempts that will be made to perform a transaction. */
+    var defaultMaxAttempts: Int
 
     /** The default minimum number of milliseconds to wait before retrying a transaction if an exception is thrown. */
-    var defaultMinRepetitionDelay: Long
+    var defaultMinRetryDelay: Long
 
     /** The default maximum number of milliseconds to wait before retrying a transaction if an exception is thrown. */
+    var defaultMaxRetryDelay: Long
+
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMaxAttempts"),
+        level = DeprecationLevel.WARNING
+    )
+    var defaultRepetitionAttempts: Int
+
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMinRetryDelay"),
+        level = DeprecationLevel.WARNING
+    )
+    var defaultMinRepetitionDelay: Long
+
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("defaultMaxRetryDelay"),
+        level = DeprecationLevel.WARNING
+    )
     var defaultMaxRepetitionDelay: Long
 
     /**

@@ -77,7 +77,7 @@ abstract class DatabaseTestsBase {
 
         val database = dbSettings.db!!
         transaction(database.transactionManager.defaultIsolationLevel, db = database) {
-            repetitionAttempts = 1
+            maxAttempts = 1
             registerInterceptor(CurrentTestDBInterceptor)
             currentTestDB = dbSettings
             statement(dbSettings)
@@ -123,7 +123,7 @@ abstract class DatabaseTestsBase {
                 } catch (_: Exception) {
                     val database = dialect.db!!
                     inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
-                        repetitionAttempts = 1
+                        maxAttempts = 1
                         SchemaUtils.drop(*tables)
                     }
                 }

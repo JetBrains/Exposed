@@ -65,14 +65,39 @@ open class Transaction(
     /** Whether tracked values like [statementCount] and [duration] should be stored in [statementStats] for debugging. */
     var debug = false
 
-    /** The number of retries that will be made inside this `transaction` block if SQLException happens */
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("maxAttempts"),
+        level = DeprecationLevel.WARNING
+    )
     var repetitionAttempts: Int = db.transactionManager.defaultRepetitionAttempts
 
-    /** The minimum number of milliseconds to wait before retrying this `transaction` if SQLException happens */
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("minRetryDelay"),
+        level = DeprecationLevel.WARNING
+    )
     var minRepetitionDelay: Long = db.transactionManager.defaultMinRepetitionDelay
 
-    /** The maximum number of milliseconds to wait before retrying this `transaction` if SQLException happens */
+    @Deprecated(
+        message = "This property will be removed in future releases",
+        replaceWith = ReplaceWith("maxRetryDelay"),
+        level = DeprecationLevel.WARNING
+    )
     var maxRepetitionDelay: Long = db.transactionManager.defaultMaxRepetitionDelay
+
+    /**
+     * The maximum amount of attempts that will be made to perform this `transaction` block.
+     *
+     * If this value is set to 1 and an SQLException happens, the exception will be thrown without performing a retry.
+     */
+    var maxAttempts: Int = maxOf(db.transactionManager.defaultMaxAttempts, repetitionAttempts)
+
+    /** The minimum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
+    var minRetryDelay: Long = minOf(db.transactionManager.defaultMinRetryDelay, minRepetitionDelay)
+
+    /** The maximum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
+    var maxRetryDelay: Long = maxOf(db.transactionManager.defaultMaxRetryDelay, maxRepetitionDelay)
 
     /**
      * The number of seconds the JDBC driver should wait for a statement to execute in [Transaction] transaction before timing out.
@@ -307,8 +332,8 @@ open class Transaction(
         executedStatements.clear()
     }
 
-    internal fun getRetryInterval(): Long = if (repetitionAttempts > 0) {
-        maxOf((maxRepetitionDelay - minRepetitionDelay) / (repetitionAttempts + 1), 1)
+    internal fun getRetryInterval(): Long = if (maxAttempts > 0) {
+        maxOf((maxRetryDelay - minRetryDelay) / (maxAttempts + 1), 1)
     } else {
         0
     }

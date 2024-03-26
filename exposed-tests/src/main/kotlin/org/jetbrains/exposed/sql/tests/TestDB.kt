@@ -71,7 +71,7 @@ enum class TestDB(
             driver = ORACLE.driver
         )
         transaction(Connection.TRANSACTION_READ_COMMITTED, db = tmp) {
-            repetitionAttempts = 1
+            maxAttempts = 1
 
             @Suppress("SwallowedException", "TooGenericExceptionCaught")
             try {

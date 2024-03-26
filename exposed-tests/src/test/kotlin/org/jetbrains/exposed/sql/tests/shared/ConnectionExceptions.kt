@@ -70,7 +70,7 @@ class ConnectionExceptions {
         val db = Database.connect(datasource = wrappingDataSource)
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
-                repetitionAttempts = 5
+                maxAttempts = 5
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
             fail("Should have thrown an exception")
@@ -106,7 +106,7 @@ class ConnectionExceptions {
         val db = Database.connect(datasource = wrappingDataSource)
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
-                repetitionAttempts = 5
+                maxAttempts = 5
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -132,7 +132,7 @@ class ConnectionExceptions {
         val db = Database.connect(datasource = wrappingDataSource)
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
-                repetitionAttempts = 5
+                maxAttempts = 5
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
