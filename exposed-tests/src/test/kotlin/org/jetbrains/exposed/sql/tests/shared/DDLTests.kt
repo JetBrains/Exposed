@@ -659,8 +659,8 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withDb { testDb ->
-            when (testDb) {
-                TestDB.MYSQL -> {
+            when {
+                testDb == TestDB.MYSQL -> {
                     expectException<ExposedSQLException> {
                         SchemaUtils.create(testTable)
                     }
