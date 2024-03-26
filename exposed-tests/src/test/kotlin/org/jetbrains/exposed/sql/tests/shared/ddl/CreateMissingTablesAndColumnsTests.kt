@@ -698,10 +698,18 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         // SQLite does not recognize creation of schema other than the attached database
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
+            // Should not require to be in the same schema
             SchemaUtils.createSchema(schema)
             SchemaUtils.create(parentTable, childTable)
 
             try {
+                // Try in different schema
+                SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
+                assertTrue(parentTable.exists())
+                assertTrue(childTable.exists())
+
+                // Try in the same schema
+                SchemaUtils.setSchema(schema)
                 SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
                 assertTrue(parentTable.exists())
                 assertTrue(childTable.exists())
