@@ -55,11 +55,11 @@ object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
 }
 
 /**
- * Represents an SQL function that returns the current date and time.
+ * Represents an SQL function that returns the current date and time, as [Instant].
  *
  * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
-class CurrentTimestamp<T : Temporal> : Function<T>(JavaInstantColumnType.INSTANCE) {
+object CurrentTimestamp : Function<Instant>(JavaInstantColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"

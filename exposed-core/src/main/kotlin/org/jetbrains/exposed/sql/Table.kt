@@ -515,7 +515,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     // Column registration
 
     /** Adds a column of the specified [type] and with the specified [name] to the table. */
-    fun <T> registerColumn(name: String, type: IColumnType): Column<T> = Column<T>(
+    fun <T> registerColumn(name: String, type: IColumnType<T & Any>): Column<T> = Column<T>(
         this,
         name,
         type
@@ -826,7 +826,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param maximumCardinality The maximum amount of allowed elements. **Note** Providing an array size limit
      * when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
      */
-    fun <T> array(name: String, columnType: ColumnType, maximumCardinality: Int? = null): Column<List<T>> =
+    fun <E> array(name: String, columnType: ColumnType<E & Any>, maximumCardinality: Int? = null): Column<List<E>> =
         registerColumn(name, ArrayColumnType(columnType.apply { nullable = true }, maximumCardinality))
 
     /**
@@ -844,9 +844,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
      * @throws IllegalStateException If no column type mapping is found.
      */
-    inline fun <reified T : Any> array(name: String, maximumCardinality: Int? = null): Column<List<T>> {
+    inline fun <reified E : Any> array(name: String, maximumCardinality: Int? = null): Column<List<E>> {
         @OptIn(InternalApi::class)
-        return array(name, resolveColumnType(T::class), maximumCardinality)
+        return array(name, resolveColumnType(E::class), maximumCardinality)
     }
 
     // Auto-generated values
@@ -1011,7 +1011,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
     ): Column<T> {
-        val column = Column<T>(
+        val column = Column(
             this,
             name,
             refColumn.columnType.cloneAsBaseType()
@@ -1334,7 +1334,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         }
     }
 
-    private fun IColumnType.cloneAsBaseType(): IColumnType = ((this as? AutoIncColumnType)?.delegate ?: this).clone()
+    private fun <T> IColumnType<T>.cloneAsBaseType(): IColumnType<T> = ((this as? AutoIncColumnType)?.delegate ?: this).clone()
 
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this

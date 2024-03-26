@@ -11,29 +11,18 @@ class EncryptedBinaryColumnType(
     private val encryptor: Encryptor,
     length: Int
 ) : BinaryColumnType(length) {
-    override fun nonNullValueToString(value: Any): String {
+    override fun nonNullValueToString(value: ByteArray): String {
         return super.nonNullValueToString(notNullValueToDB(value))
     }
 
-    override fun notNullValueToDB(value: Any): Any {
-        if (value !is ByteArray) {
-            error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
-        }
+    override fun notNullValueToDB(value: ByteArray): ByteArray = encryptor.encrypt(String(value)).toByteArray()
 
-        return encryptor.encrypt(String(value)).toByteArray()
-    }
-
-    override fun valueFromDB(value: Any): Any {
+    override fun valueFromDB(value: Any): ByteArray {
         val encryptedByte = super.valueFromDB(value)
-
-        if (encryptedByte !is ByteArray) {
-            error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
-        }
-
         return encryptor.decrypt(String(encryptedByte)).toByteArray()
     }
 
-    override fun validateValueBeforeUpdate(value: Any?) {
+    override fun validateValueBeforeUpdate(value: ByteArray?) {
         if (value != null) {
             super.validateValueBeforeUpdate(notNullValueToDB(value))
         }

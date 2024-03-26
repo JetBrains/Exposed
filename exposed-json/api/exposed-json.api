@@ -41,8 +41,7 @@ public class org/jetbrains/exposed/sql/json/JsonColumnType : org/jetbrains/expos
 	public final fun getSerialize ()Lkotlin/jvm/functions/Function1;
 	public fun getUsesBinaryFormat ()Z
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;

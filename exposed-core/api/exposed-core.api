@@ -176,14 +176,19 @@ public final class org/jetbrains/exposed/sql/ArrayColumnType : org/jetbrains/exp
 	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/ColumnType;
 	public final fun getDelegateType ()Ljava/lang/String;
 	public final fun getMaximumCardinality ()Ljava/lang/Integer;
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Ljava/util/List;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/util/List;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Ljava/util/List;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/util/List;
+	public synthetic fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun valueToString (Ljava/util/List;)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/AutoIncColumnType : org/jetbrains/exposed/sql/IColumnType {
@@ -217,10 +222,12 @@ public final class org/jetbrains/exposed/sql/Avg : org/jetbrains/exposed/sql/Fun
 
 public class org/jetbrains/exposed/sql/BasicBinaryColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> ()V
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString ([B)Ljava/lang/String;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)[B
 }
 
 public final class org/jetbrains/exposed/sql/Between : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/ComplexExpression, org/jetbrains/exposed/sql/Op$OpBoolean {
@@ -248,7 +255,8 @@ public class org/jetbrains/exposed/sql/BinaryColumnType : org/jetbrains/exposed/
 	public final fun getLength ()I
 	public fun hashCode ()I
 	public fun sqlType ()Ljava/lang/String;
-	public fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public synthetic fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public fun validateValueBeforeUpdate ([B)V
 }
 
 public final class org/jetbrains/exposed/sql/BlobColumnType : org/jetbrains/exposed/sql/ColumnType {
@@ -256,8 +264,8 @@ public final class org/jetbrains/exposed/sql/BlobColumnType : org/jetbrains/expo
 	public fun <init> (Z)V
 	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getUseObjectIdentifier ()Z
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Lorg/jetbrains/exposed/sql/statements/api/ExposedBlob;)Ljava/lang/String;
 	public synthetic fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Lorg/jetbrains/exposed/sql/statements/api/ExposedBlob;
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
@@ -269,8 +277,10 @@ public final class org/jetbrains/exposed/sql/BlobColumnType : org/jetbrains/expo
 public final class org/jetbrains/exposed/sql/BooleanColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/sql/BooleanColumnType$Companion;
 	public fun <init> ()V
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Z)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Z)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Boolean;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -324,7 +334,8 @@ public class org/jetbrains/exposed/sql/CharColumnType : org/jetbrains/exposed/sq
 	public final fun getColLength ()I
 	public fun hashCode ()I
 	public fun sqlType ()Ljava/lang/String;
-	public fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public synthetic fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public fun validateValueBeforeUpdate (Ljava/lang/String;)V
 }
 
 public final class org/jetbrains/exposed/sql/CharLength : org/jetbrains/exposed/sql/Function {
@@ -335,8 +346,10 @@ public final class org/jetbrains/exposed/sql/CharLength : org/jetbrains/exposed/
 
 public final class org/jetbrains/exposed/sql/CharacterColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> ()V
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun nonNullValueToString (C)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (C)Ljava/lang/Object;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Character;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -459,7 +472,6 @@ public abstract class org/jetbrains/exposed/sql/ColumnType : org/jetbrains/expos
 	public fun toString ()Ljava/lang/String;
 	public fun validateValueBeforeUpdate (Ljava/lang/Object;)V
 	public fun valueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
 }
@@ -545,17 +557,23 @@ public final class org/jetbrains/exposed/sql/CurrentRowWindowFrameBound : org/je
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/CustomEnumerationColumnType : org/jetbrains/exposed/sql/StringColumnType {
+public final class org/jetbrains/exposed/sql/CustomEnumerationColumnType : org/jetbrains/exposed/sql/ColumnType {
+	public static final field Companion Lorg/jetbrains/exposed/sql/CustomEnumerationColumnType$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public final fun getFromDb ()Lkotlin/jvm/functions/Function1;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getSql ()Ljava/lang/String;
 	public final fun getToDb ()Lkotlin/jvm/functions/Function1;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun nonNullValueToString (Ljava/lang/Enum;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Enum;)Ljava/lang/Object;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Enum;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/sql/CustomEnumerationColumnType$Companion {
 }
 
 public class org/jetbrains/exposed/sql/CustomFunction : org/jetbrains/exposed/sql/Function {
@@ -740,8 +758,10 @@ public final class org/jetbrains/exposed/sql/EntityIDColumnType : org/jetbrains/
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getIdColumn ()Lorg/jetbrains/exposed/sql/Column;
 	public fun hashCode ()I
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Lorg/jetbrains/exposed/dao/id/EntityID;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lorg/jetbrains/exposed/dao/id/EntityID;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -753,21 +773,32 @@ public final class org/jetbrains/exposed/sql/EnumerationColumnType : org/jetbrai
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getKlass ()Lkotlin/reflect/KClass;
 	public fun hashCode ()I
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Integer;
+	public fun notNullValueToDB (Ljava/lang/Enum;)Ljava/lang/Integer;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Enum;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public final class org/jetbrains/exposed/sql/EnumerationNameColumnType : org/jetbrains/exposed/sql/VarCharColumnType {
+public final class org/jetbrains/exposed/sql/EnumerationNameColumnType : org/jetbrains/exposed/sql/ColumnType {
+	public static final field Companion Lorg/jetbrains/exposed/sql/EnumerationNameColumnType$Companion;
 	public fun <init> (Lkotlin/reflect/KClass;I)V
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getColLength ()I
 	public final fun getKlass ()Lkotlin/reflect/KClass;
 	public fun hashCode ()I
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun nonNullValueToString (Ljava/lang/Enum;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Enum;)Ljava/lang/Object;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public fun validateValueBeforeUpdate (Ljava/lang/Enum;)V
+	public synthetic fun validateValueBeforeUpdate (Ljava/lang/Object;)V
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Enum;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/sql/EnumerationNameColumnType$Companion {
 }
 
 public final class org/jetbrains/exposed/sql/EqOp : org/jetbrains/exposed/sql/ComparisonOp {
@@ -955,7 +986,6 @@ public final class org/jetbrains/exposed/sql/IColumnType$DefaultImpls {
 	public static fun setParameter (Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public static fun validateValueBeforeUpdate (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)V
 	public static fun valueAsDefaultString (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/String;
-	public static fun valueFromDB (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun valueToDB (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun valueToString (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/String;
 }
@@ -2231,8 +2261,10 @@ public abstract class org/jetbrains/exposed/sql/StringColumnType : org/jetbrains
 	protected final fun escapeAndQuote (Ljava/lang/String;)Ljava/lang/String;
 	public final fun getCollate ()Ljava/lang/String;
 	public fun hashCode ()I
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/lang/String;)Ljava/lang/String;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/StringColumnType$Companion {
@@ -2475,7 +2507,8 @@ public final class org/jetbrains/exposed/sql/Trim : org/jetbrains/exposed/sql/Fu
 
 public final class org/jetbrains/exposed/sql/UByteColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> ()V
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB-7apg3OU (B)Ljava/lang/Object;
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -2484,7 +2517,8 @@ public final class org/jetbrains/exposed/sql/UByteColumnType : org/jetbrains/exp
 
 public final class org/jetbrains/exposed/sql/UIntegerColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> ()V
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB-WZ4Q5Ns (I)Ljava/lang/Object;
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -2493,7 +2527,8 @@ public final class org/jetbrains/exposed/sql/UIntegerColumnType : org/jetbrains/
 
 public final class org/jetbrains/exposed/sql/ULongColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> ()V
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB-VKZWuLQ (J)Ljava/lang/Object;
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -2502,7 +2537,8 @@ public final class org/jetbrains/exposed/sql/ULongColumnType : org/jetbrains/exp
 
 public final class org/jetbrains/exposed/sql/UShortColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> ()V
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB-xj2QHRw (S)Ljava/lang/Object;
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -2512,8 +2548,10 @@ public final class org/jetbrains/exposed/sql/UShortColumnType : org/jetbrains/ex
 public final class org/jetbrains/exposed/sql/UUIDColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/sql/UUIDColumnType$Companion;
 	public fun <init> ()V
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/util/UUID;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Ljava/util/UUID;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -2576,7 +2614,8 @@ public class org/jetbrains/exposed/sql/VarCharColumnType : org/jetbrains/exposed
 	public fun hashCode ()I
 	public fun preciseType ()Ljava/lang/String;
 	public fun sqlType ()Ljava/lang/String;
-	public fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public synthetic fun validateValueBeforeUpdate (Ljava/lang/Object;)V
+	public fun validateValueBeforeUpdate (Ljava/lang/String;)V
 }
 
 public final class org/jetbrains/exposed/sql/VarPop : org/jetbrains/exposed/sql/Function, org/jetbrains/exposed/sql/WindowFunction {

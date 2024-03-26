@@ -257,7 +257,7 @@ abstract class FunctionProvider {
      */
     open fun cast(
         expr: Expression<*>,
-        type: IColumnType,
+        type: IColumnType<*>,
         builder: QueryBuilder
     ): Unit = builder {
         append("CAST(", expr, " AS ", type.sqlType(), ")")
@@ -343,7 +343,7 @@ abstract class FunctionProvider {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         throw UnsupportedByDialectException(
@@ -365,7 +365,7 @@ abstract class FunctionProvider {
         target: Expression<*>,
         candidate: Expression<*>,
         path: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         throw UnsupportedByDialectException(
@@ -387,7 +387,7 @@ abstract class FunctionProvider {
         expression: Expression<*>,
         vararg path: String,
         optional: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         throw UnsupportedByDialectException(

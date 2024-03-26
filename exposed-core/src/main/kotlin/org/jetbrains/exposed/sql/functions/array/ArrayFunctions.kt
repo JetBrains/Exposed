@@ -19,7 +19,7 @@ class ArrayGet<E, T : List<E>?>(
     val expression: Expression<T>,
     /** The one-based index position at which the stored array is accessed. */
     val index: Int,
-    columnType: IColumnType
+    columnType: IColumnType<E & Any>
 ) : Function<E?>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
@@ -39,7 +39,7 @@ class ArraySlice<E, T : List<E>?>(
     val lower: Int?,
     /** The upper bounds (inclusive) of a subarray. If left `null`, the database will use the stored array's upper limit. */
     val upper: Int?,
-    columnType: IColumnType
+    columnType: IColumnType<T & Any>
 ) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         val functionProvider = when (currentDialect.h2Mode) {

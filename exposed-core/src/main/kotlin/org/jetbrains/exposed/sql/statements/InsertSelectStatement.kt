@@ -29,7 +29,7 @@ open class InsertSelectStatement(
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int? = executeUpdate()
 
-    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = selectQuery.arguments()
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = selectQuery.arguments()
 
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String =
         transaction.db.dialect.functionProvider.insert(isIgnore, targets.single(), columns, selectQuery.prepareSQL(transaction, prepared), transaction)

@@ -29,7 +29,7 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
         e is LiteralOp<*> && e.columnType is BlobColumnType && e.columnType.useObjectIdentifier && (currentDialect as? H2Dialect) == null -> {
             "lo_from_bytea(0, ${super.processForDefaultValue(e)} :: bytea)"
         }
-        e is LiteralOp<*> && e.columnType is ArrayColumnType -> {
+        e is LiteralOp<*> && e.columnType is ArrayColumnType<*> -> {
             val processed = super.processForDefaultValue(e)
             processed
                 .takeUnless { it == "ARRAY[]" }
@@ -145,7 +145,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         append("${jsonType.sqlType()}_EXTRACT_PATH")
@@ -159,7 +159,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         target: Expression<*>,
         candidate: Expression<*>,
         path: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         path?.let {
@@ -178,7 +178,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         expression: Expression<*>,
         vararg path: String,
         optional: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         if (path.size > 1) {

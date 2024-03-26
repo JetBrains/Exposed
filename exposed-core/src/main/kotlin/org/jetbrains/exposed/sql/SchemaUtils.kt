@@ -204,16 +204,17 @@ object SchemaUtils {
                                     else -> processed.trim('\'')
                                 }
                             }
-                            column.columnType is ArrayColumnType && dialect is PostgreSQLDialect -> {
+                            column.columnType is ArrayColumnType<*> && dialect is PostgreSQLDialect -> {
                                 (value as List<*>)
                                     .takeIf { it.isNotEmpty() }
                                     ?.run {
-                                        val delegate = column.withColumnType(column.columnType.delegate)
+                                        val delegateColumnType = column.columnType.delegate as IColumnType<Any>
+                                        val delegateColumn = (column as Column<Any?>).withColumnType(delegateColumnType)
                                         val processed = map {
-                                            if (delegate.columnType is StringColumnType) {
+                                            if (delegateColumn.columnType is StringColumnType) {
                                                 "'$it'::text"
                                             } else {
-                                                dbDefaultToString(delegate, delegate.asLiteral(it))
+                                                dbDefaultToString(delegateColumn, delegateColumn.asLiteral(it))
                                             }
                                         }
                                         "ARRAY$processed"

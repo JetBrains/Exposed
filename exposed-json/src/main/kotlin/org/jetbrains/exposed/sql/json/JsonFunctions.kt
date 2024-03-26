@@ -22,8 +22,8 @@ class Extract<T>(
     /** Whether the extracted result should be a scalar or text value; if `false`, result will be a JSON object. */
     val toScalar: Boolean,
     /** The column type of [expression] to check, if casting to JSONB is required. */
-    val jsonType: IColumnType,
-    columnType: IColumnType
+    val jsonType: IColumnType<*>,
+    columnType: IColumnType<T & Any>
 ) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) =
         currentDialect.functionProvider.jsonExtract(expression, path = path, toScalar, jsonType, queryBuilder)

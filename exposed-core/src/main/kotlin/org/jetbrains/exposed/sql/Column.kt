@@ -21,7 +21,7 @@ class Column<T>(
     /** Name of the column. */
     val name: String,
     /** Data type of the column. */
-    override val columnType: IColumnType
+    override val columnType: IColumnType<T & Any>
 ) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     /** The foreign key constraint on this column, or `null` if the column is not referencing. */
     var foreignKey: ForeignKeyConstraint? = null
@@ -63,12 +63,13 @@ class Column<T>(
     private val isLastColumnInPK: Boolean
         get() = this == table.primaryKey?.columns?.last()
 
-    internal val isPrimaryConstraintWillBeDefined: Boolean get() = when {
-        currentDialect is SQLiteDialect && columnType.isAutoInc -> false
-        table.isCustomPKNameDefined() -> isLastColumnInPK
-        isOneColumnPK() -> false
-        else -> isLastColumnInPK
-    }
+    internal val isPrimaryConstraintWillBeDefined: Boolean
+        get() = when {
+            currentDialect is SQLiteDialect && columnType.isAutoInc -> false
+            table.isCustomPKNameDefined() -> isLastColumnInPK
+            isOneColumnPK() -> false
+            else -> isLastColumnInPK
+        }
 
     override fun createStatement(): List<String> {
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
@@ -154,7 +155,7 @@ class Column<T>(
     /**
      * Returns a copy of this column, but with the given column type.
      */
-    fun withColumnType(columnType: IColumnType) = Column<T>(
+    fun withColumnType(columnType: IColumnType<T & Any>) = Column<T>(
         table = this.table,
         name = this.name,
         columnType = columnType

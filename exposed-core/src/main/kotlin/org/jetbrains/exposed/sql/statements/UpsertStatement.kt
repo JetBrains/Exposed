@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
+import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
 
 /**
  * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
@@ -34,7 +36,7 @@ open class UpsertStatement<Key : Any>(
         return functionProvider.upsert(table, arguments!!.first(), onUpdate, onUpdateExclude, where, transaction, keys = keys)
     }
 
-    override fun arguments(): List<Iterable<Pair<IColumnType, Any?>>> {
+    override fun arguments(): List<Iterable<Pair<IColumnType<*>, Any?>>> {
         return arguments?.map { args ->
             val builder = QueryBuilder(true)
             args.filter { (_, value) ->

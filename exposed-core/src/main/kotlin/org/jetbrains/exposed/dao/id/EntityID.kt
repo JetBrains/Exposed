@@ -18,15 +18,16 @@ open class EntityID<T : Comparable<T>> protected constructor(val table: IdTable<
     var _value: Any? = id
 
     /** The identity value of type [T] wrapped by this [EntityID] instance. */
-    val value: T get() {
-        if (_value == null) {
-            invokeOnNoValue()
-            check(_value != null) { "Entity must be inserted" }
-        }
+    val value: T
+        get() {
+            if (_value == null) {
+                invokeOnNoValue()
+                check(_value != null) { "Entity must be inserted" }
+            }
 
-        @Suppress("UNCHECKED_CAST")
-        return _value!! as T
-    }
+            @Suppress("UNCHECKED_CAST")
+            return _value!! as T
+        }
 
     /** Performs steps when the internal [_value] is accessed without first being initialized. */
     protected open fun invokeOnNoValue() {}
