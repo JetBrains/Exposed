@@ -107,8 +107,16 @@ dependencies {
 }
 ```
 
-Exposed works together with [kotlinx.serialization](https://github.com/Kotlin/kotlinx.serialization) to support 
-`@Serializable` classes and JSON serialization/deserialization:
+Exposed works together with the JSON serialization/deserialization library of your choice by allowing column definitions
+that accept generic serializer and deserializer arguments:
+```kotlin
+fun <T : Any> json(name: String, serialize: (T) -> String, deserialize: (String) -> T): Column<T>
+
+fun <T : Any> jsonb(name: String, serialize: (T) -> String, deserialize: (String) -> T): Column<T>
+```
+
+Here's an example that leverages [kotlinx.serialization](https://github.com/Kotlin/kotlinx.serialization) to support
+`@Serializable` classes. It uses a simpler form of `json()` that relies on the library's `KSerializer` interface:
 ```kotlin
 @Serializable
 data class Project(val name: String, val language: String, val active: Boolean)
@@ -135,9 +143,17 @@ transaction {
 }
 ```
 
-Both column types also support custom serializer and deserializer arguments, using the form:
+Here's how the same `Project` and `Teams` would be defined using [Jackson](https://github.com/FasterXML/jackson)
+with the `jackson-module-kotlin` dependency and the full form of `json()`:
 ```kotlin
-fun <T : Any> json(name: String, serialize: (T) -> String, deserialize: (String) -> T): Column<T>
+val mapper = jacksonObjectMapper()
+
+data class Project(val name: String, val language: String, val active: Boolean)
+
+object Teams : Table("team") {
+    val groupId = varchar("group_id", 32)
+    val project = json("project", { mapper.writeValueAsString(it) }, { mapper.readValue<Project>(it) })
+}
 ```
 
 ### Json Functions
