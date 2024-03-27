@@ -71,52 +71,52 @@ The Maven Central repository is enabled by default for Maven users.
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-core</artifactId>
-        <version>0.48.0</version>
+        <version>0.49.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-crypt</artifactId>
-        <version>0.48.0</version>
+        <version>0.49.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-dao</artifactId>
-        <version>0.48.0</version>
+        <version>0.49.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-java-time</artifactId>
-        <version>0.48.0</version>
+        <version>0.49.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-jdbc</artifactId>
-        <version>0.48.0</version>
+        <version>0.49.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-jodatime</artifactId>
-        <version>0.48.0</version>
+        <version>0.49.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-json</artifactId>
-        <version>0.48.0</version>
+        <version>0.49.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-kotlin-datetime</artifactId>
-        <version>0.48.0</version>
+        <version>0.49.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-money</artifactId>
-        <version>0.48.0</version>
+        <version>0.49.0</version>
     </dependency>
     <dependency>
         <groupId>org.jetbrains.exposed</groupId>
         <artifactId>exposed-spring-boot-starter</artifactId>
-        <version>0.48.0</version>
+        <version>0.49.0</version>
     </dependency>
 </dependencies>
 
@@ -126,20 +126,20 @@ The Maven Central repository is enabled by default for Maven users.
 
 ```groovy
 dependencies {
-    implementation 'org.jetbrains.exposed:exposed-core:0.48.0'
-    implementation 'org.jetbrains.exposed:exposed-crypt:0.48.0'
-    implementation 'org.jetbrains.exposed:exposed-dao:0.48.0'
-    implementation 'org.jetbrains.exposed:exposed-jdbc:0.48.0'
+    implementation 'org.jetbrains.exposed:exposed-core:0.49.0'
+    implementation 'org.jetbrains.exposed:exposed-crypt:0.49.0'
+    implementation 'org.jetbrains.exposed:exposed-dao:0.49.0'
+    implementation 'org.jetbrains.exposed:exposed-jdbc:0.49.0'
     
-    implementation 'org.jetbrains.exposed:exposed-jodatime:0.48.0'
+    implementation 'org.jetbrains.exposed:exposed-jodatime:0.49.0'
     // or
-    implementation 'org.jetbrains.exposed:exposed-java-time:0.48.0'
+    implementation 'org.jetbrains.exposed:exposed-java-time:0.49.0'
     // or
-    implementation 'org.jetbrains.exposed:exposed-kotlin-datetime:0.48.0'
+    implementation 'org.jetbrains.exposed:exposed-kotlin-datetime:0.49.0'
     
-    implementation 'org.jetbrains.exposed:exposed-json:0.48.0'
-    implementation 'org.jetbrains.exposed:exposed-money:0.48.0'
-    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.48.0'
+    implementation 'org.jetbrains.exposed:exposed-json:0.49.0'
+    implementation 'org.jetbrains.exposed:exposed-money:0.49.0'
+    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.49.0'
 }
 ```
 
@@ -170,7 +170,7 @@ dependencies {
 and in `gradle.properties`
 
 ```
-exposedVersion=0.48.0
+exposedVersion=0.49.0
 ```
 
 ## Samples
