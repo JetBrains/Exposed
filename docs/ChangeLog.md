@@ -1,3 +1,34 @@
+# 0.49.0
+Infrastructure:
+* log4j2 2.23.1
+* SQLite driver 3.45.2.0
+* Spring Framework 6.1.5
+* PostgreSQL driver 42.7.3
+* Detekt 1.23.6
+
+Breaking changes:
+* fix!: EXPOSED-269 Incompatible with sqlite-jdbc 3.45.0.0 by @joc-a in https://github.com/JetBrains/Exposed/pull/2030
+
+Features:
+* feat: EXPOSED-238 Support EXPLAIN statements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2022
+* feat: Include DROP statements for unmapped indices in list of statements returned by `statementsRequiredForDatabaseMigration` function by @joc-a
+  in https://github.com/JetBrains/Exposed/pull/2023
+* feat: EXPOSED-310 Add support for ULongIdTable and ULongEntity by @joc-a in https://github.com/JetBrains/Exposed/pull/2025
+* feat: EXPOSED-316 Add support for UIntIdTable and UIntEntity by @joc-a in https://github.com/JetBrains/Exposed/pull/2026
+
+Bug fixes:
+* fix: Tests `testAdjustQueryHaving`, `testQueryAndHaving`, and `testQueryOrHaving` resolve wrong `eq` function, and `testGroupBy03` shows compiler warning by @joc-a
+  in https://github.com/JetBrains/Exposed/pull/2016
+* fix: EXPOSED-217 Unnecessary query after calling with() and iteration by @bog-walk in https://github.com/JetBrains/Exposed/pull/2017
+* fix: EXPOSED-307 [SQLite] Delete ignore not supported and throws by @bog-walk in https://github.com/JetBrains/Exposed/pull/2021
+
+Docs:
+* docs: Add missing KDocs for exposed-dao Entity API by @bog-walk in https://github.com/JetBrains/Exposed/pull/2012
+* docs: Add missing KDocs for exposed-dao EntityClass API by @bog-walk in https://github.com/JetBrains/Exposed/pull/2018
+* docs: Add missing KDocs for exposed-dao Entity References API by @bog-walk in https://github.com/JetBrains/Exposed/pull/2020
+* docs: Add missing KDocs for exposed-dao EntityCache API by @bog-walk in https://github.com/JetBrains/Exposed/pull/2019
+* Improve instructions for Maven users by @breun in https://github.com/JetBrains/Exposed/pull/2031
+
 # 0.48.0
 Infrastructure:
 * PostgreSQL driver 42.7.2

@@ -11,7 +11,7 @@
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-bom</artifactId>
-      <version>0.48.0</version>
+      <version>0.49.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -38,7 +38,7 @@
     <tab title="Gradle Kotlin Script">
         <code-block lang="kotlin">
 <![CDATA[
-val exposedVersion: String = "0.48.0"
+val exposedVersion: String = "0.49.0"
 
 dependencies {
 implementation("org.jetbrains.exposed:exposed-core", exposedVersion)
