@@ -733,7 +733,7 @@ transaction {
 Unlike Insert or Update, none of the supporting databases allows a `WHERE` clause. 
 Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there is no parameter for a custom key set.
 
-The values specified in the statement block will be used for the insert statement and any omitted columns are set to their default values, if applicable.
+The values specified in the statement block will be used for the insert statement, and any omitted columns are set to their default values, if applicable.
 
 <note>
 In the example above, if the original row was inserted with a user-defined <code>rating</code>, then <code>replace()</code> was executed with a block that omitted the <code>rating</code> column, 

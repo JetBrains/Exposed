@@ -1,0 +1,146 @@
+<!DOCTYPE html SYSTEM "about:legacy-compat">
+<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2024-03-27T11:54:52.914683"><title>Data Types | Exposed</title><script type="application/json" id="virtual-toc-data">[{"id":"how-to-use-database-enum-types","level":0,"title":"How to use database ENUM types","anchor":"#how-to-use-database-enum-types"},{"id":"how-to-use-json-and-jsonb-types","level":0,"title":"How to use Json and JsonB types","anchor":"#how-to-use-json-and-jsonb-types"},{"id":"how-to-use-array-types","level":0,"title":"How to use Array types","anchor":"#how-to-use-array-types"}]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.6.6-b224/app.css" rel="stylesheet"><link rel="manifest" href="site.webmanifest"><meta name="msapplication-TileColor" content="#000000"><link rel="apple-touch-icon" sizes="180x180" href="https://jetbrains.com/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://jetbrains.com/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://jetbrains.com/favicon-16x16.png"><meta name="msapplication-TileImage" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-144x144.png"><meta name="msapplication-square70x70logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-70x70.png"><meta name="msapplication-square150x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-150x150.png"><meta name="msapplication-wide310x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x150.png"><meta name="msapplication-square310x310logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x310.png"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="Data Types | Exposed"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="Exposed Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/docs/1.0/data-types.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="Data Types | Exposed"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
+    "@context": "http://schema.org",
+    "@type": "WebPage",
+    "@id": "writerside-documentation/docs/1.0/data-types.html#webpage",
+    "url": "writerside-documentation/docs/1.0/data-types.html",
+    "name": "Data Types | Exposed",
+    "description": "",
+    "image": "",
+    "inLanguage":"en-US"
+}</script><!-- End Schema.org --><!-- Schema.org WebSite --><script type="application/ld+json">{
+    "@type": "WebSite",
+    "@id": "writerside-documentation/docs/#website",
+    "url": "writerside-documentation/docs/",
+    "name": "Exposed Help"
+}</script><!-- End Schema.org --></head><body data-id="Data-Types" data-main-title="Data Types" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs="Exposed-Modules.md|Exposed Modules"><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 1.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="Data-Types" id="Data-Types.md">Data Types</h1><p id="-dk367f_7980">Exposed supports the following data types in the table definition:</p><ul class="list _bullet" id="-dk367f_7981"><li class="list__item" id="-dk367f_7982"><p><code class="code" id="-dk367f_7983">integer</code> - translates to DB <code class="code" id="-dk367f_7984">INT</code></p></li><li class="list__item" id="-dk367f_7985"><p><code class="code" id="-dk367f_7986">short</code> - translates to DB <code class="code" id="-dk367f_7987">SMALLINT</code></p></li><li class="list__item" id="-dk367f_7988"><p><code class="code" id="-dk367f_7989">long</code> - <code class="code" id="-dk367f_7990">BIGINT</code></p></li><li class="list__item" id="-dk367f_7991"><p><code class="code" id="-dk367f_7992">float</code> - <code class="code" id="-dk367f_7993">FLOAT</code></p></li><li class="list__item" id="-dk367f_7994"><p><code class="code" id="-dk367f_7995">decimal</code> - <code class="code" id="-dk367f_7996">DECIMAL</code> with scale and precision</p></li><li class="list__item" id="-dk367f_7997"><p><code class="code" id="-dk367f_7998">bool</code> - <code class="code" id="-dk367f_7999">BOOLEAN</code></p></li><li class="list__item" id="-dk367f_8000"><p><code class="code" id="-dk367f_8001">char</code> - <code class="code" id="-dk367f_8002">CHAR</code></p></li><li class="list__item" id="-dk367f_8003"><p><code class="code" id="-dk367f_8004">varchar</code> - <code class="code" id="-dk367f_8005">VARCHAR</code> with length</p></li><li class="list__item" id="-dk367f_8006"><p><code class="code" id="-dk367f_8007">text</code> - <code class="code" id="-dk367f_8008">TEXT</code></p></li><li class="list__item" id="-dk367f_8009"><p><code class="code" id="-dk367f_8010">enumeration</code> - <code class="code" id="-dk367f_8011">INT</code> ordinal value</p></li><li class="list__item" id="-dk367f_8012"><p><code class="code" id="-dk367f_8013">enumerationByName</code> - <code class="code" id="-dk367f_8014">VARCHAR</code></p></li><li class="list__item" id="-dk367f_8015"><p><code class="code" id="-dk367f_8016">customEnumeration</code> - see <a href="#how-to-use-database-enum-types" id="-dk367f_8017" data-tooltip="Some of the databases (e.g. MySQL, PostgreSQL, H2) support explicit ENUM types. Because keeping such columns in sync with Kotlin enumerations using only JDBC metadata could be a huge challenge, Exposed doesn't provide a possibility to manage such columns in an automatic way, but…">additional section</a></p></li><li class="list__item" id="-dk367f_8018"><p><code class="code" id="-dk367f_8019">blob</code> - <code class="code" id="-dk367f_8020">BLOB</code></p></li><li class="list__item" id="-dk367f_8021"><p><code class="code" id="-dk367f_8022">binary</code> - <code class="code" id="-dk367f_8023">VARBINARY</code> with length</p></li><li class="list__item" id="-dk367f_8024"><p><code class="code" id="-dk367f_8025">uuid</code> - <code class="code" id="-dk367f_8026">BINARY(16)</code></p></li><li class="list__item" id="-dk367f_8027"><p><code class="code" id="-dk367f_8028">reference</code> - a foreign key</p></li><li class="list__item" id="-dk367f_8029"><p><code class="code" id="-dk367f_8030">array</code> - <code class="code" id="-dk367f_8031">ARRAY</code></p></li></ul><p id="-dk367f_8032">The <code class="code" id="-dk367f_8033">exposed-java-time</code> extension (<code class="code" id="-dk367f_8034">org.jetbrains.exposed:exposed-java-time:$exposed_version</code>) provides additional types:</p><ul class="list _bullet" id="-dk367f_8035"><li class="list__item" id="-dk367f_8036"><p><code class="code" id="-dk367f_8037">date</code> - <code class="code" id="-dk367f_8038">DATETIME</code></p></li><li class="list__item" id="-dk367f_8039"><p><code class="code" id="-dk367f_8040">time</code> - <code class="code" id="-dk367f_8041">TIME</code></p></li><li class="list__item" id="-dk367f_8042"><p><code class="code" id="-dk367f_8043">datetime</code> - <code class="code" id="-dk367f_8044">DATETIME</code></p></li><li class="list__item" id="-dk367f_8045"><p><code class="code" id="-dk367f_8046">timestamp</code> - <code class="code" id="-dk367f_8047">TIMESTAMP</code></p></li><li class="list__item" id="-dk367f_8048"><p><code class="code" id="-dk367f_8049">duration</code> - <code class="code" id="-dk367f_8050">DURATION</code></p></li></ul><aside class="prompt" data-type="note" data-title="" id="-dk367f_8051"><p>Some types are different for specific DB dialect.</p></aside><p id="-dk367f_8052">The <code class="code" id="-dk367f_8053">exposed-json</code> extension (<code class="code" id="-dk367f_8054">org.jetbrains.exposed:exposed-json:$exposed_version</code>) provides additional types (see <a href="#how-to-use-json-and-jsonb-types" id="-dk367f_8055" data-tooltip="Add the following dependencies to your build.gradle.kts:">how to use</a>):</p><ul class="list _bullet" id="-dk367f_8056"><li class="list__item" id="-dk367f_8057"><p><code class="code" id="-dk367f_8058">json</code> - <code class="code" id="-dk367f_8059">JSON</code></p></li><li class="list__item" id="-dk367f_8060"><p><code class="code" id="-dk367f_8061">jsonb</code> - <code class="code" id="-dk367f_8062">JSONB</code></p></li></ul><aside class="prompt" data-type="note" data-title="" id="-dk367f_8063"><p>Databases store JSON values either in text or binary format, so Exposed provides two types to account for any potential differences, if they exist, for example: </p><ul class="list _bullet" id="-dk367f_8064"><li class="list__item" id="-dk367f_8065"><p><span class="control" id="-dk367f_8066">PostgreSQL</span>: <code class="code" id="-dk367f_8067">json()</code> maps to <code class="code" id="-dk367f_8068">JSON</code>, while <code class="code" id="-dk367f_8069">jsonb()</code> maps to <code class="code" id="-dk367f_8070">JSONB</code>.</p></li><li class="list__item" id="-dk367f_8071"><p><span class="control" id="-dk367f_8072">SQLite</span>: No native JSON type, so <code class="code" id="-dk367f_8073">json()</code> maps to TEXT, while <code class="code" id="-dk367f_8074">jsonb()</code> throws.</p></li><li class="list__item" id="-dk367f_8075"><p><span class="control" id="-dk367f_8076">MySQL</span>: JSON type only supports binary format, so <code class="code" id="-dk367f_8077">json()</code> and <code class="code" id="-dk367f_8078">jsonb()</code> both map to JSON.</p></li><li class="list__item" id="-dk367f_8079"><p><span class="control" id="-dk367f_8080">Oracle</span>: Exposed does not currently support the JSON binary format of Oracle 21c; only text format <code class="code" id="-dk367f_8081">json()</code> can be used.</p></li></ul></aside><section class="chapter"><h2 id="how-to-use-database-enum-types" data-toc="how-to-use-database-enum-types">How to use database ENUM types</h2><p id="-dk367f_8082">Some of the databases (e.g. MySQL, PostgreSQL, H2) support explicit ENUM types. Because keeping such columns in sync with Kotlin enumerations using only JDBC metadata could be a huge challenge, Exposed doesn't provide a possibility to manage such columns in an automatic way, but that doesn't mean that you can't use such column types. You have two options to work with ENUM database types:</p><ol class="list _decimal" id="-dk367f_8083" type="1"><li class="list__item" id="-dk367f_8084"><p>Use existing ENUM column from your tables</p></li><li class="list__item" id="-dk367f_8085"><p>Create column from Exposed by providing raw definition SQL In both cases, you should use <code class="code" id="-dk367f_8086">customEnumeration</code> function (available since version 0.10.3)</p></li></ol><p id="-dk367f_8087">As a jdbc-driver can provide/expect specific classes for Enum type, you must provide from/to transformation functions for them when defining a <code class="code" id="-dk367f_8088">customEnumeration</code>.</p><p id="-dk367f_8089">For such enum <code class="code" id="-dk367f_8090">private enum class Foo { Bar, Baz }</code>, you can use the provided code for your database:</p><p id="-dk367f_8091"><span class="control" id="-dk367f_8092">H2</span></p><div class="code-block" data-lang="kotlin">
+val existingEnumColumn = customEnumeration(&quot;enumColumn&quot;, { Foo.values()[it as Int] }, { it.name })
+val newEnumColumn = customEnumeration(&quot;enumColumn&quot;, &quot;ENUM('Bar', 'Baz')&quot;, { Foo.values()[it as Int] }, { it.name })
+</div><p id="-dk367f_8094"><span class="control" id="-dk367f_8095">MySQL</span></p><div class="code-block" data-lang="kotlin">
+val existingEnumColumn = customEnumeration(&quot;enumColumn&quot;, { value -&gt; Foo.valueOf(value as String) }, { it.name })
+val newEnumColumn = customEnumeration(&quot;enumColumn&quot;, &quot;ENUM('Bar', 'Baz')&quot;, { value -&gt; Foo.valueOf(value as String) }, { it.name })
+</div><p id="-dk367f_8097"><span class="control" id="-dk367f_8098">PostgreSQL</span></p><p id="-dk367f_8099">PostgreSQL requires that ENUM is defined as a separate type, so you have to create it before creating your table. Also, PostgreSQL JDBC driver returns PGobject instances for such values. The full working sample is provided below:</p><div class="code-block" data-lang="kotlin">
+class PGEnum&lt;T : Enum&lt;T&gt;&gt;(enumTypeName: String, enumValue: T?) : PGobject() {
+    init {
+        value = enumValue?.name
+        type = enumTypeName
+    }
+}
+
+object EnumTable : Table() {
+    val enumColumn = customEnumeration(&quot;enumColumn&quot;, &quot;FooEnum&quot;, {value -&gt; Foo.valueOf(value as String)}, { PGEnum(&quot;FooEnum&quot;, it) })
+}
+
+transaction {
+   exec(&quot;CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');&quot;)
+   SchemaUtils.create(EnumTable)
+}
+</div></section><section class="chapter"><h2 id="how-to-use-json-and-jsonb-types" data-toc="how-to-use-json-and-jsonb-types">How to use Json and JsonB types</h2><p id="-dk367f_8101">Add the following dependencies to your <code class="code" id="-dk367f_8102">build.gradle.kts</code>:</p><div class="code-block" data-lang="kotlin">
+val exposedVersion: String by project
+
+dependencies {
+    implementation(&quot;org.jetbrains.exposed:exposed-core:$exposedVersion&quot;)
+    implementation(&quot;org.jetbrains.exposed:exposed-json:$exposedVersion&quot;)
+}
+</div><p id="-dk367f_8104">Exposed works together with <a href="https://github.com/Kotlin/kotlinx.serialization" id="-dk367f_8105" data-external="true" rel="noopener noreferrer">kotlinx.serialization</a> to support <code class="code" id="-dk367f_8106">@Serializable</code> classes and JSON serialization/deserialization:</p><div class="code-block" data-lang="kotlin">
+@Serializable
+data class Project(val name: String, val language: String, val active: Boolean)
+
+val format = Json { prettyPrint = true }
+
+object Teams : Table(&quot;team&quot;) {
+    val groupId = varchar(&quot;group_id&quot;, 32)
+    val project = json&lt;Project&gt;(&quot;project&quot;, format) // equivalent to json(&quot;project&quot;, format, Project.serializer())
+}
+
+transaction {
+    val mainProject = Project(&quot;Main&quot;, &quot;Java&quot;, true)
+    Teams.insert {
+        it[groupId] = &quot;A&quot;
+        it[project] = mainProject
+    }
+    Teams.update({ Teams.groupId eq &quot;A&quot; }) {
+        it[project] = mainProject.copy(language = &quot;Kotlin&quot;)
+    }
+
+    Teams.selectAll().map { &quot;Team ${it[Teams.groupId]} -&gt; ${it[Teams.project]}&quot; }.forEach { println(it) }
+    // Team A -&gt; Project(name=Main, language=Kotlin, active=true)
+}
+</div><p id="-dk367f_8108">Both column types also support custom serializer and deserializer arguments, using the form:</p><div class="code-block" data-lang="kotlin">
+fun &lt;T : Any&gt; json(name: String, serialize: (T) -&gt; String, deserialize: (String) -&gt; T): Column&lt;T&gt;
+</div><section class="chapter"><h3 id="json-functions" data-toc="json-functions">Json Functions</h3><p id="-dk367f_8110">JSON path strings can be used to extract values (either as JSON or as a scalar value) at a specific field/key:</p><div class="code-block" data-lang="kotlin">
+val projectName = Teams.project.extract&lt;String&gt;(&quot;name&quot;)
+val languageIsKotlin = Teams.project.extract&lt;String&gt;(&quot;language&quot;).lowerCase() eq &quot;kotlin&quot;
+Teams.select(projectName).where { languageIsKotlin }.map { it[projectName] }
+</div><aside class="prompt" data-type="note" data-title="" id="-dk367f_8112"><p>Databases that support a path context root <code class="code" id="-dk367f_8113">$</code> will have this value appended to the generated SQL path expression by default, so it is not necessary to include it in the provided argument String. In the above example, if MySQL is being used, the provided path arguments should be <code class="code" id="-dk367f_8114">.name</code> and <code class="code" id="-dk367f_8115">.language</code> respectively.</p></aside><p id="-dk367f_8116">The JSON functions <code class="code" id="-dk367f_8117">exists()</code> and <code class="code" id="-dk367f_8118">contains()</code> are currently supported as well:</p><div class="code-block" data-lang="kotlin">
+val hasActiveStatus = Teams.project.exists(&quot;.active&quot;)
+val activeProjects = Teams.selectAll().where { hasActiveStatus }.count()
+
+// Depending on the database, filter paths can be provided instead, as well as optional arguments
+// PostgreSQL example
+val mainId = &quot;Main&quot;
+val hasMainProject = Teams.project.exists(&quot;.name ? (@ == \$main)&quot;, optional = &quot;{\&quot;main\&quot;:\&quot;$mainId\&quot;}&quot;)
+val mainProjects = Teams.selectAll().where { hasMainProject }.map { it[Teams.groupId] }
+
+val usesKotlin = Teams.project.contains(&quot;{\&quot;language\&quot;:\&quot;Kotlin\&quot;}&quot;)
+val kotlinTeams = Teams.selectAll().where { usesKotlin }.count()
+
+// Depending on the database, an optional path can be provided too
+// MySQL example
+val usesKotlin = Teams.project.contains(&quot;\&quot;Kotlin\&quot;&quot;, &quot;.language&quot;)
+val kotlinTeams = Teams.selectAll().where { usesKotlin }.count()
+</div></section><section class="chapter"><h3 id="json-arrays" data-toc="json-arrays">Json Arrays</h3><p id="-dk367f_8120">JSON columns also accept JSON arrays as input values. For example, using the serializable data class <code class="code" id="-dk367f_8121">Project</code> from the example above, the following details some ways to create such a column:</p><div class="code-block" data-lang="kotlin">
+object TeamProjects : Table(&quot;team_projects&quot;) {
+    val memberIds = json&lt;IntArray&gt;(&quot;member_ids&quot;, Json.Default)
+    val projects = json&lt;Array&lt;Project&gt;&gt;(&quot;projects&quot;, Json.Default)
+    // equivalent to:
+    // @OptIn(ExperimentalSerializationApi::class) json(&quot;projects&quot;, Json.Default, ArraySerializer(Project.serializer()))
+}
+
+transaction {
+    TeamProjects.insert {
+        it[memberIds] = intArrayOf(1, 2, 3)
+        it[projects] = arrayOf(
+            Project(&quot;A&quot;, &quot;Kotlin&quot;, true),
+            Project(&quot;B&quot;, &quot;Java&quot;, true)
+        )
+    }
+    // generates SQL
+    // INSERT INTO team_projects (member_ids, projects) VALUES ([1,2,3], [{&quot;name&quot;:&quot;A&quot;,&quot;language&quot;:&quot;Kotlin&quot;,&quot;active&quot;:true},{&quot;name&quot;:&quot;B&quot;,&quot;language&quot;:&quot;Java&quot;,&quot;active&quot;:true}])
+}
+</div></section></section><section class="chapter"><h2 id="how-to-use-array-types" data-toc="how-to-use-array-types">How to use Array types</h2><p id="-dk367f_8123">PostgreSQL and H2 databases support the explicit ARRAY data type.</p><p id="-dk367f_8124">Exposed currently only supports columns defined as one-dimensional arrays, with the stored contents being any out-of-the-box or custom data type. If the contents are of a type with a supported <code class="code" id="-dk367f_8125">ColumnType</code> in the <code class="code" id="-dk367f_8126">exposed-core</code> module, the column can be simply defined with that type:</p><div class="code-block" data-lang="kotlin">
+object Teams : Table(&quot;teams&quot;) {
+    val memberIds = array&lt;UUID&gt;(&quot;member_ids&quot;)
+    val memberNames = array&lt;String&gt;(&quot;member_names&quot;)
+    val budgets = array&lt;Double&gt;(&quot;budgets&quot;)
+}
+</div><p id="-dk367f_8128">If more control is needed over the base content type, or if the latter is user-defined or from a non-core module, the explicit type should be provided to the function:</p><div class="code-block" data-lang="kotlin">
+object Teams : Table(&quot;teams&quot;) {
+    val memberIds = array&lt;UUID&gt;(&quot;member_ids&quot;)
+    val memberNames = array&lt;String&gt;(&quot;member_names&quot;, VarCharColumnType(colLength = 32))
+    val deadlines = array&lt;LocalDate&gt;(&quot;deadlines&quot;, KotlinLocalDateColumnType()).nullable()
+    val budgets = array&lt;Double&gt;(&quot;budgets&quot;)
+    val expenses = array&lt;Double?&gt;(&quot;expenses&quot;, DoubleColumnType()).default(emptyList())
+}
+</div><p id="-dk367f_8130">This will prevent an exception being thrown if Exposed cannot find an associated column mapping for the defined type. Null array contents are allowed, and the explicit column type should be provided for these columns as well.</p><p id="-dk367f_8131">An array column accepts inserts and retrieves stored array contents as a Kotlin <code class="code" id="-dk367f_8132">List</code>:</p><div class="code-block" data-lang="kotlin">
+Teams.insert {
+    it[memberIds] = List(5) { UUID.randomUUID() }
+    it[memberNames] = List(5) { i -&gt; &quot;Member ${'A' + i}&quot; }
+    it[budgets] = listOf(9999.0)
+}
+</div><section class="chapter"><h3 id="array-functions" data-toc="array-functions">Array Functions</h3><p id="-dk367f_8134">A single element in a stored array can be accessed using the index reference <code class="code" id="-dk367f_8135">get()</code> operator:</p><div class="code-block" data-lang="kotlin">
+val firstMember = Teams.memberIds[1]
+Teams
+    .select(firstMember)
+    .where { Teams.expenses[1] greater Teams.budgets[1] }
+</div><aside class="prompt" data-type="note" data-title="" id="-dk367f_8137"><p>Both PostgreSQL and H2 use a one-based indexing convention, so the first element is retrieved by using index 1.</p></aside><p id="-dk367f_8138">A new subarray can also be accessed by using <code class="code" id="-dk367f_8139">slice()</code>, which takes a lower and upper bound (inclusive):</p><div class="code-block" data-lang="kotlin">
+Teams.select(Teams.deadlines.slice(1, 3))
+</div><p id="-dk367f_8141">Both arguments for these bounds are optional if using PostgreSQL.</p><p id="-dk367f_8142">An array column can also be used as an argument for the <code class="code" id="-dk367f_8143">ANY</code> and <code class="code" id="-dk367f_8144">ALL</code> SQL operators, either by providing the entire column or a new array expression via <code class="code" id="-dk367f_8145">slice()</code>:</p><div class="code-block" data-lang="kotlin">
+Teams
+    .selectAll()
+    .where { Teams.budgets[1] lessEq allFrom(Teams.expenses) }
+
+Teams
+    .selectAll()
+    .where { stringParam(&quot;Member A&quot;) eq anyFrom(Teams.memberNames.slice(1, 4)) }
+</div></section></section><div class="last-modified">Last modified: 27 March 2024</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="exposed-modules.html" class="navigation-links__prev">Exposed Modules</a><a href="sql-functions.html" class="navigation-links__next">SQL Functions</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.6.6-b224/app.js"></script></body></html>

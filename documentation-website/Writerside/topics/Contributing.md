@@ -1,4 +1,4 @@
-# How to contribute
+# Contributing to Exposed
 
 We're delighted that you're considering contributing to Exposed!
 
@@ -15,14 +15,14 @@ Independently of how you'd like to contribute, please make sure you read and com
 
 ## Setup
 
-### Testing on Apple Silicon 
+### Testing on Apple Silicon
 To run Oracle XE tests, you need to install [Colima](https://github.com/abiosoft/colima) container runtime. It will work in pair with your docker installation.
 ```shell
 brew install colima
 ```
 
 After installing, you need to start the colima daemon in arch x86_64 mode:
-```shel
+```Bash
 colima start --arch x86_64 --memory 4 --network-address
 ```
 
@@ -62,11 +62,11 @@ Contributions are made using Github [pull requests](https://help.github.com/en/a
 A few things to remember:
 
 * Your code should conform to the official [Kotlin code style guide](https://kotlinlang.org/docs/reference/coding-conventions.html)
-  except that star imports should be always enabled.
+  except that star imports should always be enabled.
   (ensure Preferences | Editor | Code Style | Kotlin, tab **Imports**, both `Use import with '*'` should be checked).
 * Every new source file should have a copyright header.
 * Every public API (including functions, classes, objects and so on) should be documented,
-  every parameter, property, return types and exceptions should be described properly.
+  every parameter, property, return types, and exceptions should be described properly.
 
 #### Commit messages
 

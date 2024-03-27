@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic SYSTEM "https://resources.jetbrains.com/writerside/1.0/html-entities.dtd">
+
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Exposed Documentation"
+       id="Home">
+
+    <section-starting-page>
+        <title>Exposed Documentation</title>
+        <description>
+            Exposed is a Kotlin SQL database library with two flavors: a lightweight ORM (using DAO) and type-safe SQL
+            (using DSL).
+        </description>
+
+        <spotlight>
+            <a href="Getting-Started-with-Exposed.md" type="learn"
+               summary="Start exploring Exposed step-by-step by building our sample project from scratch">
+                Getting Started with Exposed
+            </a>
+            <a href="Frequently-Asked-Questions.md" type="server"
+               summary="Frequently Asked Questions">
+                FAQ
+            </a>
+        </spotlight>
+
+        <primary>
+            <title>Learn More</title>
+            <a href=""
+               summary="Learn how to configure Exposed in the existing project using Gradle or Maven build systems">
+                Adding Dependencies
+            </a>
+            <a href="" summary="Start creating your first tables and get familiar with the column types">
+                Tables and Columns ABC
+            </a>
+            <a href="" summary="Learn how to write database queries using Exposed query DSL">
+                Querying Database
+            </a>
+            <a href=""
+               summary="Learn how to perform basic CRUD (Create, Read, Update, Delete) operations using entities mapping">
+                Introduction to ORM Entities
+            </a>
+        </primary>
+        <secondary>
+            <title>Releases and Contribution</title>
+            <a href="Contributing.md" summary="Learn how to contribute to Exposed">
+                Contributing to Exposed
+            </a>
+            <a href="Migration-Guide.md" summary="Check how to update to the latest Exposed version">
+                Migration Guide
+            </a>
+        </secondary>
+    </section-starting-page>
+</topic>
