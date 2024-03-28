@@ -222,8 +222,13 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     names
                 }
 
-                val tableNameWithoutSchemaPrefix = table.nameInDatabaseCaseUnquoted()
-                val rs = metadata.getIndexInfo(catalog, tableSchema, tableNameWithoutSchemaPrefix, false, false)
+                val storedIndexTable = if
+                    (tableSchema == currentSchema!! && currentDialect is OracleDialect) {
+                    table.nameInDatabaseCase()
+                } else {
+                    table.nameInDatabaseCaseUnquoted()
+                }
+                val rs = metadata.getIndexInfo(catalog, tableSchema, storedIndexTable, false, false)
 
                 val tmpIndices = hashMapOf<Triple<String, Boolean, Op.TRUE?>, MutableList<String>>()
 
