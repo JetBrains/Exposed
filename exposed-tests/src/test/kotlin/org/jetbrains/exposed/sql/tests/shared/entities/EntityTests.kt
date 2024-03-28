@@ -1629,6 +1629,26 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testEntityIdParam() {
+        withTables(CreditCards) {
+            val creditCard = CreditCard.new {
+                number = "0000111122223333"
+                spendingLimit = 10000u
+            }
+            assertEquals(
+                1,
+                CreditCards.select(idParam(creditCard.id, CreditCards.id)).count()
+            )
+            assertEquals(
+                10000u,
+                CreditCards.select(CreditCards.spendingLimit)
+                    .where { CreditCards.id eq idParam(creditCard.id, CreditCards.id) }
+                    .single()[CreditCards.spendingLimit]
+            )
+        }
+    }
+
     object Countries : IdTable<String>("Countries") {
         override val id = varchar("id", 3).uniqueIndex().entityId()
         var name = text("name")
