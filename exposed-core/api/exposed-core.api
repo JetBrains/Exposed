@@ -1401,10 +1401,6 @@ public final class org/jetbrains/exposed/sql/LikeEscapeOp : org/jetbrains/expose
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/LikeOp : org/jetbrains/exposed/sql/ComparisonOp {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)V
-}
-
 public final class org/jetbrains/exposed/sql/LikePattern {
 	public static final field Companion Lorg/jetbrains/exposed/sql/LikePattern$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/lang/Character;)V
@@ -1528,10 +1524,6 @@ public final class org/jetbrains/exposed/sql/NotExists : org/jetbrains/exposed/s
 
 public final class org/jetbrains/exposed/sql/NotInSubQueryOp : org/jetbrains/exposed/sql/SubQueryOp {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)V
-}
-
-public final class org/jetbrains/exposed/sql/NotLikeOp : org/jetbrains/exposed/sql/ComparisonOp {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)V
 }
 
 public final class org/jetbrains/exposed/sql/NotOp : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/Op$OpBoolean {
@@ -3144,7 +3136,7 @@ public abstract class org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMe
 	public abstract fun columns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
-	public abstract fun getCurrentScheme ()Ljava/lang/String;
+	public abstract synthetic fun getCurrentScheme ()Ljava/lang/String;
 	public final fun getDatabase ()Ljava/lang/String;
 	public abstract fun getDatabaseDialectName ()Ljava/lang/String;
 	public abstract fun getDatabaseProductVersion ()Ljava/lang/String;

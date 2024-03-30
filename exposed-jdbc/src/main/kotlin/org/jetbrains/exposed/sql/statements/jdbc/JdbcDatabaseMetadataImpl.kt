@@ -77,7 +77,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     @Deprecated(
         message = "This will be removed when the interface property is fully deprecated",
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     override val currentScheme: String get() = currentSchema!!
 
