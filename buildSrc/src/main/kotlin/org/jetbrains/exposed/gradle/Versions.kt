@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.gradle
 
-@Deprecated("Use gradle version catalog")
+@Deprecated("Use gradle version catalog", level = DeprecationLevel.ERROR)
 object Versions {
     const val kotlinCoroutines = "1.7.3"
     const val kotlinxSerialization = "1.5.1"
