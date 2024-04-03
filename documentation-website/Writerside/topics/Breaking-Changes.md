@@ -29,7 +29,7 @@ constraints. It now has a different behavior and deals with excessive indices on
 foreign key constraints and has a return type `List<ForeignKeyConstraint>`.
 
 ## 0.46.0
-.
+
 * When an Exposed table object is created with a keyword identifier (a table or column name) it now retains the exact case used before being automatically quoted in generated SQL.
   This primarily affects H2 and Oracle, both of which support folding identifiers to uppercase, and PostgresSQL, which folds identifiers to a lower case.
 
@@ -56,7 +56,9 @@ Database.connect(
 // H2 generates SQL -> CREATE TABLE IF NOT EXISTS "TABLE" ("SELECT" INT NOT NULL)
 ```
 
-**Note: ** `preserveKeywordCasing` is an experimental flag and requires `@OptIn`. It may become deprecated in future releases.
+<note>
+The `preserveKeywordCasing` is an experimental flag and requires `@OptIn`. It may become deprecated in future releases.
+</note>
 
 ## 0.44.0
 
@@ -95,7 +97,9 @@ Database.connect(
 // H2 generates SQL -> CREATE TABLE IF NOT EXISTS "table" ("select" INT NOT NULL)
 ```
 
-**Note: ** `preserveKeywordCasing` is an experimental flag and requires `@OptIn`. It may become deprecated in future releases, and its behavior when set to `true` may become the default.
+<note>
+`preserveKeywordCasing` is an experimental flag and requires `@OptIn`. It may become deprecated in future releases, and its behavior when set to `true` may become the default.
+</note>
 
 ## 0.43.0
 

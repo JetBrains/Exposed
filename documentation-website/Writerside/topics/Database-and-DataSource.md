@@ -14,14 +14,15 @@ It is also possible to provide `javax.sql.DataSource` for advanced behaviors suc
 ```kotlin
 val db = Database.connect(dataSource)
 ```
-* Note: Executing this code more than once per database will create leaks in your application, hence it is recommended to store it for later use:
-```kotlin
+<note>Executing this code more than once per database will create leaks in your application, hence it is recommended to store it for later use:
+<code-block lang="kotlin">
 object DbSettings {
    val db by lazy { 
        Database.connect(/* setup connection */)
    }
 }
-```
+</code-block>
+</note>
 ## DataSource
 * PostgresSQL
 ```kotlin
@@ -121,10 +122,15 @@ Database.connect(
     }
 )
 ```
-**Note: ** Since version 0.46.0, when configured directly in the `HikariConfig` class,
+
+<note>
+Since version 0.46.0, when configured directly in the `HikariConfig` class,
 values like `transactionIsolation` and `isReadOnly` will be used by Exposed when creating transactions.
+
 If they are duplicated or new values are set in `DatabaseConfig`,
 the latter will be treated as an override in the same way
 that setting these parameters on an individual transaction block overrides the default settings.
+
 It is therefore recommended to not set these values in `DatabaseConfig`
 unless the intention is for the new value to override the Hikari settings.
+</note>

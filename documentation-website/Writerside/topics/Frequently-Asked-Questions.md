@@ -10,8 +10,8 @@ A: Yes. See [Transactions](Transactions.md#working-with-multiple-databases)
 
 ### Q: Is `Array` column type supported?
 
-A: Not at the moment. More info here: https://github.com/JetBrains/Exposed/issues/150  
-The complete list of supported data types can be found here: [Data Types](Data-Types.md).
+A: Not at the moment. More info here: [https://github.com/JetBrains/Exposed/issues/150](https://github.com/JetBrains/Exposed/issues/150)  
+The complete list of supported data types can be found here: [Data Types](Data-Types.md#how-to-use-array-types).
 
 ### Q: Is `upsert` supported?
 
@@ -47,11 +47,11 @@ fun <T:Any> String.execAndMap(transform : (ResultSet) -> T) : List<T> {
     rs.getString("u.name") to rs.getString("c.name") 
 }
 ```
-More info in this issue: https://github.com/JetBrains/Exposed/issues/118
+More info in this issue: [https://github.com/JetBrains/Exposed/issues/118](https://github.com/JetBrains/Exposed/issues/118)
 
 ### Q: Is it possible to update a field relative to current field value?
 
-A: Yes. See example here: https://github.com/JetBrains/Exposed/wiki/DSL#update
+A: Yes. See example here: [https://github.com/JetBrains/Exposed/wiki/DSL#update](https://github.com/JetBrains/Exposed/issues/118)
 
 ### Q: How can I add another type of Database?
 
@@ -64,7 +64,7 @@ A: Yes, it's possible since Exposed 0.11.1 version
 
 ### Q: How can I implement nested queries?
 
-A: See example here: https://github.com/JetBrains/Exposed/issues/248
+A: See example here: [https://github.com/JetBrains/Exposed/issues/248](https://github.com/JetBrains/Exposed/issues/118)
 
 ### Q: How can I use SAVEPOINT?
 A: It possible only through using a raw connection. See example [here](https://github.com/JetBrains/Exposed/issues/320#issuecomment-394825415).
@@ -91,9 +91,9 @@ dependencies {
 ### Q: How can I specify a primary key column type e.g StringIdTable?
 A: You need to define your own! See examples:  
 [#855](https://github.com/JetBrains/Exposed/issues/855)  
-https://stackoverflow.com/a/61940820/1155026
+[https://stackoverflow.com/a/61940820/1155026](https://github.com/JetBrains/Exposed/issues/118)
 
-### Q: How create custom collumn type
+### Q: How can I create a custom column type?
 A: Just implements [IColumnType](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/ColumnType.kt#L25)
 and use [registerColumn](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/Table.kt#L387)
 to [extends](https://kotlinlang.org/docs/extensions.html) a [Table](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/Table.kt#L326)
@@ -119,10 +119,10 @@ fun <T: TypedId> Column<T>.autoGenerate(constructor: (UUID) -> T): Column<T> = c
 class StarWarsFilmId(id: UUID): TypedId(id)
 
 object StarWarsFilms : Table() {
-  val id = typedUuid("id") { StarWarsFilmId(it) }.autoGenerate{ StarWarsFilmId(it) }
-  val name: Column<String> = varchar("name", 50)
-  val director: Column<String> = varchar("director", 50)
-  final override val primaryKey = PrimaryKey(id)
+    val id = typedUuid("id") { StarWarsFilmId(it) }.autoGenerate{ StarWarsFilmId(it) }
+    val name: Column<String> = varchar("name", 50)
+    val director: Column<String> = varchar("director", 50)
+    final override val primaryKey = PrimaryKey(id)
 }
 ```
 

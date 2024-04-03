@@ -7,7 +7,7 @@ Before starting using Exposed, you need to add the dependencies to your project.
 <tabs>
 <tab title="Gradle">
 <code-block lang="kotlin">
-val exposed_version = "0.48.0"
+val exposed_version = "0.49.0"
 dependencies {
     implementation("org.jetbrains.exposed", "exposed-core", exposed_version)
     implementation("org.jetbrains.exposed", "exposed-dao", exposed_version)
@@ -22,17 +22,17 @@ dependencies {
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-core</artifactId>
-      <version>0.48.0</version>
+      <version>0.49.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-dao</artifactId>
-      <version>0.48.0</version>
+      <version>0.49.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.exposed</groupId>
       <artifactId>exposed-jdbc</artifactId>
-      <version>0.48.0</version>
+      <version>0.49.0</version>
     </dependency>
 </dependencies>
 ]]>
@@ -40,7 +40,9 @@ dependencies {
 </tab>
 </tabs>
 
-- Note: Other modules are available. Detailed information about them is located in the [Modules](Exposed-Modules.md) section.
+<note> 
+Other modules are available. Detailed information about them is located in the [Modules](Exposed-Modules.md) section.
+</note>
 
 ## Getting Started
 
