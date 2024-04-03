@@ -148,6 +148,39 @@ Instead of invoking `addLogger()` to log all database transaction statements, ad
 spring.exposed.show-sql=true
 ```
 
+## GraalVM Native Images
+Building a GraalVM native image of a Spring Boot application with this starter is supported without any extra configuration,
+via the runtime hints contributed by the registered `ExposedAotContribution` class.
+
+**Note:** The [Spring AOT engine](https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html#native-image.introducing-graalvm-native-images.understanding-aot-processing) restricts the use of dynamic properties.
+This means that beans defined by `@ConditionalOnProperty` cannot change at runtime and are not supported,
+so setting the property `spring.exposed.generate-ddl=true` will not enable auto-creation of database schema.
+Instead, database schema should be manually generated, using for example `SchemaUtils.create()`.
+
+**Note:** In the event that a `KotlinReflectionInternalError: Unresolved class` is thrown when using Exposed with a native image,
+the missing runtime hints can be temporarily provided by using an implementation of `RuntimeHintsRegistrar`:
+```kotlin
+import org.springframework.aot.hint.MemberCategory
+import org.springframework.aot.hint.RuntimeHints
+import org.springframework.aot.hint.RuntimeHintsRegistrar
+
+class ExposedHints : RuntimeHintsRegistrar {
+    override fun registerHints(hints: RuntimeHints, classLoader: ClassLoader?) {
+        hints.reflection().registerType(IntegerColumnType::class.java, *MemberCategory.entries.toTypedArray())
+    }
+}
+```
+
+To activate the missing hints, the implementing class should be applied directly on a Spring configuration class using:
+`@ImportRuntimeHints(ExposedHints::class)`.
+Alternatively, the missing hints can be registered by adding an entry in a `META-INF/spring/aot.factories` file:
+```properties
+org.springframework.aot.hint.RuntimeHintsRegistrar=<fully qualified class name>.ExposedHints
+```
+Please open a ticket on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&draftId=25-4442763) if any such exceptions are encountered.
+
+See the [official documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html) for more details about Spring Boot's GraalVM native image support.
+
 ## Sample
 
 Check out the [Exposed - Spring Boot sample](../samples/exposed-spring/README.md) for more details, for example:
