@@ -326,6 +326,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
  * PostgreSQL dialect implementation.
  */
 open class PostgreSQLDialect(override val name: String = dialectName) : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
+    override val supportsSubqueryUnions: Boolean = true
+
     override val supportsOrderByNullsFirstLast: Boolean = true
 
     override val requiresAutoCommitOnCreateDrop: Boolean = true

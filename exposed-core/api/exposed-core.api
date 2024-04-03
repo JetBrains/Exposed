@@ -3748,6 +3748,7 @@ public class org/jetbrains/exposed/sql/vendors/PostgreSQLDialect : org/jetbrains
 	public fun getName ()Ljava/lang/String;
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsSubqueryUnions ()Z
 	public fun getSupportsWindowFrameGroupsMode ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
