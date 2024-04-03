@@ -1,4 +1,4 @@
-# Modules Documentation
+# Exposed Modules
 
 ## Dependencies
 
@@ -157,8 +157,10 @@ Dependencies mapping listed below is similar (by functionality) to the previous 
 
 ### JDBC driver and logging
 
-You also need a JDBC driver for the database system you are using (see [Databases](Databases.md)) and a logger
-for `addLogger(StdOutSqlLogger)`. Example (Gradle
+You also need a JDBC driver for the database system you are using
+(see [Databases](Database-and-DataSource.md)) and a logger
+for `addLogger(StdOutSqlLogger)`.
+Example (Gradle
 syntax):
 
 ```kotlin
@@ -175,7 +177,7 @@ dependencies {
 
 Prior Exposed 0.18.1 there was only one base module `exposed` which contains everything you may need including JodaTime
 as date-time library.
-To add `Exposed` framework of that version you had to use:
+To add `Exposed` framework of that version, you had to use:
 
 <tabs>
   <tab title="Kotlin Gradle">
@@ -204,4 +206,3 @@ To add `Exposed` framework of that version you had to use:
     </code-block>
   </tab>
 </tabs>
-#### Maven 1

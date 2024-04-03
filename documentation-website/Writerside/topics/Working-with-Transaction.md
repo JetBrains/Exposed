@@ -11,8 +11,7 @@ transaction {
 }
 ```
 
-Transactions are executed synchronously on the current thread, so they _will block_ other parts of your application! If you need to execute a
-transaction asynchronously, consider running it on a [separate thread](Asynchronous-Support.md).
+Transactions are executed synchronously on the current thread, so they _will block_ other parts of your application!
 
 ### Accessing returned values
 
@@ -166,7 +165,7 @@ Allowable values are defined in `java.sql.Connection` and are as follows:
 Much like with `transactionIsolation`, this value is not directly used by Exposed, but is simply relayed to the database.
 
 **db**: This parameter is optional and is used to select the database where the transaction should be settled 
-([[see section above|Transactions#working-with-multiple-databases]]).
+([see the section above](Transactions.md#working-with-multiple-databases)).
 
 **Transaction Repetition Attempts**
 

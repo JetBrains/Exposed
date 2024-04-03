@@ -1,0 +1,11 @@
+{
+    "name": "JetBrains",
+    "short_name": "JetBrains",
+    "icons": [
+      { "src": "https://www.jetbrains.com/icon-192.png", "type": "image/png", "sizes": "192x192" },
+      { "src": "https://www.jetbrains.com/icon-512.png", "type": "image/png", "sizes": "512x512" }
+    ],
+    "theme_color": "#000000",
+    "background_color": "#000000",
+    "display": "standalone"
+}
