@@ -52,7 +52,6 @@ class ExposedAotContribution : BeanFactoryInitializationAotProcessor {
 
     private fun RuntimeHints.registerResourceHints() {
         listOf(
-            "META-INF/spring/aot.factories",
             "META-INF/services/org.jetbrains.exposed.dao.id.EntityIDFactory",
             "META-INF/services/org.jetbrains.exposed.sql.DatabaseConnectionAutoRegistration",
             "META-INF/services/org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor"
