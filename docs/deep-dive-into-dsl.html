@@ -1,9 +1,9 @@
 <!DOCTYPE html SYSTEM "about:legacy-compat">
-<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2024-03-27T11:54:52.915178"><title>Deep Dive into DSL | Exposed</title><script type="application/json" id="virtual-toc-data">[{"id":"overview","level":0,"title":"Overview","anchor":"#overview"},{"id":"crud-operations","level":0,"title":"CRUD operations","anchor":"#crud-operations"},{"id":"where-expression","level":0,"title":"Where expression","anchor":"#where-expression"},{"id":"conditional-where","level":0,"title":"Conditional where","anchor":"#conditional-where"},{"id":"count","level":0,"title":"Count","anchor":"#count"},{"id":"order-by","level":0,"title":"Order-by","anchor":"#order-by"},{"id":"group-by","level":0,"title":"Group-by","anchor":"#group-by"},{"id":"limit","level":0,"title":"Limit","anchor":"#limit"},{"id":"join","level":0,"title":"Join","anchor":"#join"},{"id":"union","level":0,"title":"Union","anchor":"#union"},{"id":"alias","level":0,"title":"Alias","anchor":"#alias"},{"id":"schema","level":0,"title":"Schema","anchor":"#schema"},{"id":"sequence","level":0,"title":"Sequence","anchor":"#sequence"},{"id":"batch-insert","level":0,"title":"Batch Insert","anchor":"#batch-insert"},{"id":"insert-from-select","level":0,"title":"Insert From Select","anchor":"#insert-from-select"},{"id":"insert-or-ignore","level":0,"title":"Insert Or Ignore","anchor":"#insert-or-ignore"},{"id":"insert-or-update","level":0,"title":"Insert Or Update","anchor":"#insert-or-update"},{"id":"replace","level":0,"title":"Replace","anchor":"#replace"}]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.6.6-b224/app.css" rel="stylesheet"><link rel="manifest" href="site.webmanifest"><meta name="msapplication-TileColor" content="#000000"><link rel="apple-touch-icon" sizes="180x180" href="https://jetbrains.com/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://jetbrains.com/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://jetbrains.com/favicon-16x16.png"><meta name="msapplication-TileImage" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-144x144.png"><meta name="msapplication-square70x70logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-70x70.png"><meta name="msapplication-square150x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-150x150.png"><meta name="msapplication-wide310x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x150.png"><meta name="msapplication-square310x310logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x310.png"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="Deep Dive into DSL | Exposed"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="Exposed Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/docs/1.0/deep-dive-into-dsl.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="Deep Dive into DSL | Exposed"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
+<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2024-04-03T16:09:50.415748"><title>Deep Dive into DSL | Exposed</title><script type="application/json" id="virtual-toc-data">[{"id":"overview","level":0,"title":"Overview","anchor":"#overview"},{"id":"crud-operations","level":0,"title":"CRUD operations","anchor":"#crud-operations"},{"id":"where-expression","level":0,"title":"Where expression","anchor":"#where-expression"},{"id":"conditional-where","level":0,"title":"Conditional where","anchor":"#conditional-where"},{"id":"count","level":0,"title":"Count","anchor":"#count"},{"id":"order-by","level":0,"title":"Order-by","anchor":"#order-by"},{"id":"group-by","level":0,"title":"Group-by","anchor":"#group-by"},{"id":"limit","level":0,"title":"Limit","anchor":"#limit"},{"id":"join","level":0,"title":"Join","anchor":"#join"},{"id":"union","level":0,"title":"Union","anchor":"#union"},{"id":"alias","level":0,"title":"Alias","anchor":"#alias"},{"id":"schema","level":0,"title":"Schema","anchor":"#schema"},{"id":"sequence","level":0,"title":"Sequence","anchor":"#sequence"},{"id":"batch-insert","level":0,"title":"Batch Insert","anchor":"#batch-insert"},{"id":"insert-from-select","level":0,"title":"Insert From Select","anchor":"#insert-from-select"},{"id":"insert-or-ignore","level":0,"title":"Insert Or Ignore","anchor":"#insert-or-ignore"},{"id":"insert-or-update","level":0,"title":"Insert Or Update","anchor":"#insert-or-update"},{"id":"replace","level":0,"title":"Replace","anchor":"#replace"}]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.6.6-b224/app.css" rel="stylesheet"><link rel="manifest" href="site.webmanifest"><meta name="msapplication-TileColor" content="#000000"><link rel="apple-touch-icon" sizes="180x180" href="https://jetbrains.com/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://jetbrains.com/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://jetbrains.com/favicon-16x16.png"><meta name="msapplication-TileImage" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-144x144.png"><meta name="msapplication-square70x70logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-70x70.png"><meta name="msapplication-square150x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-150x150.png"><meta name="msapplication-wide310x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x150.png"><meta name="msapplication-square310x310logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x310.png"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="Deep Dive into DSL | Exposed"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="Exposed Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/docs/0.49.0/deep-dive-into-dsl.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="Deep Dive into DSL | Exposed"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
     "@context": "http://schema.org",
     "@type": "WebPage",
-    "@id": "writerside-documentation/docs/1.0/deep-dive-into-dsl.html#webpage",
-    "url": "writerside-documentation/docs/1.0/deep-dive-into-dsl.html",
+    "@id": "writerside-documentation/docs/0.49.0/deep-dive-into-dsl.html#webpage",
+    "url": "writerside-documentation/docs/0.49.0/deep-dive-into-dsl.html",
     "name": "Deep Dive into DSL | Exposed",
     "description": "",
     "image": "",
@@ -13,7 +13,7 @@
     "@id": "writerside-documentation/docs/#website",
     "url": "writerside-documentation/docs/",
     "name": "Exposed Help"
-}</script><!-- End Schema.org --></head><body data-id="Deep-Dive-into-DSL" data-main-title="Deep Dive into DSL" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs=""><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 1.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="Deep-Dive-into-DSL" id="Deep-Dive-into-DSL.md">Deep Dive into DSL</h1><section class="chapter"><h2 id="overview" data-toc="overview">Overview</h2><p id="-oh9f62_14367">The DSL (Domain-Specific Language) API of Exposed is similar to actual SQL statements, but with the type safety that Kotlin offers.</p><p id="-oh9f62_14368">A database table is represented by an <code class="code" id="-oh9f62_14369">object</code> inherited from <code class="code" id="-oh9f62_14370">org.jetbrains.exposed.sql.Table</code> like this:</p><div class="code-block" data-lang="kotlin">
+}</script><!-- End Schema.org --></head><body data-id="Deep-Dive-into-DSL" data-main-title="Deep Dive into DSL" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs=""><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 0.49.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="Deep-Dive-into-DSL" id="Deep-Dive-into-DSL.md">Deep Dive into DSL</h1><section class="chapter"><h2 id="overview" data-toc="overview">Overview</h2><p id="i4r1mpa_20465">The DSL (Domain-Specific Language) API of Exposed is similar to actual SQL statements, but with the type safety that Kotlin offers.</p><p id="i4r1mpa_20466">A database table is represented by an <code class="code" id="i4r1mpa_20467">object</code> inherited from <code class="code" id="i4r1mpa_20468">org.jetbrains.exposed.sql.Table</code> like this:</p><div class="code-block" data-lang="kotlin">
 object StarWarsFilms : Table() {
     val id: Column&lt;Int&gt; = integer(&quot;id&quot;).autoIncrement()
     val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;).uniqueIndex()
@@ -21,21 +21,21 @@ object StarWarsFilms : Table() {
     val director: Column&lt;String&gt; = varchar(&quot;director&quot;, 50)
     override val primaryKey = PrimaryKey(id, name = &quot;PK_StarWarsFilms_Id&quot;) // PK_StarWarsFilms_Id is optional here
 }
-</div><p id="-oh9f62_14372">Tables that contains <code class="code" id="-oh9f62_14373">Int</code> id with the name <code class="code" id="-oh9f62_14374">id</code> can be declared like this:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20470">Tables that contains <code class="code" id="i4r1mpa_20471">Int</code> id with the name <code class="code" id="i4r1mpa_20472">id</code> can be declared like this:</p><div class="code-block" data-lang="kotlin">
 object StarWarsFilms : IntIdTable() {
     val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;).uniqueIndex()
     val name: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
     val director: Column&lt;String&gt; = varchar(&quot;director&quot;, 50)
 }
-</div></section><section class="chapter"><h2 id="crud-operations" data-toc="crud-operations">CRUD operations</h2><p id="-oh9f62_14376">CRUD stands for Create Read Update Delete, which are four basic operations for a database to support. This section shows how to perform SQL CRUD operations using Kotlin DSL.</p><section class="chapter"><h3 id="create" data-toc="create">Create</h3><p id="-oh9f62_14377">To create a new table row, you use the <code class="code" id="-oh9f62_14378">insert</code> query. Exposed provides several functions to insert rows into a table:</p><ul class="list _bullet" id="-oh9f62_14379"><li class="list__item" id="-oh9f62_14380"><p id="-oh9f62_14381"><code class="code" id="-oh9f62_14382">insert</code> adds a new row. If the same row already exists in the table, it throws an exception.</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="crud-operations" data-toc="crud-operations">CRUD operations</h2><p id="i4r1mpa_20474">CRUD stands for Create Read Update Delete, which are four basic operations for a database to support. This section shows how to perform SQL CRUD operations using Kotlin DSL.</p><section class="chapter"><h3 id="create" data-toc="create">Create</h3><p id="i4r1mpa_20475">To create a new table row, you use the <code class="code" id="i4r1mpa_20476">insert</code> query. Exposed provides several functions to insert rows into a table:</p><ul class="list _bullet" id="i4r1mpa_20477"><li class="list__item" id="i4r1mpa_20478"><p id="i4r1mpa_20479"><code class="code" id="i4r1mpa_20480">insert</code> adds a new row. If the same row already exists in the table, it throws an exception.</p><div class="code-block" data-lang="kotlin">
 // SQL: INSERT INTO CITIES (COUNTRY, &quot;NAME&quot;, POPULATION)
 // VALUES ('RUSSIA', 'St. Petersburg', 300)
 Cities.insert {
-it[name] = &quot;St. Petersburg&quot;
-it[country] = Country.RUSSIA
-it[population] = 500
+    it[name] = &quot;St. Petersburg&quot;
+    it[country] = Country.RUSSIA
+    it[population] = 500
 }
-</div></li><li class="list__item" id="-oh9f62_14384"><p id="-oh9f62_14385"><code class="code" id="-oh9f62_14386">insertAndGetId</code> adds a new row and returns its ID. If the same row already exists in the table, it throws an exception. Works only with IntIdTable() tables.</p><div class="code-block" data-lang="kotlin">
+</div></li><li class="list__item" id="i4r1mpa_20482"><p id="i4r1mpa_20483"><code class="code" id="i4r1mpa_20484">insertAndGetId</code> adds a new row and returns its ID. If the same row already exists in the table, it throws an exception. Works only with IntIdTable() tables.</p><div class="code-block" data-lang="kotlin">
 // SQL: INSERT INTO CITIES (COUNTRY, &quot;NAME&quot;, POPULATION)
 // VALUES ('RUSSIA', 'St. Petersburg', 300)
 val id = Cities.insertAndGetId {
@@ -43,7 +43,7 @@ val id = Cities.insertAndGetId {
     it[country] = Country.RUSSIA
     it[population] = 500
 }
-</div></li><li class="list__item" id="-oh9f62_14388"><p id="-oh9f62_14389"><code class="code" id="-oh9f62_14390">insertIgnore</code> adds a new row. If the same row already exists in the table, it ignores it and doesn't throw an exception. This function is supported only for MySQL, PostgreSQL, and SQLite.</p><div class="code-block" data-lang="kotlin">
+</div></li><li class="list__item" id="i4r1mpa_20486"><p id="i4r1mpa_20487"><code class="code" id="i4r1mpa_20488">insertIgnore</code> adds a new row. If the same row already exists in the table, it ignores it and doesn't throw an exception. This function is supported only for MySQL, PostgreSQL, and SQLite.</p><div class="code-block" data-lang="kotlin">
 // SQL: INSERT IGNORE INTO CITIES (COUNTRY, &quot;NAME&quot;, POPULATION)
 // VALUES ('RUSSIA', 'St. Petersburg', 300)
 Cities.insertIgnore {
@@ -51,7 +51,7 @@ Cities.insertIgnore {
     it[country] = Country.RUSSIA
     it[population] = 500
 }
-</div></li><li class="list__item" id="-oh9f62_14392"><p id="-oh9f62_14393"><code class="code" id="-oh9f62_14394">insertIgnoreAndGetId</code> adds a new row and returns its ID. If the same row already exists in the table, it ignores it and doesn't throw an exception. This function is supported only for MySQL, PostgreSQL, and SQLite. Works only with <code class="code" id="-oh9f62_14395">IntIdTable()</code> tables.</p><div class="code-block" data-lang="kotlin">
+</div></li><li class="list__item" id="i4r1mpa_20490"><p id="i4r1mpa_20491"><code class="code" id="i4r1mpa_20492">insertIgnoreAndGetId</code> adds a new row and returns its ID. If the same row already exists in the table, it ignores it and doesn't throw an exception. This function is supported only for MySQL, PostgreSQL, and SQLite. Works only with <code class="code" id="i4r1mpa_20493">IntIdTable()</code> tables.</p><div class="code-block" data-lang="kotlin">
 // SQL: INSERT IGNORE INTO CITIES (COUNTRY, &quot;NAME&quot;, POPULATION)
 // VALUES ('RUSSIA', 'St. Petersburg', 300)
 val id = Cities.insertIgnoreAndGetId {
@@ -59,30 +59,24 @@ val id = Cities.insertIgnoreAndGetId {
     it[country] = Country.RUSSIA
     it[population] = 500
 }
-</div></li></ul><div class="code-block" data-lang="kotlin">
-val id = StarWarsFilms.insertAndGetId {
-    it[name] = &quot;The Last Jedi&quot;
+</div></li></ul><p id="i4r1mpa_20495">Some databases return a count of the number of rows inserted, updated, or deleted by the CRUD operation. For <code class="code" id="i4r1mpa_20496">insert()</code>, <code class="code" id="i4r1mpa_20497">upsert()</code>, and <code class="code" id="i4r1mpa_20498">replace()</code>, this value can be accessed using the statement class property, <code class="code" id="i4r1mpa_20499">insertedCount</code>:</p><div class="code-block" data-lang="kotlin">
+val insertStatement = StarWarsFilms.insertIgnore {
+     it[name] = &quot;The Last Jedi&quot;
     it[sequelId] = 8
     it[director] = &quot;Rian Johnson&quot;
-}
-</div><p id="-oh9f62_14398">Some databases return a count of the number of rows inserted, updated, or deleted by the CRUD operation. For <code class="code" id="-oh9f62_14399">insert()</code>, <code class="code" id="-oh9f62_14400">upsert()</code>, and <code class="code" id="-oh9f62_14401">replace()</code>, this value can be accessed using the statement class property, <code class="code" id="-oh9f62_14402">insertedCount</code>:</p><div class="code-block" data-lang="kotlin">
-val insertStatement = StarWarsFilms.insertIgnore {
-  it[name] = &quot;The Last Jedi&quot;
-  it[sequelId] = 8
-  it[director] = &quot;Rian Johnson&quot;
 }
 val rowCount: Int = insertStatement.insertedCount
 </div></section><section class="chapter"><h3 id="read" data-toc="read">Read</h3><div class="code-block" data-lang="kotlin">
 val query: Query = StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq 8 }
-</div><p id="-oh9f62_14405"><code class="code" id="-oh9f62_14406">Query</code> inherit <code class="code" id="-oh9f62_14407">Iterable</code> so it is possible to traverse it with map/foreach etc'. For example:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20502"><code class="code" id="i4r1mpa_20503">Query</code> inherit <code class="code" id="i4r1mpa_20504">Iterable</code> so it is possible to traverse it with map/foreach etc'. For example:</p><div class="code-block" data-lang="kotlin">
 StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq 8 }.forEach {
     println(it[StarWarsFilms.name])
 }
-</div><p id="-oh9f62_14409">There is <code class="code" id="-oh9f62_14410">select</code> function which allows you to select specific columns or/and expressions.</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20506">There is <code class="code" id="i4r1mpa_20507">select</code> function which allows you to select specific columns or/and expressions.</p><div class="code-block" data-lang="kotlin">
 val filmAndDirector = StarWarsFilms.select(StarWarsFilms.name, StarWarsFilms.director).map {
     it[StarWarsFilms.name] to it[StarWarsFilms.director]
 }
-</div><p id="-oh9f62_14412">If you want to select only distinct value then use <code class="code" id="-oh9f62_14413">withDistinct()</code> function:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20509">If you want to select only distinct value then use <code class="code" id="i4r1mpa_20510">withDistinct()</code> function:</p><div class="code-block" data-lang="kotlin">
 val directors = StarWarsFilms.select(StarWarsFilms.director).where { StarWarsFilms.sequelId less 5 }.withDistinct().map {
     it[StarWarsFilms.director]
 }
@@ -90,7 +84,7 @@ val directors = StarWarsFilms.select(StarWarsFilms.director).where { StarWarsFil
 StarWarsFilms.update({ StarWarsFilms.sequelId eq 8 }) {
     it[StarWarsFilms.name] = &quot;Episode VIII – The Last Jedi&quot;
 }
-</div><p id="-oh9f62_14416">If you want to update column value with some expression like increment use <code class="code" id="-oh9f62_14417">update</code> function or setter:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20513">If you want to update column value with some expression like increment use <code class="code" id="i4r1mpa_20514">update</code> function or setter:</p><div class="code-block" data-lang="kotlin">
 StarWarsFilms.update({ StarWarsFilms.sequelId eq 8 }) {
     with(SqlExpressionBuilder) {
         it.update(StarWarsFilms.sequelId, StarWarsFilms.sequelId + 1)
@@ -98,13 +92,13 @@ StarWarsFilms.update({ StarWarsFilms.sequelId eq 8 }) {
         it[StarWarsFilms.sequelId] = StarWarsFilms.sequelId + 1
     }
 } 
-</div><p id="-oh9f62_14419">If you want to know the number of updated rows, this value is also returned by the <code class="code" id="-oh9f62_14420">update()</code> function:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20516">If you want to know the number of updated rows, this value is also returned by the <code class="code" id="i4r1mpa_20517">update()</code> function:</p><div class="code-block" data-lang="kotlin">
 val updatedCount = StarWarsFilms.update({ StarWarsFilms.name like &quot;Episode%&quot; }) {
     it[StarWarsFilms.director] = StarWarsFilms.director.upperCase()
 }
 </div></section><section class="chapter"><h3 id="delete" data-toc="delete">Delete</h3><div class="code-block" data-lang="kotlin">
 StarWarsFilms.deleteWhere { StarWarsFilms.sequelId eq 8 }
-</div><p id="-oh9f62_14423">Delete functions also return a count of the number of deleted rows, as for Update above.</p></section></section><section class="chapter"><h2 id="where-expression" data-toc="where-expression">Where expression</h2><p id="-oh9f62_14424">Query expression (where) expects a boolean operator (ie: <code class="code" id="-oh9f62_14425">Op&lt;Boolean&gt;</code>). <br> Allowed conditions are:</p><div class="code-block" data-lang="none">
+</div><p id="i4r1mpa_20520">Delete functions also return a count of the number of deleted rows, as for Update above.</p></section></section><section class="chapter"><h2 id="where-expression" data-toc="where-expression">Where expression</h2><p id="i4r1mpa_20521">Query expression (where) expects a boolean operator (ie: <code class="code" id="i4r1mpa_20522">Op&lt;Boolean&gt;</code>). Allowed conditions are:</p><div class="code-block" data-lang="none">
 eq - (==)
 neq - (!=)
 isNull()
@@ -124,7 +118,7 @@ between
 match (MySQL MATCH AGAINST)
 isDistinctFrom (null-safe equality comparison)
 isNotDistinctFrom (null-safe equality comparison)
-</div><p id="-oh9f62_14428">Allowed logical conditions are:</p><div class="code-block" data-lang="none">
+</div><p id="i4r1mpa_20524">Allowed logical conditions are:</p><div class="code-block" data-lang="none">
 not
 and
 or
@@ -132,7 +126,7 @@ andIfNotNull
 orIfNotNull
 compoundAnd()
 compoundOr()
-</div></section><section class="chapter"><h2 id="conditional-where" data-toc="conditional-where">Conditional where</h2><p id="-oh9f62_14430">It is a rather common case to have a query with a <code class="code" id="-oh9f62_14431">where</code> clause that depends on some other code's conditions. Moreover, independent or nested conditions could make it more complicated to prepare such <code class="code" id="-oh9f62_14432">where</code> clauses. Let's imagine that we have a form on a website where a user can optionally filter &quot;Star Wars&quot; films by a director and/or a sequel. In Exposed version before 0.8.1 you had to code it like:</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="conditional-where" data-toc="conditional-where">Conditional where</h2><p id="i4r1mpa_20526">It is a rather common case to have a query with a <code class="code" id="i4r1mpa_20527">where</code> clause that depends on some other code's conditions. Moreover, independent or nested conditions could make it more complicated to prepare such <code class="code" id="i4r1mpa_20528">where</code> clauses. Let's imagine that we have a form on a website where a user can optionally filter &quot;Star Wars&quot; films by a director and/or a sequel. In Exposed version before 0.8.1 you had to code it like:</p><div class="code-block" data-lang="kotlin">
 val condition = when {
     directorName!=null &amp;&amp; sequelId!=null -&gt;
         Op.build { StarWarsFilms.director eq directorName and (StarWarsFilms.sequelId eq sequelId) }
@@ -143,7 +137,7 @@ val condition = when {
     else -&gt; null
 }
 val query = condition?.let { StarWarsFilms.selectAll().where(condition) } ?: StarWarsFilms.selectAll()
-</div><p id="-oh9f62_14434">or</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20530">or</p><div class="code-block" data-lang="kotlin">
 val query = when {
     directorName!=null &amp;&amp; sequelId!=null -&gt;
         StarWarsFilms.selectAll().where { StarWarsFilms.director eq directorName and (StarWarsFilms.sequelId eq sequelId) }
@@ -153,7 +147,7 @@ val query = when {
         StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq sequelId }
     else -&gt; StarWarsFilms.selectAll()
 }
-</div><p id="-oh9f62_14436">This is a very primitive example, but you should get the main idea about the problem. Now let's try to write the same query in a more simple way (<code class="code" id="-oh9f62_14437">andWhere</code> function available since 0.10.5):</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20532">This is a very primitive example, but you should get the main idea about the problem. Now let's try to write the same query in a more simple way (<code class="code" id="i4r1mpa_20533">andWhere</code> function available since 0.10.5):</p><div class="code-block" data-lang="kotlin">
 val query = StarWarsFilms.selectAll()
 directorName?.let {
     query.andWhere { StarWarsFilms.director eq it }
@@ -161,7 +155,7 @@ directorName?.let {
 sequelId?.let {
     query.andWhere { StarWarsFilms.sequelId eq it }
 }
-</div><p id="-oh9f62_14439">But what if we want to conditionally select from another table and join it only when a condition is true? You have to use <code class="code" id="-oh9f62_14440">adjustColumnSet</code> and <code class="code" id="-oh9f62_14441">adjustSelect</code> functions, which allow to extend and modify <code class="code" id="-oh9f62_14442">join</code> and <code class="code" id="-oh9f62_14443">select</code> parts of a query (see kdoc on that functions):</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20535">But what if we want to conditionally select from another table and join it only when a condition is true? You have to use <code class="code" id="i4r1mpa_20536">adjustColumnSet</code> and <code class="code" id="i4r1mpa_20537">adjustSelect</code> functions, which allow to extend and modify <code class="code" id="i4r1mpa_20538">join</code> and <code class="code" id="i4r1mpa_20539">select</code> parts of a query (see kdoc on that functions):</p><div class="code-block" data-lang="kotlin">
 actorName?.let {
     query.adjustColumnSet { innerJoin(Actors, { StarWarsFilms.sequelId }, { Actors.sequelId }) }
         .adjustSelect { select(fields + Actors.columns).set }
@@ -169,38 +163,38 @@ actorName?.let {
 }
 </div><section class="chapter"><h3 id="check-for-a-match-in-a-pattern" data-toc="check-for-a-match-in-a-pattern">Check for a match in a pattern</h3><div class="code-block" data-lang="kotlin">
 StarWarsFilms.selectAll().where { StarWarsFilms.name like &quot;The %&quot; }
-</div><p id="-oh9f62_14446"><code class="code" id="-oh9f62_14447">notLike</code> is also available to check for expressions that do not match the provided pattern.</p><p id="-oh9f62_14448">To perform a pattern match that supports regular expressions, use <code class="code" id="-oh9f62_14449">regexp</code> instead:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20542"><code class="code" id="i4r1mpa_20543">notLike</code> is also available to check for expressions that do not match the provided pattern.</p><p id="i4r1mpa_20544">To perform a pattern match that supports regular expressions, use <code class="code" id="i4r1mpa_20545">regexp</code> instead:</p><div class="code-block" data-lang="kotlin">
 StarWarsFilms.selectAll().where { StarWarsFilms.name regexp &quot;^The(\\s\\w+){2}\$&quot; }
 </div></section><section class="chapter"><h3 id="check-for-a-match-in-a-range" data-toc="check-for-a-match-in-a-range">Check for a match in a range</h3><div class="code-block" data-lang="kotlin">
 StarWarsFilms.selectAll().where { StarWarsFilms.sequelId.between(4, 6) }
-</div><p id="-oh9f62_14452">The <code class="code" id="-oh9f62_14453">between</code> operator returns <code class="code" id="-oh9f62_14454">true</code> if the expression is between the lower and upper range values (inclusive). Date and time values are also supported as arguments.</p></section><section class="chapter"><h3 id="check-for-a-match-in-a-collection" data-toc="check-for-a-match-in-a-collection">Check for a match in a collection</h3><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20548">The <code class="code" id="i4r1mpa_20549">between</code> operator returns <code class="code" id="i4r1mpa_20550">true</code> if the expression is between the lower and upper range values (inclusive). Date and time values are also supported as arguments.</p></section><section class="chapter"><h3 id="check-for-a-match-in-a-collection" data-toc="check-for-a-match-in-a-collection">Check for a match in a collection</h3><div class="code-block" data-lang="kotlin">
 StarWarsFilms.selectAll().where { StarWarsFilms.sequelId inList listOf(6, 4) }
-</div><p id="-oh9f62_14456"><code class="code" id="-oh9f62_14457">inList</code> also accepts multiple expressions to check for equality, either as a <code class="code" id="-oh9f62_14458">Pair</code> or a <code class="code" id="-oh9f62_14459">Triple</code>:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20552"><code class="code" id="i4r1mpa_20553">inList</code> also accepts multiple expressions to check for equality, either as a <code class="code" id="i4r1mpa_20554">Pair</code> or a <code class="code" id="i4r1mpa_20555">Triple</code>:</p><div class="code-block" data-lang="kotlin">
 val topRated = listOf(5 to &quot;Empire Strikes Back&quot;, 4 to &quot;A New Hope&quot;)
 StarWarsFilms.selectAll().where {
     StarWarsFilms.sequelId to StarWarsFilms.name inList topRated
 }
-</div><p id="-oh9f62_14461"><code class="code" id="-oh9f62_14462">notInList</code> is available to check for expressions that are not equal to any elements in the provided collection.</p><p id="-oh9f62_14463">In addition to the <code class="code" id="-oh9f62_14464">IN</code> operator, the <code class="code" id="-oh9f62_14465">ANY</code> and <code class="code" id="-oh9f62_14466">ALL</code> operators are available with any preceding comparison operator:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20557"><code class="code" id="i4r1mpa_20558">notInList</code> is available to check for expressions that are not equal to any elements in the provided collection.</p><p id="i4r1mpa_20559">In addition to the <code class="code" id="i4r1mpa_20560">IN</code> operator, the <code class="code" id="i4r1mpa_20561">ANY</code> and <code class="code" id="i4r1mpa_20562">ALL</code> operators are available with any preceding comparison operator:</p><div class="code-block" data-lang="kotlin">
 StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq anyFrom(arrayOf(6, 4)) }
-</div><p id="-oh9f62_14468"><code class="code" id="-oh9f62_14469">anyFrom()</code> and <code class="code" id="-oh9f62_14470">allFrom()</code> also accept subqueries, tables, and array expressions as arguments.</p></section></section><section class="chapter"><h2 id="count" data-toc="count">Count</h2><p id="-oh9f62_14471"><code class="code" id="-oh9f62_14472">count()</code> is a method of <code class="code" id="-oh9f62_14473">Query</code> that is used like in the example below:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20564"><code class="code" id="i4r1mpa_20565">anyFrom()</code> and <code class="code" id="i4r1mpa_20566">allFrom()</code> also accept subqueries, tables, and array expressions as arguments.</p></section></section><section class="chapter"><h2 id="count" data-toc="count">Count</h2><p id="i4r1mpa_20567"><code class="code" id="i4r1mpa_20568">count()</code> is a method of <code class="code" id="i4r1mpa_20569">Query</code> that is used like in the example below:</p><div class="code-block" data-lang="kotlin">
 val count = StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq 8 }.count()
-</div></section><section class="chapter"><h2 id="order-by" data-toc="order-by">Order-by</h2><p id="-oh9f62_14475">Order-by accepts a list of columns mapped to boolean indicates if sorting should be ascending or descending. Example:</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="order-by" data-toc="order-by">Order-by</h2><p id="i4r1mpa_20571">Order-by accepts a list of columns mapped to boolean indicates if sorting should be ascending or descending. Example:</p><div class="code-block" data-lang="kotlin">
 StarWarsFilms.selectAll().orderBy(StarWarsFilms.sequelId to SortOrder.ASC)
-</div></section><section class="chapter"><h2 id="group-by" data-toc="group-by">Group-by</h2><p id="-oh9f62_14477">In group-by, define fields and their functions (such as <code class="code" id="-oh9f62_14478">count</code>) by the <code class="code" id="-oh9f62_14479">select()</code> method.</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="group-by" data-toc="group-by">Group-by</h2><p id="i4r1mpa_20573">In group-by, define fields and their functions (such as <code class="code" id="i4r1mpa_20574">count</code>) by the <code class="code" id="i4r1mpa_20575">select()</code> method.</p><div class="code-block" data-lang="kotlin">
 StarWarsFilms
     .select(StarWarsFilms.sequelId.count(), StarWarsFilms.director)
     .groupBy(StarWarsFilms.director)
-</div><p id="-oh9f62_14481">Available functions are:</p><div class="code-block" data-lang="none">
+</div><p id="i4r1mpa_20577">Available functions are:</p><div class="code-block" data-lang="none">
 count
 sum
 max
 min
 average
 ...
-</div></section><section class="chapter"><h2 id="limit" data-toc="limit">Limit</h2><p id="-oh9f62_14483">You can use limit function to prevent loading large data sets or use it for pagination with second <code class="code" id="-oh9f62_14484">offset</code> parameter.</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="limit" data-toc="limit">Limit</h2><p id="i4r1mpa_20579">You can use limit function to prevent loading large data sets or use it for pagination with second <code class="code" id="i4r1mpa_20580">offset</code> parameter.</p><div class="code-block" data-lang="kotlin">
 // Take 2 films after the first one.
 StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq Actors.sequelId }.limit(2, offset = 1)
-</div></section><section class="chapter"><h2 id="join" data-toc="join">Join</h2><p id="-oh9f62_14486">For the join examples below, consider the following tables:</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="join" data-toc="join">Join</h2><p id="i4r1mpa_20582">For the join examples below, consider the following tables:</p><div class="code-block" data-lang="kotlin">
 object StarWarsFilms : IntIdTable() {
     val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;).uniqueIndex()
     val name: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
@@ -215,42 +209,42 @@ object Roles : Table() {
     val actorId: Column&lt;EntityID&lt;Int&gt;&gt; = reference(&quot;actor_id&quot;, Actors)
     val characterName: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
 }
-</div><p id="-oh9f62_14488">Join to count how many actors star in each movie:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20584">Join to count how many actors star in each movie:</p><div class="code-block" data-lang="kotlin">
 Actors.join(StarWarsFilms, JoinType.INNER, onColumn = Actors.sequelId, otherColumn = StarWarsFilms.sequelId)
     .select(Actors.name.count(), StarWarsFilms.name)
     .groupBy(StarWarsFilms.name)
-</div><p id="-oh9f62_14490">Instead of specifying <code class="code" id="-oh9f62_14491">onColumn</code> and <code class="code" id="-oh9f62_14492">otherColumn</code>, <code class="code" id="-oh9f62_14493">additionalConstraint</code> can be used (and allows specifying other types of join conditions).</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20586">Instead of specifying <code class="code" id="i4r1mpa_20587">onColumn</code> and <code class="code" id="i4r1mpa_20588">otherColumn</code>, <code class="code" id="i4r1mpa_20589">additionalConstraint</code> can be used (and allows specifying other types of join conditions).</p><div class="code-block" data-lang="kotlin">
 Actors.join(StarWarsFilms, JoinType.INNER, additionalConstraint = { StarWarsFilms.sequelId eq Actors.sequelId })
     .select(Actors.name.count(), StarWarsFilms.name)
     .groupBy(StarWarsFilms.name)
-</div><p id="-oh9f62_14495">When joining on a foreign key, the more concise <code class="code" id="-oh9f62_14496">innerJoin</code> can be used:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20591">When joining on a foreign key, the more concise <code class="code" id="i4r1mpa_20592">innerJoin</code> can be used:</p><div class="code-block" data-lang="kotlin">
 (Actors innerJoin Roles)
     .select(Roles.characterName.count(), Actors.name)
     .groupBy(Actors.name)
     .toList()
-</div><p id="-oh9f62_14498">This is equivalent to the following:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20594">This is equivalent to the following:</p><div class="code-block" data-lang="kotlin">
 Actors.join(Roles, JoinType.INNER, onColumn = Actors.id, otherColumn = Roles.actorId)
     .select(Roles.characterName.count(), Actors.name)
     .groupBy(Actors.name)
     .toList()
-</div></section><section class="chapter"><h2 id="union" data-toc="union">Union</h2><p id="-oh9f62_14500">You can combine the results of multiple queries using <code class="code" id="-oh9f62_14501">.union(...)</code>. Per the SQL specification, the queries must have the same number of columns, and not be marked for update. Subqueries may be combined when supported by the database.</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="union" data-toc="union">Union</h2><p id="i4r1mpa_20596">You can combine the results of multiple queries using <code class="code" id="i4r1mpa_20597">.union(...)</code>. Per the SQL specification, the queries must have the same number of columns, and not be marked for update. Subqueries may be combined when supported by the database.</p><div class="code-block" data-lang="kotlin">
 val lucasDirectedQuery = StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.director eq &quot;George Lucas&quot; }
 val abramsDirectedQuery = StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.director eq &quot;J.J. Abrams&quot; }
 val filmNames = lucasDirectedQuery.union(abramsDirectedQuery).map { it[StarWarsFilms.name] }
-</div><p id="-oh9f62_14503">Only unique rows are returned by default. Duplicates may be returned using <code class="code" id="-oh9f62_14504">.unionAll()</code>.</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20599">Only unique rows are returned by default. Duplicates may be returned using <code class="code" id="i4r1mpa_20600">.unionAll()</code>.</p><div class="code-block" data-lang="kotlin">
 val lucasDirectedQuery = StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.director eq &quot;George Lucas&quot; }
 val originalTrilogyQuery = StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.sequelId inList (3..5) }
 val filmNames = lucasDirectedQuery.unionAll(originalTrilogyQuery).map { it[StarWarsFilms.name] }
-</div></section><section class="chapter"><h2 id="alias" data-toc="alias">Alias</h2><p id="-oh9f62_14506">Aliases allow preventing ambiguity between field names and table names. Use the aliased var instead of original one:</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="alias" data-toc="alias">Alias</h2><p id="i4r1mpa_20602">Aliases allow preventing ambiguity between field names and table names. Use the aliased var instead of original one:</p><div class="code-block" data-lang="kotlin">
 val filmTable1 = StarWarsFilms.alias(&quot;ft1&quot;)
 filmTable1.selectAll() // can be used in joins etc'
-</div><p id="-oh9f62_14508">Also, aliases allow you to use the same table in a join multiple times:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20604">Also, aliases allow you to use the same table in a join multiple times:</p><div class="code-block" data-lang="kotlin">
 val sequelTable = StarWarsFilms.alias(&quot;sql&quot;)
 val originalAndSequelNames = StarWarsFilms
     .innerJoin(sequelTable, { StarWarsFilms.sequelId }, { sequelTable[StarWarsFilms.id] })
     .select(StarWarsFilms.name, sequelTable[StarWarsFilms.name])
     .map { it[StarWarsFilms.name] to it[sequelTable[StarWarsFilms.name]] }
-</div><p id="-oh9f62_14510">And they can be used when selecting from sub-queries:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20606">And they can be used when selecting from sub-queries:</p><div class="code-block" data-lang="kotlin">
 val starWarsFilms = StarWarsFilms
     .select(StarWarsFilms.id, StarWarsFilms.name)
     .alias(&quot;swf&quot;)
@@ -259,19 +253,19 @@ val name = starWarsFilms[StarWarsFilms.name]
 starWarsFilms
     .select(id, name)
     .map { it[id] to it[name] }
-</div></section><section class="chapter"><h2 id="schema" data-toc="schema">Schema</h2><p id="-oh9f62_14512">You can create a schema or drop an existing one:</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="schema" data-toc="schema">Schema</h2><p id="i4r1mpa_20608">You can create a schema or drop an existing one:</p><div class="code-block" data-lang="kotlin">
 val schema = Schema(&quot;my_schema&quot;) // my_schema is the schema name.
 // Creates a Schema
 SchemaUtils.createSchema(schema)
 // Drops a Schema
 SchemaUtils.dropSchema(schema)
-</div><p id="-oh9f62_14514">Also, you can specify the schema owner like this (some databases require the explicit owner) :</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20610">Also, you can specify the schema owner like this (some databases require the explicit owner) :</p><div class="code-block" data-lang="kotlin">
 val schema = Schema(&quot;my_schema&quot;, authorization = &quot;owner&quot;)
-</div><p id="-oh9f62_14516">If you have many schemas and you want to set a default one, you can use:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20612">If you have many schemas and you want to set a default one, you can use:</p><div class="code-block" data-lang="kotlin">
 SchemaUtils.setSchema(schema)
-</div></section><section class="chapter"><h2 id="sequence" data-toc="sequence">Sequence</h2><p id="-oh9f62_14518">If you want to use Sequence, Exposed allows you to:</p><section class="chapter"><h3 id="define-a-sequence" data-toc="define-a-sequence">Define a Sequence</h3><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="sequence" data-toc="sequence">Sequence</h2><p id="i4r1mpa_20614">If you want to use Sequence, Exposed allows you to:</p><section class="chapter"><h3 id="define-a-sequence" data-toc="define-a-sequence">Define a Sequence</h3><div class="code-block" data-lang="kotlin">
 val myseq = Sequence(&quot;my_sequence&quot;) // my_sequence is the sequence name.
-</div><p id="-oh9f62_14520">Several parameters can be specified to control the properties of the sequence:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20616">Several parameters can be specified to control the properties of the sequence:</p><div class="code-block" data-lang="kotlin">
 private val myseq = Sequence(
     name = &quot;my_sequence&quot;,
     startWith = 4,
@@ -286,7 +280,7 @@ private val myseq = Sequence(
 SchemaUtils.createSequence(myseq)
 // Drops a sequence
 SchemaUtils.dropSequence(myseq)
-</div></section><section class="chapter"><h3 id="use-the-nextval-function" data-toc="use-the-nextval-function">Use the NextVal function</h3><p id="-oh9f62_14523">You can use the nextVal function like this:</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h3 id="use-the-nextval-function" data-toc="use-the-nextval-function">Use the NextVal function</h3><p id="i4r1mpa_20619">You can use the nextVal function like this:</p><div class="code-block" data-lang="kotlin">
 val nextVal = myseq.nextVal()
 val id = StarWarsFilms.insertAndGetId {
     it[id] = nextVal
@@ -296,12 +290,12 @@ val id = StarWarsFilms.insertAndGetId {
 }
 </div><div class="code-block" data-lang="kotlin">
 val firstValue = StarWarsFilms.select(nextVal).single()[nextVal]
-</div></section></section><section class="chapter"><h2 id="batch-insert" data-toc="batch-insert">Batch Insert</h2><p id="-oh9f62_14526">Batch Insert allow mapping a list of entities into DB raws in one sql statement. It is more efficient than inserting one by one as it initiates only one statement. Here is an example that uses a simple list:</p><div class="code-block" data-lang="kotlin">
+</div></section></section><section class="chapter"><h2 id="batch-insert" data-toc="batch-insert">Batch Insert</h2><p id="i4r1mpa_20622">Batch Insert allow mapping a list of entities into DB raws in one sql statement. It is more efficient than inserting one by one as it initiates only one statement. Here is an example that uses a simple list:</p><div class="code-block" data-lang="kotlin">
 val cityNames = listOf(&quot;Paris&quot;, &quot;Moscow&quot;, &quot;Helsinki&quot;)
 val allCitiesID = cities.batchInsert(cityNames) { name -&gt;
     this[cities.name] = name
 }
-</div><p id="-oh9f62_14528">Here is an example that uses a list of data class instances:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20624">Here is an example that uses a list of data class instances:</p><div class="code-block" data-lang="kotlin">
 data class SWFilmData(val sequelId: Int, val name: String, val director: String)
 
 transaction {
@@ -320,15 +314,15 @@ transaction {
 
     StarWarsFilms.selectAll().count() // 3
 }
-</div><p id="-oh9f62_14530"><span class="emphasis" id="-oh9f62_14531">NOTE:</span> The <code class="code" id="-oh9f62_14532">batchInsert</code> function will still create multiple <code class="code" id="-oh9f62_14533">INSERT</code> statements when interacting with your database. You most likely want to couple this with the <code class="code" id="-oh9f62_14534">rewriteBatchedInserts=true</code> (or <code class="code" id="-oh9f62_14535">rewriteBatchedStatements=true</code>) option of your relevant JDBC driver, which will convert those into a single bulkInsert. You can find the documentation for this option for MySQL <a href="https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-configuration-properties.html" id="-oh9f62_14536" data-external="true" rel="noopener noreferrer">here</a> and PostgreSQL <a href="https://jdbc.postgresql.org/documentation/use/" id="-oh9f62_14537" data-external="true" rel="noopener noreferrer">here</a>.</p><p id="-oh9f62_14538">If you don't need to get the newly generated values (example: auto incremented ID), set the <code class="code" id="-oh9f62_14539">shouldReturnGeneratedValues</code> parameter to false, this increases the performance of batch inserts by batching them in chunks, instead of always waiting for the database to synchronize the newly inserted object state.</p><p id="-oh9f62_14540">If you want to check if the <code class="code" id="-oh9f62_14541">rewriteBatchedInserts</code> + <code class="code" id="-oh9f62_14542">batchInsert</code> is working correctly, check how to enable JDBC logging for your driver because Exposed will always show the non-rewritten multiple inserts. You can find the documentation for how to enable logging in PostgreSQL <a href="https://jdbc.postgresql.org/documentation/logging/" id="-oh9f62_14543" data-external="true" rel="noopener noreferrer">here</a>.</p></section><section class="chapter"><h2 id="insert-from-select" data-toc="insert-from-select">Insert From Select</h2><p id="-oh9f62_14544">If you want to use <code class="code" id="-oh9f62_14545">INSERT INTO ... SELECT</code> SQL clause try Exposed analog <code class="code" id="-oh9f62_14546">Table.insert(Query)</code>.</p><div class="code-block" data-lang="kotlin">
+</div><aside class="prompt" data-type="note" data-title="" id="i4r1mpa_20626"><p>The `batchInsert` function will still create multiple `INSERT` statements when interacting with your database. </p><p id="i4r1mpa_20627">You most likely want to couple this with the <code class="code" id="i4r1mpa_20628">rewriteBatchedInserts=true</code> (or <code class="code" id="i4r1mpa_20629">rewriteBatchedStatements=true</code>) option of your relevant JDBC driver, which will convert those into a single bulkInsert.</p><p id="i4r1mpa_20630">You can find the documentation for this option for MySQL <a href="https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_rewriteBatchedStatements" id="i4r1mpa_20631" data-external="true" rel="noopener noreferrer">here</a> and PostgresSQL <a href="https://jdbc.postgresql.org/documentation/use/" id="i4r1mpa_20632" data-external="true" rel="noopener noreferrer">here</a>.</p></aside><p id="i4r1mpa_20633">If you don't need to get the newly generated values (example: auto incremented ID), set the <code class="code" id="i4r1mpa_20634">shouldReturnGeneratedValues</code> parameter to false, this increases the performance of batch inserts by batching them in chunks, instead of always waiting for the database to synchronize the newly inserted object state.</p><p id="i4r1mpa_20635">If you want to check if the <code class="code" id="i4r1mpa_20636">rewriteBatchedInserts</code> + <code class="code" id="i4r1mpa_20637">batchInsert</code> is working correctly, check how to enable JDBC logging for your driver because Exposed will always show the non-rewritten multiple inserts. You can find the documentation for how to enable logging in PostgresSQL <a href="https://jdbc.postgresql.org/documentation/logging/" id="i4r1mpa_20638" data-external="true" rel="noopener noreferrer">here</a>.</p></section><section class="chapter"><h2 id="insert-from-select" data-toc="insert-from-select">Insert From Select</h2><p id="i4r1mpa_20639">If you want to use <code class="code" id="i4r1mpa_20640">INSERT INTO ... SELECT</code> SQL clause try Exposed analog <code class="code" id="i4r1mpa_20641">Table.insert(Query)</code>.</p><div class="code-block" data-lang="kotlin">
 val substring = users.name.substring(1, 2)
 cities.insert(users.select(substring).orderBy(users.id).limit(2))
-</div><p id="-oh9f62_14548">By default it will try to insert into all non auto-increment <code class="code" id="-oh9f62_14549">Table</code> columns in order they defined in Table instance. If you want to specify columns or change the order, provide list of columns as second parameter:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20643">By default it will try to insert into all non auto-increment <code class="code" id="i4r1mpa_20644">Table</code> columns in order they defined in Table instance. If you want to specify columns or change the order, provide list of columns as second parameter:</p><div class="code-block" data-lang="kotlin">
 val userCount = users.selectAll().count()
 users.insert(users.select(stringParam(&quot;Foo&quot;), Random().castTo&lt;String&gt;(VarCharColumnType()).substring(1, 10)), columns = listOf(users.name, users.id))
-</div></section><section class="chapter"><h2 id="insert-or-ignore" data-toc="insert-or-ignore">Insert Or Ignore</h2><p id="-oh9f62_14551">If supported by your specific database, <code class="code" id="-oh9f62_14552">insertIgnore()</code> allows insert statements to be executed without throwing any ignorable errors. This may be useful, for example, when insertion conflicts are possible:</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="insert-or-ignore" data-toc="insert-or-ignore">Insert Or Ignore</h2><p id="i4r1mpa_20646">If supported by your specific database, <code class="code" id="i4r1mpa_20647">insertIgnore()</code> allows insert statements to be executed without throwing any ignorable errors. This may be useful, for example, when insertion conflicts are possible:</p><div class="code-block" data-lang="kotlin">
 StarWarsFilms.insert {
-    it[sequelId] = 8  // column pre-defined with a unique index
+    it[sequelId] = 8 // column pre-defined with a unique index
     it[name] = &quot;The Last Jedi&quot;
     it[director] = &quot;Rian Johnson&quot;
 }
@@ -339,10 +333,10 @@ StarWarsFilms.insertIgnore {
     it[name] = &quot;The Rise of Skywalker&quot;
     it[director] = &quot;JJ Abrams&quot;
 }
-</div></section><section class="chapter"><h2 id="insert-or-update" data-toc="insert-or-update">Insert Or Update</h2><p id="-oh9f62_14554">Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if a duplicate constraint already exists. The supported functionality of <code class="code" id="-oh9f62_14555">upsert()</code> is dependent on the specific database being used. For example, MySQL's <code class="code" id="-oh9f62_14556">INSERT ... ON DUPLICATE KEY UPDATE</code> statement automatically assesses the primary key and unique indices for a duplicate value, so using the function in Exposed would look like this:</p><div class="code-block" data-lang="kotlin">
+</div></section><section class="chapter"><h2 id="insert-or-update" data-toc="insert-or-update">Insert Or Update</h2><p id="i4r1mpa_20649">Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if a duplicate constraint already exists. The supported functionality of <code class="code" id="i4r1mpa_20650">upsert()</code> is dependent on the specific database being used. For example, MySQL's <code class="code" id="i4r1mpa_20651">INSERT ... ON DUPLICATE KEY UPDATE</code> statement automatically assesses the primary key and unique indices for a duplicate value, so using the function in Exposed would look like this:</p><div class="code-block" data-lang="kotlin">
 // inserts a new row
 StarWarsFilms.upsert {
-    it[sequelId] = 9  // column pre-defined with a unique index
+    it[sequelId] = 9 // column pre-defined with a unique index
     it[name] = &quot;The Rise of Skywalker&quot;
     it[director] = &quot;Rian Johnson&quot;
 }
@@ -352,7 +346,7 @@ StarWarsFilms.upsert {
     it[name] = &quot;The Rise of Skywalker&quot;
     it[director] = &quot;JJ Abrams&quot;
 }
-</div><p id="-oh9f62_14558">If none of the optional arguments are provided to <code class="code" id="-oh9f62_14559">upsert()</code>, the statements in the <code class="code" id="-oh9f62_14560">body</code> block will be used for both the insert and update parts of the operation. This means that, for example, if a table mapping has columns with default values and these columns are omitted from the <code class="code" id="-oh9f62_14561">body</code> block, the default values will be used for insertion as well as for the update operation. If the update operation should differ from the insert operation, then <code class="code" id="-oh9f62_14562">onUpdate</code> should be provided an argument with the specific columns to update, as seen in the example below.</p><p id="-oh9f62_14563">Using another example, PostgreSQL allows more control over which key constraint columns to check for conflict, whether different values should be used for an update, and whether the update statement should have a <code class="code" id="-oh9f62_14564">WHERE</code> clause:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20653">If none of the optional arguments are provided to <code class="code" id="i4r1mpa_20654">upsert()</code>, the statements in the <code class="code" id="i4r1mpa_20655">body</code> block will be used for both the insert and update parts of the operation. This means that, for example, if a table mapping has columns with default values and these columns are omitted from the <code class="code" id="i4r1mpa_20656">body</code> block, the default values will be used for insertion as well as for the update operation. If the update operation should differ from the insert operation, then <code class="code" id="i4r1mpa_20657">onUpdate</code> should be provided an argument with the specific columns to update, as seen in the example below.</p><p id="i4r1mpa_20658">Using another example, PostgreSQL allows more control over which key constraint columns to check for conflict, whether different values should be used for an update, and whether the update statement should have a <code class="code" id="i4r1mpa_20659">WHERE</code> clause:</p><div class="code-block" data-lang="kotlin">
 val incrementSequelId = listOf(StarWarsFilms.sequelId to StarWarsFilms.sequelId.plus(1))
 StarWarsFilms.upsert(
     StarWarsFilms.sequelId,
@@ -363,7 +357,7 @@ StarWarsFilms.upsert(
     it[name] = &quot;The Rise of Skywalker&quot;
     it[director] = &quot;JJ Abrams&quot;
 }
-</div><p id="-oh9f62_14566">If the update operation should be identical to the insert operation except for a few columns, then <code class="code" id="-oh9f62_14567">onUpdateExclude</code> should be provided an argument with the specific columns to exclude. This parameter could also be used for the reverse case when only a small subset of columns should be updated but duplicating the insert values is tedious:</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20661">If the update operation should be identical to the insert operation except for a few columns, then <code class="code" id="i4r1mpa_20662">onUpdateExclude</code> should be provided an argument with the specific columns to exclude. This parameter could also be used for the reverse case when only a small subset of columns should be updated but duplicating the insert values is tedious:</p><div class="code-block" data-lang="kotlin">
 // on conflict, all columns EXCEPT [director] are updated with values from the lambda block
 StarWarsFilms.upsert(onUpdateExclude = listOf(StarWarsFilms.director)) {
     it[sequelId] = 9
@@ -379,7 +373,7 @@ StarWarsFilms.upsert(
     it[name] = &quot;The Rise of Skywalker&quot;
     it[director] = &quot;JJ Abrams&quot;
 }
-</div><p id="-oh9f62_14569">If a specific database supports user-defined key columns and none are provided, the table's primary key is used. If there is no defined primary key, the first unique index is used. If there are no unique indices, each database handles this case differently, so it is strongly advised that keys are defined to avoid unexpected results.</p><aside class="prompt" data-type="note" data-title="" id="-oh9f62_14570"><p>Databases that do not support a specific Insert or Update command implement the standard <code class="code" id="-oh9f62_14571">MERGE INTO ... USING</code> statement with aliases and a derived table column list. These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode). Any columns defined as key constraints (to be used in the <code class="code" id="-oh9f62_14572">ON</code> clause) must be included in the statement block to avoid throwing an error.</p></aside></section><section class="chapter"><h2 id="replace" data-toc="replace">Replace</h2><p id="-oh9f62_14573">SQLite, MySQL, and MariaDB (as well as the H2 compatibility modes of the latter 2 databases) support a <code class="code" id="-oh9f62_14574">REPLACE</code> statement that acts in a similar manner to an <code class="code" id="-oh9f62_14575">INSERT OR UPDATE</code> statement. The only difference is that, if an insertion would violate a unique constraint, the existing row is deleted (not updated) before the new row is inserted.</p><div class="code-block" data-lang="kotlin">
+</div><p id="i4r1mpa_20664">If a specific database supports user-defined key columns and none are provided, the table's primary key is used. If there is no defined primary key, the first unique index is used. If there are no unique indices, each database handles this case differently, so it is strongly advised that keys are defined to avoid unexpected results.</p><aside class="prompt" data-type="note" data-title="" id="i4r1mpa_20665"><p>Databases that do not support a specific Insert or Update command implement the standard <code class="code" id="i4r1mpa_20666">MERGE INTO ... USING</code> statement with aliases and a derived table column list. These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode). Any columns defined as key constraints (to be used in the <code class="code" id="i4r1mpa_20667">ON</code> clause) must be included in the statement block to avoid throwing an error.</p></aside></section><section class="chapter"><h2 id="replace" data-toc="replace">Replace</h2><p id="i4r1mpa_20668">SQLite, MySQL, and MariaDB (as well as the H2 compatibility modes of the latter 2 databases) support a <code class="code" id="i4r1mpa_20669">REPLACE</code> statement that acts in a similar manner to an <code class="code" id="i4r1mpa_20670">INSERT OR UPDATE</code> statement. The only difference is that, if an insertion would violate a unique constraint, the existing row is deleted (not updated) before the new row is inserted.</p><div class="code-block" data-lang="kotlin">
 object StarWarsFilms : Table() {
     val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;).uniqueIndex()
     val releaseYear: Column&lt;Int&gt; = integer(&quot;release_year&quot;)
@@ -408,4 +402,4 @@ transaction {
         it[rating] = 5.2
     }
 }
-</div><p id="-oh9f62_14577">Unlike Insert or Update, none of the supporting databases allows a <code class="code" id="-oh9f62_14578">WHERE</code> clause. Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there is no parameter for a custom key set.</p><p id="-oh9f62_14579">The values specified in the statement block will be used for the insert statement, and any omitted columns are set to their default values, if applicable.</p><aside class="prompt" data-type="note" data-title="" id="-oh9f62_14580"><p>In the example above, if the original row was inserted with a user-defined <code class="code" id="-oh9f62_14581">rating</code>, then <code class="code" id="-oh9f62_14582">replace()</code> was executed with a block that omitted the <code class="code" id="-oh9f62_14583">rating</code> column, the newly inserted row would store the default rating value. This is because the old row was completely deleted first.</p></aside></section><div class="last-modified">Last modified: 27 March 2024</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="transactions.html" class="navigation-links__prev">Transactions</a><a href="deep-dive-into-dao.html" class="navigation-links__next">Deep Dive into DAO</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.6.6-b224/app.js"></script></body></html>
+</div><p id="i4r1mpa_20672">Unlike Insert or Update, none of the supporting databases allows a <code class="code" id="i4r1mpa_20673">WHERE</code> clause. Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there is no parameter for a custom key set.</p><p id="i4r1mpa_20674">The values specified in the statement block will be used for the insert statement, and any omitted columns are set to their default values, if applicable.</p><aside class="prompt" data-type="note" data-title="" id="i4r1mpa_20675"><p>In the example above, if the original row was inserted with a user-defined <code class="code" id="i4r1mpa_20676">rating</code>, then <code class="code" id="i4r1mpa_20677">replace()</code> was executed with a block that omitted the <code class="code" id="i4r1mpa_20678">rating</code> column, the newly inserted row would store the default rating value. This is because the old row was completely deleted first.</p></aside></section><div class="last-modified">Last modified: 03 April 2024</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="transactions.html" class="navigation-links__prev">Transactions</a><a href="deep-dive-into-dao.html" class="navigation-links__next">Deep Dive into DAO</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.6.6-b224/app.js"></script></body></html>
