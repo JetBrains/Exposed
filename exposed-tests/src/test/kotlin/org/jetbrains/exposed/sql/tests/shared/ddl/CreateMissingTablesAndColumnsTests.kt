@@ -685,7 +685,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     @Test
     fun testCreateTableWithSchemaPrefix() {
         val schemaName = "my_schema"
-        val schema = Schema(schemaName)
         // index and foreign key both use table name to auto-generate their own names & to compare metadata
         // default columns in SQL Server requires a named constraint that uses table name
         val parentTable = object : IntIdTable("$schemaName.parent_table") {
@@ -698,13 +697,29 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         // SQLite does not recognize creation of schema other than the attached database
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
+            val schema = if (testDb == TestDB.SQLSERVER) {
+                Schema(schemaName, "guest")
+            } else {
+                Schema(schemaName)
+            }
+
+            // Should not require to be in the same schema
             SchemaUtils.createSchema(schema)
             SchemaUtils.create(parentTable, childTable)
 
             try {
+                // Try in different schema
                 SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
                 assertTrue(parentTable.exists())
                 assertTrue(childTable.exists())
+
+                // Try in the same schema
+                if (testDb != TestDB.ORACLE) {
+                    SchemaUtils.setSchema(schema)
+                    SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
+                    assertTrue(parentTable.exists())
+                    assertTrue(childTable.exists())
+                }
             } finally {
                 if (testDb == TestDB.SQLSERVER) {
                     SchemaUtils.drop(childTable, parentTable)
