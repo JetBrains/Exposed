@@ -179,14 +179,13 @@ Check out the [samples](samples/README.md) for a quick start.
 
 ## Links
 
-Currently, Exposed is available for **maven/gradle builds**. Check the [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) and read ([Getting started](https://github.com/JetBrains/Exposed/wiki/Getting-Started#download)) to get an insight on setting up Exposed.
+Currently, Exposed is available for **maven/gradle builds**. Check the [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) and read [Getting Started](https://jetbrains.github.io/Exposed/getting-started-with-exposed.html) to get an insight on setting up Exposed.
 <br><br>
 For more information visit the links below:
 
--   [Wiki](https://github.com/JetBrains/Exposed/wiki) with examples and docs
--   [Roadmap](docs/ROADMAP.md) to see what's coming next
--   [Change log](docs/ChangeLog.md) of improvements and bug fixes
--   [Breaking changes](docs/BREAKING_CHANGES.md) and any migration details
+-   [Documentation](https://jetbrains.github.io/Exposed/home.html) with examples and docs
+-   [Migration Guide](https://jetbrains.github.io/Exposed/migration-guide.html)
+-   [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html) and any migration details
 -   [Slack Channel](https://kotlinlang.slack.com/archives/C0CG7E0A1)
 -   [Issue Tracker](https://youtrack.jetbrains.com/issues/EXPOSED)
 <br><br>
