@@ -71,6 +71,8 @@ class DatabaseConfig private constructor(
          * This can be overridden on a per-transaction level by specifying the `maxAttempts` property in a
          * `transaction` block.
          * Default amount of attempts is 3.
+         *
+         * @throws IllegalArgumentException If the amount of attempts is set to a value less than 1.
          */
         var defaultMaxAttempts: Int = 3,
         /**
@@ -87,24 +89,6 @@ class DatabaseConfig private constructor(
          * Default maximum delay is 0.
          */
         var defaultMaxRetryDelay: Long = 0,
-        @Deprecated(
-            message = "This property will be removed in future releases",
-            replaceWith = ReplaceWith("defaultMaxAttempts"),
-            level = DeprecationLevel.WARNING
-        )
-        var defaultRepetitionAttempts: Int = 3,
-        @Deprecated(
-            message = "This property will be removed in future releases",
-            replaceWith = ReplaceWith("defaultMinRetryDelay"),
-            level = DeprecationLevel.WARNING
-        )
-        var defaultMinRepetitionDelay: Long = 0,
-        @Deprecated(
-            message = "This property will be removed in future releases",
-            replaceWith = ReplaceWith("defaultMaxRetryDelay"),
-            level = DeprecationLevel.WARNING
-        )
-        var defaultMaxRepetitionDelay: Long = 0,
         /**
          * Should all connections/transactions be executed in read-only mode by default or not.
          * Default state is false.
@@ -152,23 +136,52 @@ class DatabaseConfig private constructor(
          */
         @ExperimentalKeywordApi
         var preserveKeywordCasing: Boolean = true,
-    )
+    ) {
+        @Deprecated(
+            message = "This property will be removed in future releases",
+            replaceWith = ReplaceWith("defaultMaxAttempts"),
+            level = DeprecationLevel.WARNING
+        )
+        var defaultRepetitionAttempts: Int
+            get() = defaultMaxAttempts
+            set(value) { defaultMaxAttempts = value }
+
+        @Deprecated(
+            message = "This property will be removed in future releases",
+            replaceWith = ReplaceWith("defaultMinRetryDelay"),
+            level = DeprecationLevel.WARNING
+        )
+        var defaultMinRepetitionDelay: Long
+            get() = defaultMinRetryDelay
+            set(value) { defaultMinRetryDelay = value }
+
+        @Deprecated(
+            message = "This property will be removed in future releases",
+            replaceWith = ReplaceWith("defaultMaxRetryDelay"),
+            level = DeprecationLevel.WARNING
+        )
+        var defaultMaxRepetitionDelay: Long
+            get() = defaultMaxRetryDelay
+            set(value) { defaultMaxRetryDelay = value }
+    }
 
     companion object {
         operator fun invoke(body: Builder.() -> Unit = {}): DatabaseConfig {
             val builder = Builder().apply(body)
+            require(builder.defaultMaxAttempts > 0) { "defaultMaxAttempts must be set to perform at least 1 attempt." }
+
             @OptIn(ExperimentalKeywordApi::class)
             return DatabaseConfig(
                 sqlLogger = builder.sqlLogger ?: Slf4jSqlDebugLogger,
                 useNestedTransactions = builder.useNestedTransactions,
                 defaultFetchSize = builder.defaultFetchSize,
                 defaultIsolationLevel = builder.defaultIsolationLevel,
-                defaultMaxAttempts = builder.defaultMaxAttempts.coerceAtLeast(1),
+                defaultMaxAttempts = builder.defaultMaxAttempts,
                 defaultMinRetryDelay = builder.defaultMinRetryDelay,
                 defaultMaxRetryDelay = builder.defaultMaxRetryDelay,
-                defaultRepetitionAttempts = builder.defaultRepetitionAttempts,
-                defaultMinRepetitionDelay = builder.defaultMinRepetitionDelay,
-                defaultMaxRepetitionDelay = builder.defaultMaxRepetitionDelay,
+                defaultRepetitionAttempts = builder.defaultMaxAttempts,
+                defaultMinRepetitionDelay = builder.defaultMinRetryDelay,
+                defaultMaxRepetitionDelay = builder.defaultMaxRetryDelay,
                 defaultReadOnly = builder.defaultReadOnly,
                 warnLongQueriesDuration = builder.warnLongQueriesDuration,
                 maxEntitiesToStoreInCachePerEntity = builder.maxEntitiesToStoreInCachePerEntity,

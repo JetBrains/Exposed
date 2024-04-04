@@ -65,39 +65,51 @@ open class Transaction(
     /** Whether tracked values like [statementCount] and [duration] should be stored in [statementStats] for debugging. */
     var debug = false
 
+    /**
+     * The maximum amount of attempts that will be made to perform this `transaction` block.
+     *
+     * If this value is set to 1 and an SQLException happens, the exception will be thrown without performing a retry.
+     *
+     * @throws IllegalArgumentException If the amount of attempts is set to a value less than 1.
+     */
+    var maxAttempts: Int = db.transactionManager.defaultMaxAttempts
+        set(value) {
+            require(value > 0) { "maxAttempts must be set to perform at least 1 attempt." }
+            field = value
+        }
+
+    /** The minimum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
+    var minRetryDelay: Long = db.transactionManager.defaultMinRetryDelay
+
+    /** The maximum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
+    var maxRetryDelay: Long = db.transactionManager.defaultMaxRetryDelay
+
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("maxAttempts"),
         level = DeprecationLevel.WARNING
     )
-    var repetitionAttempts: Int = db.transactionManager.defaultRepetitionAttempts
+    var repetitionAttempts: Int
+        get() = maxAttempts
+        set(value) { maxAttempts = value }
 
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("minRetryDelay"),
         level = DeprecationLevel.WARNING
     )
-    var minRepetitionDelay: Long = db.transactionManager.defaultMinRepetitionDelay
+    var minRepetitionDelay: Long
+        get() = minRetryDelay
+        set(value) { minRetryDelay = value }
 
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("maxRetryDelay"),
         level = DeprecationLevel.WARNING
     )
-    var maxRepetitionDelay: Long = db.transactionManager.defaultMaxRepetitionDelay
-
-    /**
-     * The maximum amount of attempts that will be made to perform this `transaction` block.
-     *
-     * If this value is set to 1 and an SQLException happens, the exception will be thrown without performing a retry.
-     */
-    var maxAttempts: Int = maxOf(db.transactionManager.defaultMaxAttempts, repetitionAttempts)
-
-    /** The minimum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
-    var minRetryDelay: Long = minOf(db.transactionManager.defaultMinRetryDelay, minRepetitionDelay)
-
-    /** The maximum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
-    var maxRetryDelay: Long = maxOf(db.transactionManager.defaultMaxRetryDelay, maxRepetitionDelay)
+    var maxRepetitionDelay: Long
+        get() = maxRetryDelay
+        set(value) { maxRetryDelay = value }
 
     /**
      * The number of seconds the JDBC driver should wait for a statement to execute in [Transaction] transaction before timing out.

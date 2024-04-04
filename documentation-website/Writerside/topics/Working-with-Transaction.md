@@ -169,7 +169,7 @@ Much like with `transactionIsolation`, this value is not directly used by Expose
 
 **Transaction Maximum Attempts**
 
-Transactions also provide a property, `maxAttempts`, which sets the number of attempts that should be made to perform a transaction block.
+Transactions also provide a property, `maxAttempts`, which sets the maximum number of attempts that should be made to perform a transaction block.
 If this value is set to 1 and an SQLException occurs inside the transaction block, the exception will throw without performing a retry.
 If this property is not set, any default value provided in `DatabaseConfig` will be used instead:
 

@@ -45,25 +45,13 @@ private object NotInitializedManager : TransactionManager {
 
     override var defaultMaxRetryDelay: Long = 0
 
-    @Deprecated(
-        message = "This property will be removed in future releases",
-        replaceWith = ReplaceWith("defaultMaxAttempts"),
-        level = DeprecationLevel.WARNING
-    )
+    @Deprecated("This will be removed when the interface property is fully deprecated", level = DeprecationLevel.WARNING)
     override var defaultRepetitionAttempts: Int = -1
 
-    @Deprecated(
-        message = "This property will be removed in future releases",
-        replaceWith = ReplaceWith("defaultMinRetryDelay"),
-        level = DeprecationLevel.WARNING
-    )
+    @Deprecated("This will be removed when the interface property is fully deprecated", level = DeprecationLevel.WARNING)
     override var defaultMinRepetitionDelay: Long = 0
 
-    @Deprecated(
-        message = "This property will be removed in future releases",
-        replaceWith = ReplaceWith("defaultMaxRetryDelay"),
-        level = DeprecationLevel.WARNING
-    )
+    @Deprecated("This will be removed when the interface property is fully deprecated", level = DeprecationLevel.WARNING)
     override var defaultMaxRepetitionDelay: Long = 0
 
     override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction =

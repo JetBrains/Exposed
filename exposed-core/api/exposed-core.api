@@ -633,8 +633,8 @@ public final class org/jetbrains/exposed/sql/DatabaseConfig {
 
 public final class org/jetbrains/exposed/sql/DatabaseConfig$Builder {
 	public fun <init> ()V
-	public fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;IZ)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;IZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;IZ)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;IZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public final fun getDefaultIsolationLevel ()I
 	public final fun getDefaultMaxAttempts ()I

@@ -22,47 +22,41 @@ class ThreadLocalTransactionManager(
     private val db: Database,
     private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null
 ) : TransactionManager {
+    @Volatile
+    override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
+
+    @Volatile
+    override var defaultMinRetryDelay: Long = db.config.defaultMinRetryDelay
+
+    @Volatile
+    override var defaultMaxRetryDelay: Long = db.config.defaultMaxRetryDelay
+
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMaxAttempts"),
         level = DeprecationLevel.WARNING
     )
-    @Volatile
-    override var defaultRepetitionAttempts: Int = db.config.defaultRepetitionAttempts
-        @Deprecated("Use DatabaseConfig to define the defaultMaxAttempts", level = DeprecationLevel.WARNING)
-        @TestOnly
-        set
+    override var defaultRepetitionAttempts: Int
+        get() = defaultMaxAttempts
+        set(value) { defaultMaxAttempts = value }
 
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMinRetryDelay"),
         level = DeprecationLevel.WARNING
     )
-    @Volatile
-    override var defaultMinRepetitionDelay: Long = db.config.defaultMinRepetitionDelay
-        @Deprecated("Use DatabaseConfig to define the defaultMinRetryDelay", level = DeprecationLevel.WARNING)
-        @TestOnly
-        set
+    override var defaultMinRepetitionDelay: Long
+        get() = defaultMinRetryDelay
+        set(value) { defaultMinRetryDelay = value }
 
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMaxRetryDelay"),
         level = DeprecationLevel.WARNING
     )
-    @Volatile
-    override var defaultMaxRepetitionDelay: Long = db.config.defaultMaxRepetitionDelay
-        @Deprecated("Use DatabaseConfig to define the defaultMaxRetryDelay", level = DeprecationLevel.WARNING)
-        @TestOnly
-        set
-
-    @Volatile
-    override var defaultMaxAttempts: Int = maxOf(db.config.defaultMaxAttempts, defaultRepetitionAttempts)
-
-    @Volatile
-    override var defaultMinRetryDelay: Long = minOf(db.config.defaultMinRetryDelay, defaultMinRepetitionDelay)
-
-    @Volatile
-    override var defaultMaxRetryDelay: Long = maxOf(db.config.defaultMaxRetryDelay, defaultMaxRepetitionDelay)
+    override var defaultMaxRepetitionDelay: Long
+        get() = defaultMaxRetryDelay
+        set(value) { defaultMaxRetryDelay = value }
 
     @Volatile
     override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
