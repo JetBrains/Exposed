@@ -60,7 +60,7 @@ class NestedTransactionsTest : DatabaseTestsBase() {
 
             try {
                 inTopLevelTransaction(this.transactionIsolation) {
-                    repetitionAttempts = 1
+                    maxAttempts = 1
                     throw IllegalStateException("Should be rethrow")
                 }
             } catch (e: Exception) {

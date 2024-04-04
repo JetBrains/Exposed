@@ -57,7 +57,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
         withTables(excludeSettings = excludeSettings, RollbackTable) {
             assertFails {
                 inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, true) {
-                    repetitionAttempts = 1
+                    maxAttempts = 1
                     RollbackTable.insert { it[value] = "random-something" }
                 }
             }.message?.run { assertTrue(contains("read-only")) } ?: fail("message should not be null")

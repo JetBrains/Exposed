@@ -32,7 +32,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
 
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
-                repetitionAttempts = 42
+                maxAttempts = 42
                 exec("SELECT 1;")
                 // NO OP
             }
@@ -50,7 +50,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
         val db = Database.connect(
             datasource = datasource,
             databaseConfig = DatabaseConfig {
-                defaultRepetitionAttempts = 10
+                defaultMaxAttempts = 10
             }
         )
 
@@ -69,7 +69,7 @@ class ConnectionTimeoutTest : DatabaseTestsBase() {
         try {
             // property set in transaction block should override default DatabaseConfig
             transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
-                repetitionAttempts = 25
+                maxAttempts = 25
                 exec("SELECT 1;")
             }
             fail("Should have thrown ${GetConnectException::class.simpleName}")

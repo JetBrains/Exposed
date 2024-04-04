@@ -14,7 +14,7 @@ class RollbackTransactionTest : DatabaseTestsBase() {
     fun testRollbackWithoutSavepoints() {
         withTables(RollbackTable) {
             inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
-                repetitionAttempts = 1
+                maxAttempts = 1
                 RollbackTable.insert { it[RollbackTable.value] = "before-dummy" }
                 transaction {
                     assertEquals(1L, RollbackTable.selectAll().where { RollbackTable.value eq "before-dummy" }.count())
@@ -38,7 +38,7 @@ class RollbackTransactionTest : DatabaseTestsBase() {
             try {
                 db.useNestedTransactions = true
                 inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
-                    repetitionAttempts = 1
+                    maxAttempts = 1
                     RollbackTable.insert { it[RollbackTable.value] = "before-dummy" }
                     transaction {
                         assertEquals(1L, RollbackTable.selectAll().where { RollbackTable.value eq "before-dummy" }.count())

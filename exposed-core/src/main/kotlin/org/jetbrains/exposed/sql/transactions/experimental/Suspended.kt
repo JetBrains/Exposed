@@ -174,13 +174,13 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     shouldCommit: Boolean,
     statement: suspend Transaction.() -> T
 ): Deferred<T> = async {
-    var repetitions = 0
+    var attempts = 0
     var intermediateDelay: Long = 0
     var retryInterval: Long? = null
 
     var answer: T
     while (true) {
-        val transaction = if (repetitions == 0) tx.value else tx.value.resetIfClosed()
+        val transaction = if (attempts == 0) tx.value else tx.value.resetIfClosed()
 
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -189,28 +189,28 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
             }
             break
         } catch (cause: SQLException) {
-            handleSQLException(cause, transaction, repetitions)
-            repetitions++
-            if (repetitions >= transaction.repetitionAttempts) {
+            handleSQLException(cause, transaction, attempts)
+            attempts++
+            if (attempts >= transaction.maxAttempts) {
                 throw cause
             }
 
             if (retryInterval == null) {
                 retryInterval = transaction.getRetryInterval()
-                intermediateDelay = transaction.minRepetitionDelay
+                intermediateDelay = transaction.minRetryDelay
             }
             // set delay value with an exponential backoff time period
-            val repetitionDelay = when {
-                transaction.minRepetitionDelay < transaction.maxRepetitionDelay -> {
-                    intermediateDelay += retryInterval * repetitions
+            val retryDelay = when {
+                transaction.minRetryDelay < transaction.maxRetryDelay -> {
+                    intermediateDelay += retryInterval * attempts
                     ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
                 }
-                transaction.minRepetitionDelay == transaction.maxRepetitionDelay -> transaction.minRepetitionDelay
+                transaction.minRetryDelay == transaction.maxRetryDelay -> transaction.minRetryDelay
                 else -> 0
             }
-            exposedLogger.warn("Wait $repetitionDelay milliseconds before retrying")
+            exposedLogger.warn("Wait $retryDelay milliseconds before retrying")
             try {
-                delay(repetitionDelay)
+                delay(retryDelay)
             } catch (cause: InterruptedException) {
                 // Do nothing
             }

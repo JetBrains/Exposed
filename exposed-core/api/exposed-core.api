@@ -610,11 +610,14 @@ public final class org/jetbrains/exposed/sql/Database$Companion {
 
 public final class org/jetbrains/exposed/sql/DatabaseConfig {
 	public static final field Companion Lorg/jetbrains/exposed/sql/DatabaseConfig$Companion;
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;IZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;IZLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public final fun getDefaultIsolationLevel ()I
+	public final fun getDefaultMaxAttempts ()I
 	public final fun getDefaultMaxRepetitionDelay ()J
+	public final fun getDefaultMaxRetryDelay ()J
 	public final fun getDefaultMinRepetitionDelay ()J
+	public final fun getDefaultMinRetryDelay ()J
 	public final fun getDefaultReadOnly ()Z
 	public final fun getDefaultRepetitionAttempts ()I
 	public final fun getDefaultSchema ()Lorg/jetbrains/exposed/sql/Schema;
@@ -634,8 +637,11 @@ public final class org/jetbrains/exposed/sql/DatabaseConfig$Builder {
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;IZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public final fun getDefaultIsolationLevel ()I
+	public final fun getDefaultMaxAttempts ()I
 	public final fun getDefaultMaxRepetitionDelay ()J
+	public final fun getDefaultMaxRetryDelay ()J
 	public final fun getDefaultMinRepetitionDelay ()J
+	public final fun getDefaultMinRetryDelay ()J
 	public final fun getDefaultReadOnly ()Z
 	public final fun getDefaultRepetitionAttempts ()I
 	public final fun getDefaultSchema ()Lorg/jetbrains/exposed/sql/Schema;
@@ -649,8 +655,11 @@ public final class org/jetbrains/exposed/sql/DatabaseConfig$Builder {
 	public final fun getWarnLongQueriesDuration ()Ljava/lang/Long;
 	public final fun setDefaultFetchSize (Ljava/lang/Integer;)V
 	public final fun setDefaultIsolationLevel (I)V
+	public final fun setDefaultMaxAttempts (I)V
 	public final fun setDefaultMaxRepetitionDelay (J)V
+	public final fun setDefaultMaxRetryDelay (J)V
 	public final fun setDefaultMinRepetitionDelay (J)V
+	public final fun setDefaultMinRetryDelay (J)V
 	public final fun setDefaultReadOnly (Z)V
 	public final fun setDefaultRepetitionAttempts (I)V
 	public final fun setDefaultSchema (Lorg/jetbrains/exposed/sql/Schema;)V
@@ -2429,8 +2438,11 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun getDebug ()Z
 	public final fun getDuration ()J
 	public final fun getId ()Ljava/lang/String;
+	public final fun getMaxAttempts ()I
 	public final fun getMaxRepetitionDelay ()J
+	public final fun getMaxRetryDelay ()J
 	public final fun getMinRepetitionDelay ()J
+	public final fun getMinRetryDelay ()J
 	public fun getOuterTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
 	public final fun getQueryTimeout ()Ljava/lang/Integer;
 	public fun getReadOnly ()Z
@@ -2447,8 +2459,11 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun setCurrentStatement (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)V
 	public final fun setDebug (Z)V
 	public final fun setDuration (J)V
+	public final fun setMaxAttempts (I)V
 	public final fun setMaxRepetitionDelay (J)V
+	public final fun setMaxRetryDelay (J)V
 	public final fun setMinRepetitionDelay (J)V
+	public final fun setMinRetryDelay (J)V
 	public final fun setQueryTimeout (Ljava/lang/Integer;)V
 	public final fun setRepetitionAttempts (I)V
 	public final fun setStatementCount (I)V
@@ -3222,15 +3237,21 @@ public final class org/jetbrains/exposed/sql/transactions/ThreadLocalTransaction
 	public fun bindTransactionToThread (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
 	public fun getDefaultIsolationLevel ()I
+	public fun getDefaultMaxAttempts ()I
 	public fun getDefaultMaxRepetitionDelay ()J
+	public fun getDefaultMaxRetryDelay ()J
 	public fun getDefaultMinRepetitionDelay ()J
+	public fun getDefaultMinRetryDelay ()J
 	public fun getDefaultReadOnly ()Z
 	public fun getDefaultRepetitionAttempts ()I
 	public final fun getThreadLocal ()Ljava/lang/ThreadLocal;
 	public fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/Transaction;
 	public fun setDefaultIsolationLevel (I)V
+	public fun setDefaultMaxAttempts (I)V
 	public fun setDefaultMaxRepetitionDelay (J)V
+	public fun setDefaultMaxRetryDelay (J)V
 	public fun setDefaultMinRepetitionDelay (J)V
+	public fun setDefaultMinRetryDelay (J)V
 	public fun setDefaultReadOnly (Z)V
 	public fun setDefaultRepetitionAttempts (I)V
 	public fun toString ()Ljava/lang/String;
@@ -3265,14 +3286,20 @@ public abstract interface class org/jetbrains/exposed/sql/transactions/Transacti
 	public abstract fun bindTransactionToThread (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public abstract fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
 	public abstract fun getDefaultIsolationLevel ()I
+	public abstract fun getDefaultMaxAttempts ()I
 	public abstract fun getDefaultMaxRepetitionDelay ()J
+	public abstract fun getDefaultMaxRetryDelay ()J
 	public abstract fun getDefaultMinRepetitionDelay ()J
+	public abstract fun getDefaultMinRetryDelay ()J
 	public abstract fun getDefaultReadOnly ()Z
 	public abstract fun getDefaultRepetitionAttempts ()I
 	public abstract fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/Transaction;
 	public abstract fun setDefaultIsolationLevel (I)V
+	public abstract fun setDefaultMaxAttempts (I)V
 	public abstract fun setDefaultMaxRepetitionDelay (J)V
+	public abstract fun setDefaultMaxRetryDelay (J)V
 	public abstract fun setDefaultMinRepetitionDelay (J)V
+	public abstract fun setDefaultMinRetryDelay (J)V
 	public abstract fun setDefaultReadOnly (Z)V
 	public abstract fun setDefaultRepetitionAttempts (I)V
 }
