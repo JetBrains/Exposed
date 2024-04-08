@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
+import com.impossibl.postgres.jdbc.PGDataSource
+import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
@@ -12,7 +14,9 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
+import org.junit.Assume
 import org.junit.Test
 import java.io.File
 import kotlin.properties.Delegates
@@ -244,6 +248,109 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 assertEquals(1, statements.size)
             } finally {
                 SchemaUtils.drop(testTableWithIndex)
+            }
+        }
+    }
+
+    @Test
+    fun testMigration() {
+        val testTableWithoutIndex = object : Table("tester") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val testTableWithIndex = object : Table("tester") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+            val byName = index("test_table_by_name", false, name)
+        }
+
+        val migrationTitle = "AddIndex"
+        val migrationScriptDirectory = "src/test/resources"
+
+        withDb(excludeSettings = listOf(TestDB.POSTGRESQLNG)) {
+            if (!isOldMySql()) {
+                try {
+                    SchemaUtils.create(testTableWithoutIndex)
+                    assertTrue(testTableWithoutIndex.exists())
+
+                    val database = it.db!!
+                    database.migrate(
+                        testTableWithIndex,
+                        user = it.user,
+                        password = it.pass,
+                        oldVersion = "1",
+                        newVersion = "2.0",
+                        migrationTitle = migrationTitle,
+                        migrationScriptDirectory = migrationScriptDirectory
+                    )
+
+                    assertEquals(1, currentDialectTest.existingIndices(testTableWithoutIndex).size)
+                } finally {
+                    SchemaUtils.drop(testTableWithoutIndex)
+                    assertTrue(File("$migrationScriptDirectory/V2.0__$migrationTitle.sql").delete())
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testPostgreSQLNGMigration() {
+        Assume.assumeTrue(TestDB.POSTGRESQLNG in TestDB.enabledDialects())
+
+        val testTableWithoutIndex = object : Table("tester") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val testTableWithIndex = object : Table("tester") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+            val byName = index("test_table_by_name", false, name)
+        }
+
+        val schemaHistoryTable = object : Table("flyway_schema_history") {}
+
+        val migrationTitle = "AddIndex"
+        val migrationScriptDirectory = "src/test/resources"
+
+        val dataSource = PGDataSource().apply {
+            url = "jdbc:pgsql://127.0.0.1:3004/postgres?lc_messages=en_US.UTF-8"
+            user = "root"
+            password = "Exposed_password_1!"
+        }
+
+        val database = Database.connect(dataSource)
+
+        transaction(database) {
+            try {
+                SchemaUtils.drop(schemaHistoryTable)
+
+                SchemaUtils.create(testTableWithoutIndex)
+                assertTrue(testTableWithoutIndex.exists())
+
+                database.migrate(
+                    testTableWithIndex,
+                    dataSource = dataSource,
+                    oldVersion = "1",
+                    newVersion = "2.0",
+                    migrationTitle = migrationTitle,
+                    migrationScriptDirectory = migrationScriptDirectory
+                )
+
+                assertEquals(1, currentDialectTest.existingIndices(testTableWithoutIndex).size)
+            } finally {
+                SchemaUtils.drop(testTableWithoutIndex)
+                SchemaUtils.drop(schemaHistoryTable)
+                assertTrue(File("$migrationScriptDirectory/V2.0__$migrationTitle.sql").delete())
             }
         }
     }

@@ -77,3 +77,6 @@ internal fun Transaction.throwUnsupportedException(message: String): Nothing = t
     message,
     db.dialect
 )
+
+/** An exception thrown when a database migration fails. */
+class ExposedMigrationException(exception: Exception, message: String) : RuntimeException(message, exception)

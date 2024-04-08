@@ -1,11 +1,16 @@
 package org.jetbrains.exposed.sql
 
+import org.flywaydb.core.Flyway
+import org.flywaydb.core.api.FlywayException
+import org.flywaydb.core.api.output.MigrateResult
 import org.jetbrains.annotations.TestOnly
+import org.jetbrains.exposed.exceptions.ExposedMigrationException
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
+import java.io.File
 import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.DriverManager
@@ -103,6 +108,160 @@ class Database private constructor(
      * This value should only be adjusted if [connectsViaDataSource] has been set to `true`.
      */
     internal var dataSourceReadOnly: Boolean = false
+
+    /**
+     * @param tables The tables to which the migration will be applied.
+     * @param user The user of the database.
+     * @param password The password of the database.
+     * @param oldVersion The version to migrate from. Pending migrations up to [oldVersion] are applied before applying the migration to [newVersion].
+     * @param newVersion The version to migrate to.
+     * @param migrationTitle The title of the migration.
+     * @param migrationScriptDirectory The directory in which to create the migration script.
+     * @param withLogs By default, a description for each intermediate step, as well as its execution time, is logged at
+     * the INFO level. This can be disabled by setting [withLogs] to `false`.
+     *
+     * @throws ExposedMigrationException if the migration fails.
+     *
+     * Applies a database migration from [oldVersion] to [newVersion].
+     *
+     * If a migration script with the same name already exists, the existing one will be used as is and a new one will
+     * not be generated. This allows you to generate a migration script before the migration and modify it manually if
+     * needed.
+     */
+    @ExperimentalDatabaseMigrationApi
+    @Suppress("LongParameterList", "TooGenericExceptionCaught")
+    fun migrate(
+        vararg tables: Table,
+        user: String,
+        password: String,
+        oldVersion: String,
+        newVersion: String,
+        migrationTitle: String,
+        migrationScriptDirectory: String,
+        withLogs: Boolean = true
+    ) {
+        val flyway = Flyway
+            .configure()
+            .baselineOnMigrate(true)
+            .baselineVersion(oldVersion)
+            .dataSource(url, user, password)
+            .locations("filesystem:$migrationScriptDirectory")
+            .load()
+
+        with(TransactionManager.current()) {
+            db.dialect.resetCaches()
+
+            try {
+                val migrationScript = File("$migrationScriptDirectory/$migrationTitle.sql")
+                if (!migrationScript.exists()) {
+                    SchemaUtils.generateMigrationScript(
+                        tables = *tables,
+                        newVersion = newVersion,
+                        title = migrationTitle,
+                        scriptDirectory = migrationScriptDirectory,
+                        withLogs = withLogs
+                    )
+                }
+            } catch (exception: Exception) {
+                throw ExposedMigrationException(
+                    exception = exception,
+                    message = "Failed to generate migration script for migration from $oldVersion to $newVersion: ${exception.message.orEmpty()}"
+                )
+            }
+
+            try {
+                SchemaUtils.logTimeSpent("Migrating database from $oldVersion to $newVersion", withLogs = true) {
+                    val migrateResult: MigrateResult = flyway.migrate()
+                    if (withLogs) {
+                        exposedLogger.info("Migration of database ${if (migrateResult.success) "succeeded" else "failed"}.")
+                    }
+                }
+            } catch (exception: FlywayException) {
+                flyway.repair()
+                throw ExposedMigrationException(
+                    exception = exception,
+                    message = "Migration failed from version $oldVersion to $newVersion: ${exception.message.orEmpty()}"
+                )
+            }
+
+            db.dialect.resetCaches()
+        }
+    }
+
+    /**
+     * @param tables The tables to which the migration will be applied.
+     * @param dataSource The [DataSource] object to be used as a means of getting a connection.
+     * @param oldVersion The version to migrate from. Pending migrations up to [oldVersion] are applied before applying the migration to [newVersion].
+     * @param newVersion The version to migrate to.
+     * @param migrationTitle The title of the migration.
+     * @param migrationScriptDirectory The directory in which to create the migration script.
+     * @param withLogs By default, a description for each intermediate step, as well as its execution time, is logged at
+     * the INFO level. This can be disabled by setting [withLogs] to `false`.
+     *
+     * @throws ExposedMigrationException if the migration fails.
+     *
+     * Applies a database migration from [oldVersion] to [newVersion].
+     * For PostgreSQLNG, "jdbc:pgsql" in the database URL is replaced with "jdbc:postgresql" because the former is not
+     * supported by Flyway.
+     */
+    @ExperimentalDatabaseMigrationApi
+    @Suppress("LongParameterList", "TooGenericExceptionCaught")
+    fun migrate(
+        vararg tables: Table,
+        dataSource: DataSource,
+        oldVersion: String,
+        newVersion: String,
+        migrationTitle: String,
+        migrationScriptDirectory: String,
+        withLogs: Boolean = true
+    ) {
+        val flyway = Flyway
+            .configure()
+            .baselineOnMigrate(true)
+            .baselineVersion(oldVersion)
+            .dataSource(dataSource)
+            .locations("filesystem:$migrationScriptDirectory")
+            .load()
+
+        with(TransactionManager.current()) {
+            db.dialect.resetCaches()
+
+            try {
+                val migrationScript = File("$migrationScriptDirectory/$migrationTitle.sql")
+                if (!migrationScript.exists()) {
+                    SchemaUtils.generateMigrationScript(
+                        tables = *tables,
+                        newVersion = newVersion,
+                        title = migrationTitle,
+                        scriptDirectory = migrationScriptDirectory,
+                        withLogs = withLogs
+                    )
+                }
+            } catch (exception: Exception) {
+                throw ExposedMigrationException(
+                    exception = exception,
+                    message = "Failed to generate migration script for migration from $oldVersion to $newVersion: ${exception.message.orEmpty()}"
+                )
+            }
+
+            try {
+                SchemaUtils.logTimeSpent("Migrating database from $oldVersion to $newVersion", withLogs = true) {
+                    val migrateResult: MigrateResult = flyway.migrate()
+                    if (withLogs) {
+                        exposedLogger.info("Migration of database ${if (migrateResult.success) "succeeded" else "failed"}.")
+                    }
+                }
+            } catch (exception: FlywayException) {
+                flyway.repair()
+                throw ExposedMigrationException(
+                    exception = exception,
+                    message = "Migration failed from version $oldVersion to $newVersion: ${exception.message.orEmpty()}"
+                )
+            }
+
+            db.dialect.resetCaches()
+        }
+    }
 
     companion object {
         internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()

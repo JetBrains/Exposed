@@ -32,6 +32,7 @@ javax-money = "1.1"
 moneta = "1.4.4"
 hikariCP = "4.0.3"
 logcaptor = "2.9.2"
+flyway = "9.22.3"
 
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
@@ -80,6 +81,11 @@ oracle12 = { group = "com.oracle.database.jdbc", name = "ojdbc8", version.ref = 
 mssql = { group = "com.microsoft.sqlserver", name = "mssql-jdbc", version.ref = "sqlserver" }
 
 logcaptor = { group = "io.github.hakky54", name = "logcaptor", version.ref = "logcaptor" }
+
+flyway = { group = "org.flywaydb", name = "flyway-core", version.ref = "flyway" }
+flyway-mysql = { group = "org.flywaydb", name = "flyway-mysql", version.ref = "flyway" }
+flyway-oracle = { group = "org.flywaydb", name = "flyway-database-oracle", version.ref = "flyway" }
+flyway-sqlserver = { group = "org.flywaydb", name = "flyway-sqlserver", version.ref = "flyway" }
 
 [plugins]
 jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

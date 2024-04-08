@@ -10,7 +10,7 @@ import java.math.BigDecimal
 /** Utility functions that assist with creating, altering, and dropping database schema objects. */
 @Suppress("TooManyFunctions", "LargeClass")
 object SchemaUtils {
-    private inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
+    internal inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
         return if (withLogs) {
             val start = System.currentTimeMillis()
             val answer = block()
@@ -830,6 +830,28 @@ object SchemaUtils {
             )
         }
         return toDrop.toList()
+    }
+
+    /**
+     * @param tables The tables whose changes will be used to generate the migration script.
+     * @param newVersion The version to migrate to.
+     * @param title The title of the migration.
+     * @param scriptDirectory The directory in which to create the migration script.
+     * @param withLogs By default, a description for each intermediate step, as well as its execution time, is logged at
+     * the INFO level. This can be disabled by setting [withLogs] to `false`.
+     *
+     * @return The generated migration script.
+     *
+     * @throws IllegalArgumentException if no argument is passed for the [tables] parameter.
+     *
+     * This function simply generates the migration script without applying the migration. The purpose of it is to show
+     * the user what the migration script will look like before applying the migration.
+     * This function uses the Flyway naming convention when generating the migration script.
+     * If a migration script with the same name already exists, its content will be overwritten.
+     */
+    @ExperimentalDatabaseMigrationApi
+    fun generateMigrationScript(vararg tables: Table, newVersion: String, title: String, scriptDirectory: String, withLogs: Boolean = true): File {
+        return generateMigrationScript(*tables, scriptName = "V${newVersion}__$title", scriptDirectory = scriptDirectory, withLogs = withLogs)
     }
 
     /**
