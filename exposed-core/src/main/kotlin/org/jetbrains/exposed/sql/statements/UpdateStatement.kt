@@ -46,7 +46,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         }
     }
 
-    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = QueryBuilder(true).run {
         val dialect = currentDialect
         when {
             targetsSet is Join && dialect is OracleDialect -> {
@@ -72,9 +72,13 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         if (args.isNotEmpty()) listOf(args) else emptyList()
     }
 
-    private fun QueryBuilder.registerWhereArg() { where?.toQueryBuilder(this) }
+    private fun QueryBuilder.registerWhereArg() {
+        where?.toQueryBuilder(this)
+    }
 
-    private fun QueryBuilder.registerUpdateArgs() { values.forEach { registerArgument(it.key, it.value) } }
+    private fun QueryBuilder.registerUpdateArgs() {
+        values.forEach { registerArgument(it.key, it.value) }
+    }
 
     private fun QueryBuilder.registerAdditionalArgs(join: Join) {
         join.joinParts.forEach {

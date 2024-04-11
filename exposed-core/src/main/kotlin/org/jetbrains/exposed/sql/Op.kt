@@ -309,7 +309,7 @@ class PlusOp<T, S : T>(
     /** The right-hand side operand. */
     expr2: Expression<S>,
     /** The column type of this expression. */
-    columnType: IColumnType
+    columnType: IColumnType<T & Any>
 ) : CustomOperator<T>("+", columnType, expr1, expr2)
 
 /**
@@ -321,7 +321,7 @@ class MinusOp<T, S : T>(
     /** The right-hand side operand. */
     expr2: Expression<S>,
     /** The column type of this expression. */
-    columnType: IColumnType
+    columnType: IColumnType<T & Any>
 ) : CustomOperator<T>("-", columnType, expr1, expr2)
 
 /**
@@ -333,7 +333,7 @@ class TimesOp<T, S : T>(
     /** The right-hand side operand. */
     expr2: Expression<S>,
     /** The column type of this expression. */
-    columnType: IColumnType
+    columnType: IColumnType<T & Any>
 ) : CustomOperator<T>("*", columnType, expr1, expr2)
 
 /**
@@ -345,7 +345,7 @@ class DivideOp<T, S : T>(
     /** The right-hand side operand. */
     private val divisor: Expression<S>,
     /** The column type of this expression. */
-    columnType: IColumnType
+    columnType: IColumnType<T & Any>
 ) : CustomOperator<T>("/", columnType, dividend, divisor) {
     companion object {
         fun <T : BigDecimal?, S : T> DivideOp<T, S>.withScale(scale: Int): DivideOp<T, S> {
@@ -356,7 +356,7 @@ class DivideOp<T, S : T>(
                 decimalLiteral(it.setScale(1)) // it is needed to treat dividend as decimal instead of integer in SQL
             } ?: dividend
 
-            return DivideOp(newExpression as Expression<T>, divisor, decimalColumnType)
+            return DivideOp(newExpression as Expression<T>, divisor, decimalColumnType as IColumnType<T & Any>)
         }
     }
 }
@@ -369,7 +369,7 @@ class ModOp<T : Number?, S : Number?, R : Number?>(
     val expr1: Expression<T>,
     /** Returns the right-hand side operand. */
     val expr2: Expression<S>,
-    override val columnType: IColumnType
+    override val columnType: IColumnType<R & Any>
 ) : ExpressionWithColumnType<R>() {
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
@@ -431,7 +431,7 @@ class AndBitOp<T, S : T>(
     /** The right-hand side operand. */
     val expr2: Expression<S>,
     /** The column type of this expression. */
-    override val columnType: IColumnType
+    override val columnType: IColumnType<T & Any>
 ) : ExpressionWithColumnType<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         when (val dialect = currentDialectIfAvailable) {
@@ -462,7 +462,7 @@ class OrBitOp<T, S : T>(
     /** The right-hand side operand. */
     val expr2: Expression<S>,
     /** The column type of this expression. */
-    override val columnType: IColumnType
+    override val columnType: IColumnType<T & Any>
 ) : ExpressionWithColumnType<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         when (val dialect = currentDialectIfAvailable) {
@@ -494,7 +494,7 @@ class XorBitOp<T, S : T>(
     /** The right-hand side operand. */
     val expr2: Expression<S>,
     /** The column type of this expression. */
-    override val columnType: IColumnType
+    override val columnType: IColumnType<T & Any>
 ) : ExpressionWithColumnType<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         when (val dialect = currentDialectIfAvailable) {
@@ -632,7 +632,7 @@ class NotEqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQuer
  * Represents the specified [value] as an SQL literal, using the specified [columnType] to convert the value.
  */
 class LiteralOp<T>(
-    override val columnType: IColumnType,
+    override val columnType: IColumnType<T & Any>,
     /** Returns the value being used as a literal. */
     val value: T
 ) : ExpressionWithColumnType<T>() {
@@ -686,7 +686,7 @@ fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(Decimal
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnType? = null): LiteralOp<List<T>> {
+inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnType<T>? = null): LiteralOp<List<T>> {
     @OptIn(InternalApi::class)
     return LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class)), value)
 }
@@ -700,14 +700,14 @@ class QueryParameter<T>(
     /** Returns the value being used as a query parameter. */
     val value: T,
     /** Returns the column type of this expression. */
-    val sqlType: IColumnType
+    val sqlType: IColumnType<T & Any>
 ) : Expression<T>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { registerArgument(sqlType, value) }
 }
 
 /** Returns the specified [value] as a query parameter with the same type as [column]. */
 fun <T : Comparable<T>> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> =
-    QueryParameter(value, EntityIDColumnType(column))
+    QueryParameter(value, column.columnType)
 
 /** Returns the specified [value] as a boolean query parameter. */
 fun booleanParam(value: Boolean): Expression<Boolean> = QueryParameter(value, BooleanColumnType.INSTANCE)
@@ -765,7 +765,7 @@ fun blobParam(value: ExposedBlob, useObjectIdentifier: Boolean = false): Express
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType? = null): Expression<List<T>> {
+inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType<T>? = null): Expression<List<T>> {
     @OptIn(InternalApi::class)
     return QueryParameter(value, ArrayColumnType(delegateType ?: resolveColumnType(T::class)))
 }
@@ -779,7 +779,7 @@ inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType
 class NoOpConversion<T, S>(
     /** Returns the expression whose type is being changed. */
     val expr: Expression<T>,
-    override val columnType: IColumnType
+    override val columnType: IColumnType<S & Any>
 ) : ExpressionWithColumnType<S>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { +expr }
 }

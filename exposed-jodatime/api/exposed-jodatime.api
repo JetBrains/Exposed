@@ -20,12 +20,16 @@ public final class org/jetbrains/exposed/sql/jodatime/DateColumnType : org/jetbr
 	public fun getHasTimePart ()Z
 	public final fun getTime ()Z
 	public fun hashCode ()I
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Lorg/joda/time/DateTime;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Lorg/joda/time/DateTime;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lorg/joda/time/DateTime;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Lorg/joda/time/DateTime;
 }
 
 public final class org/jetbrains/exposed/sql/jodatime/DateColumnTypeKt {
@@ -56,9 +60,12 @@ public final class org/jetbrains/exposed/sql/jodatime/DateFunctionsKt {
 public final class org/jetbrains/exposed/sql/jodatime/DateTimeWithTimeZoneColumnType : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/IDateColumnType {
 	public fun <init> ()V
 	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Lorg/joda/time/DateTime;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Lorg/joda/time/DateTime;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lorg/joda/time/DateTime;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;

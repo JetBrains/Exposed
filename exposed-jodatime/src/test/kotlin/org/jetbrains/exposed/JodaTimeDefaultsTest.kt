@@ -225,7 +225,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
 
-            override val columnType: IColumnType = IntegerColumnType()
+            override val columnType: IColumnType<Int> = IntegerColumnType()
         }
 
         val foo = object : IntIdTable("foo") {

@@ -293,7 +293,7 @@ class DefaultsTest : DatabaseTestsBase() {
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
 
-            override val columnType: IColumnType = IntegerColumnType()
+            override val columnType: IColumnType<Int> = IntegerColumnType()
         }
 
         val foo = object : IntIdTable("foo") {
@@ -319,7 +319,7 @@ class DefaultsTest : DatabaseTestsBase() {
     fun testDefaultExpressions02() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentTimestamp())
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
         }
 
         val nonDefaultDate = LocalDate(2000, 1, 1)
@@ -373,8 +373,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val name = text("name")
             val defaultDate = date("default_date").defaultExpression(CurrentDate)
             val defaultDateTime1 = datetime("default_date_time_1").defaultExpression(CurrentDateTime)
-            val defaultDateTime2 = datetime("default_date_time_2").defaultExpression(CurrentTimestamp())
-            val defaultTimeStamp = timestamp("default_time_stamp").defaultExpression(CurrentTimestamp())
+            val defaultDateTime2 = datetime("default_date_time_2").defaultExpression(CurrentDateTime)
+            val defaultTimeStamp = timestamp("default_time_stamp").defaultExpression(CurrentTimestamp)
         }
 
         withDb {
@@ -537,7 +537,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         val tester = object : Table("tester") {
             val timestampWithDefault = timestamp("timestampWithDefault").default(instant)
-            val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp())
+            val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp)
         }
 
         // SQLite does not support ALTER TABLE on a column that has a default value

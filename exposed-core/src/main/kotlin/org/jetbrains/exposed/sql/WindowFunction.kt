@@ -15,7 +15,7 @@ interface WindowFunction<T> {
 /** Represents an SQL window function with window definition. */
 @Suppress("TooManyFunctions")
 class WindowFunctionDefinition<T>(
-    override val columnType: IColumnType,
+    override val columnType: IColumnType<T & Any>,
     /** Returns the function that definition is used for. */
     private val function: WindowFunction<T>
 ) : ExpressionWithColumnType<T>() {
