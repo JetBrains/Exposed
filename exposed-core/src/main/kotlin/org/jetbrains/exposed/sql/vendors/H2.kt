@@ -303,6 +303,16 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         }
     }
 
+    override fun sequences(): List<String> {
+        val sequences = mutableListOf<String>()
+        TransactionManager.current().exec("SELECT SEQUENCE_NAME FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
+            while (rs.next()) {
+                sequences.add(rs.getString("SEQUENCE_NAME"))
+            }
+        }
+        return sequences
+    }
+
     companion object : DialectNameProvider("H2")
 }
 

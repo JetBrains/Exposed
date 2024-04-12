@@ -393,5 +393,15 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         else -> currentDialect.defaultReferenceOption
     }
 
+    override fun sequences(): List<String> {
+        val sequences = mutableListOf<String>()
+        TransactionManager.current().exec("SELECT SEQUENCE_NAME FROM USER_SEQUENCES") { rs ->
+            while (rs.next()) {
+                sequences.add(rs.getString("SEQUENCE_NAME"))
+            }
+        }
+        return sequences
+    }
+
     companion object : DialectNameProvider("Oracle")
 }

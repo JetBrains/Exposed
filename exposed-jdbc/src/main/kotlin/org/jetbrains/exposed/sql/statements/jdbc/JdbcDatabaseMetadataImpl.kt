@@ -285,6 +285,16 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         }
     }
 
+    @Suppress("MagicNumber")
+    override fun sequences(): List<String> {
+        val sequences = mutableListOf<String>()
+        val rs = metadata.getTables(null, null, null, arrayOf("SEQUENCE"))
+        while (rs.next()) {
+            sequences.add(rs.getString(3))
+        }
+        return sequences
+    }
+
     @Synchronized
     override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
         val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCaseUnquoted() }
