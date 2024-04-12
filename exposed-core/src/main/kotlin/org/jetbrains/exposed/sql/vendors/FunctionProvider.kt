@@ -3,13 +3,14 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.MergeBaseStatement
 
 /**
  * Provides definitions for all the supported SQL functions.
  * By default, definitions from the SQL standard are provided but if a vendor doesn't support a specific function, or it
  * is implemented differently, the corresponding function should be overridden.
  */
-@Suppress("UnnecessaryAbstractClass")
+@Suppress("UnnecessaryAbstractClass", "TooManyFunctions")
 abstract class FunctionProvider {
     // Mathematical functions
 
@@ -438,6 +439,49 @@ abstract class FunctionProvider {
         return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
     }
 
+    open fun merge(
+        dest: Table,
+        source: Table,
+        transaction: Transaction,
+        whenBranches: List<MergeBaseStatement.WhenBranchData>,
+        on: Op<Boolean>
+    ): String {
+        if (whenBranches.any { it.deleteWhere != null } && currentDialect !is OracleDialect) {
+            @Suppress("UseRequire")
+            throw IllegalArgumentException("'deleteWhere' parameter can be used only as a part of Oracle SQL update clause statement.")
+        }
+        val onRaw = if (currentDialect is OracleDialect) "($on)" else "$on"
+
+        return with(QueryBuilder(true)) {
+            +"MERGE INTO ${transaction.identity(dest)} "
+            +"USING ${transaction.identity(source)} "
+            +"ON $onRaw "
+            addWhenBranchesToMergeStatement(transaction, dest, whenBranches)
+            toString()
+        }
+    }
+
+    open fun mergeSelect(
+        dest: Table,
+        source: QueryAlias,
+        transaction: Transaction,
+        whenBranches: List<MergeBaseStatement.WhenBranchData>,
+        on: Op<Boolean>,
+        prepared: Boolean
+    ): String {
+        val using = source.query.prepareSQL(transaction, prepared)
+
+        val onRaw = if (currentDialect is OracleDialect) "($on)" else "$on"
+
+        return with(QueryBuilder(true)) {
+            +"MERGE INTO ${transaction.identity(dest)} "
+            +"USING ( $using ) ${if (currentDialect is OracleDialect) "" else "as"} ${source.alias} "
+            +"ON $onRaw "
+            addWhenBranchesToMergeStatement(transaction, dest, whenBranches)
+            toString()
+        }
+    }
+
     /**
      * Returns the SQL command that updates one or more rows of a table.
      *
@@ -761,5 +805,76 @@ abstract class FunctionProvider {
         transaction.throwUnsupportedException(
             "There's no generic SQL for a command with a RETURNING clause. There must be a vendor specific implementation."
         )
+    }
+}
+
+@Suppress("NestedBlockDepth")
+private fun QueryBuilder.addWhenBranchesToMergeStatement(transaction: Transaction, table: Table, whenBranches: List<MergeBaseStatement.WhenBranchData>) {
+    fun QueryBuilder.appendValueAlias(column: Column<*>, value: Any?) {
+        when (value) {
+            is Column<*> -> {
+                val aliasExpression = transaction.fullIdentity(value)
+                append(aliasExpression)
+            }
+
+            is Expression<*> -> {
+                val aliasExpression = value.toString()
+                append(aliasExpression)
+            }
+
+            else -> registerArgument(column.columnType, value)
+        }
+    }
+
+    val autoIncColumn = table.autoIncColumn
+
+    whenBranches.forEach { (arguments, action, condition, deleteWhere) ->
+        when (action) {
+            MergeBaseStatement.MergeWhenAction.INSERT -> {
+                val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in arguments.map { it.first } }
+
+                val extraArg = if (nextValExpression != null) listOf(autoIncColumn to nextValExpression) else emptyList()
+
+                val allArguments = arguments + extraArg
+                +"WHEN NOT MATCHED "
+                if (currentDialect !is OracleDialect) {
+                    condition?.let { append("AND ($condition) ") }
+                }
+                +"THEN INSERT "
+                +allArguments.map { it.first }.joinToString(prefix = "(", postfix = ") ") {
+                    transaction.identity(it)
+                }
+                allArguments.appendTo(prefix = " VALUES (", postfix = ") ") { (column, value) ->
+                    appendValueAlias(column, value)
+                }
+                if (currentDialect is OracleDialect) {
+                    condition?.let { append("WHERE ($condition) ") }
+                }
+            }
+
+            MergeBaseStatement.MergeWhenAction.UPDATE -> {
+                +"WHEN MATCHED "
+                if (currentDialect !is OracleDialect) {
+                    condition?.let { append("AND ($condition) ") }
+                }
+                +"THEN UPDATE SET "
+                arguments.appendTo(postfix = " ") { (column, expression) ->
+                    append("${transaction.identity(column)}=")
+                    appendValueAlias(column, expression)
+                }
+                if (currentDialect is OracleDialect) {
+                    condition?.let { append("WHERE ($condition) ") }
+                }
+                deleteWhere?.let {
+                    append("DELETE WHERE $deleteWhere")
+                }
+            }
+
+            MergeBaseStatement.MergeWhenAction.DELETE -> {
+                +"WHEN MATCHED "
+                condition?.let { append("AND ($condition) ") }
+                +"THEN DELETE "
+            }
+        }
     }
 }

@@ -112,6 +112,8 @@ enum class TestDB(
         val allH2TestDB = listOf(H2, H2_MYSQL, H2_PSQL, H2_MARIADB, H2_ORACLE, H2_SQLSERVER)
         val mySqlRelatedDB = listOf(MYSQL, MARIADB, H2_MYSQL, H2_MARIADB)
         val postgreSQLRelatedDB = listOf(POSTGRESQL, POSTGRESQLNG)
+        val oracleRelatedDB = listOf(ORACLE, H2_ORACLE)
+        val sqlServerRelatedDB = listOf(SQLSERVER, H2_SQLSERVER)
 
         fun enabledDialects(): Set<TestDB> {
             if (TEST_DIALECTS.isEmpty()) {

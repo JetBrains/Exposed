@@ -606,6 +606,28 @@ private fun <T : Table, E> T.batchUpsert(
  */
 fun Table.exists(): Boolean = currentDialect.tableExists(this)
 
+fun <D : Table, S : Table> D.mergeFrom(
+    source: S,
+    on: SqlExpressionBuilder.() -> Op<Boolean>,
+    body: MergeStatement.() -> Unit
+): MergeStatement {
+    return MergeStatement(this, source, on = SqlExpressionBuilder.on()).apply {
+        body(this)
+        execute(TransactionManager.current())
+    }
+}
+
+fun <T : Table> T.mergeFrom(
+    selectQuery: QueryAlias,
+    on: SqlExpressionBuilder.() -> Op<Boolean>,
+    body: MergeSelectStatement.() -> Unit
+): MergeSelectStatement {
+    return MergeSelectStatement(this, selectQuery, SqlExpressionBuilder.on()).apply {
+        body(this)
+        execute(TransactionManager.current())
+    }
+}
+
 private fun FieldSet.selectBatched(
     batchSize: Int = 1000,
     whereOp: Op<Boolean>

@@ -2,6 +2,10 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.MergeBaseStatement
+import org.jetbrains.exposed.sql.statements.MergeBaseStatement.MergeWhenAction.DELETE
+import org.jetbrains.exposed.sql.statements.MergeBaseStatement.MergeWhenAction.INSERT
+import org.jetbrains.exposed.sql.statements.MergeBaseStatement.MergeWhenAction.UPDATE
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.DatabaseMetaData
 import java.util.*
@@ -305,6 +309,38 @@ internal object OracleFunctionProvider : FunctionProvider() {
         transaction.throwUnsupportedException(
             "EXPLAIN queries are not currently supported for Oracle. Please log a YouTrack feature extension request."
         )
+    }
+
+    override fun merge(dest: Table, source: Table, transaction: Transaction, whenBranches: List<MergeBaseStatement.WhenBranchData>, on: Op<Boolean>): String {
+        validateMergeCommandWhenBranches(whenBranches)
+        return super.merge(dest, source, transaction, whenBranches, on)
+    }
+
+    override fun mergeSelect(
+        dest: Table,
+        source: QueryAlias,
+        transaction: Transaction,
+        whenBranches: List<MergeBaseStatement.WhenBranchData>,
+        on: Op<Boolean>,
+        prepared: Boolean
+    ): String {
+        validateMergeCommandWhenBranches(whenBranches)
+        return super.mergeSelect(dest, source, transaction, whenBranches, on, prepared)
+    }
+}
+
+private fun validateMergeCommandWhenBranches(whenBranches: List<MergeBaseStatement.WhenBranchData>) {
+    if (whenBranches.count { it.action == INSERT } > 1) {
+        @Suppress("UseRequire")
+        throw IllegalArgumentException("Oracle SQL does not support multiple insert clauses")
+    }
+    if (whenBranches.count { it.action == UPDATE } > 1) {
+        @Suppress("UseRequire")
+        throw IllegalArgumentException("Oracle SQL does not support multiple update clauses")
+    }
+    if (whenBranches.count { it.action == DELETE } > 0) {
+        @Suppress("UseRequire")
+        throw IllegalArgumentException("Oracle SQL does not support delete clauses. You must use 'delete where' condition inside 'update' clause")
     }
 }
 

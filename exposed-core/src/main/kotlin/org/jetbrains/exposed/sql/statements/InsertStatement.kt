@@ -199,7 +199,7 @@ open class InsertStatement<Key : Any>(
         else -> transaction.connection.prepareStatement(sql, false)
     }
 
-    protected open var arguments: List<List<Pair<Column<*>, Any?>>>? = null
+    open var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
             val nullableColumns = table.columns.filter { it.columnType.nullable && !it.isDatabaseGenerated }
             val valuesAndDefaults = valuesAndDefaults() as MutableMap

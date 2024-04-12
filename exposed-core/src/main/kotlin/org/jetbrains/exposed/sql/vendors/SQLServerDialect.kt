@@ -2,6 +2,10 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.MergeBaseStatement
+import org.jetbrains.exposed.sql.statements.MergeBaseStatement.MergeWhenAction.DELETE
+import org.jetbrains.exposed.sql.statements.MergeBaseStatement.MergeWhenAction.INSERT
+import org.jetbrains.exposed.sql.statements.MergeBaseStatement.MergeWhenAction.UPDATE
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
@@ -13,6 +17,7 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
             "TINYINT"
         }
     }
+
     override fun integerAutoincType(): String = "INT IDENTITY(1,1)"
     override fun longAutoincType(): String = "BIGINT IDENTITY(1,1)"
     override fun binaryType(): String {
@@ -30,6 +35,7 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
         } else {
             "DATETIMEOFFSET"
         }
+
     override fun booleanType(): String = "BIT"
     override fun booleanToStatementString(bool: Boolean): String = if (bool) "1" else "0"
 
@@ -243,6 +249,38 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         transaction.throwUnsupportedException(
             "EXPLAIN queries are not currently supported for SQL Server. Please log a YouTrack feature extension request."
         )
+    }
+
+    override fun merge(dest: Table, source: Table, transaction: Transaction, whenBranches: List<MergeBaseStatement.WhenBranchData>, on: Op<Boolean>): String {
+        validateMergeCommandWhenBranches(whenBranches)
+        return super.merge(dest, source, transaction, whenBranches, on) + ";"
+    }
+
+    override fun mergeSelect(
+        dest: Table,
+        source: QueryAlias,
+        transaction: Transaction,
+        whenBranches: List<MergeBaseStatement.WhenBranchData>,
+        on: Op<Boolean>,
+        prepared: Boolean
+    ): String {
+        validateMergeCommandWhenBranches(whenBranches)
+        return super.mergeSelect(dest, source, transaction, whenBranches, on, prepared) + ";"
+    }
+}
+
+private fun validateMergeCommandWhenBranches(whenBranches: List<MergeBaseStatement.WhenBranchData>) {
+    if (whenBranches.count { it.action == INSERT } > 1) {
+        @Suppress("UseRequire")
+        throw IllegalArgumentException("SQLServer does not support multiple insert clauses")
+    }
+    if (whenBranches.count { it.action == UPDATE } > 1) {
+        @Suppress("UseRequire")
+        throw IllegalArgumentException("SQLServer does not support multiple update clauses")
+    }
+    if (whenBranches.count { it.action == DELETE } > 1) {
+        @Suppress("UseRequire")
+        throw IllegalArgumentException("SQLServer does not support delete clauses.")
     }
 }
 
