@@ -91,6 +91,10 @@ abstract class VendorDialect(
         return allSchemas.any { it == schema.identifier.inProperCase() }
     }
 
+    override fun sequenceExists(sequence: Sequence): Boolean {
+        return sequences().any { it == sequence.identifier.inProperCase() }
+    }
+
     override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
         TransactionManager.current().connection.metadata { columns(*tables) }
 
@@ -115,6 +119,9 @@ abstract class VendorDialect(
 
     override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> =
         TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
+
+    override fun sequences(): List<String> =
+        TransactionManager.current().db.metadata { sequences() }
 
     private val supportsSelectForUpdate: Boolean by lazy {
         TransactionManager.current().db.metadata { supportsSelectForUpdate }

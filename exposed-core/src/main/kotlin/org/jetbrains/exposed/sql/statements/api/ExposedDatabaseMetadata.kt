@@ -67,6 +67,9 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** Returns a map with the [PrimaryKeyMetadata] in each of the specified [tables]. */
     abstract fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?>
 
+    /** Returns a list of the names of all sequences in the database. */
+    abstract fun sequences(): List<String>
+
     /**
      * Returns a map with the [ForeignKeyConstraint] of all the defined columns in each of the specified [tables],
      * with the table name used as the key.
