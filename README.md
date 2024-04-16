@@ -1,31 +1,41 @@
 <div align="center">
-<img  align="center" src="./docs/logo.png" alt="Exposed" width="315" /></div>
+
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/logo-dark.png" width="315">
+    <img alt="Exposed logo" src="./docs/logo-light.png" width="315">
+  </picture>
+
+</div>
 <br><br>
 
+<div align="center">
+
 [![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
-[![Kotlinlang Slack Channel](https://img.shields.io/badge/slack-@kotlinlang/exposed-yellow.svg?logo=slack?style=flat)](https://kotlinlang.slack.com/archives/C0CG7E0A1)
+[![Slack Channel](https://img.shields.io/badge/chat-exposed-yellow.svg?logo=slack)](https://kotlinlang.slack.com/messages/exposed/)
 [![TC Build status](https://exposed.teamcity.com/app/rest/builds/buildType:id:Exposed_Build/statusIcon.svg)](https://exposed.teamcity.com/viewType.html?buildTypeId=Exposed_Build&guest=1)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.jetbrains.exposed/exposed-core)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
+</div>
+
 ## Welcome to **Exposed**, an ORM framework for [Kotlin](https://github.com/JetBrains/kotlin).
 
-Exposed is a lightweight SQL library on top of JDBC driver for Kotlin language.
+Exposed is a lightweight SQL library on top of a JDBC driver for the Kotlin language.
 Exposed has two flavors of database access: typesafe SQL wrapping DSL and lightweight Data Access Objects (DAO).
 
-With Exposed, you have two ways for database access: wrapping DSL and a lightweight DAO. Our official mascot is the cuttlefish, which is well-known for its outstanding mimicry ability that enables it to blend seamlessly into any environment.
-Similar to our mascot, Exposed can be used to mimic a variety of database engines and help you build applications without dependencies on any specific database engine and switch between them with very little or no changes.
+With Exposed, you have two options for database access: wrapping DSL and a lightweight DAO. Our official mascot is the cuttlefish, which is well-known for its outstanding mimicry ability that enables it to blend seamlessly into any environment.
+Similar to our mascot, Exposed can be used to mimic a variety of database engines, which helps you to build applications without dependencies on any specific database engine and to switch between them with very little or no changes.
 
 ## Supported Databases
 
 - H2 (versions 2.x; 1.x version is deprecated and will be removed in future releases)
-- ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
-- ![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
-- [Oracle](docs/ORACLE.md)
-- ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) (Also, PostgreSQL using
-  the [pgjdbc-ng](https://github.com/impossibl/pgjdbc-ng) JDBC driver)
-- [SQL Server](docs/SQLServer.md)
-- ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
+- [![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)](https://github.com/mariadb-corporation/mariadb-connector-j)
+- [![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)](https://github.com/mysql/mysql-connector-j)
+- [![Oracle](https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=white)](https://www.oracle.com/ca-en/database/technologies/appdev/jdbc-downloads.html)
+- [![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://jdbc.postgresql.org/)
+  (Also, PostgreSQL using the [pgjdbc-ng](https://impossibl.github.io/pgjdbc-ng/) JDBC driver)
+- [![MicrosoftSQLServer](https://img.shields.io/badge/Microsoft%20SQL%20Server-CC2927?style=for-the-badge&logo=microsoft%20sql%20server&logoColor=white)](https://github.com/microsoft/mssql-jdbc)
+- [![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)](https://github.com/xerial/sqlite-jdbc)
 
 ## Dependencies
 
@@ -186,7 +196,7 @@ For more information visit the links below:
 -   [Documentation](https://jetbrains.github.io/Exposed/home.html) with examples and docs
 -   [Migration Guide](https://jetbrains.github.io/Exposed/migration-guide.html)
 -   [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html) and any migration details
--   [Slack Channel](https://kotlinlang.slack.com/archives/C0CG7E0A1)
+-   [Slack Channel](https://kotlinlang.slack.com/messages/exposed/)
 -   [Issue Tracker](https://youtrack.jetbrains.com/issues/EXPOSED)
 <br><br>
 
@@ -196,7 +206,7 @@ Please note that we are moving away from GitHub Issues for reporting of bugs and
 
 ## Community
 
-Do you have questions? Feel free to [request an invitation](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up) for the [kotlinlang slack](https://kotlinlang.slack.com/) and join the project conversation at our [#exposed](https://kotlinlang.slack.com/archives/C0CG7E0A1) channel.
+Do you have questions? Feel free to [request an invitation](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up) for the [kotlinlang slack](https://kotlinlang.slack.com/) and join the project conversation at our [#exposed](https://kotlinlang.slack.com/messages/exposed/) channel.
 <br><br>
 
 ## Pull requests
@@ -208,6 +218,8 @@ We actively welcome your pull requests. However, linking your work to an existin
 -   If you've added code that should be tested, add tests and ensure the test suite passes.
 -   Make sure you address any lint warnings.
 -   If you make the existing code better, please let us know in your PR description.
+
+See the [contribution guidelines](https://jetbrains.github.io/Exposed/contributing.html) for more details.
 
 ## Examples
 
@@ -476,6 +488,6 @@ Generated SQL:
 ```
 
 ## Contributing
-Please see the [contribution guide](https://github.com/JetBrains/Exposed/blob/master/docs/CONTRIBUTING.md) before contributing.
+Please see the [contribution guide](https://jetbrains.github.io/Exposed/contributing.html) before contributing.
 
 By contributing to the Exposed project, you agree that your contributions will be licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
