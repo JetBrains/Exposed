@@ -1169,7 +1169,7 @@ class DDLTests : DatabaseTestsBase() {
             val adminBy = reference("adminBy", users).nullable()
         }
 
-        withTables(subscriptions) {
+        withTables(users, subscriptions) {
             val query = subscriptions.join(users, JoinType.INNER, additionalConstraint = { subscriptions.user eq users.id }).selectAll()
             assertEquals(0L, query.count())
         }
