@@ -243,7 +243,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
 
         val isAliasSupported = when (val dialect = transaction.db.dialect) {
-            is MysqlDialect -> dialect !is MariaDBDialect && dialect.isMysql8
+            is MysqlDialect -> dialect !is MariaDBDialect && transaction.db.isFullVersionCovered("8.0.19")
             else -> false // H2_MySQL mode also uses this function provider & requires older version
         }
 
@@ -269,6 +269,13 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
             }
             toString()
         }
+    }
+
+    /** Whether the major, minor, & patch version of the database is equal to or greater than the provided [version]. */
+    private fun Database.isFullVersionCovered(version: String): Boolean {
+        val fullVersion = metadata { databaseProductVersion }.split('.').map(String::toInt)
+        val otherVersion = version.split('.').map(String::toInt)
+        return fullVersion.zip(otherVersion).all { (full, other) -> full >= other }
     }
 }
 
