@@ -6,7 +6,7 @@ Infrastructure:
 * PostgreSQL driver 42.7.3
 * Detekt 1.23.6
 
-Breaking changes:
+[Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-49-0):
 * fix!: EXPOSED-269 Incompatible with sqlite-jdbc 3.45.0.0 by @joc-a in https://github.com/JetBrains/Exposed/pull/2030
 
 Features:
@@ -43,7 +43,7 @@ Breaking changes:
 * `nonNullValueToString()` in some date/time column types now uses more appropriate string formatters.
 * `anyFrom(array)` and `allFrom(array)` may require an additional argument if a matching column type cannot be resolved for the array contents.
 * `exposed-crypt` module now uses Spring Security Crypto 6.+, which requires Java 17 as a minimum version.
-* More details at [Breaking changes](BREAKING_CHANGES.md#0480)
+* More details at [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-48-0)
 
 Features:
 * feat: EXPOSED-248 Support array column type by @bog-walk in https://github.com/JetBrains/Exposed/pull/1986
@@ -87,7 +87,7 @@ Infrastructure:
 * Java Money Moneta 1.4.4
 
 Breaking changes:
-* [Breaking changes](BREAKING_CHANGES.md#0470)
+* [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-47-0)
 
 Features:
 * feat: Add `ALL` and `ANY` operators accepting array, subquery, or table parameters by @ShreckYe in https://github.com/JetBrains/Exposed/pull/1886
@@ -130,11 +130,11 @@ Infrastructure:
 
 Breaking changes:
 * chore!: EXPOSED-239 Set `preserveKeywordCasing` flag to true by default by @bog-walk in https://github.com/JetBrains/Exposed/pull/1948
-* More details at [Breaking changes](BREAKING_CHANGES.md#0460)
+* More details at [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-46-0)
 
 Features:
 * feat: EXPOSED-65 Design query DSL consistent with SQL language by @bog-walk in https://github.com/JetBrains/Exposed/pull/1916
-* More details in the [Migration guide](MIGRATION_GUIDE.md#migrating-from-0450-to-0460)
+* More details in the [Migration guide](https://jetbrains.github.io/Exposed/migration-guide.html)
 
 Bug fixes:
 * perf: EXPOSED-204 Performance problem with getConnection() by @bog-walk in https://github.com/JetBrains/Exposed/pull/1943
@@ -211,7 +211,7 @@ Breaking changes:
 * `spring-transaction` and `exposed-spring-boot-starter` modules now use Spring Framework 6.0 and Spring Boot 3.0, which require Java 17 as a minimum version.
 * A table that is created with a keyword identifier now logs a warning that the identifier's case may be lost when it is automatically quoted in generated SQL.
   `DatabaseConfig` now includes the property `preserveKeywordCasing`, which can be set to `true` to remove these warnings and to ensure that the identifier matches the exact case used.
-* More details at [Breaking changes](BREAKING_CHANGES.md#0440)
+* More details at [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-44-0)
 
 Features:
 * feat!: EXPOSED-109 Improve implementation of Spring transaction manager by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/1840
@@ -270,7 +270,7 @@ Bug fixes:
 * fix: Remove false warning log by @joc-a in https://github.com/JetBrains/Exposed/pull/1843
 
 Breaking changes:
-* [Breaking changes](BREAKING_CHANGES.md)
+* [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-43-0)
 
 # 0.42.1
 Infrastructure:
@@ -287,7 +287,7 @@ Deprecations:
 * deprecate: EXPOSED-84 Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/1771
 
 Breaking changes:
-* [Breaking changes](BREAKING_CHANGES.md)
+* [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-42-0)
 
 Features:
 * Add CHARINDEX function for sqlserver by @eukleshnin in https://github.com/JetBrains/Exposed/pull/1675
