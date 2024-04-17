@@ -779,6 +779,7 @@ class BlobColumnType(
         is ExposedBlob -> value
         is InputStream -> ExposedBlob(value)
         is ByteArray -> ExposedBlob(value)
+        is Blob -> ExposedBlob(value.binaryStream)
         else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
     }
 

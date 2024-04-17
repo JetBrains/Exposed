@@ -125,7 +125,7 @@ class ResultRow(
         fun create(rs: ResultSet, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             return ResultRow(fieldsIndex).apply {
                 fieldsIndex.forEach { (field, index) ->
-                    val columnType = columnTypeFromField(field)
+                    val columnType = (field as? ExpressionWithColumnType)?.columnType
                     val value = if (columnType != null) {
                         columnType.readObject(rs, index + 1)
                     } else {
@@ -134,12 +134,6 @@ class ResultRow(
                     data[index] = value
                 }
             }
-        }
-
-        private fun columnTypeFromField(field: Expression<*>): IColumnType<out Any?>? = when (field) {
-            is ExpressionWithColumnType -> field.columnType
-            is ExpressionAlias -> columnTypeFromField(field.delegate)
-            else -> null
         }
 
         /** Creates a [ResultRow] using the expressions and values provided by [data]. */
