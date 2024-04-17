@@ -243,7 +243,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
 
         val isAliasSupported = when (val dialect = transaction.db.dialect) {
-            is MysqlDialect -> dialect !is MariaDBDialect && dialect.isMysql8
+            is MysqlDialect -> dialect !is MariaDBDialect && dialect.fullVersion >= "8.0.19"
             else -> false // H2_MySQL mode also uses this function provider & requires older version
         }
 
@@ -279,6 +279,10 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     internal val isMysql8: Boolean by lazy {
         TransactionManager.current().db.isVersionCovers(BigDecimal("8.0"))
+    }
+
+    internal val fullVersion: String by lazy {
+        TransactionManager.current().db.metadata { databaseProductVersion }
     }
 
     override val supportsCreateSequence: Boolean = false
