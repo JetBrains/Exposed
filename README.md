@@ -194,6 +194,7 @@ Currently, Exposed is available for **maven/gradle builds**. Check the [Maven Ce
 For more information visit the links below:
 
 -   [Documentation](https://jetbrains.github.io/Exposed/home.html) with examples and docs
+-   [Contributing to Exposed](https://jetbrains.github.io/Exposed/contributing.html)
 -   [Migration Guide](https://jetbrains.github.io/Exposed/migration-guide.html)
 -   [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html) and any migration details
 -   [Slack Channel](https://kotlinlang.slack.com/messages/exposed/)
