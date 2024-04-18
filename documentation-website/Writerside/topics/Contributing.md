@@ -91,7 +91,8 @@ Test functions:
 There are multiple ways in which you can contribute to Exposed docs:
 
 - Create an issue in [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED).
-- Submit a pull request with proposed changes.
+- Submit a pull request containing your proposed changes. 
+Ensure that these modifications are applied directly within the `documentation-website` directory.
 
 ### Community Support
 
