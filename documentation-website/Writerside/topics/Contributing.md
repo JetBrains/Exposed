@@ -54,7 +54,8 @@ Contributions are made using Github [pull requests](https://help.github.com/en/a
 7. If the contribution requires updates to documentation (be it updating existing contents or creating new one), please
    file a new ticket on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED).
 8. Make sure any code contributed is covered by tests and no existing tests are broken. We use Docker containers to run tests.
-9. Finally, make sure to run the `apiCheck` Gradle task. If it's not successful, run the `apiDump` Gradle task. Further information can be
+9. Execute the `detekt` task in Gradle to perform code style validation. 
+10. Finally, make sure to run the `apiCheck` Gradle task. If it's not successful, run the `apiDump` Gradle task. Further information can be
    found [here](https://github.com/Kotlin/binary-compatibility-validator).
 
 #### Style Guides
@@ -67,6 +68,14 @@ A few things to remember:
 * Every new source file should have a copyright header.
 * Every public API (including functions, classes, objects and so on) should be documented,
   every parameter, property, return types, and exceptions should be described properly.
+
+Test functions:
+
+* Begin each test function name with the word `test`.
+* Employ camelCase for test function names, such as `testInsertEmojisWithInvalidLength`. 
+* Refrain from using names enclosed in backticks for test functions, because `KDocs` cannot reference function names that contain spaces.
+* In the definition of test functions, use a block body instead of an assignment operator. 
+  For example, do write `fun testMyTest() { withDb{} }`, and avoid writing `fun testMyTest() = withDb{}`.
 
 #### Commit messages
 
@@ -82,7 +91,8 @@ A few things to remember:
 There are multiple ways in which you can contribute to Exposed docs:
 
 - Create an issue in [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED).
-- Submit a pull request with proposed changes.
+- Submit a pull request containing your proposed changes. 
+Ensure that these modifications are applied directly within the `documentation-website` directory.
 
 ### Community Support
 
