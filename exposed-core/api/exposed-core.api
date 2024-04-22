@@ -73,10 +73,6 @@ public final class org/jetbrains/exposed/exceptions/DuplicateColumnException : j
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 }
 
-public final class org/jetbrains/exposed/exceptions/ExposedMigrationException : java/lang/RuntimeException {
-	public fun <init> (Ljava/lang/Exception;Ljava/lang/String;)V
-}
-
 public final class org/jetbrains/exposed/exceptions/ExposedSQLException : java/sql/SQLException {
 	public fun <init> (Ljava/lang/Throwable;Ljava/util/List;Lorg/jetbrains/exposed/sql/Transaction;)V
 	public final fun causedByQueries ()Ljava/util/List;
@@ -613,10 +609,6 @@ public final class org/jetbrains/exposed/sql/Database {
 	public final fun getVendor ()Ljava/lang/String;
 	public final fun getVersion ()Ljava/math/BigDecimal;
 	public final fun isVersionCovers (Ljava/math/BigDecimal;)Z
-	public final fun migrate ([Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V
-	public final fun migrate ([Lorg/jetbrains/exposed/sql/Table;Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V
-	public static synthetic fun migrate$default (Lorg/jetbrains/exposed/sql/Database;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)V
-	public static synthetic fun migrate$default (Lorg/jetbrains/exposed/sql/Database;[Lorg/jetbrains/exposed/sql/Table;Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)V
 	public final fun setUseNestedTransactions (Z)V
 	public fun toString ()Ljava/lang/String;
 }
@@ -2022,12 +2014,9 @@ public final class org/jetbrains/exposed/sql/SchemaUtils {
 	public static synthetic fun dropSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Schema;ZZILjava/lang/Object;)V
 	public final fun dropSequence ([Lorg/jetbrains/exposed/sql/Sequence;Z)V
 	public static synthetic fun dropSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZILjava/lang/Object;)V
-	public final fun generateMigrationScript ([Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)Ljava/io/File;
-	public final fun generateMigrationScript ([Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Z)Ljava/io/File;
-	public static synthetic fun generateMigrationScript$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
-	public static synthetic fun generateMigrationScript$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
 	public final fun listDatabases ()Ljava/util/List;
 	public final fun listTables ()Ljava/util/List;
+	public final fun logTimeSpent (Ljava/lang/String;ZLkotlin/jvm/functions/Function0;)Ljava/lang/Object;
 	public final fun setSchema (Lorg/jetbrains/exposed/sql/Schema;Z)V
 	public static synthetic fun setSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;Lorg/jetbrains/exposed/sql/Schema;ZILjava/lang/Object;)V
 	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;

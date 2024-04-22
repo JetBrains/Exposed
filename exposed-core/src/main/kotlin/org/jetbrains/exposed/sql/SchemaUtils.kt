@@ -4,13 +4,12 @@ import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.asLiteral
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import java.io.File
 import java.math.BigDecimal
 
 /** Utility functions that assist with creating, altering, and dropping database schema objects. */
 @Suppress("TooManyFunctions", "LargeClass")
 object SchemaUtils {
-    internal inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
+    inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
         return if (withLogs) {
             val start = System.currentTimeMillis()
             val answer = block()
@@ -510,11 +509,11 @@ object SchemaUtils {
      * Returns the SQL statements that need to be executed to make the existing database schema compatible with
      * the table objects defined using Exposed.
      *
-     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ADD COLUMN` syntax completely,
-     * which restricts the behavior when adding some missing columns. Please check the documentation.
-     *
      * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
+     *
+     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ADD COLUMN` syntax completely,
+     * which restricts the behavior when adding some missing columns. Please check the documentation.
      */
     fun statementsRequiredToActualizeScheme(vararg tables: Table, withLogs: Boolean = true): List<String> {
         val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() }
@@ -833,66 +832,6 @@ object SchemaUtils {
     }
 
     /**
-     * @param tables The tables whose changes will be used to generate the migration script.
-     * @param newVersion The version to migrate to.
-     * @param title The title of the migration.
-     * @param scriptDirectory The directory in which to create the migration script.
-     * @param withLogs By default, a description for each intermediate step, as well as its execution time, is logged at
-     * the INFO level. This can be disabled by setting [withLogs] to `false`.
-     *
-     * @return The generated migration script.
-     *
-     * @throws IllegalArgumentException if no argument is passed for the [tables] parameter.
-     *
-     * This function simply generates the migration script without applying the migration. The purpose of it is to show
-     * the user what the migration script will look like before applying the migration.
-     * This function uses the Flyway naming convention when generating the migration script.
-     * If a migration script with the same name already exists, its content will be overwritten.
-     */
-    @ExperimentalDatabaseMigrationApi
-    fun generateMigrationScript(vararg tables: Table, newVersion: String, title: String, scriptDirectory: String, withLogs: Boolean = true): File {
-        return generateMigrationScript(*tables, scriptName = "V${newVersion}__$title", scriptDirectory = scriptDirectory, withLogs = withLogs)
-    }
-
-    /**
-     * @param tables The tables whose changes will be used to generate the migration script.
-     * @param scriptName The name to be used for the generated migration script.
-     * @param scriptDirectory The directory (path from repository root) in which to create the migration script.
-     * @param withLogs By default, a description for each intermediate step, as well as its execution time, is logged at
-     * the INFO level. This can be disabled by setting [withLogs] to `false`.
-     *
-     * @return The generated migration script.
-     *
-     * @throws IllegalArgumentException if no argument is passed for the [tables] parameter.
-     *
-     * This function simply generates the migration script without applying the migration. Its purpose is to show what
-     * the migration script will look like before applying the migration.
-     * If a migration script with the same name already exists, its content will be overwritten.
-     */
-    @ExperimentalDatabaseMigrationApi
-    fun generateMigrationScript(vararg tables: Table, scriptDirectory: String, scriptName: String, withLogs: Boolean = true): File {
-        require(tables.isNotEmpty()) { "Tables argument must not be empty" }
-
-        val allStatements = statementsRequiredForDatabaseMigration(*tables, withLogs = withLogs)
-
-        val migrationScript = File("$scriptDirectory/$scriptName.sql")
-        migrationScript.createNewFile()
-
-        // Clear existing content
-        migrationScript.writeText("")
-
-        // Append statements
-        allStatements.forEach { statement ->
-            // Add semicolon only if it's not already there
-            val conditionalSemicolon = if (statement.last() == ';') "" else ";"
-
-            migrationScript.appendText("$statement$conditionalSemicolon\n")
-        }
-
-        return migrationScript
-    }
-
-    /**
      * Returns the SQL statements that need to be executed to make the existing database schema compatible with
      * the table objects defined using Exposed. Unlike [statementsRequiredToActualizeScheme], DROP/DELETE statements are
      * included.
@@ -903,6 +842,7 @@ object SchemaUtils {
      * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
      */
+    @ExperimentalDatabaseMigrationApi
     fun statementsRequiredForDatabaseMigration(vararg tables: Table, withLogs: Boolean = true): List<String> {
         val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() }
         val createStatements = logTimeSpent("Preparing create tables statements", withLogs) {

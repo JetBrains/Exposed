@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
+import MigrationUtils
+import MigrationUtils.migrate
 import com.impossibl.postgres.jdbc.PGDataSource
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi
@@ -18,6 +20,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
 import org.junit.Assume
 import org.junit.Test
+import org.sqlite.SQLiteDataSource
 import java.io.File
 import kotlin.properties.Delegates
 import kotlin.test.assertNull
@@ -44,7 +47,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             try {
                 SchemaUtils.create(noPKTable)
 
-                val script = SchemaUtils.generateMigrationScript(singlePKTable, scriptDirectory = scriptDirectory, scriptName = scriptName)
+                val script = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = scriptDirectory, scriptName = scriptName)
                 assertTrue(script.exists())
                 assertEquals("src/test/resources/$scriptName.sql", script.path)
 
@@ -90,7 +93,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 }
 
                 // Generate script with the same name of initial script
-                val newScript = SchemaUtils.generateMigrationScript(singlePKTable, scriptDirectory = directory, scriptName = name)
+                val newScript = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = directory, scriptName = name)
 
                 val expectedStatements: List<String> = SchemaUtils.statementsRequiredForDatabaseMigration(singlePKTable)
                 assertEquals(1, expectedStatements.size)
@@ -110,7 +113,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     fun testNoTablesPassedWhenGeneratingMigrationScript() {
         withDb {
             expectException<IllegalArgumentException> {
-                SchemaUtils.generateMigrationScript(scriptDirectory = "src/test/resources", scriptName = "V2__Test")
+                MigrationUtils.generateMigrationScript(scriptDirectory = "src/test/resources", scriptName = "V2__Test")
             }
         }
     }
@@ -272,13 +275,13 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         val migrationTitle = "AddIndex"
         val migrationScriptDirectory = "src/test/resources"
 
-        withDb(excludeSettings = listOf(TestDB.POSTGRESQLNG)) {
+        withDb(excludeSettings = listOf(TestDB.POSTGRESQLNG, TestDB.SQLITE)) {
             if (!isOldMySql()) {
                 try {
                     SchemaUtils.create(testTableWithoutIndex)
                     assertTrue(testTableWithoutIndex.exists())
 
-                    val database = it.db!!
+                    val database = this.db
                     database.migrate(
                         testTableWithIndex,
                         user = it.user,
@@ -323,9 +326,9 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         val migrationScriptDirectory = "src/test/resources"
 
         val dataSource = PGDataSource().apply {
-            url = "jdbc:pgsql://127.0.0.1:3004/postgres?lc_messages=en_US.UTF-8"
-            user = "root"
-            password = "Exposed_password_1!"
+            url = TestDB.POSTGRESQLNG.connection()
+            user = TestDB.POSTGRESQLNG.user
+            password = TestDB.POSTGRESQLNG.pass
         }
 
         val database = Database.connect(dataSource)
@@ -350,6 +353,58 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             } finally {
                 SchemaUtils.drop(testTableWithoutIndex)
                 SchemaUtils.drop(schemaHistoryTable)
+                assertTrue(File("$migrationScriptDirectory/V2.0__$migrationTitle.sql").delete())
+            }
+        }
+    }
+
+    @Test
+    fun testSQLiteMigration() {
+        Assume.assumeTrue(TestDB.SQLITE in TestDB.enabledDialects())
+
+        val testTableWithoutIndex = object : Table("tester") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val testTableWithIndex = object : Table("tester") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+            val byName = index("test_table_by_name", false, name)
+        }
+
+        val migrationTitle = "AddIndex"
+        val migrationScriptDirectory = "src/test/resources"
+
+        val dataSource = SQLiteDataSource().apply {
+            url = "jdbc:sqlite:file:testDb.db?mode=memory"
+        }
+
+        val database = Database.connect(
+            dataSource
+        )
+
+        transaction(database) {
+            try {
+                SchemaUtils.create(testTableWithoutIndex)
+                assertTrue(testTableWithoutIndex.exists())
+
+                database.migrate(
+                    testTableWithIndex,
+                    dataSource = dataSource,
+                    oldVersion = "1",
+                    newVersion = "2.0",
+                    migrationTitle = migrationTitle,
+                    migrationScriptDirectory = migrationScriptDirectory
+                )
+
+                assertEquals(1, currentDialectTest.existingIndices(testTableWithoutIndex).size)
+            } finally {
+                SchemaUtils.drop(testTableWithoutIndex)
                 assertTrue(File("$migrationScriptDirectory/V2.0__$migrationTitle.sql").delete())
             }
         }
