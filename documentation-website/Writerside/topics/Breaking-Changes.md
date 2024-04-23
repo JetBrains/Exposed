@@ -1,5 +1,10 @@
 # Breaking Changes
 
+## 0.50.0
+
+`IColumnType` and `ColumnType` now expect a type argument. Check this
+[pull request](https://github.com/JetBrains/Exposed/pull/2027) for details regarding this change.
+
 ## 0.49.0
 
 For SQLite database, Exposed now requires bumping the SQLite JDBC driver version to a minimum of 3.45.0.0.
