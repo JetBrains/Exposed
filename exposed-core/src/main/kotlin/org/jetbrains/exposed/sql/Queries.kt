@@ -609,9 +609,9 @@ fun Table.exists(): Boolean = currentDialect.tableExists(this)
 fun <D : Table, S : Table> D.mergeFrom(
     source: S,
     on: SqlExpressionBuilder.() -> Op<Boolean>,
-    body: MergeStatement.() -> Unit
-): MergeStatement {
-    return MergeStatement(this, source, on = SqlExpressionBuilder.on()).apply {
+    body: MergeTableStatement.() -> Unit
+): MergeTableStatement {
+    return MergeTableStatement(this, source, on = SqlExpressionBuilder.on()).apply {
         body(this)
         execute(TransactionManager.current())
     }

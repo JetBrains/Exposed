@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 
-open class MergeStatement(
+open class MergeTableStatement(
     dest: Table,
     private val source: Table,
     private val on: Op<Boolean>
