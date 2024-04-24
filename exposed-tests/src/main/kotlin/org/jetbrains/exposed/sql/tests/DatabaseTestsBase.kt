@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests
 
+import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Key
 import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -61,6 +62,17 @@ abstract class DatabaseTestsBase {
     lateinit var testName: String
 
     fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
+        withDatabaseInstance(dbSettings) { database ->
+            transaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                maxAttempts = 1
+                registerInterceptor(CurrentTestDBInterceptor)
+                currentTestDB = dbSettings
+                statement(dbSettings)
+            }
+        }
+    }
+
+    fun withDatabaseInstance(dbSettings: TestDB, statement: (Database) -> Unit) {
         Assume.assumeTrue(dialect == dbSettings)
 
         if (dbSettings !in registeredOnShutdown) {
@@ -76,12 +88,8 @@ abstract class DatabaseTestsBase {
         }
 
         val database = dbSettings.db!!
-        transaction(database.transactionManager.defaultIsolationLevel, db = database) {
-            maxAttempts = 1
-            registerInterceptor(CurrentTestDBInterceptor)
-            currentTestDB = dbSettings
-            statement(dbSettings)
-        }
+
+        statement(database)
     }
 
     fun withDb(db: List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
