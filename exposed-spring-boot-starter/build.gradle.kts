@@ -17,7 +17,7 @@ dependencies {
     api(project(":exposed-core"))
     api(project(":exposed-dao"))
     api(project(":spring-transaction"))
-    api(libs.spring.boot.starter.data.jdbc)
+    api(libs.spring.boot.starter.jdbc)
     api(libs.spring.boot.autoconfigure)
     compileOnly(libs.spring.boot.configuration.processor)
     testImplementation(libs.spring.boot.starter.test)
