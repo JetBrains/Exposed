@@ -10,7 +10,6 @@ import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -20,15 +19,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Assume
 import org.junit.Test
 import org.postgresql.util.PGobject
 import java.util.*
-import kotlin.random.Random
-import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
 import kotlin.test.expect
 
@@ -597,124 +593,6 @@ class DDLTests : DatabaseTestsBase() {
             repeat(3) { i ->
                 val actualStatement = SchemaUtils.createIndex(tester.indices[i])
                 assertEquals(expectedStatements[i], actualStatement)
-            }
-        }
-    }
-
-    @Test
-    fun testBlob() {
-        val t = object : Table("t1") {
-            val id = integer("id").autoIncrement()
-            val b = blob("blob")
-
-            override val primaryKey = PrimaryKey(id)
-        }
-
-        withTables(t) {
-            val shortBytes = "Hello there!".toByteArray()
-            val longBytes = Random.nextBytes(1024)
-            val shortBlob = ExposedBlob(shortBytes)
-            val longBlob = ExposedBlob(longBytes)
-
-            val id1 = t.insert {
-                it[t.b] = shortBlob
-            } get (t.id)
-
-            val id2 = t.insert {
-                it[t.b] = longBlob
-            } get (t.id)
-
-            val id3 = t.insert {
-                it[t.b] = blobParam(ExposedBlob(shortBytes))
-            } get (t.id)
-
-            val readOn1 = t.selectAll().where { t.id eq id1 }.first()[t.b]
-            val text1 = String(readOn1.bytes)
-            val text2 = readOn1.inputStream.bufferedReader().readText()
-
-            assertEquals("Hello there!", text1)
-            assertEquals("Hello there!", text2)
-
-            val readOn2 = t.selectAll().where { t.id eq id2 }.first()[t.b]
-            val bytes1 = readOn2.bytes
-            val bytes2 = readOn2.inputStream.readBytes()
-
-            assertTrue(longBytes.contentEquals(bytes1))
-            assertTrue(longBytes.contentEquals(bytes2))
-
-            val bytes3 = t.selectAll().where { t.id eq id3 }.first()[t.b].inputStream.readBytes()
-            assertTrue(shortBytes.contentEquals(bytes3))
-        }
-    }
-
-    @Test
-    fun testBlobDefault() {
-        val defaultBlobStr = "test"
-        val defaultBlob = ExposedBlob(defaultBlobStr.encodeToByteArray())
-
-        val testTable = object : Table("TestTable") {
-            val number = integer("number")
-            val blobWithDefault = blob("blobWithDefault")
-                .default(defaultBlob)
-        }
-
-        withDb { testDb ->
-            when (testDb) {
-                TestDB.MYSQL -> {
-                    expectException<ExposedSQLException> {
-                        SchemaUtils.create(testTable)
-                    }
-                }
-                else -> {
-                    SchemaUtils.create(testTable)
-
-                    testTable.insert {
-                        it[number] = 1
-                    }
-                    assertEquals(defaultBlobStr, String(testTable.selectAll().first()[testTable.blobWithDefault].bytes))
-
-                    SchemaUtils.drop(testTable)
-                }
-            }
-        }
-    }
-
-    @Test
-    fun testBlobAsOid() {
-        val defaultBytes = "test".toByteArray()
-        val defaultBlob = ExposedBlob(defaultBytes)
-        val tester = object : Table("blob_tester") {
-            val blobCol = blob("blob_col", useObjectIdentifier = true).default(defaultBlob)
-        }
-
-        withDb {
-            if (currentDialectTest !is PostgreSQLDialect) {
-                expectException<IllegalStateException> {
-                    SchemaUtils.create(tester)
-                }
-            } else {
-                assertEquals("oid", tester.blobCol.descriptionDdl().split(" ")[1])
-                SchemaUtils.create(tester)
-
-                tester.insert {}
-
-                val result1 = tester.selectAll().single()[tester.blobCol]
-                assertContentEquals(defaultBytes, result1.bytes)
-
-                tester.insert {
-                    defaultBlob.inputStream.reset()
-                    it[blobCol] = defaultBlob
-                }
-                tester.insert {
-                    defaultBlob.inputStream.reset()
-                    it[blobCol] = blobParam(defaultBlob, useObjectIdentifier = true)
-                }
-
-                val result2 = tester.selectAll()
-                assertEquals(3, result2.count())
-                assertTrue(result2.all { it[tester.blobCol].bytes.contentEquals(defaultBytes) })
-
-                SchemaUtils.drop(tester)
             }
         }
     }
