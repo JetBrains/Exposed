@@ -66,12 +66,6 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
     override fun jsonType(): String = "VARCHAR2(4000)"
 
-    override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> && (e.columnType as? IDateColumnType)?.hasTimePart == false -> "DATE ${super.processForDefaultValue(e)}"
-        e is LiteralOp<*> && e.columnType is IDateColumnType -> "TIMESTAMP ${super.processForDefaultValue(e)}"
-        else -> super.processForDefaultValue(e)
-    }
-
     override fun hexToDb(hexString: String): String = "HEXTORAW('$hexString')"
 }
 

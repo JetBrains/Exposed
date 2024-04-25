@@ -66,12 +66,18 @@ class DateColumnType(val time: Boolean) : ColumnType<DateTime>(), IDateColumnTyp
     override fun nonNullValueToString(value: DateTime): String {
         return if (time) {
             when {
+                currentDialect is OracleDialect ->
+                    "TO_TIMESTAMP('${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value.toDateTime(DateTimeZone.getDefault()))}', 'YYYY-MM-DD HH24:MI:SS.FF3')"
                 (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == false ->
                     "'${MYSQL_DATE_TIME_STRING_FORMATTER.print(value.toDateTime(DateTimeZone.getDefault()))}'"
                 else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value.toDateTime(DateTimeZone.getDefault()))}'"
             }
         } else {
-            "'${DEFAULT_DATE_STRING_FORMATTER.print(value)}'"
+            val formatted = DEFAULT_DATE_STRING_FORMATTER.print(value)
+            if (currentDialect is OracleDialect) {
+                return "TO_DATE('$formatted', 'YYYY-MM-DD')"
+            }
+            return "'$formatted'"
         }
     }
 

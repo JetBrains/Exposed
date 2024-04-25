@@ -127,7 +127,14 @@ class JavaLocalDateColumnType : ColumnType<LocalDate>(), IDateColumnType {
 
     override fun nonNullValueToString(value: LocalDate): String {
         val instant = Instant.from(value.atStartOfDay(ZoneId.systemDefault()))
-        return "'${DEFAULT_DATE_STRING_FORMATTER.format(instant)}'"
+        val formatted = DEFAULT_DATE_STRING_FORMATTER.format(instant)
+        if (currentDialect is OracleDialect) {
+            // Date literal in Oracle DB must match NLS_DATE_FORMAT parameter.
+            // That parameter can be changed on DB level.
+            // But format can be also specified per literal with TO_DATE function
+            return "TO_DATE('$formatted', 'YYYY-MM-DD')"
+        }
+        return "'$formatted'"
     }
 
     override fun valueFromDB(value: Any): LocalDate? = when (value) {
@@ -173,7 +180,8 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
         val dialect = currentDialect
         return when {
             dialect is SQLiteDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-            dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            dialect is OracleDialect ->
+                "TO_TIMESTAMP('${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}', 'YYYY-MM-DD HH24:MI:SS.FF3')"
             dialect is MysqlDialect -> {
                 val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER else MYSQL_DATE_TIME_STRING_FORMATTER
                 "'${formatter.format(instant)}'"
@@ -241,13 +249,14 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
     override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
 
     override fun nonNullValueToString(value: LocalTime): String {
-        val dialect = currentDialect
-        val formatter = if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-            ORACLE_TIME_STRING_FORMATTER
-        } else {
-            DEFAULT_TIME_STRING_FORMATTER
+        if (currentDialect is OracleDialect) {
+            return "TO_TIMESTAMP('${ORACLE_TIME_STRING_FORMATTER.format(value)}', 'YYYY-MM-DD HH24:MI:SS')"
         }
-        return "'${formatter.format(value)}'"
+        if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            return "'${ORACLE_TIME_STRING_FORMATTER.format(value)}'"
+        }
+
+        return "'${DEFAULT_TIME_STRING_FORMATTER.format(value)}'"
     }
 
     override fun valueFromDB(value: Any): LocalTime = when (value) {
@@ -295,8 +304,12 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     override fun nonNullValueToString(value: Instant): String {
         val dialect = currentDialect
         return when {
-            dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+            dialect is OracleDialect ->
+                "TO_TIMESTAMP('${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value)}', 'YYYY-MM-DD HH24:MI:SS.FF3')"
+
+            dialect is SQLiteDialect ->
                 "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value)}'"
+
             dialect is MysqlDialect -> {
                 val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER else MYSQL_DATE_TIME_STRING_FORMATTER
                 "'${formatter.format(value)}'"
@@ -350,7 +363,7 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
     override fun nonNullValueToString(value: OffsetDateTime): String = when (currentDialect) {
         is SQLiteDialect -> "'${value.format(SQLITE_OFFSET_DATE_TIME_FORMATTER)}'"
         is MysqlDialect -> "'${value.format(MYSQL_OFFSET_DATE_TIME_FORMATTER)}'"
-        is OracleDialect -> "'${value.format(ORACLE_OFFSET_DATE_TIME_FORMATTER)}'"
+        is OracleDialect -> "TO_TIMESTAMP_TZ('${value.format(ORACLE_OFFSET_DATE_TIME_FORMATTER)}', 'YYYY-MM-DD HH24:MI:SS.FF6 TZH:TZM')"
         else -> "'${value.format(DEFAULT_OFFSET_DATE_TIME_FORMATTER)}'"
     }
 
