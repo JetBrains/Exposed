@@ -25,7 +25,6 @@ import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Assume
 import org.junit.Test
-import org.postgresql.util.PGobject
 import java.util.*
 import kotlin.random.Random
 import kotlin.test.assertContentEquals
@@ -1121,19 +1120,6 @@ class DDLTests : DatabaseTestsBase() {
                     testColumn.isNotNull() neq Op.TRUE
                 }
             }
-        }
-    }
-
-    internal enum class Foo {
-        Bar, Baz;
-
-        override fun toString(): String = "Foo Enum ToString: $name"
-    }
-
-    class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
-        init {
-            value = enumValue?.name
-            type = enumTypeName
         }
     }
 
