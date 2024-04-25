@@ -51,32 +51,27 @@ differences, if they exist, for example:
 Some of the databases (e.g. MySQL, PostgreSQL, H2) support explicit ENUM types. Because keeping such columns in sync with 
 Kotlin enumerations using only JDBC metadata could be a huge challenge, Exposed doesn't provide a possibility to manage 
 such columns in an automatic way, but that doesn't mean that you can't use such column types.
-You have two options to work with ENUM database types:
-1. Use existing ENUM column from your tables
-2. Create column from Exposed by providing raw definition SQL
-   In both cases, you should use `customEnumeration` function (available since version 0.10.3)
 
-As a jdbc-driver can provide/expect specific classes for Enum type, you must provide from/to transformation functions for 
+You have two options to work with ENUM database types and you should use `customEnumeration()` (available since version 0.10.3) in both cases:
+1. Use an existing ENUM column from your table. In this case, the `sql` parameter in `customEnumeration()` can be left as `null`.
+2. Create a new ENUM column using Exposed by providing the raw definition SQL to the `sql` parameter in `customEnumeration()`.
+
+As a JDBC driver can provide/expect specific classes for ENUM types, you must also provide from/to transformation functions for 
 them when defining a `customEnumeration`.
 
-For such enum `private enum class Foo { Bar, Baz }`, you can use the provided code for your database:
+For a class like `enum class Foo { BAR, BAZ }`, you can use the provided code below for your specific database:
 
-**H2**
-```Kotlin
-val existingEnumColumn = customEnumeration("enumColumn", { Foo.values()[it as Int] }, { it.name })
-val newEnumColumn = customEnumeration("enumColumn", "ENUM('Bar', 'Baz')", { Foo.values()[it as Int] }, { it.name })
-```
-
-**MySQL**
+**MySQL, H2**
 ```Kotlin
 val existingEnumColumn = customEnumeration("enumColumn", { value -> Foo.valueOf(value as String) }, { it.name })
-val newEnumColumn = customEnumeration("enumColumn", "ENUM('Bar', 'Baz')", { value -> Foo.valueOf(value as String) }, { it.name })
+val newEnumColumn = customEnumeration("enumColumn", "ENUM('BAR', 'BAZ')", { value -> Foo.valueOf(value as String) }, { it.name })
 ```
 
 **PostgreSQL**
 
 PostgreSQL requires that ENUM is defined as a separate type, so you have to create it before creating your table. 
-Also, PostgreSQL JDBC driver returns PGobject instances for such values. The full working sample is provided below:
+Also, the PostgreSQL JDBC driver returns `PGobject` instances for such values, so a `PGobject` with its type manually set to the ENUM type needs to be used for the `toDb` parameter.
+The full working sample is provided below:
 ```Kotlin
 class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
     init {
@@ -86,11 +81,11 @@ class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
 }
 
 object EnumTable : Table() {
-    val enumColumn = customEnumeration("enumColumn", "FooEnum", {value -> Foo.valueOf(value as String)}, { PGEnum("FooEnum", it) })
+    val enumColumn = customEnumeration("enumColumn", "FooEnum", { value -> Foo.valueOf(value as String) }, { PGEnum("FooEnum", it) })
 }
 
 transaction {
-   exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
+   exec("CREATE TYPE FooEnum AS ENUM ('BAR', 'BAZ');")
    SchemaUtils.create(EnumTable)
 }
 ```
