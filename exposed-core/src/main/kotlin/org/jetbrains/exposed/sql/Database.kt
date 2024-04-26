@@ -197,16 +197,25 @@ class Database private constructor(
         }
 
         /**
-         * Creates a [Database] instance.
+         * JDBC driver implementations of `ConnectionPoolDataSource` are not actual connection pools, but rather a means
+         * of obtaining the physical connections to then be used in a connection pool. It is a known issue, with no plans
+         * to be fixed, that `SQLiteConnectionPoolDataSource`, for example, creates a new connection each time instead
+         * of retrieving a pooled connection. Other implementations, like `PGConnectionPoolDataSource`, suggest that a
+         * `DataSource` or a dedicated third-party connection pool library should be used instead.
          *
-         * **Note:** This function does not immediately instantiate an actual connection to a database,
-         * but instead provides the details necessary to do so whenever a connection is required by a transaction.
+         * Please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-354/Deprecate-Database.connectPool-with-ConnectionPoolDataSource)
+         * with a use-case if your driver implementation requires that this function remain part of the API.
          *
-         * @param datasource The [ConnectionPoolDataSource] object to be used as a means of getting a pooled connection.
-         * @param setupConnection Any setup that should be applied to each new connection.
-         * @param databaseConfig Configuration parameters for this [Database] instance.
-         * @param manager The [TransactionManager] responsible for new transactions that use this [Database] instance.
+         * [SQLiteConnectionPoolDataSource issue #1011](https://github.com/xerial/sqlite-jdbc/issues/1011)
+         *
+         * [PGConnectionPoolDataSource source code](https://github.com/pgjdbc/pgjdbc/blob/master/pgjdbc/src/main/java/org/postgresql/ds/PGConnectionPoolDataSource.java)
+         *
+         * [MysqlConnectionPoolDataSource source code](https://github.com/spullara/mysql-connector-java/blob/master/src/main/java/com/mysql/jdbc/jdbc2/optional/MysqlConnectionPoolDataSource.java)
          */
+        @Deprecated(
+            message = "Use Database.connect() with a connection pool DataSource instead. This may be removed in future releases.",
+            level = DeprecationLevel.WARNING
+        )
         fun connectPool(
             datasource: ConnectionPoolDataSource,
             setupConnection: (Connection) -> Unit = {},
