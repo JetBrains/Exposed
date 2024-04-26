@@ -3,11 +3,13 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
+import org.jetbrains.exposed.sql.statements.ReturningStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 
 class ReturningTests : DatabaseTestsBase() {
     private val returningSupportedDb = TestDB.postgreSQLRelatedDB.toSet() + TestDB.SQLITE
@@ -79,6 +81,19 @@ class ReturningTests : DatabaseTestsBase() {
             assertEquals("B", result3[Items.name])
 
             assertEquals(1, Items.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testReturningWithNoResults() {
+        withTables(TestDB.enabledDialects() - returningSupportedDb, Items) {
+            // statement not executed if not iterated over
+            val stmt = Items.insertReturning {
+                it[name] = "A"
+                it[price] = 99.0
+            }
+            assertIs<ReturningStatement>(stmt)
+            assertEquals(0, Items.selectAll().count())
         }
     }
 }

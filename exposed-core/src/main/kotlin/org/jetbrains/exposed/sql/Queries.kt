@@ -385,15 +385,17 @@ fun <T : Table> T.insertIgnore(
  * Represents the SQL statement that inserts new rows into a table and returns specified data from the inserted rows.
  *
  * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
- * @return A list of [ResultRow]s containing the specified [returning] expressions mapped to their resulting data.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testInsertReturning
  */
 fun <T : Table> T.insertReturning(
     returning: List<Expression<*>> = columns,
     body: T.(InsertStatement<Number>) -> Unit
-): List<ResultRow> {
+): ReturningStatement {
     val insert = InsertStatement<Number>(this)
     body(insert)
-    return ReturningStatement(this, returning, insert).execute(TransactionManager.current()) ?: emptyList()
+    return ReturningStatement(this, returning, insert)
 }
 
 /**
@@ -461,7 +463,9 @@ fun <T : Table> T.upsert(
  * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found.
- * @return A list of [ResultRow]s containing the specified [returning] expressions mapped to their resulting data.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpsertReturning
  */
 fun <T : Table> T.upsertReturning(
     vararg keys: Column<*>,
@@ -470,10 +474,10 @@ fun <T : Table> T.upsertReturning(
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
-): List<ResultRow> {
+): ReturningStatement {
     val update = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() })
     body(update)
-    return ReturningStatement(this, returning, update).execute(TransactionManager.current()) ?: emptyList()
+    return ReturningStatement(this, returning, update)
 }
 
 /**
