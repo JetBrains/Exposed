@@ -249,13 +249,10 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
     override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
 
     override fun nonNullValueToString(value: LocalTime): String {
-        if (currentDialect is OracleDialect) {
-            return "TO_TIMESTAMP('${ORACLE_TIME_STRING_FORMATTER.format(value)}', 'YYYY-MM-DD HH24:MI:SS')"
+        val dialect = currentDialect
+        if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            return "TIMESTAMP '${ORACLE_TIME_STRING_FORMATTER.format(value)}'"
         }
-        if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-            return "'${ORACLE_TIME_STRING_FORMATTER.format(value)}'"
-        }
-
         return "'${DEFAULT_TIME_STRING_FORMATTER.format(value)}'"
     }
 
