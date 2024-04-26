@@ -320,6 +320,18 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun StringBuilder.appendOptionsToExplain(options: String) { append("($options) ") }
+
+    override fun returning(
+        mainSql: String,
+        returning: List<Expression<*>>,
+        transaction: Transaction
+    ): String {
+        return with(QueryBuilder(true)) {
+            +"$mainSql RETURNING "
+            returning.appendTo { +it }
+            toString()
+        }
+    }
 }
 
 /**

@@ -743,4 +743,23 @@ abstract class FunctionProvider {
 
     /** Appends optional parameters to an EXPLAIN query. */
     protected open fun StringBuilder.appendOptionsToExplain(options: String) { append("$options ") }
+
+    /**
+     * Returns the SQL command that performs an insert, update, or delete, and also returns data from any modified rows.
+     *
+     * **Note:** This operation is not supported by all vendors, please check the documentation.
+     *
+     * @param mainSql SQL string representing the underlying statement before appending a RETURNING clause.
+     * @param returning Columns and expressions to include in the returned result set.
+     * @param transaction Transaction where the operation is executed.
+     */
+    open fun returning(
+        mainSql: String,
+        returning: List<Expression<*>>,
+        transaction: Transaction
+    ): String {
+        transaction.throwUnsupportedException(
+            "There's no generic SQL for a command with a RETURNING clause. There must be a vendor specific implementation."
+        )
+    }
 }

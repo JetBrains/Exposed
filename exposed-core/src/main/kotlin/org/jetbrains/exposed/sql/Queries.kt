@@ -382,6 +382,21 @@ fun <T : Table> T.insertIgnore(
 ): Int? = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
 
 /**
+ * Represents the SQL statement that inserts new rows into a table and returns specified data from the inserted rows.
+ *
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @return A list of [ResultRow]s containing the specified [returning] expressions mapped to their resulting data.
+ */
+fun <T : Table> T.insertReturning(
+    returning: List<Expression<*>> = columns,
+    body: T.(InsertStatement<Number>) -> Unit
+): List<ResultRow> {
+    val insert = InsertStatement<Number>(this)
+    body(insert)
+    return ReturningStatement(this, returning, insert).execute(TransactionManager.current()) ?: emptyList()
+}
+
+/**
  * Represents the SQL statement that updates rows of a table.
  *
  * @param where Condition that determines which rows to update.
@@ -432,6 +447,33 @@ fun <T : Table> T.upsert(
 ) = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() }).apply {
     body(this)
     execute(TransactionManager.current())
+}
+
+/**
+ * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would
+ * violate a unique constraint, and also returns specified data from the modified rows.
+ *
+ * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are
+ * provided, primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param where Condition that determines which rows to update, if a unique violation is found.
+ * @return A list of [ResultRow]s containing the specified [returning] expressions mapped to their resulting data.
+ */
+fun <T : Table> T.upsertReturning(
+    vararg keys: Column<*>,
+    returning: List<Expression<*>> = columns,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdateExclude: List<Column<*>>? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: T.(UpsertStatement<Long>) -> Unit
+): List<ResultRow> {
+    val update = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() })
+    body(update)
+    return ReturningStatement(this, returning, update).execute(TransactionManager.current()) ?: emptyList()
 }
 
 /**
