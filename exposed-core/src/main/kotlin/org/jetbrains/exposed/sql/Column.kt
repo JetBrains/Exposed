@@ -43,6 +43,9 @@ class Column<T>(
 
     internal var isDatabaseGenerated: Boolean = false
 
+    /** Returns whether this column's value will be generated in the database. */
+    fun isDatabaseGenerated() = isDatabaseGenerated
+
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = TransactionManager.current().fullIdentity(this@Column, queryBuilder)
 

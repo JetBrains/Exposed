@@ -400,6 +400,7 @@ public final class org/jetbrains/exposed/sql/Column : org/jetbrains/exposed/sql/
 	public final fun getReferee ()Lorg/jetbrains/exposed/sql/Column;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
 	public fun hashCode ()I
+	public final fun isDatabaseGenerated ()Z
 	public fun modifyStatement ()Ljava/util/List;
 	public final fun modifyStatements (Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	public final fun nameInDatabaseCase ()Ljava/lang/String;

@@ -8,7 +8,12 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
     /** The table name along with its [alias]. */
     val tableNameWithAlias: String = "${delegate.tableName} $alias"
 
-    private fun <T> Column<T>.clone() = Column<T>(this@Alias, name, columnType)
+    private fun <T> Column<T>.clone() = Column<T>(this@Alias, name, columnType).also {
+        it.defaultValueFun = defaultValueFun
+        it.dbDefaultValue = dbDefaultValue
+        it.isDatabaseGenerated = isDatabaseGenerated
+        it.foreignKey = foreignKey
+    }
 
     /**
      * Returns the original column from the [delegate] table, or `null` if the [column] is not associated
