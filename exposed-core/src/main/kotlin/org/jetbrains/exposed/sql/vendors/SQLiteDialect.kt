@@ -252,6 +252,18 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         val sql = super.explain(false, null, internalStatement, transaction)
         return sql.replaceFirst("EXPLAIN ", "EXPLAIN QUERY PLAN ")
     }
+
+    override fun returning(
+        mainSql: String,
+        returning: List<Expression<*>>,
+        transaction: Transaction
+    ): String {
+        return with(QueryBuilder(true)) {
+            +"$mainSql RETURNING "
+            returning.appendTo { +it }
+            toString()
+        }
+    }
 }
 
 /**

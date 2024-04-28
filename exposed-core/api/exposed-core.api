@@ -1718,6 +1718,8 @@ public final class org/jetbrains/exposed/sql/QueriesKt {
 	public static final fun insertIgnore (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/AbstractQuery;Ljava/util/List;)Ljava/lang/Integer;
 	public static synthetic fun insertIgnore$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/AbstractQuery;Ljava/util/List;ILjava/lang/Object;)Ljava/lang/Integer;
 	public static final fun insertIgnoreAndGetId (Lorg/jetbrains/exposed/dao/id/IdTable;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/dao/id/EntityID;
+	public static final fun insertReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
+	public static synthetic fun insertReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
 	public static final fun replace (Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReplaceStatement;
 	public static final fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public static final fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
@@ -1738,6 +1740,8 @@ public final class org/jetbrains/exposed/sql/QueriesKt {
 	public static synthetic fun update$default (Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)I
 	public static final fun upsert (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/UpsertStatement;
 	public static synthetic fun upsert$default (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/UpsertStatement;
+	public static final fun upsertReturning (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
+	public static synthetic fun upsertReturning$default (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
 }
 
 public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/AbstractQuery {
@@ -3000,6 +3004,19 @@ public class org/jetbrains/exposed/sql/statements/ReplaceStatement : org/jetbrai
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 }
 
+public class org/jetbrains/exposed/sql/statements/ReturningStatement : org/jetbrains/exposed/sql/statements/Statement, java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lorg/jetbrains/exposed/sql/statements/Statement;)V
+	public fun arguments ()Ljava/lang/Iterable;
+	public synthetic fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/sql/ResultSet;
+	public final fun getMainStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
+	public final fun getReturningExpressions ()Ljava/util/List;
+	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
+	protected final fun getTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
+	public fun iterator ()Ljava/util/Iterator;
+	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
+}
+
 public class org/jetbrains/exposed/sql/statements/SQLServerBatchInsertStatement : org/jetbrains/exposed/sql/statements/BatchInsertStatement {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Table;ZZ)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Table;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -3667,6 +3684,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/FunctionProvider {
 	public fun regexp (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;ZLorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun replace (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 	public static synthetic fun replace$default (Lorg/jetbrains/exposed/sql/vendors/FunctionProvider;Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Transaction;ZILjava/lang/Object;)Ljava/lang/String;
+	public fun returning (Ljava/lang/String;Ljava/util/List;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
 	public fun second (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun stdDevPop (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun stdDevSamp (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
