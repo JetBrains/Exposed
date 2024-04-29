@@ -6,10 +6,12 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.sql.statements.ReturningStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class ReturningTests : DatabaseTestsBase() {
     private val returningSupportedDb = TestDB.postgreSQLRelatedDB.toSet() + TestDB.SQLITE
@@ -93,6 +95,34 @@ class ReturningTests : DatabaseTestsBase() {
                 it[price] = 99.0
             }
             assertIs<ReturningStatement>(stmt)
+
+            assertEquals(0, Items.selectAll().count())
+
+            assertTrue { Items.deleteReturning().toList().isEmpty() }
+        }
+    }
+
+    @Test
+    fun testDeleteReturning() {
+        withTables(TestDB.enabledDialects() - returningSupportedDb, Items) {
+            Items.batchInsert(listOf("A" to 99.0, "B" to 100.0, "C" to 200.0)) { (n, p) ->
+                this[Items.name] = n
+                this[Items.price] = p
+            }
+
+            assertEquals(3, Items.selectAll().count())
+
+            // return all columns by default
+            val result1 = Items.deleteReturning(where = { Items.price eq 200.0 }).single()
+            assertEquals(3, result1[Items.id].value)
+            assertEquals("C", result1[Items.name])
+            assertEquals(200.0, result1[Items.price])
+
+            assertEquals(2, Items.selectAll().count())
+
+            val result2 = Items.deleteReturning(listOf(Items.id)).map { it[Items.id].value }
+            assertEqualCollections(listOf(1, 2), result2)
+
             assertEquals(0, Items.selectAll().count())
         }
     }

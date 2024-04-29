@@ -135,6 +135,23 @@ fun Table.deleteAll(): Int =
     DeleteStatement.all(TransactionManager.current(), this@deleteAll)
 
 /**
+ * Represents the SQL statement that deletes rows in a table and returns specified data from the deleted rows.
+ *
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @param where Condition that determines which rows to delete. If left as `null`, all rows in the table will be deleted.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testDeleteReturning
+ */
+fun <T : Table> T.deleteReturning(
+    returning: List<Expression<*>> = columns,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+): ReturningStatement {
+    val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, false, null, null)
+    return ReturningStatement(this, returning, delete)
+}
+
+/**
  * Represents the SQL statement that inserts a new row into a table.
  *
  * @sample org.jetbrains.exposed.sql.tests.h2.H2Tests.insertInH2

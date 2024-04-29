@@ -1707,6 +1707,8 @@ public final class org/jetbrains/exposed/sql/QueriesKt {
 	public static final fun deleteAll (Lorg/jetbrains/exposed/sql/Table;)I
 	public static final fun deleteIgnoreWhere (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Integer;Ljava/lang/Long;Lkotlin/jvm/functions/Function2;)I
 	public static synthetic fun deleteIgnoreWhere$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Integer;Ljava/lang/Long;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)I
+	public static final fun deleteReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
+	public static synthetic fun deleteReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
 	public static final fun deleteWhere (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Integer;Ljava/lang/Long;Lkotlin/jvm/functions/Function2;)I
 	public static synthetic fun deleteWhere$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Integer;Ljava/lang/Long;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)I
 	public static final fun exists (Lorg/jetbrains/exposed/sql/Table;)Z
