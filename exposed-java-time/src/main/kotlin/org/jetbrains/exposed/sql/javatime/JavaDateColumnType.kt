@@ -111,6 +111,15 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     return DateTimeFormatter.ofPattern(newFormat).withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
 
+private fun oracleDateTimeLiteral(instant: Instant) =
+    "TO_TIMESTAMP('${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}', 'YYYY-MM-DD HH24:MI:SS.FF3')"
+
+private fun oracleDateTimeWithTimezoneLiteral(dateTime: OffsetDateTime) =
+    "TO_TIMESTAMP_TZ('${dateTime.format(ORACLE_OFFSET_DATE_TIME_FORMATTER)}', 'YYYY-MM-DD HH24:MI:SS.FF6 TZH:TZM')"
+
+private fun oracleDateLiteral(instant: Instant) =
+    "TO_DATE('${DEFAULT_DATE_STRING_FORMATTER.format(instant)}', 'YYYY-MM-DD')"
+
 @Suppress("MagicNumber")
 private val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
 
@@ -132,7 +141,7 @@ class JavaLocalDateColumnType : ColumnType<LocalDate>(), IDateColumnType {
             // Date literal in Oracle DB must match NLS_DATE_FORMAT parameter.
             // That parameter can be changed on DB level.
             // But format can be also specified per literal with TO_DATE function
-            return "TO_DATE('$formatted', 'YYYY-MM-DD')"
+            return oracleDateLiteral(instant)
         }
         return "'$formatted'"
     }
@@ -180,8 +189,7 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
         val dialect = currentDialect
         return when {
             dialect is SQLiteDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-            dialect is OracleDialect ->
-                "TO_TIMESTAMP('${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}', 'YYYY-MM-DD HH24:MI:SS.FF3')"
+            dialect is OracleDialect -> oracleDateTimeLiteral(instant)
             dialect is MysqlDialect -> {
                 val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER else MYSQL_DATE_TIME_STRING_FORMATTER
                 "'${formatter.format(instant)}'"
@@ -301,8 +309,7 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     override fun nonNullValueToString(value: Instant): String {
         val dialect = currentDialect
         return when {
-            dialect is OracleDialect ->
-                "TO_TIMESTAMP('${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value)}', 'YYYY-MM-DD HH24:MI:SS.FF3')"
+            dialect is OracleDialect -> oracleDateTimeLiteral(value)
 
             dialect is SQLiteDialect ->
                 "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value)}'"
@@ -360,7 +367,7 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
     override fun nonNullValueToString(value: OffsetDateTime): String = when (currentDialect) {
         is SQLiteDialect -> "'${value.format(SQLITE_OFFSET_DATE_TIME_FORMATTER)}'"
         is MysqlDialect -> "'${value.format(MYSQL_OFFSET_DATE_TIME_FORMATTER)}'"
-        is OracleDialect -> "TO_TIMESTAMP_TZ('${value.format(ORACLE_OFFSET_DATE_TIME_FORMATTER)}', 'YYYY-MM-DD HH24:MI:SS.FF6 TZH:TZM')"
+        is OracleDialect -> oracleDateTimeWithTimezoneLiteral(value)
         else -> "'${value.format(DEFAULT_OFFSET_DATE_TIME_FORMATTER)}'"
     }
 
