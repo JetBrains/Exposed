@@ -1,3 +1,41 @@
+# 0.50.0
+Infrastructure:
+* Spring Framework 6.1.6
+
+Breaking changes:
+* fix!: EXPOSED-317 repetitionAttempts property is misleading by @bog-walk in https://github.com/JetBrains/Exposed/pull/2042
+* refactor!: Column type safety by @joc-a in https://github.com/JetBrains/Exposed/pull/2027
+* More details at [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-50-0)
+
+Deprecations:
+* deprecate: Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2038
+* deprecate: EXPOSED-354 Database.connectPool() with ConnectionPoolDataSource by @bog-walk in https://github.com/JetBrains/Exposed/pull/2059
+
+Features:
+* feat: EXPOSED-327 Support GraalVM native images with Spring Boot by @joshlong and @bog-walk in https://github.com/JetBrains/Exposed/pull/2039. Many thanks to [joshlong](https://github.com/joshlong) for the support.
+* feat: EXPOSED-296 Add ability to check if a Sequence exists in a database by @joc-a in https://github.com/JetBrains/Exposed/pull/2045
+* feat: EXPOSED-355 Support INSERT...RETURNING statement by @bog-walk in https://github.com/JetBrains/Exposed/pull/2060
+* feat: EXPOSED-357 Support DELETE...RETURNING statement by @bog-walk in https://github.com/JetBrains/Exposed/pull/2061
+* feat: EXPOSED-356 Support UPDATE...RETURNING statement by @bog-walk in https://github.com/JetBrains/Exposed/pull/2062
+
+Bug fixes:
+* fix(jdbc): existingIndices() misses indexes from tables with a schema by @jackgisel-RL in https://github.com/JetBrains/Exposed/pull/2033
+* fix: EXPOSED-259 supportsSubqueryUnions is too strict for PostgreSQL 12+ by @bog-walk in https://github.com/JetBrains/Exposed/pull/2037
+* fix: EXPOSED-339 Oracle alias for blob does not work by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2048
+* fix: EXPOSED-340 Syntax error using upsert with MySQL8 below 8.0.19 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2049
+* fix: EXPOSED-349 "defaultValueFun" is lost from Column in Alias by @joc-a in https://github.com/JetBrains/Exposed/pull/2058
+* fix: Error when updating different entities mapped to the same table by @joc-a in https://github.com/JetBrains/Exposed/pull/2065
+* fix: EXPOSED-350 keepLoadedReferencesOutOfTransaction causes duplicate query when true by @bog-walk in https://github.com/JetBrains/Exposed/pull/2064
+
+Docs:
+* Move wiki to github pages documentation by @e5l in https://github.com/JetBrains/Exposed/pull/2034
+* docs: EXPOSED-313 JSON columns support libraries other than kotlinx.serialization by @bog-walk in https://github.com/JetBrains/Exposed/pull/2041
+* docs: Update Contributing documentation with code style details by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2051
+* docs: EXPOSED-319 H2 customEnumeration example throws by @bog-walk in https://github.com/JetBrains/Exposed/pull/2056
+
+Tests:
+* Move BLOB tests to own source files by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2053
+
 # 0.49.0
 Infrastructure:
 * log4j2 2.23.1
@@ -71,7 +109,7 @@ Bug fixes:
 * fix: EXPOSED-302 Count with alias fails if table name includes schema by @bog-walk in https://github.com/JetBrains/Exposed/pull/2008
 * fix: EXPOSED-293 Logger prints plaintext value of encryptedVarchar by @bog-walk in https://github.com/JetBrains/Exposed/pull/2009
 
-* Build:
+Build:
 * build!: EXPOSED-234 Set exposed-crypt to jdk 17 & bump spring-security-crypto to 6.+ by @bog-walk in https://github.com/JetBrains/Exposed/pull/2001
 
 Docs:
