@@ -444,6 +444,24 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
 }
 
 /**
+ * Represents the SQL statement that updates rows of a table and returns specified data from the updated rows.
+ *
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpdateReturning
+ */
+fun <T : Table> T.updateReturning(
+    returning: List<Expression<*>> = columns,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: T.(UpdateStatement) -> Unit
+): ReturningStatement {
+    val update = UpdateStatement(this, null, where?.let { SqlExpressionBuilder.it() })
+    body(update)
+    return ReturningStatement(this, returning, update)
+}
+
+/**
  * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
  *
  * **Note:** Vendors that do not support this operation directly implement the standard MERGE USING command.
