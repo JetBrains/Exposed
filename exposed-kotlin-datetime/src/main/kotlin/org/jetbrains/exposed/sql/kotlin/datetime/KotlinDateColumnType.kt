@@ -265,12 +265,11 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
     override fun nonNullValueToString(value: LocalTime): String {
         val dialect = currentDialect
 
-        if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-            return oracleLocalTimeLiteral(value)
+        return when {
+            dialect is OracleDialect -> oracleLocalTimeLiteral(value)
+            dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> "TIMESTAMP '${ORACLE_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())}'"
+            else -> "'${DEFAULT_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())}'"
         }
-
-        val instant = value.toJavaLocalTime()
-        return "'${DEFAULT_TIME_STRING_FORMATTER.format(instant)}'"
     }
 
     override fun valueFromDB(value: Any): LocalTime = when (value) {
