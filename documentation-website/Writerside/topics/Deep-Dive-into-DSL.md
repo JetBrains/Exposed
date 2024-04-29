@@ -156,6 +156,37 @@ StarWarsFilms.deleteWhere { StarWarsFilms.sequelId eq 8 }
 
 Delete functions also return a count of the number of deleted rows, as for Update above.
 
+### Returning Data from Modified Rows
+
+Some databases (like PostgreSQL and SQLite) allow the return of additional data every time a row is either inserted, updated, or deleted by a CRUD operation.
+This can be accomplished by using `insertReturning()`, `upsertReturning()`, `updateReturning()`, or `deleteReturning()` with a list of the required table columns 
+provided as an argument. If the latter is omitted, all table columns will be returned by default:
+
+```kotlin
+object Projects : Table("projects") {
+    val title = varchar("title", 64)
+    val budget = integer("budget")
+    val created = datetime("created").defaultExpression(CurrentDateTime)
+}
+
+// returns all table columns by default
+val created: LocalDateTime = Projects.insertReturning {
+    it[title] = "Project A"
+    it[budget] = 100
+}.single()[Projects.created]
+
+val updatedBudgets: List<Int> = Projects.updateReturning(listOf(Projects.budget)) {
+    it[budget] = Projects.budget.times(5)
+}.map {
+    it[Projects.budget]
+}
+```
+
+<note>
+Unlike the base variants of these CRUD operations, a <code>ReturningStatement</code> behaves like a <code>Query</code> by also extending <code>Iterable</code>,
+so it will not be run by the database until the first attempt to iterate over its results.
+</note>
+
 ## Where expression
 
 Query expression (where) expects a boolean operator (ie: `Op<Boolean>`).
