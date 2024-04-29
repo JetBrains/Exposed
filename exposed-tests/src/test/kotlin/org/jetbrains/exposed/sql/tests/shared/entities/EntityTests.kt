@@ -1754,4 +1754,39 @@ class EntityTests : DatabaseTestsBase() {
             }
         }
     }
+
+    object TestTable : IntIdTable("TestTable") {
+        val value = integer("value")
+    }
+
+    class TestEntityA(id: EntityID<Int>) : IntEntity(id) {
+        var value by TestTable.value
+
+        companion object : IntEntityClass<TestEntityA>(TestTable)
+    }
+
+    class TestEntityB(id: EntityID<Int>) : IntEntity(id) {
+        var value by TestTable.value
+
+        companion object : IntEntityClass<TestEntityB>(TestTable)
+    }
+
+    @Test
+    fun testDifferentEntitiesMappedToTheSameTable() {
+        withTables(TestTable) {
+            val entityA = TestEntityA.new {
+                value = 1
+            }
+            val entityB = TestEntityB.new {
+                value = 2
+            }
+
+            flushCache()
+
+            entityA.value = 3
+            entityB.value = 4
+
+            flushCache()
+        }
+    }
 }

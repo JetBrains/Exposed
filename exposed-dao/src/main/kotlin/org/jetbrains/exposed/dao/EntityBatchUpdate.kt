@@ -25,7 +25,12 @@ class EntityBatchUpdate(private val klass: EntityClass<*, Entity<*>>) {
      * provided on instantiation of this [EntityBatchUpdate].
      */
     fun addBatch(entity: Entity<*>) {
-        if (entity.klass != klass) error("Entity class${entity.klass} differs from expected entity class $klass")
+        if (entity.klass.table != klass.table) {
+            error(
+                "Table ${entity.klass.table.tableName} for entity class ${entity.klass} differs from expected table " +
+                    "${klass.table.tableName} for entity class $klass"
+            )
+        }
         data.add(entity.id to TreeMap())
     }
 
