@@ -606,6 +606,19 @@ private fun <T : Table, E> T.batchUpsert(
  */
 fun Table.exists(): Boolean = currentDialect.tableExists(this)
 
+/**
+ * Performs an SQL MERGE operation to insert, update, or delete records in the target table based on
+ * a comparison with a source table.
+ *
+ * @param D The target table type extending from [Table].
+ * @param S The source table type extending from [Table].
+ * @param source An instance of the source table.
+ * @param on A lambda with receiver [SqlExpressionBuilder] that should return the condition [Op<Boolean>]
+ *           used to match records between the source and target tables.
+ * @param body A lambda where [MergeTableStatement] can be configured with specific actions to perform
+ *             when records are matched or not matched.
+ * @return A [MergeTableStatement] which represents the MERGE operation with the configured actions.
+ */
 fun <D : Table, S : Table> D.mergeFrom(
     source: S,
     on: SqlExpressionBuilder.() -> Op<Boolean>,
@@ -617,6 +630,18 @@ fun <D : Table, S : Table> D.mergeFrom(
     }
 }
 
+/**
+ * Performs an SQL MERGE operation to insert, update, or delete records in the target table based on
+ * a comparison with a select query source.
+ *
+ * @param T The target table type extending from [Table].
+ * @param selectQuery represents the aliased query for a complex subquery to be used as the source.
+ * @param on A lambda with receiver [SqlExpressionBuilder] that should return the condition [Op<Boolean>]
+ *           used to match records between the source and target tables.
+ * @param body A lambda where [MergeSelectStatement] can be configured with specific actions to perform
+ *             when records are matched or not matched.
+ * @return A [MergeSelectStatement] which represents the MERGE operation with the configured actions.
+ */
 fun <T : Table> T.mergeFrom(
     selectQuery: QueryAlias,
     on: SqlExpressionBuilder.() -> Op<Boolean>,
