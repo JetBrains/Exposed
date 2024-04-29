@@ -642,8 +642,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
                 distinctRefIds.forEach { id ->
                     cache.getOrPutReferrers(id, refColumn) { result[id]?.let { SizedCollection(it) } ?: emptySized() }.also {
                         if (keepLoadedReferenceOutOfTransaction) {
-                            val childEntity = find { refColumn eq id }.firstOrNull()
-                            childEntity?.storeReferenceInCache(refColumn, it)
+                            cache.find(this, id)?.storeReferenceInCache(refColumn, it)
                         }
                     }
                 }

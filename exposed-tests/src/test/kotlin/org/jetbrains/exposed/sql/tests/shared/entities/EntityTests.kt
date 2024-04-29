@@ -1679,7 +1679,18 @@ class EntityTests : DatabaseTestsBase() {
                         country = lebanon
                     }
 
+                    debug = true
+
                     Country.all().with(Country::dishes)
+
+                    statementStats
+                        .filterKeys { it.startsWith("SELECT ") }
+                        .forEach { (_, stats) ->
+                            val (count, _) = stats
+                            assertEquals(1, count)
+                        }
+
+                    debug = false
                 } finally {
                     SchemaUtils.drop(Dishes, Countries)
                 }
