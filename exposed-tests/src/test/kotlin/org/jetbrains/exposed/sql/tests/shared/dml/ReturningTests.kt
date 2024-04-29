@@ -126,4 +126,35 @@ class ReturningTests : DatabaseTestsBase() {
             assertEquals(0, Items.selectAll().count())
         }
     }
+
+    @Test
+    fun testUpdateReturning() {
+        withTables(TestDB.enabledDialects() - returningSupportedDb, Items) {
+            val input = listOf("A" to 99.0, "B" to 100.0, "C" to 200.0)
+            Items.batchInsert(input) { (n, p) ->
+                this[Items.name] = n
+                this[Items.price] = p
+            }
+
+            // return all columns by default
+            val result1 = Items.updateReturning(where = { Items.price lessEq 99.0 }) {
+                it[price] = price.times(10.0)
+            }.single()
+            assertEquals(1, result1[Items.id].value)
+            assertEquals("A", result1[Items.name])
+            assertEquals(990.0, result1[Items.price])
+
+            val result2 = Items.updateReturning(listOf(Items.name)) {
+                it[name] = name.lowerCase()
+            }.map { it[Items.name] }
+            assertEqualCollections(input.map { it.first.lowercase() }, result2)
+
+            val newPrice = Items.price.alias("new_price")
+            val result3 = Items.updateReturning(listOf(newPrice)) {
+                it[price] = 0.0
+            }.map { it[newPrice] }
+            assertEquals(3, result3.size)
+            assertTrue { result3.all { it == 0.0 } }
+        }
+    }
 }
