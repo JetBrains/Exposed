@@ -621,10 +621,10 @@ fun Table.exists(): Boolean = currentDialect.tableExists(this)
  */
 fun <D : Table, S : Table> D.mergeFrom(
     source: S,
-    on: SqlExpressionBuilder.() -> Op<Boolean>,
+    on: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
-    return MergeTableStatement(this, source, on = SqlExpressionBuilder.on()).apply {
+    return MergeTableStatement(this, source, on = on?.invoke(SqlExpressionBuilder)).apply {
         body(this)
         execute(TransactionManager.current())
     }

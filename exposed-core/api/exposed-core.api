@@ -138,6 +138,7 @@ public final class org/jetbrains/exposed/sql/Alias : org/jetbrains/exposed/sql/T
 	public fun getColumns ()Ljava/util/List;
 	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/Table;
 	public fun getFields ()Ljava/util/List;
+	public fun getPrimaryKey ()Lorg/jetbrains/exposed/sql/Table$PrimaryKey;
 	public fun getTableName ()Ljava/lang/String;
 	public final fun getTableNameWithAlias ()Ljava/lang/String;
 	public fun hashCode ()I
@@ -1724,6 +1725,7 @@ public final class org/jetbrains/exposed/sql/QueriesKt {
 	public static synthetic fun insertReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
 	public static final fun mergeFrom (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/QueryAlias;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/statements/MergeSelectStatement;
 	public static final fun mergeFrom (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/statements/MergeTableStatement;
+	public static synthetic fun mergeFrom$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/MergeTableStatement;
 	public static final fun replace (Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReplaceStatement;
 	public static final fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public static final fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;

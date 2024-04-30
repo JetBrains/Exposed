@@ -18,7 +18,7 @@ import org.jetbrains.exposed.sql.Transaction
 open class MergeTableStatement(
     dest: Table,
     private val source: Table,
-    private val on: Op<Boolean>
+    private val on: Op<Boolean>?
 ) : MergeBaseStatement(dest) {
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val result = transaction.db.dialect.functionProvider.merge(table, source, transaction, whenBranches, on)

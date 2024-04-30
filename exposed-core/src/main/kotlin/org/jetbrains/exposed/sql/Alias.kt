@@ -32,6 +32,9 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
 
     override val columns: List<Column<*>> = fields.filterIsInstance<Column<*>>()
 
+    override val primaryKey: PrimaryKey? = delegate.primaryKey?.columns
+        ?.firstNotNullOfOrNull { delegateColumn -> columns.find { it.name == delegateColumn.name } }?.let { PrimaryKey(it) }
+
     override fun createStatement() = throw UnsupportedOperationException("Unsupported for aliases")
 
     override fun dropStatement() = throw UnsupportedOperationException("Unsupported for aliases")

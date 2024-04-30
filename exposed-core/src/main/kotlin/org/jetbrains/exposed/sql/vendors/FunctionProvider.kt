@@ -444,18 +444,30 @@ abstract class FunctionProvider {
         source: Table,
         transaction: Transaction,
         whenBranches: List<MergeBaseStatement.WhenBranchData>,
-        on: Op<Boolean>
+        on: Op<Boolean>?
     ): String {
         if (whenBranches.any { it.deleteWhere != null } && currentDialect !is OracleDialect) {
             @Suppress("UseRequire")
             throw IllegalArgumentException("'deleteWhere' parameter can be used only as a part of Oracle SQL update clause statement.")
         }
-        val onRaw = if (currentDialect is OracleDialect) "($on)" else "$on"
+
+        val onCondition = (
+            on?.toString() ?: run {
+                val targetKey = dest.primaryKey?.columns?.singleOrNull()
+                val sourceKey = source.primaryKey?.columns?.singleOrNull()
+
+                if (targetKey == null || sourceKey == null) {
+                    transaction.throwUnsupportedException("MERGE requires an ON condition to be specified.")
+                }
+
+                "${transaction.fullIdentity(targetKey)}=${transaction.fullIdentity(sourceKey)}"
+            }
+            ).let { if (currentDialect is OracleDialect) "($it)" else it }
 
         return with(QueryBuilder(true)) {
             +"MERGE INTO ${transaction.identity(dest)} "
             +"USING ${transaction.identity(source)} "
-            +"ON $onRaw "
+            +"ON $onCondition "
             addWhenBranchesToMergeStatement(transaction, dest, whenBranches)
             toString()
         }
