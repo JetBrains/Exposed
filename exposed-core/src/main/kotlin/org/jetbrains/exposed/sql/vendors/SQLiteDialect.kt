@@ -12,6 +12,7 @@ import java.sql.Statement
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
     override fun longAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
+    override fun ulongAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
     override fun floatType(): String = "SINGLE"
     override fun binaryType(): String = "BLOB"
     override fun dateTimeType(): String = "TEXT"

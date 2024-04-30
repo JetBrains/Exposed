@@ -8,8 +8,10 @@ import java.util.*
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = "SMALLINT"
     override fun floatType(): String = "REAL"
+    override fun ulongType(): String = "BIGINT"
     override fun integerAutoincType(): String = "SERIAL"
     override fun longAutoincType(): String = "BIGSERIAL"
+    override fun ulongAutoincType(): String = "BIGSERIAL"
     override fun uuidType(): String = "uuid"
     override fun binaryType(): String = "bytea"
     override fun binaryType(length: Int): String {

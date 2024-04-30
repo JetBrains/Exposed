@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.*
 import java.io.InputStream
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
 import java.nio.ByteBuffer
@@ -389,32 +390,33 @@ class ULongColumnType : ColumnType<ULong>() {
         return when (value) {
             is ULong -> value
             is Long -> value.takeIf { it >= 0 }?.toULong()
+            is Double -> value.takeIf { it >= 0 }?.toULong() // For SQLite
             is Number -> {
-                if (currentDialect is MysqlDialect) {
-                    value.toString().toBigInteger().takeIf {
-                        it >= "0".toBigInteger() && it <= ULong.MAX_VALUE.toString().toBigInteger()
-                    }?.toString()?.toULong()
-                } else {
-                    value.toLong().takeIf { it >= 0 }?.toULong()
-                }
+                valueFromDB(value.toString())
             }
-            is String -> value.toULong()
+            is String -> {
+                value.toBigInteger().takeIf {
+                    it >= "0".toBigInteger() && it <= ULong.MAX_VALUE.toString().toBigInteger()
+                }?.toString()?.toULong()
+            }
             else -> error("Unexpected value of type Long: $value of ${value::class.qualifiedName}")
         } ?: error("Negative value but type is ULong: $value")
     }
 
-    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        val v = when {
-            value is ULong && currentDialect is MysqlDialect -> value.toString()
-            value is ULong -> value.toLong()
-            else -> value
+    override fun notNullValueToDB(value: ULong): Any {
+        val dialect = currentDialect
+        return when {
+            // PostgreSQLNG does not throw `out of range` error, so it's handled here to prevent storing invalid values
+            dialect is PostgreSQLNGDialect -> {
+                value.takeIf { it >= 0uL && it <= Long.MAX_VALUE.toULong() }?.toLong()
+                    ?: error("Value out of range: $value")
+            }
+            dialect is PostgreSQLDialect ||
+                (dialect is H2Dialect && dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL) -> {
+                BigInteger(value.toString())
+            }
+            else -> value.toString()
         }
-        super.setParameter(stmt, index, v)
-    }
-
-    override fun notNullValueToDB(value: ULong) = when {
-        currentDialect is MysqlDialect -> value.toString()
-        else -> value.toLong()
     }
 }
 

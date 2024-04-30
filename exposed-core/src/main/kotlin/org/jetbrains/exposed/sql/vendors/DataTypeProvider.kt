@@ -55,13 +55,13 @@ abstract class DataTypeProvider {
     open fun longType(): String = "BIGINT"
 
     /** Numeric type for storing 8-byte unsigned integers. */
-    open fun ulongType(): String = "BIGINT"
+    open fun ulongType(): String = "NUMERIC(20)"
 
     /** Numeric type for storing 8-byte integers, and marked as auto-increment. */
     open fun longAutoincType(): String = "BIGINT AUTO_INCREMENT"
 
     /** Numeric type for storing 8-byte unsigned integers, marked as auto-increment. */
-    open fun ulongAutoincType(): String = "BIGINT AUTO_INCREMENT"
+    open fun ulongAutoincType(): String = "NUMERIC(20) AUTO_INCREMENT"
 
     /** Numeric type for storing 4-byte (single precision) floating-point numbers. */
     open fun floatType(): String = "FLOAT"

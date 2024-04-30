@@ -235,9 +235,10 @@ class Join(
     val table: ColumnSet
 ) : ColumnSet() {
 
-    override val columns: List<Column<*>> get() = joinParts.flatMapTo(
-        table.columns.toMutableList()
-    ) { it.joinPart.columns }
+    override val columns: List<Column<*>>
+        get() = joinParts.flatMapTo(
+            table.columns.toMutableList()
+        ) { it.joinPart.columns }
 
     internal val joinParts: MutableList<JoinPart> = mutableListOf()
 
@@ -656,7 +657,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
 
-    /** Creates a numeric column, with the specified [name], for storing 8-byte unsigned integers. */
+    /** Creates a numeric column, with the specified [name], for storing 8-byte unsigned integers.
+     *
+     * **Note:** For PostgreSQL, the maximum value this column will store is [Long.MAX_VALUE].
+     */
     fun ulong(name: String): Column<ULong> = registerColumn(name, ULongColumnType())
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte (single precision) floating-point numbers. */
@@ -1162,7 +1166,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param isUnique Whether the index is unique or not.
      * @param columns Columns that compose the index.
      */
-    fun index(isUnique: Boolean = false, vararg columns: Column<*>) { index(null, isUnique, *columns) }
+    fun index(isUnique: Boolean = false, vararg columns: Column<*>) {
+        index(null, isUnique, *columns)
+    }
 
     /**
      * Creates an index.
