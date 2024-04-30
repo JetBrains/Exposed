@@ -1,6 +1,9 @@
 package org.jetbrains.exposed.sql.tests.shared.types
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -272,6 +275,23 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
             val result = ULongTable.selectAll().toList()
             assertEquals(1, result.size)
             assertEquals(123uL, result.single()[ULongTable.unsignedLong])
+        }
+    }
+
+    @Test
+    fun testMaxULongColumnType() {
+        val ulongMaxValueUnsupportedDatabases = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
+
+        withTables(ULongTable) { testDb ->
+            val maxValue = if (testDb in ulongMaxValueUnsupportedDatabases) Long.MAX_VALUE.toULong() else ULong.MAX_VALUE
+
+            ULongTable.insert {
+                it[unsignedLong] = maxValue
+            }
+
+            val result = ULongTable.selectAll().toList()
+            assertEquals(1, result.size)
+            assertEquals(maxValue, result.single()[ULongTable.unsignedLong])
         }
     }
 

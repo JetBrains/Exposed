@@ -13,8 +13,10 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
             "TINYINT"
         }
     }
+
     override fun integerAutoincType(): String = "INT IDENTITY(1,1)"
     override fun longAutoincType(): String = "BIGINT IDENTITY(1,1)"
+    override fun ulongAutoincType(): String = "NUMERIC(20) IDENTITY(1,1)"
     override fun binaryType(): String {
         exposedLogger.error("The length of the Binary column is missing.")
         error("The length of the Binary column is missing.")

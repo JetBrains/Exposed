@@ -2558,7 +2558,6 @@ public final class org/jetbrains/exposed/sql/ULongColumnType : org/jetbrains/exp
 	public fun <init> ()V
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB-VKZWuLQ (J)Ljava/lang/Object;
-	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB-I7RO_PI (Ljava/lang/Object;)J
