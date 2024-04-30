@@ -2,8 +2,12 @@
 
 ## 0.50.0
 
-`IColumnType` and `ColumnType` now expect a type argument. Check this
-[pull request](https://github.com/JetBrains/Exposed/pull/2027) for details regarding this change.
+* The `Transaction` class property `repetitionAttempts` is being deprecated in favor of `maxAttempts`. Additionally, the property `minRepetitionDelay` should be replaced
+  with `minRetryDelay`, and `maxRepetitionDelay` with `maxRetryDelay`. These changes also affect the default variants of these properties in `DatabaseConfig`.
+* The property `maxAttempts` represents the maximum amount of attempts to perform a transaction block. Setting it, or the now deprecated `repetitionAttempts`, to a
+  value less than 1 now throws an `IllegalArgumentException`.
+* `IColumnType` and `ColumnType` now expect a type argument. `IColumnType.valueFromDB()` also no longer has a default implementation, so an override for this method
+  must be provided in any custom column type implementation. Check this [pull request](https://github.com/JetBrains/Exposed/pull/2027) for details regarding this change.
 
 ## 0.49.0
 
