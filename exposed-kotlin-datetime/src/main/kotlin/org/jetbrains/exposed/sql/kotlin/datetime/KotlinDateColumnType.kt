@@ -324,6 +324,9 @@ class KotlinInstantColumnType : ColumnType<Instant>(), IDateColumnType {
                 "'${formatter.format(instant)}'"
             }
 
+            dialect is SQLiteDialect ->
+                "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+
             dialect is OracleDialect -> oracleDateTimeLiteral(value)
 
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
