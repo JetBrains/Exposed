@@ -121,9 +121,6 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
 private fun oracleDateTimeLiteral(instant: Instant) =
     "TO_TIMESTAMP('${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant.toJavaInstant())}', 'YYYY-MM-DD HH24:MI:SS.FF3')"
 
-private fun oracleLocalTimeLiteral(time: LocalTime) =
-    "TO_TIMESTAMP('${ORACLE_TIME_STRING_FORMATTER.format(time.toJavaLocalTime())}', 'YYYY-MM-DD HH24:MI:SS')"
-
 private fun oracleDateTimeWithTimezoneLiteral(dateTime: OffsetDateTime) =
     "TO_TIMESTAMP_TZ('${dateTime.format(ORACLE_OFFSET_DATE_TIME_FORMATTER)}', 'YYYY-MM-DD HH24:MI:SS.FF6 TZH:TZM')"
 
@@ -264,12 +261,13 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
 
     override fun nonNullValueToString(value: LocalTime): String {
         val dialect = currentDialect
+        val instant = value.toJavaLocalTime()
 
-        return when {
-            dialect is OracleDialect -> oracleLocalTimeLiteral(value)
-            dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> "TIMESTAMP '${ORACLE_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())}'"
-            else -> "'${DEFAULT_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())}'"
+        if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            return "TIMESTAMP '${ORACLE_TIME_STRING_FORMATTER.format(instant)}'"
         }
+
+        return "'${DEFAULT_TIME_STRING_FORMATTER.format(instant)}'"
     }
 
     override fun valueFromDB(value: Any): LocalTime = when (value) {

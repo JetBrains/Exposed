@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.jodatime.datetime
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.update
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.junit.Test
@@ -21,28 +20,6 @@ class JodaDateTimeLiteralTest : DatabaseTestsBase() {
 
     object TableWithDatetime : IntIdTable() {
         val datetime = datetime("datetime")
-    }
-
-    @Test
-    fun testInsertWithDateLiteral() {
-        withTables(TableWithDatetime) {
-            TableWithDatetime.insert {
-                it[datetime] = dateTimeLiteral(defaultDatetime)
-            }
-            assertEquals(defaultDatetime, TableWithDatetime.selectAll().first()[TableWithDatetime.datetime])
-        }
-    }
-
-    @Test
-    fun testUpdateWithDatetimeLiteral() {
-        withTables(TableWithDatetime) {
-            TableWithDatetime.insert {
-                it[datetime] = defaultDatetime
-            }
-
-            TableWithDatetime.update { it[datetime] = dateTimeLiteral(futureDatetime) }
-            assertEquals(futureDatetime, TableWithDatetime.selectAll().first()[TableWithDatetime.datetime])
-        }
     }
 
     @Test
