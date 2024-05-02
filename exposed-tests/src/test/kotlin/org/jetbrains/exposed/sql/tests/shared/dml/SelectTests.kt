@@ -220,10 +220,20 @@ class SelectTests : DatabaseTestsBase() {
                 category = EntityTests.Category.new { title = "Category1" }
             }
 
-            val result = EntityTests.Posts.selectAll().where {
+            val result1 = EntityTests.Posts.selectAll().where {
                 EntityTests.Posts.board inList listOf(board1.id)
             }.singleOrNull()?.get(EntityTests.Posts.id)
-            assertEquals(post1.id, result)
+            assertEquals(post1.id, result1)
+
+            val result2 = EntityTests.Board.find {
+                EntityTests.Boards.id inList listOf(1, 2, 3, 4, 5)
+            }.singleOrNull()
+            assertEquals(board1, result2)
+
+            val result3 = EntityTests.Board.find {
+                EntityTests.Boards.id notInList listOf(1, 2, 3, 4, 5)
+            }.singleOrNull()
+            assertNull(result3)
         }
     }
 
