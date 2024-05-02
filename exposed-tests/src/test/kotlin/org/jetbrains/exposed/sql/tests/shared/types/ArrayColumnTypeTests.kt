@@ -17,6 +17,7 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class ArrayColumnTypeTests : DatabaseTestsBase() {
@@ -26,6 +27,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
         val numbers = array<Int>("numbers").default(listOf(5))
         val strings = array<String?>("strings", TextColumnType()).default(emptyList())
         val doubles = array<Double>("doubles").nullable()
+        val byteArray = array<ByteArray>("byte_array", BinaryColumnType(32)).nullable()
     }
 
     @Test
@@ -289,4 +291,26 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             assertTrue(result4.toList().isEmpty())
         }
     }
+
+    @Test
+    fun testInsertArrayOfByteArrays() {
+        // POSTGRESQLNG is excluded because the problem may be on their side.
+        // Related issue: https://github.com/impossibl/pgjdbc-ng/issues/600
+        // Recheck on our side when the issue is resolved.
+        withTables(excludeSettings = arrayTypeUnsupportedDb + TestDB.POSTGRESQLNG, ArrayTestTable) {
+            val testByteArraysList = listOf(
+                byteArrayOf(0), byteArrayOf(1, 2, 3)
+            )
+            ArrayTestTable.insert {
+                it[byteArray] = testByteArraysList
+            }
+            val result = ArrayTestTable.selectAll().first()[ArrayTestTable.byteArray]
+
+            assertNotNull(result)
+            assertEquals(testByteArraysList[0][0], result[0][0])
+            assertEquals(testByteArraysList[1].toUByteString(), result[1].toUByteString())
+        }
+    }
 }
+
+private fun ByteArray.toUByteString() = joinToString { it.toUByte().toString() }
