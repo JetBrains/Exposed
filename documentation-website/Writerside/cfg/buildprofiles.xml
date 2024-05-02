@@ -6,7 +6,7 @@
     <build-profile instance="hi">
         <variables>
             <noindex-content>true</noindex-content>
-            <header-logo>logo.png</header-logo>
+            <header-logo>exposed-logo.svg</header-logo>
         </variables>
     </build-profile>
 
