@@ -3,7 +3,7 @@
 This is a starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize [Exposed](https://github.com/JetBrains/Exposed) as the ORM instead of [Hibernate](https://hibernate.org/).
 
 ## Getting Started
-This starter will give you the latest version of [Exposed](https://github.com/JetBrains/Exposed) and its `spring-transaction` library along with the [Spring Boot Starter Data JDBC](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jdbc).
+This starter will give you the latest version of [Exposed](https://github.com/JetBrains/Exposed) and its `spring-transaction` library along with the [Spring Boot Starter JDBC](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-jdbc).
 ### Maven
 ```mxml
 <dependencies>
@@ -40,7 +40,7 @@ exposedVersion=0.50.0
 ```
 
 ## Setting up a database connection
-This starter utilizes `spring-boot-starter-data-jdbc` so that all properties usually used for setting up a database in Spring are applicable here.
+This starter utilizes `spring-boot-starter-jdbc` so that all properties usually used for setting up a database in Spring are applicable here.
 
 ### application.properties (h2 example)
 ```properties
