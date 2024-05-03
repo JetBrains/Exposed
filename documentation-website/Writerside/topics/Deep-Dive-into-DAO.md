@@ -173,6 +173,32 @@ class User(id: EntityID<Int>): IntEntity(id) {
 }
 ```
 
+### Ordered reference
+
+You can also define the order in which referenced entities appear:
+
+```kotlin
+class User(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<User>(Users)
+
+    ...
+    val ratings by UserRating referrersOn UserRatings.user orderBy UserRatings.value
+    ...
+}
+```
+
+In a more complex scenario, you can specify multiple columns along with the corresponding sort order for each:
+
+```kotlin
+class User(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<User>(Users)
+
+    ...
+    val ratings by UserRating referrersOn UserRatings.user orderBy listOf(UserRatings.value to DESC, UserRatings.id to ASC)
+    ...
+}
+```
+
 ### many-to-many reference
 In some cases, a many-to-many reference may be required.
 Let's assume you want to add a reference to the following Actors table to the StarWarsFilm class:

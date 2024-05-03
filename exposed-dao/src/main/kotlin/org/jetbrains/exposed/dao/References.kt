@@ -2,8 +2,10 @@ package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.LazySizedIterable
 import org.jetbrains.exposed.sql.SizedIterable
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.emptySized
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadOnlyProperty
@@ -95,35 +97,10 @@ class OptionalBackReference<ParentID : Comparable<ParentID>, out Parent : Entity
  * @param cache Whether loaded reference entities should be stored in the [EntityCache].
  */
 class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
-    val reference: Column<REF>,
-    val factory: EntityClass<ChildID, Child>,
-    val cache: Boolean
-) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
-    init {
-        reference.referee ?: error("Column $reference is not a reference")
-
-        if (factory.table != reference.table) {
-            error("Column and factory point to different tables")
-        }
-    }
-
-    override operator fun getValue(thisRef: Parent, property: KProperty<*>): SizedIterable<Child> {
-        val value = thisRef.run { reference.referee<REF>()!!.lookup() }
-        if (thisRef.id._value == null || value == null) return emptySized()
-
-        val query = { factory.find { reference eq value } }
-        val transaction = TransactionManager.currentOrNull()
-        return when {
-            transaction == null -> thisRef.getReferenceFromCache(reference)
-            cache -> {
-                transaction.entityCache.getOrPutReferrers(thisRef.id, reference, query).also {
-                    thisRef.storeReferenceInCache(reference, it)
-                }
-            }
-            else -> query()
-        }
-    }
-}
+    reference: Column<REF>,
+    factory: EntityClass<ChildID, Child>,
+    cache: Boolean
+) : BaseReferrers<ParentID, Parent, ChildID, Child, REF>(reference, factory, cache)
 
 /**
  * Class responsible for implementing property delegates of the read-only properties involved in an optional one-to-many
@@ -134,10 +111,19 @@ class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, C
  * @param cache Whether loaded reference entities should be stored in the [EntityCache].
  */
 class OptionalReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
-    val reference: Column<REF?>,
+    reference: Column<REF?>,
+    factory: EntityClass<ChildID, Child>,
+    cache: Boolean
+) : BaseReferrers<ParentID, Parent, ChildID, Child, REF?>(reference, factory, cache)
+
+abstract class BaseReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
+    val reference: Column<REF>,
     val factory: EntityClass<ChildID, Child>,
     val cache: Boolean
 ) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
+    /** The list of columns and their [SortOrder] for ordering referred entities in on-to-many relationship. */
+    private var orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
+
     init {
         reference.referee ?: error("Column $reference is not a reference")
 
@@ -150,7 +136,12 @@ class OptionalReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<Pare
         val value = thisRef.run { reference.referee<REF>()!!.lookup() }
         if (thisRef.id._value == null || value == null) return emptySized()
 
-        val query = { factory.find { reference eq value } }
+        val query = {
+            @Suppress("SpreadOperator")
+            factory
+                .find { reference eq value }
+                .orderBy(*orderByExpressions.toTypedArray())
+        }
         val transaction = TransactionManager.currentOrNull()
         return when {
             transaction == null -> thisRef.getReferenceFromCache(reference)
@@ -161,6 +152,21 @@ class OptionalReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<Pare
             }
             else -> query()
         }
+    }
+
+    /** Modifies this reference to sort entities according to the specified [order]. **/
+    infix fun orderBy(order: Pair<Expression<*>, SortOrder>): BaseReferrers<ParentID, Parent, ChildID, Child, REF> = apply {
+        this.orderByExpressions.add(order)
+    }
+
+    /** Modifies this reference to sort entities based on multiple columns as specified in [order]. **/
+    infix fun orderBy(order: List<Pair<Expression<*>, SortOrder>>): BaseReferrers<ParentID, Parent, ChildID, Child, REF> = apply {
+        this.orderByExpressions.addAll(order)
+    }
+
+    /** Modifies this reference to sort entities by a column specified in [expression] using ascending order. **/
+    infix fun orderBy(expression: Expression<*>): BaseReferrers<ParentID, Parent, ChildID, Child, REF> = apply {
+        this.orderByExpressions.add(expression to SortOrder.ASC)
     }
 }
 
