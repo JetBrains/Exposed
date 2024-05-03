@@ -50,6 +50,15 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
     return DateTimeFormat.forPattern(newFormat)
 }
 
+private fun oracleDateTimeLiteral(dateTime: DateTime) =
+    "TO_TIMESTAMP('${DEFAULT_DATE_TIME_STRING_FORMATTER.print(dateTime)}', 'YYYY-MM-DD HH24:MI:SS.FF3')"
+
+private fun oracleDateTimeWithTimezoneLiteral(dateTime: DateTime) =
+    "TO_TIMESTAMP_TZ('${ORACLE_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(dateTime)}', 'YYYY-MM-DD HH24:MI:SS.FF3 TZH:TZM')"
+
+private fun oracleDateLiteral(dateTime: DateTime) =
+    "TO_DATE('${DEFAULT_DATE_STRING_FORMATTER.print(dateTime)}', 'YYYY-MM-DD')"
+
 /**
  * Column for storing dates, as [DateTime]. If [time] is set to `true`, both date and time data is stored.
  *
@@ -66,12 +75,16 @@ class DateColumnType(val time: Boolean) : ColumnType<DateTime>(), IDateColumnTyp
     override fun nonNullValueToString(value: DateTime): String {
         return if (time) {
             when {
+                currentDialect is OracleDialect -> oracleDateTimeLiteral(value.toDateTime(DateTimeZone.getDefault()))
                 (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == false ->
                     "'${MYSQL_DATE_TIME_STRING_FORMATTER.print(value.toDateTime(DateTimeZone.getDefault()))}'"
                 else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value.toDateTime(DateTimeZone.getDefault()))}'"
             }
         } else {
-            "'${DEFAULT_DATE_STRING_FORMATTER.print(value)}'"
+            if (currentDialect is OracleDialect) {
+                return oracleDateLiteral(value)
+            }
+            return "'${DEFAULT_DATE_STRING_FORMATTER.print(value)}'"
         }
     }
 
@@ -168,7 +181,7 @@ class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
     override fun nonNullValueToString(value: DateTime): String = when (currentDialect) {
         is SQLiteDialect -> "'${SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
         is MysqlDialect -> "'${SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
-        is OracleDialect -> "'${ORACLE_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
+        is OracleDialect -> oracleDateTimeWithTimezoneLiteral(value.toDateTime(DateTimeZone.getDefault()))
         else -> "'${DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
     }
 
