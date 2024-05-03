@@ -280,6 +280,23 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
+    @Test fun testInsertWithForeignId() {
+        val idTable = object : IntIdTable("idTable") {}
+        val standardTable = object : Table("standardTable") {
+            val externalId = reference("externalId", idTable.id)
+        }
+        withTables(idTable, standardTable) {
+            val id1 = idTable.insertAndGetId {}
+
+            standardTable.insert {
+                it[externalId] = id1.value
+            }
+
+            val allRecords = standardTable.selectAll().map { it[standardTable.externalId] }
+            assertTrue(allRecords == listOf(id1))
+        }
+    }
+
     @Test fun testInsertWithExpression() {
         val tbl = object : IntIdTable("testInsert") {
             val nullableInt = integer("nullableIntCol").nullable()
