@@ -36,7 +36,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     @Suppress("UNCHECKED_CAST")
     @JvmName("setWithEntityIdValue")
     operator fun <S : Comparable<S>> set(column: Column<EntityID<S>>, value: S) {
-        val entityId: EntityID<S> = EntityID(value, column.table as IdTable<S>)
+        val entityId: EntityID<S> = EntityID(value, (column.foreignKey?.targetTable ?: column.table) as IdTable<S>)
         column.columnType.validateValueBeforeUpdate(entityId)
         values[column] = entityId
     }
@@ -47,7 +47,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
         require(column.columnType.nullable || value != null) {
             "Trying to set null to not nullable column $column"
         }
-        val entityId: EntityID<S>? = value?.let { EntityID(it, column.table as IdTable<S>) }
+        val entityId: EntityID<S>? = value?.let { EntityID(it, (column.foreignKey?.targetTable ?: column.table) as IdTable<S>) }
         column.columnType.validateValueBeforeUpdate(entityId)
         values[column] = entityId
     }
