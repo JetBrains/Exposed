@@ -312,7 +312,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
     }
 
     override fun merge(dest: Table, source: Table, transaction: Transaction, whenBranches: List<MergeBaseStatement.WhenBranchData>, on: Op<Boolean>?): String {
-        validateMergeCommandWhenBranches(whenBranches)
+        validateMergeCommandWhenBranches(transaction, whenBranches)
         return super.merge(dest, source, transaction, whenBranches, on)
     }
 
@@ -324,23 +324,19 @@ internal object OracleFunctionProvider : FunctionProvider() {
         on: Op<Boolean>,
         prepared: Boolean
     ): String {
-        validateMergeCommandWhenBranches(whenBranches)
+        validateMergeCommandWhenBranches(transaction, whenBranches)
         return super.mergeSelect(dest, source, transaction, whenBranches, on, prepared)
     }
 }
 
-private fun validateMergeCommandWhenBranches(whenBranches: List<MergeBaseStatement.WhenBranchData>) {
-    if (whenBranches.count { it.action == INSERT } > 1) {
-        @Suppress("UseRequire")
-        throw IllegalArgumentException("Oracle SQL does not support multiple insert clauses")
-    }
-    if (whenBranches.count { it.action == UPDATE } > 1) {
-        @Suppress("UseRequire")
-        throw IllegalArgumentException("Oracle SQL does not support multiple update clauses")
-    }
-    if (whenBranches.count { it.action == DELETE } > 0) {
-        @Suppress("UseRequire")
-        throw IllegalArgumentException("Oracle SQL does not support delete clauses. You must use 'delete where' condition inside 'update' clause")
+private fun validateMergeCommandWhenBranches(transaction: Transaction, whenBranches: List<MergeBaseStatement.WhenBranchData>) {
+    when {
+        whenBranches.count { it.action == INSERT } > 1 ->
+            transaction.throwUnsupportedException("Multiple insert clauses are not supported by DB.")
+        whenBranches.count { it.action == UPDATE } > 1 ->
+            transaction.throwUnsupportedException("Multiple update clauses are not supported by DB.")
+        whenBranches.count { it.action == DELETE } > 0 ->
+            transaction.throwUnsupportedException("Delete clauses are not supported by DB. You must use 'delete where' inside 'update' clause")
     }
 }
 

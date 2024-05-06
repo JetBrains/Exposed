@@ -447,8 +447,7 @@ abstract class FunctionProvider {
         on: Op<Boolean>?
     ): String {
         if (whenBranches.any { it.deleteWhere != null } && currentDialect !is OracleDialect) {
-            @Suppress("UseRequire")
-            throw IllegalArgumentException("'deleteWhere' parameter can be used only as a part of Oracle SQL update clause statement.")
+            transaction.throwUnsupportedException("'deleteWhere' parameter can be used only as a part of Oracle SQL update clause statement.")
         }
 
         val onCondition = (

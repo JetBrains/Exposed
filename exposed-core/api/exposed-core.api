@@ -3010,16 +3010,16 @@ public class org/jetbrains/exposed/sql/statements/InsertStatement : org/jetbrain
 public abstract class org/jetbrains/exposed/sql/statements/MergeBaseStatement : org/jetbrains/exposed/sql/statements/Statement {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Table;)V
 	public fun arguments ()Ljava/lang/Iterable;
-	public final fun deleteWhenMatched (Lorg/jetbrains/exposed/sql/Op;)V
-	public static synthetic fun deleteWhenMatched$default (Lorg/jetbrains/exposed/sql/statements/MergeBaseStatement;Lorg/jetbrains/exposed/sql/Op;ILjava/lang/Object;)V
 	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Integer;
 	public synthetic fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Object;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
 	protected final fun getWhenBranches ()Ljava/util/List;
-	public final fun insertWhenNotMatched (Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)V
-	public static synthetic fun insertWhenNotMatched$default (Lorg/jetbrains/exposed/sql/statements/MergeBaseStatement;Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
-	public final fun updateWhenMatched (Lorg/jetbrains/exposed/sql/Op;Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)V
-	public static synthetic fun updateWhenMatched$default (Lorg/jetbrains/exposed/sql/statements/MergeBaseStatement;Lorg/jetbrains/exposed/sql/Op;Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun whenMatchedDelete (Lorg/jetbrains/exposed/sql/Op;)V
+	public static synthetic fun whenMatchedDelete$default (Lorg/jetbrains/exposed/sql/statements/MergeBaseStatement;Lorg/jetbrains/exposed/sql/Op;ILjava/lang/Object;)V
+	public final fun whenMatchedUpdate (Lorg/jetbrains/exposed/sql/Op;Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun whenMatchedUpdate$default (Lorg/jetbrains/exposed/sql/statements/MergeBaseStatement;Lorg/jetbrains/exposed/sql/Op;Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun whenNotMatchedInsert (Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun whenNotMatchedInsert$default (Lorg/jetbrains/exposed/sql/statements/MergeBaseStatement;Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 }
 
 public final class org/jetbrains/exposed/sql/statements/MergeBaseStatement$MergeWhenAction : java/lang/Enum {

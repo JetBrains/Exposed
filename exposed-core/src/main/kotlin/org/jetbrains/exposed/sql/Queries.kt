@@ -613,8 +613,8 @@ fun Table.exists(): Boolean = currentDialect.tableExists(this)
  * @param D The target table type extending from [Table].
  * @param S The source table type extending from [Table].
  * @param source An instance of the source table.
- * @param on A lambda with receiver [SqlExpressionBuilder] that should return the condition [Op<Boolean>]
- *           used to match records between the source and target tables.
+ * @param on A lambda function with [SqlExpressionBuilder] as its receiver that should return a [Op<Boolean>] condition.
+ *           This condition is used to match records between the source and target tables.
  * @param body A lambda where [MergeTableStatement] can be configured with specific actions to perform
  *             when records are matched or not matched.
  * @return A [MergeTableStatement] which represents the MERGE operation with the configured actions.
@@ -636,8 +636,8 @@ fun <D : Table, S : Table> D.mergeFrom(
  *
  * @param T The target table type extending from [Table].
  * @param selectQuery represents the aliased query for a complex subquery to be used as the source.
- * @param on A lambda with receiver [SqlExpressionBuilder] that should return the condition [Op<Boolean>]
- *           used to match records between the source and target tables.
+ * @param on A lambda with a receiver of type [SqlExpressionBuilder] that returns a condition [Op<Boolean>]
+ *           used to match records between the source query and the target table.
  * @param body A lambda where [MergeSelectStatement] can be configured with specific actions to perform
  *             when records are matched or not matched.
  * @return A [MergeSelectStatement] which represents the MERGE operation with the configured actions.

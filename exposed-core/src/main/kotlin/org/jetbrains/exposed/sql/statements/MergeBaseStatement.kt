@@ -13,9 +13,6 @@ abstract class MergeBaseStatement(val table: Table) : Statement<Int>(
 ) {
     protected val whenBranches = mutableListOf<WhenBranchData>()
 
-    // Workaround due to losing defaultValueFun inside Alias
-    private val originalTable = if (table is Alias<*>) table.delegate else table
-
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int? {
         return executeUpdate()
     }
@@ -39,8 +36,8 @@ abstract class MergeBaseStatement(val table: Table) : Statement<Int>(
      * @param body A lambda to configure the [InsertStatement] in which the required columns and corresponding
      * values are specified for the insert operation.
      */
-    fun insertWhenNotMatched(and: Op<Boolean>? = null, body: (InsertStatement<Int>) -> Unit) {
-        val insert = InsertStatement<Int>(originalTable).apply(body)
+    fun whenNotMatchedInsert(and: Op<Boolean>? = null, body: (InsertStatement<Int>) -> Unit) {
+        val insert = InsertStatement<Int>(table).apply(body)
         whenBranches.add(WhenBranchData(insert.arguments!!.first(), MergeWhenAction.INSERT, and))
     }
 
@@ -53,8 +50,8 @@ abstract class MergeBaseStatement(val table: Table) : Statement<Int>(
      * @param body A lambda to define the [UpdateStatement] which sets the values of columns in the matching
      * records.
      */
-    fun updateWhenMatched(and: Op<Boolean>? = null, deleteWhere: Op<Boolean>? = null, body: (UpdateStatement) -> Unit) {
-        val update = UpdateStatement(originalTable, limit = 1).apply(body)
+    fun whenMatchedUpdate(and: Op<Boolean>? = null, deleteWhere: Op<Boolean>? = null, body: (UpdateStatement) -> Unit) {
+        val update = UpdateStatement(table, limit = 1).apply(body)
         whenBranches.add(WhenBranchData(update.firstDataSet, MergeWhenAction.UPDATE, and, deleteWhere))
     }
 
@@ -64,7 +61,7 @@ abstract class MergeBaseStatement(val table: Table) : Statement<Int>(
      * @param and An additional optional condition [Op<Boolean>] to determine when the delete operation
      * should be performed.
      */
-    fun deleteWhenMatched(and: Op<Boolean>? = null) {
+    fun whenMatchedDelete(and: Op<Boolean>? = null) {
         whenBranches.add(WhenBranchData(emptyList(), MergeWhenAction.DELETE, and))
     }
 
