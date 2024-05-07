@@ -630,13 +630,15 @@ class UpsertTests : DatabaseTestsBase() {
     @Test
     fun testUpsertWithUUIDPrimaryKey() {
         val tester = object : UUIDTable("upsert_test", "id") {
-            val key = text("test_key").uniqueIndex()
+            val key = integer("test_key").uniqueIndex()
             val value = text("test_value")
         }
 
-        withTables(excludeSettings = TestDB.entries - listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), tester) {
+        // At present, only Postgres returns the correct UUID directly from the result set.
+        // For other databases incorrect ID is returned from the 'upsert' command.
+        withTables(excludeSettings = TestDB.entries - listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), tester) { testDb ->
             val insertId = tester.insertAndGetId {
-                it[key] = "key"
+                it[key] = 1
                 it[value] = "one"
             }
 
@@ -644,7 +646,7 @@ class UpsertTests : DatabaseTestsBase() {
                 keys = arrayOf(tester.key),
                 onUpdateExclude = listOf(tester.id),
             ) {
-                it[key] = "key"
+                it[key] = 1
                 it[value] = "two"
             }.resultedValues!!.first()[tester.id]
 
