@@ -1,3 +1,11 @@
+# 0.50.1
+Bug fixes:
+* fix: EXPOSED-366 inList with EntityID column causes type mismatch error by @bog-walk in https://github.com/JetBrains/Exposed/pull/2070
+* fix: EXPOSED-371 Fix incorrect table reference passed to EntityID instance when using value-based utility functions by @dzikoysk in https://github.com/JetBrains/Exposed/pull/2074
+
+Docs:
+* update: update Exposed logo by @koshachy in https://github.com/JetBrains/Exposed/pull/2071
+
 # 0.50.0
 Infrastructure:
 * Spring Framework 6.1.6
