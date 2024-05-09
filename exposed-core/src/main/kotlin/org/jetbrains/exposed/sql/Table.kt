@@ -1245,7 +1245,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Their order should match the order of columns in the referenced parent table's primary key.
      * @param target Primary key of the referenced parent table.
      * @param onUpdate [ReferenceOption] when performing update operations.
-     * @param onUpdate [ReferenceOption] when performing delete operations.
+     * @param onDelete [ReferenceOption] when performing delete operations.
      * @param name Custom foreign key constraint name.
      * @sample org.jetbrains.exposed.sql.tests.shared.ddl.CreateMissingTablesAndColumnsTests.CompositeForeignKeyTable
      */
@@ -1272,7 +1272,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * All referencing columns must belong to this table.
      * All referenced columns must belong to the same table.
      * @param onUpdate [ReferenceOption] when performing update operations.
-     * @param onUpdate [ReferenceOption] when performing delete operations.
+     * @param onDelete [ReferenceOption] when performing delete operations.
      * @param name Custom foreign key constraint name.
      * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testCompositeFKReferencingUniqueIndex
      */
