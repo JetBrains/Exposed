@@ -30,7 +30,7 @@ class Column<T>(
     val referee: Column<*>?
         get() = foreignKey?.targetOf(this)
 
-    /** Returns the column that this column references, casted as a column of type [S], or `null` if the cast fails. */
+    /** Returns the column that this column references, cast as a column of type [S], or `null` if the cast fails. */
     @Suppress("UNCHECKED_CAST")
     fun <S : T> referee(): Column<S>? = referee as? Column<S>
 
