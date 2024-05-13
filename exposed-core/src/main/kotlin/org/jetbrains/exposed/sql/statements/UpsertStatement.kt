@@ -48,4 +48,15 @@ open class UpsertStatement<Key : Any>(
             builder.args
         } ?: emptyList()
     }
+
+    override fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
+        return isEntityIdClientSideGeneratedUUID(column) ||
+            super.isColumnValuePreferredFromResultSet(column, value)
+    }
+
+    private fun isEntityIdClientSideGeneratedUUID(column: Column<*>) =
+        (column.columnType as? EntityIDColumnType<*>)
+            ?.idColumn
+            ?.takeIf { it.columnType is UUIDColumnType }
+            ?.defaultValueFun != null
 }

@@ -2993,6 +2993,7 @@ public class org/jetbrains/exposed/sql/statements/InsertStatement : org/jetbrain
 	public final fun getOrNull (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Object;
 	public final fun getResultedValues ()Ljava/util/List;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
+	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Z
 	public final fun isIgnore ()Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 	public fun prepared (Lorg/jetbrains/exposed/sql/Transaction;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;
@@ -3169,6 +3170,7 @@ public class org/jetbrains/exposed/sql/statements/UpsertStatement : org/jetbrain
 	public final fun getOnUpdate ()Ljava/util/List;
 	public final fun getOnUpdateExclude ()Ljava/util/List;
 	public final fun getWhere ()Lorg/jetbrains/exposed/sql/Op;
+	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 }
 

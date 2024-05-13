@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
@@ -623,6 +624,34 @@ class UpsertTests : DatabaseTestsBase() {
 
                 assertEquals(updatedData.size.toLong(), AutoIncTable.selectAll().count())
             }
+        }
+    }
+
+    @Test
+    fun testUpsertWithUUIDPrimaryKey() {
+        val tester = object : UUIDTable("upsert_test", "id") {
+            val key = integer("test_key").uniqueIndex()
+            val value = text("test_value")
+        }
+
+        // At present, only Postgres returns the correct UUID directly from the result set.
+        // For other databases incorrect ID is returned from the 'upsert' command.
+        withTables(excludeSettings = TestDB.entries - listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), tester) { testDb ->
+            val insertId = tester.insertAndGetId {
+                it[key] = 1
+                it[value] = "one"
+            }
+
+            val upsertId = tester.upsert(
+                keys = arrayOf(tester.key),
+                onUpdateExclude = listOf(tester.id),
+            ) {
+                it[key] = 1
+                it[value] = "two"
+            }.resultedValues!!.first()[tester.id]
+
+            assertEquals(insertId, upsertId)
+            assertEquals("two", tester.selectAll().where { tester.id eq insertId }.first()[tester.value])
         }
     }
 

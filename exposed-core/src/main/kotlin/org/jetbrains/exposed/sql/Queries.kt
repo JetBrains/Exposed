@@ -466,6 +466,10 @@ fun <T : Table> T.updateReturning(
  *
  * **Note:** Vendors that do not support this operation directly implement the standard MERGE USING command.
  *
+ * **Note:** Currently, the `upsert()` function might return an incorrect auto-generated ID (such as a UUID) if it performs an update.
+ * In this case, it returns a new auto-generated ID instead of the ID of the updated row.
+ * Postgres should not be affected by this issue as it implicitly returns the IDs of updated rows.
+ *
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match.
  * If no columns are provided, primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
