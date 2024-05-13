@@ -411,6 +411,7 @@ class DefaultsTest : DatabaseTestsBase() {
         val testTable = object : IntIdTable("t") {
             val t1 = timestampWithTimeZone("t1").default(nowWithTimeZone)
             val t2 = timestampWithTimeZone("t2").defaultExpression(timestampWithTimeZoneLiteral)
+            val t3 = timestampWithTimeZone("t3").defaultExpression(CurrentTimestampWithTimeZone)
         }
 
         fun Expression<*>.itOrNull() = when {
@@ -429,7 +430,8 @@ class DefaultsTest : DatabaseTestsBase() {
                     "${"t".inProperCase()} (" +
                     "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
                     "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
-                    "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}" +
+                    "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
+                    "${"t3".inProperCase()} $timestampWithTimeZoneType${testTable.t3.constraintNamePart()} ${CurrentTimestamp.itOrNull()}" +
                     ")"
 
                 val expected = if (currentDialectTest is OracleDialect ||
@@ -450,6 +452,9 @@ class DefaultsTest : DatabaseTestsBase() {
                 val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
+                val dbDefault = row1[testTable.t3]
+                assertEquals(dbDefault.offset, nowWithTimeZone.offset)
+                assertTrue { dbDefault.toLocalDateTime().toKotlinLocalDateTime() >= nowWithTimeZone.toLocalDateTime().toKotlinLocalDateTime() }
 
                 SchemaUtils.drop(testTable)
             }

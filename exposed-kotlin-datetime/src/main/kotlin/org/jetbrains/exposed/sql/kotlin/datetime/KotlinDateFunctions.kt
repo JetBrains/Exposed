@@ -49,11 +49,9 @@ fun <T : LocalDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeFu
 fun <T : Instant?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
 
 /**
- * Represents an SQL function that returns the current date and time, as [LocalDateTime].
- *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ * Represents the base SQL function that returns the current date and time, as determined by the specified [columnType].
  */
-object CurrentDateTime : Function<LocalDateTime>(KotlinLocalDateTimeColumnType.INSTANCE) {
+sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
@@ -61,6 +59,27 @@ object CurrentDateTime : Function<LocalDateTime>(KotlinLocalDateTimeColumnType.I
         }
     }
 }
+
+/**
+ * Represents an SQL function that returns the current date and time, as [LocalDateTime].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
+object CurrentDateTime : CurrentTimestampBase<LocalDateTime>(KotlinLocalDateTimeColumnType.INSTANCE)
+
+/**
+ * Represents an SQL function that returns the current date and time, as [Instant].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
+object CurrentTimestamp : CurrentTimestampBase<Instant>(KotlinInstantColumnType.INSTANCE)
+
+/**
+ * Represents an SQL function that returns the current date and time with time zone, as [OffsetDateTime].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testTimestampWithTimeZoneDefaults
+ */
+object CurrentTimestampWithTimeZone : CurrentTimestampBase<OffsetDateTime>(KotlinOffsetDateTimeColumnType.INSTANCE)
 
 /**
  * Represents an SQL function that returns the current date, as [LocalDate].
@@ -73,20 +92,6 @@ object CurrentDate : Function<LocalDate>(KotlinLocalDateColumnType.INSTANCE) {
             is MysqlDialect -> "CURRENT_DATE()"
             is SQLServerDialect -> "GETDATE()"
             else -> "CURRENT_DATE"
-        }
-    }
-}
-
-/**
- * Represents an SQL function that returns the current date and time.
- *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
- */
-object CurrentTimestamp : Function<Instant>(KotlinInstantColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        +when {
-            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
-            else -> "CURRENT_TIMESTAMP"
         }
     }
 }

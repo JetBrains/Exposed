@@ -26,11 +26,9 @@ class Time<T : Temporal?>(val expr: Expression<T>) : Function<LocalTime>(JavaLoc
 }
 
 /**
- * Represents an SQL function that returns the current date and time, as [LocalDateTime].
- *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ * Represents the base SQL function that returns the current date and time, as determined by the specified [columnType].
  */
-object CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INSTANCE) {
+sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
@@ -38,6 +36,27 @@ object CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INS
         }
     }
 }
+
+/**
+ * Represents an SQL function that returns the current date and time, as [LocalDateTime].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
+object CurrentDateTime : CurrentTimestampBase<LocalDateTime>(JavaLocalDateTimeColumnType.INSTANCE)
+
+/**
+ * Represents an SQL function that returns the current date and time, as [Instant].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
+object CurrentTimestamp : CurrentTimestampBase<Instant>(JavaInstantColumnType.INSTANCE)
+
+/**
+ * Represents an SQL function that returns the current date and time with time zone, as [OffsetDateTime].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testTimestampWithTimeZoneDefaults
+ */
+object CurrentTimestampWithTimeZone : CurrentTimestampBase<OffsetDateTime>(JavaOffsetDateTimeColumnType.INSTANCE)
 
 /**
  * Represents an SQL function that returns the current date, as [LocalDate].
@@ -50,20 +69,6 @@ object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
             is MysqlDialect -> "CURRENT_DATE()"
             is SQLServerDialect -> "GETDATE()"
             else -> "CURRENT_DATE"
-        }
-    }
-}
-
-/**
- * Represents an SQL function that returns the current date and time, as [Instant].
- *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
- */
-object CurrentTimestamp : Function<Instant>(JavaInstantColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        +when {
-            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
-            else -> "CURRENT_TIMESTAMP"
         }
     }
 }
