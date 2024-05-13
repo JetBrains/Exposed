@@ -125,15 +125,15 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                     }
                 }
                 else -> {
-                    // @formatter:off
+                    val castReferee = reference.referee<REF>()!!
+                    val baseReferee = (castReferee.columnType as? EntityIDColumnType<REF>)?.idColumn ?: castReferee
                     factory.findWithCacheCondition({
                         reference.referee!!.getValue(this, desc) == refValue
                     }) {
-                        reference.referee<REF>()!! eq refValue
+                        baseReferee eq refValue
                     }.singleOrNull()?.also {
                         storeReferenceInCache(reference, it)
                     }
-                    // @formatter:on
                 }
             } ?: error("Cannot find ${factory.table.tableName} WHERE id=$refValue")
         }

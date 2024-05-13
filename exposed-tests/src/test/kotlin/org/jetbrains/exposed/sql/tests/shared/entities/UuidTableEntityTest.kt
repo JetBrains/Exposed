@@ -4,7 +4,10 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.exists
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
@@ -47,10 +50,18 @@ object UUIDTables {
         var city by City.referencedOn(Addresses.city)
         var address by Addresses.address
     }
+
+    object Towns : UUIDTable("towns") {
+        val cityId: Column<UUID> = uuid("city_id").references(Cities.id)
+    }
+
+    class Town(id: EntityID<UUID>) : UUIDEntity(id) {
+        companion object : UUIDEntityClass<Town>(Towns)
+        var city by City referencedOn Towns.cityId
+    }
 }
 
 class UUIDTableEntityTest : DatabaseTestsBase() {
-
     @Test
     fun `create tables`() {
         withTables(UUIDTables.Cities, UUIDTables.People) {
@@ -147,6 +158,21 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
 
             address2.refresh(flush = true)
             assertEquals("address2", address2.address)
+        }
+    }
+
+    @Test
+    fun testForeignKeyBetweenUUIDAndEntityIDColumns() {
+        withTables(UUIDTables.Cities, UUIDTables.Towns) {
+            val cId = UUIDTables.Cities.insertAndGetId {
+                it[name] = "City A"
+            }
+            UUIDTables.Towns.insert {
+                it[cityId] = cId.value
+            }
+
+            val town1 = UUIDTables.Town.all().single()
+            assertEquals(cId, town1.city.id)
         }
     }
 }
