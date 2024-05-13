@@ -276,7 +276,7 @@ private fun validateMergeCommandWhenBranches(transaction: Transaction, whenBranc
         whenBranches.count { it.action == UPDATE } > 1 ->
             transaction.throwUnsupportedException("Multiple update clauses are not supported by DB")
         whenBranches.count { it.action == DELETE } > 1 ->
-            transaction.throwUnsupportedException("Delete clauses are not supported by DB")
+            transaction.throwUnsupportedException("Multiple delete clauses are not supported by DB")
     }
 }
 

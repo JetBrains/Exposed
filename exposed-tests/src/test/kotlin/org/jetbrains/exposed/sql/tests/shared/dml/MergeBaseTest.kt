@@ -14,34 +14,34 @@ abstract class MergeBaseTest : DatabaseTestsBase() {
 
     protected val defaultExcludeSettings = listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.MARIADB)
 
-    protected fun withMergeTestTables(excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) = withTables(
+    protected fun withMergeTestTables(excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(dest: Dest, source: Source) -> Unit) = withTables(
         defaultExcludeSettings + excludeSettings, Source, Dest
     ) {
-        statement(it)
+        statement(Dest, Source)
     }
 
-    protected fun withMergeTestTablesAndDefaultData(excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
-        withMergeTestTables(excludeSettings) {
-            Source.insert(key = "only-in-source-1", value = 1)
-            Source.insert(key = "only-in-source-2", value = 2)
-            Source.insert(key = "only-in-source-3", value = 3, optional = "optional-is-present")
-            Source.insert(key = "only-in-source-4", value = 4, at = LocalDateTime(2050, 1, 1, 0, 0, 0, 0))
+    protected fun withMergeTestTablesAndDefaultData(excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(dest: Dest, source: Source) -> Unit) {
+        withMergeTestTables(excludeSettings) { dest, source ->
+            source.insert(key = "only-in-source-1", value = 1)
+            source.insert(key = "only-in-source-2", value = 2)
+            source.insert(key = "only-in-source-3", value = 3, optional = "optional-is-present")
+            source.insert(key = "only-in-source-4", value = 4, at = LocalDateTime(2050, 1, 1, 0, 0, 0, 0))
 
-            Dest.insert(key = "only-in-dest-1", value = 10)
-            Dest.insert(key = "only-in-dest-2", value = 20)
-            Dest.insert(key = "only-in-dest-3", value = 30, optional = "optional-is-present")
-            Dest.insert(key = "only-in-dest-4", value = 40, at = LocalDateTime(2050, 1, 1, 0, 0, 0, 0))
+            dest.insert(key = "only-in-dest-1", value = 10)
+            dest.insert(key = "only-in-dest-2", value = 20)
+            dest.insert(key = "only-in-dest-3", value = 30, optional = "optional-is-present")
+            dest.insert(key = "only-in-dest-4", value = 40, at = LocalDateTime(2050, 1, 1, 0, 0, 0, 0))
 
-            Source.insert(key = "in-source-and-dest-1", value = 1)
-            Dest.insert(key = "in-source-and-dest-1", value = 10)
-            Source.insert(key = "in-source-and-dest-2", value = 2)
-            Dest.insert(key = "in-source-and-dest-2", value = 20)
-            Source.insert(key = "in-source-and-dest-3", value = 3, optional = "optional-is-present")
-            Dest.insert(key = "in-source-and-dest-3", value = 30, optional = "optional-is-present")
-            Source.insert(key = "in-source-and-dest-4", value = 4, at = LocalDateTime(1950, 1, 1, 0, 0, 0, 0))
-            Dest.insert(key = "in-source-and-dest-4", value = 40, at = LocalDateTime(1950, 1, 1, 0, 0, 0, 0))
+            source.insert(key = "in-source-and-dest-1", value = 1)
+            dest.insert(key = "in-source-and-dest-1", value = 10)
+            source.insert(key = "in-source-and-dest-2", value = 2)
+            dest.insert(key = "in-source-and-dest-2", value = 20)
+            source.insert(key = "in-source-and-dest-3", value = 3, optional = "optional-is-present")
+            dest.insert(key = "in-source-and-dest-3", value = 30, optional = "optional-is-present")
+            source.insert(key = "in-source-and-dest-4", value = 4, at = LocalDateTime(1950, 1, 1, 0, 0, 0, 0))
+            dest.insert(key = "in-source-and-dest-4", value = 40, at = LocalDateTime(1950, 1, 1, 0, 0, 0, 0))
 
-            statement(it)
+            statement(Dest, Source)
         }
     }
 

@@ -21,259 +21,259 @@ class MergeTableTest : MergeBaseTest() {
 
     @Test
     fun testInsert() {
-        withMergeTestTablesAndDefaultData {
-            Dest.mergeFrom(
-                Source,
+        withMergeTestTablesAndDefaultData { dest, source ->
+            dest.mergeFrom(
+                source,
                 on = { defaultOnCondition() },
             ) {
                 whenNotMatchedInsert {
-                    it[Dest.key] = Source.key
-                    it[Dest.value] = Source.value * 2
-                    it[Dest.optional] = stringLiteral("optional::") + Source.key
+                    it[dest.key] = source.key
+                    it[dest.value] = source.value * 2
+                    it[dest.optional] = stringLiteral("optional::") + source.key
                 }
             }
 
-            val dest = Dest.getByKey("only-in-source-1")
-            assertEquals(2, dest[Dest.value])
-            assertEquals("optional::only-in-source-1", dest[Dest.optional])
-            assertEquals(TEST_DEFAULT_DATE_TIME, dest[Dest.at])
+            val destRow = dest.getByKey("only-in-source-1")
+            assertEquals(2, destRow[dest.value])
+            assertEquals("optional::only-in-source-1", destRow[dest.optional])
+            assertEquals(TEST_DEFAULT_DATE_TIME, destRow[dest.at])
         }
     }
 
     @Test
     fun testInsertByAlias() {
-        withMergeTestTablesAndDefaultData {
-            val destAlias = Dest.alias("dest_alias")
-            val sourceAlias = Source.alias("source_alias")
+        withMergeTestTablesAndDefaultData { dest, source ->
+            val destAlias = dest.alias("dest_alias")
+            val sourceAlias = source.alias("source_alias")
 
             destAlias.mergeFrom(
                 sourceAlias,
-                on = { sourceAlias[Source.key] eq destAlias[Dest.key] },
+                on = { sourceAlias[source.key] eq destAlias[dest.key] },
             ) {
                 whenNotMatchedInsert {
-                    it[Dest.key] = sourceAlias[Source.key]
-                    it[Dest.value] = sourceAlias[Source.value] * 2
+                    it[dest.key] = sourceAlias[source.key]
+                    it[dest.value] = sourceAlias[source.value] * 2
                 }
             }
 
-            val dest = Dest.getByKey("only-in-source-1")
-            assertEquals(2, dest[Dest.value])
+            val destRow = dest.getByKey("only-in-source-1")
+            assertEquals(2, destRow[dest.value])
         }
     }
 
     @Test
     fun testUpdate() {
-        withMergeTestTablesAndDefaultData {
-            Dest.mergeFrom(
-                Source,
+        withMergeTestTablesAndDefaultData { dest, source ->
+            dest.mergeFrom(
+                source,
                 on = { defaultOnCondition() },
             ) {
                 whenMatchedUpdate {
-                    it[Dest.value] = (Source.value + Dest.value) * 2
-                    it[Dest.optional] = Source.key + stringLiteral("::") + Dest.key
+                    it[dest.value] = (source.value + dest.value) * 2
+                    it[dest.optional] = source.key + stringLiteral("::") + dest.key
                 }
             }
-            val dest = Dest.getByKey("in-source-and-dest-1")
-            assertEquals(22, dest[Dest.value])
-            assertEquals("in-source-and-dest-1::in-source-and-dest-1", dest[Dest.optional])
-            assertEquals(TEST_DEFAULT_DATE_TIME, dest[Dest.at])
+            val destRow = dest.getByKey("in-source-and-dest-1")
+            assertEquals(22, destRow[dest.value])
+            assertEquals("in-source-and-dest-1::in-source-and-dest-1", destRow[dest.optional])
+            assertEquals(TEST_DEFAULT_DATE_TIME, destRow[dest.at])
         }
     }
 
     @Test
     fun testUpdateByAlias() {
-        withMergeTestTablesAndDefaultData {
-            val destAlias = Dest.alias("dest_alias")
-            val sourceAlias = Source.alias("source_alias")
+        withMergeTestTablesAndDefaultData { dest, source ->
+            val destAlias = dest.alias("dest_alias")
+            val sourceAlias = source.alias("source_alias")
 
             destAlias.mergeFrom(
                 sourceAlias,
-                on = { sourceAlias[Source.key] eq destAlias[Dest.key] },
+                on = { sourceAlias[source.key] eq destAlias[dest.key] },
             ) {
                 whenMatchedUpdate {
-                    it[Dest.value] = (sourceAlias[Source.value] + destAlias[Dest.value]) * 2
-                    it[Dest.optional] = sourceAlias[Source.key] + stringLiteral("::") + destAlias[Dest.key]
+                    it[dest.value] = (sourceAlias[source.value] + destAlias[dest.value]) * 2
+                    it[dest.optional] = sourceAlias[source.key] + stringLiteral("::") + destAlias[dest.key]
                 }
             }
 
-            val dest = Dest.getByKey("in-source-and-dest-1")
-            assertEquals(22, dest[Dest.value])
-            assertEquals("in-source-and-dest-1::in-source-and-dest-1", dest[Dest.optional])
-            assertEquals(TEST_DEFAULT_DATE_TIME, dest[Dest.at])
+            val destRow = dest.getByKey("in-source-and-dest-1")
+            assertEquals(22, destRow[dest.value])
+            assertEquals("in-source-and-dest-1::in-source-and-dest-1", destRow[dest.optional])
+            assertEquals(TEST_DEFAULT_DATE_TIME, destRow[dest.at])
         }
     }
 
     @Test
     fun testDelete() {
-        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB) {
-            Dest.mergeFrom(
-                Source,
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB) { dest, source ->
+            dest.mergeFrom(
+                source,
                 on = { defaultOnCondition() },
             ) {
                 whenMatchedDelete()
             }
 
-            assertNull(Dest.getByKeyOrNull("in-source-and-dest-1"))
-            assertNull(Dest.getByKeyOrNull("in-source-and-dest-2"))
-            assertNull(Dest.getByKeyOrNull("in-source-and-dest-3"))
-            assertNull(Dest.getByKeyOrNull("in-source-and-dest-4"))
+            assertNull(dest.getByKeyOrNull("in-source-and-dest-1"))
+            assertNull(dest.getByKeyOrNull("in-source-and-dest-2"))
+            assertNull(dest.getByKeyOrNull("in-source-and-dest-3"))
+            assertNull(dest.getByKeyOrNull("in-source-and-dest-4"))
         }
     }
 
     @Test
     fun testOracleDeleteOnUpdate() {
-        withMergeTestTablesAndDefaultData(excludeSettings = allDbExcept(listOf(ORACLE))) {
-            Dest.mergeFrom(
-                Source,
+        withMergeTestTablesAndDefaultData(excludeSettings = allDbExcept(listOf(ORACLE))) { dest, source ->
+            dest.mergeFrom(
+                source,
                 on = { defaultOnCondition() },
             ) {
-                whenMatchedUpdate(deleteWhere = (Dest.value greater 20)) {
-                    it[Dest.value] = Dest.value
+                whenMatchedUpdate(deleteWhere = (dest.value greater 20)) {
+                    it[dest.value] = dest.value
                 }
             }
 
-            assertNotNull(Dest.getByKeyOrNull("in-source-and-dest-1"))
-            assertNotNull(Dest.getByKeyOrNull("in-source-and-dest-2"))
-            assertNull(Dest.getByKeyOrNull("in-source-and-dest-3"))
-            assertNull(Dest.getByKeyOrNull("in-source-and-dest-4"))
+            assertNotNull(dest.getByKeyOrNull("in-source-and-dest-1"))
+            assertNotNull(dest.getByKeyOrNull("in-source-and-dest-2"))
+            assertNull(dest.getByKeyOrNull("in-source-and-dest-3"))
+            assertNull(dest.getByKeyOrNull("in-source-and-dest-4"))
         }
     }
 
     @Test
     fun testConditionOnInsertAndUpdate() {
-        withMergeTestTablesAndDefaultData {
-            Dest.mergeFrom(
-                Source,
+        withMergeTestTablesAndDefaultData { dest, source ->
+            dest.mergeFrom(
+                source,
                 on = { defaultOnCondition() },
             ) {
-                whenNotMatchedInsert(and = (Source.value greater 2)) {
-                    it[Dest.key] = Source.key
-                    it[Dest.value] = Source.value
+                whenNotMatchedInsert(and = (source.value greater 2)) {
+                    it[dest.key] = source.key
+                    it[dest.value] = source.value
                 }
 
-                whenMatchedUpdate(and = (Dest.value greater 20)) {
-                    it[Dest.value] = Source.value + Dest.value
+                whenMatchedUpdate(and = (dest.value greater 20)) {
+                    it[dest.value] = source.value + dest.value
                 }
             }
 
-            assertNull(Dest.getByKeyOrNull("only-in-source-1"))
-            assertNull(Dest.getByKeyOrNull("only-in-source-2"))
-            assertNotNull(Dest.getByKeyOrNull("only-in-source-3"))
-            assertNotNull(Dest.getByKeyOrNull("only-in-source-4"))
+            assertNull(dest.getByKeyOrNull("only-in-source-1"))
+            assertNull(dest.getByKeyOrNull("only-in-source-2"))
+            assertNotNull(dest.getByKeyOrNull("only-in-source-3"))
+            assertNotNull(dest.getByKeyOrNull("only-in-source-4"))
 
-            assertEquals(10, Dest.getByKey("in-source-and-dest-1")[Dest.value])
-            assertEquals(20, Dest.getByKey("in-source-and-dest-2")[Dest.value])
-            assertEquals(33, Dest.getByKey("in-source-and-dest-3")[Dest.value])
-            assertEquals(44, Dest.getByKey("in-source-and-dest-4")[Dest.value])
+            assertEquals(10, dest.getByKey("in-source-and-dest-1")[dest.value])
+            assertEquals(20, dest.getByKey("in-source-and-dest-2")[dest.value])
+            assertEquals(33, dest.getByKey("in-source-and-dest-3")[dest.value])
+            assertEquals(44, dest.getByKey("in-source-and-dest-4")[dest.value])
         }
     }
 
     @Test
     fun testConditionOnDelete() {
-        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB) {
-            Dest.mergeFrom(
-                Source,
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB) { dest, source ->
+            dest.mergeFrom(
+                source,
                 on = { defaultOnCondition() },
             ) {
-                whenMatchedDelete(and = (Source.value greater 2) and (Dest.value greater 20))
+                whenMatchedDelete(and = (source.value greater 2) and (dest.value greater 20))
             }
 
-            assertNotNull(Dest.getByKeyOrNull("in-source-and-dest-1"))
-            assertNotNull(Dest.getByKeyOrNull("in-source-and-dest-2"))
-            assertNull(Dest.getByKeyOrNull("in-source-and-dest-3"))
-            assertNull(Dest.getByKeyOrNull("in-source-and-dest-4"))
+            assertNotNull(dest.getByKeyOrNull("in-source-and-dest-1"))
+            assertNotNull(dest.getByKeyOrNull("in-source-and-dest-2"))
+            assertNull(dest.getByKeyOrNull("in-source-and-dest-3"))
+            assertNull(dest.getByKeyOrNull("in-source-and-dest-4"))
         }
     }
 
     @Test
     fun testMultipleClauses() {
-        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB + TestDB.sqlServerRelatedDB) {
-            Dest.mergeFrom(Source, on = { defaultOnCondition() }) {
-                whenNotMatchedInsert(and = (Source.value eq 1)) {
-                    it[Dest.key] = Source.key
-                    it[Dest.value] = Source.value
-                    it[Dest.optional] = "one"
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB + TestDB.sqlServerRelatedDB) { dest, source ->
+            dest.mergeFrom(source, on = { defaultOnCondition() }) {
+                whenNotMatchedInsert(and = (source.value eq 1)) {
+                    it[dest.key] = source.key
+                    it[dest.value] = source.value
+                    it[dest.optional] = "one"
                 }
-                whenNotMatchedInsert(and = (Source.value eq 2)) {
-                    it[Dest.key] = Source.key
-                    it[Dest.value] = Source.value
-                    it[Dest.optional] = "two"
+                whenNotMatchedInsert(and = (source.value eq 2)) {
+                    it[dest.key] = source.key
+                    it[dest.value] = source.value
+                    it[dest.optional] = "two"
                 }
                 whenNotMatchedInsert {
-                    it[Dest.key] = Source.key
-                    it[Dest.value] = Source.value
-                    it[Dest.optional] = "three-and-more"
+                    it[dest.key] = source.key
+                    it[dest.value] = source.value
+                    it[dest.optional] = "three-and-more"
                 }
 
-                whenMatchedDelete(and = (Source.value eq 1))
-                whenMatchedUpdate(and = (Source.value eq 1)) {
-                    it[Dest.key] = Source.key
-                    it[Dest.value] = (Dest.value + Source.value) * 10
+                whenMatchedDelete(and = (source.value eq 1))
+                whenMatchedUpdate(and = (source.value eq 1)) {
+                    it[dest.key] = source.key
+                    it[dest.value] = (dest.value + source.value) * 10
                 }
-                whenMatchedUpdate(and = (Source.value eq 2)) {
-                    it[Dest.key] = Source.key
-                    it[Dest.value] = (Dest.value + Source.value) * 100
+                whenMatchedUpdate(and = (source.value eq 2)) {
+                    it[dest.key] = source.key
+                    it[dest.value] = (dest.value + source.value) * 100
                 }
-                whenMatchedDelete(and = (Source.value eq 3))
+                whenMatchedDelete(and = (source.value eq 3))
 
                 whenMatchedUpdate {
-                    it[Dest.key] = Source.key
-                    it[Dest.value] = 1000
+                    it[dest.key] = source.key
+                    it[dest.value] = 1000
                 }
             }
 
-            assertEquals("one", Dest.getByKey("only-in-source-1")[Dest.optional])
-            assertEquals("two", Dest.getByKey("only-in-source-2")[Dest.optional])
-            assertEquals("three-and-more", Dest.getByKey("only-in-source-3")[Dest.optional])
-            assertEquals("three-and-more", Dest.getByKey("only-in-source-4")[Dest.optional])
+            assertEquals("one", dest.getByKey("only-in-source-1")[dest.optional])
+            assertEquals("two", dest.getByKey("only-in-source-2")[dest.optional])
+            assertEquals("three-and-more", dest.getByKey("only-in-source-3")[dest.optional])
+            assertEquals("three-and-more", dest.getByKey("only-in-source-4")[dest.optional])
 
-            assertNull(Dest.getByKeyOrNull("in-source-and-dest-1"))
-            assertEquals(2200, Dest.getByKey("in-source-and-dest-2")[Dest.value])
-            assertNull(Dest.getByKeyOrNull("in-source-and-dest-3"))
-            assertEquals(1000, Dest.getByKey("in-source-and-dest-4")[Dest.value])
+            assertNull(dest.getByKeyOrNull("in-source-and-dest-1"))
+            assertEquals(2200, dest.getByKey("in-source-and-dest-2")[dest.value])
+            assertNull(dest.getByKeyOrNull("in-source-and-dest-3"))
+            assertEquals(1000, dest.getByKey("in-source-and-dest-4")[dest.value])
         }
     }
 
     @Test
     fun testUnsupportedByDialectExceptions() {
-        withMergeTestTables(excludeSettings = allDbExcept(TestDB.oracleRelatedDB + TestDB.sqlServerRelatedDB)) {
+        withMergeTestTables(excludeSettings = allDbExcept(TestDB.oracleRelatedDB + TestDB.sqlServerRelatedDB)) { dest, source ->
             expectException<UnsupportedByDialectException> {
-                Dest.mergeFrom(Source, on = { defaultOnCondition() }) {
+                dest.mergeFrom(source, on = { defaultOnCondition() }) {
                     whenNotMatchedInsert {
-                        it[Dest.key] = Source.key
-                        it[Dest.value] = Source.value
+                        it[dest.key] = source.key
+                        it[dest.value] = source.value
                     }
                     whenNotMatchedInsert {
-                        it[Dest.key] = Source.key
-                        it[Dest.value] = Source.value
+                        it[dest.key] = source.key
+                        it[dest.value] = source.value
                     }
                 }
             }
 
             expectException<UnsupportedByDialectException> {
-                Dest.mergeFrom(Source, on = { defaultOnCondition() }) {
+                dest.mergeFrom(source, on = { defaultOnCondition() }) {
                     whenMatchedUpdate {
-                        it[Dest.value] = Source.value
+                        it[dest.value] = source.value
                     }
                     whenMatchedUpdate {
-                        it[Dest.value] = Source.value
+                        it[dest.value] = source.value
                     }
                 }
             }
 
             expectException<UnsupportedByDialectException> {
-                Dest.mergeFrom(Source, on = { defaultOnCondition() }) {
+                dest.mergeFrom(source, on = { defaultOnCondition() }) {
                     whenMatchedDelete()
                     whenMatchedDelete()
                 }
             }
         }
 
-        withMergeTestTables(excludeSettings = TestDB.oracleRelatedDB) {
+        withMergeTestTables(excludeSettings = TestDB.oracleRelatedDB) { dest, source ->
             expectException<UnsupportedByDialectException> {
-                Dest.mergeFrom(Source, on = { defaultOnCondition() }) {
-                    whenMatchedUpdate(deleteWhere = (Dest.value greater 1)) {
-                        it[Dest.value] = Source.value
+                dest.mergeFrom(source, on = { defaultOnCondition() }) {
+                    whenMatchedUpdate(deleteWhere = (dest.value greater 1)) {
+                        it[dest.value] = source.value
                     }
                 }
             }
