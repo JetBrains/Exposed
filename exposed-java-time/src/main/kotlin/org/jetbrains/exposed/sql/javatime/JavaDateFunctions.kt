@@ -38,6 +38,21 @@ sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Functio
 }
 
 /**
+ * Represents an SQL function that returns the current date, as [LocalDate].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
+object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        +when (currentDialect) {
+            is MysqlDialect -> "CURRENT_DATE()"
+            is SQLServerDialect -> "GETDATE()"
+            else -> "CURRENT_DATE"
+        }
+    }
+}
+
+/**
  * Represents an SQL function that returns the current date and time, as [LocalDateTime].
  *
  * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
@@ -57,21 +72,6 @@ object CurrentTimestamp : CurrentTimestampBase<Instant>(JavaInstantColumnType.IN
  * @sample org.jetbrains.exposed.DefaultsTest.testTimestampWithTimeZoneDefaults
  */
 object CurrentTimestampWithTimeZone : CurrentTimestampBase<OffsetDateTime>(JavaOffsetDateTimeColumnType.INSTANCE)
-
-/**
- * Represents an SQL function that returns the current date, as [LocalDate].
- *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
- */
-object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        +when (currentDialect) {
-            is MysqlDialect -> "CURRENT_DATE()"
-            is SQLServerDialect -> "GETDATE()"
-            else -> "CURRENT_DATE"
-        }
-    }
-}
 
 /** Represents an SQL function that extracts the year field from a given temporal [expr]. */
 class Year<T : Temporal?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {
