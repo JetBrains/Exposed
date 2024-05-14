@@ -655,6 +655,33 @@ class UpsertTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testBatchUpsertWithUUIDPrimaryKey() {
+        val tester = object : UUIDTable("batch_upsert_test", "id") {
+            val key = integer("test_key").uniqueIndex()
+            val value = text("test_value")
+        }
+
+        withTables(excludeSettings = TestDB.entries - listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), tester) {
+            val insertId = tester.insertAndGetId {
+                it[key] = 1
+                it[value] = "one"
+            }
+
+            val upsertId = tester.batchUpsert(
+                data = listOf(1 to "two"),
+                keys = arrayOf(tester.key),
+                onUpdateExclude = listOf(tester.id),
+            ) {
+                this[tester.key] = it.first
+                this[tester.value] = it.second
+            }.first()[tester.id]
+
+            assertEquals(insertId, upsertId)
+            assertEquals("two", tester.selectAll().where { tester.id eq insertId }.first()[tester.value])
+        }
+    }
+
     private object AutoIncTable : Table("auto_inc_table") {
         val id = integer("id").autoIncrement()
         val name = varchar("name", 64)

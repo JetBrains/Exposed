@@ -42,4 +42,9 @@ open class BatchUpsertStatement(
         }
         return functionProvider.upsert(table, arguments!!.first(), onUpdate, onUpdateExclude, null, transaction, keys = keys)
     }
+
+    override fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
+        return isEntityIdClientSideGeneratedUUID(column) ||
+            super.isColumnValuePreferredFromResultSet(column, value)
+    }
 }
