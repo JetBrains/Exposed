@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.MergeBaseStatement
+import org.jetbrains.exposed.sql.statements.MergeStatement
 
 /**
  * Provides definitions for all the supported SQL functions.
@@ -439,11 +439,21 @@ abstract class FunctionProvider {
         return "INSERT INTO ${transaction.identity(table)} $columnsExpr $valuesExpr"
     }
 
+    /**
+     * Generates the SQL MERGE command which synchronizes two datasets by inserting new rows,
+     * or updating/deleting existing ones in the target table based on data from another table.
+     *
+     * @param dest The table that will be modified.
+     * @param source The table providing the data for modification.
+     * @param transaction The transaction in which the operation will be executed.
+     * @param whenBranches A list of `MergeStatement.WhenBranchData` instances describing the `when` clauses of the SQL command.
+     * @param on The condition that determines whether to apply insertions or updates/deletions.
+     */
     open fun merge(
         dest: Table,
         source: Table,
         transaction: Transaction,
-        whenBranches: List<MergeBaseStatement.WhenBranchData>,
+        whenBranches: List<MergeStatement.WhenBranchData>,
         on: Op<Boolean>?
     ): String {
         if (whenBranches.any { it.deleteWhere != null } && currentDialect !is OracleDialect) {
@@ -472,11 +482,21 @@ abstract class FunctionProvider {
         }
     }
 
+    /**
+     * Generates the SQL MERGE command which synchronizes two datasets by inserting new rows,
+     * or updating/deleting existing ones in the target table based on data from subquery.
+     *
+     * @param dest The table that will be modified.
+     * @param source The query providing the data for modification.
+     * @param transaction The transaction in which the operation will be executed.
+     * @param whenBranches A list of `MergeStatement.WhenBranchData` instances describing the `when` clauses of the SQL command.
+     * @param on The condition that determines whether to apply insertions or updates/deletions.
+     */
     open fun mergeSelect(
         dest: Table,
         source: QueryAlias,
         transaction: Transaction,
-        whenBranches: List<MergeBaseStatement.WhenBranchData>,
+        whenBranches: List<MergeStatement.WhenBranchData>,
         on: Op<Boolean>,
         prepared: Boolean
     ): String {
@@ -820,7 +840,7 @@ abstract class FunctionProvider {
 }
 
 @Suppress("NestedBlockDepth")
-private fun QueryBuilder.addWhenBranchesToMergeStatement(transaction: Transaction, table: Table, whenBranches: List<MergeBaseStatement.WhenBranchData>) {
+private fun QueryBuilder.addWhenBranchesToMergeStatement(transaction: Transaction, table: Table, whenBranches: List<MergeStatement.WhenBranchData>) {
     fun QueryBuilder.appendValueAlias(column: Column<*>, value: Any?) {
         when (value) {
             is Column<*> -> {
@@ -841,7 +861,7 @@ private fun QueryBuilder.addWhenBranchesToMergeStatement(transaction: Transactio
 
     whenBranches.forEach { (arguments, action, condition, deleteWhere) ->
         when (action) {
-            MergeBaseStatement.MergeWhenAction.INSERT -> {
+            MergeStatement.MergeWhenAction.INSERT -> {
                 val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in arguments.map { it.first } }
 
                 val extraArg = if (nextValExpression != null) listOf(autoIncColumn to nextValExpression) else emptyList()
@@ -863,7 +883,7 @@ private fun QueryBuilder.addWhenBranchesToMergeStatement(transaction: Transactio
                 }
             }
 
-            MergeBaseStatement.MergeWhenAction.UPDATE -> {
+            MergeStatement.MergeWhenAction.UPDATE -> {
                 +"WHEN MATCHED "
                 if (currentDialect !is OracleDialect) {
                     condition?.let { append("AND ($condition) ") }
@@ -881,7 +901,7 @@ private fun QueryBuilder.addWhenBranchesToMergeStatement(transaction: Transactio
                 }
             }
 
-            MergeBaseStatement.MergeWhenAction.DELETE -> {
+            MergeStatement.MergeWhenAction.DELETE -> {
                 +"WHEN MATCHED "
                 condition?.let { append("AND ($condition) ") }
                 +"THEN DELETE "

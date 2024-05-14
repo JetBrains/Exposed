@@ -2,10 +2,10 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.MergeBaseStatement
-import org.jetbrains.exposed.sql.statements.MergeBaseStatement.MergeWhenAction.DELETE
-import org.jetbrains.exposed.sql.statements.MergeBaseStatement.MergeWhenAction.INSERT
-import org.jetbrains.exposed.sql.statements.MergeBaseStatement.MergeWhenAction.UPDATE
+import org.jetbrains.exposed.sql.statements.MergeStatement
+import org.jetbrains.exposed.sql.statements.MergeStatement.MergeWhenAction.DELETE
+import org.jetbrains.exposed.sql.statements.MergeStatement.MergeWhenAction.INSERT
+import org.jetbrains.exposed.sql.statements.MergeStatement.MergeWhenAction.UPDATE
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
@@ -251,7 +251,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         )
     }
 
-    override fun merge(dest: Table, source: Table, transaction: Transaction, whenBranches: List<MergeBaseStatement.WhenBranchData>, on: Op<Boolean>?): String {
+    override fun merge(dest: Table, source: Table, transaction: Transaction, whenBranches: List<MergeStatement.WhenBranchData>, on: Op<Boolean>?): String {
         validateMergeCommandWhenBranches(transaction, whenBranches)
         return super.merge(dest, source, transaction, whenBranches, on) + ";"
     }
@@ -260,7 +260,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         dest: Table,
         source: QueryAlias,
         transaction: Transaction,
-        whenBranches: List<MergeBaseStatement.WhenBranchData>,
+        whenBranches: List<MergeStatement.WhenBranchData>,
         on: Op<Boolean>,
         prepared: Boolean
     ): String {
@@ -269,7 +269,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     }
 }
 
-private fun validateMergeCommandWhenBranches(transaction: Transaction, whenBranches: List<MergeBaseStatement.WhenBranchData>) {
+private fun validateMergeCommandWhenBranches(transaction: Transaction, whenBranches: List<MergeStatement.WhenBranchData>) {
     when {
         whenBranches.count { it.action == INSERT } > 1 ->
             transaction.throwUnsupportedException("Multiple insert clauses are not supported by DB")

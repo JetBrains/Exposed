@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
  *
  * @property table The destination [Table] where records will be merged into.
  */
-abstract class MergeBaseStatement(val table: Table) : Statement<Int>(
+abstract class MergeStatement(val table: Table) : Statement<Int>(
     StatementType.MERGE, listOf(table)
 ) {
     protected val whenBranches = mutableListOf<WhenBranchData>()
