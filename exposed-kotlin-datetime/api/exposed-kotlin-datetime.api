@@ -3,14 +3,21 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentDate : org/j
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime : org/jetbrains/exposed/sql/Function {
+public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime;
+}
+
+public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp;
+}
+
+public abstract class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase : org/jetbrains/exposed/sql/Function {
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp : org/jetbrains/exposed/sql/Function {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp;
-	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampWithTimeZone : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampWithTimeZone;
 }
 
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateColumnTypeKt {

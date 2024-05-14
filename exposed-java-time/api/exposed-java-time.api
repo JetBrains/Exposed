@@ -3,14 +3,21 @@ public final class org/jetbrains/exposed/sql/javatime/CurrentDate : org/jetbrain
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/javatime/CurrentDateTime : org/jetbrains/exposed/sql/Function {
+public final class org/jetbrains/exposed/sql/javatime/CurrentDateTime : org/jetbrains/exposed/sql/javatime/CurrentTimestampBase {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/javatime/CurrentDateTime;
+}
+
+public final class org/jetbrains/exposed/sql/javatime/CurrentTimestamp : org/jetbrains/exposed/sql/javatime/CurrentTimestampBase {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/javatime/CurrentTimestamp;
+}
+
+public abstract class org/jetbrains/exposed/sql/javatime/CurrentTimestampBase : org/jetbrains/exposed/sql/Function {
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/javatime/CurrentTimestamp : org/jetbrains/exposed/sql/Function {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/javatime/CurrentTimestamp;
-	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+public final class org/jetbrains/exposed/sql/javatime/CurrentTimestampWithTimeZone : org/jetbrains/exposed/sql/javatime/CurrentTimestampBase {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/javatime/CurrentTimestampWithTimeZone;
 }
 
 public final class org/jetbrains/exposed/sql/javatime/Date : org/jetbrains/exposed/sql/Function {

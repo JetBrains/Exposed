@@ -30,6 +30,7 @@ import org.joda.time.DateTimeZone
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     object TableWithDBDefault : IntIdTable() {
@@ -375,6 +376,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         val testTable = object : IntIdTable("t") {
             val t1 = timestampWithTimeZone("t1").default(nowWithTimeZone)
             val t2 = timestampWithTimeZone("t2").defaultExpression(timestampWithTimeZoneLiteral)
+            val t3 = timestampWithTimeZone("t3").defaultExpression(CurrentDateTime)
         }
 
         fun Expression<*>.itOrNull() = when {
@@ -394,7 +396,8 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                     "${"t".inProperCase()} (" +
                     "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
                     "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
-                    "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}" +
+                    "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
+                    "${"t3".inProperCase()} $timestampWithTimeZoneType${testTable.t3.constraintNamePart()} ${CurrentDateTime.itOrNull()}" +
                     ")"
 
                 val expected = if (currentDialectTest is OracleDialect ||
@@ -415,6 +418,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
                 val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
                 assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
+                assertTrue { row1[testTable.t3].millis >= nowWithTimeZone.millis }
 
                 SchemaUtils.drop(testTable)
             }
