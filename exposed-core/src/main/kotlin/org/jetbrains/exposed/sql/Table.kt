@@ -783,6 +783,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates an enumeration column, with the specified [name], for storing enums of type [T] by their ordinal. */
     inline fun <reified T : Enum<T>> enumeration(name: String) = enumeration(name, T::class)
 
+    inline fun <reified T : Enum<T>> enumeration(name: String, dataType: PGEnumColumnType<T>) =
+        registerColumn(name, dataType)
+
+    fun <T : Any> range(name: String, dataType: PGRangeColumnType<T>) =
+        registerColumn(name, dataType)
+
+    fun <T : Any> array(name: String, dataType: OracleArrayType<T>) =
+        registerColumn(name, dataType)
+
     /**
      * Creates an enumeration column, with the specified [name], for storing enums of type [klass] by their name.
      * With the specified maximum [length] for each name value.
@@ -1364,6 +1373,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun createStatement(): List<String> {
+        val createTypes = columns
+            .map { it.columnType }
+            .filter {
+                (it as? UserDefinedColumnType<*>)?.sqlType()?.let { type -> currentDialectIfAvailable?.userDefinedTypeExists(type) } == false
+            }
+            .filterIsInstance<UserDefinedColumnType<*>>()
+            .flatMap { it.createStatement() }
+
         val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
             Sequence(
                 it,
@@ -1422,7 +1439,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             emptyList()
         }
 
-        return createSequence + createTable + createConstraint
+        return createTypes + createSequence + createTable + createConstraint
     }
 
     override fun modifyStatement(): List<String> =

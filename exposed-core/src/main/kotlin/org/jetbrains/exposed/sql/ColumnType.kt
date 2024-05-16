@@ -434,7 +434,7 @@ class FloatColumnType : ColumnType<Float>() {
 /**
  * Numeric column for storing 8-byte (double precision) floating-point numbers.
  */
-class DoubleColumnType : ColumnType<Double>() {
+open class DoubleColumnType : ColumnType<Double>() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.doubleType()
     override fun valueFromDB(value: Any): Double = when (value) {
         is Double -> value

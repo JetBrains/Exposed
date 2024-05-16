@@ -20,7 +20,7 @@ import java.sql.Types
  * [wasGeneratedKeysRequested].
  */
 class JdbcPreparedStatementImpl(
-    val statement: PreparedStatement,
+    override val statement: PreparedStatement,
     val wasGeneratedKeysRequested: Boolean
 ) : PreparedStatementApi {
     override val resultSet: ResultSet?

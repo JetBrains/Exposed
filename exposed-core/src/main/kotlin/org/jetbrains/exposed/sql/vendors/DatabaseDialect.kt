@@ -87,6 +87,8 @@ interface DatabaseDialect {
     /** Checks if the specified schema exists. */
     fun schemaExists(schema: Schema): Boolean
 
+    fun userDefinedTypeExists(type: String): Boolean
+
     /** Returns whether the specified sequence exists. */
     fun sequenceExists(sequence: Sequence): Boolean
 

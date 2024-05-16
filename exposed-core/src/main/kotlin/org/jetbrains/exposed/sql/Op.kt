@@ -224,6 +224,10 @@ class GreaterOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1
  */
 class GreaterEqOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, ">=")
 
+class ContainsOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "@>")
+
+class OverlapOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "&&")
+
 /**
  * Represents an SQL operator that checks if the specified [expr] is between the values [from] and [to].
  */
@@ -677,6 +681,10 @@ fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(TextColumnType()
 
 /** Returns the specified [value] as a decimal literal. */
 fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value)
+
+fun <T : Enum<T>> pgEnumerationLiteral(value: T, type: PGEnumColumnType<T>) = LiteralOp(type, value)
+
+fun <T> pgRangeLiteral(value: Pair<T, T>, type: PGRangeColumnType<T>) = LiteralOp(type, value)
 
 /**
  * Returns the specified [value] as an array literal, with elements parsed by the [delegateType] if provided.

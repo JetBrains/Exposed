@@ -91,6 +91,14 @@ abstract class VendorDialect(
         return allSchemas.any { it == schema.identifier.inProperCase() }
     }
 
+    // TODO cache typeNames
+    override fun userDefinedTypeExists(type: String): Boolean {
+        val list = TransactionManager.current().connection.metadata {
+            typeNames
+        }
+        return list.any { it.lowercase() == type.lowercase() }
+    }
+
     override fun sequenceExists(sequence: Sequence): Boolean {
         return sequences().any { it == sequence.identifier.inProperCase() }
     }

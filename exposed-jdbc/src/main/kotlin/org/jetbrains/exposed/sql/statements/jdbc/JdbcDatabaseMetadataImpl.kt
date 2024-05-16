@@ -99,6 +99,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             tableNamesFor(schemeName)
         })
 
+    override val typeNames: List<String> by lazy {
+        databaseTypes()
+    }
+
     private fun tableNamesFor(scheme: String): List<String> = with(metadata) {
         val useCatalogInsteadOfScheme = currentDialect is MysqlDialect
         val (catalogName, schemeName) = when {
@@ -115,6 +119,10 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             } ?: tableName
             identifierManager.inProperCase(fullTableName)
         }
+    }
+
+    private fun databaseTypes(): List<String> = with(metadata) {
+        typeInfo.iterate { getString("TYPE_NAME") }
     }
 
     override val schemaNames: List<String> get() = schemaNames()

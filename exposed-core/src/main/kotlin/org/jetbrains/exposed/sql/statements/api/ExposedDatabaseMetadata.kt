@@ -48,6 +48,8 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** A mapping of all schema names in the database to a list of all defined table names in each schema. */
     abstract val tableNames: Map<String, List<String>>
 
+    abstract val typeNames: List<String>
+
     /** A list of existing schema names. */
     abstract val schemaNames: List<String>
 

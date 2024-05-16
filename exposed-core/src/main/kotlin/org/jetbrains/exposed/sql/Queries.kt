@@ -610,6 +610,8 @@ private fun <T : Table, E> T.batchUpsert(
  */
 fun Table.exists(): Boolean = currentDialect.tableExists(this)
 
+fun UserDefinedColumnType<*>.exists(): Boolean = currentDialect.userDefinedTypeExists(this.name)
+
 private fun FieldSet.selectBatched(
     batchSize: Int = 1000,
     whereOp: Op<Boolean>

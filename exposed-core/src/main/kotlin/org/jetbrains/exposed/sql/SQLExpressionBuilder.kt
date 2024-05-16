@@ -459,6 +459,21 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is greater than or equal to some [other] expression */
     infix fun <T : Comparable<T>, S : T?> Expression<in S>.greaterEq(other: Expression<in S>): GreaterEqOp = GreaterEqOp(this, other)
 
+    infix fun <T, S : Pair<T, T>> Expression<in S>.contains(other: Expression<in T>): ContainsOp = ContainsOp(this, other)
+
+    infix fun <T, S : Pair<T, T>> Expression<in S>.overlap(other: Expression<in S>): OverlapOp = OverlapOp(this, other)
+
+    // TODO add another range operators
+    // 1. **`&&`** - Overlap (have points in common)
+    // 2. **`<<`** - Is left of
+    // 3. **`>>`** - Is right of
+    // 4. **`&<`** - Does not extend to the right of
+    // 5. **`&>`** - Does not extend to the left of
+    // 6. **`-|`** - Is adjacent to
+    // 7. **`@>`** - Contains
+    // 8. **`<@`** - Is contained by
+    // 9. **`=`** - Equals
+
     /** Checks if this [EntityID] expression is greater than or equal to some [t] value */
     @JvmName("greaterEqEntityID")
     infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greaterEq(t: T): GreaterEqOp = GreaterEqOp(this, wrap(t))
