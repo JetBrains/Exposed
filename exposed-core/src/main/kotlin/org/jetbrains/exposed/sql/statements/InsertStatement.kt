@@ -219,4 +219,10 @@ open class InsertStatement<Key : Any>(
             builder.args
         } ?: emptyList()
     }
+
+    protected fun isEntityIdClientSideGeneratedUUID(column: Column<*>) =
+        (column.columnType as? EntityIDColumnType<*>)
+            ?.idColumn
+            ?.takeIf { it.columnType is UUIDColumnType }
+            ?.defaultValueFun != null
 }
