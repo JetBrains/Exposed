@@ -77,6 +77,25 @@ class AliasesTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testJoinSubQuery03() {
+        withCitiesAndUsers { cities, users, userData ->
+            val firstJoinQuery = cities
+                .leftJoin(users)
+                .joinQuery(
+                    on = { it[userData.user_id] eq users.id },
+                    joinPart = { userData.selectAll() }
+                )
+            assertEquals("q0", firstJoinQuery.lastQueryAlias?.alias)
+
+            val secondJoinQuery = firstJoinQuery.joinQuery(
+                on = { it[userData.user_id] eq users.id },
+                joinPart = { userData.selectAll() }
+            )
+            assertEquals("q1", secondJoinQuery.lastQueryAlias?.alias)
+        }
+    }
+
+    @Test
     fun testWrapRowWithAliasedTable() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val entity1 = EntityTestsData.XEntity.new {
