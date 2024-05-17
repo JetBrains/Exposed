@@ -178,7 +178,7 @@ fun Table.joinQuery(on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>), join
  * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery02
  */
 val Join.lastQueryAlias: QueryAlias?
-    get() = joinParts.map { it.joinPart as? QueryAlias }.firstOrNull()
+    get() = joinParts.mapNotNull { it.joinPart as? QueryAlias }.lastOrNull()
 
 /**
  * Wraps a [query] as an [Expression] so that it can be used as part of an SQL statement or in another query clause.
