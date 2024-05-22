@@ -446,17 +446,17 @@ abstract class FunctionProvider {
      * @param dest The table that will be modified.
      * @param source The table providing the data for modification.
      * @param transaction The transaction in which the operation will be executed.
-     * @param whenBranches A list of `MergeStatement.WhenBranchData` instances describing the `when` clauses of the SQL command.
+     * @param whenClauses A list of `MergeStatement.When` instances describing the `when` clauses of the SQL command.
      * @param on The condition that determines whether to apply insertions or updates/deletions.
      */
     open fun merge(
         dest: Table,
         source: Table,
         transaction: Transaction,
-        whenBranches: List<MergeStatement.WhenBranchData>,
+        whenClauses: List<MergeStatement.When>,
         on: Op<Boolean>?
     ): String {
-        if (whenBranches.any { it.deleteWhere != null } && currentDialect !is OracleDialect) {
+        if (whenClauses.any { it.deleteWhere != null } && currentDialect !is OracleDialect) {
             transaction.throwUnsupportedException("'deleteWhere' parameter can be used only as a part of Oracle SQL update clause statement.")
         }
 
@@ -477,7 +477,7 @@ abstract class FunctionProvider {
             +"MERGE INTO ${transaction.identity(dest)} "
             +"USING ${transaction.identity(source)} "
             +"ON $onCondition "
-            addWhenBranchesToMergeStatement(transaction, dest, whenBranches)
+            addWhenClausesToMergeStatement(transaction, dest, whenClauses)
             toString()
         }
     }
@@ -489,14 +489,14 @@ abstract class FunctionProvider {
      * @param dest The table that will be modified.
      * @param source The query providing the data for modification.
      * @param transaction The transaction in which the operation will be executed.
-     * @param whenBranches A list of `MergeStatement.WhenBranchData` instances describing the `when` clauses of the SQL command.
+     * @param whenClauses A list of `MergeStatement.When` instances describing the `when` clauses of the SQL command.
      * @param on The condition that determines whether to apply insertions or updates/deletions.
      */
     open fun mergeSelect(
         dest: Table,
         source: QueryAlias,
         transaction: Transaction,
-        whenBranches: List<MergeStatement.WhenBranchData>,
+        whenClauses: List<MergeStatement.When>,
         on: Op<Boolean>,
         prepared: Boolean
     ): String {
@@ -508,7 +508,7 @@ abstract class FunctionProvider {
             +"MERGE INTO ${transaction.identity(dest)} "
             +"USING ( $using ) ${if (currentDialect is OracleDialect) "" else "as"} ${source.alias} "
             +"ON $onRaw "
-            addWhenBranchesToMergeStatement(transaction, dest, whenBranches)
+            addWhenClausesToMergeStatement(transaction, dest, whenClauses)
             toString()
         }
     }
@@ -840,7 +840,7 @@ abstract class FunctionProvider {
 }
 
 @Suppress("NestedBlockDepth")
-private fun QueryBuilder.addWhenBranchesToMergeStatement(transaction: Transaction, table: Table, whenBranches: List<MergeStatement.WhenBranchData>) {
+private fun QueryBuilder.addWhenClausesToMergeStatement(transaction: Transaction, table: Table, whenClauses: List<MergeStatement.When>) {
     fun QueryBuilder.appendValueAlias(column: Column<*>, value: Any?) {
         when (value) {
             is Column<*> -> {
@@ -859,9 +859,9 @@ private fun QueryBuilder.addWhenBranchesToMergeStatement(transaction: Transactio
 
     val autoIncColumn = table.autoIncColumn
 
-    whenBranches.forEach { (arguments, action, condition, deleteWhere) ->
+    whenClauses.forEach { (action, arguments, condition, deleteWhere) ->
         when (action) {
-            MergeStatement.MergeWhenAction.INSERT -> {
+            MergeStatement.WhenAction.INSERT -> {
                 val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in arguments.map { it.first } }
 
                 val extraArg = if (nextValExpression != null) listOf(autoIncColumn to nextValExpression) else emptyList()
@@ -883,7 +883,7 @@ private fun QueryBuilder.addWhenBranchesToMergeStatement(transaction: Transactio
                 }
             }
 
-            MergeStatement.MergeWhenAction.UPDATE -> {
+            MergeStatement.WhenAction.UPDATE -> {
                 +"WHEN MATCHED "
                 if (currentDialect !is OracleDialect) {
                     condition?.let { append("AND ($condition) ") }
@@ -901,7 +901,7 @@ private fun QueryBuilder.addWhenBranchesToMergeStatement(transaction: Transactio
                 }
             }
 
-            MergeStatement.MergeWhenAction.DELETE -> {
+            MergeStatement.WhenAction.DELETE -> {
                 +"WHEN MATCHED "
                 condition?.let { append("AND ($condition) ") }
                 +"THEN DELETE "

@@ -11,7 +11,7 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 abstract class MergeStatement(val table: Table) : Statement<Int>(
     StatementType.MERGE, listOf(table)
 ) {
-    protected val whenBranches = mutableListOf<WhenBranchData>()
+    protected val whenClauses = mutableListOf<When>()
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int? {
         return executeUpdate()
@@ -19,7 +19,7 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> {
         val result = QueryBuilder(true).run {
-            whenBranches.flatMap { it.arguments }.forEach { (column, value) ->
+            whenClauses.flatMap { it.arguments }.forEach { (column, value) ->
                 if (value !is Column<*> && value !is Expression<*>) {
                     registerArgument(column, value)
                 }
@@ -37,8 +37,8 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
      * values are specified for the insert operation.
      */
     fun whenNotMatchedInsert(and: Op<Boolean>? = null, body: (InsertStatement<Int>) -> Unit) {
-        val insert = InsertStatement<Int>(table).apply(body)
-        whenBranches.add(WhenBranchData(insert.arguments!!.first(), MergeWhenAction.INSERT, and))
+        val arguments = InsertStatement<Int>(table).apply(body).arguments!!.first()
+        whenClauses.add(When(WhenAction.INSERT, arguments, and))
     }
 
     /**
@@ -51,8 +51,8 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
      * records.
      */
     fun whenMatchedUpdate(and: Op<Boolean>? = null, deleteWhere: Op<Boolean>? = null, body: (UpdateStatement) -> Unit) {
-        val update = UpdateStatement(table, limit = 1).apply(body)
-        whenBranches.add(WhenBranchData(update.firstDataSet, MergeWhenAction.UPDATE, and, deleteWhere))
+        val arguments = UpdateStatement(table, limit = 1).apply(body).firstDataSet
+        whenClauses.add(When(WhenAction.UPDATE, arguments, and, deleteWhere))
     }
 
     /**
@@ -62,12 +62,12 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
      * should be performed.
      */
     fun whenMatchedDelete(and: Op<Boolean>? = null) {
-        whenBranches.add(WhenBranchData(emptyList(), MergeWhenAction.DELETE, and))
+        whenClauses.add(When(WhenAction.DELETE, emptyList(), and))
     }
 
-    data class WhenBranchData(
+    data class When(
+        val action: WhenAction,
         val arguments: List<Pair<Column<*>, Any?>>,
-        val action: MergeWhenAction,
         val and: Op<Boolean>?,
         /**
          * deleteWhere is applicable only to Oracle SQL database which has no dedicated "when delete" clause
@@ -75,7 +75,7 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
         val deleteWhere: Op<Boolean>? = null
     )
 
-    enum class MergeWhenAction {
+    enum class WhenAction {
         INSERT, UPDATE, DELETE
     }
 }
