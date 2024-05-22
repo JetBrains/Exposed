@@ -96,33 +96,13 @@ class OptionalBackReference<ParentID : Comparable<ParentID>, out Parent : Entity
  * @param factory The [EntityClass] associated with the child entity that references the parent entity.
  * @param cache Whether loaded reference entities should be stored in the [EntityCache].
  */
-class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
-    reference: Column<REF>,
-    factory: EntityClass<ChildID, Child>,
-    cache: Boolean
-) : BaseReferrers<ParentID, Parent, ChildID, Child, REF>(reference, factory, cache)
-
-/**
- * Class responsible for implementing property delegates of the read-only properties involved in an optional one-to-many
- * relation, which retrieves all child entities that optionally reference the parent entity.
- *
- * @param reference The nullable reference column defined on the child entity's associated table.
- * @param factory The [EntityClass] associated with the child entity that optionally references the parent entity.
- * @param cache Whether loaded reference entities should be stored in the [EntityCache].
- */
-class OptionalReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
-    reference: Column<REF?>,
-    factory: EntityClass<ChildID, Child>,
-    cache: Boolean
-) : BaseReferrers<ParentID, Parent, ChildID, Child, REF?>(reference, factory, cache)
-
-abstract class BaseReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
+open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
     val reference: Column<REF>,
     val factory: EntityClass<ChildID, Child>,
     val cache: Boolean
 ) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
     /** The list of columns and their [SortOrder] for ordering referred entities in on-to-many relationship. */
-    private var orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
+    private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
 
     init {
         reference.referee ?: error("Column $reference is not a reference")
@@ -154,21 +134,36 @@ abstract class BaseReferrers<ParentID : Comparable<ParentID>, in Parent : Entity
         }
     }
 
-    /** Modifies this reference to sort entities according to the specified [order]. **/
-    infix fun orderBy(order: Pair<Expression<*>, SortOrder>): BaseReferrers<ParentID, Parent, ChildID, Child, REF> = apply {
-        this.orderByExpressions.add(order)
+    /** Modifies this reference to sort entities based on multiple columns as specified in [order]. **/
+    infix fun orderBy(order: List<Pair<Expression<*>, SortOrder>>) = this.also {
+        orderByExpressions.addAll(order)
     }
 
-    /** Modifies this reference to sort entities based on multiple columns as specified in [order]. **/
-    infix fun orderBy(order: List<Pair<Expression<*>, SortOrder>>): BaseReferrers<ParentID, Parent, ChildID, Child, REF> = apply {
-        this.orderByExpressions.addAll(order)
-    }
+    /** Modifies this reference to sort entities according to the specified [order]. **/
+    infix fun orderBy(order: Pair<Expression<*>, SortOrder>) = orderBy(listOf(order))
 
     /** Modifies this reference to sort entities by a column specified in [expression] using ascending order. **/
-    infix fun orderBy(expression: Expression<*>): BaseReferrers<ParentID, Parent, ChildID, Child, REF> = apply {
-        this.orderByExpressions.add(expression to SortOrder.ASC)
-    }
+    infix fun orderBy(expression: Expression<*>) = orderBy(listOf(expression to SortOrder.ASC))
 }
+
+/**
+ * Class responsible for implementing property delegates of the read-only properties involved in an optional one-to-many
+ * relation, which retrieves all child entities that optionally reference the parent entity.
+ *
+ * @param reference The nullable reference column defined on the child entity's associated table.
+ * @param factory The [EntityClass] associated with the child entity that optionally references the parent entity.
+ * @param cache Whether loaded reference entities should be stored in the [EntityCache].
+ */
+@Deprecated(
+    message = "The OptionalReferrers class is a complete duplicate of the Referrers class; therefore, the latter should be used instead.",
+    replaceWith = ReplaceWith("Referrers"),
+    level = DeprecationLevel.WARNING
+)
+class OptionalReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
+    reference: Column<REF?>,
+    factory: EntityClass<ChildID, Child>,
+    cache: Boolean
+) : Referrers<ParentID, Parent, ChildID, Child, REF?>(reference, factory, cache)
 
 private fun <SRC : Entity<*>> getReferenceObjectFromDelegatedProperty(entity: SRC, property: KProperty1<SRC, Any?>): Any? {
     property.isAccessible = true

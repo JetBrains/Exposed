@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.SortOrder.DESC
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -88,8 +89,8 @@ class OrderedReferenceTest : DatabaseTestsBase() {
     @Test
     fun testMultiColumnOrder() {
         withOrderedReferenceTestTables {
-            val ratings = UserMultiColumn.all().first().ratings.map { it }
-            val nullableRatings = UserMultiColumn.all().first().nullableRatings.map { it }
+            val ratings = UserMultiColumn.all().first().ratings.toList()
+            val nullableRatings = UserMultiColumn.all().first().nullableRatings.toList()
 
             // Ensure each value is less than the one before it.
             // IDs should be sorted within groups of identical values.
@@ -114,11 +115,42 @@ class OrderedReferenceTest : DatabaseTestsBase() {
         }
     }
 
+    class UserRatingChainedColumn(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<UserRatingChainedColumn>(UserRatings)
+
+        var value by UserRatings.value
+        var user by UserChainedColumn referencedOn UserRatings.user
+    }
+
+    class UserChainedColumn(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<UserChainedColumn>(Users)
+
+        val ratings by UserRatingChainedColumn referrersOn UserRatings.user orderBy (UserRatings.value to DESC) orderBy (UserRatings.id to DESC)
+    }
+
+    @Test
+    fun testChainedOrderBy() {
+        withOrderedReferenceTestTables {
+            val ratings = UserChainedColumn.all().first().ratings.toList()
+
+            fun assertRatingsOrdered(current: UserRatingChainedColumn, prev: UserRatingChainedColumn) {
+                assertTrue(current.value <= prev.value)
+                if (current.value == prev.value) {
+                    assertTrue(current.id <= prev.id)
+                }
+            }
+
+            for (i in 1..<ratings.size) {
+                assertRatingsOrdered(ratings[i], ratings[i - 1])
+            }
+        }
+    }
+
     private val unsortedRatingValues = listOf(0, 3, 1, 2, 4, 4, 5, 4, 5, 6, 9, 8)
 
     private fun withOrderedReferenceTestTables(statement: Transaction.(TestDB) -> Unit) {
         withTables(Users, UserRatings, UserNullableRatings) { db ->
-            val userId = Users.insert { }.resultedValues?.firstOrNull()?.get(Users.id) ?: error("User was not created")
+            val userId = Users.insertAndGetId { }
             unsortedRatingValues.forEach { value ->
                 UserRatings.insert {
                     it[user] = userId

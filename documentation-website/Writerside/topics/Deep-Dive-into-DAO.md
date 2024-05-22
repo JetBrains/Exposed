@@ -194,7 +194,7 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<User>(Users)
 
     ...
-    val ratings by UserRating referrersOn UserRatings.user orderBy listOf(UserRatings.value to DESC, UserRatings.id to ASC)
+    val ratings by UserRating referrersOn UserRatings.user orderBy listOf(UserRatings.value to SortOrder.DESC, UserRatings.id to SortOrder.ASC)
     ...
 }
 ```
