@@ -11,7 +11,7 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 abstract class MergeStatement(val table: Table) : Statement<Int>(
     StatementType.MERGE, listOf(table)
 ) {
-    protected val whenClauses = mutableListOf<When>()
+    protected val clauses = mutableListOf<Clause>()
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int? {
         return executeUpdate()
@@ -19,7 +19,7 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> {
         val result = QueryBuilder(true).run {
-            whenClauses.flatMap { it.arguments }.forEach { (column, value) ->
+            clauses.flatMap { it.arguments }.forEach { (column, value) ->
                 if (value !is Column<*> && value !is Expression<*>) {
                     registerArgument(column, value)
                 }
@@ -38,7 +38,7 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
      */
     fun whenNotMatchedInsert(and: Op<Boolean>? = null, body: (InsertStatement<Int>) -> Unit) {
         val arguments = InsertStatement<Int>(table).apply(body).arguments!!.first()
-        whenClauses.add(When(WhenAction.INSERT, arguments, and))
+        clauses.add(Clause(ClauseAction.INSERT, arguments, and))
     }
 
     /**
@@ -52,7 +52,7 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
      */
     fun whenMatchedUpdate(and: Op<Boolean>? = null, deleteWhere: Op<Boolean>? = null, body: (UpdateStatement) -> Unit) {
         val arguments = UpdateStatement(table, limit = 1).apply(body).firstDataSet
-        whenClauses.add(When(WhenAction.UPDATE, arguments, and, deleteWhere))
+        clauses.add(Clause(ClauseAction.UPDATE, arguments, and, deleteWhere))
     }
 
     /**
@@ -62,11 +62,11 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
      * should be performed.
      */
     fun whenMatchedDelete(and: Op<Boolean>? = null) {
-        whenClauses.add(When(WhenAction.DELETE, emptyList(), and))
+        clauses.add(Clause(ClauseAction.DELETE, emptyList(), and))
     }
 
-    data class When(
-        val action: WhenAction,
+    data class Clause(
+        val action: ClauseAction,
         val arguments: List<Pair<Column<*>, Any?>>,
         val and: Op<Boolean>?,
         /**
@@ -75,7 +75,7 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
         val deleteWhere: Op<Boolean>? = null
     )
 
-    enum class WhenAction {
+    enum class ClauseAction {
         INSERT, UPDATE, DELETE
     }
 }

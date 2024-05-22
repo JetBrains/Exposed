@@ -21,7 +21,6 @@ open class MergeTableStatement(
     private val on: Op<Boolean>?
 ) : MergeStatement(dest) {
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
-        val result = transaction.db.dialect.functionProvider.merge(table, source, transaction, whenClauses, on)
-        return result
+        return transaction.db.dialect.functionProvider.merge(table, source, transaction, clauses, on)
     }
 }
