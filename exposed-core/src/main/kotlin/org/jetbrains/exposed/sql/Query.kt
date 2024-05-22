@@ -48,13 +48,14 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             }
         }
 
-    /** Creates a new [Query] instance using all stored properties of this `SELECT` query. */
-    override fun copy(): Query = Query(set, where).also { copy ->
-        copyTo(copy)
-        copy.distinct = distinct
-        copy.groupedByColumns = groupedByColumns.toMutableList()
-        copy.having = having
-        copy.forUpdate = forUpdate
+    override fun copyInstance(): Query = Query(set, where)
+
+    override fun copyTo(other: Query) {
+        super.copyTo(other)
+        other.distinct = distinct
+        other.groupedByColumns = groupedByColumns.toMutableList()
+        other.having = having
+        other.forUpdate = forUpdate
     }
 
     override fun forUpdate(option: ForUpdateOption): Query {

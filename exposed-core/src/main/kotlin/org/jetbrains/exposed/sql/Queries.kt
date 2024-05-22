@@ -681,3 +681,39 @@ private fun FieldSet.selectBatched(
         }
     }
 }
+
+/**
+ * Adding a hint for SQL statement.
+ *
+ * For example, `/*FORCE_MASTER*/` for some cloud database to instruct the statement should run in master database,
+ * or add some comments for tracking.
+ */
+class HintQuery(private val hint: String, private val source: Query, private val position: Position = Position.FRONT) : Query(source.set, source.where) {
+
+    enum class Position {
+        FRONT, BACK
+    }
+
+    init {
+        source.copyTo(this)
+    }
+
+    override fun copyInstance(): HintQuery = HintQuery(hint, source.copy(), position)
+
+    override fun copy(): HintQuery = super.copy() as HintQuery
+
+    override fun prepareSQL(builder: QueryBuilder): String =
+        when (position) {
+            Position.FRONT -> "/*$hint*/ ${super.prepareSQL(builder)}"
+            Position.BACK -> "${super.prepareSQL(builder)} /*$hint*/"
+        }
+}
+
+/**
+ * Adding a hint for SQL statement.
+ *
+ * @param hint The hint text to add.
+ * @param position The position of hint text to be placed in the SQL statement.
+ */
+fun Query.hint(hint: String, position: HintQuery.Position = HintQuery.Position.FRONT): HintQuery = HintQuery(hint, this, position)
+
