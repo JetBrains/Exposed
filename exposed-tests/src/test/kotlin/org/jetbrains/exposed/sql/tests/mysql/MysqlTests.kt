@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.tests.mysql
 import com.mysql.cj.conf.PropertyKey
 import com.mysql.cj.jdbc.ConnectionImpl
 import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.batchInsert
