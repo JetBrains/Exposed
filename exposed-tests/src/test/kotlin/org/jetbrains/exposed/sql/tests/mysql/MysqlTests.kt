@@ -63,7 +63,8 @@ class MysqlTests : DatabaseTestsBase() {
 
     @Test
     fun mysqlStringOrdering() {
-        withTables(NullableStrings) {
+        val mysqlOnly = TestDB.enabledDialects() - TestDB.MYSQL
+        withTables(mysqlOnly, NullableStrings) {
             NullableStrings.insert {
                 it[name] = "a"
             }
