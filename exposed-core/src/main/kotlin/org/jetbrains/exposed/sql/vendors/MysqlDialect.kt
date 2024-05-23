@@ -75,7 +75,8 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
             else -> {
                 val exp = (expression as? ExpressionAlias<*>)?.alias ?: expression
                 val nullExp = if (sortOrder == SortOrder.ASC_NULLS_LAST) " IS NULL" else " IS NOT NULL"
-                queryBuilder.append(exp, nullExp, ", ", exp, " ", sortOrder)
+                val order = if (sortOrder == SortOrder.ASC_NULLS_LAST) SortOrder.ASC else SortOrder.DESC
+                queryBuilder.append(exp, nullExp, ", ", exp, " ", order.code)
             }
         }
     }

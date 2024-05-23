@@ -11,13 +11,12 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.RepeatableTestRule
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.demo.sql.Cities
-import org.jetbrains.exposed.sql.tests.demo.sql.Cities.autoIncrement
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Rule
 import org.junit.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 
@@ -56,7 +55,7 @@ class MysqlTests : DatabaseTestsBase() {
         }
     }
 
-    object Cities : Table() {
+    object NullableStrings : Table() {
         val id: Column<Int> = integer("id").autoIncrement()
         val name: Column<String?> = varchar("name", 50).nullable()
 
@@ -65,26 +64,25 @@ class MysqlTests : DatabaseTestsBase() {
 
     @Test
     fun mysqlStringOrdering() {
-        withDb(TestDB.MYSQL) {
-            SchemaUtils.create(Cities)
-            Cities.insert {
+        withTables(NullableStrings) {
+            NullableStrings.insert {
                 it[name] = "a"
             }
-            Cities.insert {
+            NullableStrings.insert {
                 it[name] = "B"
             }
-            Cities.insert {
+            NullableStrings.insert {
                 it[name] = "b"
             }
-            Cities.insert {
+            NullableStrings.insert {
                 it[name] = null
             }
-            Cities.insert {
+            NullableStrings.insert {
                 it[name] = "c"
             }
             fun assertOrdered(expected: List<Int>, order: SortOrder) {
-                val ordered = Cities.select(Cities.id).orderBy(Cities.name, order).map { it[Cities.id] }
-                assertEquals(expected, ordered)
+                val ordered = NullableStrings.select(NullableStrings.id).orderBy(NullableStrings.name, order).map { it[NullableStrings.id] }
+                assertContentEquals(expected, ordered)
             }
             assertOrdered(listOf(5, 2, 3, 1, 4), SortOrder.DESC_NULLS_LAST) // c, B, b, a, null
             assertOrdered(listOf(1, 2, 3, 5, 4), SortOrder.ASC_NULLS_LAST) // a, B, b, c, null
