@@ -78,7 +78,7 @@ class ResultRow(
         return when {
             raw == null -> null
             raw == NotInitializedValue -> error("$expression is not initialized yet")
-            expression is ExpressionAlias<T> && expression.delegate is ExpressionWithColumnType<T> -> expression.delegate.columnType.valueFromDB(raw)
+            expression is ExpressionAlias<T> -> rawToColumnValue(raw, expression.delegate)
             expression is ExpressionWithColumnType<T> -> expression.columnType.valueFromDB(raw)
             expression is Op.OpBoolean -> BooleanColumnType.INSTANCE.valueFromDB(raw)
             else -> raw
