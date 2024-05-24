@@ -1,5 +1,9 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
+
 /** Represents a temporary SQL identifier, [alias], for a [delegate] table. */
 class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
 
@@ -53,7 +57,16 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
 
 /** Represents a temporary SQL identifier, [alias], for a [delegate] expression. */
 class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expression<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(delegate).append(" $alias") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        if (delegate is ComparisonOp && (currentDialectIfAvailable is SQLServerDialect || currentDialectIfAvailable is OracleDialect)) {
+            +"(CASE WHEN "
+            append(delegate)
+            +" THEN 1 ELSE 0 END)"
+        } else {
+            append(delegate)
+        }
+        append(" $alias")
+    }
 
     /** Returns an [Expression] containing only the string representation of this [alias]. */
     fun aliasOnlyExpression(): Expression<T> {
