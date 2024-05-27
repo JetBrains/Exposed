@@ -20,11 +20,9 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
 import java.time.*
 import kotlin.test.assertEquals
@@ -264,13 +262,7 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t10".inProperCase()} $timeType${testTable.t10.constraintNamePart()} ${tLiteral.itOrNull()}" +
                 ")"
 
-            val expected = if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-                arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
-            } else {
-                arrayListOf(baseExpression)
-            }
-
-            assertEqualLists(expected, testTable.ddl)
+            assertEqualLists(arrayListOf(baseExpression), testTable.ddl)
 
             val id1 = testTable.insertAndGetId { }
 
@@ -430,18 +422,7 @@ class DefaultsTest : DatabaseTestsBase() {
                     "${"t3".inProperCase()} $timestampWithTimeZoneType${testTable.t3.constraintNamePart()} ${CurrentTimestampWithTimeZone.itOrNull()}" +
                     ")"
 
-                val expected = if (currentDialectTest is OracleDialect ||
-                    currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
-                ) {
-                    arrayListOf(
-                        "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
-                        baseExpression
-                    )
-                } else {
-                    arrayListOf(baseExpression)
-                }
-
-                assertEqualLists(expected, testTable.ddl)
+                assertEqualLists(arrayListOf(baseExpression), testTable.ddl)
 
                 val id1 = testTable.insertAndGetId { }
 
