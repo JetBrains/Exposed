@@ -226,6 +226,7 @@ class EntityCache(private val transaction: Transaction) {
         }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     internal fun flushInserts(table: IdTable<*>) {
         var toFlush: List<Entity<*>> = inserts.remove(table)?.toList().orEmpty()
         while (toFlush.isNotEmpty()) {
@@ -236,12 +237,26 @@ class EntityCache(private val transaction: Transaction) {
                 }
             }
             toFlush = partition.first
-            val ids = executeAsPartOfEntityLifecycle {
-                table.batchInsert(toFlush) { entry ->
-                    for ((c, v) in entry.writeValues) {
-                        this[c] = v
+            val ids = try {
+                executeAsPartOfEntityLifecycle {
+                    table.batchInsert(toFlush) { entry ->
+                        for ((c, v) in entry.writeValues) {
+                            this[c] = v
+                        }
                     }
                 }
+            } catch (e: ArrayIndexOutOfBoundsException) {
+                // EXPOSED-191 Flaky Oracle test on TC build
+                // this try/catch should help to get information about the flaky test.
+                // try/catch can be safely removed after the fixing the issue
+                // TooGenericExceptionCaught suppress also can be removed
+                val toFlushString = toFlush.joinToString("; ") {
+                        entry ->
+                    entry.writeValues.map { writeValue -> "${writeValue.key.name}=${writeValue.value}" }.joinToString { ", " }
+                }
+
+                exposedLogger.error("ArrayIndexOutOfBoundsException on attempt to make flush inserts. Table: ${table.tableName}, entries: ($toFlushString)", e)
+                throw e
             }
 
             for ((entry, genValues) in toFlush.zip(ids)) {
