@@ -604,7 +604,7 @@ class DDLTests : DatabaseTestsBase() {
 
         fun SizedIterable<ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE, TestDB.H2_PSQL)) {
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE, TestDB.H2_PSQL, TestDB.H2)) {
             val exposedBytes = "Exposed".toByteArray()
             val kotlinBytes = "Kotlin".toByteArray()
 
