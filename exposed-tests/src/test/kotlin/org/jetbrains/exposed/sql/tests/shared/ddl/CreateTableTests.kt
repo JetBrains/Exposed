@@ -305,7 +305,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 fkName = fkName
             )
         }
-        withTables(parent, child) {
+        withDb {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
@@ -338,7 +338,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 onDelete = ReferenceOption.NO_ACTION,
             )
         }
-        withTables(parent, child) {
+        withDb {
             val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
                 "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                 " CONSTRAINT ${"fk_Child_parent_id__id".inProperCase()}" +
@@ -360,7 +360,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 onDelete = ReferenceOption.NO_ACTION,
             )
         }
-        withTables(parent, child) {
+        withDb {
             val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
                 "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                 " CONSTRAINT ${"fk_Child2_parent_id__id".inProperCase()}" +
@@ -386,7 +386,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 fkName = fkName
             )
         }
-        withTables(parent, child) {
+        withDb {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
@@ -421,7 +421,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 fkName = fkName
             )
         }
-        withTables(parent, child) {
+        withDb {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
@@ -459,7 +459,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 fkName = fkName
             )
         }
-        withTables(parent, child) {
+        withDb {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
@@ -503,7 +503,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 )
             }
         }
-        withTables(parent, child) { testDb ->
+        withDb { testDb ->
             val t = TransactionManager.current()
             val updateCascadePart = if (testDb != TestDB.ORACLE) " ON UPDATE CASCADE" else ""
             val expected = listOfNotNull(
@@ -550,7 +550,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 )
             }
         }
-        withTables(parent, child) {
+        withDb {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
