@@ -921,21 +921,8 @@ interface ISqlExpressionBuilder {
 
     /** Returns the specified [value] as a query parameter of type [T]. */
     @Suppress("UNCHECKED_CAST")
-    fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> = when (value) {
-        is Boolean -> booleanParam(value)
-        is Byte -> byteParam(value)
-        is UByte -> ubyteParam(value)
-        is Short -> shortParam(value)
-        is UShort -> ushortParam(value)
-        is Int -> intParam(value)
-        is UInt -> uintParam(value)
-        is Long -> longParam(value)
-        is ULong -> ulongParam(value)
-        is Float -> floatParam(value)
-        is Double -> doubleParam(value)
-        is String -> QueryParameter(value, columnType as IColumnType<T & Any>) // String value should inherit from column
-        else -> QueryParameter(value, columnType as IColumnType<T & Any>)
-    } as QueryParameter<T>
+    fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> =
+        QueryParameter(value, columnType as IColumnType<T & Any>)
 
     /** Returns the specified [value] as a literal of type [T]. */
     @Suppress("UNCHECKED_CAST", "ComplexMethod")
