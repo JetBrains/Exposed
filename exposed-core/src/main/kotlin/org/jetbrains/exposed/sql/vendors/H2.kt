@@ -8,10 +8,7 @@ import java.sql.DatabaseMetaData
 import java.util.*
 
 internal object H2DataTypeProvider : DataTypeProvider() {
-    override fun binaryType(): String {
-        exposedLogger.error("The length of the Binary column is missing.")
-        error("The length of the Binary column is missing.")
-    }
+    override fun binaryType(): String = "VARBINARY"
 
     override fun uuidType(): String = "UUID"
     override fun uuidToDB(value: UUID): Any = value.toString()
