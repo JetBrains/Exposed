@@ -30,6 +30,28 @@ class FetchBatchedResultsTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `when sortOrder is given, fetchBatchedResults should return batches in the given order`() {
+        val cities = DMLTestsData.Cities
+        withTables(cities) {
+            val names = List(100) { UUID.randomUUID().toString() }
+            cities.batchInsert(names) { name -> this[cities.name] = name }
+
+            val batches = cities.selectAll().where { cities.id less 51 }
+                .fetchBatchedResults(batchSize = 25, sortOrder = SortOrder.DESC)
+                .toList().map { it.toCityNameList() }
+
+            val expectedNames = names.take(50).reversed()
+            assertEqualLists(
+                listOf(
+                    expectedNames.take(25),
+                    expectedNames.takeLast(25)
+                ),
+                batches
+            )
+        }
+    }
+
+    @Test
     fun `when batch size is greater than the amount of available items, fetchBatchedResults should return 1 batch`() {
         val cities = DMLTestsData.Cities
         withTables(cities) {
