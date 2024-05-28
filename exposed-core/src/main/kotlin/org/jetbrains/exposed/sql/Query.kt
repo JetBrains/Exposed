@@ -245,8 +245,9 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * This query's [FieldSet] will be ordered by the first auto-increment column.
      *
      * @param batchSize Size of each sub-collection to return.
+     * @param sortOrder Order in which the results should be retrieved.
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
-     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectBatchedTests.testFetchBatchedResultsWithWhereAndSetBatchSize
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
     fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Iterable<Iterable<ResultRow>> {
         require(batchSize > 0) { "Batch size should be greater than 0." }

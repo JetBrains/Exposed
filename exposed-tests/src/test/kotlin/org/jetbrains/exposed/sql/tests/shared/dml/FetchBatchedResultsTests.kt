@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.junit.Test
 import java.util.*
 
-class SelectBatchedTests : DatabaseTestsBase() {
+class FetchBatchedResultsTests : DatabaseTestsBase() {
     @Test
     fun testFetchBatchedResultsWithWhereAndSetBatchSize() {
         val cities = DMLTestsData.Cities
