@@ -1,5 +1,11 @@
 # Breaking Changes
 
+## 0.51.0
+
+* The `exposed-spring-boot-starter` module no longer provides the entire [spring-boot-starter-data-jdbc](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jdbc) module.
+  It now provides just the [spring-boot-starter-jdbc](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-jdbc).
+  If there was a reliance on this transitive dependency, please directly include a dependency on Spring Data JDBC in your build files.
+
 ## 0.50.0
 
 * The `Transaction` class property `repetitionAttempts` is being deprecated in favor of `maxAttempts`. Additionally, the property `minRepetitionDelay` should be replaced
