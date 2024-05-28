@@ -125,15 +125,27 @@ class ConditionsTests : DatabaseTestsBase() {
 
             val id1Only = listOf(id1)
             assertEqualLists(id1Only, selectIdWhere { longTable.id less longTable.amount })
+            assertEqualLists(id1Only, selectIdWhere { longTable.id less 2 })
 
             val id1AndId2 = listOf(id1, id2)
             assertEqualLists(id1AndId2, selectIdWhere { longTable.id lessEq longTable.amount })
+            assertEqualLists(id1AndId2, selectIdWhere { longTable.id lessEq 2 })
 
             val id3Only = listOf(id3)
             assertEqualLists(id3Only, selectIdWhere { longTable.id greater longTable.amount })
+            assertEqualLists(id3Only, selectIdWhere { longTable.id greater 2 })
 
             val id2AndId3 = listOf(id2, id3)
             assertEqualLists(id2AndId3, selectIdWhere { longTable.id greaterEq longTable.amount })
+            assertEqualLists(id2AndId3, selectIdWhere { longTable.id greaterEq 2 })
+
+            assertEqualLists(id2AndId3, selectIdWhere { longTable.id.between(2, 3) })
+
+            assertEqualLists(id2Only, selectIdWhere { longTable.id isNotDistinctFrom longTable.amount })
+            assertEqualLists(id2Only, selectIdWhere { longTable.id isNotDistinctFrom 2 })
+
+            assertEqualLists(id1AndId3, selectIdWhere { longTable.id isDistinctFrom longTable.amount })
+            assertEqualLists(id1AndId3, selectIdWhere { longTable.id isDistinctFrom 2 })
 
             // symmetric operators (EntityID value on right) should not show a warning either
             assertEqualLists(id2Only, selectIdWhere { longTable.amount eq longTable.id })
@@ -142,6 +154,8 @@ class ConditionsTests : DatabaseTestsBase() {
             assertEqualLists(id2AndId3, selectIdWhere { longTable.amount lessEq longTable.id })
             assertEqualLists(id1Only, selectIdWhere { longTable.amount greater longTable.id })
             assertEqualLists(id1AndId2, selectIdWhere { longTable.amount greaterEq longTable.id })
+            assertEqualLists(id2Only, selectIdWhere { longTable.amount isNotDistinctFrom longTable.id })
+            assertEqualLists(id1AndId3, selectIdWhere { longTable.amount isDistinctFrom longTable.id })
         }
     }
 
