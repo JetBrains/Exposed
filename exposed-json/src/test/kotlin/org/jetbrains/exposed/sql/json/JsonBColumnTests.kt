@@ -97,36 +97,30 @@ class JsonBColumnTests : DatabaseTestsBase() {
         val dataTable = JsonTestsData.JsonBTable
         val dataEntity = JsonTestsData.JsonBEntity
 
-        withDb(excludeSettings = binaryJsonNotSupportedDB) { testDb ->
-            excludingH2Version1(testDb) {
-                SchemaUtils.create(dataTable)
+        withTables(excludeSettings = binaryJsonNotSupportedDB, dataTable) { testDb ->
+            val dataA = DataHolder(User("Admin", "Alpha"), 10, true, null)
+            val newUser = dataEntity.new {
+                jsonBColumn = dataA
+            }
 
-                val dataA = DataHolder(User("Admin", "Alpha"), 10, true, null)
-                val newUser = dataEntity.new {
-                    jsonBColumn = dataA
+            assertEquals(dataA, dataEntity.findById(newUser.id)?.jsonBColumn)
+
+            val updatedUser = dataA.copy(logins = 99)
+            dataTable.update {
+                it[jsonBColumn] = updatedUser
+            }
+
+            assertEquals(updatedUser, dataEntity.all().single().jsonBColumn)
+
+            if (testDb !in TestDB.allH2TestDB) {
+                dataEntity.new { jsonBColumn = dataA }
+                val loginCount = if (currentDialectTest is PostgreSQLDialect) {
+                    dataTable.jsonBColumn.extract<Int>("logins").castTo(IntegerColumnType())
+                } else {
+                    dataTable.jsonBColumn.extract<Int>(".logins")
                 }
-
-                assertEquals(dataA, dataEntity.findById(newUser.id)?.jsonBColumn)
-
-                val updatedUser = dataA.copy(logins = 99)
-                dataTable.update {
-                    it[jsonBColumn] = updatedUser
-                }
-
-                assertEquals(updatedUser, dataEntity.all().single().jsonBColumn)
-
-                if (testDb !in TestDB.allH2TestDB) {
-                    dataEntity.new { jsonBColumn = dataA }
-                    val loginCount = if (currentDialectTest is PostgreSQLDialect) {
-                        dataTable.jsonBColumn.extract<Int>("logins").castTo(IntegerColumnType())
-                    } else {
-                        dataTable.jsonBColumn.extract<Int>(".logins")
-                    }
-                    val frequentUser = dataEntity.find { loginCount greaterEq 50 }.single()
-                    assertEquals(updatedUser, frequentUser.jsonBColumn)
-                }
-
-                SchemaUtils.drop(dataTable)
+                val frequentUser = dataEntity.find { loginCount greaterEq 50 }.single()
+                assertEquals(updatedUser, frequentUser.jsonBColumn)
             }
         }
     }
@@ -244,30 +238,28 @@ class JsonBColumnTests : DatabaseTestsBase() {
         }
 
         withDb(excludeSettings = binaryJsonNotSupportedDB) { testDb ->
-            excludingH2Version1(testDb) {
-                if (isOldMySql()) {
-                    expectException<UnsupportedByDialectException> {
-                        SchemaUtils.createMissingTablesAndColumns(defaultTester)
-                    }
-                } else {
+            if (isOldMySql()) {
+                expectException<UnsupportedByDialectException> {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
-                    assertTrue(defaultTester.exists())
-                    // ensure defaults match returned metadata defaults
-                    val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
-                    assertTrue(alters.isEmpty())
-
-                    defaultTester.insert {}
-
-                    defaultTester.selectAll().single().also {
-                        assertEquals(defaultUser.name, it[defaultTester.user1].name)
-                        assertEquals(defaultUser.team, it[defaultTester.user1].team)
-
-                        assertEquals(defaultUser.name, it[defaultTester.user2].name)
-                        assertEquals(defaultUser.team, it[defaultTester.user2].team)
-                    }
-
-                    SchemaUtils.drop(defaultTester)
                 }
+            } else {
+                SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                assertTrue(defaultTester.exists())
+                // ensure defaults match returned metadata defaults
+                val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
+                assertTrue(alters.isEmpty())
+
+                defaultTester.insert {}
+
+                defaultTester.selectAll().single().also {
+                    assertEquals(defaultUser.name, it[defaultTester.user1].name)
+                    assertEquals(defaultUser.team, it[defaultTester.user1].team)
+
+                    assertEquals(defaultUser.name, it[defaultTester.user2].name)
+                    assertEquals(defaultUser.team, it[defaultTester.user2].team)
+                }
+
+                SchemaUtils.drop(defaultTester)
             }
         }
     }
@@ -282,31 +274,26 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val intArray = jsonb<IntArray>("int_array", Json.Default)
         }
 
-        withDb(excludeSettings = binaryJsonNotSupportedDB) { testDb ->
-            excludingH2Version1(testDb) {
-                // the logger is left in to test that it does not throw ClassCastException on insertion of iterables
-                addLogger(StdOutSqlLogger)
-                SchemaUtils.create(iterables)
+        withTables(excludeSettings = binaryJsonNotSupportedDB, iterables) { testDb ->
+            // the logger is left in to test that it does not throw ClassCastException on insertion of iterables
+            addLogger(StdOutSqlLogger)
 
-                val user1 = User("A", "Team A")
-                val user2 = User("B", "Team B")
-                val integerList = listOf(1, 2, 3)
-                val integerArray = intArrayOf(1, 2, 3)
-                iterables.insert {
-                    it[userList] = listOf(user1, user2)
-                    it[intList] = integerList
-                    it[userArray] = arrayOf(user1, user2)
-                    it[intArray] = integerArray
-                }
-
-                val result = iterables.selectAll().single()
-                assertEqualCollections(listOf(user1, user2), result[iterables.userList])
-                assertEqualCollections(integerList, result[iterables.intList])
-                assertContentEquals(arrayOf(user1, user2), result[iterables.userArray])
-                assertContentEquals(integerArray, result[iterables.intArray])
-
-                SchemaUtils.drop(iterables)
+            val user1 = User("A", "Team A")
+            val user2 = User("B", "Team B")
+            val integerList = listOf(1, 2, 3)
+            val integerArray = intArrayOf(1, 2, 3)
+            iterables.insert {
+                it[userList] = listOf(user1, user2)
+                it[intList] = integerList
+                it[userArray] = arrayOf(user1, user2)
+                it[intArray] = integerArray
             }
+
+            val result = iterables.selectAll().single()
+            assertEqualCollections(listOf(user1, user2), result[iterables.userList])
+            assertEqualCollections(integerList, result[iterables.intList])
+            assertContentEquals(arrayOf(user1, user2), result[iterables.userArray])
+            assertContentEquals(integerArray, result[iterables.intArray])
         }
     }
 
@@ -316,25 +303,39 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val user = jsonb<User>("user", Json.Default).nullable()
         }
 
-        withDb(excludeSettings = binaryJsonNotSupportedDB) { testDb ->
-            excludingH2Version1(testDb) {
-                SchemaUtils.create(tester)
-
-                val nullId = tester.insertAndGetId {
-                    it[user] = null
-                }
-                val nonNullId = tester.insertAndGetId {
-                    it[user] = User("A", "Team A")
-                }
-
-                val result1 = tester.select(tester.user).where { tester.id eq nullId }.single()
-                assertNull(result1[tester.user])
-
-                val result2 = tester.select(tester.user).where { tester.id eq nonNullId }.single()
-                assertNotNull(result2[tester.user])
-
-                SchemaUtils.drop(tester)
+        withTables(excludeSettings = binaryJsonNotSupportedDB, tester) { testDb ->
+            val nullId = tester.insertAndGetId {
+                it[user] = null
             }
+            val nonNullId = tester.insertAndGetId {
+                it[user] = User("A", "Team A")
+            }
+
+            val result1 = tester.select(tester.user).where { tester.id eq nullId }.single()
+            assertNull(result1[tester.user])
+
+            val result2 = tester.select(tester.user).where { tester.id eq nonNullId }.single()
+            assertNotNull(result2[tester.user])
+        }
+    }
+
+    @Test
+    fun testJsonBWithUpsert() {
+        // MySQL and related databases are excluded due to their lack of support for upsert operations.
+        withJsonBTable(exclude = TestDB.mySqlRelatedDB + binaryJsonNotSupportedDB) { tester, _, _, _ ->
+            val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
+            val newId = tester.insertAndGetId {
+                it[jsonBColumn] = newData
+            }
+
+            val newData2 = newData.copy(active = false)
+            tester.upsert(tester.id) {
+                it[tester.id] = newId
+                it[tester.jsonBColumn] = newData2
+            }
+
+            val newResult = tester.selectAll().where { tester.id eq newId }.singleOrNull()
+            assertEquals(newData2, newResult?.get(tester.jsonBColumn))
         }
     }
 }

@@ -38,6 +38,12 @@ open class JsonColumnType<T : Any>(
         }
     }
 
+    override fun parameterMarker(value: T?): String = if (currentDialect is H2Dialect && value != null) {
+        "? FORMAT JSON"
+    } else {
+        super.parameterMarker(value)
+    }
+
     override fun notNullValueToDB(value: T): Any = serialize(value)
 
     override fun valueToString(value: T?): String = when (value) {

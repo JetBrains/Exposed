@@ -51,19 +51,13 @@ fun DatabaseTestsBase.withJsonTable(
 ) {
     val tester = JsonTestsData.JsonTable
 
-    withDb(excludeSettings = exclude) { testDb ->
-        excludingH2Version1(testDb) {
-            SchemaUtils.create(tester)
+    withTables(excludeSettings = exclude, tester) { testDb ->
+        val user1 = User("Admin", null)
+        val data1 = DataHolder(user1, 10, true, null)
 
-            val user1 = User("Admin", null)
-            val data1 = DataHolder(user1, 10, true, null)
+        tester.insert { it[jsonColumn] = data1 }
 
-            tester.insert { it[jsonColumn] = data1 }
-
-            statement(tester, user1, data1, testDb)
-
-            SchemaUtils.drop(tester)
-        }
+        statement(tester, user1, data1, testDb)
     }
 }
 
@@ -73,19 +67,13 @@ fun DatabaseTestsBase.withJsonBTable(
 ) {
     val tester = JsonTestsData.JsonBTable
 
-    withDb(excludeSettings = exclude) { testDb ->
-        excludingH2Version1(testDb) {
-            SchemaUtils.create(tester)
+    withTables(excludeSettings = exclude, tester) { testDb ->
+        val user1 = User("Admin", null)
+        val data1 = DataHolder(user1, 10, true, null)
 
-            val user1 = User("Admin", null)
-            val data1 = DataHolder(user1, 10, true, null)
+        tester.insert { it[jsonBColumn] = data1 }
 
-            tester.insert { it[jsonBColumn] = data1 }
-
-            statement(tester, user1, data1, testDb)
-
-            SchemaUtils.drop(tester)
-        }
+        statement(tester, user1, data1, testDb)
     }
 }
 
