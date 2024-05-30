@@ -28,6 +28,10 @@ fun <T : LocalDate?> Date(expr: Expression<T>): Function<LocalDate> = DateIntern
 @JvmName("LocalDateTimeDateFunction")
 fun <T : LocalDateTime?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
 
+/** Represents an SQL function that extracts the date part from a given datetime [expr]. */
+@JvmName("OffsetDateTimeDateFunction")
+fun <T : OffsetDateTime?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
+
 /** Represents an SQL function that extracts the date part from a given timestamp [expr]. */
 @JvmName("InstantDateFunction")
 fun <T : Instant?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
@@ -247,6 +251,10 @@ fun <T : LocalDateTime?> Expression<T>.date() = Date(this)
 /** Returns the date from this timestamp expression. */
 @JvmName("InstantDateExt")
 fun <T : Instant?> Expression<T>.date() = Date(this)
+
+/** Returns the date from this offsetdatetime expression. */
+@JvmName("OffsetDateTimeDateExt")
+fun <T : OffsetDateTime?> Expression<T>.date() = Date(this)
 
 /** Returns the year from this date expression, as an integer. */
 @JvmName("LocalDateYearExt")
