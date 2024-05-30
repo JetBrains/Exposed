@@ -94,7 +94,7 @@ class BooleanColumnTypeTests : DatabaseTestsBase() {
             characterColumnType.valueToDB(value.toChar().toString())
 
         override fun nonNullValueToString(value: Boolean): String =
-            value.toChar().toString()
+            characterColumnType.nonNullValueToString(value.toChar().toString())
 
         private fun Boolean?.toChar() = when (this) {
             true -> 'Y'
