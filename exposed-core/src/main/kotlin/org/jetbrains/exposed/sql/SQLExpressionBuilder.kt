@@ -921,38 +921,13 @@ interface ISqlExpressionBuilder {
 
     /** Returns the specified [value] as a query parameter of type [T]. */
     @Suppress("UNCHECKED_CAST")
-    fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> = when (value) {
-        is Boolean -> booleanParam(value)
-        is Byte -> byteParam(value)
-        is UByte -> ubyteParam(value)
-        is Short -> shortParam(value)
-        is UShort -> ushortParam(value)
-        is Int -> intParam(value)
-        is UInt -> uintParam(value)
-        is Long -> longParam(value)
-        is ULong -> ulongParam(value)
-        is Float -> floatParam(value)
-        is Double -> doubleParam(value)
-        is String -> QueryParameter(value, columnType as IColumnType<T & Any>) // String value should inherit from column
-        else -> QueryParameter(value, columnType as IColumnType<T & Any>)
-    } as QueryParameter<T>
+    fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> =
+        QueryParameter(value, columnType as IColumnType<T & Any>)
 
     /** Returns the specified [value] as a literal of type [T]. */
     @Suppress("UNCHECKED_CAST", "ComplexMethod")
-    fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
-        is Boolean -> booleanLiteral(value)
-        is Byte -> byteLiteral(value)
-        is UByte -> ubyteLiteral(value)
-        is Short -> shortLiteral(value)
-        is UShort -> ushortLiteral(value)
-        is Int -> intLiteral(value)
-        is UInt -> uintLiteral(value)
-        is Long -> longLiteral(value)
-        is ULong -> ulongLiteral(value)
-        is Float -> floatLiteral(value)
-        is Double -> doubleLiteral(value)
-        is String -> stringLiteral(value)
-        is ByteArray -> stringLiteral(value.toString(Charsets.UTF_8))
+    fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when {
+        value is ByteArray && columnType is BasicBinaryColumnType -> stringLiteral(value.toString(Charsets.UTF_8))
         else -> LiteralOp(columnType as IColumnType<T & Any>, value)
     } as LiteralOp<T>
 

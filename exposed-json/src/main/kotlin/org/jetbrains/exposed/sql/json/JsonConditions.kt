@@ -1,13 +1,7 @@
 package org.jetbrains.exposed.sql.json
 
-import org.jetbrains.exposed.sql.ComplexExpression
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.ExpressionWithColumnType
-import org.jetbrains.exposed.sql.IColumnType
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.asLiteral
-import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 // Operator Classes
@@ -69,6 +63,7 @@ fun ExpressionWithColumnType<*>.contains(candidate: Expression<*>, path: String?
  */
 fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null): Contains = when (candidate) {
     is Iterable<*>, is Array<*> -> Contains(this, stringLiteral(asLiteral(candidate).toString()), path, columnType)
+    is String -> Contains(this, stringLiteral(candidate), path, columnType)
     else -> Contains(this, asLiteral(candidate), path, columnType)
 }
 
