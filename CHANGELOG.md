@@ -27,6 +27,10 @@ Bug fixes:
 * fix: EXPOSED-395 ClassCastException with EntityId column operations by @joc-a in https://github.com/JetBrains/Exposed/pull/2103
 * fix: EXPOSED-391 Cannot map columns to different types anymore by @joc-a in https://github.com/JetBrains/Exposed/pull/2099
 
+Docs:
+* docs: fix typos in foreignKey documentation by @plplmax in https://github.com/JetBrains/Exposed/pull/2077
+* docs: Specify a URL for clicks on the header logo by @vnikolova in https://github.com/JetBrains/Exposed/pull/2080
+
 # 0.50.1
 Bug fixes:
 * fix: EXPOSED-366 inList with EntityID column causes type mismatch error by @bog-walk in https://github.com/JetBrains/Exposed/pull/2070
