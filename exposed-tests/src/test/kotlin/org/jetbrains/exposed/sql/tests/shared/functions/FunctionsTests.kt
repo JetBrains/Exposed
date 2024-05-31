@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared.functions
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.coalesce
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -10,7 +11,11 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -570,14 +575,15 @@ class FunctionsTests : DatabaseTestsBase() {
     @Test
     fun testCoalesceFunction() {
         withCitiesAndUsers { _, users, _ ->
-            val coalesceExp1 = Coalesce(users.cityId, intLiteral(1000))
+            val coalesceExp1 = coalesce(users.cityId, intLiteral(1000))
 
             users.select(users.cityId, coalesceExp1).forEach {
                 val cityId = it[users.cityId]
+                val actual: Int = it[coalesceExp1]
                 if (cityId != null) {
-                    assertEquals(cityId, it[coalesceExp1])
+                    assertEquals(cityId, actual)
                 } else {
-                    assertEquals(1000, it[coalesceExp1])
+                    assertEquals(1000, actual)
                 }
             }
 
@@ -585,10 +591,11 @@ class FunctionsTests : DatabaseTestsBase() {
 
             users.select(users.cityId, coalesceExp2).forEach {
                 val cityId = it[users.cityId]
+                val actual: Int = it[coalesceExp2]
                 if (cityId != null) {
-                    assertEquals(cityId, it[coalesceExp2])
+                    assertEquals(cityId, actual)
                 } else {
-                    assertEquals(1000, it[coalesceExp2])
+                    assertEquals(1000, actual)
                 }
             }
         }

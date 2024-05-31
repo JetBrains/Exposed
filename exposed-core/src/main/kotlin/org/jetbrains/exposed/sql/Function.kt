@@ -438,11 +438,12 @@ class CaseWhenElse<T>(
 /**
  * Represents an SQL function that returns the first of its arguments that is not null.
  */
-class Coalesce<out T, S : T?>(
+@Suppress("UNCHECKED_CAST")
+class Coalesce<T, S : T?>(
     private val expr: ExpressionWithColumnType<S>,
     private val alternate: Expression<out T>,
     private vararg val others: Expression<out T>
-) : Function<S>(expr.columnType) {
+) : Function<T>(expr.columnType as IColumnType<T & Any>) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         (listOf(expr, alternate) + others).appendTo(
             prefix = "COALESCE(",
