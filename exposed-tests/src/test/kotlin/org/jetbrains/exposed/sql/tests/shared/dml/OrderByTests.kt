@@ -176,7 +176,7 @@ class OrderByTests : DatabaseTestsBase() {
 
     @Test
     fun testNullableStringOrdering() {
-        withTables(TestDB.enabledDialects(), NullableStrings) {
+        withTables(NullableStrings) {
             NullableStrings.insert {
                 it[name] = "a"
             }
