@@ -53,41 +53,4 @@ class MysqlTests : DatabaseTestsBase() {
             }
         }
     }
-
-    object NullableStrings : Table() {
-        val id: Column<Int> = integer("id").autoIncrement()
-        val name: Column<String?> = varchar("name", 50).nullable()
-
-        override val primaryKey = PrimaryKey(id)
-    }
-
-    @Test
-    fun mysqlStringOrdering() {
-        val mysqlOnly = TestDB.enabledDialects() - TestDB.MYSQL
-        withTables(mysqlOnly, NullableStrings) {
-            NullableStrings.insert {
-                it[name] = "a"
-            }
-            NullableStrings.insert {
-                it[name] = "B"
-            }
-            NullableStrings.insert {
-                it[name] = "b"
-            }
-            NullableStrings.insert {
-                it[name] = null
-            }
-            NullableStrings.insert {
-                it[name] = "c"
-            }
-            fun assertOrdered(expected: List<Int>, order: SortOrder) {
-                val ordered = NullableStrings.select(NullableStrings.id).orderBy(NullableStrings.name, order).map { it[NullableStrings.id] }
-                assertContentEquals(expected, ordered)
-            }
-            assertOrdered(listOf(5, 2, 3, 1, 4), SortOrder.DESC_NULLS_LAST) // c, B, b, a, null
-            assertOrdered(listOf(1, 2, 3, 5, 4), SortOrder.ASC_NULLS_LAST) // a, B, b, c, null
-            assertOrdered(listOf(4, 5, 2, 3, 1), SortOrder.DESC_NULLS_FIRST) // null, c, B, b, a
-            assertOrdered(listOf(4, 1, 2, 3, 5), SortOrder.ASC_NULLS_FIRST) // null, a, B, b, c
-        }
-    }
 }

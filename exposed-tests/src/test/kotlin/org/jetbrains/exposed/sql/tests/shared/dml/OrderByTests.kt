@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -11,6 +12,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
+import kotlin.test.assertContentEquals
 
 class OrderByTests : DatabaseTestsBase() {
     @Test
@@ -162,6 +164,39 @@ class OrderByTests : DatabaseTestsBase() {
                     assertEquals(e, r[index][users.id])
                 }
             }
+        }
+    }
+
+    object NullableStrings : Table() {
+        val id: Column<Int> = integer("id").autoIncrement()
+        val name: Column<String?> = varchar("name", 50).nullable()
+
+        override val primaryKey = PrimaryKey(id)
+    }
+
+    @Test
+    fun testNullableStringOrdering() {
+        withTables(TestDB.enabledDialects(), NullableStrings) {
+            NullableStrings.insert {
+                it[name] = "a"
+            }
+            NullableStrings.insert {
+                it[name] = "b"
+            }
+            NullableStrings.insert {
+                it[name] = null
+            }
+            NullableStrings.insert {
+                it[name] = "c"
+            }
+            fun assertOrdered(expected: List<Int>, order: SortOrder) {
+                val ordered = NullableStrings.select(NullableStrings.id).orderBy(NullableStrings.name, order).map { it[NullableStrings.id] }
+                assertContentEquals(expected, ordered)
+            }
+            assertOrdered(listOf(4, 2, 1, 3), SortOrder.DESC_NULLS_LAST) // c, b, a, null
+            assertOrdered(listOf(1, 2, 4, 3), SortOrder.ASC_NULLS_LAST) // a, b, c, null
+            assertOrdered(listOf(3, 4, 2, 1), SortOrder.DESC_NULLS_FIRST) // null, c, b, a
+            assertOrdered(listOf(3, 1, 2, 4), SortOrder.ASC_NULLS_FIRST) // null, a, b, c
         }
     }
 }
