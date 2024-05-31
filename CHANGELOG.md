@@ -1,3 +1,36 @@
+# 0.51.0
+Infrastructure:
+* Spring Boot 3.3.0
+* Kotlin Coroutines 1.8.1
+* Spring Framework 6.1.8
+* SQLite driver 3.46.0.0
+* Kotlinx Datetime JVM 0.6.0
+
+Breaking changes:
+* build!: EXPOSED-315 Use the slimmer `spring-boot-starter-jdbc` instead of `spring-boot-starter-data-jdbc` by @bystam
+  in https://github.com/JetBrains/Exposed/pull/2055
+* fix!: EXPOSED-360 Storing ULong.MAX_VALUE in ulong column not working by @joc-a in https://github.com/JetBrains/Exposed/pull/2068
+* More details at [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-51-0)
+
+Features:
+* feat: Add support for variable-length binary columns in H2 by @rnett in https://github.com/JetBrains/Exposed/pull/2100
+
+Bug fixes:
+* fix: EXPOSED-353 dateLiteral does not work on OracleDB 12c or 19c by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2057
+* fix: EXPOSED-382 ClassCastException when uuid().references() is used with EntityID column by @bog-walk in https://github.com/JetBrains/Exposed/pull/2079
+* fix: EXPOSED-384 CurrentTimestamp cannot be used with OffsetDateTimeColumnType by @bog-walk in https://github.com/JetBrains/Exposed/pull/2081
+* EXPOSED-372 UpsertStatement.resultedValues contains incorrect value by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2075
+* EXPOSED-365 Unable to insert values into `Array` column by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2072
+* EXPOSED-376 batchUpsert does not return database values on conflict by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2082
+* EXPOSED-387 Exposed Join.lastQueryAlias not working correctly by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2085
+* fix: Crash in aliased OpBoolean by @joc-a in https://github.com/JetBrains/Exposed/pull/2094
+* fix: EXPOSED-395 ClassCastException with EntityId column operations by @joc-a in https://github.com/JetBrains/Exposed/pull/2103
+* fix: EXPOSED-391 Cannot map columns to different types anymore by @joc-a in https://github.com/JetBrains/Exposed/pull/2099
+
+Docs:
+* docs: fix typos in foreignKey documentation by @plplmax in https://github.com/JetBrains/Exposed/pull/2077
+* docs: Specify a URL for clicks on the header logo by @vnikolova in https://github.com/JetBrains/Exposed/pull/2080
+
 # 0.50.1
 Bug fixes:
 * fix: EXPOSED-366 inList with EntityID column causes type mismatch error by @bog-walk in https://github.com/JetBrains/Exposed/pull/2070
