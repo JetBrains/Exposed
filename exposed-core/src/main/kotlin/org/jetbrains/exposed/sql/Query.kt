@@ -264,24 +264,21 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         limit = batchSize
         (orderByExpressions as MutableList).add(autoIncColumn to sortOrder)
         val whereOp = where ?: Op.TRUE
+        val fetchInAscendingOrder = sortOrder in listOf(SortOrder.ASC, SortOrder.ASC_NULLS_FIRST, SortOrder.ASC_NULLS_LAST)
 
         return object : Iterable<Iterable<ResultRow>> {
             override fun iterator(): Iterator<Iterable<ResultRow>> {
                 return iterator {
-                    var lastOffset: Long? = null
+                    var lastOffset = if (fetchInAscendingOrder) 0L else null
                     while (true) {
                         val query = this@Query.copy().adjustWhere {
-                            return@adjustWhere lastOffset.let {
-                                if (it == null) return@let whereOp
-
-                                return@let if (listOf(SortOrder.ASC, SortOrder.ASC_NULLS_FIRST, SortOrder.ASC_NULLS_LAST)
-                                        .contains(sortOrder)
-                                ) {
-                                    whereOp and (autoIncColumn greater it)
+                            lastOffset?.let {
+                                whereOp and if (fetchInAscendingOrder) {
+                                    (autoIncColumn greater it)
                                 } else {
-                                    whereOp and (autoIncColumn less it)
+                                    (autoIncColumn less it)
                                 }
-                            }
+                            } ?: whereOp
                         }
 
                         val results = query.iterator().asSequence().toList()
