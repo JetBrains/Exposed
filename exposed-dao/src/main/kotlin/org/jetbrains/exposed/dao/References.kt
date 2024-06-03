@@ -101,7 +101,7 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
     val factory: EntityClass<ChildID, Child>,
     val cache: Boolean
 ) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
-    /** The list of columns and their [SortOrder] for ordering referred entities in on-to-many relationship. */
+    /** The list of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
     private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
 
     init {
@@ -144,6 +144,9 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
 
     /** Modifies this reference to sort entities by a column specified in [expression] using ascending order. **/
     infix fun orderBy(expression: Expression<*>) = orderBy(listOf(expression to SortOrder.ASC))
+
+    /** Modifies this reference to sort entities based on multiple columns as specified in [order]. **/
+    fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = orderBy(order.toList())
 }
 
 /**

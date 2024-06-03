@@ -284,6 +284,7 @@ public class org/jetbrains/exposed/dao/Referrers : kotlin/properties/ReadOnlyPro
 	public final fun orderBy (Ljava/util/List;)Lorg/jetbrains/exposed/dao/Referrers;
 	public final fun orderBy (Lkotlin/Pair;)Lorg/jetbrains/exposed/dao/Referrers;
 	public final fun orderBy (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/dao/Referrers;
+	public final fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/dao/Referrers;
 }
 
 public abstract class org/jetbrains/exposed/dao/UIntEntity : org/jetbrains/exposed/dao/Entity {

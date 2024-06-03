@@ -207,7 +207,7 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     
     ...
     val ratings by UserRating.referrersOn(UserRatings.user)
-        .orderBy(listOf(UserRatings.value to SortOrder.DESC, UserRatings.id to SortOrder.ASC))
+        .orderBy(UserRatings.value to SortOrder.DESC, UserRatings.id to SortOrder.ASC)
     ...
 ```
 

@@ -79,11 +79,15 @@ class OrderedReferenceTest : DatabaseTestsBase() {
     class UserMultiColumn(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<UserMultiColumn>(Users)
 
-        val ratings by UserRatingMultiColumn referrersOn UserRatings.user orderBy listOf(UserRatings.value to DESC, UserRatings.id to DESC)
-        val nullableRatings by UserNullableRatingMultiColumn optionalReferrersOn UserNullableRatings.user orderBy listOf(
-            UserNullableRatings.value to DESC,
-            UserNullableRatings.id to DESC
-        )
+        val ratings by UserRatingMultiColumn
+            .referrersOn(UserRatings.user)
+            .orderBy(UserRatings.value to DESC, UserRatings.id to DESC)
+        val nullableRatings by UserNullableRatingMultiColumn
+            .optionalReferrersOn(UserNullableRatings.user)
+            .orderBy(
+                UserNullableRatings.value to DESC,
+                UserNullableRatings.id to DESC
+            )
     }
 
     @Test
