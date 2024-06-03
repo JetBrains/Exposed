@@ -245,7 +245,7 @@ class EntityCache(private val transaction: Transaction) {
                         }
                     }
                 }
-            } catch (e: ArrayIndexOutOfBoundsException) {
+            } catch (cause: ArrayIndexOutOfBoundsException) {
                 // EXPOSED-191 Flaky Oracle test on TC build
                 // this try/catch should help to get information about the flaky test.
                 // try/catch can be safely removed after the fixing the issue
@@ -255,8 +255,8 @@ class EntityCache(private val transaction: Transaction) {
                     entry.writeValues.map { writeValue -> "${writeValue.key.name}=${writeValue.value}" }.joinToString { ", " }
                 }
 
-                exposedLogger.error("ArrayIndexOutOfBoundsException on attempt to make flush inserts. Table: ${table.tableName}, entries: ($toFlushString)", e)
-                throw e
+                exposedLogger.error("ArrayIndexOutOfBoundsException on attempt to make flush inserts. Table: ${table.tableName}, entries: ($toFlushString)", cause)
+                throw cause
             }
 
             for ((entry, genValues) in toFlush.zip(ids)) {
