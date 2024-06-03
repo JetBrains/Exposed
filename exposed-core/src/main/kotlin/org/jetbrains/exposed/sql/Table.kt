@@ -1351,9 +1351,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // DDL statements
 
-    /** Returns the list of DDL statements that create this table. */
-    val ddl: List<String> get() = createStatement()
-
     internal fun primaryKeyConstraint(): String? {
         return primaryKey?.let { primaryKey ->
             val tr = TransactionManager.current()
@@ -1425,7 +1422,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 maxValue = Long.MAX_VALUE
             )
         }
-            ?.takeIf { !it.exists() }
             ?.createStatement()
             .orEmpty()
     }

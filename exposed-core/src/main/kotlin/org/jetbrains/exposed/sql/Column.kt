@@ -49,9 +49,6 @@ class Column<T>(
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = TransactionManager.current().fullIdentity(this@Column, queryBuilder)
 
-    /** Returns the list of DDL statements that create this column. */
-    val ddl: List<String> get() = createStatement()
-
     /** Returns the column name in proper case. */
     fun nameInDatabaseCase(): String = name.inProperCase()
 

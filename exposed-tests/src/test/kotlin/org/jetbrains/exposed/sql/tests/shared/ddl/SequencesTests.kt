@@ -200,7 +200,7 @@ class SequencesTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testABCDEF() {
+    fun testNoCreateStatementForExistingSequence() {
         withDb {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 val createSequencePrefix = "CREATE SEQUENCE"
