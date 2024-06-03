@@ -817,7 +817,7 @@ interface ISqlExpressionBuilder {
         expr: ExpressionWithColumnType<S>,
         alternate: Expression<out T>,
         vararg others: Expression<out T>
-    ): Coalesce<T?, S> = Coalesce(expr, alternate, others = others)
+    ): Coalesce<T, S> = Coalesce<T, S>(expr, alternate, others = others)
 
     /**
      * Compares [value] against any chained conditional expressions.
