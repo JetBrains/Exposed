@@ -29,6 +29,9 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
     _sourceColumn: Column<EntityID<SID>>? = null,
     _targetColumn: Column<EntityID<ID>>? = null,
 ) : ReadWriteProperty<Source, SizedIterable<Target>> {
+    /** The list of columns and their [SortOrder] for ordering referred entities in many-to-many relationship. */
+    private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
+
     init {
         _targetColumn?.let {
             requireNotNull(_sourceColumn) { "Both source and target columns should be specified" }
@@ -74,7 +77,14 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
 
         val (columns, entityTables) = columnsAndTables
 
-        val query = { target.wrapRows(entityTables.select(columns).where { sourceColumn eq o.id }) }
+        val query = {
+            target.wrapRows(
+                @Suppress("SpreadOperator")
+                entityTables.select(columns)
+                    .where { sourceColumn eq o.id }
+                    .orderBy(*orderByExpressions.toTypedArray())
+            )
+        }
         return transaction.entityCache.getOrPutReferrers(o.id, sourceColumn, query).also {
             o.storeReferenceInCache(sourceColumn, it)
         }
@@ -119,4 +129,15 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
             }
         }
     }
+
+    /** Modifies this reference to sort entities based on multiple columns as specified in [order]. **/
+    infix fun orderBy(order: List<Pair<Expression<*>, SortOrder>>) = this.also {
+        orderByExpressions.addAll(order)
+    }
+
+    /** Modifies this reference to sort entities according to the specified [order]. **/
+    infix fun orderBy(order: Pair<Expression<*>, SortOrder>) = orderBy(listOf(order))
+
+    /** Modifies this reference to sort entities by a column specified in [expression] using ascending order. **/
+    infix fun orderBy(expression: Expression<*>) = orderBy(listOf(expression to SortOrder.ASC))
 }
