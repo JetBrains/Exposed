@@ -610,6 +610,53 @@ private fun <T : Table, E> T.batchUpsert(
  */
 fun Table.exists(): Boolean = currentDialect.tableExists(this)
 
+/**
+ * Performs an SQL MERGE operation to insert, update, or delete records in the target table based on
+ * a comparison with a source table.
+ *
+ * @param D The target table type extending from [Table].
+ * @param S The source table type extending from [Table].
+ * @param source An instance of the source table.
+ * @param on A lambda function with [SqlExpressionBuilder] as its receiver that should return a [Op<Boolean>] condition.
+ *           This condition is used to match records between the source and target tables.
+ * @param body A lambda where [MergeTableStatement] can be configured with specific actions to perform
+ *             when records are matched or not matched.
+ * @return A [MergeTableStatement] which represents the MERGE operation with the configured actions.
+ */
+fun <D : Table, S : Table> D.mergeFrom(
+    source: S,
+    on: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: MergeTableStatement.() -> Unit
+): MergeTableStatement {
+    return MergeTableStatement(this, source, on = on?.invoke(SqlExpressionBuilder)).apply {
+        body(this)
+        execute(TransactionManager.current())
+    }
+}
+
+/**
+ * Performs an SQL MERGE operation to insert, update, or delete records in the target table based on
+ * a comparison with a select query source.
+ *
+ * @param T The target table type extending from [Table].
+ * @param selectQuery represents the aliased query for a complex subquery to be used as the source.
+ * @param on A lambda with a receiver of type [SqlExpressionBuilder] that returns a condition [Op<Boolean>]
+ *           used to match records between the source query and the target table.
+ * @param body A lambda where [MergeSelectStatement] can be configured with specific actions to perform
+ *             when records are matched or not matched.
+ * @return A [MergeSelectStatement] which represents the MERGE operation with the configured actions.
+ */
+fun <T : Table> T.mergeFrom(
+    selectQuery: QueryAlias,
+    on: SqlExpressionBuilder.() -> Op<Boolean>,
+    body: MergeSelectStatement.() -> Unit
+): MergeSelectStatement {
+    return MergeSelectStatement(this, selectQuery, SqlExpressionBuilder.on()).apply {
+        body(this)
+        execute(TransactionManager.current())
+    }
+}
+
 private fun FieldSet.selectBatched(
     batchSize: Int = 1000,
     whereOp: Op<Boolean>

@@ -3,13 +3,14 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.MergeStatement
 
 /**
  * Provides definitions for all the supported SQL functions.
  * By default, definitions from the SQL standard are provided but if a vendor doesn't support a specific function, or it
  * is implemented differently, the corresponding function should be overridden.
  */
-@Suppress("UnnecessaryAbstractClass")
+@Suppress("UnnecessaryAbstractClass", "TooManyFunctions")
 abstract class FunctionProvider {
     // Mathematical functions
 
@@ -439,6 +440,80 @@ abstract class FunctionProvider {
     }
 
     /**
+     * Generates the SQL MERGE command which synchronizes two datasets by inserting new rows,
+     * or updating/deleting existing ones in the target table based on data from another table.
+     *
+     * @param dest The table that will be modified.
+     * @param source The table providing the data for modification.
+     * @param transaction The transaction in which the operation will be executed.
+     * @param clauses A list of `MergeStatement.When` instances describing the `when` clauses of the SQL command.
+     * @param on The condition that determines whether to apply insertions or updates/deletions.
+     */
+    open fun merge(
+        dest: Table,
+        source: Table,
+        transaction: Transaction,
+        clauses: List<MergeStatement.Clause>,
+        on: Op<Boolean>?
+    ): String {
+        if (clauses.any { it.deleteWhere != null } && currentDialect !is OracleDialect) {
+            transaction.throwUnsupportedException("'deleteWhere' parameter can be used only as a part of Oracle SQL update clause statement.")
+        }
+
+        val onCondition = (
+            on?.toString() ?: run {
+                val targetKey = dest.primaryKey?.columns?.singleOrNull()
+                val sourceKey = source.primaryKey?.columns?.singleOrNull()
+
+                if (targetKey == null || sourceKey == null) {
+                    transaction.throwUnsupportedException("MERGE requires an ON condition to be specified.")
+                }
+
+                "${transaction.fullIdentity(targetKey)}=${transaction.fullIdentity(sourceKey)}"
+            }
+            ).let { if (currentDialect is OracleDialect) "($it)" else it }
+
+        return with(QueryBuilder(true)) {
+            +"MERGE INTO ${transaction.identity(dest)} "
+            +"USING ${transaction.identity(source)} "
+            +"ON $onCondition "
+            addClausesToMergeStatement(transaction, dest, clauses)
+            toString()
+        }
+    }
+
+    /**
+     * Generates the SQL MERGE command which synchronizes two datasets by inserting new rows,
+     * or updating/deleting existing ones in the target table based on data from subquery.
+     *
+     * @param dest The table that will be modified.
+     * @param source The query providing the data for modification.
+     * @param transaction The transaction in which the operation will be executed.
+     * @param clauses A list of `MergeStatement.When` instances describing the `when` clauses of the SQL command.
+     * @param on The condition that determines whether to apply insertions or updates/deletions.
+     */
+    open fun mergeSelect(
+        dest: Table,
+        source: QueryAlias,
+        transaction: Transaction,
+        clauses: List<MergeStatement.Clause>,
+        on: Op<Boolean>,
+        prepared: Boolean
+    ): String {
+        val using = source.query.prepareSQL(transaction, prepared)
+
+        val onRaw = if (currentDialect is OracleDialect) "($on)" else "$on"
+
+        return with(QueryBuilder(true)) {
+            +"MERGE INTO ${transaction.identity(dest)} "
+            +"USING ( $using ) ${if (currentDialect is OracleDialect) "" else "as"} ${source.alias} "
+            +"ON $onRaw "
+            addClausesToMergeStatement(transaction, dest, clauses)
+            toString()
+        }
+    }
+
+    /**
      * Returns the SQL command that updates one or more rows of a table.
      *
      * @param target Table to update values from.
@@ -761,5 +836,76 @@ abstract class FunctionProvider {
         transaction.throwUnsupportedException(
             "There's no generic SQL for a command with a RETURNING clause. There must be a vendor specific implementation."
         )
+    }
+}
+
+@Suppress("NestedBlockDepth")
+private fun QueryBuilder.addClausesToMergeStatement(transaction: Transaction, table: Table, clauses: List<MergeStatement.Clause>) {
+    fun QueryBuilder.appendValueAlias(column: Column<*>, value: Any?) {
+        when (value) {
+            is Column<*> -> {
+                val aliasExpression = transaction.fullIdentity(value)
+                append(aliasExpression)
+            }
+
+            is Expression<*> -> {
+                val aliasExpression = value.toString()
+                append(aliasExpression)
+            }
+
+            else -> registerArgument(column.columnType, value)
+        }
+    }
+
+    val autoIncColumn = table.autoIncColumn
+
+    clauses.forEach { (action, arguments, condition, deleteWhere) ->
+        when (action) {
+            MergeStatement.ClauseAction.INSERT -> {
+                val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in arguments.map { it.first } }
+
+                val extraArg = if (nextValExpression != null) listOf(autoIncColumn to nextValExpression) else emptyList()
+
+                val allArguments = arguments + extraArg
+                +"WHEN NOT MATCHED "
+                if (currentDialect !is OracleDialect) {
+                    condition?.let { append("AND ($condition) ") }
+                }
+                +"THEN INSERT "
+                +allArguments.map { it.first }.joinToString(prefix = "(", postfix = ") ") {
+                    transaction.identity(it)
+                }
+                allArguments.appendTo(prefix = " VALUES (", postfix = ") ") { (column, value) ->
+                    appendValueAlias(column, value)
+                }
+                if (currentDialect is OracleDialect) {
+                    condition?.let { append("WHERE ($condition) ") }
+                }
+            }
+
+            MergeStatement.ClauseAction.UPDATE -> {
+                +"WHEN MATCHED "
+                if (currentDialect !is OracleDialect) {
+                    condition?.let { append("AND ($condition) ") }
+                }
+                +"THEN UPDATE SET "
+                arguments.appendTo(postfix = " ") { (column, expression) ->
+                    append("${transaction.identity(column)}=")
+                    appendValueAlias(column, expression)
+                }
+                if (currentDialect is OracleDialect) {
+                    condition?.let { append("WHERE ($condition) ") }
+                }
+                deleteWhere?.let {
+                    append("DELETE WHERE $deleteWhere")
+                }
+            }
+
+            MergeStatement.ClauseAction.DELETE -> {
+                +"WHEN MATCHED "
+                condition?.let { append("AND ($condition) ") }
+                +"THEN DELETE "
+            }
+        }
     }
 }

@@ -2,6 +2,10 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.MergeStatement
+import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.DELETE
+import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.INSERT
+import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.UPDATE
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.DatabaseMetaData
 import java.util.*
@@ -305,6 +309,34 @@ internal object OracleFunctionProvider : FunctionProvider() {
         transaction.throwUnsupportedException(
             "EXPLAIN queries are not currently supported for Oracle. Please log a YouTrack feature extension request."
         )
+    }
+
+    override fun merge(dest: Table, source: Table, transaction: Transaction, clauses: List<MergeStatement.Clause>, on: Op<Boolean>?): String {
+        validateMergeCommandClauses(transaction, clauses)
+        return super.merge(dest, source, transaction, clauses, on)
+    }
+
+    override fun mergeSelect(
+        dest: Table,
+        source: QueryAlias,
+        transaction: Transaction,
+        clauses: List<MergeStatement.Clause>,
+        on: Op<Boolean>,
+        prepared: Boolean
+    ): String {
+        validateMergeCommandClauses(transaction, clauses)
+        return super.mergeSelect(dest, source, transaction, clauses, on, prepared)
+    }
+}
+
+private fun validateMergeCommandClauses(transaction: Transaction, clauses: List<MergeStatement.Clause>) {
+    when {
+        clauses.count { it.action == INSERT } > 1 ->
+            transaction.throwUnsupportedException("Multiple insert clauses are not supported by DB.")
+        clauses.count { it.action == UPDATE } > 1 ->
+            transaction.throwUnsupportedException("Multiple update clauses are not supported by DB.")
+        clauses.count { it.action == DELETE } > 0 ->
+            transaction.throwUnsupportedException("Delete clauses are not supported by DB. You must use 'delete where' inside 'update' clause")
     }
 }
 
