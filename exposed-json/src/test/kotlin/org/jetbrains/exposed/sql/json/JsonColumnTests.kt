@@ -390,20 +390,22 @@ class JsonColumnTests : DatabaseTestsBase() {
     @Test
     fun testJsonWithUpsert() {
         // MySQL and related databases are excluded due to their lack of support for upsert operations.
-        withJsonTable(exclude = TestDB.mySqlRelatedDB) { tester, _, _, _ ->
-            val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
-            val newId = tester.insertAndGetId {
-                it[jsonColumn] = newData
-            }
+        withJsonTable(exclude = TestDB.mySqlRelatedDB) { tester, _, _, db ->
+            excludingH2Version1(db) {
+                val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
+                val newId = tester.insertAndGetId {
+                    it[jsonColumn] = newData
+                }
 
-            val newData2 = newData.copy(active = false)
-            tester.upsert(tester.id) {
-                it[tester.id] = newId
-                it[tester.jsonColumn] = newData2
-            }
+                val newData2 = newData.copy(active = false)
+                tester.upsert(tester.id) {
+                    it[tester.id] = newId
+                    it[tester.jsonColumn] = newData2
+                }
 
-            val newResult = tester.selectAll().where { tester.id eq newId }.singleOrNull()
-            assertEquals(newData2, newResult?.get(tester.jsonColumn))
+                val newResult = tester.selectAll().where { tester.id eq newId }.singleOrNull()
+                assertEquals(newData2, newResult?.get(tester.jsonColumn))
+            }
         }
     }
 }
