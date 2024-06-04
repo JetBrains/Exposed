@@ -557,6 +557,7 @@ class EntityTests : DatabaseTestsBase() {
     @Test
     fun callLimitOnRelationDoesntMutateTheCachedValue() {
         withTables(Posts, Boards, Categories) {
+            addLogger(StdOutSqlLogger)
             val category1 = Category.new {
                 title = "cat1"
             }
