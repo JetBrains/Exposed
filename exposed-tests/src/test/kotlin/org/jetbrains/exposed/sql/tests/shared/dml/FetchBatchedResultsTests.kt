@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
@@ -99,5 +100,21 @@ class FetchBatchedResultsTests : DatabaseTestsBase() {
     @Test(expected = IllegalArgumentException::class)
     fun `when batch size is 0 or less, should throw an exception`() {
         DMLTestsData.Cities.selectAll().fetchBatchedResults(batchSize = -1)
+    }
+
+    @Test
+    fun testFetchBatchedResultsWithAutoIncrementEntityId() {
+        val tester1 = object : IntIdTable("table_1") {
+            val data = varchar("data", 100)
+        }
+
+        val tester2 = object : IntIdTable("table_2") {
+            val moreData = varchar("more_data", 100)
+            val prevData = reference("prev_data", tester1, onUpdate = ReferenceOption.CASCADE)
+        }
+
+        withTables(tester1, tester2) {
+            (tester2 innerJoin tester1).selectAll().fetchBatchedResults(10_000).flatten()
+        }
     }
 }
