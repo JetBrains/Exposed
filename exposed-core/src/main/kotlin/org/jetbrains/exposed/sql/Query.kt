@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
@@ -244,10 +245,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * This query's [FieldSet] will be ordered by the first auto-increment column.
      *
      * @param batchSize Size of each sub-collection to return.
+     * @param sortOrder Order in which the results should be retrieved.
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
-     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectBatchedTests.testFetchBatchedResultsWithWhereAndSetBatchSize
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
-    fun fetchBatchedResults(batchSize: Int = 1000): Iterable<Iterable<ResultRow>> {
+    fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Iterable<Iterable<ResultRow>> {
         require(batchSize > 0) { "Batch size should be greater than 0." }
         require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
         require(orderByExpressions.isEmpty()) {
@@ -260,16 +262,23 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             throw UnsupportedOperationException("Batched select only works on tables with an auto-incrementing column")
         }
         limit = batchSize
-        (orderByExpressions as MutableList).add(autoIncColumn to SortOrder.ASC)
+        (orderByExpressions as MutableList).add(autoIncColumn to sortOrder)
         val whereOp = where ?: Op.TRUE
+        val fetchInAscendingOrder = sortOrder in listOf(SortOrder.ASC, SortOrder.ASC_NULLS_FIRST, SortOrder.ASC_NULLS_LAST)
 
         return object : Iterable<Iterable<ResultRow>> {
             override fun iterator(): Iterator<Iterable<ResultRow>> {
                 return iterator {
-                    var lastOffset = 0L
+                    var lastOffset = if (fetchInAscendingOrder) 0L else null
                     while (true) {
                         val query = this@Query.copy().adjustWhere {
-                            whereOp and (autoIncColumn greater lastOffset)
+                            lastOffset?.let {
+                                whereOp and if (fetchInAscendingOrder) {
+                                    (autoIncColumn greater it)
+                                } else {
+                                    (autoIncColumn less it)
+                                }
+                            } ?: whereOp
                         }
 
                         val results = query.iterator().asSequence().toList()
