@@ -18,7 +18,7 @@ class ParameterizationTests : DatabaseTestsBase() {
     }
 
     private val supportMultipleStatements by lazy {
-        setOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER)
+        setOf(TestDB.MYSQL_V5, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER)
     }
 
     @Test
@@ -39,7 +39,7 @@ class ParameterizationTests : DatabaseTestsBase() {
 
         val dialect = TestDB.enabledDialects().first()
         val urlExtra = when (dialect) {
-            TestDB.MYSQL -> "&allowMultiQueries=true"
+            TestDB.MYSQL_V5 -> "&allowMultiQueries=true"
             TestDB.MARIADB -> "?&allowMultiQueries=true"
             else -> ""
         }
@@ -100,7 +100,7 @@ class ParameterizationTests : DatabaseTestsBase() {
 
         val dialect = TestDB.enabledDialects().first()
         val urlExtra = when (dialect) {
-            TestDB.MYSQL -> "&allowMultiQueries=true"
+            TestDB.MYSQL_V5 -> "&allowMultiQueries=true"
             TestDB.MARIADB -> "?&allowMultiQueries=true"
             else -> ""
         }

@@ -39,7 +39,7 @@ subprojects {
 
     testDb("h2") {
         withContainer = false
-        dialects("H2", "H2_MYSQL", "H2_PSQL", "H2_MARIADB", "H2_ORACLE", "H2_SQLSERVER")
+        dialects("H2_V2", "H2_V2_MYSQL", "H2_V2_PSQL", "H2_V2_MARIADB", "H2_V2_ORACLE", "H2_V2_SQLSERVER")
 
         dependencies {
             dependency(rootProject.libs.h2)
@@ -48,7 +48,7 @@ subprojects {
 
     testDb("h2_v1") {
         withContainer = false
-        dialects("H2", "H2_MYSQL")
+        dialects("H2_V1", "H2_V1_MYSQL")
 
         dependencies {
             dependency(rootProject.libs.h1)
@@ -57,7 +57,7 @@ subprojects {
 
     testDb("sqlite") {
         withContainer = false
-        dialects("sqlite")
+        dialects("SQLITE")
 
         dependencies {
             dependency(rootProject.libs.sqlite.jdbc)
@@ -66,7 +66,7 @@ subprojects {
 
     testDb("mysql") {
         port = 3001
-        dialects("mysql")
+        dialects("MYSQL_V5")
         dependencies {
             dependency(rootProject.libs.mysql51)
         }
@@ -74,7 +74,7 @@ subprojects {
 
     testDb("mysql8") {
         port = 3002
-        dialects("mysql")
+        dialects("MYSQL_V8")
         dependencies {
             dependency(rootProject.libs.mysql)
         }

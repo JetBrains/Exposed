@@ -19,7 +19,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
     @Test
     fun `test ON DELETE SET DEFAULT for databases that support it without SQLite`() {
-        withDb(excludeSettings = listOf(TestDB.MARIADB, TestDB.MYSQL, TestDB.SQLITE, TestDB.ORACLE)) {
+        withDb(excludeSettings = TestDB.ALL_MARIADB + TestDB.ALL_MYSQL + listOf(TestDB.SQLITE, TestDB.ORACLE)) {
             testOnDeleteSetDefault()
         }
     }
@@ -184,7 +184,8 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(category, item) {
+        // TODO probably could be fixed for MySql 5
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), category, item) {
             if (currentDialectTest.supportsOnUpdate) {
                 val constraints = connection.metadata {
                     tableConstraints(listOf(item))

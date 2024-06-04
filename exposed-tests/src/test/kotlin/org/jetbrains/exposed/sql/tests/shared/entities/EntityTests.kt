@@ -374,42 +374,40 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testCacheInvalidatedOnDSLUpsert() {
-        withTables(Items) { testDb ->
-            excludingH2Version1(testDb) {
-                val oldPrice = 20.0
-                val itemA = Item.new {
-                    name = "Item A"
-                    price = oldPrice
-                }
-                assertEquals(oldPrice, itemA.price)
-                assertNotNull(Item.testCache(itemA.id))
-
-                val newPrice = 50.0
-                val conflictKeys = if (testDb in TestDB.mySqlRelatedDB) emptyArray<Column<*>>() else arrayOf(Items.name)
-                Items.upsert(*conflictKeys) {
-                    it[name] = itemA.name
-                    it[price] = newPrice
-                }
-                assertEquals(oldPrice, itemA.price)
-                assertNull(Item.testCache(itemA.id))
-
-                itemA.refresh(flush = false)
-                assertEquals(newPrice, itemA.price)
-                assertNotNull(Item.testCache(itemA.id))
-
-                val newPricePlusExtra = 100.0
-                val newItems = List(5) { i -> "Item ${'A' + i}" to newPricePlusExtra }
-                Items.batchUpsert(newItems, *conflictKeys, shouldReturnGeneratedValues = false) { (name, price) ->
-                    this[Items.name] = name
-                    this[Items.price] = price
-                }
-                assertEquals(newPrice, itemA.price)
-                assertNull(Item.testCache(itemA.id))
-
-                itemA.refresh(flush = false)
-                assertEquals(newPricePlusExtra, itemA.price)
-                assertNotNull(Item.testCache(itemA.id))
+        withTables(excludeSettings = TestDB.ALL_H2_V1, Items) { testDb ->
+            val oldPrice = 20.0
+            val itemA = Item.new {
+                name = "Item A"
+                price = oldPrice
             }
+            assertEquals(oldPrice, itemA.price)
+            assertNotNull(Item.testCache(itemA.id))
+
+            val newPrice = 50.0
+            val conflictKeys = if (testDb in TestDB.ALL_MYSQL_LIKE) emptyArray<Column<*>>() else arrayOf(Items.name)
+            Items.upsert(*conflictKeys) {
+                it[name] = itemA.name
+                it[price] = newPrice
+            }
+            assertEquals(oldPrice, itemA.price)
+            assertNull(Item.testCache(itemA.id))
+
+            itemA.refresh(flush = false)
+            assertEquals(newPrice, itemA.price)
+            assertNotNull(Item.testCache(itemA.id))
+
+            val newPricePlusExtra = 100.0
+            val newItems = List(5) { i -> "Item ${'A' + i}" to newPricePlusExtra }
+            Items.batchUpsert(newItems, *conflictKeys, shouldReturnGeneratedValues = false) { (name, price) ->
+                this[Items.name] = name
+                this[Items.price] = price
+            }
+            assertEquals(newPrice, itemA.price)
+            assertNull(Item.testCache(itemA.id))
+
+            itemA.refresh(flush = false)
+            assertEquals(newPricePlusExtra, itemA.price)
+            assertNotNull(Item.testCache(itemA.id))
         }
     }
 

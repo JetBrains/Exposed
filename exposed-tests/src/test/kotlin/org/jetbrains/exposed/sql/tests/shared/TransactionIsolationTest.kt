@@ -28,7 +28,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 
     @Test
     fun testTransactionIsolationWithHikariDataSource() {
-        Assume.assumeTrue(setOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER).containsAll(TestDB.enabledDialects()))
+        Assume.assumeTrue(setOf(TestDB.MYSQL_V5, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER).containsAll(TestDB.enabledDialects()))
         val dialect = TestDB.enabledDialects().first()
 
         val db = Database.connect(
@@ -65,7 +65,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
 
     @Test
     fun testTransactionIsolationWithHikariAndDatabaseConfig() {
-        Assume.assumeTrue(setOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER).containsAll(TestDB.enabledDialects()))
+        Assume.assumeTrue(setOf(TestDB.MYSQL_V5, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER).containsAll(TestDB.enabledDialects()))
         val dialect = TestDB.enabledDialects().first()
 
         val db = Database.connect(
@@ -117,7 +117,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     private fun Transaction.assertTransactionIsolationLevel(testDb: TestDB, expected: Int) {
         val (sql, repeatable, committed) = when (testDb) {
             TestDB.POSTGRESQL -> Triple("SHOW TRANSACTION ISOLATION LEVEL", "repeatable read", "read committed")
-            TestDB.MYSQL, TestDB.MARIADB -> Triple("SELECT @@tx_isolation", "REPEATABLE-READ", "READ-COMMITTED")
+            TestDB.MYSQL_V5, TestDB.MARIADB -> Triple("SELECT @@tx_isolation", "REPEATABLE-READ", "READ-COMMITTED")
             TestDB.SQLSERVER -> Triple("SELECT transaction_isolation_level FROM sys.dm_exec_sessions WHERE session_id = @@SPID", "3", "2")
             else -> throw UnsupportedOperationException("Cannot query isolation level using ${testDb.name}")
         }

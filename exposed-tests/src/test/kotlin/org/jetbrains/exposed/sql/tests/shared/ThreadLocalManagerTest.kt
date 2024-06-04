@@ -23,17 +23,17 @@ import kotlin.test.fail
 class ThreadLocalManagerTest : DatabaseTestsBase() {
     @Test
     fun testReconnection() {
-        Assume.assumeTrue(TestDB.MYSQL in TestDB.enabledDialects())
+        Assume.assumeTrue(TestDB.MYSQL_V5 in TestDB.enabledDialects())
 
         var secondThreadTm: TransactionManager? = null
-        val db1 = TestDB.MYSQL.connect()
+        val db1 = TestDB.MYSQL_V5.connect()
         lateinit var db2: Database
 
         transaction {
             val firstThreadTm = db1.transactionManager
             SchemaUtils.create(DMLTestsData.Cities)
             thread {
-                db2 = TestDB.MYSQL.connect()
+                db2 = TestDB.MYSQL_V5.connect()
                 transaction {
                     DMLTestsData.Cities.selectAll().toList()
                     secondThreadTm = db2.transactionManager
@@ -50,7 +50,7 @@ class ThreadLocalManagerTest : DatabaseTestsBase() {
     fun testReadOnly() {
         // Explanation: MariaDB driver never set readonly to true, MSSQL silently ignores the call, SQLLite does not
         // promise anything, H2 has very limited functionality
-        val excludeSettings = TestDB.allH2TestDB + listOf(
+        val excludeSettings = TestDB.ALL_H2 + listOf(
             TestDB.MARIADB, TestDB.SQLITE,
             TestDB.SQLSERVER, TestDB.ORACLE
         )

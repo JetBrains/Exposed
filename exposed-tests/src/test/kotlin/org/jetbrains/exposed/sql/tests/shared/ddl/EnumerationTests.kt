@@ -16,7 +16,7 @@ import org.junit.Test
 import org.postgresql.util.PGobject
 
 class EnumerationTests : DatabaseTestsBase() {
-    private val supportsCustomEnumerationDB = TestDB.mySqlRelatedDB + listOf(TestDB.H2, TestDB.H2_PSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+    private val supportsCustomEnumerationDB = TestDB.ALL_MYSQL_LIKE + listOf(TestDB.H2_V2, TestDB.H2_V2_PSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
 
     internal enum class Foo {
         Bar, Baz;

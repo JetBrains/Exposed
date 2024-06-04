@@ -21,7 +21,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class ArrayColumnTypeTests : DatabaseTestsBase() {
-    private val arrayTypeUnsupportedDb = TestDB.entries - (TestDB.postgreSQLRelatedDB + TestDB.H2 + TestDB.H2_PSQL).toSet()
+    private val arrayTypeUnsupportedDb = TestDB.ALL - (TestDB.ALL_POSTGRES + TestDB.H2_V2 + TestDB.H2_V2_PSQL).toSet()
 
     object ArrayTestTable : IntIdTable("array_test_table") {
         val numbers = array<Int>("numbers").default(listOf(5))
@@ -32,7 +32,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testCreateAndDropArrayColumns() {
-        withDb(excludeSettings = arrayTypeUnsupportedDb) {
+        withDb(excludeSettings = arrayTypeUnsupportedDb) { db ->
             try {
                 SchemaUtils.create(ArrayTestTable)
                 assertTrue(ArrayTestTable.exists())
@@ -44,7 +44,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testCreateMissingColumnsWithArrayDefaults() {
-        withTables(excludeSettings = arrayTypeUnsupportedDb, ArrayTestTable) {
+        withTestTableAndExcludeSettings {
             try {
                 SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
                 assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).isEmpty())
@@ -56,7 +56,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testArrayColumnInsertAndSelect() {
-        withTables(excludeSettings = arrayTypeUnsupportedDb, ArrayTestTable) {
+        withTestTableAndExcludeSettings {
             val numInput = listOf(1, 2, 3)
             val stringInput = listOf<String?>("hi", "hey", "hello")
             val doubleInput = listOf(1.0, 2.0, 3.0)
@@ -102,7 +102,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             val numbers = array<Int>("numbers", IntegerColumnType(), maxArraySize).default(emptyList())
         }
 
-        withTables(excludeSettings = arrayTypeUnsupportedDb, sizedTester) {
+        withTestTableAndExcludeSettings(sizedTester) {
             val tooLongList = List(maxArraySize + 1) { i -> i + 1 }
             if (currentDialectTest is PostgreSQLDialect) {
                 // PostgreSQL ignores any max cardinality value
@@ -123,7 +123,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectUsingArrayGet() {
-        withTables(excludeSettings = arrayTypeUnsupportedDb, ArrayTestTable) {
+        withTestTableAndExcludeSettings {
             val numInput = listOf(1, 2, 3)
             ArrayTestTable.insert {
                 it[numbers] = numInput
@@ -152,7 +152,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectUsingArraySlice() {
-        withTables(excludeSettings = arrayTypeUnsupportedDb, ArrayTestTable) {
+        withTestTableAndExcludeSettings {
             val numInput = listOf(1, 2, 3)
             ArrayTestTable.insert {
                 it[numbers] = numInput
@@ -188,7 +188,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testArrayLiteralAndArrayParam() {
-        withTables(excludeSettings = arrayTypeUnsupportedDb, ArrayTestTable) {
+        withTestTableAndExcludeSettings {
             val numInput = listOf(1, 2, 3)
             val doublesInput = List(5) { i -> (i + 1).toDouble() }
             val id1 = ArrayTestTable.insertAndGetId {
@@ -219,7 +219,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testArrayColumnUpdate() {
-        withTables(excludeSettings = arrayTypeUnsupportedDb, ArrayTestTable) {
+        withTestTableAndExcludeSettings { db ->
             val id1 = ArrayTestTable.insertAndGetId {
                 it[doubles] = null
             }
@@ -245,7 +245,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testArrayColumnWithDAOFunctions() {
-        withTables(excludeSettings = arrayTypeUnsupportedDb, ArrayTestTable) {
+        withTestTableAndExcludeSettings {
             val numInput = listOf(1, 2, 3)
             val entity1 = ArrayTestDao.new {
                 numbers = numInput
@@ -263,7 +263,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testArrayColumnWithAllAnyOps() {
-        withTables(excludeSettings = arrayTypeUnsupportedDb, ArrayTestTable) {
+        withTestTableAndExcludeSettings {
             val numInput = listOf(1, 2, 3)
             val id1 = ArrayTestTable.insertAndGetId {
                 it[numbers] = numInput
@@ -297,7 +297,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
         // POSTGRESQLNG is excluded because the problem may be on their side.
         // Related issue: https://github.com/impossibl/pgjdbc-ng/issues/600
         // Recheck on our side when the issue is resolved.
-        withTables(excludeSettings = arrayTypeUnsupportedDb + TestDB.POSTGRESQLNG, ArrayTestTable) {
+        withTestTableAndExcludeSettings(excludeSettings = arrayTypeUnsupportedDb + TestDB.POSTGRESQLNG) {
             val testByteArraysList = listOf(
                 byteArrayOf(0), byteArrayOf(1, 2, 3)
             )
@@ -309,6 +309,16 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             assertNotNull(result)
             assertEquals(testByteArraysList[0][0], result[0][0])
             assertEquals(testByteArraysList[1].toUByteString(), result[1].toUByteString())
+        }
+    }
+
+    private fun withTestTableAndExcludeSettings(
+        vararg tables: Table = arrayOf(ArrayTestTable),
+        excludeSettings: List<TestDB> = arrayTypeUnsupportedDb,
+        statement: Transaction.(TestDB) -> Unit
+    ) {
+        withTables(excludeSettings = excludeSettings, *tables) { db ->
+            statement(db)
         }
     }
 }

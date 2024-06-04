@@ -205,7 +205,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun addCompositePrimaryKeyToTableH2Test() {
-        withDb(TestDB.H2) {
+        withDb(TestDB.H2_V2) {
             val tableName = Person.tableName
             val tableProperName = tableName.inProperCase()
             val id1ProperName = Person.id1.name.inProperCase()
@@ -225,7 +225,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun addCompositePrimaryKeyToTableNotH2Test() {
-        withTables(excludeSettings = TestDB.allH2TestDB, tables = arrayOf(Person)) {
+        withTables(excludeSettings = TestDB.ALL_H2, tables = arrayOf(Person)) {
             val tableName = Person.tableName
             val tableProperName = tableName.inProperCase()
             val id1ProperName = Person.id1.name.inProperCase()
@@ -247,7 +247,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun addOneColumnPrimaryKeyToTableNotH2Test() {
-        withTables(excludeSettings = TestDB.allH2TestDB, tables = arrayOf(Book)) {
+        withTables(excludeSettings = TestDB.ALL_H2, tables = arrayOf(Book)) {
             val tableProperName = Book.tableName.inProperCase()
             val pkConstraintName = Book.primaryKey.name
             val id1ProperName = Book.id.name.inProperCase()
@@ -574,7 +574,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun createTableWithOnDeleteSetDefault() {
-        withDb(excludeSettings = listOf(TestDB.MARIADB, TestDB.MYSQL, TestDB.ORACLE)) {
+        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + listOf(TestDB.ORACLE)) {
             val expected = listOf(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(Item)} (" +
                     "${Item.columns.joinToString { it.descriptionDdl(false) }}," +

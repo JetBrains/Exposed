@@ -28,7 +28,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(testTable)) {
+        withTables(excludeSettings = listOf(TestDB.H2_V2_MYSQL), tables = arrayOf(testTable)) {
             SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
             SchemaUtils.drop(testTable)
@@ -46,7 +46,7 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withTables(
-            excludeSettings = listOf(TestDB.H2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE),
+            excludeSettings = listOf(TestDB.H2_V2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE),
             tables = arrayOf(testTable)
         ) {
             SchemaUtils.createMissingTablesAndColumns(testTable)
@@ -269,7 +269,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             }
         }
 
-        val functionsNotSupported = TestDB.allH2TestDB + TestDB.SQLSERVER + TestDB.MARIADB
+        val functionsNotSupported = TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MARIADB
         withTables(excludeSettings = functionsNotSupported, tester) {
             if (!isOldMySql()) {
                 SchemaUtils.createMissingTablesAndColumns()

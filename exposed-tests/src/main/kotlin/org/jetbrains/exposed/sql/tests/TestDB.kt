@@ -19,34 +19,53 @@ enum class TestDB(
     val afterTestFinished: () -> Unit = {},
     val dbConfig: DatabaseConfig.Builder.() -> Unit = {}
 ) {
-    H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver", dbConfig = {
+    H2_V1({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver", dbConfig = {
         defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
     }),
-    H2_MYSQL({ "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver", beforeConnection = {
+    H2_V1_MYSQL({ "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver", beforeConnection = {
         Mode::class.declaredMemberProperties.firstOrNull { it.name == "convertInsertNullToZero" }?.let { field ->
             val mode = Mode.getInstance("MySQL")
             @Suppress("UNCHECKED_CAST")
             (field as KMutableProperty1<Mode, Boolean>).set(mode, false)
         }
     }),
-    H2_MARIADB(
+    H2_V2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver", dbConfig = {
+        defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+    }),
+    H2_V2_MYSQL({ "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver", beforeConnection = H2_V1_MYSQL.beforeConnection),
+    H2_V2_MARIADB(
         { "jdbc:h2:mem:mariadb;MODE=MariaDB;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1" },
         "org.h2.Driver",
         pass = "root"
     ),
-    H2_PSQL(
+    H2_V2_PSQL(
         { "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" },
         "org.h2.Driver"
     ),
-    H2_ORACLE(
+    H2_V2_ORACLE(
         { "jdbc:h2:mem:oracle;MODE=Oracle;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" },
         "org.h2.Driver"
     ),
-    H2_SQLSERVER({ "jdbc:h2:mem:sqlserver;MODE=MSSQLServer;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
+    H2_V2_SQLSERVER({ "jdbc:h2:mem:sqlserver;MODE=MSSQLServer;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
     SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
-    MYSQL(
+    MYSQL_V5(
         connection = {
-            "jdbc:mysql://127.0.0.1:3001/testdb?useSSL=false&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
+            "jdbc:mysql://127.0.0.1:3001/" +
+                "testdb" +
+                "?useSSL=false" +
+                "&characterEncoding=UTF-8" +
+                "&zeroDateTimeBehavior=convertToNull"
+        },
+        driver = "com.mysql.jdbc.Driver"
+    ),
+    MYSQL_V8(
+        connection = {
+            "jdbc:mysql://127.0.0.1:3002/" +
+                "testdb" +
+                "?useSSL=false" +
+                "&characterEncoding=UTF-8" +
+                "&zeroDateTimeBehavior=convertToNull" +
+                "&allowPublicKeyRetrieval=true"
         },
         driver = "com.mysql.cj.jdbc.Driver"
     ),
@@ -109,11 +128,17 @@ enum class TestDB(
     }
 
     companion object {
-        val allH2TestDB = listOf(H2, H2_MYSQL, H2_PSQL, H2_MARIADB, H2_ORACLE, H2_SQLSERVER)
-        val mySqlRelatedDB = listOf(MYSQL, MARIADB, H2_MYSQL, H2_MARIADB)
-        val postgreSQLRelatedDB = listOf(POSTGRESQL, POSTGRESQLNG)
-        val oracleRelatedDB = listOf(ORACLE, H2_ORACLE)
-        val sqlServerRelatedDB = listOf(SQLSERVER, H2_SQLSERVER)
+        val ALL_H2_V1 = listOf(H2_V1, H2_V1_MYSQL)
+        val ALL_H2_V2 = listOf(H2_V2, H2_V2_MYSQL, H2_V2_PSQL, H2_V2_MARIADB, H2_V2_ORACLE, H2_V2_SQLSERVER)
+        val ALL_H2 = ALL_H2_V1 + ALL_H2_V2
+        val ALL_MYSQL = listOf(MYSQL_V5, MYSQL_V8)
+        val ALL_MARIADB = listOf(MARIADB)
+        val ALL_MYSQL_LIKE = ALL_MYSQL + ALL_MARIADB + listOf(H2_V2_MYSQL, H2_V2_MARIADB, H2_V1_MYSQL)
+        val ALL_POSTGRES = listOf(POSTGRESQL, POSTGRESQLNG)
+        val ALL_POSTGRES_LIKE = ALL_POSTGRES + listOf(H2_V2_PSQL)
+        val ALL_ORACLE_LIKE = listOf(ORACLE, H2_V2_ORACLE)
+        val ALL_SQLSERVER_LIKE = listOf(SQLSERVER, H2_V2_SQLSERVER)
+        val ALL = TestDB.entries.toList()
 
         fun enabledDialects(): Set<TestDB> {
             if (TEST_DIALECTS.isEmpty()) {

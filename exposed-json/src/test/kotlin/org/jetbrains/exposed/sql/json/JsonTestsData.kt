@@ -6,7 +6,6 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
@@ -88,23 +87,17 @@ fun DatabaseTestsBase.withJsonArrays(
 ) {
     val tester = JsonTestsData.JsonArrays
 
-    withDb(excludeSettings = exclude) { testDb ->
-        excludingH2Version1(testDb) {
-            SchemaUtils.create(tester)
-
-            val singleId = tester.insertAndGetId {
-                it[tester.groups] = UserGroup(listOf(User("A", "Team A")))
-                it[tester.numbers] = intArrayOf(100)
-            }
-            val tripleId = tester.insertAndGetId {
-                it[tester.groups] = UserGroup(List(3) { i -> User("${'B' + i}", "Team ${'B' + i}") })
-                it[tester.numbers] = intArrayOf(3, 4, 5)
-            }
-
-            statement(tester, singleId, tripleId, testDb)
-
-            SchemaUtils.drop(tester)
+    withTables(excludeSettings = withH2V1(exclude), tester) { testDb ->
+        val singleId = tester.insertAndGetId {
+            it[tester.groups] = UserGroup(listOf(User("A", "Team A")))
+            it[tester.numbers] = intArrayOf(100)
         }
+        val tripleId = tester.insertAndGetId {
+            it[tester.groups] = UserGroup(List(3) { i -> User("${'B' + i}", "Team ${'B' + i}") })
+            it[tester.numbers] = intArrayOf(3, 4, 5)
+        }
+
+        statement(tester, singleId, tripleId, testDb)
     }
 }
 
@@ -119,23 +112,17 @@ fun DatabaseTestsBase.withJsonBArrays(
 ) {
     val tester = JsonTestsData.JsonBArrays
 
-    withDb(excludeSettings = exclude) { testDb ->
-        excludingH2Version1(testDb) {
-            SchemaUtils.create(tester)
-
-            val singleId = tester.insertAndGetId {
-                it[tester.groups] = UserGroup(listOf(User("A", "Team A")))
-                it[tester.numbers] = intArrayOf(100)
-            }
-            val tripleId = tester.insertAndGetId {
-                it[tester.groups] = UserGroup(List(3) { i -> User("${'B' + i}", "Team ${'B' + i}") })
-                it[tester.numbers] = intArrayOf(3, 4, 5)
-            }
-
-            statement(tester, singleId, tripleId, testDb)
-
-            SchemaUtils.drop(tester)
+    withTables(excludeSettings = withH2V1(exclude), tester) { testDb ->
+        val singleId = tester.insertAndGetId {
+            it[tester.groups] = UserGroup(listOf(User("A", "Team A")))
+            it[tester.numbers] = intArrayOf(100)
         }
+        val tripleId = tester.insertAndGetId {
+            it[tester.groups] = UserGroup(List(3) { i -> User("${'B' + i}", "Team ${'B' + i}") })
+            it[tester.numbers] = intArrayOf(3, 4, 5)
+        }
+
+        statement(tester, singleId, tripleId, testDb)
     }
 }
 

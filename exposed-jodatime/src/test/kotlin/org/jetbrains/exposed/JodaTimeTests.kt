@@ -237,7 +237,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
             val modified = jsonb<ModifierData>("modified", Json.Default)
         }
 
-        withTables(excludeSettings = TestDB.allH2TestDB + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
+        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
             val dateTimeNow = DateTime.now()
             tester.insert {
                 it[created] = dateTimeNow.minusYears(1)
@@ -322,7 +322,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
                 val isOriginalTimeZonePreserved = testDB !in listOf(
                     TestDB.POSTGRESQL,
                     TestDB.POSTGRESQLNG,
-                    TestDB.MYSQL
+                    TestDB.MYSQL_V5
                 )
                 if (isOriginalTimeZonePreserved) {
                     // Assert that time zone is preserved when the same value is inserted in different time zones
@@ -353,7 +353,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withDb(db = listOf(TestDB.MYSQL, TestDB.MARIADB)) { testDB ->
+        withDb(db = listOf(TestDB.MYSQL_V5, TestDB.MARIADB)) { testDB ->
             if (testDB == TestDB.MARIADB || isOldMySql()) {
                 expectException<UnsupportedByDialectException> {
                     SchemaUtils.create(testTable)
@@ -398,7 +398,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
     fun testCurrentDateTimeFunction() {
         val fakeTestTable = object : IntIdTable("fakeTable") {}
 
-        withTables(fakeTestTable) {
+        withTables(excludeSettings = TestDB.ALL_H2_V1, fakeTestTable) { db ->
             fun currentDbDateTime(): DateTime {
                 return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
             }
@@ -418,7 +418,7 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
             val datetimes = array<DateTime>("datetimes", DateColumnType(true)).default(defaultDateTimes)
         }
 
-        withTables(excludeSettings = TestDB.entries - TestDB.POSTGRESQL - TestDB.H2, tester) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL - TestDB.H2_V2 - TestDB.H2_V2_PSQL, tester) {
             tester.insert { }
             val result1 = tester.selectAll().single()
             assertEqualLists(result1[tester.dates], defaultDates)

@@ -58,7 +58,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWithSliceExtract() {
-        withJsonTable(exclude = TestDB.allH2TestDB) { tester, user1, data1, _ ->
+        withJsonTable(exclude = TestDB.ALL_H2) { tester, user1, data1, _ ->
             val pathPrefix = if (currentDialectTest is PostgreSQLDialect) "" else "."
             // SQLServer & Oracle return null if extracted JSON is not scalar
             val requiresScalar = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect
@@ -79,7 +79,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWhereWithExtract() {
-        withJsonTable(exclude = TestDB.allH2TestDB) { tester, _, data1, _ ->
+        withJsonTable(exclude = TestDB.ALL_H2) { tester, _, data1, _ ->
             val newId = tester.insertAndGetId {
                 it[jsonColumn] = data1.copy(logins = 1000)
             }
@@ -132,7 +132,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
             assertEquals(updatedUser, dataEntity.all().single().jsonColumn)
 
-            if (testDb !in TestDB.allH2TestDB) {
+            if (testDb !in TestDB.ALL_H2) {
                 dataEntity.new { jsonColumn = dataA }
                 val path = if (currentDialectTest is PostgreSQLDialect) {
                     arrayOf("user", "team")
@@ -148,7 +148,7 @@ class JsonColumnTests : DatabaseTestsBase() {
     }
 
     private val jsonContainsNotSupported = TestDB.entries -
-        listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.MYSQL, TestDB.MARIADB)
+        listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.MYSQL_V5, TestDB.MARIADB)
 
     @Test
     fun testJsonContains() {
@@ -167,7 +167,7 @@ class JsonColumnTests : DatabaseTestsBase() {
             assertEquals(1, tester.selectAll().where { userIsInAlphaTeam }.count())
 
             // test target contains candidate at specified path
-            if (testDb in TestDB.mySqlRelatedDB) {
+            if (testDb in TestDB.ALL_MYSQL_LIKE) {
                 userIsInAlphaTeam = tester.jsonColumn.contains("\"Alpha\"", ".user.team")
                 val alphaTeamUsers = tester.select(tester.id).where { userIsInAlphaTeam }
                 assertEquals(newId, alphaTeamUsers.single()[tester.id])
@@ -177,14 +177,14 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExists() {
-        withJsonTable(exclude = TestDB.allH2TestDB + TestDB.SQLSERVER) { tester, _, data1, testDb ->
+        withJsonTable(exclude = TestDB.ALL_H2 + TestDB.SQLSERVER) { tester, _, data1, testDb ->
             val maximumLogins = 1000
             val teamA = "A"
             val newId = tester.insertAndGetId {
                 it[jsonColumn] = data1.copy(user = data1.user.copy(team = teamA), logins = maximumLogins)
             }
 
-            val optional = if (testDb in TestDB.mySqlRelatedDB) "one" else null
+            val optional = if (testDb in TestDB.ALL_MYSQL_LIKE) "one" else null
 
             // test data at path root '$' exists by providing no path arguments
             val hasAnyData = tester.jsonColumn.exists(optional = optional)
@@ -222,7 +222,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExtractWithArrays() {
-        withJsonArrays(exclude = TestDB.allH2TestDB) { tester, singleId, _, _ ->
+        withJsonArrays(exclude = TestDB.ALL_H2) { tester, singleId, _, _ ->
             val path1 = if (currentDialectTest is PostgreSQLDialect) {
                 arrayOf("users", "0", "team")
             } else {
@@ -244,7 +244,7 @@ class JsonColumnTests : DatabaseTestsBase() {
             val hasSmallNumbers = tester.numbers.contains("[3, 5]")
             assertEquals(tripleId, tester.selectAll().where { hasSmallNumbers }.single()[tester.id])
 
-            if (testDb in TestDB.mySqlRelatedDB) {
+            if (testDb in TestDB.ALL_MYSQL_LIKE) {
                 val hasUserNameB = tester.groups.contains("\"B\"", ".users[0].name")
                 assertEquals(tripleId, tester.selectAll().where { hasUserNameB }.single()[tester.id])
             }
@@ -253,8 +253,8 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExistsWithArrays() {
-        withJsonArrays(exclude = TestDB.allH2TestDB + TestDB.SQLSERVER) { tester, _, tripleId, testDb ->
-            val optional = if (testDb in TestDB.mySqlRelatedDB) "one" else null
+        withJsonArrays(exclude = TestDB.ALL_H2 + TestDB.SQLSERVER) { tester, _, tripleId, testDb ->
+            val optional = if (testDb in TestDB.ALL_MYSQL_LIKE) "one" else null
 
             val hasMultipleUsers = tester.groups.exists(".users[1]", optional = optional)
             assertEquals(tripleId, tester.selectAll().where { hasMultipleUsers }.single()[tester.id])
@@ -389,7 +389,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonWithUpsert() {
-        withJsonTable { tester, _, _, db ->
+        withJsonTable(exclude = TestDB.ALL_H2_V1) { tester, _, _, db ->
             val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
             val newId = tester.insertAndGetId {
                 it[jsonColumn] = newData

@@ -105,7 +105,7 @@ class MergeTableTest : MergeBaseTest() {
 
     @Test
     fun testDelete() {
-        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB) { dest, source ->
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.ALL_ORACLE_LIKE) { dest, source ->
             dest.mergeFrom(
                 source,
                 on = { defaultOnCondition() },
@@ -170,7 +170,7 @@ class MergeTableTest : MergeBaseTest() {
 
     @Test
     fun testConditionOnDelete() {
-        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB) { dest, source ->
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.ALL_ORACLE_LIKE) { dest, source ->
             dest.mergeFrom(
                 source,
                 on = { defaultOnCondition() },
@@ -187,7 +187,7 @@ class MergeTableTest : MergeBaseTest() {
 
     @Test
     fun testMultipleClauses() {
-        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB + TestDB.sqlServerRelatedDB) { dest, source ->
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.ALL_ORACLE_LIKE + TestDB.ALL_SQLSERVER_LIKE) { dest, source ->
             dest.mergeFrom(source, on = { defaultOnCondition() }) {
                 whenNotMatchedInsert(and = (source.value eq 1)) {
                     it[dest.key] = source.key
@@ -236,7 +236,7 @@ class MergeTableTest : MergeBaseTest() {
 
     @Test
     fun testUnsupportedByDialectExceptions() {
-        withMergeTestTables(excludeSettings = allDbExcept(TestDB.oracleRelatedDB + TestDB.sqlServerRelatedDB)) { dest, source ->
+        withMergeTestTables(excludeSettings = allDbExcept(TestDB.ALL_ORACLE_LIKE + TestDB.ALL_SQLSERVER_LIKE)) { dest, source ->
             expectException<UnsupportedByDialectException> {
                 dest.mergeFrom(source, on = { defaultOnCondition() }) {
                     whenNotMatchedInsert {
@@ -269,7 +269,7 @@ class MergeTableTest : MergeBaseTest() {
             }
         }
 
-        withMergeTestTables(excludeSettings = TestDB.oracleRelatedDB) { dest, source ->
+        withMergeTestTables(excludeSettings = TestDB.ALL_ORACLE_LIKE) { dest, source ->
             expectException<UnsupportedByDialectException> {
                 dest.mergeFrom(source, on = { defaultOnCondition() }) {
                     whenMatchedUpdate(deleteWhere = (dest.value greater 1)) {

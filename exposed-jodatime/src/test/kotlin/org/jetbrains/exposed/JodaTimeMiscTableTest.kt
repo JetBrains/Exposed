@@ -350,7 +350,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
         val time = DateTime.now()
         val eOne = MiscTable.E.ONE
         val dec = BigDecimal("239.42")
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = arrayOf(tbl)) {
+        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB, tables = arrayOf(tbl)) {
             tbl.insert {
                 it[by] = 13
                 it[sm] = -10
@@ -399,7 +399,7 @@ class JodaTimeMiscTableTest : JodaTimeBaseTest() {
 
     @Test
     fun testZeroDateTimeIsNull() {
-        withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
+        withDb(listOf(TestDB.MYSQL_V5, TestDB.MARIADB)) {
             exec(zeroDateTimeTableDdl)
             try {
                 // Need ignore to bypass strict mode

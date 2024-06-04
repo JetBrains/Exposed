@@ -25,13 +25,13 @@ class TransactionManagerResetTest : LogDbInTestName() {
     @Test
     @Ignore
     fun `test closeAndUnregister with next Database-connect works fine`() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val fail = AtomicReference<Throwable?>(null)
         thread {
             try {
                 val initialManager = TransactionManager.manager
-                val db1 = TestDB.H2.connect()
+                val db1 = TestDB.H2_V2.connect()
                 val db1TransactionManager = TransactionManager.managerFor(db1)
 
                 val afterDb1Connect = TransactionManager.manager
@@ -44,7 +44,7 @@ class TransactionManagerResetTest : LogDbInTestName() {
 
                 TransactionManager.closeAndUnregister(db1)
                 assertSame(initialManager, TransactionManager.manager)
-                val db2 = TestDB.H2.connect()
+                val db2 = TestDB.H2_V2.connect()
 
                 // Check should be made in a separate thread as in current thread manager is already initialized
                 thread {

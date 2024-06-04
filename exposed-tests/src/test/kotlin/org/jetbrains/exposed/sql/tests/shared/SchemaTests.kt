@@ -14,7 +14,7 @@ import org.junit.Test
 class SchemaTests : DatabaseTestsBase() {
     @Test
     fun `create and set schema in mysql`() {
-        withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
+        withDb(listOf(TestDB.MYSQL_V5, TestDB.MARIADB)) {
             val schema = Schema("MYSCHEMA")
             try {
                 SchemaUtils.createSchema(schema)
@@ -31,7 +31,7 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `create and set schema tests`() {
-        withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB)) {
+        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB) {
             if (currentDialect.supportsCreateSchema) {
                 val schema = when (currentDialect) {
                     is SQLServerDialect -> {
@@ -71,7 +71,7 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `table references table with same name in other database in mysql`() {
-        withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
+        withDb(listOf(TestDB.MYSQL_V5, TestDB.MARIADB)) {
             val schema = Schema("MYSCHEMA")
             try {
                 SchemaUtils.createSchema(schema)
@@ -134,9 +134,9 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `test default schema`() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val schema = Schema("schema")
-        TestDB.H2.connect()
+        TestDB.H2_V2.connect()
 
         transaction {
             connection.metadata {
@@ -148,7 +148,7 @@ class SchemaTests : DatabaseTestsBase() {
             SchemaUtils.createSchema(schema)
         }
 
-        val db = TestDB.H2.connect {
+        val db = TestDB.H2_V2.connect {
             defaultSchema = schema
         }
 

@@ -9,15 +9,36 @@ import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class H2Tests : DatabaseTestsBase() {
+    @Test
+    fun testH2VersionIsCorrect() {
+        val systemTestName = System.getProperty("exposed.test.name")
+        withDb(TestDB.ALL_H2) { db ->
+            val dialect = currentDialect
+            if (dialect is H2Dialect) {
+                val version = exec("SELECT H2VERSION();") {
+                    it.next()
+                    it.getString(1)
+                }
+                if (systemTestName == "h2") {
+                    assertEquals("2", version?.first()?.toString())
+                }
+                if (systemTestName == "h2_v1") {
+                    assertEquals("1", version?.first()?.toString())
+                }
+            }
+        }
+    }
 
     @Test
     fun insertInH2() {
-        withDb(listOf(TestDB.H2_MYSQL, TestDB.H2)) {
+        withDb(listOf(TestDB.H2_V2_MYSQL, TestDB.H2_V2)) {
             SchemaUtils.create(Testing)
             Testing.insert {
                 it[id] = 1
@@ -32,7 +53,7 @@ class H2Tests : DatabaseTestsBase() {
 
     @Test
     fun replaceAsInsertInH2() {
-        withDb(listOf(TestDB.H2_MYSQL, TestDB.H2_MARIADB)) {
+        withDb(listOf(TestDB.H2_V2_MYSQL, TestDB.H2_V2_MARIADB)) {
             SchemaUtils.create(Testing)
             Testing.replace {
                 it[id] = 1
@@ -47,7 +68,7 @@ class H2Tests : DatabaseTestsBase() {
 
     @Test
     fun closeAndUnregister() {
-        withDb(TestDB.H2) { testDB ->
+        withDb(TestDB.H2_V2) { testDB ->
             val originalManager = TransactionManager.manager
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
@@ -73,7 +94,7 @@ class H2Tests : DatabaseTestsBase() {
         }
         val t = IntIdTable(tableName)
 
-        withDb(listOf(TestDB.H2, TestDB.H2_MYSQL)) {
+        withDb(listOf(TestDB.H2_V2, TestDB.H2_V2_MYSQL)) {
             try {
                 SchemaUtils.createMissingTablesAndColumns(initialTable)
                 assertEquals(
@@ -99,7 +120,7 @@ class H2Tests : DatabaseTestsBase() {
             val number = short("number")
         }
 
-        withDb(TestDB.allH2TestDB) {
+        withDb(TestDB.ALL_H2) {
             try {
                 SchemaUtils.create(testTable)
 
