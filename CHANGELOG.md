@@ -1,3 +1,7 @@
+# 0.51.1
+Bug fixes:
+* fix: EXPOSED-389 Coalesce operator returning nullable value by @joc-a in https://github.com/JetBrains/Exposed/pull/2107
+
 # 0.51.0
 Infrastructure:
 * Spring Boot 3.3.0
