@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insert
@@ -171,8 +172,13 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
                 it[cityId] = cId.value
             }
 
+            // lazy loaded reference
             val town1 = UUIDTables.Town.all().single()
             assertEquals(cId, town1.city.id)
+
+            // eager loaded reference
+            val town1WithCity = UUIDTables.Town.all().with(UUIDTables.Town::city).single()
+            assertEquals(cId, town1WithCity.city.id)
         }
     }
 }
