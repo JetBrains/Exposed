@@ -1,12 +1,8 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.LazySizedIterable
-import org.jetbrains.exposed.sql.SizedIterable
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.emptySized
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
@@ -181,7 +177,7 @@ private fun <SRC : Entity<*>> filterRelationsForEntity(
     return validMembers.filter { it in relations } as Collection<KProperty1<SRC, Any?>>
 }
 
-@Suppress("UNCHECKED_CAST", "NestedBlockDepth", "ComplexMethod")
+@Suppress("UNCHECKED_CAST", "NestedBlockDepth", "ComplexMethod", "LongMethod")
 private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
     vararg relations: KProperty1<out Entity<*>, Any?>,
     nodesVisited: MutableSet<EntityClass<*, *>> = mutableSetOf()
@@ -209,7 +205,11 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
             is Reference<*, *, *> -> {
                 (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
                     this.map { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
-                        refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds.distinct() }.toList()
+                        val castReferee = refColumn.referee<Comparable<Comparable<*>>>()!!
+                        val baseReferee = castReferee.takeUnless {
+                            it.columnType is EntityIDColumnType<*> && refIds.first() !is EntityID<*>
+                        } ?: (castReferee.columnType as EntityIDColumnType<Comparable<Comparable<*>>>).idColumn
+                        refObject.factory.find { baseReferee inList refIds.distinct() }.toList()
                     }.orEmpty()
                     storeReferenceCache(refColumn, prop)
                 }

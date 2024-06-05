@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insert
@@ -121,8 +122,13 @@ class LongIdTableEntityTest : DatabaseTestsBase() {
                 it[cityId] = cId.value
             }
 
+            // lazy loaded reference
             val town1 = LongIdTables.Town.all().single()
             assertEquals(cId, town1.city.id)
+
+            // eager loaded reference
+            val town1WithCity = LongIdTables.Town.all().with(LongIdTables.Town::city).single()
+            assertEquals(cId, town1WithCity.city.id)
         }
     }
 }
