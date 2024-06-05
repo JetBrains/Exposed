@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.entities
 
+import kotlinx.datetime.Clock
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.EntityID
@@ -8,6 +9,8 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
+import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -16,6 +19,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
@@ -1512,14 +1516,23 @@ class EntityTests : DatabaseTestsBase() {
 
     object RequestsTable : IdTable<String>() {
         val requestId: Column<String> = varchar("requestId", 256)
+        val deletedAt = timestamp("deleted_at").nullable()
         override val primaryKey = PrimaryKey(requestId)
         override val id: Column<EntityID<String>> = requestId.entityId()
     }
 
     class Request(id: EntityID<String>) : Entity<String>(id) {
-        companion object : EntityClass<String, Request>(RequestsTable)
+        companion object : EntityClass<String, Request>(RequestsTable) {
+            override val restriction: Op<Boolean> = RequestsTable.deletedAt.isNull()
+        }
 
         var requestId by RequestsTable.requestId
+
+        override fun delete() {
+            RequestsTable.update({ RequestsTable.id eq id }) {
+                it[deletedAt] = Clock.System.now()
+            }
+        }
     }
 
     @Test
@@ -1531,6 +1544,32 @@ class EntityTests : DatabaseTestsBase() {
 
             val count = Request.all().count()
             assertEquals(1, count)
+        }
+    }
+
+    @Test
+    fun testRestrictionThroughSoftDeletePattern() {
+        withTables(RequestsTable) {
+            val request = Request.new {
+                requestId = "123"
+            }
+
+            request.delete()
+
+            // gone from the DAO
+            assertEquals(0, Request.all().count())
+            assertEquals(0, Request.count())
+            assertEquals(0, Request.count(RequestsTable.requestId eq "123"))
+            assertNull(Request.findById(request.id))
+            assertThrows(EntityNotFoundException::class.java) {
+                Request[request.id]
+            }
+
+            // but can be seen in the database
+            val actual = RequestsTable.selectAll().single()
+            assertEquals(request.id, actual[RequestsTable.id])
+            assertEquals("123", actual[RequestsTable.requestId])
+            assertNotNull(actual[RequestsTable.deletedAt])
         }
     }
 

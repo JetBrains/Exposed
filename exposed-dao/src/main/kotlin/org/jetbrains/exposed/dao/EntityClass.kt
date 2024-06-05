@@ -273,7 +273,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.testNonEntityIdReference
      */
-    open fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
+    open fun all(): SizedIterable<T> = wrapRows(table.selectAll().addRestriction().notForUpdate())
 
     /**
      * Gets all the [Entity] instances that conform to the [op] conditional expression.
@@ -314,11 +314,31 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     open val dependsOnColumns: List<Column<out Any?>> get() = dependsOnTables.columns
 
     /**
+     * Base SQL predicate automatically applied to all fetch queries. If implemented, it will
+     * behave as an automatic `AND <restriction>` addition to any queries in this EntityClass.
+     *
+     * Can be overridden to, for instance, broadly filter out soft-deleted columns.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Request
+     */
+    open val restriction: Op<Boolean>? get() = null
+
+    private fun Query.addRestriction(): Query = restriction?.let { filter ->
+        adjustWhere {
+            where?.let { wh ->
+                wh and filter
+            } ?: filter
+        }
+    } ?: this
+
+    private fun Op<Boolean>.andRestriction(): Op<Boolean> = restriction?.let { this and it } ?: this
+
+    /**
      * Returns a [Query] to select all columns in [dependsOnTables] with a WHERE clause that includes
      * the provided [op] conditional expression.
      */
     open fun searchQuery(op: Op<Boolean>): Query =
-        dependsOnTables.select(dependsOnColumns).where { op }.setForUpdateStatus()
+        dependsOnTables.select(dependsOnColumns).where { op.andRestriction() }.setForUpdateStatus()
 
     /**
      * Counts the amount of [Entity] instances that conform to the [op] conditional expression.
@@ -331,6 +351,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         val countExpression = table.id.count()
         val query = table.select(countExpression).notForUpdate()
         op?.let { query.adjustWhere { op } }
+        query.addRestriction()
         return query.first()[countExpression]
     }
 
