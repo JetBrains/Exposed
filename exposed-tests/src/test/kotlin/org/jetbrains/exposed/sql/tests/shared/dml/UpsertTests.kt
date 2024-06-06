@@ -553,6 +553,31 @@ class UpsertTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testBatchUpsertWithWhere() {
+        withTables(excludeSettings = TestDB.mySqlRelatedDB + upsertViaMergeDB, Words) {
+            val vowels = listOf("A", "E", "I", "O", "U")
+            val alphabet = ('A'..'Z').map { it.toString() }
+            val lettersWithDuplicates = alphabet + vowels
+            val incrementCount = listOf(Words.count to Words.count.plus(1))
+
+            val firstThreeVowels = vowels.take(3)
+            Words.batchUpsert(
+                lettersWithDuplicates,
+                onUpdate = incrementCount,
+                where = { Words.word inList firstThreeVowels }
+            ) { letter ->
+                this[Words.word] = letter
+            }
+
+            assertEquals(alphabet.size.toLong(), Words.selectAll().count())
+            Words.selectAll().forEach {
+                val expectedCount = if (it[Words.word] in firstThreeVowels) 2 else 1
+                assertEquals(expectedCount, it[Words.count])
+            }
+        }
+    }
+
+    @Test
     fun testInsertedCountWithBatchUpsert() {
         withTables(excludeSettings = TestDB.ALL_H2_V1, AutoIncTable) { testDb ->
             // SQL Server requires statements to be executed before results can be obtained

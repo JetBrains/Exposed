@@ -1721,10 +1721,10 @@ public final class org/jetbrains/exposed/sql/QueriesKt {
 	public static final fun batchReplace (Lorg/jetbrains/exposed/sql/Table;Lkotlin/sequences/Sequence;ZLkotlin/jvm/functions/Function2;)Ljava/util/List;
 	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Iterable;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
 	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/sql/Table;Lkotlin/sequences/Sequence;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
-	public static final fun batchUpsert (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Iterable;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;ZLkotlin/jvm/functions/Function2;)Ljava/util/List;
-	public static final fun batchUpsert (Lorg/jetbrains/exposed/sql/Table;Lkotlin/sequences/Sequence;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;ZLkotlin/jvm/functions/Function2;)Ljava/util/List;
-	public static synthetic fun batchUpsert$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Iterable;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
-	public static synthetic fun batchUpsert$default (Lorg/jetbrains/exposed/sql/Table;Lkotlin/sequences/Sequence;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
+	public static final fun batchUpsert (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Iterable;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function2;)Ljava/util/List;
+	public static final fun batchUpsert (Lorg/jetbrains/exposed/sql/Table;Lkotlin/sequences/Sequence;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function2;)Ljava/util/List;
+	public static synthetic fun batchUpsert$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Iterable;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
+	public static synthetic fun batchUpsert$default (Lorg/jetbrains/exposed/sql/Table;Lkotlin/sequences/Sequence;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Ljava/util/List;
 	public static final fun deleteAll (Lorg/jetbrains/exposed/sql/Table;)I
 	public static final fun deleteIgnoreWhere (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Integer;Ljava/lang/Long;Lkotlin/jvm/functions/Function2;)I
 	public static synthetic fun deleteIgnoreWhere$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Integer;Ljava/lang/Long;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)I
@@ -2949,11 +2949,14 @@ public class org/jetbrains/exposed/sql/statements/BatchUpdateStatement : org/jet
 }
 
 public class org/jetbrains/exposed/sql/statements/BatchUpsertStatement : org/jetbrains/exposed/sql/statements/BaseBatchInsertStatement {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Z)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/sql/Op;Z)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/sql/Op;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun arguments ()Ljava/lang/Iterable;
+	public fun arguments ()Ljava/util/List;
 	public final fun getKeys ()[Lorg/jetbrains/exposed/sql/Column;
 	public final fun getOnUpdate ()Ljava/util/List;
 	public final fun getOnUpdateExclude ()Ljava/util/List;
+	public final fun getWhere ()Lorg/jetbrains/exposed/sql/Op;
 	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 }
