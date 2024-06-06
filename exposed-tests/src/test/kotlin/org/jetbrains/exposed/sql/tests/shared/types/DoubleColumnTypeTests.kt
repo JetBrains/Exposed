@@ -12,7 +12,7 @@ class DoubleColumnTypeTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test correctly gets data from the DB`() {
+    fun testInsertAndSelectFromDoubleColumn() {
         withTables(TestTable) {
             val id = TestTable.insertAndGetId {
                 it[amount] = 9.23
@@ -23,4 +23,28 @@ class DoubleColumnTypeTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testInsertAndSelectFromRealColumn() {
+        withDb {
+            val originalColumnDDL = TestTable.amount.descriptionDdl()
+            val realColumnDDL = originalColumnDDL.replace(" DOUBLE PRECISION ", " REAL ")
+
+            // create table with double() column that uses SQL type REAL
+            TestTable.ddl
+                .map { it.replace(originalColumnDDL, realColumnDDL) }
+                .forEach { exec(it) }
+
+            val id = TestTable.insertAndGetId {
+                it[amount] = 9.23
+            }
+
+            TestTable.selectAll().where { TestTable.id eq id }.singleOrNull()?.let {
+                assertEquals(9.23, it[TestTable.amount])
+            }
+
+            SchemaUtils.drop(TestTable)
+        }
+    }
+
 }
