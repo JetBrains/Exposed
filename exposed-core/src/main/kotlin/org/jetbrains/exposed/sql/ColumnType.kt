@@ -440,6 +440,8 @@ class DoubleColumnType : ColumnType<Double>() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.doubleType()
     override fun valueFromDB(value: Any): Double = when (value) {
         is Double -> value
+        // Cast as string to prevent precision loss
+        is Float -> value.toString().toDouble()
         is Number -> value.toDouble()
         is String -> value.toDouble()
         else -> error("Unexpected value of type Double: $value of ${value::class.qualifiedName}")
