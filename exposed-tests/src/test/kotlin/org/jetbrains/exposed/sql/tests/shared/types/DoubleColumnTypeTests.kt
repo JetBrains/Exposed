@@ -46,5 +46,4 @@ class DoubleColumnTypeTests : DatabaseTestsBase() {
             SchemaUtils.drop(TestTable)
         }
     }
-
 }
