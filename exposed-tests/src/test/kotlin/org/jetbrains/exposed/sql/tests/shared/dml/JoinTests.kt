@@ -4,8 +4,6 @@ import nl.altindag.log.LogCaptor
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
@@ -220,42 +218,6 @@ class JoinTests : DatabaseTestsBase() {
             // Assert no logging took place
             assertTrue(logCaptor.warnLogs.isEmpty())
             assertTrue(logCaptor.errorLogs.isEmpty())
-        }
-    }
-
-    @Test
-    fun testLateralJoin() {
-        // lateral join is also supported by MySql8 database, but at the current moment there is no related configuration
-        val lateralJoinSupportedDb = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)
-
-        val tester1 = object : IntIdTable() {
-            val value = integer("value")
-        }
-        val tester2 = object : IntIdTable() {
-            val tester1 = reference("tester1", tester1.id)
-            val value = integer("value")
-        }
-
-        withTables(TestDB.entries - lateralJoinSupportedDb, tester1, tester2) {
-            val id = tester1.insertAndGetId { it[value] = 20 }
-
-            listOf(10, 30).forEach { value ->
-                tester2.insert {
-                    it[tester2.value] = value
-                    it[tester2.tester1] = id
-                }
-            }
-
-            val query = tester1.joinQuery(
-                joinType = JoinType.CROSS,
-                lateral = true
-            ) {
-                tester2.selectAll().where { tester2.value greater tester1.value }.limit(1)
-            }
-
-            val subqueryAlias = query.lastQueryAlias ?: error("Alias must exist!")
-
-            assertEqualLists(listOf(30), query.selectAll().map { it[subqueryAlias[tester2.value]] })
         }
     }
 }

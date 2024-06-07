@@ -272,7 +272,7 @@ class Join(
             }
 
             else -> {
-                implicitJoin(otherTable, joinType)
+                implicitJoin(otherTable, joinType, lateral)
             }
         }
         joinParts.addAll(newJoin.joinParts)
@@ -313,7 +313,8 @@ class Join(
 
     private fun implicitJoin(
         otherTable: ColumnSet,
-        joinType: JoinType
+        joinType: JoinType,
+        lateral: Boolean = false
     ): Join {
         val fkKeys = findKeys(this, otherTable) ?: findKeys(otherTable, this) ?: emptyList()
         return when {
@@ -332,7 +333,7 @@ class Join(
 
             else -> {
                 val cond = fkKeys.filter { it.second.size == 1 }.map { it.first to it.second.single() }
-                join(otherTable, joinType, cond, null)
+                join(otherTable, joinType, cond, additionalConstraint = null, lateral = lateral)
             }
         }
     }
@@ -377,6 +378,10 @@ class Join(
             require(
                 joinType == JoinType.CROSS || conditions.isNotEmpty() || additionalConstraint != null
             ) { "Missing join condition on $${this.joinPart}" }
+
+            require(joinPart !is Table || !lateral) {
+                "The LATERAL join can only be used with a subquery; it cannot be used to join table ${(joinPart as Table).tableName} directly."
+            }
         }
 
         /** Appends the SQL representation of this join component to the specified [QueryBuilder]. */
