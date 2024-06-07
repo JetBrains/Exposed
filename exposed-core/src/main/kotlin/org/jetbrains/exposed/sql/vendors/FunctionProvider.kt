@@ -171,6 +171,18 @@ abstract class FunctionProvider {
     // Date/Time functions
 
     /**
+     * SQL function that extracts the date field from a given temporal expression.
+     *
+     * @param expr Expression to extract the year from.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+    open fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
+        append("DATE(")
+        append(expr)
+        append(")")
+    }
+
+    /**
      * SQL function that extracts the year field from a given date.
      *
      * @param expr Expression to extract the year from.

@@ -11,7 +11,9 @@ import org.joda.time.DateTime
 
 /** Represents an SQL function that extracts the date part from a given datetime [expr]. */
 class Date<T : DateTime?>(val expr: Expression<T>) : Function<DateTime>(DateColumnType(false)) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.date(expr, queryBuilder)
+    }
 }
 
 /**

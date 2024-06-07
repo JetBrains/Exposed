@@ -114,7 +114,7 @@ private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
 private fun oracleDateTimeLiteral(instant: Instant) =
     "TO_TIMESTAMP('${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}', 'YYYY-MM-DD HH24:MI:SS.FF3')"
 
-private fun oracleDateTimeWithTimezoneLiteral(dateTime: OffsetDateTime) =
+private fun oracleTimestampWithTimezoneLiteral(dateTime: OffsetDateTime) =
     "TO_TIMESTAMP_TZ('${dateTime.format(ORACLE_OFFSET_DATE_TIME_FORMATTER)}', 'YYYY-MM-DD HH24:MI:SS.FF6 TZH:TZM')"
 
 private fun oracleDateLiteral(instant: Instant) =
@@ -367,7 +367,7 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
     override fun nonNullValueToString(value: OffsetDateTime): String = when (currentDialect) {
         is SQLiteDialect -> "'${value.format(SQLITE_OFFSET_DATE_TIME_FORMATTER)}'"
         is MysqlDialect -> "'${value.format(MYSQL_OFFSET_DATE_TIME_FORMATTER)}'"
-        is OracleDialect -> oracleDateTimeWithTimezoneLiteral(value)
+        is OracleDialect -> oracleTimestampWithTimezoneLiteral(value)
         else -> "'${value.format(DEFAULT_OFFSET_DATE_TIME_FORMATTER)}'"
     }
 

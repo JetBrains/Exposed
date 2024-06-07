@@ -17,7 +17,9 @@ import java.time.temporal.Temporal
 
 /** Represents an SQL function that extracts the date part from a given temporal [expr]. */
 class Date<T : Temporal?>(val expr: Expression<T>) : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.date(expr, queryBuilder)
+    }
 }
 
 /** Represents an SQL function that extracts the time part from a given temporal [expr]. */
