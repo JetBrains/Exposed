@@ -1534,6 +1534,17 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testIdValueIsTheSameAsCustomPrimaryKeyColumn() {
+        withTables(RequestsTable) {
+            val request = Request.new {
+                requestId = "123"
+            }
+
+            assertEquals("123", request.id.value)
+        }
+    }
+
     object CreditCards : IntIdTable("CreditCards") {
         val number = varchar("number", 16)
         val spendingLimit = ulong("spendingLimit").databaseGenerated()
