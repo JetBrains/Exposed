@@ -149,9 +149,8 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.innerJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    lateral: Boolean = false,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.INNER, onColumn?.invoke(this), otherColumn?.invoke(otherTable), lateral, additionalConstraint)
+): Join = join(otherTable, JoinType.INNER, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
  * Creates a left outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
@@ -163,9 +162,8 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.leftJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    lateral: Boolean = false,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.LEFT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), lateral, additionalConstraint)
+): Join = join(otherTable, JoinType.LEFT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
  * Creates a right outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
@@ -177,9 +175,8 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.rightJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    lateral: Boolean = false,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.RIGHT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), lateral, additionalConstraint)
+): Join = join(otherTable, JoinType.RIGHT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
  * Creates a full outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
@@ -191,9 +188,8 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.fullJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    lateral: Boolean = false,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.FULL, onColumn?.invoke(this), otherColumn?.invoke(otherTable), lateral, additionalConstraint)
+): Join = join(otherTable, JoinType.FULL, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
  * Creates a cross join relation with [otherTable] using [onColumn] and [otherColumn] equality
@@ -205,9 +201,8 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
     otherTable: C2,
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
-    lateral: Boolean = false,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.CROSS, onColumn?.invoke(this), otherColumn?.invoke(otherTable), lateral, additionalConstraint)
+): Join = join(otherTable, JoinType.CROSS, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
  * Represents a subset of [fields] from a given [source].

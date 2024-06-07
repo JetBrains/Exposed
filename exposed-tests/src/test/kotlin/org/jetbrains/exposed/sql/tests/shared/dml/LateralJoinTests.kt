@@ -34,7 +34,7 @@ class LateralJoinTests : DatabaseTestsBase() {
             // Cross join
             child.selectAll().where { child.value greater parent.value }.limit(1).alias("subquery")
                 .let { subqueryAlias ->
-                    val query = parent.crossJoin(subqueryAlias, lateral = true)
+                    val query = parent.join(subqueryAlias, JoinType.CROSS, onColumn = parent.id, otherColumn = subqueryAlias[child.parent], lateral = true)
 
                     assertEqualLists(listOf(30), query.selectAll().map { it[subqueryAlias[child.value]] })
                 }
@@ -42,7 +42,7 @@ class LateralJoinTests : DatabaseTestsBase() {
             // Left join
             child.selectAll().where { child.value greater parent.value }.alias("subquery")
                 .let { subqueryAlias ->
-                    val query = parent.leftJoin(subqueryAlias, lateral = true, onColumn = { parent.id }, otherColumn = { subqueryAlias[child.parent] })
+                    val query = parent.join(subqueryAlias, JoinType.LEFT, onColumn = parent.id, otherColumn = subqueryAlias[child.parent], lateral = true)
 
                     assertEqualLists(listOf(30), query.selectAll().map { it[subqueryAlias[child.value]] })
                 }
@@ -52,7 +52,7 @@ class LateralJoinTests : DatabaseTestsBase() {
             child.selectAll().where { child.value greater parentQuery[parent.value] }.alias("subquery")
                 .let { subqueryAlias ->
                     val query = parentQuery
-                        .leftJoin(subqueryAlias, lateral = true, onColumn = { parentQuery[parent.id] }, otherColumn = { subqueryAlias[child.parent] })
+                        .join(subqueryAlias, JoinType.LEFT, onColumn = parentQuery[parent.id], otherColumn = subqueryAlias[child.parent], lateral = true)
 
                     assertEqualLists(listOf(30), query.selectAll().map { it[subqueryAlias[child.value]] })
                 }
@@ -62,8 +62,16 @@ class LateralJoinTests : DatabaseTestsBase() {
     @Test
     fun testLateralDirectTableJoin() {
         withTestTables { parent, child, testDb ->
+            // Explicit notation
             expectException<IllegalArgumentException> {
-                parent.leftJoin(child, lateral = true).selectAll().toList()
+                parent.join(child, JoinType.LEFT, onColumn = parent.id, otherColumn = child.parent, lateral = true)
+            }
+        }
+
+        withTestTables { parent, child, testDb ->
+            // Implicit notation
+            expectException<IllegalArgumentException> {
+                parent.join(child, JoinType.LEFT, lateral = true).selectAll().toList()
             }
         }
     }

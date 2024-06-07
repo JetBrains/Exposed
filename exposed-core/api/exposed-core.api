@@ -2449,16 +2449,16 @@ public final class org/jetbrains/exposed/sql/Table$PrimaryKey {
 }
 
 public final class org/jetbrains/exposed/sql/TableKt {
-	public static final fun crossJoin (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
-	public static synthetic fun crossJoin$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
-	public static final fun fullJoin (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
-	public static synthetic fun fullJoin$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
-	public static final fun innerJoin (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
-	public static synthetic fun innerJoin$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
-	public static final fun leftJoin (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
-	public static synthetic fun leftJoin$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
-	public static final fun rightJoin (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
-	public static synthetic fun rightJoin$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
+	public static final fun crossJoin (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
+	public static synthetic fun crossJoin$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
+	public static final fun fullJoin (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
+	public static synthetic fun fullJoin$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
+	public static final fun innerJoin (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
+	public static synthetic fun innerJoin$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
+	public static final fun leftJoin (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
+	public static synthetic fun leftJoin$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
+	public static final fun rightJoin (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
+	public static synthetic fun rightJoin$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
 	public static final fun targetTables (Lorg/jetbrains/exposed/sql/ColumnSet;)Ljava/util/List;
 }
 
