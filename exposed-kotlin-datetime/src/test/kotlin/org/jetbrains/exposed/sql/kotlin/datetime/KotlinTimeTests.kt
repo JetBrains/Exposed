@@ -455,6 +455,74 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun testTimestampWithTimeZoneExtensionFunctions() {
+        val testTable = object : IntIdTable("TestTable") {
+            val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
+        }
+
+        withDb(excludeSettings = listOf(TestDB.MARIADB)) {
+            if (!isOldMySql()) {
+                try {
+                    // UTC time zone
+                    java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+                    assertEquals("UTC", ZoneId.systemDefault().id)
+
+                    SchemaUtils.create(testTable)
+
+                    val now = OffsetDateTime.now(ZoneId.systemDefault())
+                    val nowId = testTable.insertAndGetId {
+                        it[timestampWithTimeZone] = now
+                    }
+
+                    assertEquals(
+                        now.toLocalDate().toKotlinLocalDate(),
+                        testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.date()]
+                    )
+
+                    assertEquals(
+                        now.year,
+                        testTable.select(testTable.timestampWithTimeZone.year()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.year()]
+                    )
+
+                    assertEquals(
+                        now.month.value,
+                        testTable.select(testTable.timestampWithTimeZone.month()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.month()]
+                    )
+
+                    assertEquals(
+                        now.dayOfMonth,
+                        testTable.select(testTable.timestampWithTimeZone.day()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.day()]
+                    )
+
+                    assertEquals(
+                        now.hour,
+                        testTable.select(testTable.timestampWithTimeZone.hour()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.hour()]
+                    )
+
+                    assertEquals(
+                        now.minute,
+                        testTable.select(testTable.timestampWithTimeZone.minute()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.minute()]
+                    )
+
+                    assertEquals(
+                        now.second,
+                        testTable.select(testTable.timestampWithTimeZone.second()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.second()]
+                    )
+                } finally {
+                    SchemaUtils.drop(testTable)
+                }
+            }
+        }
+    }
+
+    @Test
     fun testCurrentDateTimeFunction() {
         val fakeTestTable = object : IntIdTable("fakeTable") {}
 

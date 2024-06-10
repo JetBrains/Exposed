@@ -132,6 +132,10 @@ internal object H2FunctionProvider : FunctionProvider() {
         }
         return super.explain(analyze, null, internalStatement, transaction)
     }
+
+    override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("CAST(", expr, " AS DATE)")
+    }
 }
 
 /**

@@ -1,7 +1,10 @@
 package org.jetbrains.exposed
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
@@ -21,7 +24,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.junit.Test
@@ -354,6 +357,38 @@ open class JodaTimeBaseTest : DatabaseTestsBase() {
             if (testDB == TestDB.MARIADB || isOldMySql()) {
                 expectException<UnsupportedByDialectException> {
                     SchemaUtils.create(testTable)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testTimestampWithTimeZoneExtensionFunctions() {
+        val testTable = object : IntIdTable("TestTable") {
+            val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
+        }
+
+        withDb(excludeSettings = listOf(TestDB.MARIADB)) {
+            if (!isOldMySql()) {
+                try {
+                    // UTC time zone
+                    DateTimeZone.setDefault(DateTimeZone.UTC)
+                    assertEquals("UTC", DateTimeZone.getDefault().id)
+
+                    SchemaUtils.create(testTable)
+
+                    val now = DateTime.now(DateTimeZone.getDefault())
+                    val nowId = testTable.insertAndGetId {
+                        it[timestampWithTimeZone] = now
+                    }
+
+                    assertEquals(
+                        DateTime(now.year, now.monthOfYear, now.dayOfMonth, 0, 0),
+                        testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.date()]
+                    )
+                } finally {
+                    SchemaUtils.drop(testTable)
                 }
             }
         }

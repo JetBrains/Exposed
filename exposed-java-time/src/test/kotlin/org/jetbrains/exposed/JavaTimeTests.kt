@@ -2,7 +2,9 @@ package org.jetbrains.exposed
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
@@ -27,13 +29,7 @@ import org.junit.Assert.fail
 import org.junit.Test
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
+import java.time.*
 import java.time.temporal.Temporal
 import kotlin.test.assertEquals
 
@@ -456,6 +452,68 @@ open class JavaTimeBaseTest : DatabaseTestsBase() {
             if (testDB == TestDB.MARIADB || isOldMySql()) {
                 expectException<UnsupportedByDialectException> {
                     SchemaUtils.create(testTable)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testTimestampWithTimeZoneExtensionFunctions() {
+        val testTable = object : IntIdTable("TestTable") {
+            val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
+        }
+
+        withDb(excludeSettings = listOf(TestDB.MARIADB)) {
+            if (!isOldMySql()) {
+                try {
+                    // UTC time zone
+                    java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+                    assertEquals("UTC", ZoneId.systemDefault().id)
+
+                    SchemaUtils.create(testTable)
+
+                    val now = OffsetDateTime.parse("2023-05-04T05:04:01.700+00:00")
+                    val nowId = testTable.insertAndGetId {
+                        it[timestampWithTimeZone] = now
+                    }
+
+                    assertEquals(
+                        now.toLocalDate(),
+                        testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.date()]
+                    )
+
+                    assertEquals(
+                        now.month.value,
+                        testTable.select(testTable.timestampWithTimeZone.month()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.month()]
+                    )
+
+                    assertEquals(
+                        now.dayOfMonth,
+                        testTable.select(testTable.timestampWithTimeZone.day()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.day()]
+                    )
+
+                    assertEquals(
+                        now.hour,
+                        testTable.select(testTable.timestampWithTimeZone.hour()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.hour()]
+                    )
+
+                    assertEquals(
+                        now.minute,
+                        testTable.select(testTable.timestampWithTimeZone.minute()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.minute()]
+                    )
+
+                    assertEquals(
+                        now.second,
+                        testTable.select(testTable.timestampWithTimeZone.second()).where { testTable.id eq nowId }
+                            .single()[testTable.timestampWithTimeZone.second()]
+                    )
+                } finally {
+                    SchemaUtils.drop(testTable)
                 }
             }
         }

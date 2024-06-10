@@ -115,6 +115,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ): Unit = TransactionManager.current().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead.")
 
+    override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("CAST(", expr, " AS DATE)")
+    }
+
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("DATEPART(YEAR, ", expr, ")")
     }
