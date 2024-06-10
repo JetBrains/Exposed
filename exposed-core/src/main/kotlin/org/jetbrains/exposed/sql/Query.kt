@@ -8,7 +8,6 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
-import java.util.*
 
 enum class SortOrder(val code: String) {
     ASC(code = "ASC"),
@@ -39,14 +38,15 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     var where: Op<Boolean>? = where
         private set
 
-    override val queryToExecute: Statement<ResultSet> get() {
-        val distinctExpressions = set.fields.distinct()
-        return if (distinctExpressions.size < set.fields.size) {
-            copy().adjustSelect { select(distinctExpressions) }
-        } else {
-            this
+    override val queryToExecute: Statement<ResultSet>
+        get() {
+            val distinctExpressions = set.fields.distinct()
+            return if (distinctExpressions.size < set.fields.size) {
+                copy().adjustSelect { select(distinctExpressions) }
+            } else {
+                this
+            }
         }
-    }
 
     /** Creates a new [Query] instance using all stored properties of this `SELECT` query. */
     override fun copy(): Query = Query(set, where).also { copy ->
@@ -272,11 +272,29 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                     var lastOffset = if (fetchInAscendingOrder) 0L else null
                     while (true) {
                         val query = this@Query.copy().adjustWhere {
-                            lastOffset?.let {
+                            lastOffset?.let { lastOffset ->
                                 whereOp and if (fetchInAscendingOrder) {
-                                    (autoIncColumn greater it)
+                                    when (autoIncColumn.columnType) {
+                                        is EntityIDColumnType<*> -> {
+                                            (autoIncColumn as? Column<EntityID<Long>>)?.let {
+                                                (it greater lastOffset)
+                                            } ?: (autoIncColumn as? Column<EntityID<Int>>)?.let {
+                                                (it greater lastOffset.toInt())
+                                            } ?: (autoIncColumn greater lastOffset)
+                                        }
+                                        else -> (autoIncColumn greater lastOffset)
+                                    }
                                 } else {
-                                    (autoIncColumn less it)
+                                    when (autoIncColumn.columnType) {
+                                        is EntityIDColumnType<*> -> {
+                                            (autoIncColumn as? Column<EntityID<Long>>)?.let {
+                                                (it less lastOffset)
+                                            } ?: (autoIncColumn as? Column<EntityID<Int>>)?.let {
+                                                (it less lastOffset.toInt())
+                                            } ?: (autoIncColumn less lastOffset)
+                                        }
+                                        else -> (autoIncColumn less lastOffset)
+                                    }
                                 }
                             } ?: whereOp
                         }
