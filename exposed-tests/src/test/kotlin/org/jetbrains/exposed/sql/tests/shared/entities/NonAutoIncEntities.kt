@@ -3,9 +3,8 @@ package org.jetbrains.exposed.sql.tests.shared.entities
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
@@ -69,35 +68,26 @@ class NonAutoIncEntities : DatabaseTestsBase() {
         }
     }
 
-    object NonAutoIncSharedTable : BaseNonAutoIncTable("SharedTable")
-
-    object AutoIncSharedTable : IntIdTable("SharedTable") {
-        val b1 = bool("b1")
+    object CustomPrimaryKeyColumnTable : IdTable<String>() {
+        val customId: Column<String> = varchar("customId", 256)
+        override val primaryKey = PrimaryKey(customId)
+        override val id: Column<EntityID<String>> = customId.entityId()
     }
 
-    class SharedNonAutoIncEntity(id: EntityID<Int>) : IntEntity(id) {
-        var bool by NonAutoIncSharedTable.b1
+    class CustomPrimaryKeyColumnEntity(id: EntityID<String>) : Entity<String>(id) {
+        companion object : EntityClass<String, CustomPrimaryKeyColumnEntity>(CustomPrimaryKeyColumnTable)
 
-        companion object : IntEntityClass<SharedNonAutoIncEntity>(NonAutoIncSharedTable)
+        var customId by CustomPrimaryKeyColumnTable.customId
     }
 
-    @Test fun testFlushNonAutoincEntityWithoutDefaultValue() {
-        withTables(AutoIncSharedTable) {
-            if (!currentDialectTest.supportsOnlyIdentifiersInGeneratedKeys) {
-                SharedNonAutoIncEntity.new {
-                    bool = true
-                }
-
-                SharedNonAutoIncEntity.new {
-                    bool = false
-                }
-
-                val entities = flushCache()
-
-                assertEquals(2, entities.size)
-                assertEquals(1, entities[0].id._value)
-                assertEquals(2, entities[1].id._value)
+    @Test
+    fun testIdValueIsTheSameAsCustomPrimaryKeyColumn() {
+        withTables(CustomPrimaryKeyColumnTable) {
+            val request = CustomPrimaryKeyColumnEntity.new {
+                customId = "customIdValue"
             }
+
+            assertEquals("customIdValue", request.id.value)
         }
     }
 }

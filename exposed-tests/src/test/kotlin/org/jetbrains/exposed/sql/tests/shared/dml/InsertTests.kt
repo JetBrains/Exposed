@@ -703,4 +703,21 @@ class InsertTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testNoAutoIncrementAppliedToCustomStringPrimaryKey() {
+        val tester = object : IdTable<String>("test_no_auto_increment_table") {
+            val customId = varchar("custom_id", 128)
+            override val primaryKey: PrimaryKey = PrimaryKey(customId)
+            override val id: Column<EntityID<String>> = customId.entityId()
+        }
+
+        withTables(tester) {
+            val result1 = tester.batchInsert(listOf("custom-id-value")) { username ->
+                this[tester.customId] = username
+            }.single()
+            assertEquals("custom-id-value", result1[tester.id].value)
+            assertEquals("custom-id-value", result1[tester.customId])
+        }
+    }
 }

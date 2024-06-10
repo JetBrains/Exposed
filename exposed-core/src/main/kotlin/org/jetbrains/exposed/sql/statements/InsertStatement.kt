@@ -181,7 +181,9 @@ open class InsertStatement<Key : Any>(
 
     protected open fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
         val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
-        val rs = if (autoIncColumns.isNotEmpty()) {
+        // According to the `processResults()` method when supportsOnlyIdentifiersInGeneratedKeys is false
+        // all the columns could be taken from result set
+        val rs = if (autoIncColumns.isNotEmpty() || !currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
             resultSet
         } else {
             null
@@ -205,7 +207,6 @@ open class InsertStatement<Key : Any>(
                     column.autoIncColumnType?.nextValExpression != null -> currentDialect.supportsSequenceAsGeneratedKeys
                     column.columnType.isAutoInc -> true
                     column in nextValExpressionColumns -> currentDialect.supportsSequenceAsGeneratedKeys
-                    column.columnType is EntityIDColumnType<*> -> !currentDialect.supportsOnlyIdentifiersInGeneratedKeys
                     else -> false
                 }
             }

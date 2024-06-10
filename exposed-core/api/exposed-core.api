@@ -2960,6 +2960,7 @@ public class org/jetbrains/exposed/sql/statements/BatchUpsertStatement : org/jet
 	public final fun getWhere ()Lorg/jetbrains/exposed/sql/Op;
 	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
+	public fun prepared (Lorg/jetbrains/exposed/sql/Transaction;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;
 }
 
 public class org/jetbrains/exposed/sql/statements/DeleteStatement : org/jetbrains/exposed/sql/statements/Statement {
@@ -3259,6 +3260,7 @@ public class org/jetbrains/exposed/sql/statements/UpsertStatement : org/jetbrain
 	public final fun getWhere ()Lorg/jetbrains/exposed/sql/Op;
 	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
+	public fun prepared (Lorg/jetbrains/exposed/sql/Transaction;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;
 }
 
 public final class org/jetbrains/exposed/sql/statements/api/ExposedBlob {
