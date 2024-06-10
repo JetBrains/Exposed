@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
 import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider

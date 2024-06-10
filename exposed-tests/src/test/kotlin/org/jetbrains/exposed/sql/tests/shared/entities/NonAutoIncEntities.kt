@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.update
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -88,6 +89,41 @@ class NonAutoIncEntities : DatabaseTestsBase() {
             }
 
             assertEquals("customIdValue", request.id.value)
+        }
+    }
+
+    object RequestsTable : IdTable<String> () {
+        val requestId = varchar("request_id", 256)
+        val deleted = bool("deleted")
+        override val primaryKey: PrimaryKey = PrimaryKey(requestId)
+        override val id: Column<EntityID<String>> = requestId.entityId()
+    }
+
+    class Request(id: EntityID<String>) : Entity<String>(id) {
+        companion object : EntityClass<String, Request>(RequestsTable)
+
+        var requestId by RequestsTable.requestId
+        var deleted by RequestsTable.deleted
+
+        override fun delete() {
+            RequestsTable.update({ RequestsTable.id eq id }) {
+                it[deleted] = true
+            }
+        }
+    }
+
+    @Test
+    fun testAccessEntityIdFromOverrideEntityMethod() {
+        withTables(RequestsTable) {
+            val request = Request.new {
+                requestId = "test1"
+                deleted = false
+            }
+
+            request.delete()
+
+            val updated = Request["test1"]
+            assertEquals(true, updated.deleted)
         }
     }
 }
