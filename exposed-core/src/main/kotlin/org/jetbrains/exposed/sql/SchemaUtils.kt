@@ -110,12 +110,12 @@ object SchemaUtils {
     }
 
     private fun tableDdlWithoutExistingSequence(table: Table): List<String> {
-        val autoIncSeq = table.autoIncColumn?.autoIncColumnType?.autoincSeq
-        val sequenceExists = autoIncSeq?.let { currentDialect.sequenceExists(Sequence(it)) } ?: false
+        val existingAutoIncSeq = table.autoIncColumn?.autoIncColumnType?.autoincSeq
+            ?.takeIf { currentDialect.sequenceExists(Sequence(it)) }
 
         return table.ddl.filter { statement ->
-            if (sequenceExists && autoIncSeq != null) {
-                !statement.lowercase().startsWith("create sequence") || !statement.contains(autoIncSeq)
+            if (existingAutoIncSeq != null) {
+                !statement.lowercase().startsWith("create sequence") || !statement.contains(existingAutoIncSeq)
             } else {
                 true
             }
