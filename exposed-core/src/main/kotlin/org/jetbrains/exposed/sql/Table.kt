@@ -1358,9 +1358,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // DDL statements
 
-    /** Returns the list of DDL statements that create this table. */
-    val ddl: List<String> get() = createStatement()
-
     internal fun primaryKeyConstraint(): String? {
         return primaryKey?.let { primaryKey ->
             val tr = TransactionManager.current()
@@ -1371,15 +1368,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun createStatement(): List<String> {
-        val createSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
-            Sequence(
-                it,
-                startWith = 1,
-                minValue = 1,
-                maxValue = Long.MAX_VALUE
-            ).createStatement()
-        }.orEmpty()
-
         val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 
         val foreignKeyConstraints = foreignKeys
@@ -1429,7 +1417,20 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             emptyList()
         }
 
-        return createSequence + createTable + createConstraint
+        return createAutoIncColumnSequence() + createTable + createConstraint
+    }
+
+    private fun createAutoIncColumnSequence(): List<String> {
+        return autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
+            Sequence(
+                it,
+                startWith = 1,
+                minValue = 1,
+                maxValue = Long.MAX_VALUE
+            )
+        }
+            ?.createStatement()
+            .orEmpty()
     }
 
     override fun modifyStatement(): List<String> =

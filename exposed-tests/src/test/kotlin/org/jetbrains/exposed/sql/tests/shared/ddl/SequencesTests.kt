@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class SequencesTests : DatabaseTestsBase() {
     @Test
@@ -194,6 +195,29 @@ class SequencesTests : DatabaseTestsBase() {
                 } finally {
                     SchemaUtils.drop(tableWithoutExplicitSequenceName)
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testNoCreateStatementForExistingSequence() {
+        withDb {
+            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
+                val createSequencePrefix = "CREATE SEQUENCE"
+
+                assertNotNull(SchemaUtils.createStatements(DeveloperWithAutoIncrementBySequence).find { it.startsWith(createSequencePrefix) })
+
+                SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
+
+                // Remove table without removing sequence
+                exec("DROP TABLE ${DeveloperWithAutoIncrementBySequence.nameInDatabaseCase()}")
+
+                assertNull(SchemaUtils.createStatements(DeveloperWithAutoIncrementBySequence).find { it.startsWith(createSequencePrefix) })
+                assertNull(SchemaUtils.statementsRequiredToActualizeScheme(DeveloperWithAutoIncrementBySequence).find { it.startsWith(createSequencePrefix) })
+
+                // Clean up: create table and drop it for removing sequence
+                SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
+                SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
             }
         }
     }

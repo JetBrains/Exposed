@@ -102,11 +102,24 @@ object SchemaUtils {
         val toCreate = sortTablesByReferences(tables.toList()).filterNot { it.exists() }
         val alters = arrayListOf<String>()
         return toCreate.flatMap { table ->
-            val (create, alter) = table.ddl.partition { it.startsWith("CREATE ") }
+            val (create, alter) = tableDdlWithoutExistingSequence(table).partition { it.startsWith("CREATE ") }
             val indicesDDL = table.indices.flatMap { createIndex(it) }
             alters += alter
             create + indicesDDL
         } + alters
+    }
+
+    private fun tableDdlWithoutExistingSequence(table: Table): List<String> {
+        val existingAutoIncSeq = table.autoIncColumn?.autoIncColumnType?.autoincSeq
+            ?.takeIf { currentDialect.sequenceExists(Sequence(it)) }
+
+        return table.ddl.filter { statement ->
+            if (existingAutoIncSeq != null) {
+                !statement.lowercase().startsWith("create sequence") || !statement.contains(existingAutoIncSeq)
+            } else {
+                true
+            }
+        }
     }
 
     /** Creates the provided sequences, using a batch execution if [inBatch] is set to `true`. */
@@ -199,11 +212,13 @@ object SchemaUtils {
                                             processed
                                         }
                                     }
+
                                     is MariaDBDialect -> processed.trim('\'')
                                     is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\"
                                     else -> processed.trim('\'')
                                 }
                             }
+
                             column.columnType is ArrayColumnType<*> && dialect is PostgreSQLDialect -> {
                                 (value as List<*>)
                                     .takeIf { it.isNotEmpty() }
@@ -220,6 +235,7 @@ object SchemaUtils {
                                         "ARRAY$processed"
                                     } ?: processForDefaultValue(exp)
                             }
+
                             column.columnType is IDateColumnType -> {
                                 val processed = processForDefaultValue(exp)
                                 if (processed.startsWith('\'') && processed.endsWith('\'')) {
@@ -228,6 +244,7 @@ object SchemaUtils {
                                     processed
                                 }
                             }
+
                             else -> processForDefaultValue(exp)
                         }
                     }

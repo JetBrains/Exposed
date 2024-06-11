@@ -20,6 +20,9 @@ interface DdlAware {
 
     /** Returns the list of DDL statements that drops this object. */
     fun dropStatement(): List<String>
+
+    /** Returns the list of DDL statements that create this DdlAware instance. */
+    val ddl: List<String> get() = createStatement()
 }
 
 /**

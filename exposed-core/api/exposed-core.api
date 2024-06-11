@@ -369,6 +369,7 @@ public final class org/jetbrains/exposed/sql/CheckConstraint : org/jetbrains/exp
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCheckName ()Ljava/lang/String;
 	public final fun getCheckOp ()Ljava/lang/String;
+	public fun getDdl ()Ljava/util/List;
 	public final fun getTableName ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun modifyStatement ()Ljava/util/List;
@@ -394,7 +395,7 @@ public final class org/jetbrains/exposed/sql/Column : org/jetbrains/exposed/sql/
 	public fun dropStatement ()Ljava/util/List;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getColumnType ()Lorg/jetbrains/exposed/sql/IColumnType;
-	public final fun getDdl ()Ljava/util/List;
+	public fun getDdl ()Ljava/util/List;
 	public final fun getDefaultValueFun ()Lkotlin/jvm/functions/Function0;
 	public final fun getForeignKey ()Lorg/jetbrains/exposed/sql/ForeignKeyConstraint;
 	public final fun getName ()Ljava/lang/String;
@@ -708,7 +709,12 @@ public final class org/jetbrains/exposed/sql/DatabaseKt {
 public abstract interface class org/jetbrains/exposed/sql/DdlAware {
 	public abstract fun createStatement ()Ljava/util/List;
 	public abstract fun dropStatement ()Ljava/util/List;
+	public abstract fun getDdl ()Ljava/util/List;
 	public abstract fun modifyStatement ()Ljava/util/List;
+}
+
+public final class org/jetbrains/exposed/sql/DdlAware$DefaultImpls {
+	public static fun getDdl (Lorg/jetbrains/exposed/sql/DdlAware;)Ljava/util/List;
 }
 
 public final class org/jetbrains/exposed/sql/DecimalColumnType : org/jetbrains/exposed/sql/ColumnType {
@@ -934,6 +940,7 @@ public final class org/jetbrains/exposed/sql/ForeignKeyConstraint : org/jetbrain
 	public fun dropStatement ()Ljava/util/List;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCustomFkName ()Ljava/lang/String;
+	public fun getDdl ()Ljava/util/List;
 	public final fun getDeleteRule ()Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public final fun getFkName ()Ljava/lang/String;
 	public final fun getFrom ()Ljava/util/LinkedHashSet;
@@ -1281,6 +1288,7 @@ public final class org/jetbrains/exposed/sql/Index : org/jetbrains/exposed/sql/D
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getColumns ()Ljava/util/List;
 	public final fun getCustomName ()Ljava/lang/String;
+	public fun getDdl ()Ljava/util/List;
 	public final fun getFilterCondition ()Lorg/jetbrains/exposed/sql/Op;
 	public final fun getFunctions ()Ljava/util/List;
 	public final fun getFunctionsTable ()Lorg/jetbrains/exposed/sql/Table;
@@ -2369,7 +2377,7 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public fun fullJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public final fun getAutoIncColumn ()Lorg/jetbrains/exposed/sql/Column;
 	public fun getColumns ()Ljava/util/List;
-	public final fun getDdl ()Ljava/util/List;
+	public fun getDdl ()Ljava/util/List;
 	public final fun getForeignKeys ()Ljava/util/List;
 	public final fun getIndices ()Ljava/util/List;
 	public fun getPrimaryKey ()Lorg/jetbrains/exposed/sql/Table$PrimaryKey;
