@@ -66,9 +66,7 @@ class LateralJoinTests : DatabaseTestsBase() {
             expectException<IllegalArgumentException> {
                 parent.join(child, JoinType.LEFT, onColumn = parent.id, otherColumn = child.parent, lateral = true)
             }
-        }
 
-        withTestTables { parent, child, testDb ->
             // Implicit notation
             expectException<IllegalArgumentException> {
                 parent.join(child, JoinType.LEFT, lateral = true).selectAll().toList()
