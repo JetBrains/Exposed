@@ -117,7 +117,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
     private fun Transaction.assertTransactionIsolationLevel(testDb: TestDB, expected: Int) {
         val (sql, repeatable, committed) = when (testDb) {
             TestDB.POSTGRESQL -> Triple("SHOW TRANSACTION ISOLATION LEVEL", "repeatable read", "read committed")
-            TestDB.MYSQL, TestDB.MARIADB -> Triple("SELECT @@tx_isolation", "REPEATABLE-READ", "READ-COMMITTED")
+            TestDB.MYSQL, TestDB.MARIADB -> Triple("SELECT @@transaction_ISOLATION", "REPEATABLE-READ", "READ-COMMITTED")
             TestDB.SQLSERVER -> Triple("SELECT transaction_isolation_level FROM sys.dm_exec_sessions WHERE session_id = @@SPID", "3", "2")
             else -> throw UnsupportedOperationException("Cannot query isolation level using ${testDb.name}")
         }

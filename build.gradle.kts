@@ -7,6 +7,11 @@ plugins {
     id(libs.plugins.detekt.get().pluginId) apply true
     alias(libs.plugins.binary.compatibility.validator)
     id(libs.plugins.docker.compose.get().pluginId)
+    alias(libs.plugins.gradle.doctor)
+}
+
+doctor {
+    enableTestCaching = false
 }
 
 repositories {
