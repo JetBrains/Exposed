@@ -14,11 +14,12 @@ import java.lang.IllegalArgumentException
 
 class UpdateTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
-        val exclude = arrayListOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_V2_PSQL)
+        val exclude = TestDB.ALL_POSTGRES_LIKE
         if (!SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT) {
-            exclude.add(TestDB.SQLITE)
+            exclude + TestDB.SQLITE
+        } else {
+            exclude
         }
-        exclude
     }
 
     @Test

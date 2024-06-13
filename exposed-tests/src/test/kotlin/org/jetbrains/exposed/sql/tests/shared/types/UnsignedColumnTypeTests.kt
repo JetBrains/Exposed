@@ -280,7 +280,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testMaxULongColumnType() {
-        val ulongMaxValueUnsupportedDatabases = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_V2_PSQL)
+        val ulongMaxValueUnsupportedDatabases = TestDB.ALL_POSTGRES_LIKE
 
         withTables(ULongTable) { testDb ->
             val maxValue = if (testDb in ulongMaxValueUnsupportedDatabases) Long.MAX_VALUE.toULong() else ULong.MAX_VALUE
@@ -297,7 +297,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testMaxUnsignedTypesInMySql() {
-        withDb(listOf(TestDB.MYSQL_V5, TestDB.MARIADB)) {
+        withDb(excludeSettings = TestDB.ALL_POSTGRES_LIKE) {
             SchemaUtils.create(UByteTable, UShortTable, UIntTable, ULongTable)
 
             UByteTable.insert { it[unsignedByte] = UByte.MAX_VALUE }

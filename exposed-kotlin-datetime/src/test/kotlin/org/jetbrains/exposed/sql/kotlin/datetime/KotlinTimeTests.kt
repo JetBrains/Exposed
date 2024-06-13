@@ -446,10 +446,8 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
         }
 
         withDb(db = listOf(TestDB.MYSQL_V5, TestDB.MARIADB)) { testDB ->
-            if (testDB == TestDB.MARIADB || isOldMySql()) {
-                expectException<UnsupportedByDialectException> {
-                    SchemaUtils.create(testTable)
-                }
+            expectException<UnsupportedByDialectException> {
+                SchemaUtils.create(testTable)
             }
         }
     }

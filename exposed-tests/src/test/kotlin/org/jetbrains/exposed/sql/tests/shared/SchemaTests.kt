@@ -14,7 +14,7 @@ import org.junit.Test
 class SchemaTests : DatabaseTestsBase() {
     @Test
     fun `create and set schema in mysql`() {
-        withDb(listOf(TestDB.MYSQL_V5, TestDB.MARIADB)) {
+        withDb(TestDB.ALL_MYSQL_MARIADB) {
             val schema = Schema("MYSCHEMA")
             try {
                 SchemaUtils.createSchema(schema)
@@ -71,7 +71,7 @@ class SchemaTests : DatabaseTestsBase() {
 
     @Test
     fun `table references table with same name in other database in mysql`() {
-        withDb(listOf(TestDB.MYSQL_V5, TestDB.MARIADB)) {
+        withDb(TestDB.ALL_MYSQL_MARIADB) {
             val schema = Schema("MYSCHEMA")
             try {
                 SchemaUtils.createSchema(schema)

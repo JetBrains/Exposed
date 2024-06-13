@@ -1247,7 +1247,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
     @Test
     fun testZeroDateTimeIsNull() {
-        withDb(listOf(TestDB.MYSQL_V5, TestDB.MARIADB)) {
+        withDb(TestDB.ALL_MYSQL_MARIADB) {
             exec(zeroDateTimeTableDdl)
             try {
                 // Need ignore to bypass strict mode

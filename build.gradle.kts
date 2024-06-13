@@ -81,7 +81,7 @@ subprojects {
     }
 
     testDb("mariadb_v2") {
-        dialects("mariadb")
+        dialects("MARIADB")
         container = "mariadb"
         port = 3000
         dependencies {
@@ -90,7 +90,7 @@ subprojects {
     }
 
     testDb("mariadb_v3") {
-        dialects("mariadb")
+        dialects("MARIADB")
         container = "mariadb"
         port = 3000
         dependencies {
@@ -101,7 +101,7 @@ subprojects {
     testDb("oracle") {
         port = 3003
         colima = true
-        dialects("oracle")
+        dialects("ORACLE")
         dependencies {
             dependency(rootProject.libs.oracle12)
         }
@@ -109,7 +109,7 @@ subprojects {
 
     testDb("postgres") {
         port = 3004
-        dialects("postgresql")
+        dialects("POSTGRESQL")
         dependencies {
             dependency(rootProject.libs.postgre)
         }
@@ -117,7 +117,7 @@ subprojects {
 
     testDb("postgresNG") {
         port = 3004
-        dialects("postgresqlng")
+        dialects("POSTGRESQLNG")
         container = "postgres"
         dependencies {
             dependency(rootProject.libs.postgre)
@@ -127,7 +127,7 @@ subprojects {
 
     testDb("sqlserver") {
         port = 3005
-        dialects("sqlserver")
+        dialects("SQLSERVER")
         dependencies {
             dependency(rootProject.libs.mssql)
         }
