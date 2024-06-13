@@ -23,6 +23,7 @@ import kotlin.reflect.full.isSubclassOf
 /**
  * Interface common to all column types.
  */
+@Suppress("TooManyFunctions")
 interface IColumnType<T> {
     /** Returns `true` if the column type is nullable, `false` otherwise. */
     var nullable: Boolean
@@ -96,6 +97,16 @@ interface IColumnType<T> {
      * */
     @Throws(IllegalArgumentException::class)
     fun validateValueBeforeUpdate(value: T?) {}
+
+    /**
+     * Defines the appearance of parameter markers in prepared SQL statements.
+     *
+     * The default parameter marker is `?`, but it can be overridden in specific cases.
+     *
+     * For example, H2 uses `? FORMAT JSON` for JSON columns,
+     * in Postgres a parameter marker can be explicitly cast to a specific type, etc.
+     */
+    fun parameterMarker(value: T?) = "?"
 }
 
 /**

@@ -80,20 +80,22 @@ class QueryBuilder(
 
     /** Adds the specified sequence of [arguments] as values of the specified [sqlType]. */
     fun <T> registerArguments(sqlType: IColumnType<*>, arguments: Iterable<T>) {
+        val sqlTypeT = (sqlType as IColumnType<T>)
+
+        // avoid potentially expensive valueToString call unless we need to sort values
         if (arguments is Collection && arguments.size <= 1) {
-            // avoid potentially expensive valueToString call unless we need to sort values
             arguments.forEach {
                 if (prepared) {
                     _args.add(sqlType to it)
-                    append("?")
+                    append(sqlTypeT.parameterMarker(it))
                 } else {
-                    append((sqlType as IColumnType<T>).valueToString(it))
+                    append(sqlTypeT.valueToString(it))
                 }
             }
         } else {
             fun toString(value: T) = when {
                 prepared && value is String -> value
-                else -> (sqlType as IColumnType<T>).valueToString(value)
+                else -> sqlTypeT.valueToString(value)
             }
 
             arguments.map { it to toString(it) }
@@ -101,7 +103,7 @@ class QueryBuilder(
                 .appendTo {
                     if (prepared) {
                         _args.add(sqlType to it.first)
-                        append("?")
+                        append(sqlTypeT.parameterMarker(it.first))
                     } else {
                         append(it.second)
                     }
