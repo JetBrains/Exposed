@@ -118,9 +118,10 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
         joinType: JoinType,
         onColumn: Expression<*>?,
         otherColumn: Expression<*>?,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
+        lateral: Boolean,
+        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?,
     ): Join =
-        Join(this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
+        Join(this, otherTable, joinType, onColumn, otherColumn, lateral, additionalConstraint)
 
     override infix fun innerJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.INNER)
 
@@ -173,9 +174,14 @@ fun <T> Expression<T>.alias(alias: String) = ExpressionAlias(this, alias)
  * @param joinPart The query to join with.
  * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery02
  */
-fun Join.joinQuery(on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> AbstractQuery<*>): Join {
+fun Join.joinQuery(
+    on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>)? = null,
+    joinType: JoinType = JoinType.INNER,
+    lateral: Boolean = false,
+    joinPart: () -> AbstractQuery<*>
+): Join {
     val qAlias = joinPart().alias("q${joinParts.count { it.joinPart is QueryAlias }}")
-    return join(qAlias, joinType, additionalConstraint = { on(qAlias) })
+    return join(qAlias, joinType, lateral = lateral, additionalConstraint = on?.let { { it(qAlias) } })
 }
 
 /**
@@ -185,8 +191,13 @@ fun Join.joinQuery(on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>), joinT
  * @param joinType The `JOIN` clause type used to combine rows. Defaults to [JoinType.INNER].
  * @param joinPart The query to join with.
  */
-fun Table.joinQuery(on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>), joinType: JoinType = JoinType.INNER, joinPart: () -> AbstractQuery<*>) =
-    Join(this).joinQuery(on, joinType, joinPart)
+fun Table.joinQuery(
+    on: (SqlExpressionBuilder.(QueryAlias) -> Op<Boolean>)? = null,
+    joinType: JoinType = JoinType.INNER,
+    lateral: Boolean = false,
+    joinPart: () -> AbstractQuery<*>
+) =
+    Join(this).joinQuery(on, joinType, lateral, joinPart)
 
 /**
  * Returns the most recent [QueryAlias] instance used to create this join relation, or `null` if a query was not joined.

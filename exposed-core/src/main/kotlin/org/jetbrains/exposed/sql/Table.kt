@@ -76,7 +76,8 @@ abstract class ColumnSet : FieldSet {
      * @param onColumn The column from a current [ColumnSet], may be skipped then [additionalConstraint] will be used.
      * @param otherColumn The column from an [otherTable], may be skipped then [additionalConstraint] will be used.
      * @param additionalConstraint The condition to join which will be placed in ON part of SQL query.
-     *
+     * @param lateral Set to true to enable a lateral join, allowing the subquery on the right side
+     *        to access columns from preceding tables in the FROM clause.
      * @throws IllegalStateException If join could not be prepared. See exception message for more details.
      */
     abstract fun join(
@@ -84,7 +85,8 @@ abstract class ColumnSet : FieldSet {
         joinType: JoinType,
         onColumn: Expression<*>? = null,
         otherColumn: Expression<*>? = null,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+        lateral: Boolean = false,
+        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     ): Join
 
     /** Creates an inner join relation with [otherTable]. */
@@ -148,7 +150,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.innerJoin(
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.INNER, onColumn?.invoke(this), otherColumn?.invoke(otherTable), additionalConstraint)
+): Join = join(otherTable, JoinType.INNER, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
  * Creates a left outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
@@ -161,7 +163,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.leftJoin(
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.LEFT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), additionalConstraint)
+): Join = join(otherTable, JoinType.LEFT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
  * Creates a right outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
@@ -174,7 +176,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.rightJoin(
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.RIGHT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), additionalConstraint)
+): Join = join(otherTable, JoinType.RIGHT, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
  * Creates a full outer join relation with [otherTable] using [onColumn] and [otherColumn] equality
@@ -187,7 +189,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.fullJoin(
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.FULL, onColumn?.invoke(this), otherColumn?.invoke(otherTable), additionalConstraint)
+): Join = join(otherTable, JoinType.FULL, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
  * Creates a cross join relation with [otherTable] using [onColumn] and [otherColumn] equality
@@ -200,7 +202,7 @@ fun <C1 : ColumnSet, C2 : ColumnSet> C1.crossJoin(
     onColumn: (C1.() -> Expression<*>)? = null,
     otherColumn: (C2.() -> Expression<*>)? = null,
     additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-): Join = join(otherTable, JoinType.CROSS, onColumn?.invoke(this), otherColumn?.invoke(otherTable), additionalConstraint)
+): Join = join(otherTable, JoinType.CROSS, onColumn?.invoke(this), otherColumn?.invoke(otherTable), false, additionalConstraint)
 
 /**
  * Represents a subset of [fields] from a given [source].
@@ -248,11 +250,12 @@ class Join(
         joinType: JoinType = JoinType.INNER,
         onColumn: Expression<*>? = null,
         otherColumn: Expression<*>? = null,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+        lateral: Boolean = false,
+        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     ) : this(table) {
         val newJoin = when {
             onColumn != null && otherColumn != null -> {
-                join(otherTable, joinType, onColumn, otherColumn, additionalConstraint)
+                join(otherTable, joinType, onColumn, otherColumn, lateral, additionalConstraint)
             }
 
             onColumn != null || otherColumn != null -> {
@@ -260,11 +263,11 @@ class Join(
             }
 
             additionalConstraint != null -> {
-                join(otherTable, joinType, emptyList(), additionalConstraint)
+                join(otherTable, joinType, emptyList(), additionalConstraint, lateral)
             }
 
             else -> {
-                implicitJoin(otherTable, joinType)
+                implicitJoin(otherTable, joinType, lateral)
             }
         }
         joinParts.addAll(newJoin.joinParts)
@@ -282,6 +285,7 @@ class Join(
         joinType: JoinType,
         onColumn: Expression<*>?,
         otherColumn: Expression<*>?,
+        lateral: Boolean,
         additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
     ): Join {
         val cond = if (onColumn != null && otherColumn != null) {
@@ -289,7 +293,7 @@ class Join(
         } else {
             emptyList()
         }
-        return join(otherTable, joinType, cond, additionalConstraint)
+        return join(otherTable, joinType, cond, additionalConstraint, lateral)
     }
 
     override infix fun innerJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.INNER)
@@ -304,7 +308,8 @@ class Join(
 
     private fun implicitJoin(
         otherTable: ColumnSet,
-        joinType: JoinType
+        joinType: JoinType,
+        lateral: Boolean = false
     ): Join {
         val fkKeys = findKeys(this, otherTable) ?: findKeys(otherTable, this) ?: emptyList()
         return when {
@@ -323,9 +328,15 @@ class Join(
 
             else -> {
                 val cond = fkKeys.filter { it.second.size == 1 }.map { it.first to it.second.single() }
-                join(otherTable, joinType, cond, null)
+                join(otherTable, joinType, cond, additionalConstraint = null, lateral = lateral)
             }
         }
+    }
+
+    @Suppress("MemberNameEqualsClassName")
+    private fun join(part: JoinPart): Join = Join(table).also {
+        it.joinParts.addAll(this.joinParts)
+        it.joinParts.add(part)
     }
 
     @Suppress("MemberNameEqualsClassName")
@@ -333,11 +344,9 @@ class Join(
         otherTable: ColumnSet,
         joinType: JoinType,
         cond: List<JoinCondition>,
-        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
-    ): Join = Join(table).also {
-        it.joinParts.addAll(this.joinParts)
-        it.joinParts.add(JoinPart(joinType, otherTable, cond, additionalConstraint))
-    }
+        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?,
+        lateral: Boolean = false
+    ): Join = join(JoinPart(joinType, otherTable, cond, lateral, additionalConstraint))
 
     private fun findKeys(a: ColumnSet, b: ColumnSet): List<Pair<Column<*>, List<Column<*>>>>? = a.columns
         .map { a_pk -> a_pk to b.columns.filter { it.referee == a_pk } }
@@ -355,6 +364,8 @@ class Join(
         val joinPart: ColumnSet,
         /** The [JoinCondition] expressions used to match rows from two joined tables. */
         val conditions: List<JoinCondition>,
+        /** Indicates whether the LATERAL keyword should be included in the JOIN operation. */
+        val lateral: Boolean = false,
         /** The conditions used to join tables, placed in the `ON` clause. */
         val additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
     ) {
@@ -362,11 +373,20 @@ class Join(
             require(
                 joinType == JoinType.CROSS || conditions.isNotEmpty() || additionalConstraint != null
             ) { "Missing join condition on $${this.joinPart}" }
+
+            require(joinPart !is Table || !lateral) {
+                "The LATERAL join can only be used with a subquery; it cannot be used to join table ${(joinPart as Table).tableName} directly."
+            }
         }
 
         /** Appends the SQL representation of this join component to the specified [QueryBuilder]. */
         fun describe(transaction: Transaction, builder: QueryBuilder) = with(builder) {
             append(" $joinType JOIN ")
+
+            if (lateral) {
+                append("LATERAL ")
+            }
+
             val isJoin = joinPart is Join
             if (isJoin) {
                 append("(")
@@ -500,8 +520,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         joinType: JoinType,
         onColumn: Expression<*>?,
         otherColumn: Expression<*>?,
+        lateral: Boolean,
         additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
-    ): Join = Join(this, otherTable, joinType, onColumn, otherColumn, additionalConstraint)
+    ): Join = Join(this, otherTable, joinType, onColumn, otherColumn, lateral, additionalConstraint)
 
     override infix fun innerJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.INNER)
 
