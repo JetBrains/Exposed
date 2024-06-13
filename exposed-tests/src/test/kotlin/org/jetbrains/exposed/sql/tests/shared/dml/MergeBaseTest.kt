@@ -12,11 +12,11 @@ val TEST_DEFAULT_DATE_TIME = LocalDateTime(2000, 1, 1, 0, 0, 0, 0)
 abstract class MergeBaseTest : DatabaseTestsBase() {
     protected fun allDbExcept(includeSettings: List<TestDB>) = TestDB.entries - includeSettings.toSet()
 
-    protected val defaultExcludeSettings = listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.MARIADB)
+    protected val defaultExcludeSettings = TestDB.ALL_MARIADB + TestDB.ALL_MYSQL + TestDB.SQLITE + TestDB.ALL_H2_V1
 
     protected fun withMergeTestTables(excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(dest: Dest, source: Source) -> Unit) = withTables(
-        defaultExcludeSettings + excludeSettings, Source, Dest
-    ) {
+        excludeSettings = defaultExcludeSettings + excludeSettings, Source, Dest
+    ) { db ->
         statement(Dest, Source)
     }
 

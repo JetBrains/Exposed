@@ -270,7 +270,7 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    private val testDBsSupportingInAnyAllFromTables = TestDB.postgreSQLRelatedDB + TestDB.allH2TestDB
+    private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.ALL_H2
 
     @Test
     fun testInTable() {
@@ -292,8 +292,8 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    private val testDBsSupportingAnyAndAllFromSubQueries = TestDB.entries - TestDB.SQLITE
-    private val testDBsSupportingAnyAndAllFromArrays = TestDB.postgreSQLRelatedDB + TestDB.allH2TestDB
+    private val testDBsSupportingAnyAndAllFromSubQueries = TestDB.ALL - TestDB.SQLITE
+    private val testDBsSupportingAnyAndAllFromArrays = TestDB.ALL_POSTGRES + TestDB.ALL_H2_V2
 
     @Test
     fun testEqAnyFromSubQuery() {

@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
-import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Assume
 import org.junit.runner.RunWith
@@ -80,7 +79,7 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withDb(db: List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
+    fun withDb(db: List<TestDB>? = null, excludeSettings: Collection<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
         if (db != null && dialect !in db) {
             Assume.assumeFalse(true)
             return
@@ -167,11 +166,7 @@ abstract class DatabaseTestsBase {
         ""
     }
 
-    fun Transaction.excludingH2Version1(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
-        if (dbSettings !in TestDB.allH2TestDB || (db.dialect as H2Dialect).isSecondVersion) {
-            statement(dbSettings)
-        }
-    }
+    fun withH2V1(testDB: List<TestDB>) = (testDB + TestDB.ALL_H2_V1).toSet()
 
     fun Transaction.isOldMySql(version: String = "8.0") = currentDialectTest is MysqlDialect && !db.isVersionCovers(BigDecimal(version))
 

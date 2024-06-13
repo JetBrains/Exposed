@@ -70,13 +70,17 @@ fun Project.testDb(name: String, block: TestDb.() -> Unit) {
             }
         }
 
-        if (!db.withContainer) return@register
-        dependsOn(rootProject.tasks.getByName("${db.container}ComposeUp"))
-    }
+        val driverConfiguration = configurations.create("${db.name}DriverConfiguration")
+        dependencies {
+            db.dependencies.forEach {
+                driverConfiguration(it)
+            }
+        }
 
-    dependencies {
-        db.dependencies.forEach {
-            add("testRuntimeOnly", it)
+        classpath += files(driverConfiguration.resolve())
+
+        if (db.withContainer) {
+            dependsOn(rootProject.tasks.getByName("${db.container}ComposeUp"))
         }
     }
 

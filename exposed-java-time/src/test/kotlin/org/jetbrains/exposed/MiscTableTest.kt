@@ -250,7 +250,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
     // these DB take the datetime nanosecond value and round up to default precision
     // which causes flaky comparison failures if not cast to TIMESTAMP first
-    private val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_ORACLE, TestDB.H2_PSQL, TestDB.H2_SQLSERVER)
+    private val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_V2_ORACLE, TestDB.H2_V2_PSQL, TestDB.H2_V2_SQLSERVER)
 
     @Test
     fun testSelect01() {
@@ -1160,7 +1160,7 @@ class MiscTableTest : DatabaseTestsBase() {
         val duration = Duration.ofMinutes(1)
         val eOne = MiscTable.E.ONE
         val dec = BigDecimal("239.42")
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB), tables = arrayOf(tbl)) {
+        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB, tables = arrayOf(tbl)) {
             tbl.insert {
                 it[by] = 13
                 it[sm] = -10
@@ -1243,7 +1243,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
     @Test
     fun testZeroDateTimeIsNull() {
-        withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
+        withDb(TestDB.ALL_MYSQL_MARIADB) {
             exec(zeroDateTimeTableDdl)
             try {
                 // Need ignore to bypass strict mode

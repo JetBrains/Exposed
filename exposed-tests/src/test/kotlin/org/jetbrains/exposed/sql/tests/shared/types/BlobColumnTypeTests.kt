@@ -91,7 +91,7 @@ class BlobColumnTypeTests : DatabaseTestsBase() {
 
         withDb { testDb ->
             when (testDb) {
-                TestDB.MYSQL -> {
+                TestDB.MYSQL_V5, TestDB.MYSQL_V8 -> {
                     expectException<ExposedSQLException> {
                         SchemaUtils.create(testTable)
                     }

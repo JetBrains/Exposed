@@ -14,7 +14,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class ReturningTests : DatabaseTestsBase() {
-    private val returningSupportedDb = TestDB.postgreSQLRelatedDB.toSet() + TestDB.SQLITE
+    private val returningSupportedDb = TestDB.ALL_POSTGRES.toSet() + TestDB.SQLITE
 
     object Items : IntIdTable("items") {
         val name = varchar("name", 32)

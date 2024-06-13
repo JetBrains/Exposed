@@ -21,7 +21,7 @@ class MysqlTests : DatabaseTestsBase() {
 
     @Test
     fun testEmbeddedConnection() {
-        withDb(TestDB.MYSQL) {
+        withDb(TestDB.MYSQL_V5) {
             assertFalse(
                 TransactionManager.current().exec("SELECT VERSION();") {
                     it.next()
@@ -33,7 +33,7 @@ class MysqlTests : DatabaseTestsBase() {
 
     @Test
     fun testBatchInsertWithRewriteBatchedStatementsOn() {
-        val mysqlOnly = TestDB.enabledDialects() - TestDB.MYSQL
+        val mysqlOnly = TestDB.enabledDialects() - TestDB.MYSQL_V8
         withTables(excludeSettings = mysqlOnly, DMLTestsData.Cities) {
             val mysqlConnection = this.connection.connection as ConnectionImpl
             mysqlConnection.propertySet.getBooleanProperty(PropertyKey.rewriteBatchedStatements).value = true

@@ -60,7 +60,7 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test
     fun testKeywordIdentifiersWithOptOut() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val keywords = listOf("Integer", "name")
         val tester = object : Table(keywords[0]) {
@@ -207,7 +207,7 @@ class DDLTests : DatabaseTestsBase() {
     fun namedEmptyTableWithoutQuotesSQL() {
         val testTable = object : Table("test_named_table") {}
 
-        withDb(TestDB.H2) {
+        withDb(TestDB.H2_V2) {
             assertEquals("CREATE TABLE IF NOT EXISTS ${"test_named_table".inProperCase()}", testTable.ddl)
         }
     }
@@ -222,7 +222,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE, TestDB.MARIADB, TestDB.SQLITE, TestDB.H2_ORACLE), tables = arrayOf(testTable)) {
+        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + TestDB.ALL_ORACLE_LIKE + TestDB.SQLITE, tables = arrayOf(testTable)) {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_column_types".inProperCase()} " +
@@ -244,7 +244,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.SQLITE), tables = arrayOf(testTable)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5, TestDB.SQLITE), tables = arrayOf(testTable)) {
             val q = db.identifierManager.quoteString
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
@@ -343,7 +343,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(column1)
         }
 
-        withDb(TestDB.allH2TestDB) {
+        withDb(TestDB.ALL_H2) {
             val h2Dialect = currentDialectTest as H2Dialect
             val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             val singleColumnDescription = testTable.columns.single().descriptionDdl(false)
@@ -418,7 +418,7 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
 
-        withDb(TestDB.allH2TestDB) {
+        withDb(TestDB.ALL_H2) {
             val h2Dialect = currentDialectTest as H2Dialect
             val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             val tableProperName = testTable.tableName.inProperCase()
@@ -564,11 +564,12 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
 
-        withDb { testDb ->
+        // TODO probably could be fixed for MySql 8
+        withDb(excludeSettings = listOf(TestDB.MYSQL_V8)) { testDb ->
             val tableProperName = tester.tableName.inProperCase()
             val priceColumnName = tester.price.nameInDatabaseCase()
             val uniqueIndexName = "tester_price_coalesce${if (testDb == TestDB.SQLITE) "" else "_unique"}".inProperCase()
-            val (p1, p2) = if (testDb == TestDB.MYSQL) "(" to ")" else "" to ""
+            val (p1, p2) = if (testDb == TestDB.MYSQL_V5) "(" to ")" else "" to ""
             val functionStrings = when (testDb) {
                 TestDB.SQLITE, TestDB.ORACLE -> listOf("(amount + price)", "LOWER(item)", "COALESCE(item, '*')").map(String::inProperCase)
                 else -> listOf(
@@ -578,7 +579,7 @@ class DDLTests : DatabaseTestsBase() {
                 )
             }
 
-            val functionsNotSupported = testDb in (TestDB.allH2TestDB + TestDB.SQLSERVER + TestDB.MARIADB) || isOldMySql()
+            val functionsNotSupported = testDb in (TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MARIADB) || isOldMySql()
             val expectedStatements = if (functionsNotSupported) {
                 List(3) { "" }
             } else {
@@ -604,7 +605,7 @@ class DDLTests : DatabaseTestsBase() {
 
         fun SizedIterable<ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE, TestDB.H2_PSQL, TestDB.H2)) {
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE, TestDB.H2_V2_PSQL, TestDB.H2_V2)) {
             val exposedBytes = "Exposed".toByteArray()
             val kotlinBytes = "Kotlin".toByteArray()
 
@@ -674,7 +675,7 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test
     fun testEscapeStringColumnType() {
-        withDb(TestDB.H2) {
+        withDb(TestDB.H2_V2) {
             assertEquals("VARCHAR(255) COLLATE utf8_general_ci", VarCharColumnType(collate = "utf8_general_ci").sqlType())
             assertEquals("VARCHAR(255) COLLATE injected''code", VarCharColumnType(collate = "injected'code").sqlType())
             assertEquals("'value'", VarCharColumnType().nonNullValueToString("value"))
@@ -817,7 +818,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey: PrimaryKey = PrimaryKey(id)
         }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.MYSQL, TestDB.H2_PSQL)) { testDb ->
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.MYSQL_V5, TestDB.H2_V2_PSQL)) { testDb ->
             SchemaUtils.create(testTable)
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_text_column_types".inProperCase()} " +
@@ -830,7 +831,7 @@ class DDLTests : DatabaseTestsBase() {
 
             // double check that different types were applied indeed
             assert(
-                testDb != TestDB.MYSQL ||
+                testDb != TestDB.MYSQL_V5 ||
                     (
                         currentDialectTest.dataTypeProvider.textType() != currentDialectTest.dataTypeProvider.mediumTextType() &&
                             currentDialectTest.dataTypeProvider.mediumTextType() != currentDialectTest.dataTypeProvider.largeTextType() &&

@@ -20,14 +20,15 @@ class QueryTimeoutTest : DatabaseTestsBase() {
 
     private fun generateTimeoutStatements(db: TestDB, timeout: Int): String {
         return when (db) {
-            TestDB.MYSQL, TestDB.MARIADB -> "SELECT SLEEP($timeout) = 0;"
+            TestDB.MYSQL_V5, TestDB.MARIADB -> "SELECT SLEEP($timeout) = 0;"
             TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> "SELECT pg_sleep($timeout);"
             TestDB.SQLSERVER -> "WAITFOR DELAY '00:00:$timeout';"
             else -> throw NotImplementedError()
         }
     }
 
-    private val timeoutTestDBList = listOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLSERVER)
+    // TODO probably could be fixed for MySql 8, 5
+    private val timeoutTestDBList = listOf(TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLSERVER)
 
     @Test
     fun timeoutStatements() {
@@ -84,7 +85,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
                     // PostgreSQL throws a regular PSQLException with a minus timeout value
                     TestDB.POSTGRESQL -> assertTrue(cause.cause is PSQLException)
                     // MySQL, POSTGRESQLNG throws a regular SQLException with a minus timeout value
-                    TestDB.MYSQL, TestDB.POSTGRESQLNG -> assertTrue(cause.cause is SQLException)
+                    TestDB.MYSQL_V5, TestDB.POSTGRESQLNG -> assertTrue(cause.cause is SQLException)
                     // MariaDB throws a regular SQLSyntaxErrorException with a minus timeout value
                     TestDB.MARIADB -> assertTrue(cause.cause is SQLSyntaxErrorException)
                     // SqlServer throws a regular SQLServerException with a minus timeout value

@@ -23,8 +23,8 @@ class DeleteTests : DatabaseTestsBase() {
             TestDB.POSTGRESQL,
             TestDB.POSTGRESQLNG,
             TestDB.ORACLE,
-            TestDB.H2_PSQL,
-            TestDB.H2_ORACLE
+            TestDB.H2_V2_PSQL,
+            TestDB.H2_V2_ORACLE
         )
         if (!SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT) {
             exclude.add(TestDB.SQLITE)

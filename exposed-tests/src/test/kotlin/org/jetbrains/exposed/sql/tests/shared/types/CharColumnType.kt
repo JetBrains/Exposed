@@ -42,7 +42,7 @@ class CharColumnType : DatabaseTestsBase() {
         // H2 only allows collation for the entire database using SET COLLATION
         // Oracle only allows collation if MAX_STRING_SIZE=EXTENDED, which can only be set in upgrade mode
         // Oracle -> https://docs.oracle.com/en/database/oracle/oracle-database/12.2/refrn/MAX_STRING_SIZE.html#
-        withDb(excludeSettings = TestDB.allH2TestDB + TestDB.ORACLE) {
+        withDb(excludeSettings = TestDB.ALL_H2 + TestDB.ORACLE) {
             try {
                 SchemaUtils.create(tester)
 

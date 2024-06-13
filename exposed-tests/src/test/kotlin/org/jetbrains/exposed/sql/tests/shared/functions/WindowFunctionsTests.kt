@@ -16,7 +16,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.rank
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.rowNumber
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB.*
-import org.jetbrains.exposed.sql.tests.TestDB.Companion.allH2TestDB
+import org.jetbrains.exposed.sql.tests.TestDB.Companion.ALL_H2
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withSales
@@ -27,17 +27,18 @@ import java.math.RoundingMode
 
 class WindowFunctionsTests : DatabaseTestsBase() {
 
-    private val supportsCountDistinctAsWindowFunction = allH2TestDB + ORACLE
+    private val supportsCountDistinctAsWindowFunction = ALL_H2 + ORACLE
     private val supportsStatisticsAggregateFunctions = entries - listOf(SQLSERVER, SQLITE)
     private val supportsNthValueFunction = entries - listOf(SQLSERVER)
-    private val supportsExpressionsInWindowFunctionArguments = entries - listOf(MYSQL)
-    private val supportsExpressionsInWindowFrameClause = entries - listOf(MYSQL, SQLSERVER, MARIADB)
+    private val supportsExpressionsInWindowFunctionArguments = entries - listOf(MYSQL_V5)
+    private val supportsExpressionsInWindowFrameClause = entries - listOf(MYSQL_V5, SQLSERVER, MARIADB)
     private val supportsDefaultValueInLeadLagFunctions = entries - listOf(MARIADB)
     private val supportsRangeModeWithOffsetFrameBound = entries - listOf(SQLSERVER)
 
+    // TODO probably could be fixed for MySql 8
     @Suppress("LongMethod")
     @Test
-    fun testWindowFunctions() = withSales { testDb, sales ->
+    fun testWindowFunctions() = withSales(excludeSettings = listOf(MYSQL_V8)) { testDb, sales ->
         if (!isOldMySql()) {
             sales.assertWindowFunctionDefinition(
                 rowNumber().over().partitionBy(sales.year, sales.product).orderBy(sales.amount),
@@ -228,9 +229,10 @@ class WindowFunctionsTests : DatabaseTestsBase() {
         }
     }
 
+    // TODO probably could be fixed for MySql 8
     @Suppress("LongMethod")
     @Test
-    fun testWindowFrameClause() = withSales { testDb, sales ->
+    fun testWindowFrameClause() = withSales(excludeSettings = listOf(MYSQL_V8)) { testDb, sales ->
         if (!isOldMySql()) {
             sales.assertWindowFunctionDefinition(
                 sumAmountPartitionByYearProductOrderByAmount(sales).rows(WindowFrameBound.unboundedPreceding()),

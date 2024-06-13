@@ -101,7 +101,7 @@ class MergeSelectTest : MergeBaseTest() {
 
     @Test
     fun testDelete() {
-        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB) { dest, source ->
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.ALL_ORACLE_LIKE) { dest, source ->
             dest.mergeFrom(
                 sourceQuery,
                 on = { defaultOnCondition() },
@@ -147,7 +147,7 @@ class MergeSelectTest : MergeBaseTest() {
 
     @Test
     fun testConditionOnDelete() {
-        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB) { dest, source ->
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.ALL_ORACLE_LIKE) { dest, source ->
             dest.mergeFrom(
                 sourceQuery,
                 on = { defaultOnCondition() },
@@ -164,7 +164,7 @@ class MergeSelectTest : MergeBaseTest() {
 
     @Test
     fun testMultipleClauses() {
-        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.oracleRelatedDB + TestDB.sqlServerRelatedDB) { dest, source ->
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.ALL_ORACLE_LIKE + TestDB.ALL_SQLSERVER_LIKE) { dest, source ->
             dest.mergeFrom(sourceQuery, on = { defaultOnCondition() }) {
                 whenNotMatchedInsert(and = (sourceQuery[source.value] eq 1)) {
                     it[dest.key] = sourceQuery[source.key]

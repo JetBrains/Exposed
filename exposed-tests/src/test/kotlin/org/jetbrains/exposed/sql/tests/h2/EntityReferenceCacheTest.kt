@@ -37,17 +37,17 @@ import kotlin.test.assertNull
 class EntityReferenceCacheTest : DatabaseTestsBase() {
 
     private val db by lazy {
-        TestDB.H2.connect()
+        TestDB.H2_V2.connect()
     }
 
     private val dbWithCache by lazy {
-        TestDB.H2.connect {
+        TestDB.H2_V2.connect {
             keepLoadedReferencesOutOfTransaction = true
         }
     }
 
     private fun executeOnH2(vararg tables: Table, body: () -> Unit) {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         var testWasStarted = false
         transaction(db) {
             SchemaUtils.create(*tables)

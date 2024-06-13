@@ -49,7 +49,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testCalc03() {
-        withCitiesAndUsers(exclude = listOf(TestDB.H2_ORACLE)) { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.H2_V2_ORACLE)) { cities, users, userData ->
             val sum = Expression.build { Sum(cities.id * 100 + userData.value / 10, IntegerColumnType()) }
             val mod1 = Expression.build { sum % 100 }
             val mod2 = Expression.build { sum mod 100 }
@@ -381,7 +381,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testRegexp01() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.H2_SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(TestDB.ALL_SQLSERVER_LIKE + TestDB.SQLITE) { _, users, _ ->
             assertEquals(2L, users.selectAll().where { users.id regexp "a.+" }.count())
             assertEquals(1L, users.selectAll().where { users.id regexp "an.+" }.count())
             assertEquals(users.selectAll().count(), users.selectAll().where { users.id regexp ".*" }.count())
@@ -391,7 +391,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testRegexp02() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.H2_SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(TestDB.ALL_SQLSERVER_LIKE + TestDB.SQLITE) { _, users, _ ->
             assertEquals(2L, users.selectAll().where { users.id.regexp(stringLiteral("a.+")) }.count())
             assertEquals(1L, users.selectAll().where { users.id.regexp(stringLiteral("an.+")) }.count())
             assertEquals(users.selectAll().count(), users.selectAll().where { users.id.regexp(stringLiteral(".*")) }.count())

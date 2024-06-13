@@ -14,11 +14,12 @@ import java.lang.IllegalArgumentException
 
 class UpdateTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
-        val exclude = arrayListOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
+        val exclude = TestDB.ALL_POSTGRES_LIKE
         if (!SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT) {
-            exclude.add(TestDB.SQLITE)
+            exclude + TestDB.SQLITE
+        } else {
+            exclude
         }
-        exclude
     }
 
     @Test
@@ -96,7 +97,7 @@ class UpdateTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateWithMultipleJoins() {
-        withCitiesAndUsers(exclude = TestDB.allH2TestDB + TestDB.SQLITE) { cities, users, userData ->
+        withCitiesAndUsers(exclude = TestDB.ALL_H2 + TestDB.SQLITE) { cities, users, userData ->
             val join = cities.innerJoin(users).innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name
@@ -120,7 +121,7 @@ class UpdateTests : DatabaseTestsBase() {
             val tableAId = reference("table_a_id", tableA)
         }
 
-        val supportWhere = TestDB.entries - TestDB.allH2TestDB.toSet() - TestDB.SQLITE + TestDB.H2_ORACLE
+        val supportWhere = TestDB.entries - TestDB.ALL_H2.toSet() - TestDB.SQLITE + TestDB.H2_V2_ORACLE
 
         withTables(tableA, tableB) { testingDb ->
             val aId = tableA.insertAndGetId { it[foo] = "foo" }

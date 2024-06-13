@@ -230,7 +230,7 @@ class CoroutineTests : DatabaseTestsBase() {
     @Test
     @RepeatableTest(10)
     fun nestedSuspendAsyncTxTest() {
-        withTables(listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), Testing) {
+        withTables(listOf(TestDB.H2_V2, TestDB.H2_V2_MYSQL, TestDB.SQLITE), Testing) {
             val mainJob = GlobalScope.async {
                 val job = launch(Dispatchers.IO) {
                     newSuspendedTransaction(db = db) {

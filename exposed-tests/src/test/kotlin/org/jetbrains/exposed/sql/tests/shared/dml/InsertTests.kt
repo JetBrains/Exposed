@@ -59,7 +59,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     private val insertIgnoreUnsupportedDB = TestDB.entries -
-        listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
+        listOf(TestDB.SQLITE, TestDB.MYSQL_V5, TestDB.H2_V2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_V2_PSQL)
 
     @Test
     fun testInsertIgnoreAndGetId01() {
@@ -394,7 +394,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(TestDB.allH2TestDB + TestDB.SQLSERVER + TestDB.ORACLE, table) {
+        withTables(TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.ORACLE, table) {
             if (isOldMySql()) {
                 exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
             }
@@ -412,7 +412,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL), table) {
+        withTables(listOf(TestDB.SQLITE, TestDB.H2_V2, TestDB.H2_V2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_V2_PSQL), table) {
             expectException<IllegalArgumentException> {
                 table.insert {
                     it[table.emoji] = emojis
@@ -490,7 +490,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val dbToTest = TestDB.enabledDialects() - setOfNotNull(
             TestDB.SQLITE,
-            TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
+            TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
         Assume.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
@@ -523,7 +523,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val dbToTest = TestDB.enabledDialects() - setOfNotNull(
             TestDB.SQLITE,
-            TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
+            TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
         Assume.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
@@ -596,13 +596,13 @@ class InsertTests : DatabaseTestsBase() {
         override fun prepareSQL(transaction: Transaction, prepared: Boolean) = buildString {
             val insertStatement = super.prepareSQL(transaction, prepared)
             when (val db = currentTestDB) {
-                in TestDB.mySqlRelatedDB -> {
+                in TestDB.ALL_MYSQL_LIKE -> {
                     append("INSERT IGNORE ")
                     append(insertStatement.substringAfter("INSERT "))
                 }
                 else -> {
                     append(insertStatement)
-                    val identifier = if (db == TestDB.H2_PSQL) "" else "(id) "
+                    val identifier = if (db == TestDB.H2_V2_PSQL) "" else "(id) "
                     append(" ON CONFLICT ${identifier}DO NOTHING")
                 }
             }
@@ -639,9 +639,9 @@ class InsertTests : DatabaseTestsBase() {
             val computedAmount = integer("computed_amount").nullable().databaseGenerated()
         }
 
-        withDb { testDb ->
+        withDb(excludeSettings = TestDB.ALL_H2_V1) { testDb ->
             try {
-                if (testDb == TestDB.ORACLE || testDb == TestDB.H2_ORACLE) {
+                if (testDb == TestDB.ORACLE || testDb == TestDB.H2_V2_ORACLE) {
                     // create sequence for primary key
                     exec(generatedTable.ddl.first(), explicitStatementType = StatementType.CREATE)
                 }
@@ -652,7 +652,7 @@ class InsertTests : DatabaseTestsBase() {
                 val computation = "${generatedTable.amount.name.inProperCase()} + 1"
                 val generatedColumnDescription = when (testDb) {
                     TestDB.SQLSERVER -> "$computedName AS ($computation)"
-                    TestDB.ORACLE, in TestDB.allH2TestDB -> "$computedName $computedType GENERATED ALWAYS AS ($computation)"
+                    TestDB.ORACLE, in TestDB.ALL_H2 -> "$computedName $computedType GENERATED ALWAYS AS ($computation)"
                     else -> "$computedName $computedType GENERATED ALWAYS AS ($computation) STORED"
                 }
                 exec(

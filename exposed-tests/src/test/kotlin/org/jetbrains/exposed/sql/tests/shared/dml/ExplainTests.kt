@@ -15,7 +15,7 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 
 class ExplainTests : DatabaseTestsBase() {
-    private val explainUnsupportedDb = listOf(TestDB.SQLSERVER, TestDB.H2_SQLSERVER, TestDB.ORACLE, TestDB.H2_ORACLE)
+    private val explainUnsupportedDb = listOf(TestDB.SQLSERVER, TestDB.H2_V2_SQLSERVER, TestDB.ORACLE, TestDB.H2_V2_ORACLE)
 
     private object Countries : IntIdTable("countries") {
         val code = varchar("country_code", 8)
@@ -54,7 +54,7 @@ class ExplainTests : DatabaseTestsBase() {
             explainCount++
         }
 
-        withCitiesAndUsers(exclude = explainUnsupportedDb) { cities, users, userData ->
+        withCitiesAndUsers(exclude = withH2V1(explainUnsupportedDb)) { cities, users, userData ->
             val testDb = currentDialectTest
             debug = true
             statementCount = 0
@@ -115,13 +115,13 @@ class ExplainTests : DatabaseTestsBase() {
 
     @Test
     fun testExplainWithAnalyze() {
-        val noAnalyzeDb = explainUnsupportedDb + TestDB.SQLITE
+        val noAnalyzeDb = explainUnsupportedDb + TestDB.SQLITE + TestDB.MYSQL_V8
         withTables(excludeSettings = noAnalyzeDb, Countries) { testDb ->
             if (!isOldMySql()) {
                 val originalCode = "ABC"
 
                 // MySQL only allows ANALYZE with SELECT queries
-                if (testDb != TestDB.MYSQL) {
+                if (testDb != TestDB.MYSQL_V5) {
                     // analyze means all wrapped statements should also be executed
                     explain(analyze = true) { Countries.insert { it[code] = originalCode } }.toList()
                     assertEquals(1, Countries.selectAll().count())
@@ -140,12 +140,12 @@ class ExplainTests : DatabaseTestsBase() {
 
     @Test
     fun testExplainWithOptions() {
-        val optionsAvailableDb = TestDB.postgreSQLRelatedDB.toSet() + TestDB.MYSQL + TestDB.MARIADB
+        val optionsAvailableDb = TestDB.ALL_POSTGRES.toSet() + TestDB.MYSQL_V5 + TestDB.MARIADB
         withTables(excludeSettings = TestDB.entries - optionsAvailableDb, Countries) { testDB ->
             if (!isOldMySql()) {
                 val formatOption = when (testDB) {
-                    in TestDB.mySqlRelatedDB -> "FORMAT=JSON"
-                    in TestDB.postgreSQLRelatedDB -> "FORMAT JSON"
+                    in TestDB.ALL_MYSQL_LIKE -> "FORMAT=JSON"
+                    in TestDB.ALL_POSTGRES -> "FORMAT JSON"
                     else -> throw UnsupportedOperationException("Format option not provided for this dialect")
                 }
 
@@ -153,17 +153,17 @@ class ExplainTests : DatabaseTestsBase() {
                 val result = explain(options = formatOption) { query }.single()
                 val jsonString = result.toString().substringAfter("=")
                 when (testDB) {
-                    in TestDB.mySqlRelatedDB -> assertTrue(jsonString.startsWith('{') && jsonString.endsWith('}'))
+                    in TestDB.ALL_MYSQL_LIKE -> assertTrue(jsonString.startsWith('{') && jsonString.endsWith('}'))
                     else -> assertTrue(jsonString.startsWith('[') && jsonString.endsWith(']'))
                 }
 
                 // test multiple options only
-                if (testDB in TestDB.postgreSQLRelatedDB) {
+                if (testDB in TestDB.ALL_POSTGRES) {
                     explain(options = "VERBOSE TRUE, COSTS FALSE") { query }.toList()
                 }
 
                 // test analyze + options
-                val combinedOption = if (testDB == TestDB.MYSQL) "FORMAT=TREE" else formatOption
+                val combinedOption = if (testDB == TestDB.MYSQL_V5) "FORMAT=TREE" else formatOption
                 explain(true, combinedOption) { query }.toList()
             }
         }
