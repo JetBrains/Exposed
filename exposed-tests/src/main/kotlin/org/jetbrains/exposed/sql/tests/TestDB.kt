@@ -143,10 +143,10 @@ enum class TestDB(
 
         fun enabledDialects(): Set<TestDB> {
             if (TEST_DIALECTS.isEmpty()) {
-                return values().toSet()
+                return entries.toSet()
             }
 
-            return values().filterTo(enumSetOf()) { it.name in TEST_DIALECTS }
+            return entries.filterTo(enumSetOf()) { it.name in TEST_DIALECTS }
         }
     }
 }
