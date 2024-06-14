@@ -270,7 +270,7 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.ALL_H2
+    private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.ALL_H2 + TestDB.MYSQL_V8
 
     @Test
     fun testInTable() {

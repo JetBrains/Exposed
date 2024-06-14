@@ -32,7 +32,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testCreateAndDropArrayColumns() {
-        withDb(excludeSettings = arrayTypeUnsupportedDb) { db ->
+        withDb(excludeSettings = arrayTypeUnsupportedDb) {
             try {
                 SchemaUtils.create(ArrayTestTable)
                 assertTrue(ArrayTestTable.exists())
@@ -219,7 +219,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testArrayColumnUpdate() {
-        withTestTableAndExcludeSettings { db ->
+        withTestTableAndExcludeSettings {
             val id1 = ArrayTestTable.insertAndGetId {
                 it[doubles] = null
             }
