@@ -24,7 +24,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class JsonBColumnTests : DatabaseTestsBase() {
-    private val binaryJsonNotSupportedDB = listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE) + TestDB.ALL_H2_V1
+    private val binaryJsonNotSupportedDB = TestDB.ALL_H2_V1 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE
 
     @Test
     fun testInsertAndSelect() {
@@ -55,7 +55,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWithSliceExtract() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, user1, data1, _ ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, user1, data1, _ ->
             val pathPrefix = if (currentDialectTest is PostgreSQLDialect) "" else "."
             val isActive = tester.jsonBColumn.extract<Boolean>("${pathPrefix}active", toScalar = false)
             val result1 = tester.select(isActive).singleOrNull()
@@ -74,7 +74,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWhereWithExtract() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, _, data1, _ ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, _, data1, _ ->
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = data1.copy(logins = 1000)
             }
@@ -112,7 +112,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
             assertEquals(updatedUser, dataEntity.all().single().jsonBColumn)
 
-            if (testDb !in TestDB.ALL_H2) {
+            if (testDb !in TestDB.ALL_H2_V2) {
                 dataEntity.new { jsonBColumn = dataA }
                 val loginCount = if (currentDialectTest is PostgreSQLDialect) {
                     dataTable.jsonBColumn.extract<Int>("logins").castTo(IntegerColumnType())
@@ -127,7 +127,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonContains() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, user1, data1, testDb ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, user1, data1, testDb ->
             val alphaTeamUser = user1.copy(team = "Alpha")
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = data1.copy(user = alphaTeamUser)
@@ -151,7 +151,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExists() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, _, data1, testDb ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, _, data1, testDb ->
             val maximumLogins = 1000
             val teamA = "A"
             val newId = tester.insertAndGetId {
@@ -187,7 +187,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExtractWithArrays() {
-        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, singleId, _, _ ->
+        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, singleId, _, _ ->
             val path1 = if (currentDialectTest is PostgreSQLDialect) {
                 arrayOf("users", "0", "team")
             } else {
@@ -205,7 +205,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonContainsWithArrays() {
-        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, _, tripleId, testDb ->
+        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, _, tripleId, testDb ->
             val hasSmallNumbers = tester.numbers.contains("[3, 5]")
             assertEquals(tripleId, tester.selectAll().where { hasSmallNumbers }.single()[tester.id])
 
@@ -218,7 +218,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExistsWithArrays() {
-        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, _, tripleId, testDb ->
+        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, _, tripleId, testDb ->
             val optional = if (testDb in TestDB.ALL_MYSQL_LIKE) "one" else null
 
             val hasMultipleUsers = tester.groups.exists(".users[1]", optional = optional)
@@ -237,7 +237,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val user2 = jsonb<User>("user_2", Json.Default).clientDefault { defaultUser }
         }
 
-        withDb(excludeSettings = binaryJsonNotSupportedDB) { testDb ->
+        withDb(excludeSettings = binaryJsonNotSupportedDB) {
             if (isOldMySql()) {
                 expectException<UnsupportedByDialectException> {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
@@ -274,7 +274,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val intArray = jsonb<IntArray>("int_array", Json.Default)
         }
 
-        withTables(excludeSettings = binaryJsonNotSupportedDB, iterables) { testDb ->
+        withTables(excludeSettings = binaryJsonNotSupportedDB, iterables) {
             // the logger is left in to test that it does not throw ClassCastException on insertion of iterables
             addLogger(StdOutSqlLogger)
 
@@ -303,7 +303,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val user = jsonb<User>("user", Json.Default).nullable()
         }
 
-        withTables(excludeSettings = binaryJsonNotSupportedDB, tester) { testDb ->
+        withTables(excludeSettings = binaryJsonNotSupportedDB, tester) {
             val nullId = tester.insertAndGetId {
                 it[user] = null
             }
@@ -321,7 +321,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonBWithUpsert() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB) { tester, _, _, db ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB) { tester, _, _, _ ->
             val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = newData

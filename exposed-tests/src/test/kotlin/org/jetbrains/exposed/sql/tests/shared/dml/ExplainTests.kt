@@ -15,7 +15,7 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 
 class ExplainTests : DatabaseTestsBase() {
-    private val explainUnsupportedDb = listOf(TestDB.SQLSERVER, TestDB.H2_V2_SQLSERVER, TestDB.ORACLE, TestDB.H2_V2_ORACLE)
+    private val explainUnsupportedDb = TestDB.ALL_SQLSERVER_LIKE + TestDB.ALL_ORACLE_LIKE
 
     private object Countries : IntIdTable("countries") {
         val code = varchar("country_code", 8)

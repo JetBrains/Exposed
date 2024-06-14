@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
 import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
@@ -21,6 +18,7 @@ import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
  * If left null, all columns will be updated with the values provided for the insert.
  * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
+ * @param where Condition that determines which rows to update, if a unique violation is found. This clause may not be supported by all vendors.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  */
@@ -29,6 +27,7 @@ open class BatchUpsertStatement(
     vararg val keys: Column<*>,
     val onUpdate: List<Pair<Column<*>, Expression<*>>>?,
     val onUpdateExclude: List<Column<*>>?,
+    val where: Op<Boolean>?,
     shouldReturnGeneratedValues: Boolean = true
 ) : BaseBatchInsertStatement(table, ignore = false, shouldReturnGeneratedValues) {
 
@@ -40,7 +39,16 @@ open class BatchUpsertStatement(
             }
             else -> dialect.functionProvider
         }
-        return functionProvider.upsert(table, arguments!!.first(), onUpdate, onUpdateExclude, null, transaction, keys = keys)
+        return functionProvider.upsert(table, arguments!!.first(), onUpdate, onUpdateExclude, where, transaction, keys = keys)
+    }
+
+    override fun arguments(): List<Iterable<Pair<IColumnType<*>, Any?>>> {
+        val whereArgs = QueryBuilder(true).apply {
+            where?.toQueryBuilder(this)
+        }.args
+        return super.arguments().map {
+            it + whereArgs
+        }
     }
 
     override fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
