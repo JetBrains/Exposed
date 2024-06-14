@@ -115,57 +115,57 @@ class ExplainTests : DatabaseTestsBase() {
 
     @Test
     fun testExplainWithAnalyze() {
-        val noAnalyzeDb = explainUnsupportedDb + TestDB.SQLITE + TestDB.MYSQL_V8
+        val noAnalyzeDb = explainUnsupportedDb + TestDB.SQLITE
         withTables(excludeSettings = noAnalyzeDb, Countries) { testDb ->
-            if (!isOldMySql()) {
-                val originalCode = "ABC"
+            val originalCode = "ABC"
 
-                // MySQL only allows ANALYZE with SELECT queries
-                if (testDb != TestDB.MYSQL_V5) {
-                    // analyze means all wrapped statements should also be executed
-                    explain(analyze = true) { Countries.insert { it[code] = originalCode } }.toList()
-                    assertEquals(1, Countries.selectAll().count())
+            // MySQL only allows ANALYZE with SELECT queries
+            if (testDb !in TestDB.ALL_MYSQL) {
+                // analyze means all wrapped statements should also be executed
+                explain(analyze = true) { Countries.insert { it[code] = originalCode } }.toList()
+                assertEquals(1, Countries.selectAll().count())
 
-                    explain(analyze = true) { Countries.update { it[code] = "DEF" } }.toList()
-                    assertEquals("DEF", Countries.selectAll().single()[Countries.code])
+                explain(analyze = true) { Countries.update { it[code] = "DEF" } }.toList()
+                assertEquals("DEF", Countries.selectAll().single()[Countries.code])
 
-                    explain(analyze = true) { Countries.deleteAll() }.toList()
-                    assertTrue(Countries.selectAll().empty())
-                }
-
-                explain(analyze = true) { Countries.selectAll() }.toList()
+                explain(analyze = true) { Countries.deleteAll() }.toList()
+                assertTrue(Countries.selectAll().empty())
             }
+
+            // In MySql prior 8 the EXPLAIN command should be used without ANALYZE modifier
+            val analyze = testDb != TestDB.MYSQL_V5
+
+            explain(analyze) { Countries.selectAll() }.toList()
         }
     }
 
     @Test
     fun testExplainWithOptions() {
-        val optionsAvailableDb = TestDB.ALL_POSTGRES.toSet() + TestDB.MYSQL_V5 + TestDB.MARIADB
-        withTables(excludeSettings = TestDB.entries - optionsAvailableDb, Countries) { testDB ->
-            if (!isOldMySql()) {
-                val formatOption = when (testDB) {
-                    in TestDB.ALL_MYSQL_LIKE -> "FORMAT=JSON"
-                    in TestDB.ALL_POSTGRES -> "FORMAT JSON"
-                    else -> throw UnsupportedOperationException("Format option not provided for this dialect")
-                }
-
-                val query = Countries.select(Countries.id).where { Countries.code like "A%" }
-                val result = explain(options = formatOption) { query }.single()
-                val jsonString = result.toString().substringAfter("=")
-                when (testDB) {
-                    in TestDB.ALL_MYSQL_LIKE -> assertTrue(jsonString.startsWith('{') && jsonString.endsWith('}'))
-                    else -> assertTrue(jsonString.startsWith('[') && jsonString.endsWith(']'))
-                }
-
-                // test multiple options only
-                if (testDB in TestDB.ALL_POSTGRES) {
-                    explain(options = "VERBOSE TRUE, COSTS FALSE") { query }.toList()
-                }
-
-                // test analyze + options
-                val combinedOption = if (testDB == TestDB.MYSQL_V5) "FORMAT=TREE" else formatOption
-                explain(true, combinedOption) { query }.toList()
+        val optionsAvailableDb = TestDB.ALL_POSTGRES + TestDB.ALL_MYSQL_MARIADB
+        withTables(excludeSettings = TestDB.ALL - optionsAvailableDb, Countries) { testDB ->
+            val formatOption = when (testDB) {
+                in TestDB.ALL_MYSQL_LIKE -> "FORMAT=JSON"
+                in TestDB.ALL_POSTGRES -> "FORMAT JSON"
+                else -> throw UnsupportedOperationException("Format option not provided for this dialect")
             }
+
+            val query = Countries.select(Countries.id).where { Countries.code like "A%" }
+            val result = explain(options = formatOption) { query }.single()
+            val jsonString = result.toString().substringAfter("=")
+            when (testDB) {
+                in TestDB.ALL_MYSQL_LIKE -> assertTrue(jsonString.startsWith('{') && jsonString.endsWith('}'))
+                else -> assertTrue(jsonString.startsWith('[') && jsonString.endsWith(']'))
+            }
+
+            // test multiple options only
+            if (testDB in TestDB.ALL_POSTGRES) {
+                explain(options = "VERBOSE TRUE, COSTS FALSE") { query }.toList()
+            }
+
+            // test analyze + options
+            val analyze = testDB != TestDB.MYSQL_V5
+            val combinedOption = if (testDB == TestDB.MYSQL_V8) "FORMAT=TREE" else formatOption
+            explain(analyze, combinedOption) { query }.toList()
         }
     }
 

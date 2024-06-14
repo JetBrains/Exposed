@@ -128,18 +128,18 @@ enum class TestDB(
     }
 
     companion object {
-        val ALL_H2_V1 = listOf(H2_V1, H2_V1_MYSQL)
-        val ALL_H2_V2 = listOf(H2_V2, H2_V2_MYSQL, H2_V2_PSQL, H2_V2_MARIADB, H2_V2_ORACLE, H2_V2_SQLSERVER)
+        val ALL_H2_V1 = setOf(H2_V1, H2_V1_MYSQL)
+        val ALL_H2_V2 = setOf(H2_V2, H2_V2_MYSQL, H2_V2_PSQL, H2_V2_MARIADB, H2_V2_ORACLE, H2_V2_SQLSERVER)
         val ALL_H2 = ALL_H2_V1 + ALL_H2_V2
-        val ALL_MYSQL = listOf(MYSQL_V5, MYSQL_V8)
-        val ALL_MARIADB = listOf(MARIADB)
+        val ALL_MYSQL = setOf(MYSQL_V5, MYSQL_V8)
+        val ALL_MARIADB = setOf(MARIADB)
         val ALL_MYSQL_MARIADB = ALL_MYSQL + ALL_MARIADB
-        val ALL_MYSQL_LIKE = ALL_MYSQL_MARIADB + listOf(H2_V2_MYSQL, H2_V2_MARIADB, H2_V1_MYSQL)
-        val ALL_POSTGRES = listOf(POSTGRESQL, POSTGRESQLNG)
-        val ALL_POSTGRES_LIKE = ALL_POSTGRES + listOf(H2_V2_PSQL)
-        val ALL_ORACLE_LIKE = listOf(ORACLE, H2_V2_ORACLE)
-        val ALL_SQLSERVER_LIKE = listOf(SQLSERVER, H2_V2_SQLSERVER)
-        val ALL = TestDB.entries.toList()
+        val ALL_MYSQL_LIKE = ALL_MYSQL_MARIADB + setOf(H2_V2_MYSQL, H2_V2_MARIADB, H2_V1_MYSQL)
+        val ALL_POSTGRES = setOf(POSTGRESQL, POSTGRESQLNG)
+        val ALL_POSTGRES_LIKE = ALL_POSTGRES + setOf(H2_V2_PSQL)
+        val ALL_ORACLE_LIKE = setOf(ORACLE, H2_V2_ORACLE)
+        val ALL_SQLSERVER_LIKE = setOf(SQLSERVER, H2_V2_SQLSERVER)
+        val ALL = TestDB.entries.toSet()
 
         fun enabledDialects(): Set<TestDB> {
             if (TEST_DIALECTS.isEmpty()) {

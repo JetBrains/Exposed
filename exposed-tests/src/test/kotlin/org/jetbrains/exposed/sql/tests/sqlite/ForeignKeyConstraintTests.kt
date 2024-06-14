@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assume
 import org.junit.Test
+import kotlin.test.assertContains
 
 class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
@@ -184,16 +185,22 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        // TODO probably could be fixed for MySql 5
-        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), category, item) {
+        withTables(excludeSettings = listOf(), category, item) { testDb ->
             if (currentDialectTest.supportsOnUpdate) {
                 val constraints = connection.metadata {
                     tableConstraints(listOf(item))
                 }
                 constraints.values.forEach { list ->
                     list.forEach {
-                        assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
-                        assertEquals(currentDialectTest.defaultReferenceOption, it.deleteRule)
+                        // According to the documentation: "NO ACTION: A keyword from standard SQL. For InnoDB, this is equivalent to RESTRICT;"
+                        // https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html
+                        if (testDb == TestDB.MYSQL_V5 && currentDialectTest.defaultReferenceOption in listOf(ReferenceOption.RESTRICT, ReferenceOption.NO_ACTION)) {
+                            assertContains(listOf(ReferenceOption.RESTRICT, ReferenceOption.NO_ACTION), it.updateRule)
+                            assertContains(listOf(ReferenceOption.RESTRICT, ReferenceOption.NO_ACTION), it.deleteRule)
+                        } else {
+                            assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
+                            assertEquals(currentDialectTest.defaultReferenceOption, it.deleteRule)
+                        }
                     }
                 }
             }

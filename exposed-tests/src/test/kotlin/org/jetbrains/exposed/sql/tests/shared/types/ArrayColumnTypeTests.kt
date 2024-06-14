@@ -314,7 +314,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
 
     private fun withTestTableAndExcludeSettings(
         vararg tables: Table = arrayOf(ArrayTestTable),
-        excludeSettings: List<TestDB> = arrayTypeUnsupportedDb,
+        excludeSettings: Collection<TestDB> = arrayTypeUnsupportedDb,
         statement: Transaction.(TestDB) -> Unit
     ) {
         withTables(excludeSettings = excludeSettings, *tables) { db ->

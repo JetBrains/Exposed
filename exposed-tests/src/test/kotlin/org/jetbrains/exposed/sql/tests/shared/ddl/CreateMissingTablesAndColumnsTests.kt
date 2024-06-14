@@ -57,14 +57,12 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-            if (!isOldMySql()) {
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertTrue(testTable.exists())
+            try {
                 SchemaUtils.createMissingTablesAndColumns(testTable)
-                assertTrue(testTable.exists())
-                try {
-                    SchemaUtils.createMissingTablesAndColumns(testTable)
-                } finally {
-                    SchemaUtils.drop(testTable)
-                }
+            } finally {
+                SchemaUtils.drop(testTable)
             }
         }
     }
@@ -292,13 +290,12 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `columns with default values that haven't changed shouldn't trigger change`() {
+    fun columnsWithDefaultValuesThatHavenNotChangedShouldnNotTriggerChange() {
         var table by Delegates.notNull<Table>()
-        // TODO probably could be fixed for MySql 8
-        withDb(excludeSettings = listOf(TestDB.MYSQL_V8)) { testDb ->
+        withDb { testDb ->
             try {
                 // MySQL doesn't support default values on text columns, hence excluded
-                table = if (testDb != TestDB.MYSQL_V5) {
+                table = if (testDb !in TestDB.ALL_MYSQL) {
                     object : Table("varchar_test") {
                         val varchar = varchar("varchar_column", 255).default(" ")
                         val text = text("text_column").default(" ")
@@ -308,8 +305,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                         val varchar = varchar("varchar_column", 255).default(" ")
                     }
                 }
-
-                // MySQL doesn't support default values on text columns, hence excluded
 
                 SchemaUtils.create(table)
                 val actual = SchemaUtils.statementsRequiredToActualizeScheme(table)
@@ -330,7 +325,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `columns with default values that are whitespaces shouldn't be treated as empty strings`() {
+    fun columnsWithDefaultValuesThatAreWhitespacesShouldNotBeTreatedAsEmptyStrings() {
         val tableWhitespaceDefaultVarchar = StringFieldTable("varchar_whitespace_test", false, " ")
 
         val tableWhitespaceDefaultText = StringFieldTable("text_whitespace_test", true, " ")
@@ -340,10 +335,9 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         val tableEmptyStringDefaultText = StringFieldTable("text_whitespace_test", true, "")
 
         // SQLite doesn't support alter table with add column, so it doesn't generate the statements, hence excluded
-        // TODO probably could be fixed for MySql 8
-        withDb(excludeSettings = listOf(TestDB.SQLITE, TestDB.MYSQL_V8)) { testDb ->
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             // MySQL doesn't support default values on text columns, hence excluded
-            val supportsTextDefault = testDb !in listOf(TestDB.MYSQL_V5)
+            val supportsTextDefault = testDb !in TestDB.ALL_MYSQL
             val tablesToTest = listOfNotNull(
                 tableWhitespaceDefaultVarchar to tableEmptyStringDefaultVarchar,
                 (tableWhitespaceDefaultText to tableEmptyStringDefaultText).takeIf { supportsTextDefault },

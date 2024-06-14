@@ -564,12 +564,18 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
 
-        // TODO probably could be fixed for MySql 8
-        withDb(excludeSettings = listOf(TestDB.MYSQL_V8)) { testDb ->
+        withDb { testDb ->
+            val functionsNotSupported = testDb in TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+
             val tableProperName = tester.tableName.inProperCase()
             val priceColumnName = tester.price.nameInDatabaseCase()
             val uniqueIndexName = "tester_price_coalesce${if (testDb == TestDB.SQLITE) "" else "_unique"}".inProperCase()
-            val (p1, p2) = if (testDb == TestDB.MYSQL_V5) "(" to ")" else "" to ""
+            val (p1, p2) = when (testDb) {
+                // MySql 8 requires double parenthesis on function index in order to differentiate it from columns
+                // https://dev.mysql.com/doc/refman/8.0/en/create-index.html#create-index-functional-key-parts
+                TestDB.MYSQL_V8 -> "(" to ")"
+                else -> "" to ""
+            }
             val functionStrings = when (testDb) {
                 TestDB.SQLITE, TestDB.ORACLE -> listOf("(amount + price)", "LOWER(item)", "COALESCE(item, '*')").map(String::inProperCase)
                 else -> listOf(
@@ -579,7 +585,6 @@ class DDLTests : DatabaseTestsBase() {
                 )
             }
 
-            val functionsNotSupported = testDb in (TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MARIADB) || isOldMySql()
             val expectedStatements = if (functionsNotSupported) {
                 List(3) { "" }
             } else {
@@ -874,27 +879,25 @@ class DDLTests : DatabaseTestsBase() {
             val negative = integer("negative").check("subZero") { it less 0 }
         }
 
-        withTables(checkTable) {
-            if (!isOldMySql()) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), checkTable) {
+            checkTable.insert {
+                it[positive] = 42
+                it[negative] = -14
+            }
+
+            assertEquals(1L, checkTable.selectAll().count())
+
+            assertFailAndRollback("Check constraint 1") {
                 checkTable.insert {
-                    it[positive] = 42
-                    it[negative] = -14
+                    it[positive] = -472
+                    it[negative] = -354
                 }
+            }
 
-                assertEquals(1L, checkTable.selectAll().count())
-
-                assertFailAndRollback("Check constraint 1") {
-                    checkTable.insert {
-                        it[positive] = -472
-                        it[negative] = -354
-                    }
-                }
-
-                assertFailAndRollback("Check constraint 2") {
-                    checkTable.insert {
-                        it[positive] = 538
-                        it[negative] = 915
-                    }
+            assertFailAndRollback("Check constraint 2") {
+                checkTable.insert {
+                    it[positive] = 538
+                    it[negative] = 915
                 }
             }
         }
@@ -911,27 +914,25 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
 
-        withTables(checkTable) {
-            if (!isOldMySql()) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), checkTable) {
+            checkTable.insert {
+                it[positive] = 57
+                it[negative] = -32
+            }
+
+            assertEquals(1L, checkTable.selectAll().count())
+
+            assertFailAndRollback("Check constraint 1") {
                 checkTable.insert {
-                    it[positive] = 57
-                    it[negative] = -32
+                    it[positive] = -47
+                    it[negative] = -35
                 }
+            }
 
-                assertEquals(1L, checkTable.selectAll().count())
-
-                assertFailAndRollback("Check constraint 1") {
-                    checkTable.insert {
-                        it[positive] = -47
-                        it[negative] = -35
-                    }
-                }
-
-                assertFailAndRollback("Check constraint 2") {
-                    checkTable.insert {
-                        it[positive] = 53
-                        it[negative] = 91
-                    }
+            assertFailAndRollback("Check constraint 2") {
+                checkTable.insert {
+                    it[positive] = 53
+                    it[negative] = 91
                 }
             }
         }
@@ -950,7 +951,7 @@ class DDLTests : DatabaseTestsBase() {
                 createStatement() to dropStatement()
             }
 
-            if (testDb == TestDB.SQLITE || isOldMySql()) { // cannot alter existing check constraint
+            if (testDb in listOf(TestDB.SQLITE, TestDB.MYSQL_V5)) { // cannot alter existing check constraint
                 assertTrue(createConstraint.isEmpty() && dropConstraint.isEmpty())
             } else {
                 val negative = -9

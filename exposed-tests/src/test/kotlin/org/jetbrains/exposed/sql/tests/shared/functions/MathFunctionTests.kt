@@ -127,7 +127,7 @@ class MathFunctionTests : FunctionsTestBase() {
             assertExpressionEqual(BigDecimal("11.2"), SqrtFunction(decimalLiteral(BigDecimal("125.44"))))
 
             when (testDb) {
-                TestDB.MYSQL_V5, TestDB.MYSQL_V8, TestDB.MARIADB, TestDB.SQLITE -> {
+                in (TestDB.ALL_MYSQL_MARIADB + TestDB.SQLITE) -> {
                     assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                 }
                 else -> {

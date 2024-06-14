@@ -153,7 +153,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testPreviousUShortColumnTypeWorksWithNewIntType() {
-        withDb(excludeSettings = listOf(TestDB.MYSQL_V5, TestDB.MARIADB)) { testDb ->
+        withDb { testDb ->
             try {
                 val tableName = UShortTable.nameInDatabaseCase()
                 val columnName = UShortTable.unsignedShort.nameInDatabaseCase()
@@ -231,7 +231,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun testPreviousUIntColumnTypeWorksWithNewBigIntType() {
         // Oracle was already previously constrained to NUMBER(13)
-        withDb(excludeSettings = listOf(TestDB.MYSQL_V5, TestDB.MARIADB, TestDB.ORACLE)) { testDb ->
+        withDb(excludeSettings = listOf(TestDB.ORACLE)) { testDb ->
             try {
                 val tableName = UIntTable.nameInDatabaseCase()
                 val columnName = UIntTable.unsignedInt.nameInDatabaseCase()
