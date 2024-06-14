@@ -133,6 +133,7 @@ public abstract class org/jetbrains/exposed/dao/EntityClass {
 	public final fun get (Lorg/jetbrains/exposed/dao/id/EntityID;)Lorg/jetbrains/exposed/dao/Entity;
 	public fun getDependsOnColumns ()Ljava/util/List;
 	public fun getDependsOnTables ()Lorg/jetbrains/exposed/sql/ColumnSet;
+	public fun getRestriction ()Lorg/jetbrains/exposed/sql/Op;
 	public final fun getTable ()Lorg/jetbrains/exposed/dao/id/IdTable;
 	public final fun isAssignableTo (Lorg/jetbrains/exposed/dao/EntityClass;)Z
 	public final fun memoizedTransform (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/ColumnWithTransform;
