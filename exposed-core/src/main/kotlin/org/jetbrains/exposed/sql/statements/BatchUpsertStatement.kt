@@ -43,16 +43,12 @@ open class BatchUpsertStatement(
     }
 
     override fun arguments(): List<Iterable<Pair<IColumnType<*>, Any?>>> {
-        return arguments?.map { args ->
-            val builder = QueryBuilder(true)
-            args.filter { (_, value) ->
-                value != DefaultValueMarker
-            }.forEach { (column, value) ->
-                builder.registerArgument(column, value)
-            }
-            where?.toQueryBuilder(builder)
-            builder.args
-        } ?: emptyList()
+        val whereArgs = QueryBuilder(true).apply {
+            where?.toQueryBuilder(this)
+        }.args
+        return super.arguments().map {
+            it + whereArgs
+        }
     }
 
     override fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {

@@ -23,7 +23,7 @@ class ReturningTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertReturning() {
-        withTables(TestDB.enabledDialects() - returningSupportedDb, Items) {
+        withTables(TestDB.ALL - returningSupportedDb, Items) {
             // return all columns by default
             val result1 = Items.insertReturning {
                 it[name] = "A"
@@ -50,7 +50,7 @@ class ReturningTests : DatabaseTestsBase() {
 
     @Test
     fun testUpsertReturning() {
-        withTables(TestDB.enabledDialects() - returningSupportedDb, Items) {
+        withTables(TestDB.ALL - returningSupportedDb, Items) {
             // return all columns by default
             val result1 = Items.upsertReturning {
                 it[name] = "A"

@@ -101,7 +101,7 @@ class JsonColumnTests : DatabaseTestsBase() {
     fun testWithNonSerializableClass() {
         data class Fake(val number: Int)
 
-        withDb { testDb ->
+        withDb {
             expectException<SerializationException> {
                 // Throws with message: Serializer for class 'Fake' is not found.
                 // Please ensure that class is marked as '@Serializable' and that the serialization compiler plugin is applied.
@@ -305,7 +305,7 @@ class JsonColumnTests : DatabaseTestsBase() {
             val user2 = json<User>("user_2", Json.Default).clientDefault { defaultUser }
         }
 
-        withDb { testDb ->
+        withDb {
             if (isOldMySql()) {
                 expectException<UnsupportedByDialectException> {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
@@ -342,7 +342,7 @@ class JsonColumnTests : DatabaseTestsBase() {
             val intArray = json<IntArray>("int_array", Json.Default)
         }
 
-        withTables(iterables) { testDb ->
+        withTables(iterables) {
             // the logger is left in to test that it does not throw ClassCastException on insertion of iterables
             addLogger(StdOutSqlLogger)
 
@@ -371,7 +371,7 @@ class JsonColumnTests : DatabaseTestsBase() {
             val user = json<User>("user", Json.Default).nullable()
         }
 
-        withTables(tester) { testDb ->
+        withTables(tester) {
             val nullId = tester.insertAndGetId {
                 it[user] = null
             }
@@ -389,7 +389,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonWithUpsert() {
-        withJsonTable(exclude = TestDB.ALL_H2_V1) { tester, _, _, db ->
+        withJsonTable(exclude = TestDB.ALL_H2_V1) { tester, _, _, _ ->
             val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
             val newId = tester.insertAndGetId {
                 it[jsonColumn] = newData
