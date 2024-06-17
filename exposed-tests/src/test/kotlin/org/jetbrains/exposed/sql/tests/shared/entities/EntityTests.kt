@@ -9,12 +9,14 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.*
+import org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.OrderedData.Companion.referrersOn
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -1672,6 +1674,7 @@ class EntityTests : DatabaseTestsBase() {
     class Country(id: EntityID<String>) : Entity<String>(id) {
         var name by Countries.name
         val dishes by Dish referrersOn Dishes.country
+        val topDishes by Dish referrersOn Dishes.country restrictedBy { Dishes.rating greater 8 }
 
         companion object : EntityClass<String, Country>(Countries)
     }
@@ -1679,11 +1682,13 @@ class EntityTests : DatabaseTestsBase() {
     object Dishes : IntIdTable("Dishes") {
         var name = text("name")
         val country = reference("country_id", Countries)
+        val rating = integer("rating").default(5)
     }
 
     class Dish(id: EntityID<Int>) : IntEntity(id) {
         var name by Dishes.name
         var country by Country referencedOn Dishes.country
+        var rating by Dishes.rating
 
         companion object : IntEntityClass<Dish>(Dishes)
     }
@@ -1735,6 +1740,29 @@ class EntityTests : DatabaseTestsBase() {
                     SchemaUtils.drop(Dishes, Countries)
                 }
             }
+        }
+    }
+
+    @Test
+    fun testRestrictedByOnReferrers() {
+        withTables(Countries, Dishes) {
+            val sweden = Country.new("SE") {
+                name = "Sweden"
+            }
+            Dish.new {
+                name = "Meatballs"
+                rating = 9
+                country = sweden
+            }
+            Dish.new {
+                name = "Pickled herring"
+                rating = 3
+                country = sweden
+            }
+
+            val topDishes = sweden.topDishes.toList()
+            assertEquals(1, topDishes.size)
+            assertEquals("Meatballs", topDishes.single().name)
         }
     }
 

@@ -1,12 +1,8 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.LazySizedIterable
-import org.jetbrains.exposed.sql.SizedIterable
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.emptySized
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
@@ -103,6 +99,7 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
 ) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
     /** The list of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
     private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
+    private var restriction: Op<Boolean>? = null
 
     init {
         reference.referee ?: error("Column $reference is not a reference")
@@ -117,9 +114,13 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
         if (thisRef.id._value == null || value == null) return emptySized()
 
         val query = {
+            var predicate = reference eq value
+            restriction?.let {
+                predicate = predicate and it
+            }
             @Suppress("SpreadOperator")
             factory
-                .find { reference eq value }
+                .find { predicate }
                 .orderBy(*orderByExpressions.toTypedArray())
         }
         val transaction = TransactionManager.currentOrNull()
@@ -147,6 +148,10 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
 
     /** Modifies this reference to sort entities based on multiple columns as specified in [order]. **/
     fun orderBy(vararg order: Pair<Expression<*>, SortOrder>) = orderBy(order.toList())
+
+    infix fun restrictedBy(restriction: SqlExpressionBuilder.() -> Op<Boolean>) = apply {
+        this.restriction = SqlExpressionBuilder.run(restriction)
+    }
 }
 
 /**
