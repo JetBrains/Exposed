@@ -46,6 +46,8 @@ class Column<T>(
     /** Returns whether this column's value will be generated in the database. */
     fun isDatabaseGenerated() = isDatabaseGenerated
 
+    internal var extraDefinitions = mutableListOf<Any>()
+
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = TransactionManager.current().fullIdentity(this@Column, queryBuilder)
 
@@ -141,6 +143,10 @@ class Column<T>(
             }
         }
 
+        if (extraDefinitions.isNotEmpty()) {
+            append(extraDefinitions.joinToString(separator = " ", prefix = " ") { "$it" })
+        }
+
         if (columnType.nullable || (defaultValue != null && defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))) {
             append(" NULL")
         } else if (!isPKColumn || (currentDialect is SQLiteDialect && !isSQLiteAutoIncColumn)) {
@@ -164,6 +170,7 @@ class Column<T>(
         it.defaultValueFun = this.defaultValueFun
         it.dbDefaultValue = this.dbDefaultValue
         it.isDatabaseGenerated = this.isDatabaseGenerated
+        it.extraDefinitions = this.extraDefinitions
     }
 
     override fun compareTo(other: Column<*>): Int = comparator.compare(this, other)

@@ -932,7 +932,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Marks a column as `databaseGenerated` if the default value of the column is not known at the time of table creation
      * and/or if it depends on other columns. It makes it possible to omit setting it when inserting a new record,
      * without getting an error.
-     * The value for the column can be set by creating a TRIGGER or with a DEFAULT clause, for example.
+     * The value for the column can be set by creating a TRIGGER or with a DEFAULT clause or
+     * by using GENERATED ALWAYS AS via [Column.withDefinition], for example.
      */
     fun <T> Column<T>.databaseGenerated(): Column<T> = apply {
         isDatabaseGenerated = true
@@ -1169,6 +1170,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         newColumn.dbDefaultValue = dbDefaultValue as Expression<T?>?
         newColumn.isDatabaseGenerated = isDatabaseGenerated
         newColumn.columnType.nullable = true
+        newColumn.extraDefinitions = extraDefinitions
         return replaceColumn(this, newColumn)
     }
 
@@ -1178,6 +1180,17 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         nullable = true
         getRealColumns().filter { !it.columnType.nullable }.forEach { (it as Column<Any>).nullable() }
     } as CompositeColumn<T?>
+
+    /**
+     * Appends a database-specific column [definition] to this column's SQL in a CREATE TABLE statement.
+     *
+     * The specified [definition] is appended after the column's name, type, and default value (if any),
+     * but before any column constraint definitions. If multiple definition arguments are passed, they
+     * will be joined as string representations separated by a single space character.
+     */
+    fun <T> Column<T>.withDefinition(vararg definition: Any): Column<T> = apply {
+        extraDefinitions.addAll(definition)
+    }
 
     // Indices
 
