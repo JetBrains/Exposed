@@ -9,7 +9,6 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
-import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentTestDB
@@ -634,36 +633,39 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertIntoNullableGeneratedColumn() {
-        val generatedTable = object : IntIdTable("generated_table") {
-            val amount = integer("amount").nullable()
-            val computedAmount = integer("computed_amount").nullable().databaseGenerated()
-        }
-
         withDb(excludeSettings = TestDB.ALL_H2_V1) { testDb ->
-            try {
-                if (testDb == TestDB.ORACLE || testDb == TestDB.H2_V2_ORACLE) {
-                    // create sequence for primary key
-                    exec(generatedTable.ddl.first(), explicitStatementType = StatementType.CREATE)
+            val generatedTable = object : IntIdTable("generated_table") {
+                val amount = integer("amount").nullable()
+                val computedAmount = integer("computed_amount").nullable().databaseGenerated().apply {
+                    if (testDb == TestDB.ORACLE || testDb in TestDB.ALL_H2_V2) {
+                        withDefinition("GENERATED ALWAYS AS (AMOUNT + 1)")
+                    } else {
+                        withDefinition("GENERATED ALWAYS AS (AMOUNT + 1) STORED")
+                    }
                 }
+            }
 
-                // Exposed does not currently support creation of generated columns
+            try {
                 val computedName = generatedTable.computedAmount.name.inProperCase()
                 val computedType = generatedTable.computedAmount.columnType.sqlType()
                 val computation = "${generatedTable.amount.name.inProperCase()} + 1"
-                val generatedColumnDescription = when (testDb) {
-                    TestDB.SQLSERVER -> "$computedName AS ($computation)"
-                    TestDB.ORACLE, in TestDB.ALL_H2 -> "$computedName $computedType GENERATED ALWAYS AS ($computation)"
-                    else -> "$computedName $computedType GENERATED ALWAYS AS ($computation) STORED"
-                }
-                exec(
-                    """CREATE TABLE ${addIfNotExistsIfSupported()}${generatedTable.tableName.inProperCase()} (
+
+                val createStatement = """CREATE TABLE ${addIfNotExistsIfSupported()}${generatedTable.tableName.inProperCase()} (
                         ${generatedTable.id.descriptionDdl()},
                         ${generatedTable.amount.descriptionDdl()},
-                        $generatedColumnDescription
-                        )
-                    """.trimIndent(),
-                    explicitStatementType = StatementType.CREATE
-                )
+                """.trimIndent()
+
+                when (testDb) {
+                    // MariaDB does not support GENERATED ALWAYS AS with any null constraint definition
+                    in TestDB.ALL_MARIADB -> {
+                        exec("${createStatement.trimIndent()} $computedName $computedType GENERATED ALWAYS AS ($computation) STORED)")
+                    }
+                    // SQL SERVER only supports the AS variant if column_type is not defined
+                    TestDB.SQLSERVER -> {
+                        exec("${createStatement.trimIndent()} $computedName AS ($computation))")
+                    }
+                    else -> SchemaUtils.create(generatedTable)
+                }
 
                 assertFailAndRollback("Generated columns are auto-derived and read-only") {
                     generatedTable.insert {

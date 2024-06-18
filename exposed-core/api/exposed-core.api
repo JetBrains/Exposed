@@ -2445,6 +2445,7 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public final fun uuid (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun varchar (Ljava/lang/String;ILjava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun varchar$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;ILjava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun withDefinition (Lorg/jetbrains/exposed/sql/Column;[Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 }
 
 public final class org/jetbrains/exposed/sql/Table$Dual : org/jetbrains/exposed/sql/Table {

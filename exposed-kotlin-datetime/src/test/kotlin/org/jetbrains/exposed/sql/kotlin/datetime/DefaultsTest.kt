@@ -576,4 +576,30 @@ class DefaultsTest : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testColumnOnUpdateCurrentTimestamp() {
+        val tester = object : Table("tester") {
+            val amount = integer("amount")
+            val created = timestamp("created").defaultExpression(CurrentTimestamp).withDefinition("ON UPDATE", CurrentTimestamp)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE.toSet(), tester) {
+            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+
+            tester.insert {
+                it[amount] = 999
+            }
+            val generatedTS = tester.select(tester.created).single()[tester.created]
+
+            Thread.sleep(1000)
+
+            tester.update {
+                it[amount] = 111
+            }
+
+            val updatedResult = tester.selectAll().where { tester.created greater generatedTS }.single()
+            assertTrue { updatedResult[tester.created] > generatedTS }
+        }
+    }
 }
