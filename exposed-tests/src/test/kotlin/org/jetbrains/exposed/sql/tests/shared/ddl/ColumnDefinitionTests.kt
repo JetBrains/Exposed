@@ -4,11 +4,9 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.junit.Test
 import java.sql.SQLException
 import kotlin.test.assertContains
