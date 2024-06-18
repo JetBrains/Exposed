@@ -20,7 +20,9 @@ object LongIdTables {
 
     class City(id: EntityID<Long>) : LongEntity(id) {
         companion object : LongEntityClass<City>(Cities)
+
         var name by Cities.name
+        val towns by Town referrersOn Towns.cityId
     }
 
     object People : LongIdTable() {
@@ -30,6 +32,7 @@ object LongIdTables {
 
     class Person(id: EntityID<Long>) : LongEntity(id) {
         companion object : LongEntityClass<Person>(People)
+
         var name by People.name
         var city by City referencedOn People.cityId
     }
@@ -40,9 +43,11 @@ object LongIdTables {
 
     class Town(id: EntityID<Long>) : LongEntity(id) {
         companion object : LongEntityClass<Town>(Towns)
+
         var city by City referencedOn Towns.cityId
     }
 }
+
 class LongIdTableEntityTest : DatabaseTestsBase() {
     @Test
     fun `create tables`() {
@@ -129,6 +134,10 @@ class LongIdTableEntityTest : DatabaseTestsBase() {
             // eager loaded reference
             val town1WithCity = LongIdTables.Town.all().with(LongIdTables.Town::city).single()
             assertEquals(cId, town1WithCity.city.id)
+
+            val city1 = LongIdTables.City.all().single()
+            val towns = city1.towns
+            assertEquals(cId, towns.first().city.id)
         }
     }
 }

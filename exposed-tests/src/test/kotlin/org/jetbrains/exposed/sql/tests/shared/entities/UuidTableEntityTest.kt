@@ -24,6 +24,7 @@ object UUIDTables {
         companion object : UUIDEntityClass<City>(Cities)
 
         var name by Cities.name
+        val towns by Town referrersOn Towns.cityId
     }
 
     object People : UUIDTable() {
@@ -58,6 +59,7 @@ object UUIDTables {
 
     class Town(id: EntityID<UUID>) : UUIDEntity(id) {
         companion object : UUIDEntityClass<Town>(Towns)
+
         var city by City referencedOn Towns.cityId
     }
 }
@@ -179,6 +181,10 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
             // eager loaded reference
             val town1WithCity = UUIDTables.Town.all().with(UUIDTables.Town::city).single()
             assertEquals(cId, town1WithCity.city.id)
+
+            val city1 = UUIDTables.City.all().single()
+            val towns = city1.towns
+            assertEquals(cId, towns.first().city.id)
         }
     }
 }

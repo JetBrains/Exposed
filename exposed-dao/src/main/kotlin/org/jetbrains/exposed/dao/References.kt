@@ -108,8 +108,17 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     override operator fun getValue(thisRef: Parent, property: KProperty<*>): SizedIterable<Child> {
-        val value = thisRef.run { reference.referee<REF>()!!.lookup() }
+        val value: REF = thisRef.run {
+            val refereeColumn = reference.referee<REF>()!!
+            val refereeValue = refereeColumn.lookup()
+            when {
+                reference.columnType !is EntityIDColumnType<*> && refereeColumn.columnType is EntityIDColumnType<*> ->
+                    (refereeValue as? EntityID<*>)?.let { it.value as? REF } ?: refereeValue
+                else -> refereeValue
+            }
+        }
         if (thisRef.id._value == null || value == null) return emptySized()
 
         val query = {
