@@ -84,22 +84,18 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
     @Test
     fun testColumnDefaultOnNull() {
         val itemA = "Item A"
-        val tester = object : Table("tester") {
-            val amount = integer("amount")
-            var item: Column<String> = varchar("item", 32)
-
-            fun initItemColumn() {
-                (columns as MutableList<Column<*>>).remove(item)
-                item = if (currentDialectTest is H2Dialect) {
-                    varchar("item", 32).default(itemA).withDefinition("DEFAULT ON NULL")
-                } else {
-                    varchar("item", 32).withDefinition("DEFAULT ON NULL", stringLiteral(itemA))
-                }
-            }
-        }
 
         withDb(TestDB.ALL_H2_V2 + TestDB.ORACLE) { testDb ->
-            tester.initItemColumn()
+            val tester = object : Table("tester") {
+                val amount = integer("amount")
+                val item = varchar("item", 32).apply {
+                    if (testDb == TestDB.ORACLE) {
+                        withDefinition("DEFAULT ON NULL", stringLiteral(itemA))
+                    } else {
+                        default(itemA).withDefinition("DEFAULT ON NULL")
+                    }
+                }
+            }
             SchemaUtils.create(tester)
 
             if (testDb != TestDB.ORACLE) {

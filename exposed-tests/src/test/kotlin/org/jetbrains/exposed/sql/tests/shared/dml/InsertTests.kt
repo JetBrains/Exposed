@@ -636,23 +636,18 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertIntoNullableGeneratedColumn() {
-        val generatedTable = object : IntIdTable("generated_table") {
-            val amount = integer("amount").nullable()
-            var computedAmount = integer("computed_amount").nullable().databaseGenerated()
-
-            // Exposed does not currently support creation of generated columns
-            fun initComputedColumn() {
-                (columns as MutableList<Column<*>>).remove(computedAmount)
-                computedAmount = integer("computed_amount").nullable().databaseGenerated().apply {
-                    when (currentDialectTest) {
-                        is OracleDialect, is H2Dialect -> withDefinition("GENERATED ALWAYS AS (AMOUNT + 1)")
-                        else -> withDefinition("GENERATED ALWAYS AS (AMOUNT + 1) STORED")
+        withDb(excludeSettings = TestDB.ALL_H2_V1) { testDb ->
+            val generatedTable = object : IntIdTable("generated_table") {
+                val amount = integer("amount").nullable()
+                val computedAmount = integer("computed_amount").nullable().databaseGenerated().apply {
+                    if (testDb == TestDB.ORACLE || testDb in TestDB.ALL_H2_V2) {
+                        withDefinition("GENERATED ALWAYS AS (AMOUNT + 1)")
+                    } else {
+                        withDefinition("GENERATED ALWAYS AS (AMOUNT + 1) STORED")
                     }
                 }
             }
-        }
 
-        withDb(excludeSettings = TestDB.ALL_H2_V1) { testDb ->
             try {
                 val computedName = generatedTable.computedAmount.name.inProperCase()
                 val computedType = generatedTable.computedAmount.columnType.sqlType()
@@ -672,10 +667,7 @@ class InsertTests : DatabaseTestsBase() {
                     TestDB.SQLSERVER -> {
                         exec("${createStatement.trimIndent()} $computedName AS ($computation))")
                     }
-                    else -> {
-                        generatedTable.initComputedColumn()
-                        SchemaUtils.create(generatedTable)
-                    }
+                    else -> SchemaUtils.create(generatedTable)
                 }
 
                 assertFailAndRollback("Generated columns are auto-derived and read-only") {
