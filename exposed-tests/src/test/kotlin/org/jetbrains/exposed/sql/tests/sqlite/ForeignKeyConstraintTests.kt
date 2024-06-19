@@ -185,7 +185,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(excludeSettings = listOf(), category, item) { testDb ->
+        withTables(category, item) { testDb ->
             if (currentDialectTest.supportsOnUpdate) {
                 val constraints = connection.metadata {
                     tableConstraints(listOf(item))
