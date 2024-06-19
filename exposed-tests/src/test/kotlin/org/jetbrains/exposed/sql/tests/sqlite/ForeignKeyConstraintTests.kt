@@ -194,9 +194,10 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
                     list.forEach {
                         // According to the documentation: "NO ACTION: A keyword from standard SQL. For InnoDB, this is equivalent to RESTRICT;"
                         // https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html
-                        if (testDb == TestDB.MYSQL_V5 && currentDialectTest.defaultReferenceOption in listOf(ReferenceOption.RESTRICT, ReferenceOption.NO_ACTION)) {
-                            assertContains(listOf(ReferenceOption.RESTRICT, ReferenceOption.NO_ACTION), it.updateRule)
-                            assertContains(listOf(ReferenceOption.RESTRICT, ReferenceOption.NO_ACTION), it.deleteRule)
+if (testDb == TestDB.MYSQL_V5) {
+    assertEquals(ReferenceOption.NO_ACTION, it.updateRule)
+    assertEquals(ReferenceOption.NO_ACTION, it.deleteRule)
+}
                         } else {
                             assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
                             assertEquals(currentDialectTest.defaultReferenceOption, it.deleteRule)
