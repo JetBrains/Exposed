@@ -64,7 +64,7 @@ subprojects {
         }
     }
 
-    testDb("mysql") {
+    testDb("mysql5") {
         port = 3001
         dialects("MYSQL_V5")
         dependencies {

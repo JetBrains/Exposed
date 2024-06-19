@@ -24,7 +24,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class JsonBColumnTests : DatabaseTestsBase() {
-    private val binaryJsonNotSupportedDB = listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE, TestDB.MYSQL_V5)
+    private val binaryJsonNotSupportedDB = listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)
 
     @Test
     fun testInsertAndSelect() {
@@ -238,7 +238,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val user2 = jsonb<User>("user_2", Json.Default).clientDefault { defaultUser }
         }
 
-        withDb { testDb ->
+        withDb(excludeSettings = listOf(TestDB.MYSQL_V5)) { testDb ->
             if (testDb in binaryJsonNotSupportedDB) {
                 expectException<UnsupportedByDialectException> {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)

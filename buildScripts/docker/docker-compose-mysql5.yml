@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-    mysql:
+    mysql5:
         platform: linux/x86_64
         restart: always
         image: mysql:5.7

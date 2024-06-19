@@ -290,7 +290,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun columnsWithDefaultValuesThatHavenNotChangedShouldnNotTriggerChange() {
+    fun columnsWithDefaultValuesThatHaveNotChangedShouldNotTriggerChange() {
         var table by Delegates.notNull<Table>()
         withDb { testDb ->
             try {

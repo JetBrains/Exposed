@@ -14,7 +14,6 @@ import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assume
 import org.junit.Test
-import kotlin.test.assertContains
 
 class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
@@ -194,10 +193,9 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
                     list.forEach {
                         // According to the documentation: "NO ACTION: A keyword from standard SQL. For InnoDB, this is equivalent to RESTRICT;"
                         // https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html
-if (testDb == TestDB.MYSQL_V5) {
-    assertEquals(ReferenceOption.NO_ACTION, it.updateRule)
-    assertEquals(ReferenceOption.NO_ACTION, it.deleteRule)
-}
+                        if (testDb == TestDB.MYSQL_V5) {
+                            assertEquals(ReferenceOption.NO_ACTION, it.updateRule)
+                            assertEquals(ReferenceOption.NO_ACTION, it.deleteRule)
                         } else {
                             assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
                             assertEquals(currentDialectTest.defaultReferenceOption, it.deleteRule)
