@@ -140,13 +140,12 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `columns with default values that haven't changed shouldn't trigger change`() {
+    fun columnsWithDefaultValuesThatHaveNotChangedShouldNotTriggerChange() {
         var table by Delegates.notNull<Table>()
-        // TODO probably could be fixed for MySql 8
-        withDb(excludeSettings = listOf(TestDB.MYSQL_V8)) { testDb ->
+        withDb { testDb ->
             try {
                 // MySQL doesn't support default values on text columns, hence excluded
-                table = if (testDb != TestDB.MYSQL_V5) {
+                table = if (testDb !in TestDB.ALL_MYSQL) {
                     object : Table("varchar_test") {
                         val varchar = varchar("varchar_column", 255).default(" ")
                         val text = text("text_column").default(" ")

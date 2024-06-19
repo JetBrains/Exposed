@@ -20,15 +20,18 @@ class QueryTimeoutTest : DatabaseTestsBase() {
 
     private fun generateTimeoutStatements(db: TestDB, timeout: Int): String {
         return when (db) {
-            TestDB.MYSQL_V5, TestDB.MARIADB -> "SELECT SLEEP($timeout) = 0;"
-            TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> "SELECT pg_sleep($timeout);"
+            in TestDB.ALL_MYSQL_MARIADB -> "SELECT SLEEP($timeout) = 0;"
+            in TestDB.ALL_POSTGRES -> "SELECT pg_sleep($timeout);"
             TestDB.SQLSERVER -> "WAITFOR DELAY '00:00:$timeout';"
             else -> throw NotImplementedError()
         }
     }
 
-    // TODO probably could be fixed for MySql 8, 5
-    private val timeoutTestDBList = listOf(TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLSERVER)
+    // MySql V5 is excluded now due to error: "java.lang.NoClassDefFoundError: com/mysql/cj/jdbc/exceptions/MySQLTimeoutException"
+    // Looks like it tries to load class from the V8 version of driver.
+    // Probably it happens because of driver mapping configuration in org.jetbrains.exposed.sql.Database::driverMapping
+    // that expects that all the versions of the Driver have the same package.
+    private val timeoutTestDBList = TestDB.ALL_MARIADB + TestDB.ALL_POSTGRES + TestDB.SQLSERVER + TestDB.MYSQL_V8
 
     @Test
     fun timeoutStatements() {
@@ -85,9 +88,9 @@ class QueryTimeoutTest : DatabaseTestsBase() {
                     // PostgreSQL throws a regular PSQLException with a minus timeout value
                     TestDB.POSTGRESQL -> assertTrue(cause.cause is PSQLException)
                     // MySQL, POSTGRESQLNG throws a regular SQLException with a minus timeout value
-                    TestDB.MYSQL_V5, TestDB.POSTGRESQLNG -> assertTrue(cause.cause is SQLException)
+                    in (TestDB.ALL_MYSQL + TestDB.POSTGRESQLNG) -> assertTrue(cause.cause is SQLException)
                     // MariaDB throws a regular SQLSyntaxErrorException with a minus timeout value
-                    TestDB.MARIADB -> assertTrue(cause.cause is SQLSyntaxErrorException)
+                    in TestDB.ALL_MARIADB -> assertTrue(cause.cause is SQLSyntaxErrorException)
                     // SqlServer throws a regular SQLServerException with a minus timeout value
                     TestDB.SQLSERVER -> assertTrue(cause.cause is SQLServerException)
                     else -> throw NotImplementedError()

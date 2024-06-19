@@ -11,8 +11,7 @@ import java.util.*
 
 class ReplaceTests : DatabaseTestsBase() {
 
-    private val mysqlLikeDialects = listOf(TestDB.MYSQL_V5, TestDB.MARIADB, TestDB.H2_V2_MYSQL, TestDB.H2_V2_MARIADB)
-    private val replaceNotSupported = TestDB.ALL - mysqlLikeDialects - TestDB.SQLITE
+    private val replaceNotSupported = TestDB.ALL - TestDB.ALL_MYSQL_LIKE - TestDB.SQLITE + TestDB.ALL_H2_V1
 
     private object NewAuth : Table("new_auth") {
         val username = varchar("username", 16)
@@ -112,7 +111,7 @@ class ReplaceTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(replaceNotSupported, tester) { db ->
+        withTables(replaceNotSupported, tester) {
             tester.replace { }
 
             assertEquals(1, tester.selectAll().count())

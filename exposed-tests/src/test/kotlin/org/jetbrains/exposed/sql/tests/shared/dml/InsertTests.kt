@@ -253,7 +253,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertWithPredefinedId() {
+    @Test
+    fun testInsertWithPredefinedId() {
         val stringTable = object : IdTable<String>("stringTable") {
             override val id = varchar("id", 15).entityId()
             val name = varchar("name", 10)
@@ -279,7 +280,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertWithForeignId() {
+    @Test
+    fun testInsertWithForeignId() {
         val idTable = object : IntIdTable("idTable") {}
         val standardTable = object : Table("standardTable") {
             val externalId = reference("externalId", idTable.id)
@@ -296,7 +298,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertWithExpression() {
+    @Test
+    fun testInsertWithExpression() {
         val tbl = object : IntIdTable("testInsert") {
             val nullableInt = integer("nullableIntCol").nullable()
             val string = varchar("stringCol", 20)
@@ -332,7 +335,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertWithColumnExpression() {
+    @Test
+    fun testInsertWithColumnExpression() {
         val tbl1 = object : IntIdTable("testInsert1") {
             val string1 = varchar("stringCol", 20)
         }
@@ -372,7 +376,8 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     // https://github.com/JetBrains/Exposed/issues/192
-    @Test fun testInsertWithColumnNamedWithKeyword() {
+    @Test
+    fun testInsertWithColumnNamedWithKeyword() {
         withTables(OrderedDataTable) {
             val foo = OrderedData.new {
                 name = "foo"
@@ -387,14 +392,15 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertEmojis() {
+    @Test
+    fun testInsertEmojis() {
         val table = object : Table("tmp") {
             val emoji = varchar("emoji", 16)
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.ORACLE, table) {
-            if (isOldMySql()) {
+        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLSERVER, table) { testDb ->
+            if (testDb == TestDB.MYSQL_V5) {
                 exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
             }
             table.insert {
@@ -405,7 +411,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertEmojisWithInvalidLength() {
+    @Test
+    fun testInsertEmojisWithInvalidLength() {
         val table = object : Table("tmp") {
             val emoji = varchar("emoji", 10)
         }
@@ -436,7 +443,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `test subquery in an insert or update statement`() {
+    @Test
+    fun `test subquery in an insert or update statement`() {
         val tab1 = object : Table("tab1") {
             val id = varchar("id", 10)
         }
@@ -465,7 +473,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testGeneratedKey04() {
+    @Test
+    fun testGeneratedKey04() {
         val charIdTable = object : IdTable<String>("charId") {
             override val id = varchar("id", 50)
                 .clientDefault { UUID.randomUUID().toString() }
@@ -553,7 +562,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `test optReference allows null values`() {
+    @Test
+    fun `test optReference allows null values`() {
         withTables(EntityTests.Posts) {
             val id1 = EntityTests.Posts.insertAndGetId {
                 it[board] = null

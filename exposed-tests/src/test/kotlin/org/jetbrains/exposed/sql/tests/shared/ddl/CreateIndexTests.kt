@@ -269,21 +269,19 @@ class CreateIndexTests : DatabaseTestsBase() {
             }
         }
 
-        val functionsNotSupported = TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MARIADB
+        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
         withTables(excludeSettings = functionsNotSupported, tester) {
-            if (!isOldMySql()) {
-                SchemaUtils.createMissingTablesAndColumns()
-                assertTrue(tester.exists())
+            SchemaUtils.createMissingTablesAndColumns()
+            assertTrue(tester.exists())
 
-                var indices = getIndices(tester)
-                assertEquals(3, indices.size)
+            var indices = getIndices(tester)
+            assertEquals(3, indices.size)
 
-                val dropStatements = indices.map { it.dropStatement().first() }
-                expect(Unit) { execInBatch(dropStatements) }
+            val dropStatements = indices.map { it.dropStatement().first() }
+            expect(Unit) { execInBatch(dropStatements) }
 
-                indices = getIndices(tester)
-                assertEquals(0, indices.size)
-            }
+            indices = getIndices(tester)
+            assertEquals(0, indices.size)
         }
     }
 

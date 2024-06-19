@@ -148,7 +148,7 @@ class JsonColumnTests : DatabaseTestsBase() {
     }
 
     private val jsonContainsNotSupported = TestDB.entries -
-        listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.MYSQL_V5, TestDB.MARIADB)
+        (TestDB.ALL_POSTGRES + TestDB.ALL_MARIADB + TestDB.MYSQL_V5)
 
     @Test
     fun testJsonContains() {
@@ -222,7 +222,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExtractWithArrays() {
-        withJsonArrays(exclude = TestDB.ALL_H2) { tester, singleId, _, _ ->
+        withJsonArrays(exclude = TestDB.ALL_H2) { tester, singleId, _, testDb ->
             val path1 = if (currentDialectTest is PostgreSQLDialect) {
                 arrayOf("users", "0", "team")
             } else {
@@ -232,8 +232,9 @@ class JsonColumnTests : DatabaseTestsBase() {
             assertEquals(singleId, tester.selectAll().where { firstIsOnTeamA }.single()[tester.id])
 
             // older MySQL and MariaDB versions require non-scalar extracted value from JSON Array
+            val toScalar = testDb != TestDB.MYSQL_V5
             val path2 = if (currentDialectTest is PostgreSQLDialect) "0" else "[0]"
-            val firstNumber = tester.numbers.extract<Int>(path2, toScalar = !isOldMySql())
+            val firstNumber = tester.numbers.extract<Int>(path2, toScalar = toScalar)
             assertEqualCollections(listOf(100, 3), tester.select(firstNumber).map { it[firstNumber] })
         }
     }
@@ -305,8 +306,8 @@ class JsonColumnTests : DatabaseTestsBase() {
             val user2 = json<User>("user_2", Json.Default).clientDefault { defaultUser }
         }
 
-        withDb {
-            if (isOldMySql()) {
+        withDb { testDb ->
+            if (testDb == TestDB.MYSQL_V5) {
                 expectException<UnsupportedByDialectException> {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }

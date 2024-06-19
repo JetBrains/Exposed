@@ -45,7 +45,7 @@ object JsonTestsData {
 }
 
 fun DatabaseTestsBase.withJsonTable(
-    exclude: List<TestDB> = emptyList(),
+    exclude: Collection<TestDB> = emptyList(),
     statement: Transaction.(tester: JsonTestsData.JsonTable, user1: User, data1: DataHolder, testDb: TestDB) -> Unit
 ) {
     val tester = JsonTestsData.JsonTable
@@ -61,7 +61,7 @@ fun DatabaseTestsBase.withJsonTable(
 }
 
 fun DatabaseTestsBase.withJsonBTable(
-    exclude: List<TestDB> = emptyList(),
+    exclude: Collection<TestDB> = emptyList(),
     statement: Transaction.(tester: JsonTestsData.JsonBTable, user1: User, data1: DataHolder, testDb: TestDB) -> Unit
 ) {
     val tester = JsonTestsData.JsonBTable
@@ -77,7 +77,7 @@ fun DatabaseTestsBase.withJsonBTable(
 }
 
 fun DatabaseTestsBase.withJsonArrays(
-    exclude: List<TestDB> = emptyList(),
+    exclude: Collection<TestDB> = emptyList(),
     statement: Transaction.(
         tester: JsonTestsData.JsonArrays,
         singleId: EntityID<Int>,
@@ -102,7 +102,7 @@ fun DatabaseTestsBase.withJsonArrays(
 }
 
 fun DatabaseTestsBase.withJsonBArrays(
-    exclude: List<TestDB> = emptyList(),
+    exclude: Collection<TestDB> = emptyList(),
     statement: Transaction.(
         tester: JsonTestsData.JsonBArrays,
         singleId: EntityID<Int>,

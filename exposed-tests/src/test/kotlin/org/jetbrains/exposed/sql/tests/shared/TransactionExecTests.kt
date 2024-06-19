@@ -58,10 +58,10 @@ class TransactionExecTests : DatabaseTestsBase() {
 
     @Test
     fun testExecWithMultiStatementQueryUsingMySQL() {
-        Assume.assumeTrue(setOf(TestDB.MYSQL_V5, TestDB.MARIADB).containsAll(TestDB.enabledDialects()))
+        Assume.assumeTrue(TestDB.ALL_MYSQL_MARIADB.containsAll(TestDB.enabledDialects()))
 
         val dialect = TestDB.enabledDialects().first()
-        val extra = if (dialect == TestDB.MARIADB) "?" else ""
+        val extra = if (dialect in TestDB.ALL_MARIADB) "?" else ""
         val db = Database.connect(
             dialect.connection.invoke().plus("$extra&allowMultiQueries=true"),
             dialect.driver,

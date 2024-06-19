@@ -6,12 +6,10 @@ import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Assume
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-import java.math.BigDecimal
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -79,7 +77,7 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withDb(db: List<TestDB>? = null, excludeSettings: Collection<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
+    fun withDb(db: Collection<TestDB>? = null, excludeSettings: Collection<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
         if (db != null && dialect !in db) {
             Assume.assumeFalse(true)
             return
@@ -166,9 +164,7 @@ abstract class DatabaseTestsBase {
         ""
     }
 
-    fun withH2V1(testDB: List<TestDB>) = (testDB + TestDB.ALL_H2_V1).toSet()
-
-    fun Transaction.isOldMySql(version: String = "8.0") = currentDialectTest is MysqlDialect && !db.isVersionCovers(BigDecimal(version))
+    fun withH2V1(testDB: Collection<TestDB>) = (testDB + TestDB.ALL_H2_V1).toSet()
 
     protected fun prepareSchemaForTest(schemaName: String): Schema = Schema(
         schemaName,

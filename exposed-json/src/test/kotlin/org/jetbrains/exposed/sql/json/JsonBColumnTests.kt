@@ -24,7 +24,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class JsonBColumnTests : DatabaseTestsBase() {
-    private val binaryJsonNotSupportedDB = TestDB.ALL_H2_V1 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE
+    private val binaryJsonNotSupportedDB = listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.ORACLE)
 
     @Test
     fun testInsertAndSelect() {
@@ -55,7 +55,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWithSliceExtract() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, user1, data1, _ ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, user1, data1, _ ->
             val pathPrefix = if (currentDialectTest is PostgreSQLDialect) "" else "."
             val isActive = tester.jsonBColumn.extract<Boolean>("${pathPrefix}active", toScalar = false)
             val result1 = tester.select(isActive).singleOrNull()
@@ -74,7 +74,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWhereWithExtract() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, _, data1, _ ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, _, data1, _ ->
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = data1.copy(logins = 1000)
             }
@@ -97,7 +97,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
         val dataTable = JsonTestsData.JsonBTable
         val dataEntity = JsonTestsData.JsonBEntity
 
-        withTables(excludeSettings = binaryJsonNotSupportedDB, dataTable) { testDb ->
+        withTables(excludeSettings = binaryJsonNotSupportedDB + TestDB.ALL_H2_V1, dataTable) { testDb ->
             val dataA = DataHolder(User("Admin", "Alpha"), 10, true, null)
             val newUser = dataEntity.new {
                 jsonBColumn = dataA
@@ -127,7 +127,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonContains() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, user1, data1, testDb ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, user1, data1, testDb ->
             val alphaTeamUser = user1.copy(team = "Alpha")
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = data1.copy(user = alphaTeamUser)
@@ -151,7 +151,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExists() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, _, data1, testDb ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, _, data1, testDb ->
             val maximumLogins = 1000
             val teamA = "A"
             val newId = tester.insertAndGetId {
@@ -187,7 +187,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExtractWithArrays() {
-        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, singleId, _, _ ->
+        withJsonBArrays(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, singleId, _, testDb ->
             val path1 = if (currentDialectTest is PostgreSQLDialect) {
                 arrayOf("users", "0", "team")
             } else {
@@ -197,8 +197,9 @@ class JsonBColumnTests : DatabaseTestsBase() {
             assertEquals(singleId, tester.selectAll().where { firstIsOnTeamA }.single()[tester.id])
 
             // older MySQL and MariaDB versions require non-scalar extracted value from JSON Array
+            val toScalar = testDb != TestDB.MYSQL_V5
             val path2 = if (currentDialectTest is PostgreSQLDialect) "0" else "[0]"
-            val firstNumber = tester.numbers.extract<Int>(path2, toScalar = !isOldMySql())
+            val firstNumber = tester.numbers.extract<Int>(path2, toScalar = toScalar)
             assertEqualCollections(listOf(100, 3), tester.select(firstNumber).map { it[firstNumber] })
         }
     }
@@ -237,8 +238,8 @@ class JsonBColumnTests : DatabaseTestsBase() {
             val user2 = jsonb<User>("user_2", Json.Default).clientDefault { defaultUser }
         }
 
-        withDb(excludeSettings = binaryJsonNotSupportedDB) {
-            if (isOldMySql()) {
+        withDb(excludeSettings = listOf(TestDB.MYSQL_V5)) { testDb ->
+            if (testDb in binaryJsonNotSupportedDB) {
                 expectException<UnsupportedByDialectException> {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
@@ -321,7 +322,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonBWithUpsert() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB) { tester, _, _, _ ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V1) { tester, _, _, _ ->
             val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = newData
