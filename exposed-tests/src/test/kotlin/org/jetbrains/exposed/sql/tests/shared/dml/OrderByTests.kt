@@ -198,4 +198,67 @@ class OrderByTests : DatabaseTestsBase() {
             assertOrdered(listOf(3, 1, 2, 4), SortOrder.ASC_NULLS_FIRST) // null, a, b, c
         }
     }
+
+    @Test
+    fun testOrderByQuery() {
+        val box = object : Table("OrderByQueryBox") {
+            val id = integer("id")
+
+            override val primaryKey: PrimaryKey = PrimaryKey(id)
+        }
+        val coin = object : Table("OrderByQueryCoin") {
+            val boxId = integer("box_id").references(box.id)
+            val cost = integer("cost")
+        }
+
+        withTables(box, coin) {
+            val coinBoxes = listOf(
+                listOf(1, 2, 3, 4, 5), // sum: 15
+                listOf(6), // sum: 6
+                listOf(7, 8, 9, 10) // sum: 34
+            )
+
+            coinBoxes.forEachIndexed { index, coins ->
+                box.insert { it[id] = index }
+                coins.forEach { cost ->
+                    coin.insert {
+                        it[coin.boxId] = index
+                        it[coin.cost] = cost
+                    }
+                }
+            }
+
+            // Variant 1
+            // SELECT OrderByQueryBox.id, (SELECT SUM(OrderByQueryCoin.cost)
+            //   FROM OrderByQueryCoin WHERE OrderByQueryBox.id = OrderByQueryCoin.box_id) cost_sum FROM OrderByQueryBox
+            //   ORDER BY cost_sum ASC
+            val expressionAlias = coin.select(coin.cost.sum()).where { coin.boxId eq box.id }.expression(coin.cost).alias("cost_sum")
+
+            val variant1Asc = box.select(box.id, expressionAlias)
+                .orderBy(expressionAlias, SortOrder.ASC)
+                .map { it[box.id] }
+            assertEqualLists(listOf(1, 0, 2), variant1Asc)
+
+            val variant1Desc = box.select(box.id, expressionAlias)
+                .orderBy(expressionAlias, SortOrder.DESC)
+                .map { it[box.id] }
+            assertEqualLists(listOf(2, 0, 1), variant1Desc)
+
+            // Variant 2
+            // SELECT OrderByQueryBox.id
+            //   FROM OrderByQueryBox
+            //   ORDER BY (SELECT SUM(OrderByQueryCoin.cost) FROM OrderByQueryCoin WHERE OrderByQueryBox.id = OrderByQueryCoin.box_id) DESC
+            val expression = coin.select(coin.cost.sum()).where { coin.boxId eq box.id }.expression(coin.cost)
+
+            val variant2Asc = box.select(box.id)
+                .orderBy(expression, SortOrder.ASC)
+                .map { it[box.id] }
+            assertEqualLists(listOf(1, 0, 2), variant2Asc)
+
+            val variant2Desc = box.select(box.id)
+                .orderBy(expression, SortOrder.DESC)
+                .map { it[box.id] }
+            assertEqualLists(listOf(2, 0, 1), variant2Desc)
+        }
+    }
 }

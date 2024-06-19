@@ -232,4 +232,28 @@ class AliasesTests : DatabaseTestsBase() {
             assertEquals(foreignKey, aliasForeignKey)
         }
     }
+
+    @Test
+    fun testAccessDataByQueryExpressionAlias() {
+        val stables = object : UUIDTable("Stables") {}
+
+        val facilities = object : UUIDTable("Facilities") {
+            val stableId = reference("stable_id", stables)
+        }
+
+        withTables(stables, facilities) {
+            val countExpression = facilities.id.count()
+            val countSubquery = facilities
+                .select(countExpression)
+                .where { facilities.stableId eq stables.id }
+                .expression(countExpression)
+                .alias("count_query")
+
+            val stableId = stables.insertAndGetId { }
+            repeat(4) { facilities.insert { it[facilities.stableId] = stableId } }
+
+            val count: Long = stables.select(countSubquery).map { it[countSubquery] }.first()
+            assertEquals(4, count)
+        }
+    }
 }

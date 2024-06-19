@@ -158,6 +158,32 @@ fun <T : Table> T.alias(alias: String) = Alias(this, alias)
 fun <T : AbstractQuery<*>> T.alias(alias: String) = QueryAlias(this, alias)
 
 /**
+ * Creates an instance of [QueryExpression] that can be used among other [Expression]s.
+ *
+ * Known usages are:
+ * - inside `SELECT` clause of query like `SELECT (SELECT ...) FROM table`
+ * - inside `ORDER BY` clause of query like `SELECT * FROM table ORDER BY (SELECT ...)`
+ *
+ * [QueryExpression] can be also aliased to get [ExpressionAlias] and used like other expression aliases.
+ *
+ * Example: `box.select(box.id).orderBy(coin.select(coin.cost.sum()).where { coin.boxId eq box.id }.expression(coin.cost))`
+ */
+fun <T : AbstractQuery<*>, P : Any> T.expression(type: ExpressionWithColumnType<P>) = QueryExpression(this, type.columnType)
+
+/**
+ * Creates an instance of [QueryExpression] that can be used among other [Expression]s.
+ *
+ * Known usages are:
+ * - inside `SELECT` clause of query like `SELECT (SELECT ...) FROM table`
+ * - inside `ORDER BY` clause of query like `SELECT * FROM table ORDER BY (SELECT ...)`
+ *
+ * [QueryExpression] can be also aliased to get [ExpressionAlias] and used like other expression aliases.
+ *
+ * Example: `box.select(box.id).orderBy(coin.select(coin.cost.sum()).where { coin.boxId eq box.id }.expression(coin.cost.columnType))`
+ */
+fun <T : AbstractQuery<*>, P : Any> T.expression(type: IColumnType<P>) = QueryExpression(this, type)
+
+/**
  * Creates a temporary identifier, [alias], for [this] expression.
  *
  * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
