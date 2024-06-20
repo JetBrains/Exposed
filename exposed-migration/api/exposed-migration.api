@@ -1,0 +1,16 @@
+public final class ExposedMigrationException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/Exception;Ljava/lang/String;)V
+}
+
+public final class MigrationUtils {
+	public static final field INSTANCE LMigrationUtils;
+	public final fun generateMigrationScript ([Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)Ljava/io/File;
+	public final fun generateMigrationScript ([Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Z)Ljava/io/File;
+	public static synthetic fun generateMigrationScript$default (LMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
+	public static synthetic fun generateMigrationScript$default (LMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
+	public final fun migrate (Lorg/jetbrains/exposed/sql/Database;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V
+	public final fun migrate (Lorg/jetbrains/exposed/sql/Database;[Lorg/jetbrains/exposed/sql/Table;Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V
+	public static synthetic fun migrate$default (LMigrationUtils;Lorg/jetbrains/exposed/sql/Database;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)V
+	public static synthetic fun migrate$default (LMigrationUtils;Lorg/jetbrains/exposed/sql/Database;[Lorg/jetbrains/exposed/sql/Table;Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)V
+}
+
