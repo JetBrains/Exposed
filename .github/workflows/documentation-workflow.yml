@@ -1,6 +1,6 @@
 name: Build documentation website
 
-on: [workflow_run]
+on: [workflow_dispatch]
   
 permissions:
   id-token: write
