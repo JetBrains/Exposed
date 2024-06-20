@@ -21,7 +21,7 @@ postgreNG = "0.8.9"
 sqlLite3 = "3.46.0.0"
 sqlserver = "9.4.1.jre8"
 
-springFramework = "6.1.9"
+springFramework = "6.1.10"
 springBoot = "3.3.0"
 
 spring-security-crypto = "6.2.1"
