@@ -40,7 +40,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             try {
                 SchemaUtils.create(noPKTable)
 
-                val script = SchemaUtils.generateMigrationScript(singlePKTable, scriptDirectory = scriptDirectory, scriptName = scriptName)
+                val script = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = scriptDirectory, scriptName = scriptName)
                 assertTrue(script.exists())
                 assertEquals("src/test/resources/$scriptName.sql", script.path)
 
@@ -86,7 +86,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 }
 
                 // Generate script with the same name of initial script
-                val newScript = SchemaUtils.generateMigrationScript(singlePKTable, scriptDirectory = directory, scriptName = name)
+                val newScript = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = directory, scriptName = name)
 
                 val expectedStatements: List<String> = SchemaUtils.statementsRequiredForDatabaseMigration(singlePKTable)
                 assertEquals(1, expectedStatements.size)
@@ -106,7 +106,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     fun testNoTablesPassedWhenGeneratingMigrationScript() {
         withDb {
             expectException<IllegalArgumentException> {
-                SchemaUtils.generateMigrationScript(scriptDirectory = "src/test/resources", scriptName = "V2__Test")
+                MigrationUtils.generateMigrationScript(scriptDirectory = "src/test/resources", scriptName = "V2__Test")
             }
         }
     }

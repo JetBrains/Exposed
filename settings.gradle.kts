@@ -12,6 +12,7 @@ include("exposed-bom")
 include("exposed-kotlin-datetime")
 include("exposed-crypt")
 include("exposed-json")
+include("exposed-migration")
 
 pluginManagement {
     repositories {
