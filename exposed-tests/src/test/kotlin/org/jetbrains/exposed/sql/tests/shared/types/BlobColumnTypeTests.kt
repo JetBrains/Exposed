@@ -17,6 +17,8 @@ import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.io.SequenceInputStream
 import java.nio.charset.Charset
 import kotlin.random.Random
 import kotlin.test.assertContentEquals
@@ -46,7 +48,12 @@ class BlobColumnTypeTests : DatabaseTestsBase() {
             val shortBytes = "Hello there!".toByteArray()
             val longBytes = Random.nextBytes(1024)
             val shortBlob = ExposedBlob(shortBytes)
-            val longBlob = ExposedBlob(longBytes)
+            val longBlob = ExposedBlob(
+                inputStream = SequenceInputStream(
+                    ByteArrayInputStream(longBytes, 0, 512),
+                    ByteArrayInputStream(longBytes, 512, 512)
+                )
+            )
 
             val id1 = BlobTable.insert {
                 it[content] = shortBlob
