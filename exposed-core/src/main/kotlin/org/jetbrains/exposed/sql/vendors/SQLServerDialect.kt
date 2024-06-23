@@ -2,6 +2,10 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.MergeStatement
+import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.DELETE
+import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.INSERT
+import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.UPDATE
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
@@ -13,8 +17,10 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
             "TINYINT"
         }
     }
+
     override fun integerAutoincType(): String = "INT IDENTITY(1,1)"
     override fun longAutoincType(): String = "BIGINT IDENTITY(1,1)"
+    override fun ulongAutoincType(): String = "NUMERIC(20) IDENTITY(1,1)"
     override fun binaryType(): String {
         exposedLogger.error("The length of the Binary column is missing.")
         error("The length of the Binary column is missing.")
@@ -30,6 +36,7 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
         } else {
             "DATETIMEOFFSET"
         }
+
     override fun booleanType(): String = "BIT"
     override fun booleanToStatementString(bool: Boolean): String = if (bool) "1" else "0"
 
@@ -108,6 +115,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ): Unit = TransactionManager.current().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead.")
 
+    override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("CAST(", expr, " AS DATE)")
+    }
+
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("DATEPART(YEAR, ", expr, ")")
     }
@@ -152,7 +163,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         if (path.size > 1) {
@@ -216,12 +227,13 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
     ): String {
         // SQLSERVER MERGE statement must be terminated by a semi-colon (;)
-        return super.upsert(table, data, onUpdate, where, transaction, *keys) + ";"
+        return super.upsert(table, data, onUpdate, onUpdateExclude, where, transaction, *keys) + ";"
     }
 
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
@@ -231,6 +243,45 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
 
     override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
         return (if (alreadyOrdered) "" else " ORDER BY(SELECT NULL)") + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
+    }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        transaction.throwUnsupportedException(
+            "EXPLAIN queries are not currently supported for SQL Server. Please log a YouTrack feature extension request."
+        )
+    }
+
+    override fun merge(dest: Table, source: Table, transaction: Transaction, clauses: List<MergeStatement.Clause>, on: Op<Boolean>?): String {
+        validateMergeCommandClauses(transaction, clauses)
+        return super.merge(dest, source, transaction, clauses, on) + ";"
+    }
+
+    override fun mergeSelect(
+        dest: Table,
+        source: QueryAlias,
+        transaction: Transaction,
+        clauses: List<MergeStatement.Clause>,
+        on: Op<Boolean>,
+        prepared: Boolean
+    ): String {
+        validateMergeCommandClauses(transaction, clauses)
+        return super.mergeSelect(dest, source, transaction, clauses, on, prepared) + ";"
+    }
+}
+
+private fun validateMergeCommandClauses(transaction: Transaction, clauses: List<MergeStatement.Clause>) {
+    when {
+        clauses.count { it.action == INSERT } > 1 ->
+            transaction.throwUnsupportedException("Multiple insert clauses are not supported by DB")
+        clauses.count { it.action == UPDATE } > 1 ->
+            transaction.throwUnsupportedException("Multiple update clauses are not supported by DB")
+        clauses.count { it.action == DELETE } > 1 ->
+            transaction.throwUnsupportedException("Multiple delete clauses are not supported by DB")
     }
 }
 
@@ -347,6 +398,16 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
 
     // https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql?redirectedfrom=MSDN&view=sql-server-ver15#arguments
     override val likePatternSpecialChars = sqlServerLikePatternSpecialChars
+
+    override fun sequences(): List<String> {
+        val sequences = mutableListOf<String>()
+        TransactionManager.current().exec("SELECT name FROM sys.sequences") { rs ->
+            while (rs.next()) {
+                sequences.add(rs.getString("name"))
+            }
+        }
+        return sequences
+    }
 
     companion object : DialectNameProvider("SQLServer") {
         private val sqlServerLikePatternSpecialChars = mapOf('%' to null, '_' to null, '[' to ']')

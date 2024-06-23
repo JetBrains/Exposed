@@ -55,13 +55,13 @@ abstract class DataTypeProvider {
     open fun longType(): String = "BIGINT"
 
     /** Numeric type for storing 8-byte unsigned integers. */
-    open fun ulongType(): String = "BIGINT"
+    open fun ulongType(): String = "NUMERIC(20)"
 
     /** Numeric type for storing 8-byte integers, and marked as auto-increment. */
     open fun longAutoincType(): String = "BIGINT AUTO_INCREMENT"
 
     /** Numeric type for storing 8-byte unsigned integers, marked as auto-increment. */
-    open fun ulongAutoincType(): String = "BIGINT AUTO_INCREMENT"
+    open fun ulongAutoincType(): String = "NUMERIC(20) AUTO_INCREMENT"
 
     /** Numeric type for storing 4-byte (single precision) floating-point numbers. */
     open fun floatType(): String = "FLOAT"
@@ -137,11 +137,6 @@ abstract class DataTypeProvider {
     open fun jsonBType(): String =
         throw UnsupportedByDialectException("This vendor does not support binary JSON data type", currentDialect)
 
-    /** Data type for arrays with no specified size or element type, used only as types of [QueryParameter]s for PostgreSQL and H2.
-     * An array with no element type cannot be used for storing arrays in a column in either PostgreSQL or H2. */
-    open fun untypedAndUnsizedArrayType(): String =
-        throw UnsupportedByDialectException("This vendor does not support array data type", currentDialect)
-
     // Misc.
 
     /** Returns the SQL representation of the specified expression, for it to be used as a column default value. */
@@ -152,7 +147,7 @@ abstract class DataTypeProvider {
             "'$e'"
         }
 
-        e is LiteralOp<*> -> e.columnType.valueAsDefaultString(e.value)
+        e is LiteralOp<*> -> (e.columnType as IColumnType<Any?>).valueAsDefaultString(e.value)
         e is Function<*> -> "$e"
         currentDialect is MysqlDialect -> "$e"
         currentDialect is SQLServerDialect -> "$e"

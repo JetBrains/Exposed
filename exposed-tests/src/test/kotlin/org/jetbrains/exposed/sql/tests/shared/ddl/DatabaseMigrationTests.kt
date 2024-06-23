@@ -40,7 +40,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             try {
                 SchemaUtils.create(noPKTable)
 
-                val script = SchemaUtils.generateMigrationScript(singlePKTable, scriptDirectory = scriptDirectory, scriptName = scriptName)
+                val script = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = scriptDirectory, scriptName = scriptName)
                 assertTrue(script.exists())
                 assertEquals("src/test/resources/$scriptName.sql", script.path)
 
@@ -86,7 +86,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 }
 
                 // Generate script with the same name of initial script
-                val newScript = SchemaUtils.generateMigrationScript(singlePKTable, scriptDirectory = directory, scriptName = name)
+                val newScript = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = directory, scriptName = name)
 
                 val expectedStatements: List<String> = SchemaUtils.statementsRequiredForDatabaseMigration(singlePKTable)
                 assertEquals(1, expectedStatements.size)
@@ -106,7 +106,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     fun testNoTablesPassedWhenGeneratingMigrationScript() {
         withDb {
             expectException<IllegalArgumentException> {
-                SchemaUtils.generateMigrationScript(scriptDirectory = "src/test/resources", scriptName = "V2__Test")
+                MigrationUtils.generateMigrationScript(scriptDirectory = "src/test/resources", scriptName = "V2__Test")
             }
         }
     }
@@ -140,12 +140,12 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `columns with default values that haven't changed shouldn't trigger change`() {
+    fun columnsWithDefaultValuesThatHaveNotChangedShouldNotTriggerChange() {
         var table by Delegates.notNull<Table>()
         withDb { testDb ->
             try {
                 // MySQL doesn't support default values on text columns, hence excluded
-                table = if (testDb != TestDB.MYSQL) {
+                table = if (testDb !in TestDB.ALL_MYSQL) {
                     object : Table("varchar_test") {
                         val varchar = varchar("varchar_column", 255).default(" ")
                         val text = text("text_column").default(" ")
@@ -214,6 +214,36 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 assertEquals(1, statements.size)
             } finally {
                 SchemaUtils.drop(testTableWithTwoIndices)
+            }
+        }
+    }
+
+    @Test
+    fun testDropUnmappedIndex() {
+        val testTableWithIndex = object : Table("test_table") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+            val byName = index("test_table_by_name", false, name)
+        }
+
+        val testTableWithoutIndex = object : Table("test_table") {
+            val id = integer("id")
+            val name = varchar("name", length = 42)
+
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(tables = arrayOf(testTableWithIndex)) {
+            try {
+                SchemaUtils.create(testTableWithIndex)
+                assertTrue(testTableWithIndex.exists())
+
+                val statements = SchemaUtils.statementsRequiredForDatabaseMigration(testTableWithoutIndex)
+                assertEquals(1, statements.size)
+            } finally {
+                SchemaUtils.drop(testTableWithIndex)
             }
         }
     }

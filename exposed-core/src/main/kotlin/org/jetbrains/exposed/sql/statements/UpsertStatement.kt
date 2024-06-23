@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
+import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
 
 /**
  * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
@@ -11,12 +13,15 @@ import org.jetbrains.exposed.sql.vendors.*
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
  * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
+ * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found. This clause may not be supported by all vendors.
  */
 open class UpsertStatement<Key : Any>(
     table: Table,
     vararg val keys: Column<*>,
     val onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+    val onUpdateExclude: List<Column<*>>?,
     val where: Op<Boolean>?
 ) : InsertStatement<Key>(table) {
 
@@ -28,19 +33,20 @@ open class UpsertStatement<Key : Any>(
             }
             else -> dialect.functionProvider
         }
-        return functionProvider.upsert(table, arguments!!.first(), onUpdate, where, transaction, keys = keys)
+        return functionProvider.upsert(table, arguments!!.first(), onUpdate, onUpdateExclude, where, transaction, keys = keys)
     }
 
-    override fun arguments(): List<Iterable<Pair<IColumnType, Any?>>> {
-        return arguments?.map { args ->
-            val builder = QueryBuilder(true)
-            args.filter { (_, value) ->
-                value != DefaultValueMarker
-            }.forEach { (column, value) ->
-                builder.registerArgument(column, value)
-            }
-            where?.toQueryBuilder(builder)
-            builder.args
-        } ?: emptyList()
+    override fun arguments(): List<Iterable<Pair<IColumnType<*>, Any?>>> {
+        val whereArgs = QueryBuilder(true).apply {
+            where?.toQueryBuilder(this)
+        }.args
+        return super.arguments().map {
+            it + whereArgs
+        }
+    }
+
+    override fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
+        return isEntityIdClientSideGeneratedUUID(column) ||
+            super.isColumnValuePreferredFromResultSet(column, value)
     }
 }

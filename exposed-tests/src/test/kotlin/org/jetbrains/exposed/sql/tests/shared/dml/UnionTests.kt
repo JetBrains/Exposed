@@ -80,7 +80,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun testIntersectWithThreeQueries() {
-        withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _ ->
+        withCitiesAndUsers(TestDB.ALL_MYSQL) { _, users, _ ->
             val usersQuery = users.selectAll()
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
             val expectedUsers = usersQuery.map { it[users.id] } + "sergey"
@@ -103,7 +103,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun testExceptWithTwoQueries() {
-        withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _ ->
+        withCitiesAndUsers(TestDB.ALL_MYSQL) { _, users, _ ->
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey"
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
@@ -116,7 +116,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test except of three queries`() {
-        withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _ ->
+        withCitiesAndUsers(TestDB.ALL_MYSQL) { _, users, _ ->
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey"
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
@@ -129,7 +129,7 @@ class UnionTests : DatabaseTestsBase() {
 
     @Test
     fun `test except of two excepts queries`() {
-        withCitiesAndUsers(listOf(TestDB.MYSQL)) { _, users, _ ->
+        withCitiesAndUsers(TestDB.ALL_MYSQL) { _, users, _ ->
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey" - "andrey"
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
@@ -155,7 +155,7 @@ class UnionTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test union of sorted queries`() {
+    fun testUnionOfSortedQueries() {
         withCitiesAndUsers { _, users, _ ->
             val andreyOrSergeyQuery: Query =
                 users.selectAll().where { users.id inList setOf("andrey", "sergey") }.orderBy(users.id to SortOrder.DESC)
@@ -174,7 +174,7 @@ class UnionTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test union of limited queries`() {
+    fun testUnionOfLimitedQueries() {
         withCitiesAndUsers { _, users, _ ->
             val andreyOrSergeyQuery = users.selectAll().where { users.id inList setOf("andrey", "sergey") }.limit(1)
 
@@ -192,7 +192,7 @@ class UnionTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test union of sorted and limited queries`() {
+    fun testUnionOfSortedAndLimitedQueries() {
         withCitiesAndUsers { _, users, _ ->
             val andreyOrSergeyQuery =
                 users.selectAll().where { users.id inList setOf("andrey", "sergey") }.orderBy(users.id to SortOrder.DESC).limit(1)

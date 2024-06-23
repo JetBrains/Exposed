@@ -2,12 +2,14 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.flushCache
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData
 import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -75,7 +77,26 @@ class AliasesTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test wrap row with Aliased table`() {
+    fun testJoinSubQuery03() {
+        withCitiesAndUsers { cities, users, userData ->
+            val firstJoinQuery = cities
+                .leftJoin(users)
+                .joinQuery(
+                    on = { it[userData.user_id] eq users.id },
+                    joinPart = { userData.selectAll() }
+                )
+            assertEquals("q0", firstJoinQuery.lastQueryAlias?.alias)
+
+            val secondJoinQuery = firstJoinQuery.joinQuery(
+                on = { it[userData.user_id] eq users.id },
+                joinPart = { userData.selectAll() }
+            )
+            assertEquals("q1", secondJoinQuery.lastQueryAlias?.alias)
+        }
+    }
+
+    @Test
+    fun testWrapRowWithAliasedTable() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val entity1 = EntityTestsData.XEntity.new {
                 this.b1 = false
@@ -93,7 +114,7 @@ class AliasesTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test wrap row with Aliased query`() {
+    fun testWrapRowWithAliasedQuery() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val entity1 = EntityTestsData.XEntity.new {
                 this.b1 = false
@@ -139,7 +160,8 @@ class AliasesTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `test alias for same table with join`() {
+    @Test
+    fun `test alias for same table with join`() {
         withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
             val table1Count = EntityTestsData.XTable.id.max().alias("t1max")
             val table2Count = EntityTestsData.XTable.id.max().alias("t2max")
@@ -148,6 +170,66 @@ class AliasesTests : DatabaseTestsBase() {
             t1Alias.join(t2Alias, JoinType.INNER) {
                 t1Alias[table1Count] eq t2Alias[table2Count]
             }.select(t1Alias[table1Count]).toList()
+        }
+    }
+
+    @Test
+    fun testClientDefaultIsSameInAlias() {
+        val tester = object : IntIdTable("tester") {
+            val text = text("text").clientDefault { "DEFAULT_TEXT" }
+        }
+
+        val aliasTester = tester.alias("alias_tester")
+
+        val default = tester.columns.find { it.name == "text" }?.defaultValueFun
+        val aliasDefault = aliasTester.columns.find { it.name == "text" }?.defaultValueFun
+
+        assertEquals(default, aliasDefault)
+    }
+
+    @Test
+    fun testDefaultExpressionIsSameInAlias() {
+        val defaultExpression = stringLiteral("DEFAULT_TEXT")
+
+        val tester = object : IntIdTable("tester") {
+            val text = text("text").defaultExpression(defaultExpression)
+        }
+
+        val testerAlias = tester.alias("alias_tester")
+
+        val default = tester.columns.find { it.name == "text" }?.defaultValueInDb()
+        val aliasDefault = testerAlias.columns.find { it.name == "text" }?.defaultValueInDb()
+
+        assertEquals(default, aliasDefault)
+    }
+
+    @Test
+    fun testDatabaseGeneratedIsSameInAlias() {
+        val tester = object : IntIdTable("tester") {
+            val text = text("text").databaseGenerated()
+        }
+
+        val testerAlias = tester.alias("alias_tester")
+
+        val default = tester.columns.find { it.name == "text" }?.isDatabaseGenerated()
+        val aliasDefault = testerAlias.columns.find { it.name == "text" }?.isDatabaseGenerated()
+
+        assertEquals(default, aliasDefault)
+    }
+
+    @Test
+    fun testReferenceIsSameInAlias() {
+        val stables = object : UUIDTable("Stables") {}
+
+        val facilities = object : UUIDTable("Facilities") {
+            val stableId = reference("stable_id", stables)
+        }
+
+        withTables(facilities, stables) {
+            val facilitiesAlias = facilities.alias("FacilitiesAlias")
+            val foreignKey = facilities.columns.find { it.name == "stable_id" }?.foreignKey
+            val aliasForeignKey = facilitiesAlias.columns.find { it.name == "stable_id" }?.foreignKey
+            assertEquals(foreignKey, aliasForeignKey)
         }
     }
 }

@@ -41,4 +41,44 @@
         <description>Created after removal of "DSL API" from Exposed Documentation</description>
         <accepts>DSL-API.html</accepts>
     </rule>
+    <rule id="7a907023">
+        <description>Created after removal of "Welcome to Writerside!" from Exposed</description>
+        <accepts>Default-topic.html</accepts>
+    </rule>
+    <rule id="21d136e6">
+        <description>Created after removal of "Tutorials and Samples" from Exposed</description>
+        <accepts>Tutorials-and-Samples.html</accepts>
+    </rule>
+    <rule id="1acd9e">
+        <description>Created after removal of "Asynchronous Support" from Exposed</description>
+        <accepts>Asynchronous-Support.html</accepts>
+    </rule>
+    <rule id="617f8bba">
+        <description>Created after removal of "Working with Database" from Exposed</description>
+        <accepts>Working-with-Database.html</accepts>
+    </rule>
+    <rule id="300cb92b">
+        <description>Created after removal of "Working with DataSource" from Exposed</description>
+        <accepts>Working-with-DataSource.html</accepts>
+    </rule>
+    <rule id="60ed0cd8">
+        <description>Created after removal of "Working with Transaction" from Exposed</description>
+        <accepts>Working-with-Transaction.html</accepts>
+    </rule>
+    <rule id="127ff996">
+        <description>Created after removal of "Databases" from Exposed</description>
+        <accepts>Databases.html</accepts>
+    </rule>
+    <rule id="1a72cf9b">
+        <description>Created after removal of "Table Definition" from Exposed</description>
+        <accepts>Table-Definition.html</accepts>
+    </rule>
+    <rule id="b9994d4">
+        <description>Created after removal of "Schemas" from Exposed</description>
+        <accepts>Schemas.html</accepts>
+    </rule>
+    <rule id="7ffadf8d">
+        <description>Created after removal of "Breaking Changes" from Exposed</description>
+        <accepts>Changelog.html</accepts>
+    </rule>
 </rules>

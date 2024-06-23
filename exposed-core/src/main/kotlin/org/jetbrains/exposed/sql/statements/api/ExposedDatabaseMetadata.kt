@@ -38,7 +38,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
 
     @Deprecated(
         message = "it's temporary solution which will be replaced in a future releases. Do not use it in your code",
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     abstract val currentScheme: String
 
@@ -66,6 +66,9 @@ abstract class ExposedDatabaseMetadata(val database: String) {
 
     /** Returns a map with the [PrimaryKeyMetadata] in each of the specified [tables]. */
     abstract fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?>
+
+    /** Returns a list of the names of all sequences in the database. */
+    abstract fun sequences(): List<String>
 
     /**
      * Returns a map with the [ForeignKeyConstraint] of all the defined columns in each of the specified [tables],

@@ -19,34 +19,53 @@ enum class TestDB(
     val afterTestFinished: () -> Unit = {},
     val dbConfig: DatabaseConfig.Builder.() -> Unit = {}
 ) {
-    H2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver", dbConfig = {
+    H2_V1({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver", dbConfig = {
         defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
     }),
-    H2_MYSQL({ "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver", beforeConnection = {
+    H2_V1_MYSQL({ "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver", beforeConnection = {
         Mode::class.declaredMemberProperties.firstOrNull { it.name == "convertInsertNullToZero" }?.let { field ->
             val mode = Mode.getInstance("MySQL")
             @Suppress("UNCHECKED_CAST")
             (field as KMutableProperty1<Mode, Boolean>).set(mode, false)
         }
     }),
-    H2_MARIADB(
+    H2_V2({ "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" }, "org.h2.Driver", dbConfig = {
+        defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+    }),
+    H2_V2_MYSQL({ "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" }, "org.h2.Driver", beforeConnection = H2_V1_MYSQL.beforeConnection),
+    H2_V2_MARIADB(
         { "jdbc:h2:mem:mariadb;MODE=MariaDB;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1" },
         "org.h2.Driver",
         pass = "root"
     ),
-    H2_PSQL(
+    H2_V2_PSQL(
         { "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" },
         "org.h2.Driver"
     ),
-    H2_ORACLE(
+    H2_V2_ORACLE(
         { "jdbc:h2:mem:oracle;MODE=Oracle;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" },
         "org.h2.Driver"
     ),
-    H2_SQLSERVER({ "jdbc:h2:mem:sqlserver;MODE=MSSQLServer;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
+    H2_V2_SQLSERVER({ "jdbc:h2:mem:sqlserver;MODE=MSSQLServer;DB_CLOSE_DELAY=-1" }, "org.h2.Driver"),
     SQLITE({ "jdbc:sqlite:file:test?mode=memory&cache=shared" }, "org.sqlite.JDBC"),
-    MYSQL(
+    MYSQL_V5(
         connection = {
-            "jdbc:mysql://127.0.0.1:3001/testdb?useSSL=false&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull"
+            "jdbc:mysql://127.0.0.1:3001/" +
+                "testdb" +
+                "?useSSL=false" +
+                "&characterEncoding=UTF-8" +
+                "&zeroDateTimeBehavior=convertToNull"
+        },
+        driver = "com.mysql.jdbc.Driver"
+    ),
+    MYSQL_V8(
+        connection = {
+            "jdbc:mysql://127.0.0.1:3002/" +
+                "testdb" +
+                "?useSSL=false" +
+                "&characterEncoding=UTF-8" +
+                "&zeroDateTimeBehavior=convertToNull" +
+                "&allowPublicKeyRetrieval=true"
         },
         driver = "com.mysql.cj.jdbc.Driver"
     ),
@@ -71,7 +90,7 @@ enum class TestDB(
             driver = ORACLE.driver
         )
         transaction(Connection.TRANSACTION_READ_COMMITTED, db = tmp) {
-            repetitionAttempts = 1
+            maxAttempts = 1
 
             @Suppress("SwallowedException", "TooGenericExceptionCaught")
             try {
@@ -109,16 +128,25 @@ enum class TestDB(
     }
 
     companion object {
-        val allH2TestDB = listOf(H2, H2_MYSQL, H2_PSQL, H2_MARIADB, H2_ORACLE, H2_SQLSERVER)
-        val mySqlRelatedDB = listOf(MYSQL, MARIADB, H2_MYSQL, H2_MARIADB)
-        val postgreSQLRelatedDB = listOf(POSTGRESQL, POSTGRESQLNG)
+        val ALL_H2_V1 = setOf(H2_V1, H2_V1_MYSQL)
+        val ALL_H2_V2 = setOf(H2_V2, H2_V2_MYSQL, H2_V2_PSQL, H2_V2_MARIADB, H2_V2_ORACLE, H2_V2_SQLSERVER)
+        val ALL_H2 = ALL_H2_V1 + ALL_H2_V2
+        val ALL_MYSQL = setOf(MYSQL_V5, MYSQL_V8)
+        val ALL_MARIADB = setOf(MARIADB)
+        val ALL_MYSQL_MARIADB = ALL_MYSQL + ALL_MARIADB
+        val ALL_MYSQL_LIKE = ALL_MYSQL_MARIADB + setOf(H2_V2_MYSQL, H2_V2_MARIADB, H2_V1_MYSQL)
+        val ALL_POSTGRES = setOf(POSTGRESQL, POSTGRESQLNG)
+        val ALL_POSTGRES_LIKE = ALL_POSTGRES + setOf(H2_V2_PSQL)
+        val ALL_ORACLE_LIKE = setOf(ORACLE, H2_V2_ORACLE)
+        val ALL_SQLSERVER_LIKE = setOf(SQLSERVER, H2_V2_SQLSERVER)
+        val ALL = TestDB.entries.toSet()
 
         fun enabledDialects(): Set<TestDB> {
             if (TEST_DIALECTS.isEmpty()) {
-                return values().toSet()
+                return entries.toSet()
             }
 
-            return values().filterTo(enumSetOf()) { it.name in TEST_DIALECTS }
+            return entries.filterTo(enumSetOf()) { it.name in TEST_DIALECTS }
         }
     }
 }

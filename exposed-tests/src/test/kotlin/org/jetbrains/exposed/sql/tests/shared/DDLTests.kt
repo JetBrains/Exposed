@@ -10,7 +10,6 @@ import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -28,7 +27,6 @@ import org.postgresql.util.PGobject
 import java.io.ByteArrayInputStream
 import java.io.SequenceInputStream
 import java.util.*
-import kotlin.random.Random
 import kotlin.test.assertNotNull
 import kotlin.test.expect
 
@@ -65,7 +63,7 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test
     fun testKeywordIdentifiersWithOptOut() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
 
         val keywords = listOf("Integer", "name")
         val tester = object : Table(keywords[0]) {
@@ -212,7 +210,7 @@ class DDLTests : DatabaseTestsBase() {
     fun namedEmptyTableWithoutQuotesSQL() {
         val testTable = object : Table("test_named_table") {}
 
-        withDb(TestDB.H2) {
+        withDb(TestDB.H2_V2) {
             assertEquals("CREATE TABLE IF NOT EXISTS ${"test_named_table".inProperCase()}", testTable.ddl)
         }
     }
@@ -227,7 +225,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.ORACLE, TestDB.MARIADB, TestDB.SQLITE, TestDB.H2_ORACLE), tables = arrayOf(testTable)) {
+        withTables(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + TestDB.ALL_ORACLE_LIKE + TestDB.SQLITE, tables = arrayOf(testTable)) {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_column_types".inProperCase()} " +
@@ -249,7 +247,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL, TestDB.SQLITE), tables = arrayOf(testTable)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5, TestDB.SQLITE), tables = arrayOf(testTable)) {
             val q = db.identifierManager.quoteString
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
@@ -348,7 +346,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(column1)
         }
 
-        withDb(TestDB.allH2TestDB) {
+        withDb(TestDB.ALL_H2) {
             val h2Dialect = currentDialectTest as H2Dialect
             val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             val singleColumnDescription = testTable.columns.single().descriptionDdl(false)
@@ -423,7 +421,7 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
 
-        withDb(TestDB.allH2TestDB) {
+        withDb(TestDB.ALL_H2) {
             val h2Dialect = currentDialectTest as H2Dialect
             val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             val tableProperName = testTable.tableName.inProperCase()
@@ -570,10 +568,17 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withDb { testDb ->
+            val functionsNotSupported = testDb in TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+
             val tableProperName = tester.tableName.inProperCase()
             val priceColumnName = tester.price.nameInDatabaseCase()
             val uniqueIndexName = "tester_price_coalesce${if (testDb == TestDB.SQLITE) "" else "_unique"}".inProperCase()
-            val (p1, p2) = if (testDb == TestDB.MYSQL) "(" to ")" else "" to ""
+            val (p1, p2) = when (testDb) {
+                // MySql 8 requires double parenthesis on function index in order to differentiate it from columns
+                // https://dev.mysql.com/doc/refman/8.0/en/create-index.html#create-index-functional-key-parts
+                TestDB.MYSQL_V8 -> "(" to ")"
+                else -> "" to ""
+            }
             val functionStrings = when (testDb) {
                 TestDB.SQLITE, TestDB.ORACLE -> listOf("(amount + price)", "LOWER(item)", "COALESCE(item, '*')").map(String::inProperCase)
                 else -> listOf(
@@ -583,7 +588,6 @@ class DDLTests : DatabaseTestsBase() {
                 )
             }
 
-            val functionsNotSupported = testDb in (TestDB.allH2TestDB + TestDB.SQLSERVER + TestDB.MARIADB) || isOldMySql()
             val expectedStatements = if (functionsNotSupported) {
                 List(3) { "" }
             } else {
@@ -602,89 +606,6 @@ class DDLTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testBlob() {
-        val t = object : Table("t1") {
-            val id = integer("id").autoIncrement()
-            val b = blob("blob")
-
-            override val primaryKey = PrimaryKey(id)
-        }
-
-        withTables(t) {
-            val shortBytes = "Hello there!".toByteArray()
-            val longBytes = Random.nextBytes(1024)
-            val shortBlob = ExposedBlob(shortBytes)
-            val longBlob = ExposedBlob(
-                inputStream = SequenceInputStream(
-                    ByteArrayInputStream(longBytes, 0, 512),
-                    ByteArrayInputStream(longBytes, 512, 512)
-                )
-            )
-
-            val id1 = t.insert {
-                it[t.b] = shortBlob
-            } get (t.id)
-
-            val id2 = t.insert {
-                it[t.b] = longBlob
-            } get (t.id)
-
-            val id3 = t.insert {
-                it[t.b] = blobParam(ExposedBlob(shortBytes))
-            } get (t.id)
-
-            val readOn1 = t.selectAll().where { t.id eq id1 }.first()[t.b]
-            val text1 = String(readOn1.bytes)
-            val text2 = readOn1.inputStream.bufferedReader().readText()
-
-            assertEquals("Hello there!", text1)
-            assertEquals("Hello there!", text2)
-
-            val readOn2 = t.selectAll().where { t.id eq id2 }.first()[t.b]
-            val bytes1 = readOn2.bytes
-            val bytes2 = readOn2.inputStream.readBytes()
-
-            assertTrue(longBytes.contentEquals(bytes1))
-            assertTrue(longBytes.contentEquals(bytes2))
-
-            val bytes3 = t.selectAll().where { t.id eq id3 }.first()[t.b].inputStream.readBytes()
-            assertTrue(shortBytes.contentEquals(bytes3))
-        }
-    }
-
-    @Test
-    fun testBlobDefault() {
-        val defaultBlobStr = "test"
-        val defaultBlob = ExposedBlob(defaultBlobStr.encodeToByteArray())
-
-        val testTable = object : Table("TestTable") {
-            val number = integer("number")
-            val blobWithDefault = blob("blobWithDefault")
-                .default(defaultBlob)
-        }
-
-        withDb { testDb ->
-            when (testDb) {
-                TestDB.MYSQL -> {
-                    expectException<ExposedSQLException> {
-                        SchemaUtils.create(testTable)
-                    }
-                }
-                else -> {
-                    SchemaUtils.create(testTable)
-
-                    testTable.insert {
-                        it[number] = 1
-                    }
-                    assertEquals(defaultBlobStr, String(testTable.selectAll().first()[testTable.blobWithDefault].bytes))
-
-                    SchemaUtils.drop(testTable)
-                }
-            }
-        }
-    }
-
-    @Test
     fun testBinaryWithoutLength() {
         val tableWithBinary = object : Table("TableWithBinary") {
             val binaryColumn = binary("binaryColumn")
@@ -692,7 +613,7 @@ class DDLTests : DatabaseTestsBase() {
 
         fun SizedIterable<ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE, TestDB.H2_PSQL)) {
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE, TestDB.H2_V2_PSQL, TestDB.H2_V2)) {
             val exposedBytes = "Exposed".toByteArray()
             val kotlinBytes = "Kotlin".toByteArray()
 
@@ -762,7 +683,7 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test
     fun testEscapeStringColumnType() {
-        withDb(TestDB.H2) {
+        withDb(TestDB.H2_V2) {
             assertEquals("VARCHAR(255) COLLATE utf8_general_ci", VarCharColumnType(collate = "utf8_general_ci").sqlType())
             assertEquals("VARCHAR(255) COLLATE injected''code", VarCharColumnType(collate = "injected'code").sqlType())
             assertEquals("'value'", VarCharColumnType().nonNullValueToString("value"))
@@ -905,7 +826,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey: PrimaryKey = PrimaryKey(id)
         }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.MYSQL, TestDB.H2_PSQL)) { testDb ->
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.MYSQL_V5, TestDB.H2_V2_PSQL)) { testDb ->
             SchemaUtils.create(testTable)
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_text_column_types".inProperCase()} " +
@@ -918,7 +839,7 @@ class DDLTests : DatabaseTestsBase() {
 
             // double check that different types were applied indeed
             assert(
-                testDb != TestDB.MYSQL ||
+                testDb != TestDB.MYSQL_V5 ||
                     (
                         currentDialectTest.dataTypeProvider.textType() != currentDialectTest.dataTypeProvider.mediumTextType() &&
                             currentDialectTest.dataTypeProvider.mediumTextType() != currentDialectTest.dataTypeProvider.largeTextType() &&
@@ -961,27 +882,25 @@ class DDLTests : DatabaseTestsBase() {
             val negative = integer("negative").check("subZero") { it less 0 }
         }
 
-        withTables(checkTable) {
-            if (!isOldMySql()) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), checkTable) {
+            checkTable.insert {
+                it[positive] = 42
+                it[negative] = -14
+            }
+
+            assertEquals(1L, checkTable.selectAll().count())
+
+            assertFailAndRollback("Check constraint 1") {
                 checkTable.insert {
-                    it[positive] = 42
-                    it[negative] = -14
+                    it[positive] = -472
+                    it[negative] = -354
                 }
+            }
 
-                assertEquals(1L, checkTable.selectAll().count())
-
-                assertFailAndRollback("Check constraint 1") {
-                    checkTable.insert {
-                        it[positive] = -472
-                        it[negative] = -354
-                    }
-                }
-
-                assertFailAndRollback("Check constraint 2") {
-                    checkTable.insert {
-                        it[positive] = 538
-                        it[negative] = 915
-                    }
+            assertFailAndRollback("Check constraint 2") {
+                checkTable.insert {
+                    it[positive] = 538
+                    it[negative] = 915
                 }
             }
         }
@@ -998,27 +917,25 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
 
-        withTables(checkTable) {
-            if (!isOldMySql()) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), checkTable) {
+            checkTable.insert {
+                it[positive] = 57
+                it[negative] = -32
+            }
+
+            assertEquals(1L, checkTable.selectAll().count())
+
+            assertFailAndRollback("Check constraint 1") {
                 checkTable.insert {
-                    it[positive] = 57
-                    it[negative] = -32
+                    it[positive] = -47
+                    it[negative] = -35
                 }
+            }
 
-                assertEquals(1L, checkTable.selectAll().count())
-
-                assertFailAndRollback("Check constraint 1") {
-                    checkTable.insert {
-                        it[positive] = -47
-                        it[negative] = -35
-                    }
-                }
-
-                assertFailAndRollback("Check constraint 2") {
-                    checkTable.insert {
-                        it[positive] = 53
-                        it[negative] = 91
-                    }
+            assertFailAndRollback("Check constraint 2") {
+                checkTable.insert {
+                    it[positive] = 53
+                    it[negative] = 91
                 }
             }
         }
@@ -1037,7 +954,7 @@ class DDLTests : DatabaseTestsBase() {
                 createStatement() to dropStatement()
             }
 
-            if (testDb == TestDB.SQLITE || isOldMySql()) { // cannot alter existing check constraint
+            if (testDb in listOf(TestDB.SQLITE, TestDB.MYSQL_V5)) { // cannot alter existing check constraint
                 assertTrue(createConstraint.isEmpty() && dropConstraint.isEmpty())
             } else {
                 val negative = -9
@@ -1089,19 +1006,6 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
-    internal enum class Foo {
-        Bar, Baz;
-
-        override fun toString(): String = "Foo Enum ToString: $name"
-    }
-
-    class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
-        init {
-            value = enumValue?.name
-            type = enumTypeName
-        }
-    }
-
     object KeyWordTable : IntIdTable(name = "keywords") {
         val bool = bool("bool")
     }
@@ -1134,7 +1038,7 @@ class DDLTests : DatabaseTestsBase() {
             val adminBy = reference("adminBy", users).nullable()
         }
 
-        withTables(subscriptions) {
+        withTables(users, subscriptions) {
             val query = subscriptions.join(users, JoinType.INNER, additionalConstraint = { subscriptions.user eq users.id }).selectAll()
             assertEquals(0L, query.count())
         }

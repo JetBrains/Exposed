@@ -49,4 +49,60 @@ class BooleanColumnTypeTests : DatabaseTestsBase() {
             assertEquals(idTrue, resultTrue?.get(BooleanTable.id))
         }
     }
+
+    @Test
+    fun testCustomCharBooleanColumnType() {
+        val tester = object : Table("tester") {
+            val charBooleanColumn = charBoolean("charBooleanColumn")
+            val charBooleanColumnWithDefault = charBoolean("charBooleanColumnWithDefault")
+                .default(false)
+        }
+
+        withDb {
+            try {
+                SchemaUtils.create(tester)
+
+                tester.insert {
+                    it[charBooleanColumn] = true
+                }
+
+                assertEquals(
+                    1,
+                    tester.select(tester.charBooleanColumn)
+                        .where { tester.charBooleanColumn eq true }
+                        .andWhere { tester.charBooleanColumnWithDefault eq false }
+                        .count()
+                )
+            } finally {
+                SchemaUtils.drop(tester)
+            }
+        }
+    }
+
+    class CharBooleanColumnType(
+        private val characterColumnType: VarCharColumnType = VarCharColumnType(1),
+    ) : ColumnType<Boolean>() {
+        override fun sqlType(): String = characterColumnType.preciseType()
+
+        override fun valueFromDB(value: Any): Boolean =
+            when (characterColumnType.valueFromDB(value)) {
+                "Y" -> true
+                else -> false
+            }
+
+        override fun valueToDB(value: Boolean?): Any? =
+            characterColumnType.valueToDB(value.toChar().toString())
+
+        override fun nonNullValueToString(value: Boolean): String =
+            characterColumnType.nonNullValueToString(value.toChar().toString())
+
+        private fun Boolean?.toChar() = when (this) {
+            true -> 'Y'
+            false -> 'N'
+            else -> ' '
+        }
+    }
+
+    fun Table.charBoolean(name: String): Column<Boolean> =
+        registerColumn(name, CharBooleanColumnType())
 }

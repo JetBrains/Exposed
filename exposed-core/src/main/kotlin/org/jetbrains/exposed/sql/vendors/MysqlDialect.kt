@@ -74,8 +74,9 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
             SortOrder.DESC_NULLS_LAST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.DESC)
             else -> {
                 val exp = (expression as? ExpressionAlias<*>)?.alias ?: expression
-                val sortOrderAdjusted = if (sortOrder == SortOrder.ASC_NULLS_LAST) SortOrder.DESC else SortOrder.ASC
-                queryBuilder.append("-", exp, " ", sortOrderAdjusted.code)
+                val nullExp = if (sortOrder == SortOrder.ASC_NULLS_LAST) " IS NULL" else " IS NOT NULL"
+                val order = if (sortOrder == SortOrder.ASC_NULLS_LAST) SortOrder.ASC else SortOrder.DESC
+                queryBuilder.append(exp, nullExp, ", ", exp, " ", order.code)
             }
         }
     }
@@ -129,7 +130,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         if (toScalar) append("JSON_UNQUOTE(")
@@ -142,7 +143,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         target: Expression<*>,
         candidate: Expression<*>,
         path: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         append("JSON_CONTAINS(", target, ", ", candidate)
@@ -156,7 +157,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         expression: Expression<*>,
         vararg path: String,
         optional: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         val oneOrAll = optional?.lowercase()
@@ -186,7 +187,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         override fun sqlType(): String = "CHAR"
     }
 
-    override fun cast(expr: Expression<*>, type: IColumnType, builder: QueryBuilder) = when (type) {
+    override fun cast(expr: Expression<*>, type: IColumnType<*>, builder: QueryBuilder) = when (type) {
         is StringColumnType -> super.cast(expr, CharColumnType, builder)
         else -> super.cast(expr, type, builder)
     }
@@ -230,6 +231,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
@@ -242,7 +244,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
 
         val isAliasSupported = when (val dialect = transaction.db.dialect) {
-            is MysqlDialect -> dialect !is MariaDBDialect && dialect.isMysql8
+            is MysqlDialect -> dialect !is MariaDBDialect && dialect.fullVersion >= "8.0.19"
             else -> false // H2_MySQL mode also uses this function provider & requires older version
         }
 
@@ -256,7 +258,8 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
             onUpdate?.appendTo { (columnToUpdate, updateExpression) ->
                 append("${transaction.identity(columnToUpdate)}=$updateExpression")
             } ?: run {
-                data.unzip().first.appendTo { column ->
+                val updateColumns = getUpdateColumnsForUpsert(data.unzip().first, onUpdateExclude, null)
+                updateColumns.appendTo { column ->
                     val columnName = transaction.identity(column)
                     if (isAliasSupported) {
                         append("$columnName=NEW.$columnName")
@@ -277,6 +280,10 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     internal val isMysql8: Boolean by lazy {
         TransactionManager.current().db.isVersionCovers(BigDecimal("8.0"))
+    }
+
+    internal val fullVersion: String by lazy {
+        TransactionManager.current().db.metadata { databaseProductVersion }
     }
 
     override val supportsCreateSequence: Boolean = false

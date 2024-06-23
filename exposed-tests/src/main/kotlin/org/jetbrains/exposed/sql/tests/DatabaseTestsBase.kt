@@ -1,22 +1,15 @@
 package org.jetbrains.exposed.sql.tests
 
-import org.jetbrains.exposed.sql.Key
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Assume
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-import java.math.BigDecimal
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -77,14 +70,14 @@ abstract class DatabaseTestsBase {
 
         val database = dbSettings.db!!
         transaction(database.transactionManager.defaultIsolationLevel, db = database) {
-            repetitionAttempts = 1
+            maxAttempts = 1
             registerInterceptor(CurrentTestDBInterceptor)
             currentTestDB = dbSettings
             statement(dbSettings)
         }
     }
 
-    fun withDb(db: List<TestDB>? = null, excludeSettings: List<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
+    fun withDb(db: Collection<TestDB>? = null, excludeSettings: Collection<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
         if (db != null && dialect !in db) {
             Assume.assumeFalse(true)
             return
@@ -123,7 +116,7 @@ abstract class DatabaseTestsBase {
                 } catch (_: Exception) {
                     val database = dialect.db!!
                     inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
-                        repetitionAttempts = 1
+                        maxAttempts = 1
                         SchemaUtils.drop(*tables)
                     }
                 }
@@ -171,13 +164,7 @@ abstract class DatabaseTestsBase {
         ""
     }
 
-    fun Transaction.excludingH2Version1(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
-        if (dbSettings !in TestDB.allH2TestDB || (db.dialect as H2Dialect).isSecondVersion) {
-            statement(dbSettings)
-        }
-    }
-
-    fun Transaction.isOldMySql(version: String = "8.0") = currentDialectTest is MysqlDialect && !db.isVersionCovers(BigDecimal(version))
+    fun withH2V1(testDB: Collection<TestDB>) = (testDB + TestDB.ALL_H2_V1).toSet()
 
     protected fun prepareSchemaForTest(schemaName: String): Schema = Schema(
         schemaName,

@@ -1,6 +1,9 @@
 package org.jetbrains.exposed.sql.tests.shared.types
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -73,7 +76,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun testPreviousUByteColumnTypeWorksWithNewSmallIntType() {
         // MySQL and MariaDB type hasn't changed, and PostgreSQL and Oracle never supported TINYINT
-        withDb(TestDB.allH2TestDB - TestDB.H2_PSQL + TestDB.SQLITE) { testDb ->
+        withDb(TestDB.ALL_H2 - TestDB.H2_V2_PSQL + TestDB.SQLITE) { testDb ->
             try {
                 val tableName = UByteTable.nameInDatabaseCase()
                 val columnName = UByteTable.unsignedByte.nameInDatabaseCase()
@@ -150,7 +153,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testPreviousUShortColumnTypeWorksWithNewIntType() {
-        withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB)) { testDb ->
+        withDb { testDb ->
             try {
                 val tableName = UShortTable.nameInDatabaseCase()
                 val columnName = UShortTable.unsignedShort.nameInDatabaseCase()
@@ -228,7 +231,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun testPreviousUIntColumnTypeWorksWithNewBigIntType() {
         // Oracle was already previously constrained to NUMBER(13)
-        withDb(excludeSettings = listOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.ORACLE)) { testDb ->
+        withDb(excludeSettings = listOf(TestDB.ORACLE)) { testDb ->
             try {
                 val tableName = UIntTable.nameInDatabaseCase()
                 val columnName = UIntTable.unsignedInt.nameInDatabaseCase()
@@ -276,8 +279,25 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testMaxULongColumnType() {
+        val ulongMaxValueUnsupportedDatabases = TestDB.ALL_POSTGRES_LIKE
+
+        withTables(ULongTable) { testDb ->
+            val maxValue = if (testDb in ulongMaxValueUnsupportedDatabases) Long.MAX_VALUE.toULong() else ULong.MAX_VALUE
+
+            ULongTable.insert {
+                it[unsignedLong] = maxValue
+            }
+
+            val result = ULongTable.selectAll().toList()
+            assertEquals(1, result.size)
+            assertEquals(maxValue, result.single()[ULongTable.unsignedLong])
+        }
+    }
+
+    @Test
     fun testMaxUnsignedTypesInMySql() {
-        withDb(listOf(TestDB.MYSQL, TestDB.MARIADB)) {
+        withDb(excludeSettings = TestDB.ALL_POSTGRES_LIKE) {
             SchemaUtils.create(UByteTable, UShortTable, UIntTable, ULongTable)
 
             UByteTable.insert { it[unsignedByte] = UByte.MAX_VALUE }

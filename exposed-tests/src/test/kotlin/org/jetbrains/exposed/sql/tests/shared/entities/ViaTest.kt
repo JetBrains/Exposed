@@ -251,4 +251,33 @@ class ViaTests : DatabaseTestsBase() {
             checkParentsReferences(root2, emptyList())
         }
     }
+
+    class NodeOrdered(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<NodeOrdered>(NodesTable)
+
+        var name by NodesTable.name
+        var parents by NodeOrdered.via(NodeToNodes.child, NodeToNodes.parent)
+        var children by NodeOrdered.via(NodeToNodes.parent, NodeToNodes.child) orderBy (NodesTable.name to SortOrder.ASC)
+
+        override fun equals(other: Any?): Boolean = (other as? NodeOrdered)?.id == id
+
+        override fun hashCode(): Int = Objects.hash(id)
+    }
+
+    @Test
+    fun testOrderBy() {
+        withTables(NodeToNodes) {
+            val root = NodeOrdered.new { name = "root" }
+            listOf("#3", "#0", "#2", "#4", "#1").forEach {
+                NodeOrdered.new {
+                    name = it
+                    parents = SizedCollection(root)
+                }
+            }
+
+            root.children.forEachIndexed { index, node ->
+                assertEquals("#$index", node.name)
+            }
+        }
+    }
 }

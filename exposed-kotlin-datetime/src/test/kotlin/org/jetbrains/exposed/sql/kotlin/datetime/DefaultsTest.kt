@@ -293,7 +293,7 @@ class DefaultsTest : DatabaseTestsBase() {
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
 
-            override val columnType: IColumnType = IntegerColumnType()
+            override val columnType: IColumnType<Int> = IntegerColumnType()
         }
 
         val foo = object : IntIdTable("foo") {
@@ -319,7 +319,7 @@ class DefaultsTest : DatabaseTestsBase() {
     fun testDefaultExpressions02() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
-            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentTimestamp())
+            val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
         }
 
         val nonDefaultDate = LocalDate(2000, 1, 1)
@@ -373,8 +373,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val name = text("name")
             val defaultDate = date("default_date").defaultExpression(CurrentDate)
             val defaultDateTime1 = datetime("default_date_time_1").defaultExpression(CurrentDateTime)
-            val defaultDateTime2 = datetime("default_date_time_2").defaultExpression(CurrentTimestamp())
-            val defaultTimeStamp = timestamp("default_time_stamp").defaultExpression(CurrentTimestamp())
+            val defaultDateTime2 = datetime("default_date_time_2").defaultExpression(CurrentDateTime)
+            val defaultTimeStamp = timestamp("default_time_stamp").defaultExpression(CurrentTimestamp)
         }
 
         withDb {
@@ -411,6 +411,7 @@ class DefaultsTest : DatabaseTestsBase() {
         val testTable = object : IntIdTable("t") {
             val t1 = timestampWithTimeZone("t1").default(nowWithTimeZone)
             val t2 = timestampWithTimeZone("t2").defaultExpression(timestampWithTimeZoneLiteral)
+            val t3 = timestampWithTimeZone("t3").defaultExpression(CurrentTimestampWithTimeZone)
         }
 
         fun Expression<*>.itOrNull() = when {
@@ -419,40 +420,38 @@ class DefaultsTest : DatabaseTestsBase() {
             else -> "NULL"
         }
 
-        withDb(excludeSettings = listOf(TestDB.SQLITE, TestDB.MARIADB)) {
-            if (!isOldMySql()) {
-                SchemaUtils.create(testTable)
+        withTables(excludeSettings = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5, testTable) {
+            val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 
-                val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
+            val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
+                "${"t".inProperCase()} (" +
+                "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
+                "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
+                "${"t3".inProperCase()} $timestampWithTimeZoneType${testTable.t3.constraintNamePart()} ${CurrentTimestampWithTimeZone.itOrNull()}" +
+                ")"
 
-                val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
-                    "${"t".inProperCase()} (" +
-                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                    "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
-                    "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}" +
-                    ")"
-
-                val expected = if (currentDialectTest is OracleDialect ||
-                    currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
-                ) {
-                    arrayListOf(
-                        "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
-                        baseExpression
-                    )
-                } else {
-                    arrayListOf(baseExpression)
-                }
-
-                assertEqualLists(expected, testTable.ddl)
-
-                val id1 = testTable.insertAndGetId { }
-
-                val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
-                assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
-                assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
-
-                SchemaUtils.drop(testTable)
+            val expected = if (currentDialectTest is OracleDialect ||
+                currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+            ) {
+                arrayListOf(
+                    "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
+                    baseExpression
+                )
+            } else {
+                arrayListOf(baseExpression)
             }
+
+            assertEqualLists(expected, testTable.ddl)
+
+            val id1 = testTable.insertAndGetId { }
+
+            val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
+            assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
+            assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
+            val dbDefault = row1[testTable.t3]
+            assertEquals(dbDefault.offset, nowWithTimeZone.offset)
+            assertTrue { dbDefault.toLocalDateTime().toKotlinLocalDateTime() >= nowWithTimeZone.toLocalDateTime().toKotlinLocalDateTime() }
         }
     }
 
@@ -537,7 +536,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         val tester = object : Table("tester") {
             val timestampWithDefault = timestamp("timestampWithDefault").default(instant)
-            val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp())
+            val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp)
         }
 
         // SQLite does not support ALTER TABLE on a column that has a default value
@@ -557,18 +556,42 @@ class DefaultsTest : DatabaseTestsBase() {
 
         // SQLite does not support ALTER TABLE on a column that has a default value
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
-        val unsupportedDatabases = listOf(TestDB.SQLITE, TestDB.MARIADB)
+        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5
         withDb(excludeSettings = unsupportedDatabases) {
-            if (!isOldMySql()) {
-                try {
-                    SchemaUtils.drop(tester)
-                    SchemaUtils.create(tester)
-                    val statements = SchemaUtils.addMissingColumnsStatements(tester)
-                    assertEquals(0, statements.size)
-                } finally {
-                    SchemaUtils.drop(tester)
-                }
+            try {
+                SchemaUtils.drop(tester)
+                SchemaUtils.create(tester)
+                val statements = SchemaUtils.addMissingColumnsStatements(tester)
+                assertEquals(0, statements.size)
+            } finally {
+                SchemaUtils.drop(tester)
             }
+        }
+    }
+
+    @Test
+    fun testColumnOnUpdateCurrentTimestamp() {
+        val tester = object : Table("tester") {
+            val amount = integer("amount")
+            val created = timestamp("created").defaultExpression(CurrentTimestamp).withDefinition("ON UPDATE", CurrentTimestamp)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE.toSet(), tester) {
+            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+
+            tester.insert {
+                it[amount] = 999
+            }
+            val generatedTS = tester.select(tester.created).single()[tester.created]
+
+            Thread.sleep(1000)
+
+            tester.update {
+                it[amount] = 111
+            }
+
+            val updatedResult = tester.selectAll().where { tester.created greater generatedTS }.single()
+            assertTrue { updatedResult[tester.created] > generatedTS }
         }
     }
 }

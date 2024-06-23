@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.json.jsonb
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
@@ -29,6 +30,8 @@ import kotlin.test.assertEquals
 import kotlin.time.Duration
 
 open class KotlinTimeBaseTest : DatabaseTestsBase() {
+
+    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
 
     @Test
     fun kotlinTimeFunctions() {
@@ -297,7 +300,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             }
 
             // these DB take the nanosecond value 871_130_789 and round up to default precision (e.g. in Oracle: 871_131)
-            val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_ORACLE, TestDB.H2_PSQL, TestDB.H2_SQLSERVER)
+            val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_V2_ORACLE, TestDB.H2_V2_PSQL, TestDB.H2_V2_SQLSERVER)
             val dateTime = when (testDb) {
                 in requiresExplicitDTCast -> Cast(dateTimeParam(mayTheFourthDT), KotlinLocalDateTimeColumnType())
                 else -> dateTimeParam(mayTheFourthDT)
@@ -320,7 +323,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             val modified = jsonb<ModifierData>("modified", Json.Default)
         }
 
-        withTables(excludeSettings = TestDB.allH2TestDB + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
+        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
             val dateTimeNow = now()
             tester.insert {
                 it[created] = dateTimeNow.date.minus(1, DateTimeUnit.YEAR).atTime(0, 0, 0)
@@ -359,82 +362,72 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withDb(excludeSettings = listOf(TestDB.MARIADB)) { testDB ->
-            if (!isOldMySql()) {
-                SchemaUtils.create(testTable)
+        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB, testTable) { testDB ->
+            // Cairo time zone
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+            assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
-                // Cairo time zone
-                java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
-                assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
+            val cairoNow = OffsetDateTime.now(ZoneId.systemDefault())
 
-                val cairoNow = OffsetDateTime.now(ZoneId.systemDefault())
-
-                val cairoId = testTable.insertAndGetId {
-                    it[timestampWithTimeZone] = cairoNow
-                }
-
-                val cairoNowInsertedInCairoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
-                    .single()[testTable.timestampWithTimeZone]
-
-                // UTC time zone
-                java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
-                assertEquals("UTC", ZoneId.systemDefault().id)
-
-                val cairoNowRetrievedInUTCTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
-                    .single()[testTable.timestampWithTimeZone]
-
-                val utcID = testTable.insertAndGetId {
-                    it[timestampWithTimeZone] = cairoNow
-                }
-
-                val cairoNowInsertedInUTCTimeZone = testTable.selectAll().where { testTable.id eq utcID }
-                    .single()[testTable.timestampWithTimeZone]
-
-                // Tokyo time zone
-                java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Tokyo"))
-                assertEquals("Asia/Tokyo", ZoneId.systemDefault().id)
-
-                val cairoNowRetrievedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
-                    .single()[testTable.timestampWithTimeZone]
-
-                val tokyoID = testTable.insertAndGetId {
-                    it[timestampWithTimeZone] = cairoNow
-                }
-
-                val cairoNowInsertedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq tokyoID }
-                    .single()[testTable.timestampWithTimeZone]
-
-                // PostgreSQL and MySQL always store the timestamp in UTC, thereby losing the original time zone.
-                // To preserve the original time zone, store the time zone information in a separate column.
-                val isOriginalTimeZonePreserved = testDB !in listOf(
-                    TestDB.POSTGRESQL,
-                    TestDB.POSTGRESQLNG,
-                    TestDB.MYSQL
-                )
-                if (isOriginalTimeZonePreserved) {
-                    // Assert that time zone is preserved when the same value is inserted in different time zones
-                    assertEqualDateTime(cairoNow, cairoNowInsertedInCairoTimeZone)
-                    assertEqualDateTime(cairoNow, cairoNowInsertedInUTCTimeZone)
-                    assertEqualDateTime(cairoNow, cairoNowInsertedInTokyoTimeZone)
-
-                    // Assert that time zone is preserved when the same record is retrieved in different time zones
-                    assertEqualDateTime(cairoNow, cairoNowRetrievedInUTCTimeZone)
-                    assertEqualDateTime(cairoNow, cairoNowRetrievedInTokyoTimeZone)
-                } else {
-                    // Assert equivalence in UTC when the same value is inserted in different time zones
-                    assertEqualDateTime(cairoNowInsertedInCairoTimeZone, cairoNowInsertedInUTCTimeZone)
-                    assertEqualDateTime(cairoNowInsertedInUTCTimeZone, cairoNowInsertedInTokyoTimeZone)
-
-                    // Assert equivalence in UTC when the same record is retrieved in different time zones
-                    assertEqualDateTime(cairoNowRetrievedInUTCTimeZone, cairoNowRetrievedInTokyoTimeZone)
-                }
-
-                // Reset to original time zone as set up in DatabaseTestsBase init block
-                java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
-                assertEquals("UTC", ZoneId.systemDefault().id)
-
-                SchemaUtils.drop(testTable)
+            val cairoId = testTable.insertAndGetId {
+                it[timestampWithTimeZone] = cairoNow
             }
+
+            val cairoNowInsertedInCairoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
+                .single()[testTable.timestampWithTimeZone]
+
+            // UTC time zone
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+            assertEquals("UTC", ZoneId.systemDefault().id)
+
+            val cairoNowRetrievedInUTCTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
+                .single()[testTable.timestampWithTimeZone]
+
+            val utcID = testTable.insertAndGetId {
+                it[timestampWithTimeZone] = cairoNow
+            }
+
+            val cairoNowInsertedInUTCTimeZone = testTable.selectAll().where { testTable.id eq utcID }
+                .single()[testTable.timestampWithTimeZone]
+
+            // Tokyo time zone
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Tokyo"))
+            assertEquals("Asia/Tokyo", ZoneId.systemDefault().id)
+
+            val cairoNowRetrievedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
+                .single()[testTable.timestampWithTimeZone]
+
+            val tokyoID = testTable.insertAndGetId {
+                it[timestampWithTimeZone] = cairoNow
+            }
+
+            val cairoNowInsertedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq tokyoID }
+                .single()[testTable.timestampWithTimeZone]
+
+            // PostgreSQL and MySQL always store the timestamp in UTC, thereby losing the original time zone.
+            // To preserve the original time zone, store the time zone information in a separate column.
+            val isOriginalTimeZonePreserved = testDB !in (TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES)
+            if (isOriginalTimeZonePreserved) {
+                // Assert that time zone is preserved when the same value is inserted in different time zones
+                assertEqualDateTime(cairoNow, cairoNowInsertedInCairoTimeZone)
+                assertEqualDateTime(cairoNow, cairoNowInsertedInUTCTimeZone)
+                assertEqualDateTime(cairoNow, cairoNowInsertedInTokyoTimeZone)
+
+                // Assert that time zone is preserved when the same record is retrieved in different time zones
+                assertEqualDateTime(cairoNow, cairoNowRetrievedInUTCTimeZone)
+                assertEqualDateTime(cairoNow, cairoNowRetrievedInTokyoTimeZone)
+            } else {
+                // Assert equivalence in UTC when the same value is inserted in different time zones
+                assertEqualDateTime(cairoNowInsertedInCairoTimeZone, cairoNowInsertedInUTCTimeZone)
+                assertEqualDateTime(cairoNowInsertedInUTCTimeZone, cairoNowInsertedInTokyoTimeZone)
+
+                // Assert equivalence in UTC when the same record is retrieved in different time zones
+                assertEqualDateTime(cairoNowRetrievedInUTCTimeZone, cairoNowRetrievedInTokyoTimeZone)
+            }
+
+            // Reset to original time zone as set up in DatabaseTestsBase init block
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+            assertEquals("UTC", ZoneId.systemDefault().id)
         }
     }
 
@@ -444,11 +437,75 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withDb(db = listOf(TestDB.MYSQL, TestDB.MARIADB)) { testDB ->
-            if (testDB == TestDB.MARIADB || isOldMySql()) {
-                expectException<UnsupportedByDialectException> {
-                    SchemaUtils.create(testTable)
+        withDb(db = timestampWithTimeZoneUnsupportedDB) { testDB ->
+            expectException<UnsupportedByDialectException> {
+                SchemaUtils.create(testTable)
+            }
+        }
+    }
+
+    @Test
+    fun testTimestampWithTimeZoneExtensionFunctions() {
+        val testTable = object : IntIdTable("TestTable") {
+            val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
+        }
+
+        withDb(excludeSettings = timestampWithTimeZoneUnsupportedDB) {
+            try {
+                // UTC time zone
+                java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+                assertEquals("UTC", ZoneId.systemDefault().id)
+
+                SchemaUtils.create(testTable)
+
+                val now = OffsetDateTime.now(ZoneId.systemDefault())
+                val nowId = testTable.insertAndGetId {
+                    it[timestampWithTimeZone] = now
                 }
+
+                assertEquals(
+                    now.toLocalDate().toKotlinLocalDate(),
+                    testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
+                        .single()[testTable.timestampWithTimeZone.date()]
+                )
+
+                assertEquals(
+                    now.year,
+                    testTable.select(testTable.timestampWithTimeZone.year()).where { testTable.id eq nowId }
+                        .single()[testTable.timestampWithTimeZone.year()]
+                )
+
+                assertEquals(
+                    now.month.value,
+                    testTable.select(testTable.timestampWithTimeZone.month()).where { testTable.id eq nowId }
+                        .single()[testTable.timestampWithTimeZone.month()]
+                )
+
+                assertEquals(
+                    now.dayOfMonth,
+                    testTable.select(testTable.timestampWithTimeZone.day()).where { testTable.id eq nowId }
+                        .single()[testTable.timestampWithTimeZone.day()]
+                )
+
+                assertEquals(
+                    now.hour,
+                    testTable.select(testTable.timestampWithTimeZone.hour()).where { testTable.id eq nowId }
+                        .single()[testTable.timestampWithTimeZone.hour()]
+                )
+
+                assertEquals(
+                    now.minute,
+                    testTable.select(testTable.timestampWithTimeZone.minute()).where { testTable.id eq nowId }
+                        .single()[testTable.timestampWithTimeZone.minute()]
+                )
+
+                assertEquals(
+                    now.second,
+                    testTable.select(testTable.timestampWithTimeZone.second()).where { testTable.id eq nowId }
+                        .single()[testTable.timestampWithTimeZone.second()]
+                )
+            } finally {
+                SchemaUtils.drop(testTable)
             }
         }
     }
@@ -457,7 +514,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
     fun testCurrentDateTimeFunction() {
         val fakeTestTable = object : IntIdTable("fakeTable") {}
 
-        withTables(fakeTestTable) {
+        withTables(excludeSettings = TestDB.ALL_H2_V1, fakeTestTable) { db ->
             fun currentDbDateTime(): LocalDateTime {
                 return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
             }
@@ -479,6 +536,38 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             }
             val row = tester.selectAll().where { tester.duration eq Duration.INFINITE }.single()
             assertEquals(Duration.INFINITE, row[tester.duration])
+        }
+    }
+
+    @Test
+    fun testDateTimeAsArray() {
+        val defaultDates = listOf(now().date)
+        val defaultDateTimes = listOf(now())
+        val tester = object : Table("array_tester") {
+            val dates = array<LocalDate>("dates", KotlinLocalDateColumnType()).default(defaultDates)
+            val datetimes = array<LocalDateTime>("datetimes", KotlinLocalDateTimeColumnType()).default(defaultDateTimes)
+        }
+
+        withTables(excludeSettings = TestDB.entries - TestDB.POSTGRESQL - TestDB.H2_V2, tester) {
+            tester.insert { }
+            val result1 = tester.selectAll().single()
+            assertEqualLists(result1[tester.dates], defaultDates)
+            assertEqualLists(result1[tester.datetimes], defaultDateTimes)
+
+            val datesInput = List(3) { LocalDate(2020 + it, 5, 4) }
+            val datetimeInput = List(3) { LocalDateTime(2020 + it, 5, 4, 9, 9, 9) }
+            tester.insert {
+                it[dates] = datesInput
+                it[datetimes] = datetimeInput
+            }
+
+            val lastDate = tester.dates[3]
+            val firstTwoDatetimes = tester.datetimes.slice(1, 2)
+            val result2 = tester.select(lastDate, firstTwoDatetimes).where {
+                tester.dates[1].year() eq 2020
+            }.single()
+            assertEqualDateTime(datesInput.last(), result2[lastDate])
+            assertEqualLists(result2[firstTwoDatetimes], datetimeInput.take(2))
         }
     }
 }

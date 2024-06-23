@@ -1,11 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.Sequence
-import org.jetbrains.exposed.sql.append
-import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.*
 
 internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
     override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
@@ -27,6 +22,20 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
         substring: String
     ) = queryBuilder {
         append("LOCATE(\'", substring, "\',", expr, ")")
+    }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        val sql = super.explain(analyze, options, internalStatement, transaction)
+        return if (analyze) {
+            sql.substringAfter("EXPLAIN ")
+        } else {
+            sql
+        }
     }
 }
 

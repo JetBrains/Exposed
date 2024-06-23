@@ -11,8 +11,7 @@ transaction {
 }
 ```
 
-Transactions are executed synchronously on the current thread, so they _will block_ other parts of your application! If you need to execute a
-transaction asynchronously, consider running it on a [separate thread](Asynchronous-Support.md).
+Transactions are executed synchronously on the current thread, so they _will block_ other parts of your application!
 
 ### Accessing returned values
 
@@ -27,8 +26,8 @@ val jamesList = transaction {
 ```
 
 <note>
-`Blob` and `text` fields won't be available outside of a transaction if you don't load them directly. For `text` fields you can also use
-the `eagerLoading` param when defining the Table to make the text fields available outside of the transaction.
+<code>Blob</code> and <code>text</code> fields won't be available outside of a transaction if you don't load them directly. For <code>text</code> fields you can also use
+the <code>eagerLoading</code> param when defining the Table to make the text fields available outside of the transaction.
 </note>
 
 ```kotlin
@@ -166,29 +165,30 @@ Allowable values are defined in `java.sql.Connection` and are as follows:
 Much like with `transactionIsolation`, this value is not directly used by Exposed, but is simply relayed to the database.
 
 **db**: This parameter is optional and is used to select the database where the transaction should be settled 
-([[see section above|Transactions#working-with-multiple-databases]]).
+([see the section above](Transactions.md#working-with-multiple-databases)).
 
-**Transaction Repetition Attempts**
+**Transaction Maximum Attempts**
 
-Transactions also provide a property, `repetitionAttempts`, which sets the number of retries that should be made if an SQLException occurs inside the transaction block. 
+Transactions also provide a property, `maxAttempts`, which sets the maximum number of attempts that should be made to perform a transaction block.
+If this value is set to 1 and an SQLException occurs inside the transaction block, the exception will throw without performing a retry.
 If this property is not set, any default value provided in `DatabaseConfig` will be used instead:
 
 ```kotlin
 val db = Database.connect(
     datasource = datasource,
     databaseConfig = DatabaseConfig {
-        defaultRepetitionAttempts = 3
+        defaultMaxAttempts = 3
     }
 )
 
 // property set in transaction block overrides default DatabaseConfig
 transaction(db = db) {
-    repetitionAttempts = 25
+    maxAttempts = 25
     // operation that may need multiple attempts
 }
 ```
 
-If this property is set to a value greater than 0, `minRepetitionDelay` and `maxRepetitionDelay` can also be set in the transaction block to indicate the minimum 
+If this property is set to a value greater than 1, `minRetryDelay` and `maxRetryDelay` can also be set in the transaction block to indicate the minimum 
 and maximum number of milliseconds to wait before retrying.
 
 **Transaction Query Timeout**
@@ -208,7 +208,7 @@ transaction {
 ```
 
 <note>
-As is the case for `transactionIsolation` and `readOnly` properties, this value is not directly managed by Exposed, but is simply relayed to the JDBC driver. 
+As is the case for <code>transactionIsolation</code> and <code>readOnly</code> properties, this value is not directly managed by Exposed, but is simply relayed to the JDBC driver. 
 Some drivers may not support implementing this limit.
 </note>
 

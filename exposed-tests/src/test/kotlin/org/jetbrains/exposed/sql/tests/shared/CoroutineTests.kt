@@ -81,7 +81,7 @@ class CoroutineTests : DatabaseTestsBase() {
 
                 val insertJob = launch {
                     newSuspendedTransaction(Dispatchers.Default, db = db) {
-                        repetitionAttempts = 20
+                        maxAttempts = 20
 
                         // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
                         // until original row is updated with a new id
@@ -92,7 +92,7 @@ class CoroutineTests : DatabaseTestsBase() {
                 }
                 val updateJob = launch {
                     newSuspendedTransaction(Dispatchers.Default, db = db) {
-                        repetitionAttempts = 20
+                        maxAttempts = 20
 
                         TestingUnique.update({ TestingUnique.id eq originalId }) { it[id] = updatedId }
 
@@ -162,7 +162,7 @@ class CoroutineTests : DatabaseTestsBase() {
 
                 val (insertResult, updateResult) = listOf(
                     suspendedTransactionAsync(db = db) {
-                        repetitionAttempts = 20
+                        maxAttempts = 20
 
                         // throws JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation
                         // until original row is updated with a new id
@@ -171,7 +171,7 @@ class CoroutineTests : DatabaseTestsBase() {
                         TestingUnique.selectAll().count()
                     },
                     suspendedTransactionAsync(db = db) {
-                        repetitionAttempts = 20
+                        maxAttempts = 20
 
                         TestingUnique.update({ TestingUnique.id eq originalId }) { it[id] = updatedId }
                         TestingUnique.selectAll().count()
@@ -230,7 +230,7 @@ class CoroutineTests : DatabaseTestsBase() {
     @Test
     @RepeatableTest(10)
     fun nestedSuspendAsyncTxTest() {
-        withTables(listOf(TestDB.H2, TestDB.H2_MYSQL, TestDB.SQLITE), Testing) {
+        withTables(listOf(TestDB.H2_V2, TestDB.H2_V2_MYSQL, TestDB.SQLITE), Testing) {
             val mainJob = GlobalScope.async {
                 val job = launch(Dispatchers.IO) {
                     newSuspendedTransaction(db = db) {

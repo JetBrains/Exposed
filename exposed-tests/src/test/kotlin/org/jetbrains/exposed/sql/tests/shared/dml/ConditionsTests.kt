@@ -4,6 +4,10 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
@@ -121,15 +125,27 @@ class ConditionsTests : DatabaseTestsBase() {
 
             val id1Only = listOf(id1)
             assertEqualLists(id1Only, selectIdWhere { longTable.id less longTable.amount })
+            assertEqualLists(id1Only, selectIdWhere { longTable.id less 2 })
 
             val id1AndId2 = listOf(id1, id2)
             assertEqualLists(id1AndId2, selectIdWhere { longTable.id lessEq longTable.amount })
+            assertEqualLists(id1AndId2, selectIdWhere { longTable.id lessEq 2 })
 
             val id3Only = listOf(id3)
             assertEqualLists(id3Only, selectIdWhere { longTable.id greater longTable.amount })
+            assertEqualLists(id3Only, selectIdWhere { longTable.id greater 2 })
 
             val id2AndId3 = listOf(id2, id3)
             assertEqualLists(id2AndId3, selectIdWhere { longTable.id greaterEq longTable.amount })
+            assertEqualLists(id2AndId3, selectIdWhere { longTable.id greaterEq 2 })
+
+            assertEqualLists(id2AndId3, selectIdWhere { longTable.id.between(2, 3) })
+
+            assertEqualLists(id2Only, selectIdWhere { longTable.id isNotDistinctFrom longTable.amount })
+            assertEqualLists(id2Only, selectIdWhere { longTable.id isNotDistinctFrom 2 })
+
+            assertEqualLists(id1AndId3, selectIdWhere { longTable.id isDistinctFrom longTable.amount })
+            assertEqualLists(id1AndId3, selectIdWhere { longTable.id isDistinctFrom 2 })
 
             // symmetric operators (EntityID value on right) should not show a warning either
             assertEqualLists(id2Only, selectIdWhere { longTable.amount eq longTable.id })
@@ -138,6 +154,8 @@ class ConditionsTests : DatabaseTestsBase() {
             assertEqualLists(id2AndId3, selectIdWhere { longTable.amount lessEq longTable.id })
             assertEqualLists(id1Only, selectIdWhere { longTable.amount greater longTable.id })
             assertEqualLists(id1AndId2, selectIdWhere { longTable.amount greaterEq longTable.id })
+            assertEqualLists(id2Only, selectIdWhere { longTable.amount isNotDistinctFrom longTable.id })
+            assertEqualLists(id1AndId3, selectIdWhere { longTable.amount isDistinctFrom longTable.id })
         }
     }
 
@@ -315,6 +333,49 @@ class ConditionsTests : DatabaseTestsBase() {
                 }
                 assertEquals(expectedNumber, it[chainedCondition])
             }
+        }
+    }
+
+    @Test
+    fun testSelectAliasedComparisonResult() {
+        val table = object : IntIdTable("foo") {
+            val c1 = integer("c1")
+            val c2 = integer("c2").nullable()
+        }
+        withTables(table) {
+            table.insert {
+                it[c1] = 0
+                it[c2] = 0
+            }
+            table.insert {
+                it[c1] = 1
+                it[c2] = 2
+            }
+            table.insert {
+                it[c1] = 2
+                it[c2] = 1
+            }
+
+            val c1LtC2 = table.c1.less(table.c2).alias("c1ltc2")
+            assertEqualLists(
+                listOf(false, true, false),
+                table.select(table.c1, c1LtC2).orderBy(table.c1).map { it[c1LtC2] }
+            )
+            val c1LteC2 = table.c1.lessEq(table.c2).alias("c1ltec2")
+            assertEqualLists(
+                listOf(true, true, false),
+                table.select(table.c1, c1LteC2).orderBy(table.c1).map { it[c1LteC2] }
+            )
+            val c1GtC2 = table.c1.greater(table.c2).alias("c1gt2")
+            assertEqualLists(
+                listOf(false, false, true),
+                table.select(table.c1, c1GtC2).orderBy(table.c1).map { it[c1GtC2] }
+            )
+            val c1GteC2 = table.c1.greaterEq(table.c2).alias("c1gtec2")
+            assertEqualLists(
+                listOf(true, false, true),
+                table.select(table.c1, c1GteC2).orderBy(table.c1).map { it[c1GteC2] }
+            )
         }
     }
 }

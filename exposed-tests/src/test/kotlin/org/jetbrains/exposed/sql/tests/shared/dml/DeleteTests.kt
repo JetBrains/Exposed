@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import junit.framework.TestCase.assertNull
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -11,8 +12,10 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
+import kotlin.test.expect
 
 class DeleteTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
@@ -20,8 +23,8 @@ class DeleteTests : DatabaseTestsBase() {
             TestDB.POSTGRESQL,
             TestDB.POSTGRESQLNG,
             TestDB.ORACLE,
-            TestDB.H2_PSQL,
-            TestDB.H2_ORACLE
+            TestDB.H2_V2_PSQL,
+            TestDB.H2_V2_ORACLE
         )
         if (!SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT) {
             exclude.add(TestDB.SQLITE)
@@ -42,6 +45,20 @@ class DeleteTests : DatabaseTestsBase() {
             users.deleteWhere { users.name like "%thing" }
             val hasSmth = users.select(users.id).where { users.name.like("%thing") }.any()
             assertEquals(false, hasSmth)
+
+            if (currentDialectTest is MysqlDialect) {
+                assertEquals(1, cities.selectAll().where { cities.id eq 1 }.count())
+                expectException<ExposedSQLException> {
+                    // a regular delete throws SQLIntegrityConstraintViolationException because Users reference Cities
+                    // Cannot delete or update a parent row: a foreign key constraint fails
+                    cities.deleteWhere { cities.id eq 1 }
+                }
+                expect(0) {
+                    // the error is now ignored and the record is skipped
+                    cities.deleteIgnoreWhere { cities.id eq 1 }
+                }
+                assertEquals(1, cities.selectAll().where { cities.id eq 1 }.count())
+            }
         }
     }
 

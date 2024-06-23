@@ -4,7 +4,11 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.dao.with
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.exists
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
@@ -20,6 +24,7 @@ object UUIDTables {
         companion object : UUIDEntityClass<City>(Cities)
 
         var name by Cities.name
+        val towns by Town referrersOn Towns.cityId
     }
 
     object People : UUIDTable() {
@@ -47,10 +52,19 @@ object UUIDTables {
         var city by City.referencedOn(Addresses.city)
         var address by Addresses.address
     }
+
+    object Towns : UUIDTable("towns") {
+        val cityId: Column<UUID> = uuid("city_id").references(Cities.id)
+    }
+
+    class Town(id: EntityID<UUID>) : UUIDEntity(id) {
+        companion object : UUIDEntityClass<Town>(Towns)
+
+        var city by City referencedOn Towns.cityId
+    }
 }
 
 class UUIDTableEntityTest : DatabaseTestsBase() {
-
     @Test
     fun `create tables`() {
         withTables(UUIDTables.Cities, UUIDTables.People) {
@@ -147,6 +161,30 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
 
             address2.refresh(flush = true)
             assertEquals("address2", address2.address)
+        }
+    }
+
+    @Test
+    fun testForeignKeyBetweenUUIDAndEntityIDColumns() {
+        withTables(UUIDTables.Cities, UUIDTables.Towns) {
+            val cId = UUIDTables.Cities.insertAndGetId {
+                it[name] = "City A"
+            }
+            UUIDTables.Towns.insert {
+                it[cityId] = cId.value
+            }
+
+            // lazy loaded reference
+            val town1 = UUIDTables.Town.all().single()
+            assertEquals(cId, town1.city.id)
+
+            // eager loaded reference
+            val town1WithCity = UUIDTables.Town.all().with(UUIDTables.Town::city).single()
+            assertEquals(cId, town1WithCity.city.id)
+
+            val city1 = UUIDTables.City.all().single()
+            val towns = city1.towns
+            assertEquals(cId, towns.first().city.id)
         }
     }
 }

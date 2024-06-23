@@ -7,6 +7,13 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import kotlin.reflect.KProperty
 
+/**
+ * A [SizedIterable] of [Entity] instances that represent a subset of all managed entities that conform to the
+ * provided [op] conditional expression.
+ *
+ * @param op The conditional expression to use when querying for matching entities.
+ * @param factory The [EntityClass] to use when searching for matching entities.
+ */
 class View<out Target : Entity<*>> (val op: Op<Boolean>, val factory: EntityClass<*, Target>) : SizedIterable<Target> {
     override fun limit(n: Int, offset: Long): SizedIterable<Target> = factory.find(op).limit(n, offset)
     override fun count(): Long = factory.find(op).count()

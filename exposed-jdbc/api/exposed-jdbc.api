@@ -38,7 +38,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 	public fun columns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
-	public fun getCurrentScheme ()Ljava/lang/String;
+	public synthetic fun getCurrentScheme ()Ljava/lang/String;
 	public fun getDatabaseDialectName ()Ljava/lang/String;
 	public fun getDatabaseProductVersion ()Ljava/lang/String;
 	public fun getDefaultIsolationLevel ()I
@@ -52,6 +52,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 	public fun getUrl ()Ljava/lang/String;
 	public fun getVersion ()Ljava/math/BigDecimal;
 	public fun resetCurrentScheme ()V
+	public fun sequences ()Ljava/util/List;
 	public fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
 	public fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
 }
@@ -60,7 +61,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 }
 
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStatementImpl : org/jetbrains/exposed/sql/statements/api/PreparedStatementApi {
-	public fun <init> (Ljava/sql/PreparedStatement;ZZ)V
+	public fun <init> (Ljava/sql/PreparedStatement;Z)V
 	public fun addBatch ()V
 	public fun cancel ()V
 	public fun closeIfPossible ()V
@@ -77,7 +78,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStateme
 	public fun set (ILjava/lang/Object;)V
 	public fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
 	public fun setFetchSize (Ljava/lang/Integer;)V
-	public fun setInputStream (ILjava/io/InputStream;)V
+	public fun setInputStream (ILjava/io/InputStream;Z)V
 	public fun setNull (ILorg/jetbrains/exposed/sql/IColumnType;)V
 	public fun setTimeout (Ljava/lang/Integer;)V
 }

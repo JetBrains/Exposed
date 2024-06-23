@@ -49,7 +49,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         // Both SQLite and H2 drivers allow multiple but only return the result of the first statement:
         // SQLite issue tracker: https://github.com/xerial/sqlite-jdbc/issues/277
         // H2 issue tracker: https://github.com/h2database/h2database/issues/3704
-        val toExclude = TestDB.allH2TestDB + listOf(TestDB.SQLITE, TestDB.MARIADB, TestDB.MYSQL, TestDB.POSTGRESQLNG)
+        val toExclude = TestDB.ALL_H2 + TestDB.ALL_MYSQL_LIKE + listOf(TestDB.SQLITE, TestDB.POSTGRESQLNG)
 
         withTables(excludeSettings = toExclude, ExecTable) { testDb ->
             testInsertAndSelectInSingleExec(testDb)
@@ -58,10 +58,10 @@ class TransactionExecTests : DatabaseTestsBase() {
 
     @Test
     fun testExecWithMultiStatementQueryUsingMySQL() {
-        Assume.assumeTrue(setOf(TestDB.MYSQL, TestDB.MARIADB).containsAll(TestDB.enabledDialects()))
+        Assume.assumeTrue(TestDB.ALL_MYSQL_MARIADB.containsAll(TestDB.enabledDialects()))
 
         val dialect = TestDB.enabledDialects().first()
-        val extra = if (dialect == TestDB.MARIADB) "?" else ""
+        val extra = if (dialect in TestDB.ALL_MARIADB) "?" else ""
         val db = Database.connect(
             dialect.connection.invoke().plus("$extra&allowMultiQueries=true"),
             dialect.driver,

@@ -11,10 +11,10 @@ class QueryBuilder(
     val prepared: Boolean
 ) {
     private val internalBuilder = StringBuilder()
-    private val _args = mutableListOf<Pair<IColumnType, Any?>>()
+    private val _args = mutableListOf<Pair<IColumnType<*>, Any?>>()
 
     /** Returns the list of arguments used in this query. */
-    val args: List<Pair<IColumnType, Any?>> get() = _args
+    val args: List<Pair<IColumnType<*>, Any?>> get() = _args
 
     operator fun invoke(body: QueryBuilder.() -> Unit): Unit = body()
 
@@ -76,24 +76,26 @@ class QueryBuilder(
     }
 
     /** Adds the specified [argument] as a value of the specified [sqlType]. */
-    fun <T> registerArgument(sqlType: IColumnType, argument: T): Unit = registerArguments(sqlType, listOf(argument))
+    fun <T> registerArgument(sqlType: IColumnType<*>, argument: T): Unit = registerArguments(sqlType, listOf(argument))
 
     /** Adds the specified sequence of [arguments] as values of the specified [sqlType]. */
-    fun <T> registerArguments(sqlType: IColumnType, arguments: Iterable<T>) {
+    fun <T> registerArguments(sqlType: IColumnType<*>, arguments: Iterable<T>) {
+        val sqlTypeT = (sqlType as IColumnType<T>)
+
+        // avoid potentially expensive valueToString call unless we need to sort values
         if (arguments is Collection && arguments.size <= 1) {
-            // avoid potentially expensive valueToString call unless we need to sort values
             arguments.forEach {
                 if (prepared) {
                     _args.add(sqlType to it)
-                    append("?")
+                    append(sqlTypeT.parameterMarker(it))
                 } else {
-                    append(sqlType.valueToString(it))
+                    append(sqlTypeT.valueToString(it))
                 }
             }
         } else {
             fun toString(value: T) = when {
                 prepared && value is String -> value
-                else -> sqlType.valueToString(value)
+                else -> sqlTypeT.valueToString(value)
             }
 
             arguments.map { it to toString(it) }
@@ -101,7 +103,7 @@ class QueryBuilder(
                 .appendTo {
                     if (prepared) {
                         _args.add(sqlType to it.first)
-                        append("?")
+                        append(sqlTypeT.parameterMarker(it.first))
                     } else {
                         append(it.second)
                     }
@@ -166,5 +168,5 @@ abstract class Expression<T> {
  */
 abstract class ExpressionWithColumnType<T> : Expression<T>() {
     /** Returns the column type of this expression. Used for operations with literals. */
-    abstract val columnType: IColumnType
+    abstract val columnType: IColumnType<T & Any>
 }

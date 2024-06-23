@@ -15,8 +15,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.rank
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.rowNumber
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB.*
-import org.jetbrains.exposed.sql.tests.TestDB.Companion.allH2TestDB
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withSales
@@ -27,18 +26,18 @@ import java.math.RoundingMode
 
 class WindowFunctionsTests : DatabaseTestsBase() {
 
-    private val supportsCountDistinctAsWindowFunction = allH2TestDB + ORACLE
-    private val supportsStatisticsAggregateFunctions = entries - listOf(SQLSERVER, SQLITE)
-    private val supportsNthValueFunction = entries - listOf(SQLSERVER)
-    private val supportsExpressionsInWindowFunctionArguments = entries - listOf(MYSQL)
-    private val supportsExpressionsInWindowFrameClause = entries - listOf(MYSQL, SQLSERVER, MARIADB)
-    private val supportsDefaultValueInLeadLagFunctions = entries - listOf(MARIADB)
-    private val supportsRangeModeWithOffsetFrameBound = entries - listOf(SQLSERVER)
+    private val supportsCountDistinctAsWindowFunction = TestDB.ALL_H2 + TestDB.ORACLE
+    private val supportsStatisticsAggregateFunctions = TestDB.ALL - listOf(TestDB.SQLSERVER, TestDB.SQLITE)
+    private val supportsNthValueFunction = TestDB.ALL - TestDB.SQLSERVER
+    private val supportsExpressionsInWindowFunctionArguments = TestDB.ALL - TestDB.ALL_MYSQL
+    private val supportsExpressionsInWindowFrameClause = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB - TestDB.SQLSERVER
+    private val supportsDefaultValueInLeadLagFunctions = TestDB.ALL - TestDB.ALL_MARIADB
+    private val supportsRangeModeWithOffsetFrameBound = TestDB.ALL - TestDB.SQLSERVER
 
     @Suppress("LongMethod")
     @Test
-    fun testWindowFunctions() = withSales { testDb, sales ->
-        if (!isOldMySql()) {
+    fun testWindowFunctions() {
+        withSales(excludeSettings = listOf(TestDB.MYSQL_V5)) { testDb, sales ->
             sales.assertWindowFunctionDefinition(
                 rowNumber().over().partitionBy(sales.year, sales.product).orderBy(sales.amount),
                 listOf(1, 1, 2, 1, 1, 1, 2)
@@ -132,8 +131,8 @@ class WindowFunctionsTests : DatabaseTestsBase() {
 
     @Suppress("LongMethod")
     @Test
-    fun testAggregateFunctionsAsWindowFunctions() = withSales { testDb, sales ->
-        if (!isOldMySql()) {
+    fun testAggregateFunctionsAsWindowFunctions() {
+        withSales(excludeSettings = listOf(TestDB.MYSQL_V5)) { testDb, sales ->
             sales.assertWindowFunctionDefinition(
                 sales.amount.min().over().partitionBy(sales.year, sales.product),
                 listOfBigDecimal("550.1", "1500.25", "550.1", "1620.1", "650.7", "10.2", "1620.1")
@@ -184,8 +183,8 @@ class WindowFunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testPartitionByClause() = withSales { _, sales ->
-        if (!isOldMySql()) {
+    fun testPartitionByClause() {
+        withSales(excludeSettings = listOf(TestDB.MYSQL_V5)) { _, sales ->
             sales.assertWindowFunctionDefinition(
                 sales.amount.sum().over(),
                 listOfBigDecimal("7102.55", "7102.55", "7102.55", "7102.55", "7102.55", "7102.55", "7102.55")
@@ -206,8 +205,8 @@ class WindowFunctionsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testOrderByClause() = withSales { _, sales ->
-        if (!isOldMySql()) {
+    fun testOrderByClause() {
+        withSales(excludeSettings = listOf(TestDB.MYSQL_V5)) { _, sales ->
             sales.assertWindowFunctionDefinition(
                 sales.amount.sum().over(),
                 listOfBigDecimal("7102.55", "7102.55", "7102.55", "7102.55", "7102.55", "7102.55", "7102.55")
@@ -230,8 +229,8 @@ class WindowFunctionsTests : DatabaseTestsBase() {
 
     @Suppress("LongMethod")
     @Test
-    fun testWindowFrameClause() = withSales { testDb, sales ->
-        if (!isOldMySql()) {
+    fun testWindowFrameClause() {
+        withSales(excludeSettings = listOf(TestDB.MYSQL_V5)) { testDb, sales ->
             sales.assertWindowFunctionDefinition(
                 sumAmountPartitionByYearProductOrderByAmount(sales).rows(WindowFrameBound.unboundedPreceding()),
                 listOfBigDecimal("550.1", "1500.25", "1450.4", "1620.1", "650.7", "10.2", "3491")

@@ -22,7 +22,8 @@ dependencies {
     implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
     implementation(project(":exposed-dao"))
-    implementation(project(":exposed-crypt"))
+    implementation(project(":exposed-kotlin-datetime"))
+    implementation(project(":exposed-migration"))
 
     implementation(libs.slf4j)
     implementation(libs.log4j.slf4j.impl)

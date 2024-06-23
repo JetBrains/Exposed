@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
@@ -17,7 +18,9 @@ import java.time.OffsetDateTime
 import kotlin.time.Duration
 
 internal class DateInternal(val expr: Expression<*>) : Function<LocalDate>(KotlinLocalDateColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.date(expr, queryBuilder)
+    }
 }
 
 /** Represents an SQL function that extracts the date part from a given [expr]. */
@@ -32,28 +35,39 @@ fun <T : LocalDateTime?> Date(expr: Expression<T>): Function<LocalDate> = DateIn
 @JvmName("InstantDateFunction")
 fun <T : Instant?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
 
-internal class TimeFunction(val expr: Expression<*>) : Function<LocalTime>(KotlinLocalTimeColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("Time(", expr, ")") }
+/** Represents an SQL function that extracts the date part from a given timestampWithTimeZone [expr]. */
+@JvmName("OffsetDateTimeDateFunction")
+fun <T : OffsetDateTime?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
+
+internal class TimeInternal(val expr: Expression<*>) : Function<LocalTime>(KotlinLocalTimeColumnType.INSTANCE) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        when (currentDialect) {
+            is PostgreSQLDialect -> append(expr, "::time")
+            else -> append("Time(", expr, ")")
+        }
+    }
 }
 
-/** Represents an SQL function that extracts the time part from a given [expr]. */
+/** Represents an SQL function that extracts the time part from a given date [expr]. */
 @JvmName("LocalDateTimeFunction")
-fun <T : LocalDate?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
+fun <T : LocalDate?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal(expr)
 
 /** Represents an SQL function that extracts the time part from a given datetime [expr]. */
 @JvmName("LocalDateTimeTimeFunction")
-fun <T : LocalDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
+fun <T : LocalDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal(expr)
 
 /** Represents an SQL function that extracts the time part from a given timestamp [expr]. */
 @JvmName("InstantTimeFunction")
-fun <T : Instant?> Time(expr: Expression<T>): Function<LocalTime> = TimeFunction(expr)
+fun <T : Instant?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal(expr)
+
+/** Represents an SQL function that extracts the time part from a given timestampWithTimeZone [expr]. */
+@JvmName("OffsetDateTimeTimeFunction")
+fun <T : OffsetDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal(expr)
 
 /**
- * Represents an SQL function that returns the current date and time, as [LocalDateTime].
- *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ * Represents the base SQL function that returns the current date and time, as determined by the specified [columnType].
  */
-object CurrentDateTime : Function<LocalDateTime>(KotlinLocalDateTimeColumnType.INSTANCE) {
+sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
@@ -61,6 +75,27 @@ object CurrentDateTime : Function<LocalDateTime>(KotlinLocalDateTimeColumnType.I
         }
     }
 }
+
+/**
+ * Represents an SQL function that returns the current date and time, as [LocalDateTime].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
+object CurrentDateTime : CurrentTimestampBase<LocalDateTime>(KotlinLocalDateTimeColumnType.INSTANCE)
+
+/**
+ * Represents an SQL function that returns the current date and time, as [Instant].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
+object CurrentTimestamp : CurrentTimestampBase<Instant>(KotlinInstantColumnType.INSTANCE)
+
+/**
+ * Represents an SQL function that returns the current date and time with time zone, as [OffsetDateTime].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testTimestampWithTimeZoneDefaults
+ */
+object CurrentTimestampWithTimeZone : CurrentTimestampBase<OffsetDateTime>(KotlinOffsetDateTimeColumnType.INSTANCE)
 
 /**
  * Represents an SQL function that returns the current date, as [LocalDate].
@@ -73,20 +108,6 @@ object CurrentDate : Function<LocalDate>(KotlinLocalDateColumnType.INSTANCE) {
             is MysqlDialect -> "CURRENT_DATE()"
             is SQLServerDialect -> "GETDATE()"
             else -> "CURRENT_DATE"
-        }
-    }
-}
-
-/**
- * Represents an SQL function that returns the current date and time.
- *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
- */
-class CurrentTimestamp<T> : Function<T>(KotlinInstantColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        +when {
-            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
-            else -> "CURRENT_TIMESTAMP"
         }
     }
 }
@@ -114,6 +135,10 @@ fun <T : LocalDateTime?> Year(expr: Expression<T>): Function<Int> = YearInternal
 @JvmName("InstantYearFunction")
 fun <T : Instant?> Year(expr: Expression<T>): Function<Int> = YearInternal(expr)
 
+/** Represents an SQL function that extracts the year field from a given timestampWithTimeZone [expr]. */
+@JvmName("OffsetDateTimeYearFunction")
+fun <T : OffsetDateTime?> Year(expr: Expression<T>): Function<Int> = YearInternal(expr)
+
 internal class MonthInternal(val expr: Expression<*>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
@@ -136,6 +161,10 @@ fun <T : LocalDateTime?> Month(expr: Expression<T>): Function<Int> = MonthIntern
 /** Represents an SQL function that extracts the month field from a given timestamp [expr]. */
 @JvmName("InstantMonthFunction")
 fun <T : Instant?> Month(expr: Expression<T>): Function<Int> = MonthInternal(expr)
+
+/** Represents an SQL function that extracts the month field from a given timestampWithTimeZone [expr]. */
+@JvmName("OffsetDateTimeMonthFunction")
+fun <T : OffsetDateTime?> Month(expr: Expression<T>): Function<Int> = MonthInternal(expr)
 
 internal class DayInternal(val expr: Expression<*>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
@@ -160,6 +189,10 @@ fun <T : LocalDateTime?> Day(expr: Expression<T>): Function<Int> = DayInternal(e
 @JvmName("InstantDayFunction")
 fun <T : Instant?> Day(expr: Expression<T>): Function<Int> = DayInternal(expr)
 
+/** Represents an SQL function that extracts the day field from a given timestampWithTimeZone [expr]. */
+@JvmName("OffsetDateTimeDayFunction")
+fun <T : OffsetDateTime?> Day(expr: Expression<T>): Function<Int> = DayInternal(expr)
+
 internal class HourInternal(val expr: Expression<*>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
@@ -171,7 +204,7 @@ internal class HourInternal(val expr: Expression<*>) : Function<Int>(IntegerColu
     }
 }
 
-/** Represents an SQL function that extracts the hour field from a given [expr]. */
+/** Represents an SQL function that extracts the hour field from a given date [expr]. */
 @JvmName("LocalDateHourFunction")
 fun <T : LocalDate?> Hour(expr: Expression<T>): Function<Int> = HourInternal(expr)
 
@@ -182,6 +215,10 @@ fun <T : LocalDateTime?> Hour(expr: Expression<T>): Function<Int> = HourInternal
 /** Represents an SQL function that extracts the hour field from a given timestamp [expr]. */
 @JvmName("InstantHourFunction")
 fun <T : Instant?> Hour(expr: Expression<T>): Function<Int> = HourInternal(expr)
+
+/** Represents an SQL function that extracts the hour field from a given timestampWithTimeZone [expr]. */
+@JvmName("OffsetDateTimeHourFunction")
+fun <T : OffsetDateTime?> Hour(expr: Expression<T>): Function<Int> = HourInternal(expr)
 
 internal class MinuteInternal(val expr: Expression<*>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
@@ -194,7 +231,7 @@ internal class MinuteInternal(val expr: Expression<*>) : Function<Int>(IntegerCo
     }
 }
 
-/** Represents an SQL function that extracts the minute field from a given [expr]. */
+/** Represents an SQL function that extracts the minute field from a given date [expr]. */
 @JvmName("LocalDateMinuteFunction")
 fun <T : LocalDate?> Minute(expr: Expression<T>): Function<Int> = MinuteInternal(expr)
 
@@ -205,6 +242,10 @@ fun <T : LocalDateTime?> Minute(expr: Expression<T>): Function<Int> = MinuteInte
 /** Represents an SQL function that extracts the minute field from a given timestamp [expr]. */
 @JvmName("InstantMinuteFunction")
 fun <T : Instant?> Minute(expr: Expression<T>): Function<Int> = MinuteInternal(expr)
+
+/** Represents an SQL function that extracts the minute field from a given timestampWithTimeZone [expr]. */
+@JvmName("OffsetDateTimeMinuteFunction")
+fun <T : OffsetDateTime?> Minute(expr: Expression<T>): Function<Int> = MinuteInternal(expr)
 
 internal class SecondInternal(val expr: Expression<*>) : Function<Int>(IntegerColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
@@ -217,7 +258,7 @@ internal class SecondInternal(val expr: Expression<*>) : Function<Int>(IntegerCo
     }
 }
 
-/** Represents an SQL function that extracts the second field from a given [expr]. */
+/** Represents an SQL function that extracts the second field from a given date [expr]. */
 @JvmName("LocalDateSecondFunction")
 fun <T : LocalDate?> Second(expr: Expression<T>): Function<Int> = SecondInternal(expr)
 
@@ -229,9 +270,13 @@ fun <T : LocalDateTime?> Second(expr: Expression<T>): Function<Int> = SecondInte
 @JvmName("InstantSecondFunction")
 fun <T : Instant?> Second(expr: Expression<T>): Function<Int> = SecondInternal(expr)
 
+/** Represents an SQL function that extracts the second field from a given timestampWithTimeZone [expr]. */
+@JvmName("OffsetDateTimeSecondFunction")
+fun <T : OffsetDateTime?> Second(expr: Expression<T>): Function<Int> = SecondInternal(expr)
+
 // Extension functions
 
-/** Returns the date from this expression. */
+/** Returns the date from this date expression. */
 @JvmName("LocalDateDateExt")
 fun <T : LocalDate?> Expression<T>.date() = Date(this)
 
@@ -242,6 +287,10 @@ fun <T : LocalDateTime?> Expression<T>.date() = Date(this)
 /** Returns the date from this timestamp expression. */
 @JvmName("InstantDateExt")
 fun <T : Instant?> Expression<T>.date() = Date(this)
+
+/** Returns the date from this timestampWithTimeZone expression. */
+@JvmName("OffsetDateTimeDateExt")
+fun <T : OffsetDateTime?> Expression<T>.date() = Date(this)
 
 /** Returns the year from this date expression, as an integer. */
 @JvmName("LocalDateYearExt")
@@ -255,6 +304,10 @@ fun <T : LocalDateTime?> Expression<T>.year() = Year(this)
 @JvmName("InstantYearExt")
 fun <T : Instant?> Expression<T>.year() = Year(this)
 
+/** Returns the year from this timestampWithTimeZone expression, as an integer. */
+@JvmName("OffsetDateTimeYearExt")
+fun <T : OffsetDateTime?> Expression<T>.year() = Year(this)
+
 /** Returns the month from this date expression, as an integer between 1 and 12 inclusive. */
 @JvmName("LocalDateMonthExt")
 fun <T : LocalDate?> Expression<T>.month() = Month(this)
@@ -266,6 +319,10 @@ fun <T : LocalDateTime?> Expression<T>.month() = Month(this)
 /** Returns the month from this timestamp expression, as an integer between 1 and 12 inclusive. */
 @JvmName("InstantMonthExt")
 fun <T : Instant?> Expression<T>.month() = Month(this)
+
+/** Returns the month from this timestampWithTimeZone expression, as an integer between 1 and 12 inclusive. */
+@JvmName("OffsetDateTimeMonthExt")
+fun <T : OffsetDateTime?> Expression<T>.month() = Month(this)
 
 /** Returns the day from this date expression, as an integer between 1 and 31 inclusive. */
 @JvmName("LocalDateDayExt")
@@ -279,7 +336,11 @@ fun <T : LocalDateTime?> Expression<T>.day() = Day(this)
 @JvmName("InstantDayExt")
 fun <T : Instant?> Expression<T>.day() = Day(this)
 
-/** Returns the hour from this expression, as an integer between 0 and 23 inclusive. */
+/** Returns the day from this timestampWithTimeZone expression, as an integer between 1 and 31 inclusive. */
+@JvmName("OffsetDateTimeDayExt")
+fun <T : OffsetDateTime?> Expression<T>.day() = Day(this)
+
+/** Returns the hour from this date expression, as an integer between 0 and 23 inclusive. */
 @JvmName("LocalDateHourExt")
 fun <T : LocalDate?> Expression<T>.hour() = Hour(this)
 
@@ -291,7 +352,11 @@ fun <T : LocalDateTime?> Expression<T>.hour() = Hour(this)
 @JvmName("InstantHourExt")
 fun <T : Instant?> Expression<T>.hour() = Hour(this)
 
-/** Returns the minute from this expression, as an integer between 0 and 59 inclusive. */
+/** Returns the hour from this timestampWithTimeZone expression, as an integer between 0 and 23 inclusive. */
+@JvmName("OffsetDateTimeHourExt")
+fun <T : OffsetDateTime?> Expression<T>.hour() = Hour(this)
+
+/** Returns the minute from this date expression, as an integer between 0 and 59 inclusive. */
 @JvmName("LocalDateMinuteExt")
 fun <T : LocalDate?> Expression<T>.minute() = Minute(this)
 
@@ -303,7 +368,11 @@ fun <T : LocalDateTime?> Expression<T>.minute() = Minute(this)
 @JvmName("InstantMinuteExt")
 fun <T : Instant?> Expression<T>.minute() = Minute(this)
 
-/** Returns the second from this expression, as an integer between 0 and 59 inclusive. */
+/** Returns the minute from this timestampWithTimeZone expression, as an integer between 0 and 59 inclusive. */
+@JvmName("OffsetDateTimeMinuteExt")
+fun <T : OffsetDateTime?> Expression<T>.minute() = Minute(this)
+
+/** Returns the second from this date expression, as an integer between 0 and 59 inclusive. */
 @JvmName("LocalDateSecondExt")
 fun <T : LocalDate?> Expression<T>.second() = Second(this)
 
@@ -314,6 +383,10 @@ fun <T : LocalDateTime?> Expression<T>.second() = Second(this)
 /** Returns the second from this timestamp expression, as an integer between 0 and 59 inclusive. */
 @JvmName("InstantSecondExt")
 fun <T : Instant?> Expression<T>.second() = Second(this)
+
+/** Returns the second from this timestampWithTimeZone expression, as an integer between 0 and 59 inclusive. */
+@JvmName("OffsetDateTimeSecondExt")
+fun <T : OffsetDateTime?> Expression<T>.second() = Second(this)
 
 /** Returns the specified [value] as a date query parameter. */
 fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, KotlinLocalDateColumnType.INSTANCE)

@@ -54,7 +54,7 @@ object DMLTestsData {
 
 @Suppress("LongMethod")
 fun DatabaseTestsBase.withCitiesAndUsers(
-    exclude: List<TestDB> = emptyList(),
+    exclude: Collection<TestDB> = emptyList(),
     statement: Transaction.(
         cities: DMLTestsData.Cities,
         users: DMLTestsData.Users,
@@ -66,7 +66,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
     val cities = DMLTestsData.Cities
     val userData = DMLTestsData.UserData
 
-    withTables(exclude, cities, users, userData) {
+    withTables(exclude, cities, users, userData) { db ->
         val saintPetersburgId = cities.insert {
             it[name] = "St. Petersburg"
         } get cities.id
@@ -142,11 +142,12 @@ fun DatabaseTestsBase.withCitiesAndUsers(
 }
 
 fun DatabaseTestsBase.withSales(
+    excludeSettings: Collection<TestDB> = emptyList(),
     statement: Transaction.(testDb: TestDB, sales: DMLTestsData.Sales) -> Unit
 ) {
     val sales = DMLTestsData.Sales
 
-    withTables(sales) {
+    withTables(excludeSettings, sales) {
         insertSale(2018, 11, "tea", "550.10")
         insertSale(2018, 12, "coffee", "1500.25")
         insertSale(2018, 12, "tea", "900.30")

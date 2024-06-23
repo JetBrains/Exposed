@@ -3,22 +3,14 @@
 This is a starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize [Exposed](https://github.com/JetBrains/Exposed) as the ORM instead of [Hibernate](https://hibernate.org/).
 
 ## Getting Started
-This starter will give you the latest version of [Exposed](https://github.com/JetBrains/Exposed) and its `spring-transaction` library along with the [Spring Boot Starter Data JDBC](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jdbc).
+This starter will give you the latest version of [Exposed](https://github.com/JetBrains/Exposed) and its `spring-transaction` library along with the [Spring Boot Starter JDBC](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-jdbc).
 ### Maven
 ```mxml
-<repositories>
-  <repository>
-    <id>mavenCentral</id>
-    <name>mavenCentral</name>
-    <url>https://repo1.maven.org/maven2/</url>
-  </repository>
-</repositories>
-
 <dependencies>
   <dependency>
     <groupId>org.jetbrains.exposed</groupId>
     <artifactId>exposed-spring-boot-starter</artifactId>
-    <version>0.47.0</version>
+    <version>0.51.1</version>
   </dependency>
 </dependencies>
 ```
@@ -28,7 +20,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.47.0'
+    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.51.1'
 }
 ```
 ### Gradle Kotlin DSL
@@ -44,11 +36,11 @@ dependencies {
 ```
 In `gradle.properties`
 ```properties
-exposedVersion=0.47.0
+exposedVersion=0.51.1
 ```
 
 ## Setting up a database connection
-This starter utilizes `spring-boot-starter-data-jdbc` so that all properties usually used for setting up a database in Spring are applicable here.
+This starter utilizes `spring-boot-starter-jdbc` so that all properties usually used for setting up a database in Spring are applicable here.
 
 ### application.properties (h2 example)
 ```properties
@@ -155,6 +147,39 @@ Instead of invoking `addLogger()` to log all database transaction statements, ad
 ```properties
 spring.exposed.show-sql=true
 ```
+
+## GraalVM Native Images
+Building a GraalVM native image of a Spring Boot application with this starter is supported without any extra configuration,
+via the runtime hints contributed by the registered `ExposedAotContribution` class.
+
+**Note:** The [Spring AOT engine](https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html#native-image.introducing-graalvm-native-images.understanding-aot-processing) restricts the use of dynamic properties.
+This means that beans defined by `@ConditionalOnProperty` cannot change at runtime and are not supported,
+so setting the property `spring.exposed.generate-ddl=true` will not enable auto-creation of database schema.
+Instead, database schema should be manually generated, using for example `SchemaUtils.create()`.
+
+**Note:** In the event that a `KotlinReflectionInternalError: Unresolved class` is thrown when using Exposed with a native image,
+the missing runtime hints can be temporarily provided by using an implementation of `RuntimeHintsRegistrar`:
+```kotlin
+import org.springframework.aot.hint.MemberCategory
+import org.springframework.aot.hint.RuntimeHints
+import org.springframework.aot.hint.RuntimeHintsRegistrar
+
+class ExposedHints : RuntimeHintsRegistrar {
+    override fun registerHints(hints: RuntimeHints, classLoader: ClassLoader?) {
+        hints.reflection().registerType(IntegerColumnType::class.java, *MemberCategory.entries.toTypedArray())
+    }
+}
+```
+
+To activate the missing hints, the implementing class should be applied directly on a Spring configuration class using:
+`@ImportRuntimeHints(ExposedHints::class)`.
+Alternatively, the missing hints can be registered by adding an entry in a `META-INF/spring/aot.factories` file:
+```properties
+org.springframework.aot.hint.RuntimeHintsRegistrar=<fully qualified class name>.ExposedHints
+```
+Please open a ticket on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&draftId=25-4442763) if any such exceptions are encountered.
+
+See the [official documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html) for more details about Spring Boot's GraalVM native image support.
 
 ## Sample
 

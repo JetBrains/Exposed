@@ -1,13 +1,7 @@
 package org.jetbrains.exposed.sql.json
 
-import org.jetbrains.exposed.sql.ComplexExpression
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.ExpressionWithColumnType
-import org.jetbrains.exposed.sql.IColumnType
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.asLiteral
-import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 // Operator Classes
@@ -23,7 +17,7 @@ class Contains(
     /** An optional String representing JSON path/keys that match specific fields to search for [candidate]. */
     val path: String?,
     /** The column type of [target] to check, if casting to JSONB is required. */
-    val jsonType: IColumnType
+    val jsonType: IColumnType<*>
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) =
         currentDialect.functionProvider.jsonContains(target, candidate, path, jsonType, queryBuilder)
@@ -40,7 +34,7 @@ class Exists(
     /** An optional String representing any vendor-specific clause or argument. */
     val optional: String?,
     /** The column type of [expression] to check, if casting to JSONB is required. */
-    val jsonType: IColumnType
+    val jsonType: IColumnType<*>
 ) : Op<Boolean>(), ComplexExpression {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) =
         currentDialect.functionProvider.jsonExists(expression, path = path, optional, jsonType, queryBuilder)
@@ -69,6 +63,7 @@ fun ExpressionWithColumnType<*>.contains(candidate: Expression<*>, path: String?
  */
 fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null): Contains = when (candidate) {
     is Iterable<*>, is Array<*> -> Contains(this, stringLiteral(asLiteral(candidate).toString()), path, columnType)
+    is String -> Contains(this, stringLiteral(candidate), path, columnType)
     else -> Contains(this, asLiteral(candidate), path, columnType)
 }
 

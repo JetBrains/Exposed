@@ -5,10 +5,15 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class SequencesTests : DatabaseTestsBase() {
     @Test
@@ -128,6 +133,91 @@ class SequencesTests : DatabaseTestsBase() {
                 } finally {
                     SchemaUtils.dropSequence(myseq)
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testManuallyCreatedSequenceExists() {
+        withDb {
+            if (currentDialectTest.supportsCreateSequence) {
+                try {
+                    SchemaUtils.createSequence(myseq)
+
+                    assertTrue(myseq.exists())
+                } finally {
+                    SchemaUtils.dropSequence(myseq)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testExistingSequencesForAutoIncrementWithExplicitSequenceName() {
+        val sequenceName = "id_seq"
+        val tableWithExplicitSequenceName = object : IdTable<Long>() {
+            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
+        }
+
+        withDb {
+            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
+                try {
+                    SchemaUtils.create(tableWithExplicitSequenceName)
+
+                    val sequences = currentDialectTest.sequences()
+
+                    assertTrue(sequences.isNotEmpty())
+                    assertTrue(sequences.any { it == sequenceName.inProperCase() })
+                } finally {
+                    SchemaUtils.drop(tableWithExplicitSequenceName)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testExistingSequencesForAutoIncrementWithoutExplicitSequenceName() {
+        val tableWithoutExplicitSequenceName = object : IdTable<Long>() {
+            override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
+        }
+
+        withDb { testDb ->
+            if (currentDialect.needsSequenceToAutoInc) {
+                try {
+                    SchemaUtils.create(tableWithoutExplicitSequenceName)
+
+                    val sequences = currentDialectTest.sequences()
+
+                    assertTrue(sequences.isNotEmpty())
+
+                    val expected = tableWithoutExplicitSequenceName.id.autoIncColumnType!!.autoincSeq!!
+                    assertTrue(sequences.any { it == if (testDb == TestDB.ORACLE) expected.inProperCase() else expected })
+                } finally {
+                    SchemaUtils.drop(tableWithoutExplicitSequenceName)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testNoCreateStatementForExistingSequence() {
+        withDb {
+            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
+                val createSequencePrefix = "CREATE SEQUENCE"
+
+                assertNotNull(SchemaUtils.createStatements(DeveloperWithAutoIncrementBySequence).find { it.startsWith(createSequencePrefix) })
+
+                SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
+
+                // Remove table without removing sequence
+                exec("DROP TABLE ${DeveloperWithAutoIncrementBySequence.nameInDatabaseCase()}")
+
+                assertNull(SchemaUtils.createStatements(DeveloperWithAutoIncrementBySequence).find { it.startsWith(createSequencePrefix) })
+                assertNull(SchemaUtils.statementsRequiredToActualizeScheme(DeveloperWithAutoIncrementBySequence).find { it.startsWith(createSequencePrefix) })
+
+                // Clean up: create table and drop it for removing sequence
+                SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
+                SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
             }
         }
     }

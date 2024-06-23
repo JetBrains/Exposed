@@ -135,6 +135,23 @@ fun Table.deleteAll(): Int =
     DeleteStatement.all(TransactionManager.current(), this@deleteAll)
 
 /**
+ * Represents the SQL statement that deletes rows in a table and returns specified data from the deleted rows.
+ *
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @param where Condition that determines which rows to delete. If left as `null`, all rows in the table will be deleted.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testDeleteReturning
+ */
+fun <T : Table> T.deleteReturning(
+    returning: List<Expression<*>> = columns,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+): ReturningStatement {
+    val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, false, null, null)
+    return ReturningStatement(this, returning, delete)
+}
+
+/**
  * Represents the SQL statement that inserts a new row into a table.
  *
  * @sample org.jetbrains.exposed.sql.tests.h2.H2Tests.insertInH2
@@ -240,17 +257,6 @@ fun <T : Table, E : Any> T.batchReplace(
     body: BatchReplaceStatement.(E) -> Unit
 ): List<ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
 
-/**
- * Represents the SQL statement that either batch inserts new rows into a table, or, if insertions violate unique constraints,
- * first deletes the existing rows before inserting new rows.
- *
- * **Note:** This operation is not supported by all vendors, please check the documentation.
- *
- * @param data Iterator over a collection of values to use in replace.
- * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
- * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testBatchReplace01
- */
 private fun <T : Table, E> T.batchReplace(
     data: Iterator<E>,
     shouldReturnGeneratedValues: Boolean = true,
@@ -382,6 +388,23 @@ fun <T : Table> T.insertIgnore(
 ): Int? = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
 
 /**
+ * Represents the SQL statement that inserts new rows into a table and returns specified data from the inserted rows.
+ *
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testInsertReturning
+ */
+fun <T : Table> T.insertReturning(
+    returning: List<Expression<*>> = columns,
+    body: T.(InsertStatement<Number>) -> Unit
+): ReturningStatement {
+    val insert = InsertStatement<Number>(this)
+    body(insert)
+    return ReturningStatement(this, returning, insert)
+}
+
+/**
  * Represents the SQL statement that updates rows of a table.
  *
  * @param where Condition that determines which rows to update.
@@ -392,7 +415,7 @@ fun <T : Table> T.insertIgnore(
 fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
-    return query.execute(TransactionManager.current())!!
+    return query.execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -406,7 +429,25 @@ fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
 fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
-    return query.execute(TransactionManager.current())!!
+    return query.execute(TransactionManager.current()) ?: 0
+}
+
+/**
+ * Represents the SQL statement that updates rows of a table and returns specified data from the updated rows.
+ *
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpdateReturning
+ */
+fun <T : Table> T.updateReturning(
+    returning: List<Expression<*>> = columns,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: T.(UpdateStatement) -> Unit
+): ReturningStatement {
+    val update = UpdateStatement(this, null, where?.let { SqlExpressionBuilder.it() })
+    body(update)
+    return ReturningStatement(this, returning, update)
 }
 
 /**
@@ -414,9 +455,15 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
  *
  * **Note:** Vendors that do not support this operation directly implement the standard MERGE USING command.
  *
+ * **Note:** Currently, the `upsert()` function might return an incorrect auto-generated ID (such as a UUID) if it performs an update.
+ * In this case, it returns a new auto-generated ID instead of the ID of the updated row.
+ * Postgres should not be affected by this issue as it implicitly returns the IDs of updated rows.
+ *
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match.
  * If no columns are provided, primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testUpsertWithUniqueIndexConflict
@@ -424,11 +471,41 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
 fun <T : Table> T.upsert(
     vararg keys: Column<*>,
     onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
-) = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, where = where?.let { SqlExpressionBuilder.it() }).apply {
+) = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() }).apply {
     body(this)
     execute(TransactionManager.current())
+}
+
+/**
+ * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would
+ * violate a unique constraint, and also returns specified data from the modified rows.
+ *
+ * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are
+ * provided, primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param where Condition that determines which rows to update, if a unique violation is found.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpsertReturning
+ */
+fun <T : Table> T.upsertReturning(
+    vararg keys: Column<*>,
+    returning: List<Expression<*>> = columns,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdateExclude: List<Column<*>>? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: T.(UpsertStatement<Long>) -> Unit
+): ReturningStatement {
+    val update = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() })
+    body(update)
+    return ReturningStatement(this, returning, update)
 }
 
 /**
@@ -442,6 +519,9 @@ fun <T : Table> T.upsert(
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
  * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param where Condition that determines which rows to update, if a unique violation is found.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testBatchUpsertWithNoConflict
@@ -450,10 +530,12 @@ fun <T : Table, E : Any> T.batchUpsert(
     data: Iterable<E>,
     vararg keys: Column<*>,
     onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdateExclude: List<Column<*>>? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> {
-    return batchUpsert(data.iterator(), *keys, onUpdate = onUpdate, shouldReturnGeneratedValues = shouldReturnGeneratedValues, body = body)
+    return batchUpsert(data.iterator(), onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body = body)
 }
 
 /**
@@ -467,6 +549,9 @@ fun <T : Table, E : Any> T.batchUpsert(
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
  * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdateExclude List of specific columns to exclude from updating.
+ * If left null, all columns will be updated with the values provided for the insert.
+ * @param where Condition that determines which rows to update, if a unique violation is found.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testBatchUpsertWithSequence
@@ -475,35 +560,31 @@ fun <T : Table, E : Any> T.batchUpsert(
     data: Sequence<E>,
     vararg keys: Column<*>,
     onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdateExclude: List<Column<*>>? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> {
-    return batchUpsert(data.iterator(), *keys, onUpdate = onUpdate, shouldReturnGeneratedValues = shouldReturnGeneratedValues, body = body)
+    return batchUpsert(data.iterator(), onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body = body)
 }
 
-/**
- * Represents the SQL statement that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
- *
- * **Note**: Unlike `upsert`, `batchUpsert` does not include a `where` parameter. Please log a feature request on
- * [YouTrack](https://youtrack.jetbrains.com/newIssue?project=EXPOSED&c=Type%20Feature&draftId=25-4449790) if a use-case requires inclusion of a `where` clause.
- *
- * @param data Iterator over a collection of values to use in batch upsert.
- * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
- * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
- * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
- * If left null, all columns will be updated with the values provided for the insert.
- * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
- * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testBatchUpsertWithNoConflict
- */
 private fun <T : Table, E> T.batchUpsert(
     data: Iterator<E>,
-    vararg keys: Column<*>,
     onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdateExclude: List<Column<*>>? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
+    vararg keys: Column<*>,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    BatchUpsertStatement(this, *keys, onUpdate = onUpdate, shouldReturnGeneratedValues = shouldReturnGeneratedValues)
+    BatchUpsertStatement(
+        this,
+        *keys,
+        onUpdate = onUpdate,
+        onUpdateExclude = onUpdateExclude,
+        where = where?.let { SqlExpressionBuilder.it() },
+        shouldReturnGeneratedValues = shouldReturnGeneratedValues
+    )
 }
 
 /**
@@ -512,6 +593,53 @@ private fun <T : Table, E> T.batchUpsert(
  * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.tableExists02
  */
 fun Table.exists(): Boolean = currentDialect.tableExists(this)
+
+/**
+ * Performs an SQL MERGE operation to insert, update, or delete records in the target table based on
+ * a comparison with a source table.
+ *
+ * @param D The target table type extending from [Table].
+ * @param S The source table type extending from [Table].
+ * @param source An instance of the source table.
+ * @param on A lambda function with [SqlExpressionBuilder] as its receiver that should return a [Op<Boolean>] condition.
+ *           This condition is used to match records between the source and target tables.
+ * @param body A lambda where [MergeTableStatement] can be configured with specific actions to perform
+ *             when records are matched or not matched.
+ * @return A [MergeTableStatement] which represents the MERGE operation with the configured actions.
+ */
+fun <D : Table, S : Table> D.mergeFrom(
+    source: S,
+    on: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: MergeTableStatement.() -> Unit
+): MergeTableStatement {
+    return MergeTableStatement(this, source, on = on?.invoke(SqlExpressionBuilder)).apply {
+        body(this)
+        execute(TransactionManager.current())
+    }
+}
+
+/**
+ * Performs an SQL MERGE operation to insert, update, or delete records in the target table based on
+ * a comparison with a select query source.
+ *
+ * @param T The target table type extending from [Table].
+ * @param selectQuery represents the aliased query for a complex subquery to be used as the source.
+ * @param on A lambda with a receiver of type [SqlExpressionBuilder] that returns a condition [Op<Boolean>]
+ *           used to match records between the source query and the target table.
+ * @param body A lambda where [MergeSelectStatement] can be configured with specific actions to perform
+ *             when records are matched or not matched.
+ * @return A [MergeSelectStatement] which represents the MERGE operation with the configured actions.
+ */
+fun <T : Table> T.mergeFrom(
+    selectQuery: QueryAlias,
+    on: SqlExpressionBuilder.() -> Op<Boolean>,
+    body: MergeSelectStatement.() -> Unit
+): MergeSelectStatement {
+    return MergeSelectStatement(this, selectQuery, SqlExpressionBuilder.on()).apply {
+        body(this)
+        execute(TransactionManager.current())
+    }
+}
 
 private fun FieldSet.selectBatched(
     batchSize: Int = 1000,

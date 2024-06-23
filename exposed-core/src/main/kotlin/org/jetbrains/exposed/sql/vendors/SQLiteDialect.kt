@@ -12,6 +12,7 @@ import java.sql.Statement
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
     override fun longAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
+    override fun ulongAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
     override fun floatType(): String = "SINGLE"
     override fun binaryType(): String = "BLOB"
     override fun dateTimeType(): String = "TEXT"
@@ -133,7 +134,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         append("JSON_EXTRACT(", expression, ", ")
@@ -145,7 +146,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         expression: Expression<*>,
         vararg path: String,
         optional: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         val transaction = TransactionManager.current()
@@ -201,6 +202,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
@@ -216,8 +218,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         }
 
         +" DO"
-        val dataColumns = data.unzip().first
-        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
+        val updateColumns = getUpdateColumnsForUpsert(data.unzip().first, onUpdateExclude, keyColumns)
         appendUpdateToUpsertClause(table, updateColumns, onUpdate, transaction, isAliasNeeded = false)
 
         where?.let {
@@ -237,8 +238,32 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in DELETE clause.")
         }
-        val def = super.delete(false, table, where, limit, transaction)
-        return if (ignore) def.replaceFirst("DELETE", "DELETE OR IGNORE") else def
+        return super.delete(ignore, table, where, limit, transaction)
+    }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        if (analyze || options != null) {
+            transaction.throwUnsupportedException("SQLite does not support ANALYZE or other options in EXPLAIN queries.")
+        }
+        val sql = super.explain(false, null, internalStatement, transaction)
+        return sql.replaceFirst("EXPLAIN ", "EXPLAIN QUERY PLAN ")
+    }
+
+    override fun returning(
+        mainSql: String,
+        returning: List<Expression<*>>,
+        transaction: Transaction
+    ): String {
+        return with(QueryBuilder(true)) {
+            +"$mainSql RETURNING "
+            returning.appendTo { +it }
+            toString()
+        }
     }
 }
 

@@ -45,7 +45,7 @@ class MultiDatabaseTest {
 
     @Before
     fun before() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         if (TransactionManager.isInitialized()) {
             currentDB = TransactionManager.currentOrNull()?.db
         }

@@ -6,7 +6,6 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
@@ -46,51 +45,39 @@ object JsonTestsData {
 }
 
 fun DatabaseTestsBase.withJsonTable(
-    exclude: List<TestDB> = emptyList(),
+    exclude: Collection<TestDB> = emptyList(),
     statement: Transaction.(tester: JsonTestsData.JsonTable, user1: User, data1: DataHolder, testDb: TestDB) -> Unit
 ) {
     val tester = JsonTestsData.JsonTable
 
-    withDb(excludeSettings = exclude) { testDb ->
-        excludingH2Version1(testDb) {
-            SchemaUtils.create(tester)
+    withTables(excludeSettings = exclude, tester) { testDb ->
+        val user1 = User("Admin", null)
+        val data1 = DataHolder(user1, 10, true, null)
 
-            val user1 = User("Admin", null)
-            val data1 = DataHolder(user1, 10, true, null)
+        tester.insert { it[jsonColumn] = data1 }
 
-            tester.insert { it[jsonColumn] = data1 }
-
-            statement(tester, user1, data1, testDb)
-
-            SchemaUtils.drop(tester)
-        }
+        statement(tester, user1, data1, testDb)
     }
 }
 
 fun DatabaseTestsBase.withJsonBTable(
-    exclude: List<TestDB> = emptyList(),
+    exclude: Collection<TestDB> = emptyList(),
     statement: Transaction.(tester: JsonTestsData.JsonBTable, user1: User, data1: DataHolder, testDb: TestDB) -> Unit
 ) {
     val tester = JsonTestsData.JsonBTable
 
-    withDb(excludeSettings = exclude) { testDb ->
-        excludingH2Version1(testDb) {
-            SchemaUtils.create(tester)
+    withTables(excludeSettings = exclude, tester) { testDb ->
+        val user1 = User("Admin", null)
+        val data1 = DataHolder(user1, 10, true, null)
 
-            val user1 = User("Admin", null)
-            val data1 = DataHolder(user1, 10, true, null)
+        tester.insert { it[jsonBColumn] = data1 }
 
-            tester.insert { it[jsonBColumn] = data1 }
-
-            statement(tester, user1, data1, testDb)
-
-            SchemaUtils.drop(tester)
-        }
+        statement(tester, user1, data1, testDb)
     }
 }
 
 fun DatabaseTestsBase.withJsonArrays(
-    exclude: List<TestDB> = emptyList(),
+    exclude: Collection<TestDB> = emptyList(),
     statement: Transaction.(
         tester: JsonTestsData.JsonArrays,
         singleId: EntityID<Int>,
@@ -100,28 +87,22 @@ fun DatabaseTestsBase.withJsonArrays(
 ) {
     val tester = JsonTestsData.JsonArrays
 
-    withDb(excludeSettings = exclude) { testDb ->
-        excludingH2Version1(testDb) {
-            SchemaUtils.create(tester)
-
-            val singleId = tester.insertAndGetId {
-                it[tester.groups] = UserGroup(listOf(User("A", "Team A")))
-                it[tester.numbers] = intArrayOf(100)
-            }
-            val tripleId = tester.insertAndGetId {
-                it[tester.groups] = UserGroup(List(3) { i -> User("${'B' + i}", "Team ${'B' + i}") })
-                it[tester.numbers] = intArrayOf(3, 4, 5)
-            }
-
-            statement(tester, singleId, tripleId, testDb)
-
-            SchemaUtils.drop(tester)
+    withTables(excludeSettings = withH2V1(exclude), tester) { testDb ->
+        val singleId = tester.insertAndGetId {
+            it[tester.groups] = UserGroup(listOf(User("A", "Team A")))
+            it[tester.numbers] = intArrayOf(100)
         }
+        val tripleId = tester.insertAndGetId {
+            it[tester.groups] = UserGroup(List(3) { i -> User("${'B' + i}", "Team ${'B' + i}") })
+            it[tester.numbers] = intArrayOf(3, 4, 5)
+        }
+
+        statement(tester, singleId, tripleId, testDb)
     }
 }
 
 fun DatabaseTestsBase.withJsonBArrays(
-    exclude: List<TestDB> = emptyList(),
+    exclude: Collection<TestDB> = emptyList(),
     statement: Transaction.(
         tester: JsonTestsData.JsonBArrays,
         singleId: EntityID<Int>,
@@ -131,23 +112,17 @@ fun DatabaseTestsBase.withJsonBArrays(
 ) {
     val tester = JsonTestsData.JsonBArrays
 
-    withDb(excludeSettings = exclude) { testDb ->
-        excludingH2Version1(testDb) {
-            SchemaUtils.create(tester)
-
-            val singleId = tester.insertAndGetId {
-                it[tester.groups] = UserGroup(listOf(User("A", "Team A")))
-                it[tester.numbers] = intArrayOf(100)
-            }
-            val tripleId = tester.insertAndGetId {
-                it[tester.groups] = UserGroup(List(3) { i -> User("${'B' + i}", "Team ${'B' + i}") })
-                it[tester.numbers] = intArrayOf(3, 4, 5)
-            }
-
-            statement(tester, singleId, tripleId, testDb)
-
-            SchemaUtils.drop(tester)
+    withTables(excludeSettings = withH2V1(exclude), tester) { testDb ->
+        val singleId = tester.insertAndGetId {
+            it[tester.groups] = UserGroup(listOf(User("A", "Team A")))
+            it[tester.numbers] = intArrayOf(100)
         }
+        val tripleId = tester.insertAndGetId {
+            it[tester.groups] = UserGroup(List(3) { i -> User("${'B' + i}", "Team ${'B' + i}") })
+            it[tester.numbers] = intArrayOf(3, 4, 5)
+        }
+
+        statement(tester, singleId, tripleId, testDb)
     }
 }
 

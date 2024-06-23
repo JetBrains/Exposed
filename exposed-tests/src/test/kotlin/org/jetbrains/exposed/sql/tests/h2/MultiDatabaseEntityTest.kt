@@ -43,7 +43,7 @@ class MultiDatabaseEntityTest {
 
     @Before
     fun before() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         if (TransactionManager.isInitialized()) {
             currentDB = TransactionManager.currentOrNull()?.db
         }
@@ -57,7 +57,7 @@ class MultiDatabaseEntityTest {
 
     @After
     fun after() {
-        if (TestDB.H2 in TestDB.enabledDialects()) {
+        if (TestDB.H2_V2 in TestDB.enabledDialects()) {
             TransactionManager.resetCurrent(currentDB?.transactionManager)
             transaction(db1) {
                 SchemaUtils.drop(EntityTestsData.XTable, EntityTestsData.YTable)
@@ -197,7 +197,7 @@ class MultiDatabaseEntityTest {
             }
         }
         inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED, db = db1) {
-            repetitionAttempts = 1
+            maxAttempts = 1
             assertNull(EntityTestsData.BEntity.testCache(db1b1.id))
             val b1Reread = EntityTestsData.BEntity[db1b1.id]
             assertEquals(db1b1.id, b1Reread.id)

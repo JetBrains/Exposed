@@ -19,7 +19,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
     @Test
     fun `test ON DELETE SET DEFAULT for databases that support it without SQLite`() {
-        withDb(excludeSettings = listOf(TestDB.MARIADB, TestDB.MYSQL, TestDB.SQLITE, TestDB.ORACLE)) {
+        withDb(excludeSettings = TestDB.ALL_MARIADB + TestDB.ALL_MYSQL + listOf(TestDB.SQLITE, TestDB.ORACLE)) {
             testOnDeleteSetDefault()
         }
     }
@@ -191,15 +191,14 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
                 }
                 constraints.values.forEach { list ->
                     list.forEach {
-                        when (testDb) {
-                            TestDB.H2_ORACLE, TestDB.H2_SQLSERVER -> {
-                                assertEquals(ReferenceOption.RESTRICT, it.updateRule)
-                                assertEquals(ReferenceOption.RESTRICT, it.deleteRule)
-                            }
-                            else -> {
-                                assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
-                                assertEquals(currentDialectTest.defaultReferenceOption, it.deleteRule)
-                            }
+                        // According to the documentation: "NO ACTION: A keyword from standard SQL. For InnoDB, this is equivalent to RESTRICT;"
+                        // https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html
+                        if (testDb == TestDB.MYSQL_V5) {
+                            assertEquals(ReferenceOption.NO_ACTION, it.updateRule)
+                            assertEquals(ReferenceOption.NO_ACTION, it.deleteRule)
+                        } else {
+                            assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
+                            assertEquals(currentDialectTest.defaultReferenceOption, it.deleteRule)
                         }
                     }
                 }

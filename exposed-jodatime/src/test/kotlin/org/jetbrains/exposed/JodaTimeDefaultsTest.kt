@@ -30,6 +30,7 @@ import org.joda.time.DateTimeZone
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class JodaTimeDefaultsTest : JodaTimeBaseTest() {
     object TableWithDBDefault : IntIdTable() {
@@ -225,7 +226,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         fun abs(value: Int) = object : ExpressionWithColumnType<Int>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
 
-            override val columnType: IColumnType = IntegerColumnType()
+            override val columnType: IColumnType<Int> = IntegerColumnType()
         }
 
         val foo = object : IntIdTable("foo") {
@@ -375,6 +376,7 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
         val testTable = object : IntIdTable("t") {
             val t1 = timestampWithTimeZone("t1").default(nowWithTimeZone)
             val t2 = timestampWithTimeZone("t2").defaultExpression(timestampWithTimeZoneLiteral)
+            val t3 = timestampWithTimeZone("t3").defaultExpression(CurrentDateTime)
         }
 
         fun Expression<*>.itOrNull() = when {
@@ -384,40 +386,40 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
             else -> "NULL"
         }
 
-        withDb(excludeSettings = listOf(TestDB.SQLITE, TestDB.MARIADB)) {
-            if (!isOldMySql()) {
-                SchemaUtils.create(testTable)
+        withDb(excludeSettings = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5) {
+            SchemaUtils.create(testTable)
 
-                val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
+            val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 
-                val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
-                    "${"t".inProperCase()} (" +
-                    "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
-                    "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
-                    "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}" +
-                    ")"
+            val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
+                "${"t".inProperCase()} (" +
+                "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
+                "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
+                "${"t3".inProperCase()} $timestampWithTimeZoneType${testTable.t3.constraintNamePart()} ${CurrentDateTime.itOrNull()}" +
+                ")"
 
-                val expected = if (currentDialectTest is OracleDialect ||
-                    currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
-                ) {
-                    arrayListOf(
-                        "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
-                        baseExpression
-                    )
-                } else {
-                    arrayListOf(baseExpression)
-                }
-
-                assertEqualLists(expected, testTable.ddl)
-
-                val id1 = testTable.insertAndGetId { }
-
-                val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
-                assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
-                assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
-
-                SchemaUtils.drop(testTable)
+            val expected = if (currentDialectTest is OracleDialect ||
+                currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+            ) {
+                arrayListOf(
+                    "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
+                    baseExpression
+                )
+            } else {
+                arrayListOf(baseExpression)
             }
+
+            assertEqualLists(expected, testTable.ddl)
+
+            val id1 = testTable.insertAndGetId { }
+
+            val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
+            assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
+            assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
+            assertTrue { row1[testTable.t3].millis >= nowWithTimeZone.millis }
+
+            SchemaUtils.drop(testTable)
         }
     }
 
@@ -481,17 +483,15 @@ class JodaTimeDefaultsTest : JodaTimeBaseTest() {
 
         // SQLite does not support ALTER TABLE on a column that has a default value
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
-        val unsupportedDatabases = listOf(TestDB.SQLITE, TestDB.MARIADB)
+        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5
         withDb(excludeSettings = unsupportedDatabases) {
-            if (!isOldMySql()) {
-                try {
-                    SchemaUtils.drop(tester)
-                    SchemaUtils.create(tester)
-                    val statements = SchemaUtils.addMissingColumnsStatements(tester)
-                    assertEquals(0, statements.size)
-                } finally {
-                    SchemaUtils.drop(tester)
-                }
+            try {
+                SchemaUtils.drop(tester)
+                SchemaUtils.create(tester)
+                val statements = SchemaUtils.addMissingColumnsStatements(tester)
+                assertEquals(0, statements.size)
+            } finally {
+                SchemaUtils.drop(tester)
             }
         }
     }

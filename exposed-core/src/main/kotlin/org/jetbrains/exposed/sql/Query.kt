@@ -2,12 +2,12 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
-import java.util.*
 
 enum class SortOrder(val code: String) {
     ASC(code = "ASC"),
@@ -38,14 +38,15 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     var where: Op<Boolean>? = where
         private set
 
-    override val queryToExecute: Statement<ResultSet> get() {
-        val distinctExpressions = set.fields.distinct()
-        return if (distinctExpressions.size < set.fields.size) {
-            copy().adjustSelect { select(distinctExpressions) }
-        } else {
-            this
+    override val queryToExecute: Statement<ResultSet>
+        get() {
+            val distinctExpressions = set.fields.distinct()
+            return if (distinctExpressions.size < set.fields.size) {
+                copy().adjustSelect { select(distinctExpressions) }
+            } else {
+                this
+            }
         }
-    }
 
     /** Creates a new [Query] instance using all stored properties of this `SELECT` query. */
     override fun copy(): Query = Query(set, where).also { copy ->
@@ -244,10 +245,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * This query's [FieldSet] will be ordered by the first auto-increment column.
      *
      * @param batchSize Size of each sub-collection to return.
+     * @param sortOrder Order in which the results should be retrieved.
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
-     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectBatchedTests.testFetchBatchedResultsWithWhereAndSetBatchSize
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
-    fun fetchBatchedResults(batchSize: Int = 1000): Iterable<Iterable<ResultRow>> {
+    fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Iterable<Iterable<ResultRow>> {
         require(batchSize > 0) { "Batch size should be greater than 0." }
         require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
         require(orderByExpressions.isEmpty()) {
@@ -260,16 +262,41 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             throw UnsupportedOperationException("Batched select only works on tables with an auto-incrementing column")
         }
         limit = batchSize
-        (orderByExpressions as MutableList).add(autoIncColumn to SortOrder.ASC)
+        (orderByExpressions as MutableList).add(autoIncColumn to sortOrder)
         val whereOp = where ?: Op.TRUE
+        val fetchInAscendingOrder = sortOrder in listOf(SortOrder.ASC, SortOrder.ASC_NULLS_FIRST, SortOrder.ASC_NULLS_LAST)
 
         return object : Iterable<Iterable<ResultRow>> {
             override fun iterator(): Iterator<Iterable<ResultRow>> {
                 return iterator {
-                    var lastOffset = 0L
+                    var lastOffset = if (fetchInAscendingOrder) 0L else null
                     while (true) {
                         val query = this@Query.copy().adjustWhere {
-                            whereOp and (autoIncColumn greater lastOffset)
+                            lastOffset?.let { lastOffset ->
+                                whereOp and if (fetchInAscendingOrder) {
+                                    when (autoIncColumn.columnType) {
+                                        is EntityIDColumnType<*> -> {
+                                            (autoIncColumn as? Column<EntityID<Long>>)?.let {
+                                                (it greater lastOffset)
+                                            } ?: (autoIncColumn as? Column<EntityID<Int>>)?.let {
+                                                (it greater lastOffset.toInt())
+                                            } ?: (autoIncColumn greater lastOffset)
+                                        }
+                                        else -> (autoIncColumn greater lastOffset)
+                                    }
+                                } else {
+                                    when (autoIncColumn.columnType) {
+                                        is EntityIDColumnType<*> -> {
+                                            (autoIncColumn as? Column<EntityID<Long>>)?.let {
+                                                (it less lastOffset)
+                                            } ?: (autoIncColumn as? Column<EntityID<Int>>)?.let {
+                                                (it less lastOffset.toInt())
+                                            } ?: (autoIncColumn less lastOffset)
+                                        }
+                                        else -> (autoIncColumn less lastOffset)
+                                    }
+                                }
+                            } ?: whereOp
                         }
 
                         val results = query.iterator().asSequence().toList()
@@ -301,7 +328,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     override fun count(): Long {
         return if (distinct || groupedByColumns.isNotEmpty() || limit != null) {
             fun Column<*>.makeAlias() =
-                alias(transaction.db.identifierManager.quoteIfNecessary("${table.tableName}_$name"))
+                alias(transaction.db.identifierManager.quoteIfNecessary("${table.tableNameWithoutSchemeSanitized}_$name"))
 
             val originalSet = set
             try {

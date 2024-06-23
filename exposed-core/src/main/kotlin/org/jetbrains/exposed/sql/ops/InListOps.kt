@@ -10,9 +10,9 @@ import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 /**
  * Represents an SQL operator that checks if [expr] is equals to any element from [list].
  */
-abstract class InListOrNotInListBaseOp<V> (
+abstract class InListOrNotInListBaseOp<V>(
     /** Returns the expression compared to each element of the list. */
-    val expr: Any,
+    open val expr: Any,
     /** Returns the query to check against. */
     val list: Iterable<V>,
     /** Returns `false` if the check is inverted, `true` otherwise. */
@@ -20,7 +20,6 @@ abstract class InListOrNotInListBaseOp<V> (
 ) : Op<Boolean>(), ComplexExpression {
 
     protected abstract val columnTypes: List<ExpressionWithColumnType<*>>
-    protected abstract fun extractValues(value: V): List<Any?>
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         val iterator = list.iterator()
@@ -45,35 +44,23 @@ abstract class InListOrNotInListBaseOp<V> (
                     isInList -> append(" = ")
                     else -> append(" != ")
                 }
-                registerValues(extractValues(firstValue))
+                registerValues(firstValue)
             } else {
                 when {
                     isInList -> append(" IN (")
                     else -> append(" NOT IN (")
                 }
-                registerValues(extractValues(firstValue))
+                registerValues(firstValue)
                 iterator.forEach { value ->
                     append(", ")
-                    registerValues(extractValues(value))
+                    registerValues(value)
                 }
                 append(')')
             }
         }
     }
 
-    private fun QueryBuilder.registerValues(values: List<Any?>) {
-        val singleColumn = columnTypes.singleOrNull()
-        if (singleColumn != null) {
-            registerArgument(singleColumn.columnType, values.single())
-        } else {
-            append("(")
-            columnTypes.forEachIndexed { index, columnExpression ->
-                if (index != 0) append(", ")
-                registerArgument(columnExpression.columnType, values[index])
-            }
-            append(")")
-        }
-    }
+    protected abstract fun QueryBuilder.registerValues(values: V)
 }
 
 /**
@@ -82,13 +69,15 @@ abstract class InListOrNotInListBaseOp<V> (
  * To inverse the operator and check if [expr] is **not** in [list], set [isInList] to `false`.
  */
 class SingleValueInListOp<T>(
-    expr: ExpressionWithColumnType<out T>,
+    override val expr: ExpressionWithColumnType<out T>,
     list: Iterable<T>,
     isInList: Boolean = true
 ) : InListOrNotInListBaseOp<T>(expr, list, isInList) {
     override val columnTypes: List<ExpressionWithColumnType<*>> = listOf(expr)
 
-    override fun extractValues(value: T): List<Any?> = listOf(value)
+    override fun QueryBuilder.registerValues(values: T) {
+        registerArgument(expr.columnType, values)
+    }
 }
 
 /**
@@ -97,13 +86,19 @@ class SingleValueInListOp<T>(
  * To inverse the operator and check if the `Pair` is **not** in [list], set [isInList] to `false`.
  */
 class PairInListOp<T1, T2>(
-    expr: Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>,
+    override val expr: Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>,
     list: Iterable<Pair<T1, T2>>,
     isInList: Boolean = true
 ) : InListOrNotInListBaseOp<Pair<T1, T2>>(expr, list, isInList) {
     override val columnTypes: List<ExpressionWithColumnType<*>> = listOf(expr.first, expr.second)
 
-    override fun extractValues(value: Pair<T1, T2>): List<Any?> = listOf(value.first, value.second)
+    override fun QueryBuilder.registerValues(values: Pair<T1, T2>) {
+        append("(")
+        registerArgument(expr.first.columnType, values.first)
+        append(", ")
+        registerArgument(expr.second.columnType, values.second)
+        append(")")
+    }
 }
 
 /**
@@ -112,11 +107,19 @@ class PairInListOp<T1, T2>(
  * To inverse the operator and check if the `Triple` is **not** in [list], set [isInList] to `false`.
  */
 class TripleInListOp<T1, T2, T3>(
-    expr: Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>,
+    override val expr: Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>,
     list: Iterable<Triple<T1, T2, T3>>,
     isInList: Boolean = true
 ) : InListOrNotInListBaseOp<Triple<T1, T2, T3>>(expr, list, isInList) {
     override val columnTypes: List<ExpressionWithColumnType<*>> = listOf(expr.first, expr.second, expr.third)
 
-    override fun extractValues(value: Triple<T1, T2, T3>): List<Any?> = listOf(value.first, value.second, value.third)
+    override fun QueryBuilder.registerValues(values: Triple<T1, T2, T3>) {
+        append("(")
+        registerArgument(expr.first.columnType, values.first)
+        append(", ")
+        registerArgument(expr.second.columnType, values.second)
+        append(", ")
+        registerArgument(expr.third.columnType, values.third)
+        append(")")
+    }
 }

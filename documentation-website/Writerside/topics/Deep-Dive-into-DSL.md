@@ -40,9 +40,9 @@ To create a new table row, you use the `insert` query. Exposed provides several 
     // SQL: INSERT INTO CITIES (COUNTRY, "NAME", POPULATION)
     // VALUES ('RUSSIA', 'St. Petersburg', 300)
     Cities.insert {
-    it[name] = "St. Petersburg"
-    it[country] = Country.RUSSIA
-    it[population] = 500
+        it[name] = "St. Petersburg"
+        it[country] = Country.RUSSIA
+        it[population] = 500
     }
     ```
 * `insertAndGetId` adds a new row and returns its ID. If the same row already exists in the table, it throws an exception. Works only with IntIdTable() tables.
@@ -55,8 +55,8 @@ To create a new table row, you use the `insert` query. Exposed provides several 
         it[population] = 500
     }
     ```
-* `insertIgnore` adds a new row. If the same row already exists in the table, it ignores it and doesn't throw an exception. This function is supported only for MySQL, 
-  PostgreSQL, and SQLite. 
+* `insertIgnore` adds a new row. If the same row already exists in the table, it ignores it and doesn't throw an exception. This function is supported only for MySQL,
+  PostgreSQL, and SQLite.
     ```kotlin
     // SQL: INSERT IGNORE INTO CITIES (COUNTRY, "NAME", POPULATION)
     // VALUES ('RUSSIA', 'St. Petersburg', 300)
@@ -78,22 +78,14 @@ To create a new table row, you use the `insert` query. Exposed provides several 
     }
     ```
 
-```kotlin
-val id = StarWarsFilms.insertAndGetId {
-    it[name] = "The Last Jedi"
-    it[sequelId] = 8
-    it[director] = "Rian Johnson"
-}
-```
-
 Some databases return a count of the number of rows inserted, updated, or deleted by the CRUD operation.
 For `insert()`, `upsert()`, and `replace()`, this value can be accessed using the statement class property, `insertedCount`:
 
 ```kotlin
 val insertStatement = StarWarsFilms.insertIgnore {
-  it[name] = "The Last Jedi"
-  it[sequelId] = 8
-  it[director] = "Rian Johnson"
+     it[name] = "The Last Jedi"
+    it[sequelId] = 8
+    it[director] = "Rian Johnson"
 }
 val rowCount: Int = insertStatement.insertedCount
 ```
@@ -164,9 +156,40 @@ StarWarsFilms.deleteWhere { StarWarsFilms.sequelId eq 8 }
 
 Delete functions also return a count of the number of deleted rows, as for Update above.
 
+### Returning Data from Modified Rows
+
+Some databases (like PostgreSQL and SQLite) allow the return of additional data every time a row is either inserted, updated, or deleted by a CRUD operation.
+This can be accomplished by using `insertReturning()`, `upsertReturning()`, `updateReturning()`, or `deleteReturning()` with a list of the required table columns 
+provided as an argument. If the latter is omitted, all table columns will be returned by default:
+
+```kotlin
+object Projects : Table("projects") {
+    val title = varchar("title", 64)
+    val budget = integer("budget")
+    val created = datetime("created").defaultExpression(CurrentDateTime)
+}
+
+// returns all table columns by default
+val created: LocalDateTime = Projects.insertReturning {
+    it[title] = "Project A"
+    it[budget] = 100
+}.single()[Projects.created]
+
+val updatedBudgets: List<Int> = Projects.updateReturning(listOf(Projects.budget)) {
+    it[budget] = Projects.budget.times(5)
+}.map {
+    it[Projects.budget]
+}
+```
+
+<note>
+Unlike the base variants of these CRUD operations, a <code>ReturningStatement</code> behaves like a <code>Query</code> by also extending <code>Iterable</code>,
+so it will not be run by the database until the first attempt to iterate over its results.
+</note>
+
 ## Where expression
 
-Query expression (where) expects a boolean operator (ie: `Op<Boolean>`).  
+Query expression (where) expects a boolean operator (ie: `Op<Boolean>`).
 Allowed conditions are:
 
 ```
@@ -205,7 +228,7 @@ compoundOr()
 
 ## Conditional where
 
-It is a rather common case to have a query with a `where` clause that depends on some other code's conditions. Moreover, independent or nested conditions could 
+It is a rather common case to have a query with a `where` clause that depends on some other code's conditions. Moreover, independent or nested conditions could
 make it more complicated to prepare such `where` clauses.
 Let's imagine that we have a form on a website where a user can optionally filter "Star Wars" films by a director and/or a sequel.
 In Exposed version before 0.8.1 you had to code it like:
@@ -282,7 +305,7 @@ StarWarsFilms.selectAll().where { StarWarsFilms.name regexp "^The(\\s\\w+){2}\$"
 StarWarsFilms.selectAll().where { StarWarsFilms.sequelId.between(4, 6) }
 ```
 
-The `between` operator returns `true` if the expression is between the lower and upper range values (inclusive). 
+The `between` operator returns `true` if the expression is between the lower and upper range values (inclusive).
 Date and time values are also supported as arguments.
 
 ### Check for a match in a collection
@@ -301,6 +324,13 @@ StarWarsFilms.selectAll().where {
 ```
 
 `notInList` is available to check for expressions that are not equal to any elements in the provided collection.
+
+In addition to the `IN` operator, the `ANY` and `ALL` operators are available with any preceding comparison operator:
+```kotlin
+StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq anyFrom(arrayOf(6, 4)) }
+```
+
+`anyFrom()` and `allFrom()` also accept subqueries, tables, and array expressions as arguments.
 
 ## Count
 
@@ -568,17 +598,21 @@ transaction {
 }
 ```
 
-*NOTE:* The `batchInsert` function will still create multiple `INSERT` statements when interacting with your database. You most likely want to couple this with
-the `rewriteBatchedInserts=true` (or `rewriteBatchedStatements=true`) option of your relevant JDBC driver, which will convert those into a single bulkInsert.
-You can find the documentation for this option for MySQL [here](https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-configuration-properties.html) and
-PostgreSQL [here](https://jdbc.postgresql.org/documentation/use/).
+<note> 
+The `batchInsert` function will still create multiple `INSERT` statements when interacting with your database.
+
+You most likely want to couple this with the `rewriteBatchedInserts=true` (or `rewriteBatchedStatements=true`) option of your relevant JDBC driver, which will convert those into a single bulkInsert.
+
+You can find the documentation for this option for MySQL [here](https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_rewriteBatchedStatements) and
+PostgresSQL [here](https://jdbc.postgresql.org/documentation/use/).
+</note>
 
 If you don't need to get the newly generated values (example: auto incremented ID), set the `shouldReturnGeneratedValues` parameter to false, this increases the
 performance of batch inserts by batching them in chunks, instead of always waiting for the database to synchronize the newly inserted object state.
 
 If you want to check if the `rewriteBatchedInserts` + `batchInsert` is working correctly, check how to enable JDBC logging for your driver because Exposed will always
 show the non-rewritten multiple inserts. You can find the documentation for how to enable logging in
-PostgreSQL [here](https://jdbc.postgresql.org/documentation/logging/).
+PostgresSQL [here](https://jdbc.postgresql.org/documentation/logging/).
 
 ## Insert From Select
 
@@ -599,11 +633,11 @@ users.insert(users.select(stringParam("Foo"), Random().castTo<String>(VarCharCol
 
 ## Insert Or Ignore
 
-If supported by your specific database, `insertIgnore()` allows insert statements to be executed without throwing any 
+If supported by your specific database, `insertIgnore()` allows insert statements to be executed without throwing any
 ignorable errors. This may be useful, for example, when insertion conflicts are possible:
 ```kotlin
 StarWarsFilms.insert {
-    it[sequelId] = 8  // column pre-defined with a unique index
+    it[sequelId] = 8 // column pre-defined with a unique index
     it[name] = "The Last Jedi"
     it[director] = "Rian Johnson"
 }
@@ -618,14 +652,14 @@ StarWarsFilms.insertIgnore {
 
 ## Insert Or Update
 
-Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if a duplicate 
+Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if a duplicate
 constraint already exists. The supported functionality of `upsert()` is dependent on the specific database being used.
-For example, MySQL's `INSERT ... ON DUPLICATE KEY UPDATE` statement automatically assesses the primary key and unique indices 
+For example, MySQL's `INSERT ... ON DUPLICATE KEY UPDATE` statement automatically assesses the primary key and unique indices
 for a duplicate value, so using the function in Exposed would look like this:
 ```kotlin
 // inserts a new row
 StarWarsFilms.upsert {
-    it[sequelId] = 9  // column pre-defined with a unique index
+    it[sequelId] = 9 // column pre-defined with a unique index
     it[name] = "The Rise of Skywalker"
     it[director] = "Rian Johnson"
 }
@@ -637,12 +671,12 @@ StarWarsFilms.upsert {
 }
 ```
 
-If none of the optional arguments are provided to `upsert()`, the statements in the `body` block will be used for both the insert and update parts of the operation. 
-This means that, for example, if a table mapping has columns with default values and these columns are omitted from the `body` block, the default values will be 
-used for insertion as well as for the update operation. If the update operation should differ from the insert operation, then `onUpdate` should be provided an 
+If none of the optional arguments are provided to `upsert()`, the statements in the `body` block will be used for both the insert and update parts of the operation.
+This means that, for example, if a table mapping has columns with default values and these columns are omitted from the `body` block, the default values will be
+used for insertion as well as for the update operation. If the update operation should differ from the insert operation, then `onUpdate` should be provided an
 argument with the specific columns to update, as seen in the example below.
 
-Using another example, PostgreSQL allows more control over which key constraint columns to check for conflict, whether different 
+Using another example, PostgreSQL allows more control over which key constraint columns to check for conflict, whether different
 values should be used for an update, and whether the update statement should have a `WHERE` clause:
 ```kotlin
 val incrementSequelId = listOf(StarWarsFilms.sequelId to StarWarsFilms.sequelId.plus(1))
@@ -656,20 +690,40 @@ StarWarsFilms.upsert(
     it[director] = "JJ Abrams"
 }
 ```
-If a specific database supports user-defined key columns and none are provided, the table's primary key is used. If there 
-is no defined primary key, the first unique index is used. If there are no unique indices, each database handles this case 
+If the update operation should be identical to the insert operation except for a few columns,
+then `onUpdateExclude` should be provided an argument with the specific columns to exclude.
+This parameter could also be used for the reverse case when only a small subset of columns should be updated but duplicating the insert values is tedious:
+```kotlin
+// on conflict, all columns EXCEPT [director] are updated with values from the lambda block
+StarWarsFilms.upsert(onUpdateExclude = listOf(StarWarsFilms.director)) {
+    it[sequelId] = 9
+    it[name] = "The Rise of Skywalker"
+    it[director] = "JJ Abrams"
+}
+
+// on conflict, ONLY column [director] is updated with value from the lambda block
+StarWarsFilms.upsert(
+    onUpdateExclude = StarWarsFilms.columns - setOf(StarWarsFilms.director)
+) {
+    it[sequelId] = 9
+    it[name] = "The Rise of Skywalker"
+    it[director] = "JJ Abrams"
+}
+```
+If a specific database supports user-defined key columns and none are provided, the table's primary key is used. If there
+is no defined primary key, the first unique index is used. If there are no unique indices, each database handles this case
 differently, so it is strongly advised that keys are defined to avoid unexpected results.
 
 <note>
-Databases that do not support a specific Insert or Update command implement the standard `MERGE INTO ... USING` statement with aliases and a derived table column list. 
+Databases that do not support a specific Insert or Update command implement the standard <code>MERGE INTO ... USING</code> statement with aliases and a derived table column list. 
 These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode). 
-Any columns defined as key constraints (to be used in the `ON` clause) must be included in the statement block to avoid throwing an error.
+Any columns defined as key constraints (to be used in the <code>ON</code> clause) must be included in the statement block to avoid throwing an error.
 </note>
 
 ## Replace
 
-SQLite, MySQL, and MariaDB (as well as the H2 compatibility modes of the latter 2 databases) support a `REPLACE` statement that acts in a similar manner 
-to an `INSERT OR UPDATE` statement. The only difference is that, if an insertion would violate a unique constraint, the existing row is deleted (not updated) 
+SQLite, MySQL, and MariaDB (as well as the H2 compatibility modes of the latter 2 databases) support a `REPLACE` statement that acts in a similar manner
+to an `INSERT OR UPDATE` statement. The only difference is that, if an insertion would violate a unique constraint, the existing row is deleted (not updated)
 before the new row is inserted.
 
 ```kotlin
@@ -703,12 +757,12 @@ transaction {
 }
 ```
 
-Unlike Insert or Update, none of the supporting databases allows a `WHERE` clause. 
+Unlike Insert or Update, none of the supporting databases allows a `WHERE` clause.
 Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there is no parameter for a custom key set.
 
-The values specified in the statement block will be used for the insert statement and any omitted columns are set to their default values, if applicable.
+The values specified in the statement block will be used for the insert statement, and any omitted columns are set to their default values, if applicable.
 
 <note>
-In the example above, if the original row was inserted with a user-defined `rating`, then `replace()` was executed with a block that omitted the `rating` column, 
+In the example above, if the original row was inserted with a user-defined <code>rating</code>, then <code>replace()</code> was executed with a block that omitted the <code>rating</code> column, 
 the newly inserted row would store the default rating value. This is because the old row was completely deleted first.
 </note>

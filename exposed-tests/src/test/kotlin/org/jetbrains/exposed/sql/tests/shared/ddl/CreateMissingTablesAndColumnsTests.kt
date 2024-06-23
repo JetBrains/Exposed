@@ -37,7 +37,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(excludeSettings = listOf(TestDB.H2_MYSQL), tables = arrayOf(testTable)) {
+        withTables(excludeSettings = listOf(TestDB.H2_V2_MYSQL), tables = arrayOf(testTable)) {
             SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
             SchemaUtils.drop(testTable)
@@ -57,14 +57,12 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-            if (!isOldMySql()) {
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            assertTrue(testTable.exists())
+            try {
                 SchemaUtils.createMissingTablesAndColumns(testTable)
-                assertTrue(testTable.exists())
-                try {
-                    SchemaUtils.createMissingTablesAndColumns(testTable)
-                } finally {
-                    SchemaUtils.drop(testTable)
-                }
+            } finally {
+                SchemaUtils.drop(testTable)
             }
         }
     }
@@ -118,7 +116,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb(db = listOf(TestDB.H2)) {
+        withDb(db = listOf(TestDB.H2_V2)) {
             SchemaUtils.createMissingTablesAndColumns(t1)
             t1.insert { it[foo] = "ABC" }
 
@@ -252,7 +250,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
         val t = IntIdTable(tableName)
 
-        withTables(excludeSettings = TestDB.allH2TestDB + TestDB.SQLITE, tables = arrayOf(initialTable)) {
+        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLITE, tables = arrayOf(initialTable)) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
@@ -292,12 +290,12 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `columns with default values that haven't changed shouldn't trigger change`() {
+    fun columnsWithDefaultValuesThatHaveNotChangedShouldNotTriggerChange() {
         var table by Delegates.notNull<Table>()
         withDb { testDb ->
             try {
                 // MySQL doesn't support default values on text columns, hence excluded
-                table = if (testDb != TestDB.MYSQL) {
+                table = if (testDb !in TestDB.ALL_MYSQL) {
                     object : Table("varchar_test") {
                         val varchar = varchar("varchar_column", 255).default(" ")
                         val text = text("text_column").default(" ")
@@ -307,8 +305,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                         val varchar = varchar("varchar_column", 255).default(" ")
                     }
                 }
-
-                // MySQL doesn't support default values on text columns, hence excluded
 
                 SchemaUtils.create(table)
                 val actual = SchemaUtils.statementsRequiredToActualizeScheme(table)
@@ -329,7 +325,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `columns with default values that are whitespaces shouldn't be treated as empty strings`() {
+    fun columnsWithDefaultValuesThatAreWhitespacesShouldNotBeTreatedAsEmptyStrings() {
         val tableWhitespaceDefaultVarchar = StringFieldTable("varchar_whitespace_test", false, " ")
 
         val tableWhitespaceDefaultText = StringFieldTable("text_whitespace_test", true, " ")
@@ -341,7 +337,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         // SQLite doesn't support alter table with add column, so it doesn't generate the statements, hence excluded
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             // MySQL doesn't support default values on text columns, hence excluded
-            val supportsTextDefault = testDb !in listOf(TestDB.MYSQL)
+            val supportsTextDefault = testDb !in TestDB.ALL_MYSQL
             val tablesToTest = listOfNotNull(
                 tableWhitespaceDefaultVarchar to tableEmptyStringDefaultVarchar,
                 (tableWhitespaceDefaultText to tableEmptyStringDefaultText).takeIf { supportsTextDefault },
@@ -376,7 +372,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
                     // null is here as Oracle treat '' as NULL
                     val expectedEmptyValue = when (testDb) {
-                        TestDB.ORACLE, TestDB.H2_ORACLE -> null
+                        TestDB.ORACLE, TestDB.H2_V2_ORACLE -> null
                         else -> ""
                     }
 
@@ -411,7 +407,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         val excludeSettings = listOf(TestDB.SQLITE)
-        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE, TestDB.H2_PSQL, TestDB.SQLSERVER)
+        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE, TestDB.H2_V2_PSQL, TestDB.SQLSERVER)
         withDb(excludeSettings = excludeSettings) { testDb ->
             try {
                 SchemaUtils.createMissingTablesAndColumns(t1)
@@ -568,7 +564,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
     @Test
     fun createTableWithReservedIdentifierInColumnName() {
-        withDb(TestDB.MYSQL) {
+        withDb(TestDB.MYSQL_V5) {
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
 
@@ -641,6 +637,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+            assertTrue(statements.isEmpty())
         }
     }
 
@@ -683,7 +681,6 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     @Test
     fun testCreateTableWithSchemaPrefix() {
         val schemaName = "my_schema"
-        val schema = Schema(schemaName)
         // index and foreign key both use table name to auto-generate their own names & to compare metadata
         // default columns in SQL Server requires a named constraint that uses table name
         val parentTable = object : IntIdTable("$schemaName.parent_table") {
@@ -696,13 +693,29 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         // SQLite does not recognize creation of schema other than the attached database
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
+            val schema = if (testDb == TestDB.SQLSERVER) {
+                Schema(schemaName, "guest")
+            } else {
+                Schema(schemaName)
+            }
+
+            // Should not require to be in the same schema
             SchemaUtils.createSchema(schema)
             SchemaUtils.create(parentTable, childTable)
 
             try {
+                // Try in different schema
                 SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
                 assertTrue(parentTable.exists())
                 assertTrue(childTable.exists())
+
+                // Try in the same schema
+                if (testDb != TestDB.ORACLE) {
+                    SchemaUtils.setSchema(schema)
+                    SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
+                    assertTrue(parentTable.exists())
+                    assertTrue(childTable.exists())
+                }
             } finally {
                 if (testDb == TestDB.SQLSERVER) {
                     SchemaUtils.drop(childTable, parentTable)

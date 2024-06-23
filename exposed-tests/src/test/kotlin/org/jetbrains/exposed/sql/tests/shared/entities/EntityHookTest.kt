@@ -306,7 +306,7 @@ class EntityHookTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun `calling flush notifies EntityHook subscribers`() {
+    fun testCallingFlushNotifiesEntityHookSubscribers() {
         withTables(EntityHookTestData.User.table) {
             var hookCalls = 0
             val user = EntityHookTestData.User.new {

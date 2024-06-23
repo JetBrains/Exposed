@@ -15,7 +15,7 @@ import java.math.BigDecimal
 class ArithmeticTests : DatabaseTestsBase() {
     @Test
     fun `test operator precedence of minus() plus() div() times()`() {
-        withCitiesAndUsers(exclude = listOf(TestDB.H2_ORACLE)) { _, _, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.H2_V2_ORACLE)) { _, _, userData ->
             val calculatedColumn = ((DMLTestsData.UserData.value - 5) * 2) / 2
             userData
                 .select(DMLTestsData.UserData.value, calculatedColumn)

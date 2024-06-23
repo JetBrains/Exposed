@@ -24,7 +24,7 @@ object Cities : Table() {
 }
 
 fun main() {
-    Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+    Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {

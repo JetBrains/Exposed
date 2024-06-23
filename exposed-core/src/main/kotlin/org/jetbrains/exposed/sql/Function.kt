@@ -9,7 +9,7 @@ import java.math.BigDecimal
 /**
  * Represents an SQL function.
  */
-abstract class Function<T>(override val columnType: IColumnType) : ExpressionWithColumnType<T>()
+abstract class Function<T>(override val columnType: IColumnType<T & Any>) : ExpressionWithColumnType<T>()
 
 /**
  * Represents a custom SQL function.
@@ -17,7 +17,7 @@ abstract class Function<T>(override val columnType: IColumnType) : ExpressionWit
 open class CustomFunction<T>(
     /** Returns the name of the function. */
     val functionName: String,
-    columnType: IColumnType,
+    columnType: IColumnType<T & Any>,
     /** Returns the list of arguments of this function. */
     vararg val expr: Expression<*>
 ) : Function<T>(columnType) {
@@ -34,7 +34,7 @@ open class CustomFunction<T>(
 open class CustomOperator<T>(
     /** Returns the name of the operator. */
     val operatorName: String,
-    columnType: IColumnType,
+    columnType: IColumnType<T & Any>,
     /** Returns the left-hand side operand. */
     val expr1: Expression<*>,
     /** Returns the right-hand side operand. */
@@ -84,7 +84,7 @@ class CharLength<T : String?>(
 class LowerCase<T : String?>(
     /** Returns the expression to convert. */
     val expr: Expression<T>
-) : Function<T>(TextColumnType()) {
+) : Function<String>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("LOWER(", expr, ")") }
 }
 
@@ -94,7 +94,7 @@ class LowerCase<T : String?>(
 class UpperCase<T : String?>(
     /** Returns the expression to convert. */
     val expr: Expression<T>
-) : Function<T>(TextColumnType()) {
+) : Function<String>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("UPPER(", expr, ")") }
 }
 
@@ -124,7 +124,7 @@ class GroupConcat<T : String?>(
     val distinct: Boolean,
     /** Returns the order in which the elements of each group are sorted. */
     vararg val orderBy: Pair<Expression<*>, SortOrder>
-) : Function<T>(TextColumnType()) {
+) : Function<String>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         currentDialect.functionProvider.groupConcat(this, queryBuilder)
     }
@@ -138,7 +138,7 @@ class Substring<T : String?>(
     private val start: Expression<Int>,
     /** Returns the length of the substring. */
     val length: Expression<Int>
-) : Function<T>(TextColumnType()) {
+) : Function<String>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         currentDialect.functionProvider.substring(expr, start, length, queryBuilder)
     }
@@ -150,7 +150,7 @@ class Substring<T : String?>(
 class Trim<T : String?>(
     /** Returns the expression being trimmed. */
     val expr: Expression<T>
-) : Function<T>(TextColumnType()) {
+) : Function<String>(TextColumnType()) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("TRIM(", expr, ")") }
 }
 
@@ -170,7 +170,7 @@ class Locate<T : String?>(val expr: Expression<T>, val substring: String) : Func
 class Min<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the minimum value is obtained. */
     val expr: Expression<in S>,
-    columnType: IColumnType
+    columnType: IColumnType<T>
 ) : Function<T?>(columnType), WindowFunction<T?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MIN(", expr, ")") }
 
@@ -185,7 +185,7 @@ class Min<T : Comparable<T>, in S : T?>(
 class Max<T : Comparable<T>, in S : T?>(
     /** Returns the expression from which the maximum value is obtained. */
     val expr: Expression<in S>,
-    columnType: IColumnType
+    columnType: IColumnType<T>
 ) : Function<T?>(columnType), WindowFunction<T?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("MAX(", expr, ")") }
 
@@ -197,9 +197,9 @@ class Max<T : Comparable<T>, in S : T?>(
 /**
  * Represents an SQL function that returns the average (arithmetic mean) of all non-null input values, or `null` if there are no non-null values.
  */
-class Avg<T : Comparable<T>, in S : T?>(
+class Avg<T : Comparable<T>, S : T?>(
     /** Returns the expression from which the average is calculated. */
-    val expr: Expression<in S>,
+    val expr: Expression<S>,
     scale: Int
 ) : Function<BigDecimal?>(DecimalColumnType(Int.MAX_VALUE, scale)), WindowFunction<BigDecimal?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("AVG(", expr, ")") }
@@ -215,7 +215,7 @@ class Avg<T : Comparable<T>, in S : T?>(
 class Sum<T>(
     /** Returns the expression from which the sum is calculated. */
     val expr: Expression<T>,
-    columnType: IColumnType
+    columnType: IColumnType<T & Any>
 ) : Function<T?>(columnType), WindowFunction<T?> {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { append("SUM(", expr, ")") }
 
@@ -351,7 +351,7 @@ class VarSamp<T>(
 sealed class NextVal<T>(
     /** Returns the sequence from which the next value is obtained. */
     val seq: Sequence,
-    columnType: IColumnType
+    columnType: IColumnType<T & Any>
 ) : Function<T>(columnType) {
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
@@ -393,30 +393,30 @@ class CaseWhen<T>(
 
     /** Adds a conditional expression with a [result] if the expression evaluates to `true`. */
     @Suppress("UNCHECKED_CAST")
-    fun <R : T> When(cond: Expression<Boolean>, result: Expression<R>): CaseWhen<R> {
+    fun When(cond: Expression<Boolean>, result: Expression<T>): CaseWhen<T> {
         cases.add(cond to result)
-        return this as CaseWhen<R>
+        return this
     }
 
     /** Adds an expression that will be used as the function result if all [cases] evaluate to `false`. */
-    fun <R : T> Else(e: Expression<R>): ExpressionWithColumnType<R> = CaseWhenElse(this, e)
+    fun Else(e: Expression<T>): ExpressionWithColumnType<T> = CaseWhenElse(this, e)
 }
 
 /**
  * Represents an SQL function that steps through conditions, and either returns a value when the first condition is met
  * or returns [elseResult] if all conditions are `false`.
  */
-class CaseWhenElse<T, R : T>(
+class CaseWhenElse<T>(
     /** The conditions to check and their results if met. */
     val caseWhen: CaseWhen<T>,
     /** The result if none of the conditions checked are found to be `true`. */
-    val elseResult: Expression<R>
-) : ExpressionWithColumnType<R>(), ComplexExpression {
+    val elseResult: Expression<T>
+) : ExpressionWithColumnType<T>(), ComplexExpression {
 
-    override val columnType: IColumnType =
-        (elseResult as? ExpressionWithColumnType<R>)?.columnType
-            ?: caseWhen.cases.map { it.second }.filterIsInstance<ExpressionWithColumnType<*>>().firstOrNull()?.columnType
-            ?: BooleanColumnType.INSTANCE
+    override val columnType: IColumnType<T & Any> =
+        (elseResult as? ExpressionWithColumnType<T>)?.columnType
+            ?: caseWhen.cases.map { it.second }.filterIsInstance<ExpressionWithColumnType<T>>().firstOrNull()?.columnType
+            ?: error("No column type has been found")
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
@@ -438,11 +438,12 @@ class CaseWhenElse<T, R : T>(
 /**
  * Represents an SQL function that returns the first of its arguments that is not null.
  */
-class Coalesce<out T, S : T?, R : T>(
+@Suppress("UNCHECKED_CAST")
+class Coalesce<T, S : T?>(
     private val expr: ExpressionWithColumnType<S>,
     private val alternate: Expression<out T>,
     private vararg val others: Expression<out T>
-) : Function<R>(expr.columnType) {
+) : Function<T>(expr.columnType as IColumnType<T & Any>) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         (listOf(expr, alternate) + others).appendTo(
             prefix = "COALESCE(",
@@ -460,7 +461,7 @@ class Coalesce<out T, S : T?, R : T>(
 class Cast<T>(
     /** Returns the expression being casted. */
     val expr: Expression<*>,
-    columnType: IColumnType
+    columnType: IColumnType<T & Any>
 ) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         currentDialect.functionProvider.cast(expr, columnType, queryBuilder)

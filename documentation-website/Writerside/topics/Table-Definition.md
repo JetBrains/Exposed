@@ -127,10 +127,10 @@ Table.indices.map { it.indexName to it.createStatement().first() }
 ```
 
 <note>
-An instance of the `Index` data class can be created directly using its public constructor, for the purpose of 
+An instance of the <code>Index</code> data class can be created directly using its public constructor, for the purpose of 
 evaluating or using  create/modify/drop statements, for example. Doing so will not add the instance to an existing table's 
-list of indices in the way that using `index()` would. Also, if an instance is created with arguments provided to the 
-`functions` parameter, a `functionsTable` argument must also be provided.
+list of indices in the way that using <code>index()</code> would. Also, if an instance is created with arguments provided to the 
+<code>functions</code> parameter, a <code>functionsTable</code> argument must also be provided.
 </note>
 
 ### Unique

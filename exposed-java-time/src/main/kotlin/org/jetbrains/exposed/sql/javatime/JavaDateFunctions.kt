@@ -17,7 +17,9 @@ import java.time.temporal.Temporal
 
 /** Represents an SQL function that extracts the date part from a given temporal [expr]. */
 class Date<T : Temporal?>(val expr: Expression<T>) : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("DATE(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        currentDialect.functionProvider.date(expr, queryBuilder)
+    }
 }
 
 /** Represents an SQL function that extracts the time part from a given temporal [expr]. */
@@ -26,11 +28,9 @@ class Time<T : Temporal?>(val expr: Expression<T>) : Function<LocalTime>(JavaLoc
 }
 
 /**
- * Represents an SQL function that returns the current date and time, as [LocalDateTime].
- *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ * Represents the base SQL function that returns the current date and time, as determined by the specified [columnType].
  */
-object CurrentDateTime : Function<LocalDateTime>(JavaLocalDateTimeColumnType.INSTANCE) {
+sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
             (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
@@ -55,18 +55,25 @@ object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
 }
 
 /**
- * Represents an SQL function that returns the current date and time.
+ * Represents an SQL function that returns the current date and time, as [LocalDateTime].
  *
  * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
-class CurrentTimestamp<T : Temporal> : Function<T>(JavaInstantColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        +when {
-            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
-            else -> "CURRENT_TIMESTAMP"
-        }
-    }
-}
+object CurrentDateTime : CurrentTimestampBase<LocalDateTime>(JavaLocalDateTimeColumnType.INSTANCE)
+
+/**
+ * Represents an SQL function that returns the current date and time, as [Instant].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ */
+object CurrentTimestamp : CurrentTimestampBase<Instant>(JavaInstantColumnType.INSTANCE)
+
+/**
+ * Represents an SQL function that returns the current date and time with time zone, as [OffsetDateTime].
+ *
+ * @sample org.jetbrains.exposed.DefaultsTest.testTimestampWithTimeZoneDefaults
+ */
+object CurrentTimestampWithTimeZone : CurrentTimestampBase<OffsetDateTime>(JavaOffsetDateTimeColumnType.INSTANCE)
 
 /** Represents an SQL function that extracts the year field from a given temporal [expr]. */
 class Year<T : Temporal?>(val expr: Expression<T>) : Function<Int>(IntegerColumnType()) {

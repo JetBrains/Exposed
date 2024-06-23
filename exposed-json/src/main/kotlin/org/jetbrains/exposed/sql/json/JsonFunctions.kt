@@ -22,8 +22,8 @@ class Extract<T>(
     /** Whether the extracted result should be a scalar or text value; if `false`, result will be a JSON object. */
     val toScalar: Boolean,
     /** The column type of [expression] to check, if casting to JSONB is required. */
-    val jsonType: IColumnType,
-    columnType: IColumnType
+    val jsonType: IColumnType<*>,
+    columnType: IColumnType<T & Any>
 ) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) =
         currentDialect.functionProvider.jsonExtract(expression, path = path, toScalar, jsonType, queryBuilder)
@@ -44,22 +44,13 @@ inline fun <reified T : Any> ExpressionWithColumnType<*>.extract(
     vararg path: String,
     toScalar: Boolean = true
 ): Extract<T> {
-    val columnType = when (T::class) {
-        String::class -> TextColumnType()
-        Boolean::class -> BooleanColumnType()
-        Long::class -> LongColumnType()
-        Int::class -> IntegerColumnType()
-        Short::class -> ShortColumnType()
-        Byte::class -> ByteColumnType()
-        Double::class -> DoubleColumnType()
-        Float::class -> FloatColumnType()
-        ByteArray::class -> BasicBinaryColumnType()
-        else -> {
-            JsonColumnType(
-                { Json.Default.encodeToString(serializer<T>(), it) },
-                { Json.Default.decodeFromString(serializer<T>(), it) }
-            )
-        }
-    }
+    @OptIn(InternalApi::class)
+    val columnType = resolveColumnType(
+        T::class,
+        defaultType = JsonColumnType(
+            { Json.Default.encodeToString(serializer<T>(), it) },
+            { Json.Default.decodeFromString(serializer<T>(), it) }
+        )
+    )
     return Extract(this, path = path, toScalar, this.columnType, columnType)
 }

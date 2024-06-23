@@ -2,6 +2,10 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.MergeStatement
+import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.DELETE
+import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.INSERT
+import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.UPDATE
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.DatabaseMetaData
 import java.util.*
@@ -66,12 +70,6 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
     override fun jsonType(): String = "VARCHAR2(4000)"
 
-    override fun processForDefaultValue(e: Expression<*>): String = when {
-        e is LiteralOp<*> && (e.columnType as? IDateColumnType)?.hasTimePart == false -> "DATE ${super.processForDefaultValue(e)}"
-        e is LiteralOp<*> && e.columnType is IDateColumnType -> "TIMESTAMP ${super.processForDefaultValue(e)}"
-        else -> super.processForDefaultValue(e)
-    }
-
     override fun hexToDb(hexString: String): String = "HEXTORAW('$hexString')"
 }
 
@@ -133,6 +131,10 @@ internal object OracleFunctionProvider : FunctionProvider() {
         append("INSTR(", expr, ",\'", substring, "\')")
     }
 
+    override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("CAST(", expr, " AS DATE)")
+    }
+
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("Extract(YEAR FROM ")
         append(expr)
@@ -173,7 +175,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         if (path.size > 1) {
@@ -191,7 +193,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expression: Expression<*>,
         vararg path: String,
         optional: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         if (path.size > 1) {
@@ -266,11 +268,12 @@ internal object OracleFunctionProvider : FunctionProvider() {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
     ): String {
-        val statement = super.upsert(table, data, onUpdate, where, transaction, *keys)
+        val statement = super.upsert(table, data, onUpdate, onUpdateExclude, where, transaction, *keys)
 
         val dualTable = data.appendTo(QueryBuilder(true), prefix = "(SELECT ", postfix = " FROM DUAL) S") { (column, value) ->
             registerArgument(column, value)
@@ -299,6 +302,45 @@ internal object OracleFunctionProvider : FunctionProvider() {
 
     override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
         return (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
+    }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        transaction.throwUnsupportedException(
+            "EXPLAIN queries are not currently supported for Oracle. Please log a YouTrack feature extension request."
+        )
+    }
+
+    override fun merge(dest: Table, source: Table, transaction: Transaction, clauses: List<MergeStatement.Clause>, on: Op<Boolean>?): String {
+        validateMergeCommandClauses(transaction, clauses)
+        return super.merge(dest, source, transaction, clauses, on)
+    }
+
+    override fun mergeSelect(
+        dest: Table,
+        source: QueryAlias,
+        transaction: Transaction,
+        clauses: List<MergeStatement.Clause>,
+        on: Op<Boolean>,
+        prepared: Boolean
+    ): String {
+        validateMergeCommandClauses(transaction, clauses)
+        return super.mergeSelect(dest, source, transaction, clauses, on, prepared)
+    }
+}
+
+private fun validateMergeCommandClauses(transaction: Transaction, clauses: List<MergeStatement.Clause>) {
+    when {
+        clauses.count { it.action == INSERT } > 1 ->
+            transaction.throwUnsupportedException("Multiple insert clauses are not supported by DB.")
+        clauses.count { it.action == UPDATE } > 1 ->
+            transaction.throwUnsupportedException("Multiple update clauses are not supported by DB.")
+        clauses.count { it.action == DELETE } > 0 ->
+            transaction.throwUnsupportedException("Delete clauses are not supported by DB. You must use 'delete where' inside 'update' clause")
     }
 }
 
@@ -379,6 +421,16 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         DatabaseMetaData.importedKeySetNull -> ReferenceOption.SET_NULL
         DatabaseMetaData.importedKeyRestrict -> ReferenceOption.NO_ACTION
         else -> currentDialect.defaultReferenceOption
+    }
+
+    override fun sequences(): List<String> {
+        val sequences = mutableListOf<String>()
+        TransactionManager.current().exec("SELECT SEQUENCE_NAME FROM USER_SEQUENCES") { rs ->
+            while (rs.next()) {
+                sequences.add(rs.getString("SEQUENCE_NAME"))
+            }
+        }
+        return sequences
     }
 
     companion object : DialectNameProvider("Oracle")

@@ -1,11 +1,9 @@
 package org.jetbrains.exposed.sql.tests.shared.functions
 
-import org.jetbrains.exposed.crypt.Algorithms
-import org.jetbrains.exposed.crypt.Encryptor
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.coalesce
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -13,9 +11,12 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
-import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -48,7 +49,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testCalc03() {
-        withCitiesAndUsers(exclude = listOf(TestDB.H2_ORACLE)) { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.H2_V2_ORACLE)) { cities, users, userData ->
             val sum = Expression.build { Sum(cities.id * 100 + userData.value / 10, IntegerColumnType()) }
             val mod1 = Expression.build { sum % 100 }
             val mod2 = Expression.build { sum mod 100 }
@@ -380,7 +381,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testRegexp01() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.H2_SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(TestDB.ALL_SQLSERVER_LIKE + TestDB.SQLITE) { _, users, _ ->
             assertEquals(2L, users.selectAll().where { users.id regexp "a.+" }.count())
             assertEquals(1L, users.selectAll().where { users.id regexp "an.+" }.count())
             assertEquals(users.selectAll().count(), users.selectAll().where { users.id regexp ".*" }.count())
@@ -390,7 +391,7 @@ class FunctionsTests : DatabaseTestsBase() {
 
     @Test
     fun testRegexp02() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.H2_SQLSERVER)) { _, users, _ ->
+        withCitiesAndUsers(TestDB.ALL_SQLSERVER_LIKE + TestDB.SQLITE) { _, users, _ ->
             assertEquals(2L, users.selectAll().where { users.id.regexp(stringLiteral("a.+")) }.count())
             assertEquals(1L, users.selectAll().where { users.id.regexp(stringLiteral("an.+")) }.count())
             assertEquals(users.selectAll().count(), users.selectAll().where { users.id.regexp(stringLiteral(".*")) }.count())
@@ -574,14 +575,15 @@ class FunctionsTests : DatabaseTestsBase() {
     @Test
     fun testCoalesceFunction() {
         withCitiesAndUsers { _, users, _ ->
-            val coalesceExp1 = Coalesce(users.cityId, intLiteral(1000))
+            val coalesceExp1 = coalesce(users.cityId, intLiteral(1000))
 
             users.select(users.cityId, coalesceExp1).forEach {
                 val cityId = it[users.cityId]
+                val actual: Int = it[coalesceExp1]
                 if (cityId != null) {
-                    assertEquals(cityId, it[coalesceExp1])
+                    assertEquals(cityId, actual)
                 } else {
-                    assertEquals(1000, it[coalesceExp1])
+                    assertEquals(1000, actual)
                 }
             }
 
@@ -589,10 +591,11 @@ class FunctionsTests : DatabaseTestsBase() {
 
             users.select(users.cityId, coalesceExp2).forEach {
                 val cityId = it[users.cityId]
+                val actual: Int = it[coalesceExp2]
                 if (cityId != null) {
-                    assertEquals(cityId, it[coalesceExp2])
+                    assertEquals(cityId, actual)
                 } else {
-                    assertEquals(1000, it[coalesceExp2])
+                    assertEquals(1000, actual)
                 }
             }
         }
@@ -612,30 +615,6 @@ class FunctionsTests : DatabaseTestsBase() {
             val concatField3 = SqlExpressionBuilder.run { "Hi " plus users.name + "!" }
             val result3 = users.select(concatField3).where { users.id eq "andrey" }.single()
             assertEquals("Hi Andrey!", result3[concatField3])
-        }
-    }
-
-    private val encryptors = arrayOf(
-        "AES_256_PBE_GCM" to Algorithms.AES_256_PBE_GCM("passwd", "12345678"),
-        "AES_256_PBE_CBC" to Algorithms.AES_256_PBE_CBC("passwd", "12345678"),
-        "BLOW_FISH" to Algorithms.BLOW_FISH("sadsad"),
-        "TRIPLE_DES" to Algorithms.TRIPLE_DES("1".repeat(24))
-    )
-    private val testStrings = arrayOf("1", "2".repeat(10), "3".repeat(31), "4".repeat(1001), "5".repeat(5391))
-
-    @Test
-    fun `test output length of encryption`() {
-        fun testSize(algorithm: String, encryptor: Encryptor, str: String) =
-            assertEquals(
-                encryptor.maxColLength(str.toByteArray().size),
-                encryptor.encrypt(str).toByteArray().size,
-                "Failed to calculate length of $algorithm's output."
-            )
-
-        for ((algorithm, encryptor) in encryptors) {
-            for (testStr in testStrings) {
-                testSize(algorithm, encryptor, testStr)
-            }
         }
     }
 }

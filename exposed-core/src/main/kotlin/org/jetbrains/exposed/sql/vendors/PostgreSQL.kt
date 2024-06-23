@@ -8,8 +8,10 @@ import java.util.*
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun byteType(): String = "SMALLINT"
     override fun floatType(): String = "REAL"
+    override fun ulongType(): String = "BIGINT"
     override fun integerAutoincType(): String = "SERIAL"
     override fun longAutoincType(): String = "BIGSERIAL"
+    override fun ulongAutoincType(): String = "BIGSERIAL"
     override fun uuidType(): String = "uuid"
     override fun binaryType(): String = "bytea"
     override fun binaryType(length: Int): String {
@@ -21,14 +23,15 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun dateTimeType(): String = "TIMESTAMP"
     override fun jsonBType(): String = "JSONB"
 
-    override fun untypedAndUnsizedArrayType(): String = "ARRAY"
-
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && e.columnType is JsonColumnMarker && (currentDialect as? H2Dialect) == null -> {
             val cast = if (e.columnType.usesBinaryFormat) "::jsonb" else "::json"
             "${super.processForDefaultValue(e)}$cast"
         }
-        e is LiteralOp<*> && e.columnType is ArrayColumnType -> {
+        e is LiteralOp<*> && e.columnType is BlobColumnType && e.columnType.useObjectIdentifier && (currentDialect as? H2Dialect) == null -> {
+            "lo_from_bytea(0, ${super.processForDefaultValue(e)} :: bytea)"
+        }
+        e is LiteralOp<*> && e.columnType is ArrayColumnType<*> -> {
             val processed = super.processForDefaultValue(e)
             processed
                 .takeUnless { it == "ARRAY[]" }
@@ -94,6 +97,10 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         append(pattern)
     }
 
+    override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("CAST(", expr, " AS DATE)")
+    }
+
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("Extract(YEAR FROM ")
         append(expr)
@@ -144,7 +151,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         expression: Expression<T>,
         vararg path: String,
         toScalar: Boolean,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) = queryBuilder {
         append("${jsonType.sqlType()}_EXTRACT_PATH")
@@ -158,7 +165,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         target: Expression<*>,
         candidate: Expression<*>,
         path: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         path?.let {
@@ -177,7 +184,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         expression: Expression<*>,
         vararg path: String,
         optional: String?,
-        jsonType: IColumnType,
+        jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
         if (path.size > 1) {
@@ -261,6 +268,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
         onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?,
         transaction: Transaction,
         vararg keys: Column<*>
@@ -270,8 +278,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("UPSERT requires a unique key or constraint as a conflict target")
         }
 
-        val dataColumns = data.unzip().first
-        val updateColumns = dataColumns.filter { it !in keyColumns }.ifEmpty { dataColumns }
+        val updateColumns = getUpdateColumnsForUpsert(data.unzip().first, onUpdateExclude, keyColumns)
 
         return with(QueryBuilder(true)) {
             appendInsertToUpsertClause(table, data, transaction)
@@ -304,12 +311,41 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
         return super.delete(ignore, table, where, limit, transaction)
     }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        return if (analyze && options != null) {
+            super.explain(false, "ANALYZE TRUE, $options", internalStatement, transaction)
+        } else {
+            super.explain(analyze, options, internalStatement, transaction)
+        }
+    }
+
+    override fun StringBuilder.appendOptionsToExplain(options: String) { append("($options) ") }
+
+    override fun returning(
+        mainSql: String,
+        returning: List<Expression<*>>,
+        transaction: Transaction
+    ): String {
+        return with(QueryBuilder(true)) {
+            +"$mainSql RETURNING "
+            returning.appendTo { +it }
+            toString()
+        }
+    }
 }
 
 /**
  * PostgreSQL dialect implementation.
  */
 open class PostgreSQLDialect(override val name: String = dialectName) : VendorDialect(dialectName, PostgreSQLDataTypeProvider, PostgreSQLFunctionProvider) {
+    override val supportsSubqueryUnions: Boolean = true
+
     override val supportsOrderByNullsFirstLast: Boolean = true
 
     override val requiresAutoCommitOnCreateDrop: Boolean = true

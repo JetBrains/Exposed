@@ -77,7 +77,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     @Deprecated(
         message = "This will be removed when the interface property is fully deprecated",
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     override val currentScheme: String get() = currentSchema!!
 
@@ -221,7 +221,13 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     rs.close()
                     names
                 }
-                val storedIndexTable = if (tableSchema == currentSchema!!) table.nameInDatabaseCase() else table.nameInDatabaseCaseUnquoted()
+
+                val storedIndexTable = if
+                    (tableSchema == currentSchema!! && currentDialect is OracleDialect) {
+                    table.nameInDatabaseCase()
+                } else {
+                    table.nameInDatabaseCaseUnquoted()
+                }
                 val rs = metadata.getIndexInfo(catalog, tableSchema, storedIndexTable, false, false)
 
                 val tmpIndices = hashMapOf<Triple<String, Boolean, Op.TRUE?>, MutableList<String>>()
@@ -277,6 +283,16 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 if (pkName.isEmpty()) null else PrimaryKeyMetadata(pkName, columnNames)
             }
         }
+    }
+
+    @Suppress("MagicNumber")
+    override fun sequences(): List<String> {
+        val sequences = mutableListOf<String>()
+        val rs = metadata.getTables(null, null, null, arrayOf("SEQUENCE"))
+        while (rs.next()) {
+            sequences.add(rs.getString(3))
+        }
+        return sequences
     }
 
     @Synchronized

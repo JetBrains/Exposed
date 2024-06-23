@@ -21,7 +21,7 @@ class Column<T>(
     /** Name of the column. */
     val name: String,
     /** Data type of the column. */
-    override val columnType: IColumnType
+    override val columnType: IColumnType<T & Any>
 ) : ExpressionWithColumnType<T>(), DdlAware, Comparable<Column<*>> {
     /** The foreign key constraint on this column, or `null` if the column is not referencing. */
     var foreignKey: ForeignKeyConstraint? = null
@@ -30,7 +30,7 @@ class Column<T>(
     val referee: Column<*>?
         get() = foreignKey?.targetOf(this)
 
-    /** Returns the column that this column references, casted as a column of type [S], or `null` if the cast fails. */
+    /** Returns the column that this column references, cast as a column of type [S], or `null` if the cast fails. */
     @Suppress("UNCHECKED_CAST")
     fun <S : T> referee(): Column<S>? = referee as? Column<S>
 
@@ -43,11 +43,13 @@ class Column<T>(
 
     internal var isDatabaseGenerated: Boolean = false
 
+    /** Returns whether this column's value will be generated in the database. */
+    fun isDatabaseGenerated() = isDatabaseGenerated
+
+    internal var extraDefinitions = mutableListOf<Any>()
+
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = TransactionManager.current().fullIdentity(this@Column, queryBuilder)
-
-    /** Returns the list of DDL statements that create this column. */
-    val ddl: List<String> get() = createStatement()
 
     /** Returns the column name in proper case. */
     fun nameInDatabaseCase(): String = name.inProperCase()
@@ -63,12 +65,13 @@ class Column<T>(
     private val isLastColumnInPK: Boolean
         get() = this == table.primaryKey?.columns?.last()
 
-    internal val isPrimaryConstraintWillBeDefined: Boolean get() = when {
-        currentDialect is SQLiteDialect && columnType.isAutoInc -> false
-        table.isCustomPKNameDefined() -> isLastColumnInPK
-        isOneColumnPK() -> false
-        else -> isLastColumnInPK
-    }
+    internal val isPrimaryConstraintWillBeDefined: Boolean
+        get() = when {
+            currentDialect is SQLiteDialect && columnType.isAutoInc -> false
+            table.isCustomPKNameDefined() -> isLastColumnInPK
+            isOneColumnPK() -> false
+            else -> isLastColumnInPK
+        }
 
     override fun createStatement(): List<String> {
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
@@ -140,6 +143,10 @@ class Column<T>(
             }
         }
 
+        if (extraDefinitions.isNotEmpty()) {
+            append(extraDefinitions.joinToString(separator = " ", prefix = " ") { "$it" })
+        }
+
         if (columnType.nullable || (defaultValue != null && defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))) {
             append(" NULL")
         } else if (!isPKColumn || (currentDialect is SQLiteDialect && !isSQLiteAutoIncColumn)) {
@@ -154,7 +161,7 @@ class Column<T>(
     /**
      * Returns a copy of this column, but with the given column type.
      */
-    fun withColumnType(columnType: IColumnType) = Column<T>(
+    fun withColumnType(columnType: IColumnType<T & Any>) = Column<T>(
         table = this.table,
         name = this.name,
         columnType = columnType
@@ -163,6 +170,7 @@ class Column<T>(
         it.defaultValueFun = this.defaultValueFun
         it.dbDefaultValue = this.dbDefaultValue
         it.isDatabaseGenerated = this.isDatabaseGenerated
+        it.extraDefinitions = this.extraDefinitions
     }
 
     override fun compareTo(other: Column<*>): Int = comparator.compare(this, other)

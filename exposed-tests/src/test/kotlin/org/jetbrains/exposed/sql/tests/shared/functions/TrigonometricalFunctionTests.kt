@@ -79,7 +79,7 @@ class TrigonometricalFunctionTests : FunctionsTestBase() {
     fun testPiFunction() {
         withTable(excludeDB = TestDB.ORACLE) { testDb ->
             when (testDb) {
-                TestDB.MYSQL, TestDB.MARIADB -> assertExpressionEqual(BigDecimal("3.141593"), PiFunction)
+                in TestDB.ALL_MYSQL_MARIADB -> assertExpressionEqual(BigDecimal("3.141593"), PiFunction)
                 else -> assertExpressionEqual(BigDecimal("3.141592653589793"), PiFunction)
             }
         }

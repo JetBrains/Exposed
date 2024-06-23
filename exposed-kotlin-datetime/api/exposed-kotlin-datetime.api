@@ -3,14 +3,21 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentDate : org/j
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime : org/jetbrains/exposed/sql/Function {
+public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime;
+}
+
+public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp;
+}
+
+public abstract class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase : org/jetbrains/exposed/sql/Function {
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp : org/jetbrains/exposed/sql/Function {
-	public fun <init> ()V
-	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampWithTimeZone : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampWithTimeZone;
 }
 
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateColumnTypeKt {
@@ -74,6 +81,21 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateFunctions
 	public static final fun LocalDateTimeYearFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateYearExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateYearFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeDateExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeDateFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeDayExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeDayFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeHourExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeHourFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeMinuteExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeMinuteFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeMonthExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeMonthFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeSecondExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeSecondFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeTimeFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeYearExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeYearFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun dateLiteral (Lkotlinx/datetime/LocalDate;)Lorg/jetbrains/exposed/sql/LiteralOp;
 	public static final fun dateParam (Lkotlinx/datetime/LocalDate;)Lorg/jetbrains/exposed/sql/Expression;
 	public static final fun dateTimeLiteral (Lkotlinx/datetime/LocalDateTime;)Lorg/jetbrains/exposed/sql/LiteralOp;
@@ -91,8 +113,10 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateFunctions
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDurationColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinDurationColumnType$Companion;
 	public fun <init> ()V
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString-LRDsOJo (J)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB-LRDsOJo (J)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -106,9 +130,12 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinInstantColumn
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinInstantColumnType$Companion;
 	public fun <init> ()V
 	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Lkotlinx/datetime/Instant;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Lkotlinx/datetime/Instant;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lkotlinx/datetime/Instant;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -122,11 +149,15 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateColu
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateColumnType$Companion;
 	public fun <init> ()V
 	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Lkotlinx/datetime/LocalDate;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Lkotlinx/datetime/LocalDate;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lkotlinx/datetime/LocalDate;)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Lkotlinx/datetime/LocalDate;
 }
 
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateColumnType$Companion {
@@ -136,12 +167,16 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateTime
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateTimeColumnType$Companion;
 	public fun <init> ()V
 	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Lkotlinx/datetime/LocalDateTime;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Lkotlinx/datetime/LocalDateTime;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lkotlinx/datetime/LocalDateTime;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
-	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Lkotlinx/datetime/LocalDateTime;
 }
 
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateTimeColumnType$Companion {
@@ -151,9 +186,12 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalTimeColu
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalTimeColumnType$Companion;
 	public fun <init> ()V
 	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Lkotlinx/datetime/LocalTime;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Lkotlinx/datetime/LocalTime;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lkotlinx/datetime/LocalTime;)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lkotlinx/datetime/LocalTime;
@@ -166,9 +204,12 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinOffsetDateTim
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinOffsetDateTimeColumnType$Companion;
 	public fun <init> ()V
 	public fun getHasTimePart ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Ljava/time/OffsetDateTime;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/time/OffsetDateTime;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Ljava/time/OffsetDateTime;)Ljava/lang/Object;
 	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;

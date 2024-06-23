@@ -9,7 +9,6 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
-import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentTestDB
@@ -59,7 +58,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     private val insertIgnoreUnsupportedDB = TestDB.entries -
-        listOf(TestDB.SQLITE, TestDB.MYSQL, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
+        listOf(TestDB.SQLITE, TestDB.MYSQL_V5, TestDB.H2_V2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_V2_PSQL)
 
     @Test
     fun testInsertIgnoreAndGetId01() {
@@ -254,7 +253,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertWithPredefinedId() {
+    @Test
+    fun testInsertWithPredefinedId() {
         val stringTable = object : IdTable<String>("stringTable") {
             override val id = varchar("id", 15).entityId()
             val name = varchar("name", 10)
@@ -280,7 +280,26 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertWithExpression() {
+    @Test
+    fun testInsertWithForeignId() {
+        val idTable = object : IntIdTable("idTable") {}
+        val standardTable = object : Table("standardTable") {
+            val externalId = reference("externalId", idTable.id)
+        }
+        withTables(idTable, standardTable) {
+            val id1 = idTable.insertAndGetId {}
+
+            standardTable.insert {
+                it[externalId] = id1.value
+            }
+
+            val allRecords = standardTable.selectAll().map { it[standardTable.externalId] }
+            assertTrue(allRecords == listOf(id1))
+        }
+    }
+
+    @Test
+    fun testInsertWithExpression() {
         val tbl = object : IntIdTable("testInsert") {
             val nullableInt = integer("nullableIntCol").nullable()
             val string = varchar("stringCol", 20)
@@ -316,7 +335,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertWithColumnExpression() {
+    @Test
+    fun testInsertWithColumnExpression() {
         val tbl1 = object : IntIdTable("testInsert1") {
             val string1 = varchar("stringCol", 20)
         }
@@ -356,7 +376,8 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     // https://github.com/JetBrains/Exposed/issues/192
-    @Test fun testInsertWithColumnNamedWithKeyword() {
+    @Test
+    fun testInsertWithColumnNamedWithKeyword() {
         withTables(OrderedDataTable) {
             val foo = OrderedData.new {
                 name = "foo"
@@ -371,14 +392,15 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertEmojis() {
+    @Test
+    fun testInsertEmojis() {
         val table = object : Table("tmp") {
             val emoji = varchar("emoji", 16)
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(TestDB.allH2TestDB + TestDB.SQLSERVER + TestDB.ORACLE, table) {
-            if (isOldMySql()) {
+        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLSERVER, table) { testDb ->
+            if (testDb == TestDB.MYSQL_V5) {
                 exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
             }
             table.insert {
@@ -389,13 +411,14 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testInsertEmojisWithInvalidLength() {
+    @Test
+    fun testInsertEmojisWithInvalidLength() {
         val table = object : Table("tmp") {
             val emoji = varchar("emoji", 10)
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(listOf(TestDB.SQLITE, TestDB.H2, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL), table) {
+        withTables(listOf(TestDB.SQLITE, TestDB.H2_V2, TestDB.H2_V2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_V2_PSQL), table) {
             expectException<IllegalArgumentException> {
                 table.insert {
                     it[table.emoji] = emojis
@@ -420,7 +443,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `test subquery in an insert or update statement`() {
+    @Test
+    fun `test subquery in an insert or update statement`() {
         val tab1 = object : Table("tab1") {
             val id = varchar("id", 10)
         }
@@ -449,7 +473,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun testGeneratedKey04() {
+    @Test
+    fun testGeneratedKey04() {
         val charIdTable = object : IdTable<String>("charId") {
             override val id = varchar("id", 50)
                 .clientDefault { UUID.randomUUID().toString() }
@@ -473,7 +498,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val dbToTest = TestDB.enabledDialects() - setOfNotNull(
             TestDB.SQLITE,
-            TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
+            TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
         Assume.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
@@ -506,7 +531,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val dbToTest = TestDB.enabledDialects() - setOfNotNull(
             TestDB.SQLITE,
-            TestDB.MYSQL.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
+            TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
         Assume.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
@@ -537,7 +562,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test fun `test optReference allows null values`() {
+    @Test
+    fun `test optReference allows null values`() {
         withTables(EntityTests.Posts) {
             val id1 = EntityTests.Posts.insertAndGetId {
                 it[board] = null
@@ -579,13 +605,13 @@ class InsertTests : DatabaseTestsBase() {
         override fun prepareSQL(transaction: Transaction, prepared: Boolean) = buildString {
             val insertStatement = super.prepareSQL(transaction, prepared)
             when (val db = currentTestDB) {
-                in TestDB.mySqlRelatedDB -> {
+                in TestDB.ALL_MYSQL_LIKE -> {
                     append("INSERT IGNORE ")
                     append(insertStatement.substringAfter("INSERT "))
                 }
                 else -> {
                     append(insertStatement)
-                    val identifier = if (db == TestDB.H2_PSQL) "" else "(id) "
+                    val identifier = if (db == TestDB.H2_V2_PSQL) "" else "(id) "
                     append(" ON CONFLICT ${identifier}DO NOTHING")
                 }
             }
@@ -617,36 +643,39 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertIntoNullableGeneratedColumn() {
-        val generatedTable = object : IntIdTable("generated_table") {
-            val amount = integer("amount").nullable()
-            val computedAmount = integer("computed_amount").nullable().databaseGenerated()
-        }
-
-        withDb { testDb ->
-            try {
-                if (testDb == TestDB.ORACLE || testDb == TestDB.H2_ORACLE) {
-                    // create sequence for primary key
-                    exec(generatedTable.ddl.first(), explicitStatementType = StatementType.CREATE)
+        withDb(excludeSettings = TestDB.ALL_H2_V1) { testDb ->
+            val generatedTable = object : IntIdTable("generated_table") {
+                val amount = integer("amount").nullable()
+                val computedAmount = integer("computed_amount").nullable().databaseGenerated().apply {
+                    if (testDb == TestDB.ORACLE || testDb in TestDB.ALL_H2_V2) {
+                        withDefinition("GENERATED ALWAYS AS (AMOUNT + 1)")
+                    } else {
+                        withDefinition("GENERATED ALWAYS AS (AMOUNT + 1) STORED")
+                    }
                 }
+            }
 
-                // Exposed does not currently support creation of generated columns
+            try {
                 val computedName = generatedTable.computedAmount.name.inProperCase()
                 val computedType = generatedTable.computedAmount.columnType.sqlType()
                 val computation = "${generatedTable.amount.name.inProperCase()} + 1"
-                val generatedColumnDescription = when (testDb) {
-                    TestDB.SQLSERVER -> "$computedName AS ($computation)"
-                    TestDB.ORACLE, in TestDB.allH2TestDB -> "$computedName $computedType GENERATED ALWAYS AS ($computation)"
-                    else -> "$computedName $computedType GENERATED ALWAYS AS ($computation) STORED"
-                }
-                exec(
-                    """CREATE TABLE ${addIfNotExistsIfSupported()}${generatedTable.tableName.inProperCase()} (
+
+                val createStatement = """CREATE TABLE ${addIfNotExistsIfSupported()}${generatedTable.tableName.inProperCase()} (
                         ${generatedTable.id.descriptionDdl()},
                         ${generatedTable.amount.descriptionDdl()},
-                        $generatedColumnDescription
-                        )
-                    """.trimIndent(),
-                    explicitStatementType = StatementType.CREATE
-                )
+                """.trimIndent()
+
+                when (testDb) {
+                    // MariaDB does not support GENERATED ALWAYS AS with any null constraint definition
+                    in TestDB.ALL_MARIADB -> {
+                        exec("${createStatement.trimIndent()} $computedName $computedType GENERATED ALWAYS AS ($computation) STORED)")
+                    }
+                    // SQL SERVER only supports the AS variant if column_type is not defined
+                    TestDB.SQLSERVER -> {
+                        exec("${createStatement.trimIndent()} $computedName AS ($computation))")
+                    }
+                    else -> SchemaUtils.create(generatedTable)
+                }
 
                 assertFailAndRollback("Generated columns are auto-derived and read-only") {
                     generatedTable.insert {

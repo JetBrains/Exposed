@@ -64,16 +64,16 @@ fun <T : String?> Expression<T>.locate(substring: String): Locate<T> = Locate(th
 // General-Purpose Aggregate Functions
 
 /** Returns the minimum value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min<T, S>(this, this.columnType)
+fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min<T, S>(this, this.columnType as IColumnType<T>)
 
 /** Returns the maximum value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max<T, S>(this, this.columnType)
+fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max<T, S>(this, this.columnType as IColumnType<T>)
 
 /** Returns the average (arithmetic mean) value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.avg(scale: Int = 2): Avg<T, S> = Avg<T, S>(this, scale)
+fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<S>.avg(scale: Int = 2): Avg<T, S> = Avg<T, S>(this, scale)
 
 /** Returns the sum of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Any?> ExpressionWithColumnType<T>.sum(): Sum<T> = Sum(this, this.columnType)
+fun <T> ExpressionWithColumnType<T>.sum(): Sum<T> = Sum(this, this.columnType)
 
 /** Returns the number of input rows for which the value of this expression is not null. */
 fun ExpressionWithColumnType<*>.count(): Count = Count(this)
@@ -116,8 +116,35 @@ fun <T : Any?> ExpressionWithColumnType<T>.varSamp(scale: Int = 2): VarSamp<T> =
 /** Returns this subquery wrapped in the `ANY` operator. This function is not supported by the SQLite dialect. */
 fun <T> anyFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(true, subQuery)
 
-/** Returns this array of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects. */
-fun <T> anyFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(true, array)
+/**
+ * Returns this array of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects.
+ *
+ * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
+ * resolved according to the internal mapping of the element's type in [resolveColumnType].
+ *
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
+ */
+inline fun <reified T : Any> anyFrom(array: Array<T>, delegateType: ColumnType<T>? = null): Op<T> {
+    // emptyArray() without type info generates ARRAY[]
+    @OptIn(InternalApi::class)
+    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
+    return AllAnyFromArrayOp(true, array.toList(), columnType)
+}
+
+/**
+ * Returns this list of data wrapped in the `ANY` operator. This function is only supported by PostgreSQL and H2 dialects.
+ *
+ * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
+ * resolved according to the internal mapping of the element's type in [resolveColumnType].
+ *
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
+ */
+inline fun <reified T : Any> anyFrom(array: List<T>, delegateType: ColumnType<T>? = null): Op<T> {
+    // emptyList() without type info generates ARRAY[]
+    @OptIn(InternalApi::class)
+    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
+    return AllAnyFromArrayOp(true, array, columnType)
+}
 
 /** Returns this table wrapped in the `ANY` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
 fun <T> anyFrom(table: Table): Op<T> = AllAnyFromTableOp(true, table)
@@ -128,8 +155,35 @@ fun <E, T : List<E>?> anyFrom(expression: Expression<T>): Op<E> = AllAnyFromExpr
 /** Returns this subquery wrapped in the `ALL` operator. This function is not supported by the SQLite dialect. */
 fun <T> allFrom(subQuery: AbstractQuery<*>): Op<T> = AllAnyFromSubQueryOp(false, subQuery)
 
-/** Returns this array of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects. */
-fun <T> allFrom(array: Array<T>): Op<T> = AllAnyFromArrayOp(false, array)
+/**
+ * Returns this array of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects.
+ *
+ * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
+ * resolved according to the internal mapping of the element's type in [resolveColumnType].
+ *
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
+ */
+inline fun <reified T : Any> allFrom(array: Array<T>, delegateType: ColumnType<T>? = null): Op<T> {
+    // emptyArray() without type info generates ARRAY[]
+    @OptIn(InternalApi::class)
+    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
+    return AllAnyFromArrayOp(false, array.toList(), columnType)
+}
+
+/**
+ * Returns this list of data wrapped in the `ALL` operator. This function is only supported by PostgreSQL and H2 dialects.
+ *
+ * **Note** If [delegateType] is left `null`, the base column type associated with storing elements of type [T] will be
+ * resolved according to the internal mapping of the element's type in [resolveColumnType].
+ *
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
+ */
+inline fun <reified T : Any> allFrom(array: List<T>, delegateType: ColumnType<T>? = null): Op<T> {
+    // emptyList() without type info generates ARRAY[]
+    @OptIn(InternalApi::class)
+    val columnType = delegateType ?: resolveColumnType(T::class, if (array.isEmpty()) TextColumnType() else null)
+    return AllAnyFromArrayOp(false, array, columnType)
+}
 
 /** Returns this table wrapped in the `ALL` operator. This function is only supported by MySQL, PostgreSQL, and H2 dialects. */
 fun <T> allFrom(table: Table): Op<T> = AllAnyFromTableOp(false, table)
@@ -143,7 +197,7 @@ fun <E, T : List<E>?> allFrom(expression: Expression<T>): Op<E> = AllAnyFromExpr
  * @sample org.jetbrains.exposed.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArrayGet
  */
 infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int): ArrayGet<E, T> =
-    ArrayGet(this, index, (this.columnType as ArrayColumnType).delegate)
+    ArrayGet(this, index, (this.columnType as ArrayColumnType<E>).delegate)
 
 /**
  * Returns a subarray of elements stored from between [lower] and [upper] bounds (inclusive),
@@ -153,7 +207,7 @@ infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int)
  * @sample org.jetbrains.exposed.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArraySlice
  */
 fun <E, T : List<E>?> ExpressionWithColumnType<T>.slice(lower: Int? = null, upper: Int? = null): ArraySlice<E, T> =
-    ArraySlice(this, lower, upper, ArrayColumnType((this.columnType as ArrayColumnType).delegate))
+    ArraySlice(this, lower, upper, this.columnType)
 
 // Sequence Manipulation Functions
 
@@ -166,14 +220,14 @@ fun Sequence.nextLongVal(): NextVal<Long> = NextVal.LongNextVal(this)
 // Value Expressions
 
 /** Specifies a conversion from one data type to another. */
-fun <R> Expression<*>.castTo(columnType: IColumnType): ExpressionWithColumnType<R> = Cast(this, columnType)
+fun <R> Expression<*>.castTo(columnType: IColumnType<R & Any>): ExpressionWithColumnType<R> = Cast(this, columnType)
 
 // Misc.
 
 /**
  * Calls a custom SQL function with the specified [functionName] and passes this expression as its only argument.
  */
-fun <T : Any?> ExpressionWithColumnType<T>.function(functionName: String): CustomFunction<T?> = CustomFunction(functionName, columnType, this)
+fun <T> ExpressionWithColumnType<T>.function(functionName: String): CustomFunction<T?> = CustomFunction(functionName, columnType, this)
 
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a string, and passing [params] as its arguments.
@@ -289,7 +343,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.eq(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.eq(
         other: ExpressionWithColumnType<E>
     ): Op<Boolean> = other eq this
 
@@ -323,7 +377,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is not equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.neq(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.neq(
         other: ExpressionWithColumnType<E>
     ): Op<Boolean> = other neq this
 
@@ -338,7 +392,8 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this [EntityID] expression is less than some [t] value. */
     @JvmName("lessEntityID")
-    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.less(t: T): LessOp = LessOp(this, wrap(t))
+    infix fun <T : Comparable<T>> Column<EntityID<T>>.less(t: T): LessOp =
+        LessOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
 
     /** Checks if this [EntityID] expression is less than some [other] expression. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.less(
@@ -346,7 +401,7 @@ interface ISqlExpressionBuilder {
     ): LessOp = LessOp(this, other)
 
     /** Checks if this expression is less than some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.less(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.less(
         other: ExpressionWithColumnType<E>
     ): LessOp = LessOp(this, other)
 
@@ -361,7 +416,8 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this [EntityID] expression is less than or equal to some [t] value */
     @JvmName("lessEqEntityID")
-    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.lessEq(t: T): LessEqOp = LessEqOp(this, wrap(t))
+    infix fun <T : Comparable<T>> Column<EntityID<T>>.lessEq(t: T): LessEqOp =
+        LessEqOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
 
     /** Checks if this [EntityID] expression is less than or equal to some [other] expression */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.lessEq(
@@ -369,7 +425,7 @@ interface ISqlExpressionBuilder {
     ): LessEqOp = LessEqOp(this, other)
 
     /** Checks if this expression is less than or equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.lessEq(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.lessEq(
         other: ExpressionWithColumnType<E>
     ): LessEqOp = LessEqOp(this, other)
 
@@ -384,7 +440,8 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this [EntityID] expression is greater than some [t] value. */
     @JvmName("greaterEntityID")
-    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greater(t: T): GreaterOp = GreaterOp(this, wrap(t))
+    infix fun <T : Comparable<T>> Column<EntityID<T>>.greater(t: T): GreaterOp =
+        GreaterOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
 
     /** Checks if this [EntityID] expression is greater than some [other] expression. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.greater(
@@ -392,7 +449,7 @@ interface ISqlExpressionBuilder {
     ): GreaterOp = GreaterOp(this, other)
 
     /** Checks if this expression is greater than some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.greater(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greater(
         other: ExpressionWithColumnType<E>
     ): GreaterOp = GreaterOp(this, other)
 
@@ -407,7 +464,8 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this [EntityID] expression is greater than or equal to some [t] value */
     @JvmName("greaterEqEntityID")
-    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.greaterEq(t: T): GreaterEqOp = GreaterEqOp(this, wrap(t))
+    infix fun <T : Comparable<T>> Column<EntityID<T>>.greaterEq(t: T): GreaterEqOp =
+        GreaterEqOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
 
     /** Checks if this [EntityID] expression is greater than or equal to some [other] expression */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.greaterEq(
@@ -415,7 +473,7 @@ interface ISqlExpressionBuilder {
     ): GreaterEqOp = GreaterEqOp(this, other)
 
     /** Checks if this expression is greater than or equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.greaterEq(
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greaterEq(
         other: ExpressionWithColumnType<E>
     ): GreaterEqOp = GreaterEqOp(this, other)
 
@@ -425,7 +483,12 @@ interface ISqlExpressionBuilder {
     fun <T, S : T?> ExpressionWithColumnType<in S>.between(from: T, to: T): Between = Between(this, wrap(from), wrap(to))
 
     /** Returns `true` if this [EntityID] expression is between the values [from] and [to], `false` otherwise. */
-    fun <T : Comparable<T>, E : EntityID<T>?> ExpressionWithColumnType<E>.between(from: T, to: T): Between = Between(this, wrap(from), wrap(to))
+    fun <T : Comparable<T>, E : EntityID<T>?> Column<E>.between(from: T, to: T): Between =
+        Between(
+            this,
+            wrap(EntityID(from, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)),
+            wrap(EntityID(to, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>))
+        )
 
     /** Returns `true` if this expression is null, `false` otherwise. */
     fun <T> Expression<T>.isNull(): IsNullOp = IsNullOp(this)
@@ -434,6 +497,7 @@ interface ISqlExpressionBuilder {
     fun <T> Expression<T>.isNotNull(): IsNotNullOp = IsNotNullOp(this)
 
     /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
+    @LowPriorityInOverloadResolution
     infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.isNotDistinctFrom(t: T): IsNotDistinctFromOp = IsNotDistinctFromOp(this, wrap(t))
 
     /** Checks if this expression is equal to some [other] expression, with `null` treated as a comparable value */
@@ -441,9 +505,21 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
     @JvmName("isNotDistinctFromEntityID")
-    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.isNotDistinctFrom(t: T): IsNotDistinctFromOp = IsNotDistinctFromOp(this, wrap(t))
+    infix fun <T : Comparable<T>> Column<EntityID<T>>.isNotDistinctFrom(t: T): IsNotDistinctFromOp =
+        IsNotDistinctFromOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
+
+    /** Checks if this [EntityID] expression is equal to some [other] expression */
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.isNotDistinctFrom(
+        other: Expression<in V>
+    ): IsNotDistinctFromOp = IsNotDistinctFromOp(this, other)
+
+    /** Checks if this expression is equal to some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.isNotDistinctFrom(
+        other: ExpressionWithColumnType<E>
+    ): IsNotDistinctFromOp = IsNotDistinctFromOp(this, other)
 
     /** Checks if this expression is not equal to some [t] value, with `null` treated as a comparable value */
+    @LowPriorityInOverloadResolution
     infix fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.isDistinctFrom(t: T): IsDistinctFromOp = IsDistinctFromOp(this, wrap(t))
 
     /** Checks if this expression is not equal to some [other] expression, with `null` treated as a comparable value */
@@ -451,7 +527,18 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this expression is not equal to some [t] value, with `null` treated as a comparable value */
     @JvmName("isDistinctFromEntityID")
-    infix fun <T : Comparable<T>> ExpressionWithColumnType<EntityID<T>>.isDistinctFrom(t: T): IsDistinctFromOp = IsDistinctFromOp(this, wrap(t))
+    infix fun <T : Comparable<T>> Column<EntityID<T>>.isDistinctFrom(t: T): IsDistinctFromOp =
+        IsDistinctFromOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
+
+    /** Checks if this [EntityID] expression is not equal to some [other] expression */
+    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.isDistinctFrom(
+        other: Expression<in V>
+    ): IsDistinctFromOp = IsDistinctFromOp(this, other)
+
+    /** Checks if this expression is not equal to some [other] [EntityID] expression. */
+    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.isDistinctFrom(
+        other: ExpressionWithColumnType<E>
+    ): IsDistinctFromOp = IsDistinctFromOp(this, other)
 
     // Mathematical Operators
 
@@ -726,11 +813,11 @@ interface ISqlExpressionBuilder {
     // Conditional Expressions
 
     /** Returns the first of its arguments that is not null. */
-    fun <T, S : T?, A : Expression<out T>, R : T> coalesce(
+    fun <T, S : T?> coalesce(
         expr: ExpressionWithColumnType<S>,
-        alternate: A,
-        vararg others: A
-    ): Coalesce<T?, S, R> = Coalesce(expr, alternate, others = others)
+        alternate: Expression<out T>,
+        vararg others: Expression<out T>
+    ): Coalesce<T, S> = Coalesce<T, S>(expr, alternate, others = others)
 
     /**
      * Compares [value] against any chained conditional expressions.
@@ -834,39 +921,14 @@ interface ISqlExpressionBuilder {
 
     /** Returns the specified [value] as a query parameter of type [T]. */
     @Suppress("UNCHECKED_CAST")
-    fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> = when (value) {
-        is Boolean -> booleanParam(value)
-        is Byte -> byteParam(value)
-        is UByte -> ubyteParam(value)
-        is Short -> shortParam(value)
-        is UShort -> ushortParam(value)
-        is Int -> intParam(value)
-        is UInt -> uintParam(value)
-        is Long -> longParam(value)
-        is ULong -> ulongParam(value)
-        is Float -> floatParam(value)
-        is Double -> doubleParam(value)
-        is String -> QueryParameter(value, columnType) // String value should inherit from column
-        else -> QueryParameter(value, columnType)
-    } as QueryParameter<T>
+    fun <T, S : T?> ExpressionWithColumnType<in S>.wrap(value: T): QueryParameter<T> =
+        QueryParameter(value, columnType as IColumnType<T & Any>)
 
     /** Returns the specified [value] as a literal of type [T]. */
     @Suppress("UNCHECKED_CAST", "ComplexMethod")
-    fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when (value) {
-        is Boolean -> booleanLiteral(value)
-        is Byte -> byteLiteral(value)
-        is UByte -> ubyteLiteral(value)
-        is Short -> shortLiteral(value)
-        is UShort -> ushortLiteral(value)
-        is Int -> intLiteral(value)
-        is UInt -> uintLiteral(value)
-        is Long -> longLiteral(value)
-        is ULong -> ulongLiteral(value)
-        is Float -> floatLiteral(value)
-        is Double -> doubleLiteral(value)
-        is String -> stringLiteral(value)
-        is ByteArray -> stringLiteral(value.toString(Charsets.UTF_8))
-        else -> LiteralOp(columnType, value)
+    fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when {
+        value is ByteArray && columnType is BasicBinaryColumnType -> stringLiteral(value.toString(Charsets.UTF_8))
+        else -> LiteralOp(columnType as IColumnType<T & Any>, value)
     } as LiteralOp<T>
 
     fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> =

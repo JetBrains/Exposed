@@ -18,7 +18,7 @@ class ParameterizationTests : DatabaseTestsBase() {
     }
 
     private val supportMultipleStatements by lazy {
-        setOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.POSTGRESQL, TestDB.SQLSERVER)
+        TestDB.ALL_MARIADB + TestDB.SQLSERVER + TestDB.ALL_MYSQL + TestDB.POSTGRESQL
     }
 
     @Test
@@ -38,13 +38,8 @@ class ParameterizationTests : DatabaseTestsBase() {
         Assume.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
 
         val dialect = TestDB.enabledDialects().first()
-        val urlExtra = when (dialect) {
-            TestDB.MYSQL -> "&allowMultiQueries=true"
-            TestDB.MARIADB -> "?&allowMultiQueries=true"
-            else -> ""
-        }
         val db = Database.connect(
-            dialect.connection.invoke().plus(urlExtra),
+            dialect.connection.invoke().plus(urlExtra(dialect)),
             dialect.driver,
             dialect.user,
             dialect.pass
@@ -99,13 +94,8 @@ class ParameterizationTests : DatabaseTestsBase() {
         }
 
         val dialect = TestDB.enabledDialects().first()
-        val urlExtra = when (dialect) {
-            TestDB.MYSQL -> "&allowMultiQueries=true"
-            TestDB.MARIADB -> "?&allowMultiQueries=true"
-            else -> ""
-        }
         val db = Database.connect(
-            dialect.connection.invoke().plus(urlExtra),
+            dialect.connection.invoke().plus(urlExtra(dialect)),
             dialect.driver,
             dialect.user,
             dialect.pass
@@ -160,6 +150,14 @@ class ParameterizationTests : DatabaseTestsBase() {
             )
 
             assertNull(TempTable.selectAll().single()[TempTable.name])
+        }
+    }
+
+    private fun urlExtra(testDB: TestDB): String {
+        return when (testDB) {
+            in TestDB.ALL_MYSQL -> "&allowMultiQueries=true"
+            in TestDB.ALL_MARIADB -> "?&allowMultiQueries=true"
+            else -> ""
         }
     }
 }

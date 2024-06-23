@@ -1,8 +1,5 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
-import org.jetbrains.exposed.crypt.Algorithms
-import org.jetbrains.exposed.crypt.encryptedBinary
-import org.jetbrains.exposed.crypt.encryptedVarchar
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
@@ -17,11 +14,12 @@ import java.lang.IllegalArgumentException
 
 class UpdateTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
-        val exclude = arrayListOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
+        val exclude = TestDB.ALL_POSTGRES_LIKE
         if (!SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT) {
-            exclude.add(TestDB.SQLITE)
+            exclude + TestDB.SQLITE
+        } else {
+            exclude
         }
-        exclude
     }
 
     @Test
@@ -71,7 +69,7 @@ class UpdateTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testUpdateWithJoin01() {
+    fun testUpdateWithSingleJoin() {
         withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { _, users, userData ->
             val join = users.innerJoin(userData)
             join.update {
@@ -83,12 +81,23 @@ class UpdateTests : DatabaseTestsBase() {
                 assertEquals(it[users.name], it[userData.comment])
                 assertEquals(123, it[userData.value])
             }
+
+            val joinWithConstraint = users.innerJoin(userData, { users.id }, { userData.user_id }) { users.id eq "smth" }
+            joinWithConstraint.update {
+                it[userData.comment] = users.name
+                it[userData.value] = 0
+            }
+
+            joinWithConstraint.selectAll().forEach {
+                assertEquals(it[users.name], it[userData.comment])
+                assertEquals(0, it[userData.value])
+            }
         }
     }
 
     @Test
-    fun testUpdateWithJoin02() {
-        withCitiesAndUsers(exclude = TestDB.allH2TestDB + TestDB.SQLITE) { cities, users, userData ->
+    fun testUpdateWithMultipleJoins() {
+        withCitiesAndUsers(exclude = TestDB.ALL_H2 + TestDB.SQLITE) { cities, users, userData ->
             val join = cities.innerJoin(users).innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name
@@ -112,7 +121,7 @@ class UpdateTests : DatabaseTestsBase() {
             val tableAId = reference("table_a_id", tableA)
         }
 
-        val supportWhere = TestDB.entries - TestDB.allH2TestDB - TestDB.SQLITE + TestDB.H2_ORACLE
+        val supportWhere = TestDB.entries - TestDB.ALL_H2.toSet() - TestDB.SQLITE + TestDB.H2_V2_ORACLE
 
         withTables(tableA, tableB) { testingDb ->
             val aId = tableA.insertAndGetId { it[foo] = "foo" }
@@ -122,6 +131,7 @@ class UpdateTests : DatabaseTestsBase() {
             }
 
             val join = tableA.innerJoin(tableB)
+            val joinWithConstraint = tableA.innerJoin(tableB, { tableA.id }, { tableB.tableAId }) { tableB.bar eq "foo" }
 
             if (testingDb in supportWhere) {
                 join.update({ tableA.foo eq "foo" }) {
@@ -130,6 +140,11 @@ class UpdateTests : DatabaseTestsBase() {
                 join.selectAll().single().also {
                     assertEquals("baz", it[tableB.bar])
                 }
+
+                joinWithConstraint.update({ tableA.foo eq "foo" }) {
+                    it[tableB.bar] = "baz"
+                }
+                assertEquals(0, joinWithConstraint.selectAll().count())
             } else {
                 expectException<UnsupportedByDialectException> {
                     join.update({ tableA.foo eq "foo" }) {
@@ -168,36 +183,6 @@ class UpdateTests : DatabaseTestsBase() {
                     // empty
                 }
             }
-        }
-    }
-
-    @Test
-    fun `update encryptedColumnType`() {
-        val stringTable = object : IntIdTable("StringTable") {
-            val name = encryptedVarchar("name", 100, Algorithms.AES_256_PBE_GCM("passwd", "12345678"))
-            val city = encryptedBinary("city", 100, Algorithms.AES_256_PBE_CBC("passwd", "12345678"))
-            val address = encryptedVarchar("address", 100, Algorithms.BLOW_FISH("key"))
-        }
-
-        withTables(stringTable) {
-            val id = stringTable.insertAndGetId {
-                it[name] = "TestName"
-                it[city] = "TestCity".toByteArray()
-                it[address] = "TestAddress"
-            }
-
-            val updatedName = "TestName2"
-            val updatedCity = "TestCity2"
-            val updatedAddress = "TestAddress2"
-            stringTable.update({ stringTable.id eq id }) {
-                it[name] = updatedName
-                it[city] = updatedCity.toByteArray()
-                it[address] = updatedAddress
-            }
-
-            assertEquals(updatedName, stringTable.selectAll().where { stringTable.id eq id }.single()[stringTable.name])
-            assertEquals(updatedCity, String(stringTable.selectAll().where { stringTable.id eq id }.single()[stringTable.city]))
-            assertEquals(updatedAddress, stringTable.selectAll().where { stringTable.id eq id }.single()[stringTable.address])
         }
     }
 }

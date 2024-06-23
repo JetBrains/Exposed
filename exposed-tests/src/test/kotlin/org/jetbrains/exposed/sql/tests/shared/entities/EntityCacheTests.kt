@@ -30,10 +30,10 @@ class EntityCacheTests : DatabaseTestsBase() {
 
     @Test
     fun testGlobalEntityCacheLimit() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val entitiesCount = 25
         val cacheSize = 10
-        val db = TestDB.H2.connect {
+        val db = TestDB.H2_V2.connect {
             maxEntitiesToStoreInCachePerEntity = cacheSize
         }
 
@@ -60,10 +60,10 @@ class EntityCacheTests : DatabaseTestsBase() {
 
     @Test
     fun testGlobalEntityCacheLimitZero() {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         val entitiesCount = 25
-        val db = TestDB.H2.connect()
-        val dbNoCache = TestDB.H2.connect {
+        val db = TestDB.H2_V2.connect()
+        val dbNoCache = TestDB.H2_V2.connect {
             maxEntitiesToStoreInCachePerEntity = 10
         }
 
@@ -129,7 +129,7 @@ class EntityCacheTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `change EntityCache maxEntitiesToStore in the middle of transaction`() {
+    fun changeEntityCacheMaxEntitiesToStoreInMiddleOfTransaction() {
         withTables(TestTable) {
             repeat(20) {
                 TestEntity.new {

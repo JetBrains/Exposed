@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 
@@ -44,21 +46,43 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
         }
     }
 
-    override fun arguments(): Iterable<Iterable<Pair<IColumnType, Any?>>> = QueryBuilder(true).run {
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = QueryBuilder(true).run {
+        val dialect = currentDialect
         when {
-            targetsSet is Join && currentDialect is OracleDialect -> {
-                where?.toQueryBuilder(this)
-                values.forEach {
-                    registerArgument(it.key, it.value)
-                }
+            targetsSet is Join && dialect is OracleDialect -> {
+                registerAdditionalArgs(targetsSet)
+                registerWhereArg()
+                registerUpdateArgs()
+            }
+            targetsSet is Join && (dialect is SQLServerDialect || dialect is PostgreSQLDialect) -> {
+                registerUpdateArgs()
+                registerAdditionalArgs(targetsSet)
+                registerWhereArg()
+            }
+            targetsSet is Join -> {
+                registerAdditionalArgs(targetsSet)
+                registerUpdateArgs()
+                registerWhereArg()
             }
             else -> {
-                values.forEach {
-                    registerArgument(it.key, it.value)
-                }
-                where?.toQueryBuilder(this)
+                registerUpdateArgs()
+                registerWhereArg()
             }
         }
         if (args.isNotEmpty()) listOf(args) else emptyList()
+    }
+
+    private fun QueryBuilder.registerWhereArg() {
+        where?.toQueryBuilder(this)
+    }
+
+    private fun QueryBuilder.registerUpdateArgs() {
+        values.forEach { registerArgument(it.key, it.value) }
+    }
+
+    private fun QueryBuilder.registerAdditionalArgs(join: Join) {
+        join.joinParts.forEach {
+            it.additionalConstraint?.invoke(SqlExpressionBuilder)?.toQueryBuilder(this)
+        }
     }
 }

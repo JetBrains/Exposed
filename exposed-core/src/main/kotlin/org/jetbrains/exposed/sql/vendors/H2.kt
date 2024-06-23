@@ -4,13 +4,11 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.sql.DatabaseMetaData
 import java.util.*
 
 internal object H2DataTypeProvider : DataTypeProvider() {
-    override fun binaryType(): String {
-        exposedLogger.error("The length of the Binary column is missing.")
-        error("The length of the Binary column is missing.")
-    }
+    override fun binaryType(): String = "VARBINARY"
 
     override fun uuidType(): String = "UUID"
     override fun uuidToDB(value: UUID): Any = value.toString()
@@ -19,7 +17,6 @@ internal object H2DataTypeProvider : DataTypeProvider() {
     override fun timestampWithTimeZoneType(): String = "TIMESTAMP(9) WITH TIME ZONE"
 
     override fun jsonBType(): String = "JSON"
-    override fun untypedAndUnsizedArrayType(): String = "ARRAY[]"
 
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
@@ -122,6 +119,22 @@ internal object H2FunctionProvider : FunctionProvider() {
         substring: String
     ) = queryBuilder {
         append("LOCATE(\'", substring, "\',", expr, ")")
+    }
+
+    override fun explain(
+        analyze: Boolean,
+        options: String?,
+        internalStatement: String,
+        transaction: Transaction
+    ): String {
+        if (options != null) {
+            transaction.throwUnsupportedException("H2 does not support options other than ANALYZE in EXPLAIN queries.")
+        }
+        return super.explain(analyze, null, internalStatement, transaction)
+    }
+
+    override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("CAST(", expr, " AS DATE)")
     }
 }
 
@@ -281,6 +294,25 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
     override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
+
+    override fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption {
+        val modeDelegatesRefOption = h2Mode == H2CompatibilityMode.Oracle || h2Mode == H2CompatibilityMode.SQLServer
+        return when {
+            refOption == DatabaseMetaData.importedKeyRestrict && modeDelegatesRefOption -> ReferenceOption.NO_ACTION
+            refOption == DatabaseMetaData.importedKeyRestrict -> ReferenceOption.RESTRICT
+            else -> super.resolveRefOptionFromJdbc(refOption)
+        }
+    }
+
+    override fun sequences(): List<String> {
+        val sequences = mutableListOf<String>()
+        TransactionManager.current().exec("SELECT SEQUENCE_NAME FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
+            while (rs.next()) {
+                sequences.add(rs.getString("SEQUENCE_NAME"))
+            }
+        }
+        return sequences
+    }
 
     companion object : DialectNameProvider("H2")
 }

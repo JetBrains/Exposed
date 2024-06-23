@@ -9,6 +9,18 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
+/**
+ * Class responsible for implementing property delegates of the read-write properties involved in a many-to-many
+ * relation, which uses an intermediate (join) table.
+ *
+ * @param table The intermediate table containing reference columns to both child and parent entities.
+ * @param sourceTable The [IdTable] associated with the source child entity.
+ * @param target The [EntityClass] for the target parent entity.
+ * @param _sourceColumn The intermediate table's reference column for the child entity class. If left `null`,
+ * this will be inferred from the provided intermediate [table] columns.
+ * @param _targetColumn The intermediate table's reference column for the parent entity class. If left `null`,
+ * this will be inferred from the provided intermediate [table] columns.
+ */
 @Suppress("UNCHECKED_CAST")
 class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparable<ID>, Target : Entity<ID>>(
     val table: Table,
@@ -17,6 +29,9 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
     _sourceColumn: Column<EntityID<SID>>? = null,
     _targetColumn: Column<EntityID<ID>>? = null,
 ) : ReadWriteProperty<Source, SizedIterable<Target>> {
+    /** The list of columns and their [SortOrder] for ordering referred entities in many-to-many relationship. */
+    private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
+
     init {
         _targetColumn?.let {
             requireNotNull(_sourceColumn) { "Both source and target columns should be specified" }
@@ -35,10 +50,12 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         }
     }
 
+    /** The reference identity column for the child entity class. */
     val sourceColumn = _sourceColumn
         ?: table.columns.singleOrNull { it.referee == sourceTable.id } as? Column<EntityID<SID>>
         ?: error("Table does not reference source")
 
+    /** The reference identity column for the parent entity class. */
     val targetColumn = _targetColumn
         ?: table.columns.singleOrNull { it.referee == target.table.id } as? Column<EntityID<ID>>
         ?: error("Table does not reference target")
@@ -60,7 +77,14 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
 
         val (columns, entityTables) = columnsAndTables
 
-        val query = { target.wrapRows(entityTables.select(columns).where { sourceColumn eq o.id }) }
+        val query = {
+            target.wrapRows(
+                @Suppress("SpreadOperator")
+                entityTables.select(columns)
+                    .where { sourceColumn eq o.id }
+                    .orderBy(*orderByExpressions.toTypedArray())
+            )
+        }
         return transaction.entityCache.getOrPutReferrers(o.id, sourceColumn, query).also {
             o.storeReferenceInCache(sourceColumn, it)
         }
@@ -105,4 +129,15 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
             }
         }
     }
+
+    /** Modifies this reference to sort entities based on multiple columns as specified in [order]. **/
+    infix fun orderBy(order: List<Pair<Expression<*>, SortOrder>>) = this.also {
+        orderByExpressions.addAll(order)
+    }
+
+    /** Modifies this reference to sort entities according to the specified [order]. **/
+    infix fun orderBy(order: Pair<Expression<*>, SortOrder>) = orderBy(listOf(order))
+
+    /** Modifies this reference to sort entities by a column specified in [expression] using ascending order. **/
+    infix fun orderBy(expression: Expression<*>) = orderBy(listOf(expression to SortOrder.ASC))
 }

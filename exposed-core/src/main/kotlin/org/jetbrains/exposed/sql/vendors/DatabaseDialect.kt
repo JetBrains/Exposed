@@ -48,7 +48,7 @@ interface DatabaseDialect {
     /** Returns`true` if the dialect supports schema creation. */
     val supportsCreateSchema: Boolean get() = true
 
-    /** Returns `true` if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement */
+    /** Returns `true` if the dialect supports subqueries within a UNION/EXCEPT/INTERSECT statement. */
     val supportsSubqueryUnions: Boolean get() = false
 
     /** Returns `true` if the dialect provides a special dummy DUAL table, accessible by all users. */
@@ -87,6 +87,9 @@ interface DatabaseDialect {
     /** Checks if the specified schema exists. */
     fun schemaExists(schema: Schema): Boolean
 
+    /** Returns whether the specified sequence exists. */
+    fun sequenceExists(sequence: Sequence): Boolean
+
     fun checkTableMapping(table: Table): Boolean = true
 
     /** Returns a map with the column metadata of all the defined columns in each of the specified [tables]. */
@@ -102,6 +105,9 @@ interface DatabaseDialect {
 
     /** Returns a map with the primary key metadata in each of the specified [tables]. */
     fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> = emptyMap()
+
+    /** Returns a list of the names of all sequences in the database. */
+    fun sequences(): List<String>
 
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
     fun supportsSelectForUpdate(): Boolean

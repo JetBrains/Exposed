@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import nl.altindag.log.LogCaptor
-import org.jetbrains.exposed.crypt.Algorithms
-import org.jetbrains.exposed.crypt.encryptedBinary
-import org.jetbrains.exposed.crypt.encryptedVarchar
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -223,10 +220,20 @@ class SelectTests : DatabaseTestsBase() {
                 category = EntityTests.Category.new { title = "Category1" }
             }
 
-            val result = EntityTests.Posts.selectAll().where {
+            val result1 = EntityTests.Posts.selectAll().where {
                 EntityTests.Posts.board inList listOf(board1.id)
             }.singleOrNull()?.get(EntityTests.Posts.id)
-            assertEquals(post1.id, result)
+            assertEquals(post1.id, result1)
+
+            val result2 = EntityTests.Board.find {
+                EntityTests.Boards.id inList listOf(1, 2, 3, 4, 5)
+            }.singleOrNull()
+            assertEquals(board1, result2)
+
+            val result3 = EntityTests.Board.find {
+                EntityTests.Boards.id notInList listOf(1, 2, 3, 4, 5)
+            }.singleOrNull()
+            assertNull(result3)
         }
     }
 
@@ -263,7 +270,7 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    private val testDBsSupportingInAnyAllFromTables = TestDB.postgreSQLRelatedDB + TestDB.allH2TestDB
+    private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.ALL_H2 + TestDB.MYSQL_V8
 
     @Test
     fun testInTable() {
@@ -285,8 +292,8 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    private val testDBsSupportingAnyAndAllFromSubQueries = TestDB.entries - TestDB.SQLITE
-    private val testDBsSupportingAnyAndAllFromArrays = TestDB.postgreSQLRelatedDB + TestDB.allH2TestDB
+    private val testDBsSupportingAnyAndAllFromSubQueries = TestDB.ALL - TestDB.SQLITE
+    private val testDBsSupportingAnyAndAllFromArrays = TestDB.ALL_POSTGRES + TestDB.ALL_H2_V2
 
     @Test
     fun testEqAnyFromSubQuery() {
@@ -328,11 +335,38 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testEqAnyFromList() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withCitiesAndUsers { _, users, _ ->
+                val r = users.selectAll().where {
+                    users.id eq anyFrom(listOf("andrey", "alex"))
+                }.orderBy(users.name).toList()
+
+                assertEquals(2, r.size)
+                assertEquals("Alex", r[0][users.name])
+                assertEquals("Andrey", r[1][users.name])
+            }
+        }
+    }
+
+    @Test
     fun testNeqAnyFromArray() {
         withDb(testDBsSupportingAnyAndAllFromArrays) {
             withCitiesAndUsers { _, users, _ ->
                 val r = users.selectAll().where {
                     users.id neq anyFrom(arrayOf("andrey"))
+                }.orderBy(users.name)
+                assertEquals(4, r.count())
+            }
+        }
+    }
+
+    @Test
+    fun testNeqAnyFromList() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withCitiesAndUsers { _, users, _ ->
+                val r = users.selectAll().where {
+                    users.id neq anyFrom(listOf("andrey"))
                 }.orderBy(users.name)
                 assertEquals(4, r.count())
             }
@@ -350,10 +384,35 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testNeqAnyFromEmptyList() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withCitiesAndUsers { _, users, _ ->
+                val r = users.selectAll().where { users.id neq anyFrom(emptyList()) }.orderBy(users.name)
+                assert(r.empty())
+            }
+        }
+    }
+
+    @Test
     fun testGreaterEqAnyFromArray() {
         withDb(testDBsSupportingAnyAndAllFromArrays) {
             withSales { _, sales ->
                 val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
+                val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
+                    .orderBy(sales.amount)
+                    .map { it[sales.product] }
+                assertEquals(6, r.size)
+                r.subList(0, 3).forEach { assertEquals("tea", it) }
+                r.subList(3, 6).forEach { assertEquals("coffee", it) }
+            }
+        }
+    }
+
+    @Test
+    fun testGreaterEqAnyFromList() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withSales { _, sales ->
+                val amounts = listOf(100, 1000).map { it.toBigDecimal() }
                 val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
                     .orderBy(sales.amount)
                     .map { it[sales.product] }
@@ -404,6 +463,18 @@ class SelectTests : DatabaseTestsBase() {
         withDb(testDBsSupportingAnyAndAllFromArrays) {
             withSales { _, sales ->
                 val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
+                val r = sales.selectAll().where { sales.amount greaterEq allFrom(amounts) }.toList()
+                assertEquals(3, r.size)
+                r.forEach { assertEquals("coffee", it[sales.product]) }
+            }
+        }
+    }
+
+    @Test
+    fun testGreaterEqAllFromList() {
+        withDb(testDBsSupportingAnyAndAllFromArrays) {
+            withSales { _, sales ->
+                val amounts = listOf(100, 1000).map { it.toBigDecimal() }
                 val r = sales.selectAll().where { sales.amount greaterEq allFrom(amounts) }.toList()
                 assertEquals(3, r.size)
                 r.forEach { assertEquals("coffee", it[sales.product]) }
@@ -491,32 +562,6 @@ class SelectTests : DatabaseTestsBase() {
 
             val veryLongString = "1".repeat(255)
             assertEquals(0, stringTable.selectAll().where { stringTable.name eq veryLongString }.count())
-        }
-    }
-
-    @Test
-    fun testEncryptedColumnTypeWithAString() {
-        val stringTable = object : IntIdTable("StringTable") {
-            val name = encryptedVarchar("name", 80, Algorithms.AES_256_PBE_CBC("passwd", "5c0744940b5c369b"))
-            val city = encryptedBinary("city", 80, Algorithms.AES_256_PBE_GCM("passwd", "5c0744940b5c369b"))
-            val address = encryptedVarchar("address", 100, Algorithms.BLOW_FISH("key"))
-            val age = encryptedVarchar("age", 100, Algorithms.TRIPLE_DES("1".repeat(24)))
-        }
-
-        withTables(stringTable) {
-            val id1 = stringTable.insertAndGetId {
-                it[name] = "testName"
-                it[city] = "testCity".toByteArray()
-                it[address] = "testAddress"
-                it[age] = "testAge"
-            }
-
-            assertEquals(1L, stringTable.selectAll().count())
-
-            assertEquals("testName", stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.name])
-            assertEquals("testCity", String(stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.city]))
-            assertEquals("testAddress", stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.address])
-            assertEquals("testAge", stringTable.selectAll().where { stringTable.id eq id1 }.first()[stringTable.age])
         }
     }
 }

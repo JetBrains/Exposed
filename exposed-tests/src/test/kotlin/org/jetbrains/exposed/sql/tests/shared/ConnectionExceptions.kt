@@ -63,14 +63,14 @@ class ConnectionExceptions {
     }
 
     private fun `_transaction repetition works even if rollback throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
-        Class.forName(TestDB.H2.driver).newInstance()
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Class.forName(TestDB.H2_V2.driver).newInstance()
 
-        val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
+        val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
-                repetitionAttempts = 5
+                maxAttempts = 5
                 this.exec("BROKEN_SQL_THAT_CAUSES_EXCEPTION()")
             }
             fail("Should have thrown an exception")
@@ -99,14 +99,14 @@ class ConnectionExceptions {
     }
 
     private fun `_transaction repetition works when commit throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
-        Class.forName(TestDB.H2.driver).newInstance()
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Class.forName(TestDB.H2_V2.driver).newInstance()
 
-        val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
+        val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
-                repetitionAttempts = 5
+                maxAttempts = 5
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")
@@ -125,14 +125,14 @@ class ConnectionExceptions {
     }
 
     private fun `_transaction throws exception if all commits throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
-        Assume.assumeTrue(TestDB.H2 in TestDB.enabledDialects())
-        Class.forName(TestDB.H2.driver).newInstance()
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+        Class.forName(TestDB.H2_V2.driver).newInstance()
 
-        val wrappingDataSource = WrappingDataSource(TestDB.H2, connectionDecorator)
+        val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
         try {
             transaction(Connection.TRANSACTION_SERIALIZABLE, db = db) {
-                repetitionAttempts = 5
+                maxAttempts = 5
                 this.exec("SELECT 1;")
             }
             fail("Should have thrown an exception")

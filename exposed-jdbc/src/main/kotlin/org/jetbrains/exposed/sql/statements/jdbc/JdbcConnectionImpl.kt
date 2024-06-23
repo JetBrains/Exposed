@@ -77,19 +77,11 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         } else {
             PreparedStatement.NO_GENERATED_KEYS
         }
-        return JdbcPreparedStatementImpl(
-            connection.prepareStatement(sql, generated),
-            returnKeys,
-            connection.metaData.supportsGetGeneratedKeys()
-        )
+        return JdbcPreparedStatementImpl(connection.prepareStatement(sql, generated), returnKeys)
     }
 
     override fun prepareStatement(sql: String, columns: Array<String>): PreparedStatementApi {
-        return JdbcPreparedStatementImpl(
-            connection.prepareStatement(sql, columns),
-            true,
-            connection.metaData.supportsGetGeneratedKeys()
-        )
+        return JdbcPreparedStatementImpl(connection.prepareStatement(sql, columns), true)
     }
 
     override fun executeInBatch(sqls: List<String>) {
@@ -132,7 +124,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
             override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = sqls.joinToString("\n")
 
-            override fun arguments(): Iterable<Iterable<Pair<ColumnType, Any?>>> = emptyList()
+            override fun arguments(): Iterable<Iterable<Pair<ColumnType<*>, Any?>>> = emptyList()
         }
 
         prepStatement.execute(TransactionManager.current())

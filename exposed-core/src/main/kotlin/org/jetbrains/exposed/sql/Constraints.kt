@@ -20,6 +20,9 @@ interface DdlAware {
 
     /** Returns the list of DDL statements that drops this object. */
     fun dropStatement(): List<String>
+
+    /** Returns the list of DDL statements that create this DdlAware instance. */
+    val ddl: List<String> get() = createStatement()
 }
 
 /**
@@ -48,7 +51,7 @@ enum class ReferenceOption {
  * Represents a foreign key constraint.
  */
 data class ForeignKeyConstraint(
-    /** Mapping of referenced parent table columns to the foreign key columns in their child tables. */
+    /** Mapping of the foreign key columns in the referencing child table to their referenced parent table columns. */
     val references: Map<Column<*>, Column<*>>,
     private val onUpdate: ReferenceOption?,
     private val onDelete: ReferenceOption?,
@@ -65,31 +68,31 @@ data class ForeignKeyConstraint(
     private val tx: Transaction
         get() = TransactionManager.current()
 
-    /** The columns of the referencing child table. */
+    /** The columns of the referenced parent table. */
     val target: LinkedHashSet<Column<*>> = LinkedHashSet(references.values)
 
-    /** The referencing child table. */
+    /** The referenced parent table. */
     val targetTable: Table = target.first().table
 
-    /** Name of the child table. */
+    /** Name of the referenced parent table. */
     val targetTableName: String
         get() = tx.identity(targetTable)
 
-    /** Names of the foreign key columns. */
+    /** Names of the referenced parent table columns. */
     private val targetColumns: String
         get() = target.joinToString { tx.identity(it) }
 
-    /** The columns of the referenced parent table. */
+    /** The foreign key columns of the referencing child table. */
     val from: LinkedHashSet<Column<*>> = LinkedHashSet(references.keys)
 
-    /** The referenced parent table. */
+    /** The referencing child table. */
     val fromTable: Table = from.first().table
 
-    /** Name of the parent table. */
+    /** Name of the referencing child table. */
     val fromTableName: String
         get() = tx.identity(fromTable)
 
-    /** Names of the key columns from the parent table. */
+    /** Names of the foreign key columns from the referencing child table. */
     private val fromColumns: String
         get() = from.joinToString { tx.identity(it) }
 
@@ -105,7 +108,7 @@ data class ForeignKeyConstraint(
     val customFkName: String?
         get() = name
 
-    /** Name of this constraint. */
+    /** Name of this foreign key constraint. */
     val fkName: String
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
             name ?: (
@@ -168,7 +171,7 @@ data class ForeignKeyConstraint(
         return listOf("ALTER TABLE $fromTableName DROP $constraintType $fkName")
     }
 
-    /** Returns the child table column that is referencing the provided column in the parent table. */
+    /** Returns the parent table column that is referenced by the [from] column in the child table. */
     fun targetOf(from: Column<*>): Column<*>? = references[from]
 
     operator fun plus(other: ForeignKeyConstraint): ForeignKeyConstraint {

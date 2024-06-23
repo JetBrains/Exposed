@@ -11,8 +11,7 @@ import java.util.*
 
 class ReplaceTests : DatabaseTestsBase() {
 
-    private val mysqlLikeDialects = listOf(TestDB.MYSQL, TestDB.MARIADB, TestDB.H2_MYSQL, TestDB.H2_MARIADB)
-    private val replaceNotSupported = TestDB.entries - mysqlLikeDialects - TestDB.SQLITE
+    private val replaceNotSupported = TestDB.ALL - TestDB.ALL_MYSQL_LIKE - TestDB.SQLITE + TestDB.ALL_H2_V1
 
     private object NewAuth : Table("new_auth") {
         val username = varchar("username", 16)
