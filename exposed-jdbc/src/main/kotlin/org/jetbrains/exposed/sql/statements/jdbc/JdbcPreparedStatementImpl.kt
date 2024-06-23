@@ -91,6 +91,7 @@ class JdbcPreparedStatementImpl(
             else -> false
         }
 
+    @SuppressWarnings("SwallowedException")
     override fun setInputStream(index: Int, inputStream: InputStream, setAsBlobObject: Boolean) {
         if (setAsBlobObject) {
             statement.setBlob(index, inputStream)
