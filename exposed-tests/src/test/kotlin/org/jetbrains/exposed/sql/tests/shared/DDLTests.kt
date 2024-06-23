@@ -23,9 +23,6 @@ import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Assume
 import org.junit.Test
-import org.postgresql.util.PGobject
-import java.io.ByteArrayInputStream
-import java.io.SequenceInputStream
 import java.util.*
 import kotlin.test.assertNotNull
 import kotlin.test.expect
