@@ -562,6 +562,9 @@ class UpsertTests : DatabaseTestsBase() {
             Words.batchUpsert(
                 lettersWithDuplicates,
                 onUpdate = incrementCount,
+                // PostgresNG throws IndexOutOfBound if shouldReturnGeneratedValues == true
+                // Related issue in pgjdbc-ng repository: https://github.com/impossibl/pgjdbc-ng/issues/545
+                shouldReturnGeneratedValues = false,
                 where = { Words.word inList firstThreeVowels }
             ) { letter ->
                 this[Words.word] = letter

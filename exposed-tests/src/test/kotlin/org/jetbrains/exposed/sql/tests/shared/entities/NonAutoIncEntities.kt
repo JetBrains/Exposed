@@ -3,11 +3,11 @@ package org.jetbrains.exposed.sql.tests.shared.entities
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.update
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -69,35 +69,61 @@ class NonAutoIncEntities : DatabaseTestsBase() {
         }
     }
 
-    object NonAutoIncSharedTable : BaseNonAutoIncTable("SharedTable")
-
-    object AutoIncSharedTable : IntIdTable("SharedTable") {
-        val b1 = bool("b1")
+    object CustomPrimaryKeyColumnTable : IdTable<String>() {
+        val customId: Column<String> = varchar("customId", 256)
+        override val primaryKey = PrimaryKey(customId)
+        override val id: Column<EntityID<String>> = customId.entityId()
     }
 
-    class SharedNonAutoIncEntity(id: EntityID<Int>) : IntEntity(id) {
-        var bool by NonAutoIncSharedTable.b1
+    class CustomPrimaryKeyColumnEntity(id: EntityID<String>) : Entity<String>(id) {
+        companion object : EntityClass<String, CustomPrimaryKeyColumnEntity>(CustomPrimaryKeyColumnTable)
 
-        companion object : IntEntityClass<SharedNonAutoIncEntity>(NonAutoIncSharedTable)
+        var customId by CustomPrimaryKeyColumnTable.customId
     }
 
-    @Test fun testFlushNonAutoincEntityWithoutDefaultValue() {
-        withTables(AutoIncSharedTable) {
-            if (!currentDialectTest.supportsOnlyIdentifiersInGeneratedKeys) {
-                SharedNonAutoIncEntity.new {
-                    bool = true
-                }
-
-                SharedNonAutoIncEntity.new {
-                    bool = false
-                }
-
-                val entities = flushCache()
-
-                assertEquals(2, entities.size)
-                assertEquals(1, entities[0].id._value)
-                assertEquals(2, entities[1].id._value)
+    @Test
+    fun testIdValueIsTheSameAsCustomPrimaryKeyColumn() {
+        withTables(CustomPrimaryKeyColumnTable) {
+            val request = CustomPrimaryKeyColumnEntity.new {
+                customId = "customIdValue"
             }
+
+            assertEquals("customIdValue", request.id.value)
+        }
+    }
+
+    object RequestsTable : IdTable<String> () {
+        val requestId = varchar("request_id", 256)
+        val deleted = bool("deleted")
+        override val primaryKey: PrimaryKey = PrimaryKey(requestId)
+        override val id: Column<EntityID<String>> = requestId.entityId()
+    }
+
+    class Request(id: EntityID<String>) : Entity<String>(id) {
+        companion object : EntityClass<String, Request>(RequestsTable)
+
+        var requestId by RequestsTable.requestId
+        var deleted by RequestsTable.deleted
+
+        override fun delete() {
+            RequestsTable.update({ RequestsTable.id eq id }) {
+                it[deleted] = true
+            }
+        }
+    }
+
+    @Test
+    fun testAccessEntityIdFromOverrideEntityMethod() {
+        withTables(RequestsTable) {
+            val request = Request.new {
+                requestId = "test1"
+                deleted = false
+            }
+
+            request.delete()
+
+            val updated = Request["test1"]
+            assertEquals(true, updated.deleted)
         }
     }
 }
