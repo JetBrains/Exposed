@@ -5,7 +5,6 @@ import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
@@ -179,25 +178,57 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         )
     }
 
-    private fun sanitizedDefault(defaultValue: String): String {
+    /**
+     * Here is the table of default values which are returned from the column `"COLUMN_DEF"` depending on how it was configured:
+     *
+     * - Not set: `varchar("any", 128).nullable()`
+     * - Set null: `varchar("any", 128).nullable().default(null)`
+     * - Set "NULL": `varchar("any", 128).nullable().default("NULL")`
+     * ```
+     * DB                  Not set    Set null                    Set "NULL"
+     * SqlServer           null       "(NULL)"                    "('NULL')"
+     * SQLite              null       "NULL"                      "'NULL'"
+     * Postgres            null       "NULL::character varying"   "'NULL'::character varying"
+     * PostgresNG          null       "NULL::character varying"   "'NULL'::character varying"
+     * Oracle              null       "NULL "                     "'NULL' "
+     * MySql5              null       null                        "NULL"
+     * MySql8              null       null                        "NULL"
+     * MariaDB3            "NULL"     "NULL"                      "'NULL'"
+     * MariaDB2            "NULL"     "NULL"                      "'NULL'"
+     * H2V1                null       "NULL"                      "'NULL'"
+     * H2V1 (MySql)        null       "NULL"                      "'NULL'"
+     * H2V2                null       "NULL"                      "'NULL'"
+     * H2V2 (MySql)        null       "NULL"                      "'NULL'"
+     * H2V2 (MariaDB)      null       "NULL"                      "'NULL'"
+     * H2V2 (PSQL)         null       "NULL"                      "'NULL'"
+     * H2V2 (Oracle)       null       "NULL"                      "'NULL'"
+     * H2V2 (SqlServer)    null       "NULL"                      "'NULL'"
+     * ```
+     * According to this table there is no simple rule of what is the default value. It should be checked
+     * for each DB (or groups of DBs) specifically.
+     * In the case of MySql and MariaDB it's also not possible to say whether was default value skipped or
+     * explicitly set to `null`.
+     *
+     * @return `null` - if the value was set to `null` or not configured. `defaultValue` in other case.
+     */
+    private fun sanitizedDefault(defaultValue: String): String? {
         val dialect = currentDialect
-        val h2Mode = dialect.h2Mode
         return when {
-            dialect is SQLServerDialect -> defaultValue.trim('(', ')', '\'')
-            dialect is OracleDialect || h2Mode == H2CompatibilityMode.Oracle -> defaultValue.trim().let {
-                if (it.startsWith('\'') && it.endsWith('\'')) it.trim('\'') else it
+            dialect is SQLServerDialect -> defaultValue.trim('(', ')').extractNullAndStringFromDefaultValue()
+            dialect is MariaDBDialect -> when (defaultValue) {
+                "NULL" -> null
+                else -> defaultValue.extractNullAndStringFromDefaultValue()
             }
-            dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL || h2Mode == H2CompatibilityMode.MariaDB -> defaultValue.substringAfter(
-                "b'"
-            ).trim('\'')
-
-            dialect is PostgreSQLDialect || h2Mode == H2CompatibilityMode.PostgreSQL -> when {
-                defaultValue.startsWith('\'') && defaultValue.endsWith('\'') -> defaultValue.trim('\'')
-                else -> defaultValue
-            }
-
-            else -> defaultValue.trim('\'')
+            dialect is OracleDialect -> defaultValue.trim().extractNullAndStringFromDefaultValue()
+            dialect is MysqlDialect -> defaultValue.substringAfter("b'").trim('\'')
+            else -> defaultValue.extractNullAndStringFromDefaultValue()
         }
+    }
+
+    private fun String.extractNullAndStringFromDefaultValue() = when {
+        this.startsWith("NULL") -> null
+        this.startsWith('\'') && this.endsWith('\'') -> this.trim('\'')
+        else -> this
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()
