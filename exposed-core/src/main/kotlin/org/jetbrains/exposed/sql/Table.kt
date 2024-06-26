@@ -1176,6 +1176,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** Marks this [CompositeColumn] as nullable. */
     @Suppress("UNCHECKED_CAST")
+    @LowPriorityInOverloadResolution
     fun <T : Any, C : CompositeColumn<T>> C.nullable(): CompositeColumn<T?> = apply {
         nullable = true
         getRealColumns().filter { !it.columnType.nullable }.forEach { (it as Column<Any>).nullable() }

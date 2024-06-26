@@ -10,11 +10,15 @@ import javax.money.Monetary
 import javax.money.MonetaryAmount
 
 /**
- * Represents amount of money and currency using Java Money API. Data are stored using two composite columns.
+ * Represents amount of money and currency using Java Money API. Data is stored using two composite columns.
  *
  * @author Vladislav Kisel
  */
-class CompositeMoneyColumn<T1 : BigDecimal?, T2 : CurrencyUnit?, R : MonetaryAmount?>(val amount: Column<T1>, val currency: Column<T2>) :
+class CompositeMoneyColumn<T1 : BigDecimal?, T2 : CurrencyUnit?, R : MonetaryAmount?>(
+    val amount: Column<T1>,
+    val currency: Column<T2>,
+    nullable: Boolean = false
+) :
     BiCompositeColumn<T1, T2, R>(
         column1 = amount,
         column2 = currency,
@@ -36,12 +40,26 @@ class CompositeMoneyColumn<T1 : BigDecimal?, T2 : CurrencyUnit?, R : MonetaryAmo
 
                 result.create() as R
             }
-        }
+        },
+        nullable
     )
 
+/**
+ * Creates a composite column made up of a numeric column, with the specified [amountName], for storing numbers with
+ * the specified [precision] and [scale], as wel as a character column, with the specified [currencyName], for storing
+ * currency (as javax.money.CurrencyUnit).
+ */
 @Suppress("FunctionNaming")
 fun CompositeMoneyColumn(table: Table, precision: Int, scale: Int, amountName: String, currencyName: String) =
     CompositeMoneyColumn<BigDecimal, CurrencyUnit, MonetaryAmount>(
         amount = Column(table, amountName, DecimalColumnType(precision, scale)),
         currency = Column(table, currencyName, CurrencyColumnType())
     )
+
+/** Marks this [CompositeMoneyColumn] as nullable. */
+@Suppress("UNCHECKED_CAST")
+fun <T1 : BigDecimal, T2 : CurrencyUnit, R : MonetaryAmount> CompositeMoneyColumn<T1, T2, R>.nullable(): CompositeMoneyColumn<T1?, T2?, R?> {
+    return with(amount.table) {
+        (this@nullable as BiCompositeColumn<T1, T2, R>).nullable() as CompositeMoneyColumn<T1?, T2?, R?>
+    }
+}

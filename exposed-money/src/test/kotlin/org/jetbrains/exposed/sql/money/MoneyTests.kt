@@ -12,10 +12,10 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.junit.Ignore
 import org.junit.Test
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
+import javax.money.Monetary
 import javax.money.MonetaryAmount
 
 private const val AMOUNT_SCALE = 5
@@ -25,26 +25,36 @@ open class MoneyBaseTest : DatabaseTestsBase() {
     @Test
     fun testInsertSelectMoney() {
         testInsertedAndSelect(Money.of(BigDecimal.TEN, "USD"))
+        testInsertedAndSelectByComponentColumns(Money.of(BigDecimal.TEN, "USD"))
     }
 
     @Test
     fun testInsertSelectFloatingMoney() {
         testInsertedAndSelect(Money.of(BigDecimal("0.12345"), "USD"))
+        testInsertedAndSelectByComponentColumns(Money.of(BigDecimal("0.12345"), "USD"))
     }
 
     @Test
-    @Ignore // TODO not supported yet
     fun testInsertSelectNull() {
         testInsertedAndSelect(null)
+        testInsertedAndSelectByComponentColumns(null)
     }
 
     @Test
     fun testInsertSelectOutOfLength() {
-        val toInsert = Money.of(BigDecimal.valueOf(12345678901), "CZK")
+        val amount = BigDecimal.valueOf(12345678901)
+        val toInsert = Money.of(amount, "CZK")
         withTables(excludeSettings = listOf(TestDB.SQLITE), Account) {
             expectException<ExposedSQLException> {
-                val accountID = Account.insertAndGetId {
+                Account.insertAndGetId {
                     it[composite_money] = toInsert
+                }
+            }
+
+            expectException<ExposedSQLException> {
+                Account.insertAndGetId {
+                    it[composite_money.amount] = amount
+                    it[composite_money.currency] = toInsert.currency
                 }
             }
         }
@@ -78,27 +88,61 @@ open class MoneyBaseTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun testNullableCompositeColumnInsertAndSelect() {
-        val table = object : IntIdTable("CompositeTable") {
-            val composite_money = compositeMoney(8, AMOUNT_SCALE, "composite_money").nullable()
+    fun testUsingManualCompositeMoneyColumns() {
+        val tester = object : Table("tester") {
+            val money = compositeMoney(
+                decimal("amount", 8, AMOUNT_SCALE),
+                currency("currency")
+            )
+            val nullableMoney = compositeMoney(
+                decimal("nullable_amount", 8, AMOUNT_SCALE).nullable(),
+                currency("nullable_currency").nullable()
+            )
         }
 
-        withTables(table) {
-            val id = table.insertAndGetId {
-                it[composite_money] = null
+        withTables(tester) {
+            val amount = BigDecimal(99).setScale(AMOUNT_SCALE)
+            val currencyUnit = Monetary.getCurrency("EUR")
+            tester.insert {
+                it[money.amount] = amount
+                it[money.currency] = currencyUnit
+                it[nullableMoney.amount] = null
+                it[nullableMoney.currency] = null
             }
 
-            val resultRow = table.selectAll().where { table.id.eq(id) }.single()
-            val result = resultRow[table.composite_money]
+            val result1 = tester
+                .selectAll()
+                .where { tester.nullableMoney.amount.isNull() and tester.nullableMoney.currency.isNull() }
+                .single()
+            assertEquals(amount, result1[tester.money.amount])
 
-            assertEquals(null, result)
+            tester.update {
+                it[tester.nullableMoney.amount] = amount
+                it[tester.nullableMoney.currency] = currencyUnit
+            }
+
+            val result2 = tester
+                .select(tester.money.currency, tester.nullableMoney.currency)
+                .where { tester.money.amount.isNotNull() and tester.nullableMoney.amount.isNotNull() }
+                .single()
+            assertEquals(currencyUnit, result2[tester.money.currency])
+            assertEquals(currencyUnit, result2[tester.nullableMoney.currency])
+
+            // manual composite columns should still accept composite values
+            val compositeMoney = Money.of(BigDecimal(10), "CAD")
+            tester.insert {
+                it[money] = compositeMoney
+                it[nullableMoney] = null
+            }
+
+            assertEquals(1, tester.selectAll().where { tester.nullableMoney eq null }.count())
         }
     }
 
     private fun testInsertedAndSelect(toInsert: Money?) {
         withTables(Account) {
             val accountID = Account.insertAndGetId {
-                it[composite_money] = toInsert!!
+                it[composite_money] = toInsert
             }
 
             val single = Account.select(Account.composite_money).where { Account.id.eq(accountID) }.single()
@@ -107,11 +151,27 @@ open class MoneyBaseTest : DatabaseTestsBase() {
             assertEquals(toInsert, inserted)
         }
     }
+
+    private fun testInsertedAndSelectByComponentColumns(toInsert: Money?) {
+        withTables(Account) {
+            val amount: BigDecimal? = toInsert?.numberStripped?.setScale(AMOUNT_SCALE)
+            val currencyUnit: CurrencyUnit? = toInsert?.currency
+            val accountID = Account.insertAndGetId {
+                it[composite_money.amount] = amount
+                it[composite_money.currency] = currencyUnit
+            }
+
+            val single = Account.select(Account.composite_money).where { Account.id eq accountID }.single()
+
+            assertEquals(amount, single[Account.composite_money.amount])
+            assertEquals(currencyUnit, single[Account.composite_money.currency])
+        }
+    }
 }
 
 class AccountDao(id: EntityID<Int>) : IntEntity(id) {
 
-    val money: MonetaryAmount by Account.composite_money
+    val money: MonetaryAmount? by Account.composite_money
 
     val currency: CurrencyUnit? by Account.composite_money.currency
 
@@ -122,5 +182,5 @@ class AccountDao(id: EntityID<Int>) : IntEntity(id) {
 
 object Account : IntIdTable("AccountTable") {
 
-    val composite_money = compositeMoney(8, AMOUNT_SCALE, "composite_money")
+    val composite_money = compositeMoney(8, AMOUNT_SCALE, "composite_money").nullable()
 }
