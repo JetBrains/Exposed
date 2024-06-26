@@ -16,7 +16,11 @@ import javax.money.MonetaryAmount
 fun Table.compositeMoney(precision: Int, scale: Int, amountName: String, currencyName: String = amountName + "_C") =
     registerCompositeColumn(CompositeMoneyColumn(this, precision, scale, amountName, currencyName))
 
-/** Creates a composite column made up of a decimal column and a currency column. */
+/**
+ * Creates a composite column made up of a decimal column and a currency column.
+ *
+ * @sample org.jetbrains.exposed.sql.money.MoneyBaseTest.testUsingManualCompositeMoneyColumns
+ */
 fun Table.compositeMoney(
     amountColumn: Column<BigDecimal>,
     currencyColumn: Column<CurrencyUnit>
@@ -28,13 +32,17 @@ fun Table.compositeMoney(
     }
 }
 
-/** Creates a composite column made up of a nullable decimal column and a nullable currency column. */
+/**
+ * Creates a composite column made up of a nullable decimal column and a nullable currency column.
+ *
+ * @sample org.jetbrains.exposed.sql.money.MoneyBaseTest.testUsingManualCompositeMoneyColumns
+ */
 @JvmName("compositeMoneyNullable")
 fun Table.compositeMoney(
     amountColumn: Column<BigDecimal?>,
     currencyColumn: Column<CurrencyUnit?>
 ): CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?> {
-    return CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?>(amountColumn, currencyColumn).also {
+    return CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?>(amountColumn, currencyColumn, true).also {
         if (amountColumn !in columns && currencyColumn !in columns) {
             registerCompositeColumn(it)
         }
