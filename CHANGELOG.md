@@ -1,3 +1,39 @@
+# 0.52.0
+
+Features:
+* feat: EXPOSED-334 Support MERGE statement by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2047
+* feat: EXPOSED-368 Ordering on References by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2083
+* Feat: EXPOSED-396 Supports fetchBatchedResults with sorting order  by @roharon in https://github.com/JetBrains/Exposed/pull/2102
+* feat: Add OffsetDateTime extension functions by @joc-a in https://github.com/JetBrains/Exposed/pull/2118
+* feat: EXPOSED-295 Support subqueries with preceding LATERAL by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2095
+* feat: EXPOSED-336 Support Where clause with batchUpsert by @bog-walk in https://github.com/JetBrains/Exposed/pull/2120
+* feat: EXPOSED-416 Support adding special database-specific column definitions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2125
+
+Bug fixes:
+* fix: EXPOSED-389 Coalesce operator returning nullable value by @joc-a in https://github.com/JetBrains/Exposed/pull/2107
+* fix: EXPOSED-390 ASC_NULLS_LAST and DESC_NULLS_FIRST for MySQL string columns by @zly2006 in https://github.com/JetBrains/Exposed/pull/2091
+* fix: EXPOSED-402 ClassCastException when eager loading with uuid().references() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2112
+* fix(DoubleColumnType): correctly handle precision when casting Float to DoubleColumnType for a `real` column by @jackgisel-RL in https://github.com/JetBrains/Exposed/pull/2115
+* fix: EXPOSED-277 statementsRequiredToActualizeScheme does not check s… by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2096
+* fix: EXPOSED-411 ClassCastException when `uuid().references()` is used with `referrersOn` by @joc-a in https://github.com/JetBrains/Exposed/pull/2127
+* fix: EXPOSED-412 Remove all the usage of isOldMySql function in tests by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2126
+* fix: EXPOSED-405 SQLite bugs: Table with custom ID behaves weirdly in DAO and batchInsert by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2119
+* fix: EXPOSED-393 H2 upsert with JSON column creates invalid data by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2104
+* fix: EXPOSED-400 ClassCastException when using `fetchBatchedResults` by @joc-a in https://github.com/JetBrains/Exposed/pull/2113
+* EXPOSED-398 Gradle task testH2_v1 runs tests on version 2.2.224 by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2110
+* test: EXPOSED-191 Flaky Oracle test on TC build by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2098
+
+Infrastructure:
+* Spring Boot 3.3.1
+* io.github.hakky54:logcaptor 2.9.3
+* Spring Framework 6.1.10
+* org.junit:junit-bom 5.10.2
+* chore: Fix TC Docker `version` is obsolete by @bog-walk in https://github.com/JetBrains/Exposed/pull/2111
+* test: EXPOSED-249 Add MySQL8 to tests for AllAnyFromBaseOp feature by @bog-walk in https://github.com/JetBrains/Exposed/pull/2123
+* chore: Add migration module and move `generateMigrationScript` function to it by @joc-a in https://github.com/JetBrains/Exposed/pull/2128
+* Add workflow to build documentation website by @e5l in https://github.com/JetBrains/Exposed/pull/2134
+
+
 # 0.51.1
 Bug fixes:
 * fix: EXPOSED-389 Coalesce operator returning nullable value by @joc-a in https://github.com/JetBrains/Exposed/pull/2107
