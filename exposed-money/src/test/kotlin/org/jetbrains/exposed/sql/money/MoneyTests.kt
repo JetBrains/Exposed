@@ -6,12 +6,17 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
-import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.update
 import org.junit.Test
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
@@ -134,8 +139,11 @@ open class MoneyBaseTest : DatabaseTestsBase() {
                 it[money] = compositeMoney
                 it[nullableMoney] = null
             }
+            tester.insert {
+                it[money] = compositeMoney
+            }
 
-            assertEquals(1, tester.selectAll().where { tester.nullableMoney eq null }.count())
+            assertEquals(2, tester.selectAll().where { tester.nullableMoney eq null }.count())
         }
     }
 
