@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
@@ -7,6 +9,7 @@ import org.jetbrains.exposed.sql.statements.ReturningStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -155,6 +158,29 @@ class ReturningTests : DatabaseTestsBase() {
             }.map { it[newPrice] }
             assertEquals(3, result3.size)
             assertTrue { result3.all { it == 0.0 } }
+        }
+    }
+
+    object User : IdTable<String>("user") {
+        val username = varchar("username", 128)
+        override val primaryKey: PrimaryKey = PrimaryKey(username)
+        override val id: Column<EntityID<String>> = username.entityId()
+    }
+
+    @Test
+    fun testBatchInsertReturningCustomPrimaryKey() {
+        withTables(TestDB.enabledDialects() - returningSupportedDb, User) {
+            val result1 = User.batchInsert(listOf("batman")) { username ->
+                this[User.username] = username
+            }.single()
+            assertEquals("batman", result1[User.id].value)
+            assertEquals("batman", result1[User.username])
+
+            val result2 = User.batchInsert(listOf("superman")) { username ->
+                this[User.username] = username
+            }.single()
+            assertEquals("superman", result2[User.username])
+            assertEquals("superman", result2[User.id].value)
         }
     }
 }
