@@ -48,6 +48,7 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateFunctions
 	public static final fun InstantMonthFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantSecondExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantSecondFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun InstantTimeExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantTimeFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantYearExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantYearFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
@@ -67,6 +68,7 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateFunctions
 	public static final fun LocalDateTimeDateFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeDayExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeDayFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun LocalDateTimeExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeHourExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeHourFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
@@ -76,6 +78,7 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateFunctions
 	public static final fun LocalDateTimeMonthFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeSecondExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeSecondFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun LocalDateTimeTimeExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeTimeFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeYearExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeYearFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
@@ -93,6 +96,7 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateFunctions
 	public static final fun OffsetDateTimeMonthFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun OffsetDateTimeSecondExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun OffsetDateTimeSecondFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeTimeExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun OffsetDateTimeTimeFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun OffsetDateTimeYearExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun OffsetDateTimeYearFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;

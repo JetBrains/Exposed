@@ -66,6 +66,7 @@ public final class org/jetbrains/exposed/sql/javatime/JavaDateFunctionsKt {
 	public static final fun minute (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/javatime/Minute;
 	public static final fun month (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/javatime/Month;
 	public static final fun second (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/javatime/Second;
+	public static final fun time (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/javatime/Time;
 	public static final fun timeLiteral (Ljava/time/LocalTime;)Lorg/jetbrains/exposed/sql/LiteralOp;
 	public static final fun timeParam (Ljava/time/LocalTime;)Lorg/jetbrains/exposed/sql/Expression;
 	public static final fun timestampLiteral (Ljava/time/Instant;)Lorg/jetbrains/exposed/sql/LiteralOp;

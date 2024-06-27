@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.jodatime.*
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.constraintNamePart
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -32,7 +33,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class JodaTimeDefaultsTest : JodaTimeBaseTest() {
+class JodaTimeDefaultsTest : DatabaseTestsBase() {
     object TableWithDBDefault : IntIdTable() {
         var cIndex = 0
         val field = varchar("field", 100)

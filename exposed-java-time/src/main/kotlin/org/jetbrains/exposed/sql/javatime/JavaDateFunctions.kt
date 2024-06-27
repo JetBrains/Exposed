@@ -24,7 +24,15 @@ class Date<T : Temporal?>(val expr: Expression<T>) : Function<LocalDate>(JavaLoc
 
 /** Represents an SQL function that extracts the time part from a given temporal [expr]. */
 class Time<T : Temporal?>(val expr: Expression<T>) : Function<LocalTime>(JavaLocalTimeColumnType.INSTANCE) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("Time(", expr, ")") }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        val dialect = currentDialect
+        val functionProvider = when (dialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.SQLServer, H2Dialect.H2CompatibilityMode.PostgreSQL ->
+                (dialect as H2Dialect).originalFunctionProvider
+            else -> dialect.functionProvider
+        }
+        functionProvider.time(expr, queryBuilder)
+    }
 }
 
 /**
@@ -149,6 +157,9 @@ class Second<T : Temporal?>(val expr: Expression<T>) : Function<Int>(IntegerColu
 
 /** Returns the date from this temporal expression. */
 fun <T : Temporal?> Expression<T>.date(): Date<T> = Date(this)
+
+/** Returns the time from this temporal expression. */
+fun <T : Temporal?> Expression<T>.time(): Time<T> = Time(this)
 
 /** Returns the year from this temporal expression, as an integer. */
 fun <T : Temporal?> Expression<T>.year(): Year<T> = Year(this)

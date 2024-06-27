@@ -29,7 +29,7 @@ import java.time.ZoneOffset
 import kotlin.test.assertEquals
 import kotlin.time.Duration
 
-open class KotlinTimeBaseTest : DatabaseTestsBase() {
+class KotlinTimeTests : DatabaseTestsBase() {
 
     private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
 
@@ -450,7 +450,7 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withDb(excludeSettings = timestampWithTimeZoneUnsupportedDB) {
+        withDb(excludeSettings = timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1) { testDb ->
             try {
                 // UTC time zone
                 java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
@@ -458,15 +458,29 @@ open class KotlinTimeBaseTest : DatabaseTestsBase() {
 
                 SchemaUtils.create(testTable)
 
-                val now = OffsetDateTime.now(ZoneId.systemDefault())
+                val now = OffsetDateTime.parse("2023-05-04T05:04:01.123123123+00:00")
                 val nowId = testTable.insertAndGetId {
-                    it[timestampWithTimeZone] = now
+                    it[testTable.timestampWithTimeZone] = now
                 }
 
                 assertEquals(
                     now.toLocalDate().toKotlinLocalDate(),
                     testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
                         .single()[testTable.timestampWithTimeZone.date()]
+                )
+
+                val expectedTime =
+                    when (testDb) {
+                        TestDB.SQLITE -> OffsetDateTime.parse("2023-05-04T05:04:01.123+00:00")
+                        TestDB.MYSQL_V8, TestDB.SQLSERVER,
+                        in TestDB.ALL_ORACLE_LIKE,
+                        in TestDB.ALL_POSTGRES_LIKE -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")
+                        else -> now
+                    }.toLocalTime().toKotlinLocalTime()
+                assertEquals(
+                    expectedTime,
+                    testTable.select(testTable.timestampWithTimeZone.time()).where { testTable.id eq nowId }
+                        .single()[testTable.timestampWithTimeZone.time()]
                 )
 
                 assertEquals(

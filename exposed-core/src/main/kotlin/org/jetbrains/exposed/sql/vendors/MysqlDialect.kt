@@ -271,6 +271,10 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
             toString()
         }
     }
+
+    override fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("SUBSTRING_INDEX(", expr, ", ' ', -1)")
+    }
 }
 
 /**

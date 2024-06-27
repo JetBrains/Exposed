@@ -5,6 +5,7 @@ package org.jetbrains.exposed
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.jodatime.date
 import org.jetbrains.exposed.sql.jodatime.datetime
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.MiscTable
 import org.jetbrains.exposed.sql.tests.shared.checkInsert
@@ -23,7 +24,7 @@ object Misc : MiscTable() {
     val tn = datetime("tn").nullable()
 }
 
-class JodaTimeMiscTableTest : JodaTimeBaseTest() {
+class JodaTimeMiscTableTest : DatabaseTestsBase() {
     @Test
     fun testInsert01() {
         val tbl = Misc

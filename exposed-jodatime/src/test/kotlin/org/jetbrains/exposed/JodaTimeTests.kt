@@ -30,7 +30,7 @@ import org.joda.time.DateTimeZone
 import org.junit.Test
 import kotlin.test.assertEquals
 
-open class JodaTimeBaseTest : DatabaseTestsBase() {
+class JodaTimeTests : DatabaseTestsBase() {
     init {
         DateTimeZone.setDefault(DateTimeZone.UTC)
     }
