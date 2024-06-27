@@ -119,6 +119,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         append("CAST(", expr, " AS DATE)")
     }
 
+    override fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("SUBSTRING(CONVERT(NVARCHAR, ", expr, ", 121), 12, 15)")
+    }
+
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("DATEPART(YEAR, ", expr, ")")
     }

@@ -183,6 +183,18 @@ abstract class FunctionProvider {
     }
 
     /**
+     * SQL function that extracts the time field from a given temporal expression.
+     *
+     * @param expr Expression to extract the year from.
+     * @param queryBuilder Query builder to append the SQL function to.
+     */
+    open fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) {
+        throw UnsupportedByDialectException(
+            "There's no generic SQL for TIME. There must be a vendor-specific implementation.", currentDialect
+        )
+    }
+
+    /**
      * SQL function that extracts the year field from a given date.
      *
      * @param expr Expression to extract the year from.
@@ -829,7 +841,9 @@ abstract class FunctionProvider {
     }
 
     /** Appends optional parameters to an EXPLAIN query. */
-    protected open fun StringBuilder.appendOptionsToExplain(options: String) { append("$options ") }
+    protected open fun StringBuilder.appendOptionsToExplain(options: String) {
+        append("$options ")
+    }
 
     /**
      * Returns the SQL command that performs an insert, update, or delete, and also returns data from any modified rows.

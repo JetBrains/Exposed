@@ -101,6 +101,10 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         append("CAST(", expr, " AS DATE)")
     }
 
+    override fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("TO_CHAR(", expr, ", 'HH24:MI:SS.US')")
+    }
+
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
         append("Extract(YEAR FROM ")
         append(expr)

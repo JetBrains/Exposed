@@ -136,6 +136,10 @@ internal object H2FunctionProvider : FunctionProvider() {
     override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
         append("CAST(", expr, " AS DATE)")
     }
+
+    override fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
+        append("FORMATDATETIME(", expr, ", 'HH:mm:ss.SSSSSSSSS')")
+    }
 }
 
 /**

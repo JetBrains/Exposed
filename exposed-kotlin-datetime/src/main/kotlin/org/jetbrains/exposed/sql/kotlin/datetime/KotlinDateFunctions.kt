@@ -10,7 +10,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
@@ -41,10 +40,13 @@ fun <T : OffsetDateTime?> Date(expr: Expression<T>): Function<LocalDate> = DateI
 
 internal class TimeInternal(val expr: Expression<*>) : Function<LocalTime>(KotlinLocalTimeColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        when (currentDialect) {
-            is PostgreSQLDialect -> append(expr, "::time")
-            else -> append("Time(", expr, ")")
+        val dialect = currentDialect
+        val functionProvider = when (dialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.SQLServer, H2Dialect.H2CompatibilityMode.PostgreSQL ->
+                (dialect as H2Dialect).originalFunctionProvider
+            else -> dialect.functionProvider
         }
+        functionProvider.time(expr, queryBuilder)
     }
 }
 
@@ -291,6 +293,22 @@ fun <T : Instant?> Expression<T>.date() = Date(this)
 /** Returns the date from this timestampWithTimeZone expression. */
 @JvmName("OffsetDateTimeDateExt")
 fun <T : OffsetDateTime?> Expression<T>.date() = Date(this)
+
+/** Returns the time from this date expression. */
+@JvmName("LocalDateTimeExt")
+fun <T : LocalDate?> Expression<T>.time() = Time(this)
+
+/** Returns the time from this datetime expression. */
+@JvmName("LocalDateTimeTimeExt")
+fun <T : LocalDateTime?> Expression<T>.time() = Time(this)
+
+/** Returns the time from this timestamp expression. */
+@JvmName("InstantTimeExt")
+fun <T : Instant?> Expression<T>.time() = Time(this)
+
+/** Returns the time from this timestampWithTimeZone expression. */
+@JvmName("OffsetDateTimeTimeExt")
+fun <T : OffsetDateTime?> Expression<T>.time() = Time(this)
 
 /** Returns the year from this date expression, as an integer. */
 @JvmName("LocalDateYearExt")
