@@ -1647,7 +1647,6 @@ public final class org/jetbrains/exposed/sql/OpKt {
 	public static final fun andIfNotNull (Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun andIfNotNull (Lorg/jetbrains/exposed/sql/Op;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static final fun andNot (Lorg/jetbrains/exposed/sql/Expression;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Op;
-	public static final fun binaryLiteral ([B)Lorg/jetbrains/exposed/sql/LiteralOp;
 	public static final fun blobParam (Lorg/jetbrains/exposed/sql/statements/api/ExposedBlob;Z)Lorg/jetbrains/exposed/sql/Expression;
 	public static synthetic fun blobParam$default (Lorg/jetbrains/exposed/sql/statements/api/ExposedBlob;ZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Expression;
 	public static final fun booleanLiteral (Z)Lorg/jetbrains/exposed/sql/LiteralOp;

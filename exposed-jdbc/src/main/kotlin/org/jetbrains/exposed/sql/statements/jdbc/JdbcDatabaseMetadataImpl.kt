@@ -5,7 +5,6 @@ import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
@@ -214,21 +213,14 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
      */
     private fun sanitizedDefault(defaultValue: String): String? {
         val dialect = currentDialect
-        val h2Mode = dialect.h2Mode
         return when {
-            // Check for MariaDB must be before MySql because MariaDBDialect as a class inherits MysqlDialect
-            dialect is MariaDBDialect || h2Mode == H2CompatibilityMode.MariaDB -> when {
-                defaultValue.startsWith("b'") -> defaultValue.substringAfter("b'").trim('\'')
-                else -> defaultValue.extractNullAndStringFromDefaultValue()
-            }
-            // It's the special case, because MySql returns default string "NULL" as string "NULL", but other DBs return it as "'NULL'"
-            dialect is MysqlDialect && defaultValue == "NULL" -> defaultValue
-            dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL -> when {
-                defaultValue.startsWith("b'") -> defaultValue.substringAfter("b'").trim('\'')
-                else -> defaultValue.extractNullAndStringFromDefaultValue()
-            }
             dialect is SQLServerDialect -> defaultValue.trim('(', ')').extractNullAndStringFromDefaultValue()
+            dialect is MariaDBDialect -> when (defaultValue) {
+                "NULL" -> null
+                else -> defaultValue.extractNullAndStringFromDefaultValue()
+            }
             dialect is OracleDialect -> defaultValue.trim().extractNullAndStringFromDefaultValue()
+            dialect is MysqlDialect -> defaultValue.substringAfter("b'").trim('\'')
             else -> defaultValue.extractNullAndStringFromDefaultValue()
         }
     }
