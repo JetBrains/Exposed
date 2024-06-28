@@ -20,14 +20,9 @@ open class EntityID<T : Comparable<T>> protected constructor(val table: IdTable<
     /** The identity value of type [T] wrapped by this [EntityID] instance. */
     val value: T
         get() {
-            if (_value == null) {
+            if (isNotInitialized()) {
                 invokeOnNoValue()
-                check(_value != null) { "Entity must be inserted" }
-            }
-
-            if ((_value as? CompositeID)?.values?.any { it == null } == true) {
-                invokeOnNoValue()
-                check((_value as? CompositeID)?.values?.none { it == null } == true) { "Entity must be inserted" }
+                check(!isNotInitialized()) { "Entity must be inserted" }
             }
 
             @Suppress("UNCHECKED_CAST")
@@ -36,6 +31,9 @@ open class EntityID<T : Comparable<T>> protected constructor(val table: IdTable<
 
     /** Performs steps when the internal [_value] is accessed without first being initialized. */
     protected open fun invokeOnNoValue() {}
+
+    /** Returns `true` if all component columns have been initialized with a value other than `null`. */
+    fun isNotInitialized(): Boolean = _value == null || (_value as? CompositeID)?.values?.any { it.value == null } == true
 
     override fun toString() = value.toString()
 
