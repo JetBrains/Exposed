@@ -1849,13 +1849,6 @@ public final class org/jetbrains/exposed/sql/QueryBuilder {
 	public final fun unaryPlus (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/QueryBuilder;
 }
 
-public final class org/jetbrains/exposed/sql/QueryExpression : org/jetbrains/exposed/sql/ExpressionWithColumnType {
-	public fun <init> (Lorg/jetbrains/exposed/sql/AbstractQuery;Lorg/jetbrains/exposed/sql/IColumnType;)V
-	public fun getColumnType ()Lorg/jetbrains/exposed/sql/IColumnType;
-	public final fun getQuery ()Lorg/jetbrains/exposed/sql/AbstractQuery;
-	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
-}
-
 public final class org/jetbrains/exposed/sql/QueryKt {
 	public static final fun andHaving (Lorg/jetbrains/exposed/sql/Query;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public static final fun andWhere (Lorg/jetbrains/exposed/sql/Query;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;

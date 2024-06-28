@@ -170,13 +170,3 @@ abstract class ExpressionWithColumnType<T> : Expression<T>() {
     /** Returns the column type of this expression. Used for operations with literals. */
     abstract val columnType: IColumnType<T & Any>
 }
-
-class QueryExpression<T>(val query: AbstractQuery<*>, override val columnType: IColumnType<T & Any>) : ExpressionWithColumnType<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-        with(queryBuilder) {
-            append("(")
-            query.prepareSQL(this)
-            append(")")
-        }
-    }
-}
