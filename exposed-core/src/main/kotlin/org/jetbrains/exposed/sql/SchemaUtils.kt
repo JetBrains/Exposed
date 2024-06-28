@@ -199,6 +199,17 @@ object SchemaUtils {
                         else -> processForDefaultValue(exp)
                     }
 
+                    is ByteArray -> when {
+                        dialect is MariaDBDialect -> value.toString(Charsets.UTF_8)
+                        dialect is MysqlDialect && !dialect.isMysql8 -> value.toString(Charsets.UTF_8)
+                        dialect is MysqlDialect ||
+                            dialect is SQLServerDialect ||
+                            dialect is OracleDialect ||
+                            dialect is PostgreSQLDialect -> BasicBinaryColumnType().nonNullValueToString(value)
+                        dialect is H2Dialect && dialect.h2Mode == null -> BasicBinaryColumnType().nonNullValueToString(value)
+                        else -> value.toString(Charsets.UTF_8)
+                    }
+
                     else -> {
                         when {
                             column.columnType is JsonColumnMarker -> {
@@ -213,7 +224,7 @@ object SchemaUtils {
                                     }
 
                                     is MariaDBDialect -> processed.trim('\'')
-                                    is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\"
+                                    is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\'"
                                     else -> processed.trim('\'')
                                 }
                             }
@@ -354,7 +365,7 @@ object SchemaUtils {
             (column.dbDefaultValue is LiteralOp<*> && (column.dbDefaultValue as? LiteralOp<*>)?.value == null)
 
         return when {
-            // Bot values are null-like, no DDL update is needed
+            // Both values are null-like, no DDL update is needed
             isExistingColumnDefaultNull && isDefinedColumnDefaultNull -> false
             // Only one of the values is null-like, DDL update is needed
             isExistingColumnDefaultNull != isDefinedColumnDefaultNull -> true

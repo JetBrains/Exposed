@@ -739,7 +739,21 @@ open class BasicBinaryColumnType : ColumnType<ByteArray>() {
         else -> error("Unexpected value $value of type ${value::class.qualifiedName}")
     }
 
-    override fun nonNullValueToString(value: ByteArray): String = value.toString(Charsets.UTF_8)
+    override fun nonNullValueToString(value: ByteArray): String {
+        return when {
+            currentDialect is H2Dialect && currentDialect.h2Mode == null -> "X'${value.toHexString().lowercase()}'"
+            currentDialect is MariaDBDialect -> toTextString(value)
+            currentDialect is OracleDialect -> "HEXTORAW('${value.toHexString()}')"
+            currentDialect is SQLServerDialect || currentDialect is MysqlDialect -> "0x${value.toHexString()}"
+            currentDialect is PostgreSQLDialect -> "'\\x${value.toHexString().lowercase()}'::bytea"
+            else -> toTextString(value)
+        }
+    }
+
+    private fun toTextString(value: ByteArray) = TextColumnType().nonNullValueToString(value.toString(Charsets.UTF_8))
+
+    @Suppress("MagicNumber")
+    private fun ByteArray.toHexString(): String = joinToString("") { it.toString(16).uppercase().padStart(2, '0') }
 }
 
 /**

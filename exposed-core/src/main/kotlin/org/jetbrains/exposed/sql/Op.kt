@@ -678,6 +678,9 @@ fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(TextColumnType()
 /** Returns the specified [value] as a decimal literal. */
 fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(DecimalColumnType(value.precision(), value.scale()), value)
 
+/** Returns the specified [value] as a binary literal. */
+fun binaryLiteral(value: ByteArray): LiteralOp<ByteArray> = LiteralOp(BasicBinaryColumnType(), value)
+
 /**
  * Returns the specified [value] as an array literal, with elements parsed by the [delegateType] if provided.
  *

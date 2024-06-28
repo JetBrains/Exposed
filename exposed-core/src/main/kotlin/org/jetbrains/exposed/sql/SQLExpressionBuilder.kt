@@ -927,7 +927,7 @@ interface ISqlExpressionBuilder {
     /** Returns the specified [value] as a literal of type [T]. */
     @Suppress("UNCHECKED_CAST", "ComplexMethod")
     fun <T, S : T?> ExpressionWithColumnType<S>.asLiteral(value: T): LiteralOp<T> = when {
-        value is ByteArray && columnType is BasicBinaryColumnType -> stringLiteral(value.toString(Charsets.UTF_8))
+        value is ByteArray && columnType is BasicBinaryColumnType -> binaryLiteral(value)
         else -> LiteralOp(columnType as IColumnType<T & Any>, value)
     } as LiteralOp<T>
 
