@@ -232,7 +232,7 @@ class OrderByTests : DatabaseTestsBase() {
             // SELECT OrderByQueryBox.id, (SELECT SUM(OrderByQueryCoin.cost)
             //   FROM OrderByQueryCoin WHERE OrderByQueryBox.id = OrderByQueryCoin.box_id) cost_sum FROM OrderByQueryBox
             //   ORDER BY cost_sum ASC
-            val expressionAlias = coin.select(coin.cost.sum()).where { coin.boxId eq box.id }.expression(coin.cost).alias("cost_sum")
+            val expressionAlias = coin.select(coin.cost.sum()).where { coin.boxId eq box.id }.asExpression<Int>().alias("cost_sum")
 
             val variant1Asc = box.select(box.id, expressionAlias)
                 .orderBy(expressionAlias, SortOrder.ASC)
@@ -248,7 +248,7 @@ class OrderByTests : DatabaseTestsBase() {
             // SELECT OrderByQueryBox.id
             //   FROM OrderByQueryBox
             //   ORDER BY (SELECT SUM(OrderByQueryCoin.cost) FROM OrderByQueryCoin WHERE OrderByQueryBox.id = OrderByQueryCoin.box_id) DESC
-            val expression = coin.select(coin.cost.sum()).where { coin.boxId eq box.id }.expression(coin.cost)
+            val expression = coin.select(coin.cost.sum()).where { coin.boxId eq box.id }.asExpression<Int>()
 
             val variant2Asc = box.select(box.id)
                 .orderBy(expression, SortOrder.ASC)

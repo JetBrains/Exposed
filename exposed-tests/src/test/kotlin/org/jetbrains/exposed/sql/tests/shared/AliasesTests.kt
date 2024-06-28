@@ -242,18 +242,20 @@ class AliasesTests : DatabaseTestsBase() {
         }
 
         withTables(stables, facilities) {
-            val countExpression = facilities.id.count()
             val countSubquery = facilities
-                .select(countExpression)
+                // `count()` is defined as Long function, but in this case it could be Int for several databases
+                // The problem is that when `count` is returned from subquery internal columnType of that function is not used
+                // and the row value from DB is returned.
+                .select(facilities.id.count())
                 .where { facilities.stableId eq stables.id }
-                .expression(countExpression)
+                .asExpression<Number>()
                 .alias("count_query")
 
             val stableId = stables.insertAndGetId { }
             repeat(4) { facilities.insert { it[facilities.stableId] = stableId } }
 
-            val count: Long = stables.select(countSubquery).map { it[countSubquery] }.first()
-            assertEquals(4, count)
+            val count = stables.select(countSubquery).map { it[countSubquery] }.first()
+            assertEquals(4L, count?.toLong())
         }
     }
 }

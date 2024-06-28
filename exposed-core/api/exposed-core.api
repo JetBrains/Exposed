@@ -151,8 +151,7 @@ public final class org/jetbrains/exposed/sql/AliasKt {
 	public static final fun alias (Lorg/jetbrains/exposed/sql/AbstractQuery;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/QueryAlias;
 	public static final fun alias (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/ExpressionAlias;
 	public static final fun alias (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Alias;
-	public static final fun expression (Lorg/jetbrains/exposed/sql/AbstractQuery;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/QueryExpression;
-	public static final fun expression (Lorg/jetbrains/exposed/sql/AbstractQuery;Lorg/jetbrains/exposed/sql/IColumnType;)Lorg/jetbrains/exposed/sql/QueryExpression;
+	public static final fun asExpression (Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/Expression;
 	public static final fun getLastQueryAlias (Lorg/jetbrains/exposed/sql/Join;)Lorg/jetbrains/exposed/sql/QueryAlias;
 	public static final fun joinQuery (Lorg/jetbrains/exposed/sql/Join;Lkotlin/jvm/functions/Function2;Lorg/jetbrains/exposed/sql/JoinType;ZLkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/sql/Join;
 	public static final fun joinQuery (Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function2;Lorg/jetbrains/exposed/sql/JoinType;ZLkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/sql/Join;
