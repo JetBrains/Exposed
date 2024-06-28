@@ -102,14 +102,6 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
     /** The list of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
     private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
 
-    private val allReferences = references ?: run {
-        reference.referee ?: error("Column $reference is not a reference")
-        if (factory.table != reference.table) {
-            error("Column and factory point to different tables")
-        }
-        mapOf(reference to reference.referee)
-    }
-
     @Suppress("UNCHECKED_CAST")
     override operator fun getValue(thisRef: Parent, property: KProperty<*>): SizedIterable<Child> {
         val value: REF = thisRef.run {
