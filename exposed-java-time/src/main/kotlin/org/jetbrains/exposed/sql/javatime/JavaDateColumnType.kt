@@ -101,13 +101,11 @@ private val MYSQL_FRACTION_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
 }
 
 private fun formatterForDateString(date: String) = dateTimeWithFractionFormat(
-    date,
     date.substringAfterLast('.', "").length
 )
 
-private fun dateTimeWithFractionFormat(date: String, fraction: Int): DateTimeFormatter {
-    val containsDatePart = date.contains("T") || date.contains(" ")
-    val baseFormat = if (containsDatePart) "yyyy-MM-dd HH:mm:ss" else "HH:mm:ss"
+private fun dateTimeWithFractionFormat(fraction: Int): DateTimeFormatter {
+    val baseFormat = "yyyy-MM-dd HH:mm:ss"
     val newFormat = if (fraction in 1..9) {
         (1..fraction).joinToString(prefix = "$baseFormat.", separator = "") { "S" }
     } else {
