@@ -2,6 +2,7 @@
 
 package org.jetbrains.exposed.sql.statements
 
+import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
@@ -29,16 +30,28 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
             "Trying to set null to not nullable column $column"
         }
 
-        column.columnType.validateValueBeforeUpdate(value)
-        values[column] = value
+        if (value is CompositeID) {
+            value.values.forEach { (idColumn, idValue) ->
+                set(idColumn as Column<Any?>, idValue)
+            }
+        } else {
+            column.columnType.validateValueBeforeUpdate(value)
+            values[column] = value
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
     @JvmName("setWithEntityIdValue")
     operator fun <S : Comparable<S>> set(column: Column<EntityID<S>>, value: S) {
-        val entityId: EntityID<S> = EntityID(value, (column.foreignKey?.targetTable ?: column.table) as IdTable<S>)
-        column.columnType.validateValueBeforeUpdate(entityId)
-        values[column] = entityId
+        if (value is CompositeID) {
+            value.values.forEach { (idColumn, idValue) ->
+                idValue?.let { set(idColumn as Column<Any>, it) }
+            }
+        } else {
+            val entityId: EntityID<S> = EntityID(value, (column.foreignKey?.targetTable ?: column.table) as IdTable<S>)
+            column.columnType.validateValueBeforeUpdate(entityId)
+            values[column] = entityId
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -47,9 +60,15 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
         require(column.columnType.nullable || value != null) {
             "Trying to set null to not nullable column $column"
         }
-        val entityId: EntityID<S>? = value?.let { EntityID(it, (column.foreignKey?.targetTable ?: column.table) as IdTable<S>) }
-        column.columnType.validateValueBeforeUpdate(entityId)
-        values[column] = entityId
+        if (value is CompositeID) {
+            value.values.forEach { (idColumn, idValue) ->
+                set(idColumn as Column<Any?>, idValue)
+            }
+        } else {
+            val entityId: EntityID<S>? = value?.let { EntityID(it, (column.foreignKey?.targetTable ?: column.table) as IdTable<S>) }
+            column.columnType.validateValueBeforeUpdate(entityId)
+            values[column] = entityId
+        }
     }
 
     @JvmName("setWithEntityIdExpression")

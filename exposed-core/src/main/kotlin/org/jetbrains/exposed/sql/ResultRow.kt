@@ -24,24 +24,20 @@ class ResultRow(
      *
      * @see [getOrNull] to get null in the cases an exception would be thrown
      */
+    @Suppress("UNCHECKED_CAST")
     operator fun <T> get(expression: Expression<T>): T {
         val column = expression as? Column<*>
         return when {
-            column?.columnType is EntityIDColumnType<*> && column.table is CompositeIdTable -> getIdComponents(column.table)
+            column?.columnType?.isEntityIdentifier() == true && column.table is CompositeIdTable -> {
+                val resultID = CompositeID {
+                    column.table.idColumns.forEach { column ->
+                        it[column as Column<EntityID<Comparable<Any>>>] = getInternal(column, checkNullability = true).value
+                    }
+                }
+                EntityID(resultID, column.table) as T
+            }
             else -> getInternal(expression, checkNullability = true)
         }
-    }
-
-    /**
-     * Retrieves the value for each component column from the specified [table] `id` column and returns the
-     * collective values as an [EntityID] value.
-     */
-    @Suppress("UNCHECKED_CAST")
-    private fun <T> getIdComponents(table: CompositeIdTable): T {
-        val resultMap = table.idColumns.associateWith { column ->
-            getInternal(column, checkNullability = true)
-        }
-        return EntityID(CompositeID(resultMap), table) as T
     }
 
     /**

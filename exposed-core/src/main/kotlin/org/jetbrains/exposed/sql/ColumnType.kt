@@ -205,6 +205,10 @@ internal fun IColumnType<*>.rawSqlType(): IColumnType<*> = when {
     else -> this
 }
 
+fun IColumnType<*>.isEntityIdentifier(): Boolean {
+    return this is EntityIDColumnType<*> && (idColumn.table as IdTable<*>).id == idColumn
+}
+
 /**
  * Identity column type for storing unique [EntityID] values.
  */
