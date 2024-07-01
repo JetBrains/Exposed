@@ -49,7 +49,7 @@ private val MYSQL_DATE_TIME_STRING_FORMATTER by lazy {
 
 private val ORACLE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
-        "1900-01-01 HH:mm:ss",
+        "1970-01-01 HH:mm:ss",
         Locale.ROOT
     ).withZone(ZoneId.of("UTC"))
 }
@@ -292,7 +292,12 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         else -> valueFromDB(value.toString())
     }
 
-    override fun notNullValueToDB(value: LocalTime): Any = java.sql.Time.valueOf(value.toJavaLocalTime())
+    override fun notNullValueToDB(value: LocalTime): Any = when {
+        currentDialect is SQLiteDialect -> DEFAULT_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())
+        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+            ORACLE_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())
+        else -> java.sql.Time.valueOf(value.toJavaLocalTime())
+    }
 
     override fun nonNullValueAsDefaultString(value: LocalTime): String = when (currentDialect) {
         is PostgreSQLDialect -> "${nonNullValueToString(value)}::time without time zone"

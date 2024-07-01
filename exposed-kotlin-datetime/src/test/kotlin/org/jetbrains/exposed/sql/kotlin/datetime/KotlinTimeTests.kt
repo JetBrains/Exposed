@@ -584,6 +584,32 @@ class KotlinTimeTests : DatabaseTestsBase() {
             assertEqualLists(result2[firstTwoDatetimes], datetimeInput.take(2))
         }
     }
+
+    @Test
+    fun testSelectByTimeLiteralEquality() {
+        val tableWithTime = object : IntIdTable("TableWithTime") {
+            val time = time("time")
+        }
+        withTables(tableWithTime) {
+            val localTime = LocalTime(13, 0)
+            val localTimeLiteral = timeLiteral(localTime)
+
+            // UTC time zone
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+            assertEquals("UTC", ZoneId.systemDefault().id)
+
+            tableWithTime.insert {
+                it[time] = localTime
+            }
+
+            assertEquals(
+                localTime,
+                tableWithTime.select(tableWithTime.id, tableWithTime.time)
+                    .where { tableWithTime.time eq localTimeLiteral }
+                    .single()[tableWithTime.time]
+            )
+        }
+    }
 }
 
 fun <T> assertEqualDateTime(d1: T?, d2: T?) {
