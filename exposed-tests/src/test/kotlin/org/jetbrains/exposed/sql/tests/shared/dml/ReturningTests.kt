@@ -49,6 +49,34 @@ class ReturningTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testInsertIgnoreReturning() {
+        val tester = object : Table("tester") {
+            val item = varchar("item", 32).uniqueIndex()
+        }
+
+        withTables(TestDB.ALL - returningSupportedDb, tester) {
+            tester.insert {
+                it[item] = "Item A"
+            }
+            assertEquals(1, tester.selectAll().count())
+
+            val resultWithConflict = tester.insertReturning(ignore = true) {
+                it[item] = "Item A"
+            }.toList()
+
+            assertTrue { resultWithConflict.isEmpty() }
+            assertEquals(1, tester.selectAll().count())
+
+            val resultWithoutConflict = tester.insertReturning(ignore = true) {
+                it[item] = "Item B"
+            }.single()
+
+            assertEquals("Item B", resultWithoutConflict[tester.item])
+            assertEquals(2, tester.selectAll().count())
+        }
+    }
+
+    @Test
     fun testUpsertReturning() {
         withTables(TestDB.ALL - returningSupportedDb, Items) {
             // return all columns by default
