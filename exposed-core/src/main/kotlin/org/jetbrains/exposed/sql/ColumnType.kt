@@ -247,6 +247,66 @@ class EntityIDColumnType<T : Comparable<T>>(
     override fun hashCode(): Int = 31 * super.hashCode() + idColumn.hashCode()
 }
 
+/**
+ * An interface defining the transformation between a database column type and a real type.
+ *
+ * @param TReal The real type to which the column value is transformed.
+ * @param TColumn The column type provided by underlying `ColumnType`.
+ */
+interface ColumnTransformer<TReal : Any, TColumn : Any> {
+    /**
+     * Transforms a column value from the underlying `ColumnType` into the real type.
+     */
+    fun toReal(value: TColumn): TReal
+
+    /**
+     * Transforms a real type value into a column value.
+     */
+    fun toColumn(value: TReal): TColumn
+}
+
+/**
+ * A class that provides a transformation between a database column type and a real type.
+ *
+ * `TransformColumnType` is `ColumnType` by itself and can be used for defining columns.
+ *
+ * @param TReal The real type to which the column value is transformed.
+ * @param TColumn The column type provided by underlying `ColumnType`.
+ * @param delegate The original column type to be transformed.
+ */
+abstract class TransformColumnType<TReal : Any, TColumn : Any>(val delegate: IColumnType<TColumn>) : ColumnType<TReal>(), ColumnTransformer<TReal, TColumn> {
+    override fun sqlType() = delegate.sqlType()
+
+    override fun valueFromDB(value: Any): TReal? {
+        return delegate.valueFromDB(value)?.let { toReal(it) }
+    }
+
+    override fun notNullValueToDB(value: TReal): Any {
+        return delegate.notNullValueToDB(toColumn(value))
+    }
+
+    override fun nonNullValueToString(value: TReal): String {
+        return delegate.nonNullValueToString(toColumn(value))
+    }
+
+    override var nullable = delegate.nullable
+
+    companion object {
+        /**
+         * Creates a new instance of [TransformColumnType] with the given column type and transformer.
+         *
+         * @param Real The real type to which the column value is transformed.
+         * @param Column The type of delegated column type.
+         * @param delegate The original column type to be transformed.
+         * @param transformer The transformer that provides the transformation logic.
+         * @return A new instance of [TransformColumnType] with the specified transformations.
+         */
+        fun <Real : Any, Column : Any>create(delegate: IColumnType<Column>, transformer: ColumnTransformer<Real, Column>): TransformColumnType<Real, Column> {
+            return object : TransformColumnType<Real, Column>(delegate), ColumnTransformer<Real, Column> by transformer {}
+        }
+    }
+}
+
 // Numeric columns
 
 /**

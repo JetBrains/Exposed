@@ -460,6 +460,11 @@ public abstract class org/jetbrains/exposed/sql/ColumnSet : org/jetbrains/expose
 	public final fun slice (Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/FieldSet;
 }
 
+public abstract interface class org/jetbrains/exposed/sql/ColumnTransformer {
+	public abstract fun toColumn (Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun toReal (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
 public abstract class org/jetbrains/exposed/sql/ColumnType : org/jetbrains/exposed/sql/IColumnType {
 	public fun <init> ()V
 	public fun <init> (Z)V
@@ -2430,6 +2435,10 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public final fun short (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun text (Ljava/lang/String;Ljava/lang/String;Z)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun text$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun transform (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun transform (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnTransformer;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun transformNullable (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun transformNullable (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnTransformer;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun ubyte (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun uinteger (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun ulong (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
@@ -2541,6 +2550,22 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 }
 
 public final class org/jetbrains/exposed/sql/Transaction$Companion {
+}
+
+public abstract class org/jetbrains/exposed/sql/TransformColumnType : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/ColumnTransformer {
+	public static final field Companion Lorg/jetbrains/exposed/sql/TransformColumnType$Companion;
+	public fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;)V
+	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/IColumnType;
+	public fun getNullable ()Z
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun setNullable (Z)V
+	public fun sqlType ()Ljava/lang/String;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/sql/TransformColumnType$Companion {
+	public final fun create (Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/ColumnTransformer;)Lorg/jetbrains/exposed/sql/TransformColumnType;
 }
 
 public final class org/jetbrains/exposed/sql/Trim : org/jetbrains/exposed/sql/Function {

@@ -1192,6 +1192,117 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         extraDefinitions.addAll(definition)
     }
 
+    /**
+     * Transforms a column by specifying transformation functions.
+     *
+     * @param TReal The target type of the transformation.
+     * @param TColumn The source type of the column.
+     * @param toReal A function to transform from the source type [TColumn] to the target type [TReal].
+     * @param toColumn A function to transform from the target type [TReal] to the source type [TColumn].
+     * @return A new column of type [TReal] with the applied transformations.
+     */
+    fun <TReal : Any, TColumn : Any> Column<TColumn>.transform(
+        toReal: (TColumn) -> TReal,
+        toColumn: (TReal) -> TColumn
+    ): Column<TReal> {
+        val transformer = object : ColumnTransformer<TReal, TColumn> {
+            override fun toReal(value: TColumn): TReal = toReal(value)
+
+            override fun toColumn(value: TReal): TColumn = toColumn(value)
+        }
+
+        return transform(transformer)
+    }
+
+    /**
+     * Transforms a column by specifying a transformer.
+     *
+     * @param TReal The target type of the transformation.
+     * @param TColumn The source type of the column.
+     * @param transformer An instance of [ColumnTransformer] to handle the transformations.
+     * @return A new column of type [TReal] with the applied transformations.
+     */
+    fun <TReal : Any, TColumn : Any> Column<TColumn>.transform(
+        transformer: ColumnTransformer<TReal, TColumn>
+    ): Column<TReal> = transform(TransformColumnType.create(columnType, transformer))
+
+    /**
+     * Applies the transformation column type to the column.
+     *
+     * @param TReal The target type of the transformation.
+     * @param TColumn The source type of the column.
+     * @param toColumnType The [TransformColumnType] instance with the transformation logic.
+     * @return A new column of type [TReal] with the applied transformation column type.
+     */
+    private fun <TReal : Any, TColumn : Any> Column<TColumn>.transform(toColumnType: TransformColumnType<TReal, TColumn>): Column<TReal> {
+        val newColumn: Column<TReal> = Column(table, name, toColumnType)
+        newColumn.foreignKey = foreignKey
+        newColumn.defaultValueFun = defaultValueFun?.let { { toColumnType.toReal(it()) } }
+        @Suppress("UNCHECKED_CAST")
+        newColumn.dbDefaultValue = dbDefaultValue as Expression<TReal>?
+        newColumn.isDatabaseGenerated = isDatabaseGenerated
+        newColumn.extraDefinitions = extraDefinitions
+        return replaceColumn(this, newColumn)
+    }
+
+    /**
+     * Transforms a nullable column by specifying transformation functions.
+     *
+     * @param TReal The target type of the transformation.
+     * @param TColumn The source type of the column.
+     * @param toReal A function to transform from the source type [TColumn] to the target type [TReal].
+     * @param toColumn A function to transform from the target type [TReal] to the source type [TColumn].
+     * @return A new column of type [TReal?] with the applied transformations.
+     */
+    @JvmName("transformNullable")
+    fun <TReal : Any, TColumn : Any> Column<TColumn?>.transform(
+        toReal: (TColumn) -> TReal,
+        toColumn: (TReal) -> TColumn
+    ): Column<TReal?> {
+        val transformer = object : ColumnTransformer<TReal, TColumn> {
+            override fun toReal(value: TColumn): TReal = toReal(value)
+
+            override fun toColumn(value: TReal): TColumn = toColumn(value)
+        }
+
+        return transform(transformer)
+    }
+
+    /**
+     * Transforms a nullable column by specifying a transformer.
+     *
+     * @param TReal The target type of the transformation.
+     * @param TColumn The source type of the column.
+     * @param transformer An instance of [ColumnTransformer] to handle the transformations.
+     * @return A new column of type [TReal?] with the applied transformations.
+     */
+    @JvmName("transformNullable")
+    fun <TReal : Any, TColumn : Any> Column<TColumn?>.transform(
+        transformer: ColumnTransformer<TReal, TColumn>
+    ): Column<TReal?> = transform(TransformColumnType.create(columnType, transformer))
+
+    /**
+     * Applies the transformation column type to the nullable column.
+     *
+     * @param TReal The target type of the transformation.
+     * @param TColumn The source type of the column.
+     * @param toColumnType The [TransformColumnType] instance with the transformation logic.
+     * @return A new column of type [TReal?] with the applied transformation column type.
+     */
+    @JvmName("transformNullable")
+    private fun <TReal : Any, TColumn : Any> Column<TColumn?>.transform(
+        toColumnType: TransformColumnType<TReal, TColumn>
+    ): Column<TReal?> {
+        val newColumn = Column<TReal?>(table, name, toColumnType)
+        newColumn.foreignKey = foreignKey
+        newColumn.defaultValueFun = defaultValueFun?.let { { it()?.let { it1 -> toColumnType.toReal(it1) } } }
+        @Suppress("UNCHECKED_CAST")
+        newColumn.dbDefaultValue = dbDefaultValue as Expression<TReal?>?
+        newColumn.isDatabaseGenerated = isDatabaseGenerated
+        newColumn.extraDefinitions = extraDefinitions
+        return replaceColumn(this, newColumn)
+    }
+
     // Indices
 
     /**
