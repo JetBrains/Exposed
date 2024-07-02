@@ -393,7 +393,7 @@ interface ISqlExpressionBuilder {
     /** Checks if this [EntityID] expression is less than some [t] value. */
     @JvmName("lessEntityID")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.less(t: T): LessOp =
-        LessOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
+        LessOp(this, wrap(EntityID(t, this.idTable())))
 
     /** Checks if this [EntityID] expression is less than some [other] expression. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.less(
@@ -417,7 +417,7 @@ interface ISqlExpressionBuilder {
     /** Checks if this [EntityID] expression is less than or equal to some [t] value */
     @JvmName("lessEqEntityID")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.lessEq(t: T): LessEqOp =
-        LessEqOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
+        LessEqOp(this, wrap(EntityID(t, this.idTable())))
 
     /** Checks if this [EntityID] expression is less than or equal to some [other] expression */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.lessEq(
@@ -441,7 +441,7 @@ interface ISqlExpressionBuilder {
     /** Checks if this [EntityID] expression is greater than some [t] value. */
     @JvmName("greaterEntityID")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.greater(t: T): GreaterOp =
-        GreaterOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
+        GreaterOp(this, wrap(EntityID(t, this.idTable())))
 
     /** Checks if this [EntityID] expression is greater than some [other] expression. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.greater(
@@ -465,7 +465,7 @@ interface ISqlExpressionBuilder {
     /** Checks if this [EntityID] expression is greater than or equal to some [t] value */
     @JvmName("greaterEqEntityID")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.greaterEq(t: T): GreaterEqOp =
-        GreaterEqOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
+        GreaterEqOp(this, wrap(EntityID(t, this.idTable())))
 
     /** Checks if this [EntityID] expression is greater than or equal to some [other] expression */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.greaterEq(
@@ -484,11 +484,7 @@ interface ISqlExpressionBuilder {
 
     /** Returns `true` if this [EntityID] expression is between the values [from] and [to], `false` otherwise. */
     fun <T : Comparable<T>, E : EntityID<T>?> Column<E>.between(from: T, to: T): Between =
-        Between(
-            this,
-            wrap(EntityID(from, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)),
-            wrap(EntityID(to, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>))
-        )
+        Between(this, wrap(EntityID(from, this.idTable())), wrap(EntityID(to, this.idTable())))
 
     /** Returns `true` if this expression is null, `false` otherwise. */
     fun <T> Expression<T>.isNull(): IsNullOp = IsNullOp(this)
@@ -506,7 +502,7 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
     @JvmName("isNotDistinctFromEntityID")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.isNotDistinctFrom(t: T): IsNotDistinctFromOp =
-        IsNotDistinctFromOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
+        IsNotDistinctFromOp(this, wrap(EntityID(t, this.idTable())))
 
     /** Checks if this [EntityID] expression is equal to some [other] expression */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.isNotDistinctFrom(
@@ -528,7 +524,7 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is not equal to some [t] value, with `null` treated as a comparable value */
     @JvmName("isDistinctFromEntityID")
     infix fun <T : Comparable<T>> Column<EntityID<T>>.isDistinctFrom(t: T): IsDistinctFromOp =
-        IsDistinctFromOp(this, wrap(EntityID(t, (this.foreignKey?.targetTable ?: this.table) as IdTable<T>)))
+        IsDistinctFromOp(this, wrap(EntityID(t, this.idTable())))
 
     /** Checks if this [EntityID] expression is not equal to some [other] expression */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.isDistinctFrom(
@@ -933,6 +929,12 @@ interface ISqlExpressionBuilder {
 
     fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> =
         NoOpConversion(this, DecimalColumnType(precision = 15, scale = 0))
+
+    private fun <T : Comparable<T>, E : EntityID<T>> Column<out E?>.idTable(): IdTable<T> =
+        when (val table = this.foreignKey?.targetTable ?: this.table) {
+            is Alias<*> -> table.delegate
+            else -> table
+        } as IdTable<T>
 }
 
 /**

@@ -1,7 +1,12 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.alias
+import org.jetbrains.exposed.sql.batchInsert
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.junit.Test
@@ -115,6 +120,18 @@ class FetchBatchedResultsTests : DatabaseTestsBase() {
 
         withTables(tester1, tester2) {
             (tester2 innerJoin tester1).selectAll().fetchBatchedResults(10_000).flatten()
+        }
+    }
+
+    @Test
+    fun testFetchBatchedResultsWithAlias() {
+        val tester = object : IntIdTable("tester") {
+            val name = varchar("name", 1)
+        }
+        withTables(tester) {
+            tester.insert { it[name] = "a" }
+            tester.insert { it[name] = "b" }
+            tester.alias("tester_alias").selectAll().fetchBatchedResults(1).flatten()
         }
     }
 }
