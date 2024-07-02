@@ -221,3 +221,10 @@ fun <T : Any> wrapAsExpression(query: AbstractQuery<*>) = object : Expression<T?
         append(")")
     }
 }
+
+/**
+ * Wraps the query into [Expression] so that it can be used as part of an SQL statement or in another query clause.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.OrderByTests.testOrderByExpressions
+ */
+fun <T : Any> AbstractQuery<*>.asExpression() = wrapAsExpression<T>(this)

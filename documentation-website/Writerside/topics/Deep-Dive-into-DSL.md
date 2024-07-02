@@ -349,6 +349,20 @@ Example:
 StarWarsFilms.selectAll().orderBy(StarWarsFilms.sequelId to SortOrder.ASC)
 ```
 
+### Order-by with query
+
+SQL allows ordering by a subquery, which in Exposed translates to the following statement
+(in the following query, the actors are ordered by the number of roles they play):
+
+```kotlin
+val rolesCountExpression = Roles.characterName.count()
+val orderExpression = Roles.select(rolesCountExpression)
+    .where { Roles.actorId eq Actors.id }
+    .expression(rolesCountExpression.columnType)
+Actors.selectAll()
+    .orderBy(orderExpression, SortOrder.DESC)
+```
+
 ## Group-by
 
 In group-by, define fields and their functions (such as `count`) by the `select()` method.
