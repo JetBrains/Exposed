@@ -6,17 +6,12 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.update
 import org.junit.Test
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
@@ -29,20 +24,29 @@ open class MoneyBaseTest : DatabaseTestsBase() {
 
     @Test
     fun testInsertSelectMoney() {
-        testInsertedAndSelect(Money.of(BigDecimal.TEN, "USD"))
-        testInsertedAndSelectByComponentColumns(Money.of(BigDecimal.TEN, "USD"))
+        withTables(Account) {
+            assertInsertOfCompositeValueReturnsEquivalentOnSelect(Money.of(BigDecimal.TEN, "USD"))
+            Account.deleteAll()
+            assertInsertOfComponentValuesReturnsEquivalentOnSelect(Money.of(BigDecimal.TEN, "USD"))
+        }
     }
 
     @Test
     fun testInsertSelectFloatingMoney() {
-        testInsertedAndSelect(Money.of(BigDecimal("0.12345"), "USD"))
-        testInsertedAndSelectByComponentColumns(Money.of(BigDecimal("0.12345"), "USD"))
+        withTables(Account) {
+            assertInsertOfCompositeValueReturnsEquivalentOnSelect(Money.of(BigDecimal("0.12345"), "USD"))
+            Account.deleteAll()
+            assertInsertOfComponentValuesReturnsEquivalentOnSelect(Money.of(BigDecimal("0.12345"), "USD"))
+        }
     }
 
     @Test
     fun testInsertSelectNull() {
-        testInsertedAndSelect(null)
-        testInsertedAndSelectByComponentColumns(null)
+        withTables(Account) {
+            assertInsertOfCompositeValueReturnsEquivalentOnSelect(null)
+            Account.deleteAll()
+            assertInsertOfComponentValuesReturnsEquivalentOnSelect(null)
+        }
     }
 
     @Test
@@ -147,33 +151,29 @@ open class MoneyBaseTest : DatabaseTestsBase() {
         }
     }
 
-    private fun testInsertedAndSelect(toInsert: Money?) {
-        withTables(Account) {
-            val accountID = Account.insertAndGetId {
-                it[composite_money] = toInsert
-            }
-
-            val single = Account.select(Account.composite_money).where { Account.id.eq(accountID) }.single()
-            val inserted = single[Account.composite_money]
-
-            assertEquals(toInsert, inserted)
+    private fun Transaction.assertInsertOfCompositeValueReturnsEquivalentOnSelect(toInsert: Money?) {
+        val accountID = Account.insertAndGetId {
+            it[composite_money] = toInsert
         }
+
+        val single = Account.select(Account.composite_money).where { Account.id.eq(accountID) }.single()
+        val inserted = single[Account.composite_money]
+
+        assertEquals(toInsert, inserted)
     }
 
-    private fun testInsertedAndSelectByComponentColumns(toInsert: Money?) {
-        withTables(Account) {
-            val amount: BigDecimal? = toInsert?.numberStripped?.setScale(AMOUNT_SCALE)
-            val currencyUnit: CurrencyUnit? = toInsert?.currency
-            val accountID = Account.insertAndGetId {
-                it[composite_money.amount] = amount
-                it[composite_money.currency] = currencyUnit
-            }
-
-            val single = Account.select(Account.composite_money).where { Account.id eq accountID }.single()
-
-            assertEquals(amount, single[Account.composite_money.amount])
-            assertEquals(currencyUnit, single[Account.composite_money.currency])
+    private fun Transaction.assertInsertOfComponentValuesReturnsEquivalentOnSelect(toInsert: Money?) {
+        val amount: BigDecimal? = toInsert?.numberStripped?.setScale(AMOUNT_SCALE)
+        val currencyUnit: CurrencyUnit? = toInsert?.currency
+        val accountID = Account.insertAndGetId {
+            it[composite_money.amount] = amount
+            it[composite_money.currency] = currencyUnit
         }
+
+        val single = Account.select(Account.composite_money).where { Account.id eq accountID }.single()
+
+        assertEquals(amount, single[Account.composite_money.amount])
+        assertEquals(currencyUnit, single[Account.composite_money.currency])
     }
 }
 
