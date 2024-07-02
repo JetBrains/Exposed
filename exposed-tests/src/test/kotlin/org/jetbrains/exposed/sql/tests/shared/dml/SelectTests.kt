@@ -564,4 +564,26 @@ class SelectTests : DatabaseTestsBase() {
             assertEquals(0, stringTable.selectAll().where { stringTable.name eq veryLongString }.count())
         }
     }
+
+    @Test
+    fun `test hint select query`() {
+        val hint = "additional_info"
+        withCitiesAndUsers { cities, _, _ ->
+            // add more conditions to confirm copying from another query works well
+            val query = cities.selectAll().withDistinct(true).where { cities.name eq "Munich" }.limit(1).groupBy(cities.name)
+            val originalSql = query.prepareSQL(this, false)
+
+            val hintedSql = query.hint(hint).prepareSQL(this, false)
+            assertEquals("/*$hint*/ $originalSql", hintedSql)
+
+            val hintedBackSql = query.hint(hint, HintQuery.Position.BACK).prepareSQL(this, false)
+            assertEquals("$originalSql /*$hint*/", hintedBackSql)
+
+            val hintedTwiceSql = query.hint(hint).prepareSQL(this, false)
+            assertEquals("/*$hint*/ $originalSql", hintedTwiceSql)
+
+            assertEquals(query.count(), query.hint(hint).count())
+            assertEquals(query.count(), query.hint(hint, HintQuery.Position.BACK).count())
+        }
+    }
 }
