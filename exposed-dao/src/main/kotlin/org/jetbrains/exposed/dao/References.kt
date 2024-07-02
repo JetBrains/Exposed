@@ -10,12 +10,13 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
-private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>) {
+private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>): Map<Column<*>, Column<*>> {
     val refColumn = reference.referee ?: error("Column $reference is not a reference")
     val targetTable = refColumn.table
     if (factoryTable != targetTable) {
         error("Column and factory point to different tables")
     }
+    return mapOf(reference to refColumn)
 }
 
 /**
@@ -27,11 +28,10 @@ private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>) {
  */
 class Reference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<ID>>(
     val reference: Column<REF>,
-    val factory: EntityClass<ID, Target>
+    val factory: EntityClass<ID, Target>,
+    references: Map<Column<*>, Column<*>>? = null
 ) {
-    init {
-        checkReference(reference, factory.table)
-    }
+    val allReferences = references ?: checkReference(reference, factory.table)
 }
 
 /**
@@ -43,11 +43,10 @@ class Reference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<
  */
 class OptionalReference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<ID>>(
     val reference: Column<REF?>,
-    val factory: EntityClass<ID, Target>
+    val factory: EntityClass<ID, Target>,
+    references: Map<Column<*>, Column<*>>? = null
 ) {
-    init {
-        checkReference(reference, factory.table)
-    }
+    val allReferences = references ?: checkReference(reference, factory.table)
 }
 
 /**
@@ -59,7 +58,8 @@ class OptionalReference<REF : Comparable<REF>, ID : Comparable<ID>, out Target :
  */
 internal class BackReference<ParentID : Comparable<ParentID>, out Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, in Child : Entity<ChildID>, REF>(
     reference: Column<REF>,
-    factory: EntityClass<ParentID, Parent>
+    factory: EntityClass<ParentID, Parent>,
+    references: Map<Column<*>, Column<*>>? = null
 ) : ReadOnlyProperty<Child, Parent> {
     internal val delegate = Referrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true)
 
@@ -76,7 +76,8 @@ internal class BackReference<ParentID : Comparable<ParentID>, out Parent : Entit
  */
 class OptionalBackReference<ParentID : Comparable<ParentID>, out Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, in Child : Entity<ChildID>, REF>(
     reference: Column<REF?>,
-    factory: EntityClass<ParentID, Parent>
+    factory: EntityClass<ParentID, Parent>,
+    references: Map<Column<*>, Column<*>>? = null
 ) : ReadOnlyProperty<Child, Parent?> {
     internal val delegate = OptionalReferrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true)
 
@@ -95,7 +96,8 @@ class OptionalBackReference<ParentID : Comparable<ParentID>, out Parent : Entity
 open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
     val reference: Column<REF>,
     val factory: EntityClass<ChildID, Child>,
-    val cache: Boolean
+    val cache: Boolean,
+    references: Map<Column<*>, Column<*>>? = null
 ) : ReadOnlyProperty<Parent, SizedIterable<Child>> {
     /** The list of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
     private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
