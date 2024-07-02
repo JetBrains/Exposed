@@ -39,8 +39,12 @@ abstract class BiCompositeColumn<C1, C2, T>(
     /** Transformation that receives the column's composite value and returns the parsed values of the underlying columns. */
     val transformFromValue: (T) -> Pair<C1?, C2?>,
     /** Transformation that receives the retrieved values of [column1] and [column2] and returns a composite value. */
-    val transformToValue: (Any?, Any?) -> T
+    val transformToValue: (Any?, Any?) -> T,
+    nullable: Boolean = false
 ) : CompositeColumn<T>() {
+    init {
+        this.nullable = nullable
+    }
 
     override fun getRealColumns(): List<Column<*>> = listOf(column1, column2)
 

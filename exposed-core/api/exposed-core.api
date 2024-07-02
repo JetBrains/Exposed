@@ -241,7 +241,8 @@ public final class org/jetbrains/exposed/sql/Between : org/jetbrains/exposed/sql
 }
 
 public abstract class org/jetbrains/exposed/sql/BiCompositeColumn : org/jetbrains/exposed/sql/CompositeColumn {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Z)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	protected final fun getColumn1 ()Lorg/jetbrains/exposed/sql/Column;
 	protected final fun getColumn2 ()Lorg/jetbrains/exposed/sql/Column;
 	public fun getRealColumns ()Ljava/util/List;
