@@ -57,13 +57,22 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && e.columnType is JsonColumnMarker -> when {
             currentDialect is MariaDBDialect -> super.processForDefaultValue(e)
-            (currentDialect as? MysqlDialect)?.isMysql8 == true -> "(${super.processForDefaultValue(e)})"
+            ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" -> "(${super.processForDefaultValue(e)})"
             else -> throw UnsupportedByDialectException(
                 "MySQL versions prior to 8.0.13 do not accept default values on JSON columns",
                 currentDialect
             )
         }
-
+        currentDialect is MariaDBDialect -> super.processForDefaultValue(e)
+        // The default value specified in a DEFAULT clause can be a literal constant or an expression. With one
+        // exception, enclose expression default values within parentheses to distinguish them from literal constant
+        // default values. The exception is that, for TIMESTAMP and DATETIME columns, you can specify the
+        // CURRENT_TIMESTAMP function as the default, without enclosing parentheses.
+        // https://dev.mysql.com/doc/refman/8.0/en/data-type-defaults.html#data-type-defaults-explicit
+        e is ExpressionWithColumnType<*> && e.columnType is IDateColumnType && e.toString().startsWith("CURRENT_TIMESTAMP") ->
+            super.processForDefaultValue(e)
+        e !is LiteralOp<*> && ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" ->
+            "(${super.processForDefaultValue(e)})"
         else -> super.processForDefaultValue(e)
     }
 
@@ -308,7 +317,10 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true
-        val acceptableDefaults = arrayOf("CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "NOW()", "CURRENT_TIMESTAMP(6)", "NOW(6)")
+        if ((currentDialect is MariaDBDialect && fullVersion >= "10.2.1") || (currentDialect !is MariaDBDialect && fullVersion >= "8.0.13")) {
+            return true
+        }
+        val acceptableDefaults = mutableListOf("CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "NOW()", "CURRENT_TIMESTAMP(6)", "NOW(6)")
         return e.toString().trim() in acceptableDefaults && isFractionDateTimeSupported()
     }
 

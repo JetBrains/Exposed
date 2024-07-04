@@ -372,8 +372,7 @@ class DefaultsTest : DatabaseTestsBase() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
             val defaultDate = date("default_date").defaultExpression(CurrentDate)
-            val defaultDateTime1 = datetime("default_date_time_1").defaultExpression(CurrentDateTime)
-            val defaultDateTime2 = datetime("default_date_time_2").defaultExpression(CurrentDateTime)
+            val defaultDateTime = datetime("default_date_time").defaultExpression(CurrentDateTime)
             val defaultTimeStamp = timestamp("default_time_stamp").defaultExpression(CurrentTimestamp)
         }
 
@@ -383,16 +382,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
                 val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
 
-                if (currentDialectTest is MysqlDialect) {
-                    // MySQL and MariaDB do not support CURRENT_DATE as default
-                    // so the column is created with a NULL marker, which correctly triggers 1 alter statement
-                    val tableName = foo.nameInDatabaseCase()
-                    val dateColumnName = foo.defaultDate.nameInDatabaseCase()
-                    val alter = "ALTER TABLE $tableName MODIFY COLUMN $dateColumnName DATE NULL"
-                    assertEquals(alter, actual.single())
-                } else {
-                    assertTrue(actual.isEmpty())
-                }
+                assertTrue(actual.isEmpty())
             } finally {
                 SchemaUtils.drop(foo)
             }
