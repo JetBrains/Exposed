@@ -213,7 +213,7 @@ object SchemaUtils {
                                     }
 
                                     is MariaDBDialect -> processed.trim('\'')
-                                    is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\"
+                                    is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\'"
                                     else -> processed.trim('\'')
                                 }
                             }
@@ -354,7 +354,7 @@ object SchemaUtils {
             (column.dbDefaultValue is LiteralOp<*> && (column.dbDefaultValue as? LiteralOp<*>)?.value == null)
 
         return when {
-            // Bot values are null-like, no DDL update is needed
+            // Both values are null-like, no DDL update is needed
             isExistingColumnDefaultNull && isDefinedColumnDefaultNull -> false
             // Only one of the values is null-like, DDL update is needed
             isExistingColumnDefaultNull != isDefinedColumnDefaultNull -> true
