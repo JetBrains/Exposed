@@ -511,7 +511,6 @@ public abstract class org/jetbrains/exposed/sql/ColumnType : org/jetbrains/expos
 public final class org/jetbrains/exposed/sql/ColumnTypeKt {
 	public static final fun getAutoIncColumnType (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/AutoIncColumnType;
 	public static final fun isAutoInc (Lorg/jetbrains/exposed/sql/IColumnType;)Z
-	public static final fun isEntityIdentifier (Lorg/jetbrains/exposed/sql/IColumnType;)Z
 	public static final fun resolveColumnType (Lkotlin/reflect/KClass;Lorg/jetbrains/exposed/sql/ColumnType;)Lorg/jetbrains/exposed/sql/ColumnType;
 	public static synthetic fun resolveColumnType$default (Lkotlin/reflect/KClass;Lorg/jetbrains/exposed/sql/ColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/ColumnType;
 }
