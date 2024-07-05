@@ -2,6 +2,7 @@ package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.dao.id.CompositeID
+import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
@@ -120,7 +121,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         val outOfTransaction = TransactionManager.currentOrNull() == null
         if (outOfTransaction && reference in referenceCache) return getReferenceFromCache(reference)
         return executeAsPartOfEntityLifecycle {
-            val refValue = if (allReferences.size == 1) {
+            val refValue = if (hasSingleReferenceWithReferee(allReferences)) {
                 reference.getValue(o, desc)
             } else {
                 CompositeID {
@@ -146,7 +147,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                     val castReferee = reference.referee<REF>()!!
                     val baseReferee = (castReferee.columnType as? EntityIDColumnType<REF>)?.idColumn ?: castReferee
                     factory.findWithCacheCondition({
-                        if (allReferences.size == 1) {
+                        if (hasSingleReferenceWithReferee(allReferences)) {
                             reference.referee!!.getValue(this, desc) == refValue
                         } else {
                             allReferences.all {
@@ -185,12 +186,19 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         val outOfTransaction = TransactionManager.currentOrNull() == null
         if (outOfTransaction && reference in referenceCache) return getReferenceFromCache(reference)
         return executeAsPartOfEntityLifecycle {
-            val refValue = if (allReferences.size == 1) {
+            val refValue = if (hasSingleReferenceWithReferee(allReferences)) {
                 reference.getValue(o, desc)
             } else {
-                CompositeID {
-                    allReferences.forEach { (child, parent) ->
-                        it[parent as Column<EntityID<Comparable<Any>>>] = child.getValue(o, desc) as Comparable<Any>
+                val childValues = allReferences.map { (child, parent) ->
+                    (parent as Column<EntityID<Comparable<Any?>>>) to (child.getValue(o, desc) as? Comparable<Any?>)
+                }
+                if (childValues.any { it.second == null }) {
+                    null
+                } else {
+                    CompositeID {
+                        childValues.forEach { (parent, childValue) ->
+                            it[parent] = childValue!!
+                        }
                     }
                 }
             }
@@ -210,7 +218,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 }
                 else -> {
                     factory.findWithCacheCondition({
-                        if (allReferences.size == 1) {
+                        if (hasSingleReferenceWithReferee(allReferences)) {
                             reference.referee!!.getValue(this, desc) == refValue
                         } else {
                             allReferences.all {
@@ -227,6 +235,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.setValue(
         o: Entity<ID>,
         desc: KProperty<*>,
@@ -234,9 +243,11 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     ) {
         if (value != null && db != value.db) error("Can't link entities from different databases.")
         value?.id?.value // flush before creating reference on it
-        val refValue = value?.run { reference.referee<REF>()!!.getValue(this, desc) }
-        storeReferenceInCache(reference, value)
-        reference.setValue(o, desc, refValue)
+        allReferences.forEach { (childColumn, parentColumn) ->
+            val refValue = value?.run { parentColumn.getValue(this, desc) }
+            if (childColumn == reference) storeReferenceInCache(reference, value)
+            (childColumn as Column<Any?>).setValue(o, desc, refValue)
+        }
     }
 
     operator fun <T> Column<T>.getValue(o: Entity<ID>, desc: KProperty<*>): T = lookup()

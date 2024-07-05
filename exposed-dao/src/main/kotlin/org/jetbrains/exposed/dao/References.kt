@@ -1,8 +1,12 @@
 package org.jetbrains.exposed.dao
 
+import org.jetbrains.exposed.dao.id.CompositeID
+import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
@@ -61,7 +65,7 @@ internal class BackReference<ParentID : Comparable<ParentID>, out Parent : Entit
     factory: EntityClass<ParentID, Parent>,
     references: Map<Column<*>, Column<*>>? = null
 ) : ReadOnlyProperty<Child, Parent> {
-    internal val delegate = Referrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true)
+    internal val delegate = Referrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true, references)
 
     override operator fun getValue(thisRef: Child, property: KProperty<*>) =
         delegate.getValue(thisRef.apply { thisRef.id.value }, property).single() // flush entity before to don't miss newly created entities
@@ -79,7 +83,7 @@ class OptionalBackReference<ParentID : Comparable<ParentID>, out Parent : Entity
     factory: EntityClass<ParentID, Parent>,
     references: Map<Column<*>, Column<*>>? = null
 ) : ReadOnlyProperty<Child, Parent?> {
-    internal val delegate = OptionalReferrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true)
+    internal val delegate = OptionalReferrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true, references)
 
     override operator fun getValue(thisRef: Child, property: KProperty<*>) =
         delegate.getValue(thisRef.apply { thisRef.id.value }, property).singleOrNull() // flush entity before to don't miss newly created entities
@@ -102,31 +106,51 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
     /** The list of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
     private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
 
-    init {
+    private val allReferences = references ?: run {
         reference.referee ?: error("Column $reference is not a reference")
 
         if (factory.table != reference.table) {
             error("Column and factory point to different tables")
         }
+
+        mapOf(reference as Column<*> to reference.referee!!)
     }
 
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST", "NestedBlockDepth")
     override operator fun getValue(thisRef: Parent, property: KProperty<*>): SizedIterable<Child> {
         val value: REF = thisRef.run {
-            val refereeColumn = reference.referee<REF>()!!
-            val refereeValue = refereeColumn.lookup()
-            when {
-                reference.columnType !is EntityIDColumnType<*> && refereeColumn.columnType is EntityIDColumnType<*> ->
-                    (refereeValue as? EntityID<*>)?.let { it.value as? REF } ?: refereeValue
-                else -> refereeValue
+            if (hasSingleReferenceWithReferee(allReferences)) {
+                val refereeColumn = reference.referee<REF>()!!
+                val refereeValue = refereeColumn.lookup()
+                when {
+                    reference.columnType !is EntityIDColumnType<*> && refereeColumn.columnType is EntityIDColumnType<*> ->
+                        (refereeValue as? EntityID<*>)?.let { it.value as? REF } ?: refereeValue
+                    else -> refereeValue
+                }
+            } else {
+                val refereeValue = CompositeID {
+                    allReferences.forEach { (_, parent) ->
+                        it[parent as Column<EntityID<Comparable<Any>>>] = parent.lookup() as Comparable<Any>
+                    }
+                }
+                refereeValue as REF
             }
         }
         if (thisRef.id._value == null || value == null) return emptySized()
 
+        val condition = if (hasSingleReferenceWithReferee(allReferences)) {
+            reference eq value
+        } else {
+            value as CompositeID
+            allReferences.map { (child, parent) ->
+                val parentValue = value[parent as Column<EntityID<Comparable<Any?>>>].value
+                EqOp(child, child.wrap((parentValue as? DaoEntityID<*>)?.value ?: parentValue))
+            }.compoundAnd()
+        }
         val query = {
             @Suppress("SpreadOperator")
             factory
-                .find { reference eq value }
+                .find { condition }
                 .orderBy(*orderByExpressions.toTypedArray())
         }
         val transaction = TransactionManager.currentOrNull()
@@ -172,8 +196,9 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
 class OptionalReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
     reference: Column<REF?>,
     factory: EntityClass<ChildID, Child>,
-    cache: Boolean
-) : Referrers<ParentID, Parent, ChildID, Child, REF?>(reference, factory, cache)
+    cache: Boolean,
+    references: Map<Column<*>, Column<*>>? = null
+) : Referrers<ParentID, Parent, ChildID, Child, REF?>(reference, factory, cache, references)
 
 private fun <SRC : Entity<*>> getReferenceObjectFromDelegatedProperty(entity: SRC, property: KProperty1<SRC, Any?>): Any? {
     property.isAccessible = true
@@ -327,4 +352,8 @@ fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterab
  */
 fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>): SRC = apply {
     listOf(this).with(*relations)
+}
+
+internal fun hasSingleReferenceWithReferee(allReferences: Map<Column<*>, Column<*>>?): Boolean {
+    return allReferences?.size == 1 && allReferences.values.first().table !is CompositeIdTable
 }

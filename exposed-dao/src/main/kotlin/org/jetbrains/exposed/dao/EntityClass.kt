@@ -426,6 +426,8 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
      *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Publisher
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Authors
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Author
      */
     infix fun referencedOn(table: IdTable<*>): Reference<Comparable<Any>, ID, T> {
@@ -453,6 +455,10 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      *
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Publisher
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Offices
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Office
      */
     infix fun optionalReferencedOn(table: IdTable<*>): OptionalReference<Comparable<Any>, ID, T> {
         val tableFK = getCompositeForeignKey(table)
@@ -495,11 +501,15 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      *
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Book
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Reviews
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Review
      */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(
         table: IdTable<*>
     ): ReadOnlyProperty<Entity<ID>, Target> {
-        val tableFK = getCompositeForeignKey(table)
+        val tableFK = this@EntityClass.getCompositeForeignKey(table)
         val delegate = tableFK.from.first() as Column<Comparable<Any>?>
         return registerRefRule(delegate) { BackReference(delegate, this, tableFK.references) }
     }
@@ -543,11 +553,15 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      *
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Publisher
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Offices
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Office
      */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalBackReferencedOn(
         table: IdTable<*>
     ): OptionalBackReference<TargetID, Target, ID, Entity<ID>, Comparable<Any>> {
-        val tableFK = getCompositeForeignKey(table)
+        val tableFK = this@EntityClass.getCompositeForeignKey(table)
         val delegate = tableFK.from.first() as Column<Comparable<Any>?>
         return registerRefRule(delegate) { OptionalBackReference(delegate, this, tableFK.references) }
     }
@@ -573,11 +587,15 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      *
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Publisher
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Authors
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Author
      */
     infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.referrersOn(
         table: IdTable<*>
     ): Referrers<ID, Entity<ID>, TargetID, Target, Comparable<Any>> {
-        val tableFK = getCompositeForeignKey(table)
+        val tableFK = this@EntityClass.getCompositeForeignKey(table)
         val delegate = tableFK.from.first() as Column<Comparable<Any>>
         return registerRefRule(delegate) { Referrers(delegate, this, true, tableFK.references) }
     }
@@ -601,6 +619,24 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
 
     /**
+     * Registers a reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent.
+     *
+     * The reference should have been defined by the creation of a foreign key constraint on the child table,
+     * by using `foreignKey()`.
+     *
+     * Set [cache] to `true` to also store the loaded entities to a cache.
+     */
+    fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.referrersOn(
+        table: IdTable<*>,
+        cache: Boolean
+    ): Referrers<ID, Entity<ID>, TargetID, Target, Comparable<Any>> {
+        val tableFK = this@EntityClass.getCompositeForeignKey(table)
+        val delegate = tableFK.from.first() as Column<Comparable<Any>>
+        return registerRefRule(delegate) { Referrers(delegate, this, cache, tableFK.references) }
+    }
+
+    /**
      * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
      * child objects of this `EntityClass` that all reference the parent.
      *
@@ -622,6 +658,27 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
      * child objects of this `EntityClass` that all reference the parent.
      *
+     * The reference should have been defined by the creation of a foreign key constraint on the child table,
+     * by using `foreignKey()`.
+     *
+     * By default, this also stores the loaded entities to a cache.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Publisher
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Authors
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Author
+     */
+    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalReferrersOn(
+        table: IdTable<*>
+    ): OptionalReferrers<ID, Entity<ID>, TargetID, Target, Comparable<Any>> {
+        val tableFK = this@EntityClass.getCompositeForeignKey(table)
+        val delegate = tableFK.from.first() as Column<Comparable<Any>?>
+        return registerRefRule(delegate) { OptionalReferrers(delegate, this, true, tableFK.references) }
+    }
+
+    /**
+     * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent.
+     *
      * The reference should have been defined by the creation of a [column] using either `optReference()` or
      * `reference().nullable()` on the child table.
      *
@@ -638,13 +695,33 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
 
     /**
+     * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent.
+     *
+     * The reference should have been defined by the creation of a foreign key constraint on the child table,
+     * by using `foreignKey()`.
+     *
+     * Set [cache] to `true` to also store the loaded entities to a cache.
+     */
+    fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalReferrersOn(
+        table: IdTable<*>,
+        cache: Boolean = false
+    ): OptionalReferrers<ID, Entity<ID>, TargetID, Target, Comparable<Any>> {
+        val tableFK = this@EntityClass.getCompositeForeignKey(table)
+        val delegate = tableFK.from.first() as Column<Comparable<Any>?>
+        return registerRefRule(delegate) { OptionalReferrers(delegate, this, cache, tableFK.references) }
+    }
+
+    /**
      * Returns the child table's [ForeignKeyConstraint] that matches the primary key columns defined on the table
      * associated with this `EntityClass`.
      *
      * @throws IllegalStateException If [table] does not have a defined composite foreign key that matches the
      * primary key defined on the table associated with this `EntityClass`.
      */
-    private fun getCompositeForeignKey(table: IdTable<*>): ForeignKeyConstraint = table.foreignKeys.firstOrNull {
+    private fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.getCompositeForeignKey(
+        table: IdTable<*>
+    ): ForeignKeyConstraint = table.foreignKeys.firstOrNull {
         it.target == this.table.idColumns
     } ?: error("Table $table does not hold a composite foreign key constraint matching ${this.table}'s primary key.")
 

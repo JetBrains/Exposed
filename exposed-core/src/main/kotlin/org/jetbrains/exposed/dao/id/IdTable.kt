@@ -60,7 +60,7 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
                 } else {
                     error("Comparison CompositeID is missing a key mapping for ${column.name}")
                 }
-                operator(column, column.wrap(otherValue))
+                operator(column, column.wrap(otherValue.value as? EntityID<*> ?: otherValue))
             }.compoundAnd()
         }
     }

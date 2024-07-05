@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentTestDB
+import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
@@ -19,6 +20,7 @@ import org.junit.Test
 import java.util.*
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 // SQLite excluded from most tests as it only allows auto-increment on single column PKs.
 // SQL Server is sometimes excluded because it doesn't allow inserting explicit values for identity columns.
@@ -37,6 +39,9 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         companion object : CompositeEntityClass<Publisher>(Publishers)
 
         var name by Publishers.name
+        val authors by Author referrersOn Authors
+        val office by Office optionalBackReferencedOn Offices
+        val allOffices by Office optionalReferrersOn Offices
     }
 
     // IntIdTable with 1 key columns - int (db-generated)
@@ -72,27 +77,50 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
         var title by Books.title
         var author by Author optionalReferencedOn Books.author
-        val review by Review backReferencedOn Reviews.book
+        val review by Review backReferencedOn Reviews
     }
 
     // CompositeIdTable with 2 key columns - string & long (neither db-generated)
     object Reviews : CompositeIdTable("reviews") {
         val content = varchar("code", 8).entityId()
         val rank = long("rank").entityId()
-
-        // FK constraint with single column can be created as a column-level constraint
-        val book = reference("book_id", Books.bookId)
+        val book = integer("book_id")
 
         override val primaryKey = PrimaryKey(content, rank)
+
+        init {
+            foreignKey(book, target = Books.primaryKey)
+        }
     }
 
     class Review(id: EntityID<CompositeID>) : CompositeEntity(id) {
         companion object : CompositeEntityClass<Review>(Reviews)
 
-        var book by Book referencedOn Reviews.book
+        var book by Book referencedOn Reviews
     }
 
-    private val allTables = arrayOf(Publishers, Authors, Books, Reviews)
+    // CompositeIdTable with 3 key columns - string, string, & int (none db-generated)
+    object Offices : CompositeIdTable("offices") {
+        val zipCode = varchar("zip_code", 8).entityId()
+        val name = varchar("name", 64).entityId()
+        val areaCode = integer("area_code").entityId()
+        val staff = long("staff").nullable()
+        val publisherId = integer("publisher_id").nullable()
+        val publisherIsbn = uuid("publisher_isbn").nullable()
+
+        init {
+            foreignKey(publisherId, publisherIsbn, target = Publishers.primaryKey)
+        }
+    }
+
+    class Office(id: EntityID<CompositeID>) : CompositeEntity(id) {
+        companion object : CompositeEntityClass<Office>(Offices)
+
+        var staff by Offices.staff
+        var publisher by Publisher optionalReferencedOn Offices
+    }
+
+    private val allTables = arrayOf(Publishers, Authors, Books, Reviews, Offices)
 
     // The tests below will be removed before merging ------------------------------------------------------------
     // They only exist in case the branch is checked out, to view composite PK types, etc.
@@ -119,12 +147,21 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val reviewA: Review = Review.new(reviewIdValueOg) {
                 book = bookA
             }
+            val officeIdValueOg = CompositeID {
+                it[Offices.zipCode] = "1A2 3B4"
+                it[Offices.name] = "Office A"
+                it[Offices.areaCode] = 789
+            }
+            val officeA = Office.new(officeIdValueOg) {
+                staff = 2000
+            }
 
             // entity id properties
             val publisherId: EntityID<CompositeID> = publisherA.id
             val authorId: EntityID<Int> = authorA.id
             val bookId: EntityID<CompositeID> = bookA.id
             val reviewId: EntityID<CompositeID> = reviewA.id
+            val officeId: EntityID<CompositeID> = officeA.id
 
             // access wrapped entity id values
             val publisherIdValue: CompositeID = publisherId.value
@@ -132,6 +169,8 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val bookIdValue: CompositeID = bookId.value
             val reviewIdValue: CompositeID = reviewId.value
             assertEquals(reviewIdValueOg, reviewId.value)
+            val officeIdValue: CompositeID = officeId.value
+            assertEquals(officeIdValueOg, officeId.value)
 
             // access individual composite entity id values - these are now each wrapped as EntityID
             val publisherIdComponent1: EntityID<Int> = publisherIdValue[Publishers.pubId]
@@ -139,6 +178,9 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val bookIdComponent1: EntityID<Int> = bookIdValue[Books.bookId]
             val reviewIdComponent1: EntityID<String> = reviewIdValue[Reviews.content]
             val reviewIdComponent2: EntityID<Long> = reviewIdValue[Reviews.rank]
+            val officeIdComponent1: EntityID<String> = officeIdValue[Offices.zipCode]
+            val officeIdComponent2: EntityID<String> = officeIdValue[Offices.name]
+            val officeIdComponent3: EntityID<Int> = officeIdValue[Offices.areaCode]
 
             // access individual composite values - requires unwrapping - no type erasure
             val publisherIdComponent1Value: Int = publisherIdValue[Publishers.pubId].value
@@ -146,12 +188,16 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val bookIdComponent1Value: Int = bookIdValue[Books.bookId].value
             val reviewIdComponent1Value: String = reviewIdValue[Reviews.content].value
             val reviewIdComponent2Value: Long = reviewIdValue[Reviews.rank].value
+            val officeIdComponent1Value: String = officeIdValue[Offices.zipCode].value
+            val officeIdComponent2Value: String = officeIdValue[Offices.name].value
+            val officeIdComponent3Value: Int = officeIdValue[Offices.areaCode].value
 
             // find entity by its id property - argument type EntityID<T> must match invoking type EntityClass<T, _>
             val foundPublisherA: Publisher? = Publisher.findById(publisherId)
             val foundAuthorA: Author? = Author.findById(authorId)
             val foundBookA: Book? = Book.findById(bookId)
             val foundReviewA: Review? = Review.findById(reviewId)
+            val foundOfficeA: Office? = Office.findById(officeId)
         }
     }
 
@@ -162,6 +208,8 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val publisherIdColumn: Column<EntityID<CompositeID>> = Publishers.id
             val authorIdColumn: Column<EntityID<Int>> = Authors.id
             val bookIdColumn: Column<EntityID<CompositeID>> = Books.id
+            val reviewIdColumn: Column<EntityID<CompositeID>> = Reviews.id
+            val officeIdColumn: Column<EntityID<CompositeID>> = Offices.id
 
             // entity id values
             val publisherA: EntityID<CompositeID> = Publishers.insertAndGetId {
@@ -181,7 +229,12 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 it[content] = "Not bad"
                 it[rank] = 12345
                 // don't need to access wrapped value as column-level FK constraint means copied EntityID column
-                it[book] = bookA.value[Books.bookId]
+                it[book] = bookA.value[Books.bookId].value
+            }
+            val officeA: EntityID<CompositeID> = Offices.insertAndGetId {
+                it[zipCode] = "1A2 3B4"
+                it[name] = "Office A"
+                it[areaCode] = 789
             }
 
             // access entity id with single result row access
@@ -189,12 +242,14 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val authorResult: EntityID<Int> = Authors.selectAll().single()[Authors.id]
             val bookResult: EntityID<CompositeID> = Books.selectAll().single()[Books.id]
             val reviewResult: EntityID<CompositeID> = Reviews.selectAll().single()[Reviews.id]
+            val officeResult: EntityID<CompositeID> = Offices.selectAll().single()[Offices.id]
 
             // add all id components to query builder with single column op - EntityID<T> == EntityID<T>
             Publishers.selectAll().where { Publishers.id eq publisherResult }.single() // deconstructs to use compound AND
             Authors.selectAll().where { Authors.id eq authorResult }.single()
             Books.selectAll().where { Books.id eq bookResult }.single()
             Reviews.selectAll().where { Reviews.id eq reviewResult }.single()
+            Offices.selectAll().where { Offices.id eq officeResult }.single()
         }
     }
 
@@ -222,6 +277,11 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 it[rank] = 12345
                 it[book] = 1
             }
+            Offices.insert {
+                it[zipCode] = "1A2 3B4"
+                it[name] = "Office A"
+                it[areaCode] = 789
+            }
 
             // manual using DAO
             val publisherIdValue = CompositeID {
@@ -247,18 +307,29 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             Review.new(reviewIdValue) {
                 book = bookB
             }
+            val officeIdValue = CompositeID {
+                it[Offices.zipCode] = "5C6 7D8"
+                it[Offices.name] = "Office A"
+                it[Offices.areaCode] = 456
+            }
+            Office.new(officeIdValue) {
+                staff = 2000
+                publisher = publisherB
+            }
 
             // equality check - EntityID<T> == T
             Publishers.selectAll().where { Publishers.id eq publisherIdValue }.single()
             Authors.selectAll().where { Authors.id eq authorB.id }.single()
             Books.selectAll().where { Books.id eq bookIdValue }.single()
             Reviews.selectAll().where { Reviews.id eq reviewIdValue }.single()
+            Offices.selectAll().where { Offices.id eq officeIdValue }.single()
 
             // find entity by its id value - argument type T must match invoking type EntityClass<T, _>
             val foundPublisherA: Publisher? = Publisher.findById(publisherIdValue)
             val foundAuthorA: Author? = Author.findById(authorB.id.value)
             val foundBookA: Book? = Book.findById(bookIdValue)
             val foundReviewA: Review? = Review.findById(reviewIdValue)
+            val foundOfficeA: Office? = Office.findById(officeIdValue)
         }
     }
     // The tests above will be removed before merging ------------------------------------------------------------
@@ -370,6 +441,19 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 it[name] = "Publisher C"
             }
             assertEquals(999, id3.value[Publishers.pubId].value)
+
+            // insert as EntityID<CompositeID>
+            val id4: EntityID<CompositeID> = Publishers.insertAndGetId {
+                it[id] = EntityID(
+                    CompositeID { id ->
+                        id[pubId] = 111
+                        id[isbn] = UUID.randomUUID()
+                    },
+                    Publishers
+                )
+                it[name] = "Publisher C"
+            }
+            assertEquals(111, id4.value[Publishers.pubId].value)
         }
     }
 
@@ -478,7 +562,6 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
     object Towns : CompositeIdTable("towns") {
         val zipCode = varchar("zip_code", 8).entityId()
         val name = varchar("name", 64).entityId()
-        val areaCode = integer("area_code").entityId()
         val population = long("population").nullable()
     }
 
@@ -494,12 +577,10 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val townAId = Towns.insertAndGetId {
                 it[zipCode] = "1A2 3B4"
                 it[name] = "Town A"
-                it[areaCode] = 789
             }
             val townBIdValue = CompositeID {
                 it[Towns.zipCode] = "5C6 7D8"
                 it[Towns.name] = "Town B"
-                it[Towns.areaCode] = 456
             }
             Town.new(townBIdValue) {
                 population = 123456789
@@ -512,7 +593,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
     @Test
     fun testInsertAndSelectReferencedEntities() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers, Authors, Books, Reviews) {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables + Offices) {
             val publisherA = Publisher.new {
                 name = "Publisher A"
             }
@@ -539,6 +620,20 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val reviewA: Review = Review.new(reviewIdValue) {
                 book = bookA
             }
+            val officeAIdValue = CompositeID {
+                it[Offices.zipCode] = "1A2 3B4"
+                it[Offices.name] = "Office A"
+                it[Offices.areaCode] = 789
+            }
+            val officeA = Office.new(officeAIdValue) {}
+            val officeBIdValue = CompositeID {
+                it[Offices.zipCode] = "5C6 7D8"
+                it[Offices.name] = "Office B"
+                it[Offices.areaCode] = 456
+            }
+            val officeB = Office.new(officeBIdValue) {
+                publisher = publisherA
+            }
 
             // child entity references
             assertEquals(publisherA.id.value[Publishers.pubId], authorA.publisher.id.value[Publishers.pubId])
@@ -548,9 +643,16 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             assertEquals(authorB, bookA.author)
             assertEquals(bookA.id, reviewA.book.id)
             assertEquals(authorB, reviewA.book.author)
+            assertNull(officeA.publisher)
+            assertEquals(publisherA, officeB.publisher)
 
             // parent entity references
             assertEquals(reviewA, bookA.review)
+            assertEqualCollections(publisherA.authors.toList(), listOf(authorA, authorB))
+            assertNotNull(publisherA.office)
+            // if multiple children reference parent, backReferencedOn & optBackReferencedOn save last one
+            assertEquals(officeB, publisherA.office)
+            assertEqualCollections(publisherA.allOffices.toList(), listOf(officeB))
         }
     }
 }

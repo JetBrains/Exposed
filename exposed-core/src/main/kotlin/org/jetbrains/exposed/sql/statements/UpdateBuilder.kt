@@ -30,10 +30,8 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
             "Trying to set null to not nullable column $column"
         }
 
-        if (value is CompositeID) {
-            value.values.forEach { (idColumn, idValue) ->
-                set(idColumn as Column<Any?>, idValue)
-            }
+        if (column.columnType.isEntityIdentifier() && (value as EntityID<*>).value is CompositeID) {
+            (value.value as CompositeID).setComponentValues()
         } else {
             column.columnType.validateValueBeforeUpdate(value)
             values[column] = value
@@ -44,9 +42,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     @JvmName("setWithEntityIdValue")
     operator fun <S : Comparable<S>> set(column: Column<EntityID<S>>, value: S) {
         if (value is CompositeID) {
-            value.values.forEach { (idColumn, idValue) ->
-                idValue?.let { set(idColumn as Column<Any>, it) }
-            }
+            value.setComponentValues()
         } else {
             val entityId: EntityID<S> = EntityID(value, (column.foreignKey?.targetTable ?: column.table) as IdTable<S>)
             column.columnType.validateValueBeforeUpdate(entityId)
@@ -61,9 +57,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
             "Trying to set null to not nullable column $column"
         }
         if (value is CompositeID) {
-            value.values.forEach { (idColumn, idValue) ->
-                set(idColumn as Column<Any?>, idValue)
-            }
+            value.setComponentValues()
         } else {
             val entityId: EntityID<S>? = value?.let { EntityID(it, (column.foreignKey?.targetTable ?: column.table) as IdTable<S>) }
             column.columnType.validateValueBeforeUpdate(entityId)
@@ -87,6 +81,13 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
     open operator fun <S> set(column: CompositeColumn<S>, value: S) {
         column.getRealColumnsWithValues(value).forEach { (realColumn, itsValue) ->
             set(realColumn as Column<Any?>, itsValue)
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun CompositeID.setComponentValues() {
+        this.values.forEach { (idColumn, idValue) ->
+            set(idColumn as Column<Any?>, idValue)
         }
     }
 
