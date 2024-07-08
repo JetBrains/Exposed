@@ -1742,8 +1742,8 @@ public final class org/jetbrains/exposed/sql/QueriesKt {
 	public static final fun insertIgnore (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/AbstractQuery;Ljava/util/List;)Ljava/lang/Integer;
 	public static synthetic fun insertIgnore$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/AbstractQuery;Ljava/util/List;ILjava/lang/Object;)Ljava/lang/Integer;
 	public static final fun insertIgnoreAndGetId (Lorg/jetbrains/exposed/dao/id/IdTable;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/dao/id/EntityID;
-	public static final fun insertReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
-	public static synthetic fun insertReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
+	public static final fun insertReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;ZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
+	public static synthetic fun insertReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningStatement;
 	public static final fun mergeFrom (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/QueryAlias;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/statements/MergeSelectStatement;
 	public static final fun mergeFrom (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/statements/MergeTableStatement;
 	public static synthetic fun mergeFrom$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/MergeTableStatement;
