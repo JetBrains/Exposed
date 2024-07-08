@@ -1205,6 +1205,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /**
      * Transforms a column by specifying transformation functions.
      *
+     * Sample:
+     * ```kotlin
+     * object TestTable : IntIdTable() {
+     *     val stringToInteger = integer("stringToInteger")
+     *         .transform(toColumn = { it.toInt() }, toReal = { it.toString() })
+     * }
+     * ```
+     *
      * @param TReal The target type of the transformation.
      * @param TColumn The source type of the column.
      * @param toReal A function to transform from the source type [TColumn] to the target type [TReal].
@@ -1218,6 +1226,22 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /**
      * Transforms a column by specifying a transformer.
+     *
+     * Sample:
+     * ```kotlin
+     * object IntListColumnType : ColumnTransformer<List<Int>, String> {
+     *     override fun toReal(value: String): List<Int> {
+     *         val result = value.split(",").map { it.toInt() }
+     *         return result
+     *     }
+     *
+     *     override fun toColumn(value: List<Int>): String = value.joinToString(",")
+     * }
+     *
+     * object TestTable : IntIdTable() {
+     *     val numbers = text("numbers").transform(IntListColumnType)
+     * }
+     * ```
      *
      * @param TReal The target type of the transformation.
      * @param TColumn The source type of the column.
@@ -1250,6 +1274,15 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /**
      * Transforms a nullable column by specifying transformation functions.
      *
+     * Sample:
+     * ```kotlin
+     * object TestTable : IntIdTable() {
+     *     val nullableStringToInteger = integer("nullableStringToInteger")
+     *         .nullable()
+     *         .transform(toColumn = { it.toInt() }, toReal = { it.toString() })
+     * }
+     * ```
+     *
      * @param TReal The target type of the transformation.
      * @param TColumn The source type of the column.
      * @param toReal A function to transform from the source type [TColumn] to the target type [TReal].
@@ -1264,6 +1297,22 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /**
      * Transforms a nullable column by specifying a transformer.
+     *
+     * Sample:
+     * ```kotlin
+     * object IntListColumnType : ColumnTransformer<List<Int>, String> {
+     *     override fun toReal(value: String): List<Int> {
+     *         val result = value.split(",").map { it.toInt() }
+     *         return result
+     *     }
+     *
+     *     override fun toColumn(value: List<Int>): String = value.joinToString(",")
+     * }
+     *
+     * object TestTable : IntIdTable() {
+     *     val numbers = text("numbers").nullable().transform(IntListColumnType)
+     * }
+     * ```
      *
      * @param TReal The target type of the transformation.
      * @param TColumn The source type of the column.

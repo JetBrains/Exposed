@@ -782,7 +782,7 @@ enum class Meal {
 }
 
 object Meals : Table() {
-    val mealTime = time("meal_time")
+    val mealTime: Column<Meal> = time("meal_time")
         .transform(
             toReal = {
                 when {
@@ -825,6 +825,6 @@ class MealTimeTransformer : ColumnTransformer<Meal, LocalTime> {
 }
 
 object Meals : Table() {
-    val mealTime = time("meal_time").transform(MealTimeTransformer())
+    val mealTime: Column<Meal> = time("meal_time").transform(MealTimeTransformer())
 }
 ```

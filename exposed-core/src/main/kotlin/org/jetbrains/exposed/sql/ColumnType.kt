@@ -314,7 +314,7 @@ abstract class TransformColumnType<TReal : Any, TColumn : Any>(val delegate: ICo
          * @param transformer The transformer that provides the transformation logic.
          * @return A new instance of [TransformColumnType] with the specified transformations.
          */
-        fun <Real : Any, Column : Any>create(delegate: IColumnType<Column>, transformer: ColumnTransformer<Real, Column>): TransformColumnType<Real, Column> {
+        fun <Real : Any, Column : Any> create(delegate: IColumnType<Column>, transformer: ColumnTransformer<Real, Column>): TransformColumnType<Real, Column> {
             return object : TransformColumnType<Real, Column>(delegate), ColumnTransformer<Real, Column> by transformer {}
         }
     }
