@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import junit.framework.TestCase
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
@@ -155,6 +158,26 @@ class ReturningTests : DatabaseTestsBase() {
             }.map { it[newPrice] }
             assertEquals(3, result3.size)
             assertTrue { result3.all { it == 0.0 } }
+        }
+    }
+
+    @Test
+    fun testCustomEntityIdColumnAccess() {
+        val tester = object : IdTable<String>() {
+
+            val value = varchar("value", 128)
+
+            override val primaryKey: PrimaryKey = PrimaryKey(value)
+            override val id: Column<EntityID<String>> = value.entityId()
+        }
+
+        withTables(tester) {
+            tester.insert {
+                it[tester.value] = "test-value"
+            }
+            val entry = tester.selectAll().first()
+            TestCase.assertEquals("test-value", entry[tester.value])
+            TestCase.assertEquals("test-value", entry[tester.id].value)
         }
     }
 }
