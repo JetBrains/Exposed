@@ -61,14 +61,14 @@ class ReturningTests : DatabaseTestsBase() {
             assertEquals(1, tester.selectAll().count())
 
             // no result set is returned because insert is ignored
-            val resultWithConflict = tester.insertReturning(ignore = true) {
+            val resultWithConflict = tester.insertReturning(ignoreErrors = true) {
                 it[item] = "Item A"
             }.toList()
 
             assertTrue { resultWithConflict.isEmpty() }
             assertEquals(1, tester.selectAll().count())
 
-            val resultWithoutConflict = tester.insertReturning(ignore = true) {
+            val resultWithoutConflict = tester.insertReturning(ignoreErrors = true) {
                 it[item] = "Item B"
             }.single()
 

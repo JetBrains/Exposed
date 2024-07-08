@@ -391,7 +391,7 @@ fun <T : Table> T.insertIgnore(
  * Represents the SQL statement that inserts new rows into a table and returns specified data from the inserted rows.
  *
  * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
- * @param ignore Whether to ignore any possible errors that occur during the process.
+ * @param ignoreErrors Whether to ignore any possible errors that occur during the process.
  * Note `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
  * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
  * expressions mapped to their resulting data.
@@ -399,10 +399,10 @@ fun <T : Table> T.insertIgnore(
  */
 fun <T : Table> T.insertReturning(
     returning: List<Expression<*>> = columns,
-    ignore: Boolean = false,
+    ignoreErrors: Boolean = false,
     body: T.(InsertStatement<Number>) -> Unit
 ): ReturningStatement {
-    val insert = InsertStatement<Number>(this, ignore)
+    val insert = InsertStatement<Number>(this, ignoreErrors)
     body(insert)
     return ReturningStatement(this, returning, insert)
 }
