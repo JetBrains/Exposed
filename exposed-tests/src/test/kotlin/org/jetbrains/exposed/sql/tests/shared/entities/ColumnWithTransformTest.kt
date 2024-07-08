@@ -8,9 +8,10 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Parent.Companion.transform
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.junit.Test
 import java.math.BigDecimal
+import kotlin.random.Random
 
 object TransformationsTable : IntIdTable() {
     val value = varchar("value", 50)
@@ -22,6 +23,7 @@ object NullableTransformationsTable : IntIdTable() {
 
 class TransformationEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<TransformationEntity>(TransformationsTable)
+
     var value by TransformationsTable.value.transform(
         toColumn = { "transformed-$it" },
         toReal = { it.replace("transformed-", "") }
@@ -109,6 +111,60 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
 
             // Correct DSL value
             assertEquals(BigDecimal(10), TableWithTransforms.selectAll().first()[TableWithTransforms.value])
+        }
+    }
+
+    class ChainedTransformationEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<ChainedTransformationEntity>(TransformationsTable)
+
+        var value by TransformationsTable.value
+            .transform(
+                toColumn = { "transformed-$it" },
+                toReal = { it.replace("transformed-", "") }
+            )
+            .transform(
+                toColumn = { if (it.length > 5) it.slice(0..4) else it },
+                toReal = { it }
+            )
+    }
+
+    @Test
+    fun testChainedTransformation() {
+        withTables(TransformationsTable) {
+            ChainedTransformationEntity.new {
+                value = "qwertyuiop"
+            }
+
+            assertEquals("qwert", ChainedTransformationEntity.all().first().value)
+        }
+    }
+
+    class MemoizedChainedTransformationEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<MemoizedChainedTransformationEntity>(TransformationsTable)
+
+        var value by TransformationsTable.value
+            .transform(
+                toColumn = { "transformed-$it" },
+                toReal = { it.replace("transformed-", "") }
+            )
+            .memoizedTransform(
+                toColumn = { it + Random(10).nextInt(0, 100) },
+                toReal = { it }
+            )
+    }
+
+    @Test
+    fun testMemoizedChainedTransformation() {
+        withTables(TransformationsTable) {
+            MemoizedChainedTransformationEntity.new {
+                value = "value#"
+            }
+
+            val entity = MemoizedChainedTransformationEntity.all().first()
+
+            val firstRead = entity.value
+            assertTrue(firstRead.startsWith("value#"))
+            assertEquals(firstRead, entity.value)
         }
     }
 }

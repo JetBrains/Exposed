@@ -491,6 +491,14 @@ public abstract interface class org/jetbrains/exposed/sql/ColumnTransformer {
 	public abstract fun toReal (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
+public final class org/jetbrains/exposed/sql/ColumnTransformerImpl : org/jetbrains/exposed/sql/ColumnTransformer {
+	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public final fun getToColumnFn ()Lkotlin/jvm/functions/Function1;
+	public final fun getToRealFn ()Lkotlin/jvm/functions/Function1;
+	public fun toColumn (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun toReal (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
 public abstract class org/jetbrains/exposed/sql/ColumnType : org/jetbrains/exposed/sql/IColumnType {
 	public fun <init> ()V
 	public fun <init> (Z)V

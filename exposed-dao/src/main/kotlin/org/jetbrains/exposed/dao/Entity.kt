@@ -18,13 +18,14 @@ import kotlin.reflect.KProperty
 open class ColumnWithTransform<TColumn, TReal>(
     /** The original column type used in the transformation. */
     val column: Column<TColumn>,
+    private val transformer: ColumnTransformer<TReal, TColumn>,
     /** The function used to convert a transformed value to a value that can be stored in the original column type. */
-    val toColumn: (TReal) -> TColumn,
-    toReal: (TColumn) -> TReal,
     /** Whether the original and transformed values should be cached to avoid multiple conversion calls. */
     protected val cacheResult: Boolean = false
 ) {
     private var cache: Pair<TColumn, TReal>? = null
+
+    val toColumn: (TReal) -> TColumn = { transformer.toColumn(it) }
 
     /** The function used to transform a value stored in the original column type. */
     val toReal: (TColumn) -> TReal = { columnValue ->
@@ -33,10 +34,10 @@ open class ColumnWithTransform<TColumn, TReal>(
             if (localCache != null && localCache.first == columnValue) {
                 localCache.second
             } else {
-                toReal(columnValue).also { cache = columnValue to it }
+                transformer.toReal(columnValue).also { cache = columnValue to it }
             }
         } else {
-            toReal(columnValue)
+            transformer.toReal(columnValue)
         }
     }
 }

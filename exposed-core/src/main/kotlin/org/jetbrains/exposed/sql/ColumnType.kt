@@ -257,7 +257,7 @@ class EntityIDColumnType<T : Comparable<T>>(
  * @param TReal The real type to which the column value is transformed.
  * @param TColumn The column type provided by underlying `ColumnType`.
  */
-interface ColumnTransformer<TReal : Any, TColumn : Any> {
+interface ColumnTransformer<TReal, TColumn> {
     /**
      * Transforms a column value from the underlying `ColumnType` into the real type.
      */
@@ -267,6 +267,15 @@ interface ColumnTransformer<TReal : Any, TColumn : Any> {
      * Transforms a real type value into a column value.
      */
     fun toColumn(value: TReal): TColumn
+}
+
+class ColumnTransformerImpl<TReal, TColumn>(
+    val toColumnFn: (TReal) -> TColumn,
+    val toRealFn: (TColumn) -> TReal
+) : ColumnTransformer<TReal, TColumn> {
+    override fun toReal(value: TColumn) = toRealFn(value)
+
+    override fun toColumn(value: TReal) = toColumnFn(value)
 }
 
 /**

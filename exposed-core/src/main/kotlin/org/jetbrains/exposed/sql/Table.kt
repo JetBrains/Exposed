@@ -1214,15 +1214,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <TReal : Any, TColumn : Any> Column<TColumn>.transform(
         toReal: (TColumn) -> TReal,
         toColumn: (TReal) -> TColumn
-    ): Column<TReal> {
-        val transformer = object : ColumnTransformer<TReal, TColumn> {
-            override fun toReal(value: TColumn): TReal = toReal(value)
-
-            override fun toColumn(value: TReal): TColumn = toColumn(value)
-        }
-
-        return transform(transformer)
-    }
+    ): Column<TReal> = transform(ColumnTransformerImpl(toColumn, toReal))
 
     /**
      * Transforms a column by specifying a transformer.
@@ -1268,15 +1260,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <TReal : Any, TColumn : Any> Column<TColumn?>.transform(
         toReal: (TColumn) -> TReal,
         toColumn: (TReal) -> TColumn
-    ): Column<TReal?> {
-        val transformer = object : ColumnTransformer<TReal, TColumn> {
-            override fun toReal(value: TColumn): TReal = toReal(value)
-
-            override fun toColumn(value: TReal): TColumn = toColumn(value)
-        }
-
-        return transform(transformer)
-    }
+    ): Column<TReal?> = transform(ColumnTransformerImpl(toColumn, toReal))
 
     /**
      * Transforms a nullable column by specifying a transformer.

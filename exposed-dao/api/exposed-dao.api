@@ -1,6 +1,6 @@
 public class org/jetbrains/exposed/dao/ColumnWithTransform {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Z)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnTransformer;Z)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnTransformer;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	protected final fun getCacheResult ()Z
 	public final fun getColumn ()Lorg/jetbrains/exposed/sql/Column;
 	public final fun getToColumn ()Lkotlin/jvm/functions/Function1;
@@ -145,7 +145,9 @@ public abstract class org/jetbrains/exposed/dao/EntityClass {
 	public fun getDependsOnTables ()Lorg/jetbrains/exposed/sql/ColumnSet;
 	public final fun getTable ()Lorg/jetbrains/exposed/dao/id/IdTable;
 	public final fun isAssignableTo (Lorg/jetbrains/exposed/dao/EntityClass;)Z
+	public final fun memoizedTransform (Lorg/jetbrains/exposed/dao/ColumnWithTransform;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/ColumnWithTransform;
 	public final fun memoizedTransform (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/ColumnWithTransform;
+	public final fun memoizedTransform (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnTransformer;)Lorg/jetbrains/exposed/dao/ColumnWithTransform;
 	public fun new (Ljava/lang/Comparable;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
 	public fun new (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
 	public final fun optionalBackReferencedOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/OptionalBackReference;
@@ -171,7 +173,9 @@ public abstract class org/jetbrains/exposed/dao/EntityClass {
 	public fun searchQuery (Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun testCache (Lkotlin/jvm/functions/Function1;)Lkotlin/sequences/Sequence;
 	public final fun testCache (Lorg/jetbrains/exposed/dao/id/EntityID;)Lorg/jetbrains/exposed/dao/Entity;
+	public final fun transform (Lorg/jetbrains/exposed/dao/ColumnWithTransform;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/ColumnWithTransform;
 	public final fun transform (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/ColumnWithTransform;
+	public final fun transform (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnTransformer;)Lorg/jetbrains/exposed/dao/ColumnWithTransform;
 	public final fun view (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/View;
 	protected fun warmCache ()Lorg/jetbrains/exposed/dao/EntityCache;
 	public final fun warmUpLinkedReferences (Ljava/util/List;Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Boolean;Z)Ljava/util/List;
