@@ -8,7 +8,9 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Parent.Companion.transform
 import org.junit.Test
+import java.math.BigDecimal
 
 object TransformationsTable : IntIdTable() {
     val value = varchar("value", 50)
@@ -82,6 +84,31 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
                 .first()
 
             assertEquals(null, row[NullableTransformationsTable.value])
+        }
+    }
+
+    object TableWithTransforms : IntIdTable() {
+        val value = varchar("value", 50)
+            .transform(toReal = { it.toBigDecimal() }, toColumn = { it.toString() })
+    }
+
+    class TableWithTransform(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<TableWithTransform>(TableWithTransforms)
+        var value by TableWithTransforms.value.transform(toReal = { it.toInt() }, toColumn = { it.toBigDecimal() })
+    }
+
+    @Test
+    fun testDaoTransformWithDslTransform() {
+        withTables(TableWithTransforms) {
+            TableWithTransform.new {
+                value = 10
+            }
+
+            // Correct DAO value
+            assertEquals(10, TableWithTransform.all().first().value)
+
+            // Correct DSL value
+            assertEquals(BigDecimal(10), TableWithTransforms.selectAll().first()[TableWithTransforms.value])
         }
     }
 }

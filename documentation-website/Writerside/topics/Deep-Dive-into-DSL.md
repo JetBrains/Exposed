@@ -811,7 +811,7 @@ Transformation could be also defined as an implementation of `ColumnTransformer`
 
 ```kotlin
 class MealTimeTransformer : ColumnTransformer<Meal, LocalTime> {
-    override fun fromColumn(value: LocalTime): Meal = when {
+    override fun toReal(value: LocalTime): Meal = when {
         value.hour < 10 -> Meal.BREAKFAST
         value.hour < 15 -> Meal.LUNCH
         else -> Meal.DINNER

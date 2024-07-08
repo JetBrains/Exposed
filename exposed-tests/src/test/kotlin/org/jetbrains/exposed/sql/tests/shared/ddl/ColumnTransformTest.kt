@@ -2,8 +2,6 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ColumnTransformer
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -104,7 +102,6 @@ class ColumnTransformTest : DatabaseTestsBase() {
         }
 
         withTables(tester) {
-            addLogger(StdOutSqlLogger)
             val id1 = tester.insertAndGetId {
                 it[tester.numbers] = listOf(1, 2, 3)
                 it[tester.numbersNullable] = listOf(4, 5, 6)
