@@ -26,7 +26,7 @@ class TransformationEntity(id: EntityID<Int>) : IntEntity(id) {
 
     var value by TransformationsTable.value.transform(
         toColumn = { "transformed-$it" },
-        toReal = { it.replace("transformed-", "") }
+        toTarget = { it.replace("transformed-", "") }
     )
 }
 
@@ -34,11 +34,11 @@ class NullableTransformationEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<NullableTransformationEntity>(NullableTransformationsTable)
     var value by NullableTransformationsTable.value.transform(
         toColumn = { "transformed-$it" },
-        toReal = { it?.replace("transformed-", "") }
+        toTarget = { it?.replace("transformed-", "") }
     )
 }
 
-class ColumnWithTransformTest : DatabaseTestsBase() {
+class EntityFieldWithTransformTest : DatabaseTestsBase() {
 
     @Test
     fun `set and get value`() {
@@ -91,12 +91,12 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
 
     object TableWithTransforms : IntIdTable() {
         val value = varchar("value", 50)
-            .transform(toReal = { it.toBigDecimal() }, toColumn = { it.toString() })
+            .transform(toTarget = { it.toBigDecimal() }, toColumn = { it.toString() })
     }
 
     class TableWithTransform(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<TableWithTransform>(TableWithTransforms)
-        var value by TableWithTransforms.value.transform(toReal = { it.toInt() }, toColumn = { it.toBigDecimal() })
+        var value by TableWithTransforms.value.transform(toTarget = { it.toInt() }, toColumn = { it.toBigDecimal() })
     }
 
     @Test
@@ -120,11 +120,11 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         var value by TransformationsTable.value
             .transform(
                 toColumn = { "transformed-$it" },
-                toReal = { it.replace("transformed-", "") }
+                toTarget = { it.replace("transformed-", "") }
             )
             .transform(
-                toColumn = { if (it.length > 5) it.slice(0..4) else it },
-                toReal = { it }
+                toCurrentTarget = { if (it.length > 5) it.slice(0..4) else it },
+                toNextTarget = { it }
             )
     }
 
@@ -145,11 +145,11 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         var value by TransformationsTable.value
             .transform(
                 toColumn = { "transformed-$it" },
-                toReal = { it.replace("transformed-", "") }
+                toTarget = { it.replace("transformed-", "") }
             )
             .memoizedTransform(
-                toColumn = { it + Random(10).nextInt(0, 100) },
-                toReal = { it }
+                toCurrentTarget = { it + Random(10).nextInt(0, 100) },
+                toNextTarget = { it }
             )
     }
 

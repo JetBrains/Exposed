@@ -252,70 +252,70 @@ class EntityIDColumnType<T : Comparable<T>>(
 }
 
 /**
- * An interface defining the transformation between a database column type and a real type.
+ * An interface defining the transformation between a source column type and a target type.
  *
- * @param TReal The real type to which the column value is transformed.
- * @param TColumn The column type provided by underlying `ColumnType`.
+ * @param Target The type of the column values after transformation
+ * @param Source The type of the column values without transformation
  */
-interface ColumnTransformer<TReal, TColumn> {
+interface ColumnTransformer<Source, Target> {
     /**
-     * Transforms a column value from the underlying `ColumnType` into the real type.
+     * Applies transformation to the underlying column value ([Source] -> [Target])
      */
-    fun toReal(value: TColumn): TReal
+    fun toTarget(value: Source): Target
 
     /**
-     * Transforms a real type value into a column value.
+     * Applies back transformation to the value of the transformed type [Target] to the column type [Source] ([Target] -> [Source])
      */
-    fun toColumn(value: TReal): TColumn
+    fun toSource(value: Target): Source
 }
 
-class ColumnTransformerImpl<TReal, TColumn>(
-    val toColumnFn: (TReal) -> TColumn,
-    val toRealFn: (TColumn) -> TReal
-) : ColumnTransformer<TReal, TColumn> {
-    override fun toReal(value: TColumn) = toRealFn(value)
+class ColumnTransformerImpl<Source, Target>(
+    val toSourceFn: (Target) -> Source,
+    val toTargetFn: (Source) -> Target
+) : ColumnTransformer<Source, Target> {
+    override fun toTarget(value: Source) = toTargetFn(value)
 
-    override fun toColumn(value: TReal) = toColumnFn(value)
+    override fun toSource(value: Target) = toSourceFn(value)
 }
 
 /**
- * A class that provides a transformation between a database column type and a real type.
+ * A class that provides the transformation between a source column type and a target type.
  *
- * `TransformColumnType` is `ColumnType` by itself and can be used for defining columns.
+ * [ColumnWithTransform] is [ColumnType] by itself and can be used for defining columns.
  *
- * @param TReal The real type to which the column value is transformed.
- * @param TColumn The column type provided by underlying `ColumnType`.
- * @param delegate The original column type to be transformed.
+ * @param Target The type to which the column value of type [TColumn] is transformed
+ * @param TColumn The type of the column
+ * @param delegate The original column's [IColumnType]
  */
-abstract class TransformColumnType<TReal : Any, TColumn : Any>(val delegate: IColumnType<TColumn>) : ColumnType<TReal>(), ColumnTransformer<TReal, TColumn> {
+abstract class ColumnWithTransform<TColumn : Any, Target : Any>(val delegate: IColumnType<TColumn>) : ColumnType<Target>(), ColumnTransformer<TColumn, Target> {
     override fun sqlType() = delegate.sqlType()
 
-    override fun valueFromDB(value: Any): TReal? {
-        return delegate.valueFromDB(value)?.let { toReal(it) }
+    override fun valueFromDB(value: Any): Target? {
+        return delegate.valueFromDB(value)?.let { toTarget(it) }
     }
 
-    override fun notNullValueToDB(value: TReal): Any {
-        return delegate.notNullValueToDB(toColumn(value))
+    override fun notNullValueToDB(value: Target): Any {
+        return delegate.notNullValueToDB(toSource(value))
     }
 
-    override fun nonNullValueToString(value: TReal): String {
-        return delegate.nonNullValueToString(toColumn(value))
+    override fun nonNullValueToString(value: Target): String {
+        return delegate.nonNullValueToString(toSource(value))
     }
 
     override var nullable = delegate.nullable
 
     companion object {
         /**
-         * Creates a new instance of [TransformColumnType] with the given column type and transformer.
+         * Creates a new instance of [ColumnWithTransform] with the given column type and transformer.
          *
-         * @param Real The real type to which the column value is transformed.
-         * @param Column The type of delegated column type.
+         * @param S The type of the column's values.
+         * @param T The Target type to which the column value is transformed.
          * @param delegate The original column type to be transformed.
          * @param transformer The transformer that provides the transformation logic.
-         * @return A new instance of [TransformColumnType] with the specified transformations.
+         * @return A new instance of [ColumnWithTransform] with the specified transformations.
          */
-        fun <Real : Any, Column : Any> create(delegate: IColumnType<Column>, transformer: ColumnTransformer<Real, Column>): TransformColumnType<Real, Column> {
-            return object : TransformColumnType<Real, Column>(delegate), ColumnTransformer<Real, Column> by transformer {}
+        fun <S : Any, T : Any> create(delegate: IColumnType<S>, transformer: ColumnTransformer<S, T>): ColumnWithTransform<S, T> {
+            return object : ColumnWithTransform<S, T>(delegate), ColumnTransformer<S, T> by transformer {}
         }
     }
 }

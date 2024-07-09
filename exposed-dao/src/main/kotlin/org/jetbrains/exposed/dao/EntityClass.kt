@@ -728,88 +728,86 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     )
 
     /**
-     * Returns a [ColumnWithTransform] delegate that transforms this stored [TColumn] value on every read.
+     * Returns a [EntityFieldWithTransform] delegate that transforms this stored [TColumn] value on every read.
      *
      * @param transformer An instance of [ColumnTransformer] to handle the transformations.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, TReal : Any?> Column<TColumn>.transform(
-        transformer: ColumnTransformer<TReal, TColumn>
-    ): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, transformer, false)
+    fun <TColumn : Any?, Target : Any?> Column<TColumn>.transform(
+        transformer: ColumnTransformer<TColumn, Target>
+    ): EntityFieldWithTransform<TColumn, Target> = EntityFieldWithTransform(this, transformer, false)
 
     /**
-     * Returns a [ColumnWithTransform] delegate that transforms this stored [TColumn] value on every read.
+     * Returns a [EntityFieldWithTransform] delegate that transforms this stored [TColumn] value on every read.
      *
      * @param toColumn A pure function that converts a transformed value to a value that can be stored
      * in this original column type.
-     * @param toReal A pure function that transforms a value stored in this original column type.
+     * @param toTarget A pure function that transforms a value stored in this original column type.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, TReal : Any?> Column<TColumn>.transform(
-        toColumn: (TReal) -> TColumn,
-        toReal: (TColumn) -> TReal
-    ): ColumnWithTransform<TColumn, TReal> = transform(ColumnTransformerImpl(toColumn, toReal))
+    fun <TColumn : Any?, Target : Any?> Column<TColumn>.transform(
+        toColumn: (Target) -> TColumn,
+        toTarget: (TColumn) -> Target
+    ): EntityFieldWithTransform<TColumn, Target> = transform(ColumnTransformerImpl(toColumn, toTarget))
 
     /**
-     * Returns a [ColumnWithTransform] that extends transformation of existing [ColumnWithTransform].
+     * Returns a [EntityFieldWithTransform] that extends transformation of existing [EntityFieldWithTransform].
      *
-     * @param toColumn A pure function that converts a transformed value to a value that can be stored
-     * in this original column type.
-     * @param toReal A pure function that transforms a value stored in this original column type.
+     * @param toCurrentTarget A function that transforms the value to the target type of previously defined transformation
+     * @param toNextTarget A function that transforms value to the target type
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, TReal : Any?, TNextReal : Any?> ColumnWithTransform<TColumn, TReal>.transform(
-        toColumn: (TNextReal) -> TReal,
-        toReal: (TReal) -> TNextReal
-    ): ColumnWithTransform<TColumn, TNextReal> =
-        ColumnWithTransform(this.column, ColumnTransformerImpl({ this.toColumn(toColumn(it)) }, { toReal(this.toReal(it)) }), false)
+    fun <TColumn : Any?, CurrentTarget : Any?, NextTarget : Any?> EntityFieldWithTransform<TColumn, CurrentTarget>.transform(
+        toCurrentTarget: (NextTarget) -> CurrentTarget,
+        toNextTarget: (CurrentTarget) -> NextTarget
+    ): EntityFieldWithTransform<TColumn, NextTarget> =
+        EntityFieldWithTransform(this.column, ColumnTransformerImpl({ this.toColumn(toCurrentTarget(it)) }, { toNextTarget(this.toTarget(it)) }), false)
 
     /**
-     * Returns a [ColumnWithTransform] delegate that will cache the transformed value on first read of
+     * Returns a [EntityFieldWithTransform] delegate that will cache the transformed value on first read of
      * this same stored [TColumn] value.
      *
      * @param transformer An instance of [ColumnTransformer] to handle the transformations.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, TReal : Any?> Column<TColumn>.memoizedTransform(
-        transformer: ColumnTransformer<TReal, TColumn>
-    ): ColumnWithTransform<TColumn, TReal> = ColumnWithTransform(this, transformer, true)
+    fun <TColumn : Any?, Target : Any?> Column<TColumn>.memoizedTransform(
+        transformer: ColumnTransformer<TColumn, Target>
+    ): EntityFieldWithTransform<TColumn, Target> = EntityFieldWithTransform(this, transformer, true)
 
     /**
-     * Returns a [ColumnWithTransform] delegate that will cache the transformed value on first read of
+     * Returns a [EntityFieldWithTransform] delegate that will cache the transformed value on first read of
      * this same stored [TColumn] value.
      *
      * @param toColumn A pure function that converts a transformed value to a value that can be stored
      * in this original column type.
-     * @param toReal A pure function that transforms a value stored in this original column type.
+     * @param toTarget A pure function that transforms a value stored in this original column type.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, TReal : Any?> Column<TColumn>.memoizedTransform(
-        toColumn: (TReal) -> TColumn,
-        toReal: (TColumn) -> TReal
-    ): ColumnWithTransform<TColumn, TReal> = memoizedTransform(ColumnTransformerImpl(toColumn, toReal))
+    fun <TColumn : Any?, Target : Any?> Column<TColumn>.memoizedTransform(
+        toColumn: (Target) -> TColumn,
+        toTarget: (TColumn) -> Target
+    ): EntityFieldWithTransform<TColumn, Target> = memoizedTransform(ColumnTransformerImpl(toColumn, toTarget))
 
     /**
-     * Returns a [ColumnWithTransform] that extends transformation of existing [ColumnWithTransform]
+     * Returns a [EntityFieldWithTransform] that extends transformation of existing [EntityFieldWithTransform]
      * and caches the transformed value on first read.
      *
-     * @param toColumn A pure function that converts a transformed value to a value that can be stored
-     * in this original column type.
-     * @param toReal A pure function that transforms a value stored in this original column type.
+     * @param toCurrentTarget A function that transforms the value to the target type of previously defined transformation
+     * @param toNextTarget A function that transforms value to the target type
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, TReal : Any?, TNextReal : Any?> ColumnWithTransform<TColumn, TReal>.memoizedTransform(
-        toColumn: (TNextReal) -> TReal,
-        toReal: (TReal) -> TNextReal
-    ): ColumnWithTransform<TColumn, TNextReal> = ColumnWithTransform(
+    fun <TColumn : Any?, CurrentTarget : Any?, NextTarget : Any?> EntityFieldWithTransform<TColumn, CurrentTarget>.memoizedTransform(
+        toCurrentTarget: (NextTarget) -> CurrentTarget,
+        toNextTarget: (CurrentTarget) -> NextTarget
+    ): EntityFieldWithTransform<TColumn, NextTarget> = EntityFieldWithTransform(
         this.column,
-        ColumnTransformerImpl({ this.toColumn(toColumn(it)) }, { toReal(this.toReal(it)) }),
+        ColumnTransformerImpl({ this.toColumn(toCurrentTarget(it)) }, { toNextTarget(this.toTarget(it)) }),
         true
     )
 

@@ -15,29 +15,32 @@ import kotlin.reflect.KProperty
  * Class responsible for enabling [Entity] field transformations, which may be useful when advanced database
  * type conversions are necessary for entity mappings.
  */
-open class ColumnWithTransform<TColumn, TReal>(
-    /** The original column type used in the transformation. */
+open class EntityFieldWithTransform<TColumn, Target>(
+    /** The original column that will be transformed */
     val column: Column<TColumn>,
-    private val transformer: ColumnTransformer<TReal, TColumn>,
-    /** The function used to convert a transformed value to a value that can be stored in the original column type. */
-    /** Whether the original and transformed values should be cached to avoid multiple conversion calls. */
+    /** Instance of [ColumnTransformer] with the transformation logic */
+    private val transformer: ColumnTransformer<TColumn, Target>,
+    /**
+     * The function used to convert a transformed value to a value that can be stored in the original column type.
+     * Whether the original and transformed values should be cached to avoid multiple conversion calls.
+     */
     protected val cacheResult: Boolean = false
 ) {
-    private var cache: Pair<TColumn, TReal>? = null
+    private var cache: Pair<TColumn, Target>? = null
 
-    val toColumn: (TReal) -> TColumn = { transformer.toColumn(it) }
+    val toColumn: (Target) -> TColumn = { transformer.toSource(it) }
 
     /** The function used to transform a value stored in the original column type. */
-    val toReal: (TColumn) -> TReal = { columnValue ->
+    val toTarget: (TColumn) -> Target = { columnValue ->
         if (cacheResult) {
             val localCache = cache
             if (localCache != null && localCache.first == columnValue) {
                 localCache.second
             } else {
-                transformer.toReal(columnValue).also { cache = columnValue to it }
+                transformer.toTarget(columnValue).also { cache = columnValue to it }
             }
         } else {
-            transformer.toReal(columnValue)
+            transformer.toTarget(columnValue)
         }
     }
 }
@@ -311,10 +314,10 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         }
     }
 
-    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.getValue(o: Entity<ID>, desc: KProperty<*>): TReal =
-        toReal(column.getValue(o, desc))
+    operator fun <Source, Target> EntityFieldWithTransform<Source, Target>.getValue(o: Entity<ID>, desc: KProperty<*>): Target =
+        toTarget(column.getValue(o, desc))
 
-    operator fun <TColumn, TReal> ColumnWithTransform<TColumn, TReal>.setValue(o: Entity<ID>, desc: KProperty<*>, value: TReal) {
+    operator fun <Source, Target> EntityFieldWithTransform<Source, Target>.setValue(o: Entity<ID>, desc: KProperty<*>, value: Target) {
         column.setValue(o, desc, toColumn(value))
     }
 

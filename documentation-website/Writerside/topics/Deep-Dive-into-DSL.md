@@ -784,7 +784,7 @@ enum class Meal {
 object Meals : Table() {
     val mealTime: Column<Meal> = time("meal_time")
         .transform(
-            toReal = {
+            toTarget = {
                 when {
                     it.hour < 10 -> Meal.BREAKFAST
                     it.hour < 15 -> Meal.LUNCH
@@ -804,20 +804,20 @@ object Meals : Table() {
 
 The `transform` function is used to apply custom transformations to the `mealTime` column:
 
-- The `toReal` function transforms the stored `LocalTime` values into `Meal` enums. It checks the hour of the stored time and returns the corresponding meal type.
+- The `toTarget` function transforms the stored `LocalTime` values into `Meal` enums. It checks the hour of the stored time and returns the corresponding meal type.
 - The `toColumn` function transforms `Meal` enums back into `LocalTime` values for storage in the database.
 
 Transformation could be also defined as an implementation of `ColumnTransformer` interface and reused among different tables:
 
 ```kotlin
-class MealTimeTransformer : ColumnTransformer<Meal, LocalTime> {
-    override fun toReal(value: LocalTime): Meal = when {
+class MealTimeTransformer : ColumnTransformer<LocalTime, Meal> {
+    override fun toTarget(value: LocalTime): Meal = when {
         value.hour < 10 -> Meal.BREAKFAST
         value.hour < 15 -> Meal.LUNCH
         else -> Meal.DINNER
     }
 
-    override fun toColumn(value: Meal): LocalTime = when (value) {
+    override fun toSource(value: Meal): LocalTime = when (value) {
         Meal.BREAKFAST -> LocalTime(8, 0)
         Meal.LUNCH -> LocalTime(12, 0)
         Meal.DINNER -> LocalTime(18, 0)

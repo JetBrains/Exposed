@@ -10,17 +10,17 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import kotlin.test.assertNull
 
-class ColumnTransformTest : DatabaseTestsBase() {
+class ColumnWithTransformTest : DatabaseTestsBase() {
     @Test
     fun testSimpleTransforms() {
         val tester = object : IntIdTable("SimpleTransforms") {
             val stringToInteger = integer("stringToInteger")
-                .transform(toColumn = { it.toInt() }, toReal = { it.toString() })
+                .transform(toColumn = { it.toInt() }, toTarget = { it.toString() })
             val nullableStringToInteger = integer("nullableStringToInteger")
                 .nullable()
-                .transform(toColumn = { it.toInt() }, toReal = { it.toString() })
+                .transform(toColumn = { it.toInt() }, toTarget = { it.toString() })
             val stringToIntegerNullable = integer("stringToIntegerNullable")
-                .transform(toColumn = { it.toInt() }, toReal = { it.toString() })
+                .transform(toColumn = { it.toInt() }, toTarget = { it.toString() })
                 .nullable()
         }
 
@@ -50,13 +50,13 @@ class ColumnTransformTest : DatabaseTestsBase() {
     fun testNestedTransforms() {
         val tester = object : IntIdTable("NestedTransforms") {
             val booleanToInteger = integer("stringToInteger")
-                .transform(toReal = { if (it != 0) "TRUE" else "FALSE" }, toColumn = { if (it == "TRUE") 1 else 0 })
-                .transform(toReal = { it == "TRUE" }, toColumn = { if (it) "TRUE" else "FALSE" })
+                .transform(toTarget = { if (it != 0) "TRUE" else "FALSE" }, toColumn = { if (it == "TRUE") 1 else 0 })
+                .transform(toTarget = { it == "TRUE" }, toColumn = { if (it) "TRUE" else "FALSE" })
 
             val booleanToIntegerNullable = integer("booleanToIntegerNullable")
-                .transform(toReal = { if (it != 0) "TRUE" else "FALSE" }, toColumn = { if (it == "TRUE") 1 else 0 })
+                .transform(toTarget = { if (it != 0) "TRUE" else "FALSE" }, toColumn = { if (it == "TRUE") 1 else 0 })
                 .nullable()
-                .transform(toReal = { it == "TRUE" }, toColumn = { if (it) "TRUE" else "FALSE" })
+                .transform(toTarget = { it == "TRUE" }, toColumn = { if (it) "TRUE" else "FALSE" })
         }
 
         withTables(tester) {
@@ -78,13 +78,13 @@ class ColumnTransformTest : DatabaseTestsBase() {
         }
     }
 
-    object IntListColumnType : ColumnTransformer<List<Int>, String> {
-        override fun toReal(value: String): List<Int> {
+    object IntListColumnType : ColumnTransformer<String, List<Int>> {
+        override fun toTarget(value: String): List<Int> {
             val result = value.split(",").map { it.toInt() }
             return result
         }
 
-        override fun toColumn(value: List<Int>): String = value.joinToString(",")
+        override fun toSource(value: List<Int>): String = value.joinToString(",")
     }
 
     @Test
