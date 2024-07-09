@@ -239,6 +239,7 @@ class EntityIDColumnType<T : Comparable<T>>(
 
         return when (other) {
             is EntityIDColumnType<*> -> idColumn == other.idColumn
+            is IColumnType<*> -> idColumn.columnType == other
             else -> false
         }
     }

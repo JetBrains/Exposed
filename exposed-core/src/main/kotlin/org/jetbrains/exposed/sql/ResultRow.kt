@@ -11,7 +11,8 @@ class ResultRow(
     private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
 ) {
     private val database: Database? = TransactionManager.currentOrNull()?.db
-    private val lookUpCache = HashMap<Expression<*>, Any?>()
+
+    private val lookUpCache = ResultRowCache()
 
     /**
      * Retrieves the value of a given expression on this row.
@@ -50,13 +51,11 @@ class ResultRow(
      */
     fun <T> getOrNull(expression: Expression<T>): T? = if (hasValue(expression)) getInternal(expression, checkNullability = false) else null
 
-    private fun <T> getInternal(expression: Expression<T>, checkNullability: Boolean): T {
-        if (expression in lookUpCache) return lookUpCache[expression] as T
-
-        val d = getRaw(expression)
+    private fun <T> getInternal(expression: Expression<T>, checkNullability: Boolean): T = lookUpCache.cached(expression) {
+        val rawValue = getRaw(expression)
 
         if (checkNullability) {
-            if (d == null && expression is Column<*> && expression.dbDefaultValue != null && !expression.columnType.nullable) {
+            if (rawValue == null && expression is Column<*> && expression.dbDefaultValue != null && !expression.columnType.nullable) {
                 exposedLogger.warn(
                     "Column ${TransactionManager.current().fullIdentity(expression)} is marked as not null, " +
                         "has default db value, but returns null. Possible have to re-read it from DB."
@@ -64,13 +63,11 @@ class ResultRow(
             }
         }
 
-        val result = database?.dialect?.let {
+        database?.dialect?.let {
             withDialect(it) {
-                rawToColumnValue(d, expression)
+                rawToColumnValue(rawValue, expression)
             }
-        } ?: rawToColumnValue(d, expression)
-        lookUpCache[expression] = result
-        return result
+        } ?: rawToColumnValue(rawValue, expression)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -160,5 +157,31 @@ class ResultRow(
                     setInternal(it, value)
                 }
             }
+    }
+
+    /**
+     * [ResultRowCache] caches the values on reads by `expression`. The value cached by pair of `expression` itself and `columnType` of that expression.
+     * It solves the problem of "equal" expression with different column type (like the same column with original type and [EntityIDColumnType])
+     */
+    private class ResultRowCache {
+        private val values: MutableMap<Pair<Expression<*>, IColumnType<*>?>, Any?> = mutableMapOf()
+
+        /**
+         * Wrapping function that accept the expression and target function.
+         * The function would be called if the value not found in the cache.
+         *
+         * @param expression is the key of caching
+         * @param initializer function that returns the new value if the cache missed
+         */
+        fun <T> cached(expression: Expression<*>, initializer: () -> T): T = values.getOrPut(key(expression), initializer) as T
+
+        /**
+         * Remove the value by expression
+         *
+         * @param expression is the key of caching
+         */
+        fun remove(expression: Expression<*>) = values.remove(key(expression))
+
+        private fun key(expression: Expression<*>): Pair<Expression<*>, IColumnType<*>?> = expression to (expression as? Column<*>)?.columnType
     }
 }
