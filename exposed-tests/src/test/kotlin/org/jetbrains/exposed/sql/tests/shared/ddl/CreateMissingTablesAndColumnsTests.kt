@@ -726,4 +726,75 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testNoChangesOnCreateMissingNullableColumns() {
+        val testerWithDefaults = object : Table("tester") {
+            val defaultNullNumber = integer("default_null_number").nullable().default(null)
+            val defaultNullWord = varchar("default_null_word", 8).nullable().default(null)
+            val nullNumber = integer("null_number").nullable()
+            val nullWord = varchar("null_word", 8).nullable()
+            val defaultNumber = integer("default_number").default(999).nullable()
+            val defaultWord = varchar("default_word", 8).default("Hello").nullable()
+        }
+
+        val testerWithoutDefaults = object : Table("tester") {
+            val defaultNullNumber = integer("default_null_number").nullable()
+            val defaultNullWord = varchar("default_null_word", 8).nullable()
+            val nullNumber = integer("null_number").nullable()
+            val nullWord = varchar("null_word", 8).nullable()
+            val defaultNumber = integer("default_number").default(999).nullable()
+            val defaultWord = varchar("default_word", 8).default("Hello").nullable()
+        }
+
+        listOf(
+            testerWithDefaults to testerWithDefaults,
+            testerWithDefaults to testerWithoutDefaults,
+            testerWithoutDefaults to testerWithDefaults,
+            testerWithoutDefaults to testerWithoutDefaults
+        ).forEach { (existingTable, definedTable) ->
+            withTables(existingTable) {
+                SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
+                    assertTrue(it.isEmpty())
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testChangesOnCreateMissingNullableColumns() {
+        val testerWithDefaults = object : Table("tester") {
+            val defaultNullString = varchar("default_null_string", 8).nullable().default("NULL")
+            val defaultNumber = integer("default_number").default(999).nullable()
+            val defaultWord = varchar("default_word", 8).default("Hello").nullable()
+        }
+
+        val testerWithoutDefaults = object : Table("tester") {
+            val defaultNullString = varchar("default_null_string", 8).nullable()
+            val defaultNumber = integer("default_number").nullable()
+            val defaultWord = varchar("default_word", 8).nullable()
+        }
+
+        listOf(
+            testerWithDefaults to testerWithoutDefaults,
+            testerWithoutDefaults to testerWithDefaults,
+        ).forEach { (existingTable, definedTable) ->
+            withTables(excludeSettings = listOf(TestDB.SQLITE), existingTable) {
+                SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
+                    assertTrue(it.isNotEmpty())
+                }
+            }
+        }
+
+        listOf(
+            testerWithDefaults to testerWithDefaults,
+            testerWithoutDefaults to testerWithoutDefaults
+        ).forEach { (existingTable, definedTable) ->
+            withTables(excludeSettings = listOf(TestDB.SQLITE), existingTable) {
+                SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
+                    assertTrue(it.isEmpty())
+                }
+            }
+        }
+    }
 }

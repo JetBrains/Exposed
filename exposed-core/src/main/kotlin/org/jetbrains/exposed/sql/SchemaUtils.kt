@@ -213,7 +213,7 @@ object SchemaUtils {
                                     }
 
                                     is MariaDBDialect -> processed.trim('\'')
-                                    is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\"
+                                    is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\'"
                                     else -> processed.trim('\'')
                                 }
                             }
@@ -316,10 +316,11 @@ object SchemaUtils {
                     val incorrectNullability = existingCol.nullable != columnType.nullable
                     // Exposed doesn't support changing sequences on columns
                     val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc && col.autoIncColumnType?.autoincSeq == null
-                    val incorrectDefaults = existingCol.defaultDbValue != col.dbDefaultValue?.let {
-                        dataTypeProvider.dbDefaultToString(col, it)
-                    }
+
+                    val incorrectDefaults = isIncorrectDefault(dataTypeProvider, existingCol, col)
+
                     val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameUnquoted().inProperCase()
+
                     ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
                 }.filterValues { it.hasDifferences() }
 
@@ -341,6 +342,30 @@ object SchemaUtils {
         }
 
         return statements
+    }
+
+    /**
+     * For DDL purposes we do not segregate the cases when the default value was not specified, and when it
+     * was explicitly set to `null`.
+     */
+    private fun isIncorrectDefault(dataTypeProvider: DataTypeProvider, columnMeta: ColumnMetadata, column: Column<*>): Boolean {
+        val isExistingColumnDefaultNull = columnMeta.defaultDbValue == null
+        val isDefinedColumnDefaultNull = column.dbDefaultValue == null ||
+            (column.dbDefaultValue is LiteralOp<*> && (column.dbDefaultValue as? LiteralOp<*>)?.value == null)
+
+        return when {
+            // Both values are null-like, no DDL update is needed
+            isExistingColumnDefaultNull && isDefinedColumnDefaultNull -> false
+            // Only one of the values is null-like, DDL update is needed
+            isExistingColumnDefaultNull != isDefinedColumnDefaultNull -> true
+
+            else -> {
+                val columnDefaultValue = column.dbDefaultValue?.let {
+                    dataTypeProvider.dbDefaultToString(column, it)
+                }
+                columnMeta.defaultDbValue != columnDefaultValue
+            }
+        }
     }
 
     private fun addMissingColumnConstraints(vararg tables: Table, withLogs: Boolean): List<String> {
