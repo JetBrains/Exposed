@@ -30,3 +30,10 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
+
+tasks.register<JavaExec>("generateMigrationScript") {
+    group = "application"
+    description = "Generate migration script in the path exposed-migration/migrations"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "GenerateMigrationScriptKt"
+}

@@ -24,6 +24,12 @@ implementation("org.jetbrains.exposed:exposed-migration:$exposedVersion")
 The generated migration script can also be edited manually before applying a migration. In this sample project, it will
 be generated inside a directory called `migrations`.
 
+To generate the migration script for this project, execute the following command in the repository's root directory:
+
+```bash
+./gradlew generateMigrationScript
+```
+
 ## Applying a migration
 
 In this sample project, Flyway is set up to apply migrations using migration scripts in the directory where Exposed
@@ -31,7 +37,7 @@ generates them. It is recommended to apply the migration in a separate transacti
 
 ## Running
 
-To run the sample, execute the following command in the repository's root directory:
+To apply the database migration for this project, execute the following command in the repository's root directory:
 
 ```bash
 ./gradlew run
