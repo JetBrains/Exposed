@@ -234,6 +234,9 @@ class EntityIDColumnType<T : Comparable<T>>(
 
     override fun readObject(rs: ResultSet, index: Int): Any? = idColumn.columnType.readObject(rs, index)
 
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) =
+        idColumn.columnType.setParameter(stmt, index, value)
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
 
