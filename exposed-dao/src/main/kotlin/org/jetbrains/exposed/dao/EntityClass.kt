@@ -114,7 +114,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     }
 
     internal open fun invalidateEntityInCache(o: Entity<ID>) {
-        val entityAlreadyFlushed = !o.id.isNotInitialized()
+        val entityAlreadyFlushed = o.id._value != null
         val sameDatabase = TransactionManager.current().db == o.db
         if (!entityAlreadyFlushed || !sameDatabase) return
 
@@ -376,7 +376,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         prototype.klass = this
         prototype.db = TransactionManager.current().db
         prototype._readValues = ResultRow.createAndFillDefaults(dependsOnColumns)
-        if (!entityId.isNotInitialized()) {
+        if (entityId._value != null) {
             prototype.writeIdColumnValue(table, entityId)
         }
         try {
@@ -385,7 +385,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         } finally {
             entityCache.finishEntityInitialization(prototype)
         }
-        if (entityId.isNotInitialized()) {
+        if (entityId._value == null) {
             val readValues = prototype._readValues!!
             val writeValues = prototype.writeValues
             table.columns.filter { col ->
@@ -723,7 +723,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         table: IdTable<*>
     ): ForeignKeyConstraint = table.foreignKeys.firstOrNull {
         it.target == this.table.idColumns
-    } ?: error("Table $table does not hold a composite foreign key constraint matching ${this.table}'s primary key.")
+    } ?: error(
+        "Table ${table.tableName} does not hold a composite FK constraint matching ${this.table.tableName}'s primary key."
+    )
 
     /**
      * Returns a [ColumnWithTransform] delegate that transforms this stored [TColumn] value on every read.

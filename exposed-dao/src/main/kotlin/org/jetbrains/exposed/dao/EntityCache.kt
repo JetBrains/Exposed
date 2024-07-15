@@ -239,11 +239,7 @@ class EntityCache(private val transaction: Transaction) {
                 executeAsPartOfEntityLifecycle {
                     table.batchInsert(toFlush) { entry ->
                         for ((c, v) in entry.writeValues) {
-                            this[c] = if (c.columnType !is EntityIDColumnType<*> && v is EntityID<*>) {
-                                v.value
-                            } else {
-                                v
-                            }
+                            this[c] = v
                         }
                     }
                 }
@@ -262,7 +258,7 @@ class EntityCache(private val transaction: Transaction) {
             }
 
             for ((entry, genValues) in toFlush.zip(ids)) {
-                if (entry.id.isNotInitialized()) {
+                if (entry.id._value == null) {
                     val id = genValues[table.id]
                     entry.id._value = id._value
                     entry.writeIdColumnValue(entry.klass.table, id)

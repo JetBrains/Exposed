@@ -10,7 +10,7 @@ class CompositeID private constructor() : Comparable<CompositeID> {
     @JvmName("setWithEntityIdValue")
     operator fun <T : Comparable<T>, ID : EntityID<T>> set(column: Column<ID>, value: T) {
         require(values.isEmpty() || values.keys.first().table == column.table) {
-            "CompositeID key columns must all come from the same IdTable"
+            "CompositeID key columns must all come from the same IdTable ${values.keys.first().table.tableName}"
         }
         values[column] = EntityID(value, column.table as IdTable<T>)
     }
@@ -57,7 +57,11 @@ class CompositeID private constructor() : Comparable<CompositeID> {
 
     companion object {
         operator fun invoke(body: (CompositeID) -> Unit): CompositeID {
-            return CompositeID().apply(body)
+            return CompositeID().apply(body).also {
+                require(it.values.isNotEmpty()) {
+                    "CompositeID must be initialized with at least one key column mapping"
+                }
+            }
         }
     }
 }

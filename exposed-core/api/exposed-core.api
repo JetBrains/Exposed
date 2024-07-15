@@ -33,7 +33,6 @@ public class org/jetbrains/exposed/dao/id/EntityID : java/lang/Comparable {
 	public final fun get_value ()Ljava/lang/Object;
 	public fun hashCode ()I
 	protected fun invokeOnNoValue ()V
-	public final fun isNotInitialized ()Z
 	public final fun set_value (Ljava/lang/Object;)V
 	public fun toString ()Ljava/lang/String;
 }

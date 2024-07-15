@@ -616,7 +616,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         val newColumn = Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also {
             it.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
         }
-        (table as IdTable<T>).idColumns.add(newColumn)
+        (table as IdTable<T>).addIdColumn(newColumn)
         return replaceColumn(this, newColumn)
     }
 

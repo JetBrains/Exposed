@@ -118,8 +118,9 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
 
     @Suppress("UNCHECKED_CAST", "NestedBlockDepth")
     override operator fun getValue(thisRef: Parent, property: KProperty<*>): SizedIterable<Child> {
+        val isNotCompositeIdReference = hasSingleReferenceWithReferee(allReferences)
         val value: REF = thisRef.run {
-            if (hasSingleReferenceWithReferee(allReferences)) {
+            if (isNotCompositeIdReference) {
                 val refereeColumn = reference.referee<REF>()!!
                 val refereeValue = refereeColumn.lookup()
                 when {
@@ -138,7 +139,7 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
         }
         if (thisRef.id._value == null || value == null) return emptySized()
 
-        val condition = if (hasSingleReferenceWithReferee(allReferences)) {
+        val condition = if (isNotCompositeIdReference) {
             reference eq value
         } else {
             value as CompositeID
@@ -356,4 +357,9 @@ fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>> SRC.load(vararg relations: 
 
 internal fun hasSingleReferenceWithReferee(allReferences: Map<Column<*>, Column<*>>?): Boolean {
     return allReferences?.size == 1 && allReferences.values.first().table !is CompositeIdTable
+}
+
+internal fun allReferencesMatch(allReferences: Map<Column<*>, Column<*>>, parentTable: IdTable<*>): Boolean {
+    val parentIdColumns = parentTable.idColumns
+    return allReferences.values.size == parentIdColumns.size && allReferences.values.containsAll(parentIdColumns)
 }
