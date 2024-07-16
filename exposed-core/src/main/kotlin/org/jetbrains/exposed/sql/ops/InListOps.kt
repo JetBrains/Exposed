@@ -1,10 +1,13 @@
 package org.jetbrains.exposed.sql.ops
 
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ComplexExpression
 import org.jetbrains.exposed.sql.ExpressionWithColumnType
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
 
 /**
@@ -121,5 +124,72 @@ class TripleInListOp<T1, T2, T3>(
         append(", ")
         registerArgument(expr.third.columnType, values.third)
         append(")")
+    }
+}
+
+/**
+ * Represents an SQL operator that checks if all columns of a `List` [expr] match any of the lists of
+ * values from [list].
+ *
+ * To inverse the operator and check if the `List` of columns is **not** in [list], set [isInList] to `false`.
+ */
+class MultipleInListOp(
+    override val expr: List<Column<*>>,
+    list: Iterable<List<*>>,
+    isInList: Boolean = true
+) : InListOrNotInListBaseOp<List<*>>(expr, list, isInList) {
+    override val columnTypes: List<Column<*>> = expr
+
+    override fun QueryBuilder.registerValues(values: List<*>) {
+        append("(")
+        expr.forEachIndexed { i, expression ->
+            registerArgument(expression.columnType, values[i])
+            if (i != values.lastIndex) append(", ")
+        }
+        append(")")
+    }
+
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        // SQL Server does not support IN operator with tuples (or any more than 1 expression on the left-hand side)
+        if (currentDialectIfAvailable !is SQLServerDialect) {
+            super.toQueryBuilder(queryBuilder)
+        } else {
+            queryBuilder {
+                val iterator = list.iterator()
+                if (!iterator.hasNext()) {
+                    if (isInList) {
+                        +FALSE
+                    } else {
+                        +TRUE
+                    }
+                } else {
+                    // Built-in exists(AbstractQuery) cannot be used because row value constructors are not supported
+                    // Alternative: Compound AND + OR operators for each value list ->
+                    // (col_1 = ? AND col_2 = ? AND col_3 = ?) OR (col_1 = ? AND col_2 = ? AND col_3 = ?) OR ... (...)
+                    val transaction = TransactionManager.current()
+                    val columnNames = columnTypes.map { transaction.identity(it) }
+                    val firstValue = iterator.next()
+
+                    when {
+                        isInList -> append("EXISTS (")
+                        else -> append("NOT EXISTS (")
+                    }
+                    append("SELECT * FROM (VALUES ")
+                    registerValues(firstValue)
+                    iterator.forEach { value ->
+                        append(", ")
+                        registerValues(value)
+                    }
+                    append(") v")
+                    columnNames.appendTo(prefix = "(", postfix = ")") { +it }
+                    append(" WHERE ")
+                    columnNames.withIndex().appendTo(separator = " AND ") { (i, column) ->
+                        +"v.$column="
+                        +columnTypes[i]
+                    }
+                    append(")")
+                }
+            }
+        }
     }
 }

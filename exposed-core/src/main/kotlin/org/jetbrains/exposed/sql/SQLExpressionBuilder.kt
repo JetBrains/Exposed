@@ -863,26 +863,46 @@ interface ISqlExpressionBuilder {
 
     // Array Comparisons
 
-    /** Checks if this expression is equal to any element from [list]. */
+    /**
+     * Checks if this expression is equal to any element from [list].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithSingleExpression01
+     */
     infix fun <T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): InListOrNotInListBaseOp<T> = SingleValueInListOp(this, list, isInList = true)
 
     /**
-     * Checks if both expressions are equal to elements from [list].
-     * This syntax is unsupported by SQLite and SQL Server
+     * Checks if expressions from this `Pair` are equal to elements from [list].
+     * This syntax is unsupported by SQL Server.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithPairExpressions01
      **/
     infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.inList(list: Iterable<Pair<T1, T2>>): InListOrNotInListBaseOp<Pair<T1, T2>> =
         PairInListOp(this, list, isInList = true)
 
     /**
-     * Checks if expressions from triple are equal to elements from [list].
-     * This syntax is unsupported by SQLite and SQL Server
+     * Checks if expressions from this `Triple` are equal to elements from [list].
+     * This syntax is unsupported by SQL Server.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithTripleExpressions
      **/
     infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.inList(
         list: Iterable<Triple<T1, T2, T3>>
     ): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
         TripleInListOp(this, list, isInList = true)
 
-    /** Checks if this expression is equals to any element from [list]. */
+    /**
+     * Checks if all columns in this `List` are equal to any of the lists of values from [list].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithMultipleColumns
+     **/
+    infix fun List<Column<*>>.inList(list: Iterable<List<*>>): InListOrNotInListBaseOp<List<*>> =
+        MultipleInListOp(this, list, isInList = true)
+
+    /**
+     * Checks if this [EntityID] column is equal to any element from [list].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithEntityIDColumns
+     */
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
     infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
@@ -890,13 +910,19 @@ interface ISqlExpressionBuilder {
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = true)
     }
 
-    /** Checks if this expression is not equals to any element from [list]. */
+    /**
+     * Checks if this expression is not equal to any element from [list].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithSingleExpression01
+     */
     infix fun <T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<T> =
         SingleValueInListOp(this, list, isInList = false)
 
     /**
-     * Checks if both expressions are not equal to elements from [list].
-     * This syntax is unsupported by SQLite and SQL Server
+     * Checks if expressions from this `Pair` are not equal to elements from [list].
+     * This syntax is unsupported by SQL Server.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testNotInListWithPairExpressionsAndEmptyList
      **/
     infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.notInList(
         list: Iterable<Pair<T1, T2>>
@@ -904,15 +930,29 @@ interface ISqlExpressionBuilder {
         PairInListOp(this, list, isInList = false)
 
     /**
-     * Checks if expressions from triple are not equal to elements from [list].
-     * This syntax is unsupported by SQLite and SQL Server
+     * Checks if expressions from this `Triple` are not equal to elements from [list].
+     * This syntax is unsupported by SQL Server.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithTripleExpressions
      **/
     infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.notInList(
         list: Iterable<Triple<T1, T2, T3>>
     ): InListOrNotInListBaseOp<Triple<T1, T2, T3>> =
         TripleInListOp(this, list, isInList = false)
 
-    /** Checks if this expression is not equals to any element from [list]. */
+    /**
+     * Checks if all columns in this `List` are not equal to any of the lists of values from [list].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithMultipleColumns
+     **/
+    infix fun List<Column<*>>.notInList(list: Iterable<List<*>>): InListOrNotInListBaseOp<List<*>> =
+        MultipleInListOp(this, list, isInList = false)
+
+    /**
+     * Checks if this [EntityID] column is not equal to any element from [list].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithEntityIDColumns
+     */
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
     infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
