@@ -10,8 +10,7 @@ A: Yes. See [Transactions](Transactions.md#working-with-multiple-databases)
 
 ### Q: Is `Array` column type supported?
 
-A: Not at the moment. More info here: [https://github.com/JetBrains/Exposed/issues/150](https://github.com/JetBrains/Exposed/issues/150)  
-The complete list of supported data types can be found here: [Data Types](Data-Types.md#how-to-use-array-types).
+A: Yes. See [Data Types](Data-Types.md#how-to-use-array-types).
 
 ### Q: Is `upsert` supported?
 
@@ -87,11 +86,6 @@ dependencies {
     implementation 'com.github.JetBrains:Exposed:-SNAPSHOT'
 }
 ```
-
-### Q: How can I specify a primary key column type e.g StringIdTable?
-A: You need to define your own! See examples:  
-[#855](https://github.com/JetBrains/Exposed/issues/855)  
-[https://stackoverflow.com/a/61940820/1155026](https://github.com/JetBrains/Exposed/issues/118)
 
 ### Q: How can I create a custom column type?
 A: Just implements [IColumnType](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/ColumnType.kt#L25)

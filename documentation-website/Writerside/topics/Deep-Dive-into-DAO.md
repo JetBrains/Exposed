@@ -37,13 +37,75 @@ class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
   var director by StarWarsFilms.director
 }
 ```
+
+## Table types
+In addition to `IntIdTable`, the following `IdTable` subclasses exist:
+* `LongIdTable` - `Long` id column
+* `UIntIdTable` - `UInt` id column
+* `ULongIdTable` - `ULong` id column
+* `UUIDTable` - `UUID` id column
+* `CompositeIdTable` - multiple columns make up the table id
+
+To define a custom column as the primary key and id, use a typed `IdTable` directly and override the `id` column directly:
+```kotlin
+object Directors : IdTable<String>("directors") {
+    override val id = varchar("id", 32).entityId()
+    val name = varchar("name", 50)
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+class Director(id: EntityID<String>) : Entity<String>(id) {
+    companion object : EntityClass<String, Director>(Directors)
+    var name by Directors.name
+}
+```
+
+To define multiple columns as part of the primary key and id, use `CompositeIdTable` and mark each composite column using `entityId()`.
+Each component column will be available for CRUD operations either individually (as for any standard column) or all together as part of the `id` column:
+```kotlin
+object Directors : CompositeIdTable("directors") {
+    val name = varchar("name", 50).entityId()
+    val guildId = uuid("guild_id").autoGenerate().entityId()
+    val genre = enumeration<Genre>("genre")
+
+    override val primaryKey = PrimaryKey(name, guildId, genreId)
+}
+
+class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
+    companion object : CompositeEntityClass<Director>(Directors)
+    var name by Directors.name
+    var genre by Directors.genre
+}
+```
+
 ## Basic CRUD operations
 ### Create
 ```kotlin
 val movie = StarWarsFilm.new {
-  name = "The Last Jedi"
-  sequelId = 8
-  director = "Rian Johnson"
+    name = "The Last Jedi"
+    sequelId = 8
+    director = "Rian Johnson"
+}
+```
+
+To provide a manual id value to a new entity, pass the value as an argument to the `id` parameter:
+```kotlin
+StarWarsFilm.new(id = 2) {
+    name = "The Rise of Skywalker"
+    sequelId = 9
+    director = "J.J. Abrams"
+}
+```
+If the table is a `CompositeIdTable`, the id value can be constructed by creating a component column to value association using `CompositeID`:
+```kotlin
+val newId = CompositeID {
+    it[Directors.name] = "J.J. Abrams"
+    it[Directors.guildId] = UUID.randomUUID()
+}
+
+Director.new(newId) {
+    genre = Genre.SCI_FI
 }
 ```
 ### Read
