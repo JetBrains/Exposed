@@ -1,11 +1,13 @@
 # 0.52.0
 
+Breaking changes: 
+* feat: EXPOSED-295 Support subqueries with preceding LATERAL by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2095
+
 Features:
 * feat: EXPOSED-334 Support MERGE statement by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2047
 * feat: EXPOSED-368 Ordering on References by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2083
 * Feat: EXPOSED-396 Supports fetchBatchedResults with sorting order  by @roharon in https://github.com/JetBrains/Exposed/pull/2102
 * feat: Add OffsetDateTime extension functions by @joc-a in https://github.com/JetBrains/Exposed/pull/2118
-* feat: EXPOSED-295 Support subqueries with preceding LATERAL by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2095
 * feat: EXPOSED-336 Support Where clause with batchUpsert by @bog-walk in https://github.com/JetBrains/Exposed/pull/2120
 * feat: EXPOSED-416 Support adding special database-specific column definitions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2125
 
