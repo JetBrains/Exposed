@@ -480,10 +480,6 @@ abstract class FunctionProvider {
         clauses: List<MergeStatement.Clause>,
         on: Op<Boolean>?
     ): String {
-        if (clauses.any { it.deleteWhere != null } && currentDialect !is OracleDialect) {
-            transaction.throwUnsupportedException("'deleteWhere' parameter can be used only as a part of Oracle SQL update clause statement.")
-        }
-
         val onCondition = (
             on?.toString() ?: run {
                 val targetKey = dest.primaryKey?.columns?.singleOrNull()
@@ -865,7 +861,7 @@ abstract class FunctionProvider {
     }
 }
 
-@Suppress("NestedBlockDepth")
+@Suppress("NestedBlockDepth", "CyclomaticComplexMethod")
 private fun QueryBuilder.addClausesToMergeStatement(transaction: Transaction, table: Table, clauses: List<MergeStatement.Clause>) {
     fun QueryBuilder.appendValueAlias(column: Column<*>, value: Any?) {
         when (value) {
@@ -885,52 +881,72 @@ private fun QueryBuilder.addClausesToMergeStatement(transaction: Transaction, ta
 
     val autoIncColumn = table.autoIncColumn
 
-    clauses.forEach { (action, arguments, condition, deleteWhere) ->
-        when (action) {
+    clauses.forEach { clause ->
+        val whenMatchedOrNotPrefix = if (clause.type == MergeStatement.ClauseCondition.MATCHED) "WHEN MATCHED " else "WHEN NOT MATCHED "
+        val defaultValuesStatementSupported = currentDialect !is H2Dialect
+        when (clause.action) {
             MergeStatement.ClauseAction.INSERT -> {
-                val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in arguments.map { it.first } }
+                val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression?.takeIf { autoIncColumn !in clause.arguments.map { it.first } }
 
                 val extraArg = if (nextValExpression != null) listOf(autoIncColumn to nextValExpression) else emptyList()
 
-                val allArguments = arguments + extraArg
-                +"WHEN NOT MATCHED "
+                val allArguments = clause.arguments + extraArg
+                +whenMatchedOrNotPrefix
                 if (currentDialect !is OracleDialect) {
-                    condition?.let { append("AND ($condition) ") }
+                    clause.and?.let { append("AND ($it) ") }
                 }
                 +"THEN INSERT "
-                +allArguments.map { it.first }.joinToString(prefix = "(", postfix = ") ") {
-                    transaction.identity(it)
+                if (allArguments.isNotEmpty() || !defaultValuesStatementSupported) {
+                    +allArguments.map { it.first }.joinToString(prefix = "(", postfix = ") ") {
+                        transaction.identity(it)
+                    }
                 }
-                allArguments.appendTo(prefix = " VALUES (", postfix = ") ") { (column, value) ->
-                    appendValueAlias(column, value)
+                if (clause.overridingSystemValue) {
+                    +"OVERRIDING SYSTEM VALUE"
+                }
+                if (clause.overridingUserValue) {
+                    +"OVERRIDING USER VALUE"
+                }
+                if (allArguments.isNotEmpty() || !defaultValuesStatementSupported) {
+                    allArguments.appendTo(prefix = " VALUES (", postfix = ") ") { (column, value) ->
+                        appendValueAlias(column, value)
+                    }
+                } else {
+                    +"DEFAULT VALUES"
                 }
                 if (currentDialect is OracleDialect) {
-                    condition?.let { append("WHERE ($condition) ") }
+                    clause.and?.let { append("WHERE ($it) ") }
                 }
             }
 
             MergeStatement.ClauseAction.UPDATE -> {
-                +"WHEN MATCHED "
+                +whenMatchedOrNotPrefix
                 if (currentDialect !is OracleDialect) {
-                    condition?.let { append("AND ($condition) ") }
+                    clause.and?.let { append("AND ($it) ") }
                 }
                 +"THEN UPDATE SET "
-                arguments.appendTo(postfix = " ") { (column, expression) ->
+                clause.arguments.appendTo(postfix = " ") { (column, expression) ->
                     append("${transaction.identity(column)}=")
                     appendValueAlias(column, expression)
                 }
                 if (currentDialect is OracleDialect) {
-                    condition?.let { append("WHERE ($condition) ") }
+                    clause.and?.let { append("WHERE ($it) ") }
                 }
-                deleteWhere?.let {
-                    append("DELETE WHERE $deleteWhere")
+                clause.deleteWhere?.let {
+                    append("DELETE WHERE $it")
                 }
             }
 
             MergeStatement.ClauseAction.DELETE -> {
-                +"WHEN MATCHED "
-                condition?.let { append("AND ($condition) ") }
+                +whenMatchedOrNotPrefix
+                clause.and?.let { append("AND ($it) ") }
                 +"THEN DELETE "
+            }
+
+            MergeStatement.ClauseAction.DO_NOTHING -> {
+                +whenMatchedOrNotPrefix
+                clause.and?.let { append("AND ($it) ") }
+                +"THEN DO NOTHING "
             }
         }
     }
