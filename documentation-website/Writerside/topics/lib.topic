@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="lib" id="lib" is-library="true">
+
+    <snippet id="code_example">
+        <p>
+            <b>Code example</b>:
+            <a href="https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/%example_name%">
+                %example_name%
+            </a>
+        </p>
+    </snippet>
+
+    <snippet id="intellij_idea_restart_application">
+        <p>
+            In IntelliJ IDEA, click the rerun button (<img src="intellij_idea_rerun_icon.svg"
+                                                           style="inline" height="16" width="16"
+                                                           alt="intelliJ IDEA rerun icon"/>) to restart the
+            application.
+        </p>
+    </snippet>
+
+    <snippet id="intellij_idea_start_application">
+        <p>In IntelliJ IDEA, click on the run button
+            (<img src="intellij_idea_gutter_icon.svg"
+                  style="inline" height="16" width="16"
+                  alt="intelliJ IDEA run icon"/>)
+            to start the application.</p>
+    </snippet>
+
+    <snippet id="intellij_idea_load_gradle_changes">
+        <p>In intelliJ IDEA, click on the notification Gradle icon
+            (<img alt="intelliJ IDEA gradle icon"
+                  src="intellij_idea_gradle_icon.svg" width="16" height="26"/>)
+            on the right side of the editor to load Gradle changes.</p>
+    </snippet>
+</topic>
