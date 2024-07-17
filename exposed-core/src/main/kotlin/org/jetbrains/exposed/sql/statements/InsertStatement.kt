@@ -230,7 +230,7 @@ open class InsertStatement<Key : Any>(
             val nullableColumns = table.columns.filter { it.columnType.nullable && !it.isDatabaseGenerated }
             val valuesAndDefaults = valuesAndDefaults() as MutableMap
             valuesAndDefaults.putAll((nullableColumns - valuesAndDefaults.keys).associateWith { null })
-            val result = valuesAndDefaults.toList().sortedBy { it.first }
+            val result = valuesAndDefaults.toList()
             listOf(result).apply { field = this }
         }
 
