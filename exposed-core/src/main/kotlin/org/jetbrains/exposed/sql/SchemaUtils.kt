@@ -252,10 +252,17 @@ object SchemaUtils {
 
             is Function<*> -> {
                 var processed = processForDefaultValue(exp)
-                if (exp.columnType is IDateColumnType && (processed.startsWith("CURRENT_TIMESTAMP") || processed == "GETDATE()")) {
-                    when (currentDialect) {
-                        is SQLServerDialect -> processed = "getdate"
-                        is MariaDBDialect -> processed = processed.lowercase()
+                if (exp.columnType is IDateColumnType) {
+                    if (processed.startsWith("CURRENT_TIMESTAMP") || processed == "GETDATE()") {
+                        when (currentDialect) {
+                            is SQLServerDialect -> processed = "getdate"
+                            is MariaDBDialect -> processed = processed.lowercase()
+                        }
+                    }
+                    if (processed.trim('(').startsWith("CURRENT_DATE")) {
+                        when (currentDialect) {
+                            is MysqlDialect -> processed = "curdate()"
+                        }
                     }
                 }
                 processed
@@ -313,7 +320,12 @@ object SchemaUtils {
                 val dataTypeProvider = currentDialect.dataTypeProvider
                 val redoColumns = existingTableColumns.mapValues { (col, existingCol) ->
                     val columnType = col.columnType
-                    val incorrectNullability = existingCol.nullable != columnType.nullable
+                    val colNullable = if (col.dbDefaultValue?.let { currentDialect.isAllowedAsColumnDefault(it) } == false) {
+                        true // Treat a disallowed default value as null because that is what Exposed does with it
+                    } else {
+                        columnType.nullable
+                    }
+                    val incorrectNullability = existingCol.nullable != colNullable
                     // Exposed doesn't support changing sequences on columns
                     val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc && col.autoIncColumnType?.autoincSeq == null
 
@@ -350,7 +362,7 @@ object SchemaUtils {
      */
     private fun isIncorrectDefault(dataTypeProvider: DataTypeProvider, columnMeta: ColumnMetadata, column: Column<*>): Boolean {
         val isExistingColumnDefaultNull = columnMeta.defaultDbValue == null
-        val isDefinedColumnDefaultNull = column.dbDefaultValue == null ||
+        val isDefinedColumnDefaultNull = column.dbDefaultValue?.takeIf { currentDialect.isAllowedAsColumnDefault(it) } == null ||
             (column.dbDefaultValue is LiteralOp<*> && (column.dbDefaultValue as? LiteralOp<*>)?.value == null)
 
         return when {

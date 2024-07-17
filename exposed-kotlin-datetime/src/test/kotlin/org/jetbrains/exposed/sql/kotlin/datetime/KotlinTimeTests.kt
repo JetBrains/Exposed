@@ -4,6 +4,7 @@ import kotlinx.datetime.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
@@ -608,6 +609,17 @@ class KotlinTimeTests : DatabaseTestsBase() {
                     .where { tableWithTime.time eq localTimeLiteral }
                     .single()[tableWithTime.time]
             )
+        }
+    }
+
+    @Test
+    fun testCurrentDateAsDefaultExpression() {
+        val testTable = object : LongIdTable("test_table") {
+            val date: Column<LocalDate> = date("date").index().defaultExpression(CurrentDate)
+        }
+        withTables(testTable) {
+            val statements = SchemaUtils.statementsRequiredForDatabaseMigration(testTable)
+            assertTrue(statements.isEmpty())
         }
     }
 }

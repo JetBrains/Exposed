@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.javatime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -55,6 +56,7 @@ sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Functio
 object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when (currentDialect) {
+            is MariaDBDialect -> "curdate()"
             is MysqlDialect -> "CURRENT_DATE()"
             is SQLServerDialect -> "GETDATE()"
             else -> "CURRENT_DATE"
