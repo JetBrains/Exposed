@@ -2,11 +2,17 @@
 <!DOCTYPE topic SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
-       id="Getting-Started-with-Exposed" title="Get started with Exposed">
+       id="Getting-Started-with-Exposed" title="Get started with Exposed, an ORM framework for Kotlin">
     <tldr>
         <var name="example_name" value="get-started-with-exposed"/>
         <include from="lib.topic" element-id="code_example"/>
     </tldr>
+    <web-summary>
+        In this tutorial, you’ll learn how to create and query a table in Kotlin with Exposed's DSL API.
+    </web-summary>
+    <link-summary>
+        Learn how to create and query tables in Kotlin with Exposed's DSL API.
+    </link-summary>
     <p>
         In this tutorial, you’ll learn how to use Exposed’s Domain-Specific Language (DSL) API to store and retrieve
         data in a relational database by building a simple console application.

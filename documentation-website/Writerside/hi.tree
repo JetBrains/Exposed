@@ -7,7 +7,7 @@
                   start-page="Home.topic">
 
     <toc-element topic="Home.topic"/>
-    <toc-element topic="Getting-Started-with-Exposed.topic"/>
+    <toc-element topic="Getting-Started-with-Exposed.topic" toc-title="Get started with Exposed"/>
     <toc-element topic="Exposed-Modules.md"/>
     <toc-element topic="Database-and-DataSource.md"/>
     <toc-element toc-title="Working with Tables">
