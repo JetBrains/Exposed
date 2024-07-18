@@ -1,8 +1,15 @@
 package org.jetbrains.exposed.sql.tests.shared.functions
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.div
+import org.jetbrains.exposed.sql.decimalLiteral
+import org.jetbrains.exposed.sql.doubleLiteral
 import org.jetbrains.exposed.sql.functions.math.*
+import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.intLiteral
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import java.math.BigDecimal
@@ -145,6 +152,41 @@ class MathFunctionTests : FunctionsTestBase() {
             assertExpressionEqual(BigDecimal("2.7182818284590"), ExpFunction(intLiteral(1)))
             assertExpressionEqual(BigDecimal("12.182493960703473"), ExpFunction(doubleLiteral(2.5)))
             assertExpressionEqual(BigDecimal("12.182493960703473"), ExpFunction(decimalLiteral(BigDecimal("2.5"))))
+        }
+    }
+
+    @Test
+    fun testColumnReferenceInDefaultExpression() {
+        val foo = object : IntIdTable("foo") {
+            val integer = integer("integer")
+            val double = double("double")
+            val long = long("long")
+            val defaultInt = integer("defaultInt").defaultExpression(AbsFunction(integer))
+            val defaultInt2 = integer("defaultInt2").defaultExpression(defaultInt.div(100))
+            val defaultDecimal = decimal("defaultDecimal", 14, 12).nullable().defaultExpression(ExpFunction(defaultInt2))
+            val defaultLong = long("defaultLong").nullable().defaultExpression(FloorFunction(double))
+            val defaultDecimal2 = decimal("defaultDecimal2", 3, 0).nullable().defaultExpression(PowerFunction(long, intLiteral(2)))
+            val defaultDecimal3 = decimal("defaultDecimal3", 3, 0).nullable().defaultExpression(RoundFunction(double, 0))
+            val defaultInt3 = integer("defaultInt3").nullable().defaultExpression(SignFunction(integer))
+            val defaultDecimal4 = decimal("defaultDecimal4", 3, 0).nullable().defaultExpression(SqrtFunction(defaultDecimal2))
+        }
+
+        // MySQL and MariaDB are the only supported databases that allow referencing another column in a default expression
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB, foo) {
+            val id = foo.insertAndGetId {
+                it[foo.integer] = -100
+                it[foo.double] = 100.70
+                it[foo.long] = 10L
+            }
+            val result = foo.selectAll().where { foo.id eq id }.single()
+
+            assertEquals(100, result[foo.defaultInt])
+            assertEquals(BigDecimal("2.718281828459"), result[foo.defaultDecimal])
+            assertEquals(100, result[foo.defaultLong])
+            assertEquals(BigDecimal(100), result[foo.defaultDecimal2])
+            assertEquals(BigDecimal(101), result[foo.defaultDecimal3])
+            assertEquals(-1, result[foo.defaultInt3])
+            assertEquals(BigDecimal(10), result[foo.defaultDecimal4])
         }
     }
 }
