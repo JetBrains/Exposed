@@ -24,7 +24,6 @@ import kotlin.test.assertNull
 
 // SQLite excluded from most tests as it only allows auto-increment on single column PKs.
 // SQL Server is sometimes excluded because it doesn't allow inserting explicit values for identity columns.
-@Suppress("UnusedPrivateProperty")
 class CompositeIdTableEntityTest : DatabaseTestsBase() {
     // CompositeIdTable with 2 key columns - int & uuid (both db-generated)
     object Publishers : CompositeIdTable("publishers") {
@@ -393,7 +392,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 title = "Book A"
                 author = authorB
             }
-            val bookB = Book.new {
+            Book.new {
                 title = "Book B"
                 author = authorB
             }
