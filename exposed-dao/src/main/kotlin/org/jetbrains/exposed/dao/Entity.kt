@@ -1,7 +1,10 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
+import org.jetbrains.exposed.dao.id.CompositeID
+import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -110,6 +113,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.getValue(
         o: Entity<ID>,
         desc: KProperty<*>
@@ -117,10 +121,24 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         val outOfTransaction = TransactionManager.currentOrNull() == null
         if (outOfTransaction && reference in referenceCache) return getReferenceFromCache(reference)
         return executeAsPartOfEntityLifecycle {
-            val refValue = reference.getValue(o, desc)
+            val isNotCompositeIdReference = hasSingleReferenceWithReferee(allReferences)
+            val refValue = if (isNotCompositeIdReference) {
+                reference.getValue(o, desc)
+            } else {
+                CompositeID {
+                    allReferences.forEach { (child, parent) ->
+                        it[parent as Column<EntityID<Comparable<Any>>>] = child.getValue(o, desc) as Comparable<Any>
+                    }
+                }
+            }
             when {
                 refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> {
                     factory.findById(refValue.value as RID).also {
+                        storeReferenceInCache(reference, it)
+                    }
+                }
+                refValue is CompositeID && allReferencesMatch(allReferences, factory.table) -> {
+                    factory.findById(refValue as RID).also {
                         storeReferenceInCache(reference, it)
                     }
                 }
@@ -128,9 +146,15 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                     val castReferee = reference.referee<REF>()!!
                     val baseReferee = (castReferee.columnType as? EntityIDColumnType<REF>)?.idColumn ?: castReferee
                     factory.findWithCacheCondition({
-                        reference.referee!!.getValue(this, desc) == refValue
+                        if (isNotCompositeIdReference) {
+                            reference.referee!!.getValue(this, desc) == refValue
+                        } else {
+                            allReferences.all {
+                                it.value.getValue(this, desc) == (refValue as CompositeID)[it.key as Column<EntityID<Comparable<Any>>>]
+                            }
+                        }
                     }) {
-                        baseReferee eq refValue
+                        baseReferee eq (refValue as REF)
                     }.singleOrNull()?.also {
                         storeReferenceInCache(reference, it)
                     }
@@ -146,11 +170,14 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     ) {
         if (db != value.db) error("Can't link entities from different databases.")
         value.id.value // flush before creating reference on it
-        val refValue = value.run { reference.referee<REF>()!!.getValue(this, desc) }
-        storeReferenceInCache(reference, value)
-        reference.setValue(o, desc, refValue)
+        allReferences.forEach { (childColumn, parentColumn) ->
+            val refValue = value.run { parentColumn.getValue(this, desc) }
+            if (childColumn == reference) storeReferenceInCache(reference, value)
+            (childColumn as Column<Any?>).setValue(o, desc, refValue)
+        }
     }
 
+    @Suppress("UNCHECKED_CAST")
     operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.getValue(
         o: Entity<ID>,
         desc: KProperty<*>
@@ -158,7 +185,23 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         val outOfTransaction = TransactionManager.currentOrNull() == null
         if (outOfTransaction && reference in referenceCache) return getReferenceFromCache(reference)
         return executeAsPartOfEntityLifecycle {
-            val refValue = reference.getValue(o, desc)
+            val isNotCompositeIdReference = hasSingleReferenceWithReferee(allReferences)
+            val refValue = if (isNotCompositeIdReference) {
+                reference.getValue(o, desc)
+            } else {
+                val childValues = allReferences.map { (child, parent) ->
+                    (parent as Column<EntityID<Comparable<Any?>>>) to (child.getValue(o, desc) as? Comparable<Any?>)
+                }
+                if (childValues.any { it.second == null }) {
+                    null
+                } else {
+                    CompositeID {
+                        childValues.forEach { (parent, childValue) ->
+                            it[parent] = childValue!!
+                        }
+                    }
+                }
+            }
             when {
                 refValue == null -> null
                 refValue is EntityID<*> && reference.referee<REF>() == factory.table.id -> {
@@ -166,21 +209,31 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                         storeReferenceInCache(reference, it)
                     }
                 }
+                refValue is CompositeID && allReferencesMatch(allReferences, factory.table) -> {
+                    factory.findById(refValue as RID).also {
+                        storeReferenceInCache(reference, it)
+                    }
+                }
                 else -> {
-                    // @formatter:off
-                    factory.findWithCacheCondition(
-                        { reference.referee!!.getValue(this, desc) == refValue }
-                    ) {
-                        reference.referee<REF>()!! eq refValue
+                    factory.findWithCacheCondition({
+                        if (isNotCompositeIdReference) {
+                            reference.referee!!.getValue(this, desc) == refValue
+                        } else {
+                            allReferences.all {
+                                it.value.getValue(this, desc) == (refValue as CompositeID)[it.key as Column<EntityID<Comparable<Any>>>]
+                            }
+                        }
+                    }) {
+                        reference.referee<REF>()!! eq (refValue as REF)
                     }.singleOrNull().also {
                         storeReferenceInCache(reference, it)
                     }
-                    // @formatter:on
                 }
             }
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.setValue(
         o: Entity<ID>,
         desc: KProperty<*>,
@@ -188,9 +241,11 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     ) {
         if (value != null && db != value.db) error("Can't link entities from different databases.")
         value?.id?.value // flush before creating reference on it
-        val refValue = value?.run { reference.referee<REF>()!!.getValue(this, desc) }
-        storeReferenceInCache(reference, value)
-        reference.setValue(o, desc, refValue)
+        allReferences.forEach { (childColumn, parentColumn) ->
+            val refValue = value?.run { parentColumn.getValue(this, desc) }
+            if (childColumn == reference) storeReferenceInCache(reference, value)
+            (childColumn as Column<Any?>).setValue(o, desc, refValue)
+        }
     }
 
     operator fun <T> Column<T>.getValue(o: Entity<ID>, desc: KProperty<*>): T = lookup()
@@ -239,7 +294,8 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                     entityCache.referrers[this]?.remove(it)
                 }
             }
-            writeValues[this as Column<Any?>] = value
+            val valueTypeMismatch = value is EntityID<*> && value.table is CompositeIdTable && this.columnType !is EntityIDColumnType<*>
+            writeValues[this as Column<Any?>] = if (valueTypeMismatch) (value as EntityID<*>)._value else value
             if (entityCache.data[table].orEmpty().contains(o.id._value)) {
                 entityCache.scheduleUpdate(klass, o)
             }
@@ -366,5 +422,22 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         }
         // clear write values
         writeValues.clear()
+    }
+
+    /**
+     * Stores a [value] for a [table] `id` column in this Entity's [writeValues] map.
+     * If the `id` column wraps a composite value, each non-null component value is stored for its component column.
+     */
+    @Suppress("UNCHECKED_CAST")
+    internal fun writeIdColumnValue(table: IdTable<*>, value: EntityID<*>) {
+        (value._value as? CompositeID)?.let { id ->
+            table.idColumns.forEach { column ->
+                id[column as Column<EntityID<Comparable<Any>>>]?.let {
+                    writeValues[column as Column<Any?>] = it
+                }
+            }
+        } ?: run {
+            writeValues[table.id as Column<Any?>] = value
+        }
     }
 }

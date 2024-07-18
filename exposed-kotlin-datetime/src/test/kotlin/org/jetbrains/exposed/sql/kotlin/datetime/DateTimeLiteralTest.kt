@@ -4,8 +4,6 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -83,7 +81,6 @@ class DateTimeLiteralTest : DatabaseTestsBase() {
     @Test
     fun testSelectByTimestampLiteralEquality() {
         withTables(TableWithTimestamp) {
-            addLogger(StdOutSqlLogger)
             TableWithTimestamp.insert {
                 it[timestamp] = defaultTimestamp
             }

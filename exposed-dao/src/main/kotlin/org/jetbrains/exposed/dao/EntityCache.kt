@@ -5,8 +5,6 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transactionScope
 import java.util.*
-import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 
 /** The current [EntityCache] for [this][Transaction] scope, or a new instance if none exists. */
 val Transaction.entityCache: EntityCache by transactionScope { EntityCache(this) }
@@ -263,7 +261,7 @@ class EntityCache(private val transaction: Transaction) {
                 if (entry.id._value == null) {
                     val id = genValues[table.id]
                     entry.id._value = id._value
-                    entry.writeValues[entry.klass.table.id as Column<Any?>] = id
+                    entry.writeIdColumnValue(entry.klass.table, id)
                 }
                 genValues.fieldIndex.keys.forEach { key ->
                     entry.writeValues[key as Column<Any?>] = genValues[key]

@@ -2,6 +2,7 @@
 
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
@@ -43,10 +44,12 @@ interface FieldSet {
             val unrolled = ArrayList<Expression<*>>(fields.size)
 
             fields.forEach {
-                if (it is CompositeColumn<*>) {
-                    unrolled.addAll(it.getRealColumns())
-                } else {
-                    unrolled.add(it)
+                when {
+                    it is CompositeColumn<*> -> unrolled.addAll(it.getRealColumns())
+                    (it as? Column<*>)?.columnType?.isEntityIdentifier() == true && it.table is CompositeIdTable -> {
+                        unrolled.addAll(it.table.idColumns)
+                    }
+                    else -> unrolled.add(it)
                 }
             }
 
@@ -613,6 +616,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         val newColumn = Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also {
             it.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
         }
+        (table as IdTable<T>).addIdColumn(newColumn)
         return replaceColumn(this, newColumn)
     }
 
@@ -1094,7 +1098,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
         fkName: String? = null
-    ): Column<EntityID<T>> = entityId(name, foreign).references(foreign.id, onDelete, onUpdate, fkName)
+    ): Column<EntityID<T>> {
+        require(foreign !is CompositeIdTable || foreign.idColumns.size == 1) {
+            "Use foreignKey() to create a foreign key constraint involving multiple key columns."
+        }
+        return entityId(name, foreign).references(foreign.id, onDelete, onUpdate, fkName)
+    }
 
     /**
      * Creates a column with the specified [name] with an optional reference to the [refColumn] column with [onDelete], [onUpdate], and [fkName] options.

@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.dao.id
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import java.util.*
 
 /** Base class representing a producer of [EntityID] instances.  */
@@ -34,6 +34,43 @@ object EntityIDFunctionProvider {
 abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
     /** The identity column of this [IdTable], for storing values of type [T] wrapped as [EntityID] instances. */
     abstract val id: Column<EntityID<T>>
+
+    /** All base columns that make up this [IdTable]'s identifier column. */
+    val idColumns = HashSet<Column<out Comparable<*>>>()
+
+    /**
+     * Adds a column to [idColumns].
+     *
+     * @throws IllegalStateException If more than one column is added to an [IdTable] that is not a [CompositeIdTable].
+     */
+    internal fun <S : Comparable<S>> addIdColumn(newColumn: Column<EntityID<S>>) {
+        if (idColumns.isNotEmpty() && this !is CompositeIdTable) {
+            val message = "CompositeIdTable should be used if multiple EntityID key columns are required"
+            exposedLogger.error(message)
+            error(message)
+        }
+        idColumns.add(newColumn)
+    }
+
+    /**
+     * Returns a boolean operator comparing each of this table's [idColumns] to its corresponding
+     * value in [toCompare], using the specified SQL [operator].
+     *
+     * @throws IllegalStateException If [toCompare] is either not a matching id type or it does not contain a key for
+     * each component column.
+     */
+    internal open fun mapIdComparison(
+        toCompare: Any?,
+        operator: (Column<*>, Expression<*>) -> Op<Boolean>
+    ): Op<Boolean> {
+        val singleId = idColumns.single()
+        return operator(singleId, singleId.wrap(toCompare))
+    }
+
+    /** Returns a boolean operator with each of this table's [idColumns] using the specified SQL [operator]. */
+    internal open fun mapIdOperator(
+        operator: (Column<*>) -> Op<Boolean>
+    ): Op<Boolean> = operator(idColumns.single())
 }
 
 /**
@@ -97,4 +134,48 @@ open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUI
     /** The identity column of this [UUIDTable], for storing UUIDs wrapped as [EntityID] instances. */
     final override val id: Column<EntityID<UUID>> = uuid(columnName).autoGenerate().entityId()
     final override val primaryKey = PrimaryKey(id)
+}
+
+/**
+ * Identity table with a primary key consisting of a combination of columns.
+ *
+ * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
+ */
+open class CompositeIdTable(name: String = "") : IdTable<CompositeID>(name) {
+    /** The identity column of this [CompositeIdTable], for storing references to all key columns wrapped as [EntityID] instances. */
+    final override val id: Column<EntityID<CompositeID>> = compositeIdColumn()
+
+    private fun compositeIdColumn(): Column<EntityID<CompositeID>> {
+        val placeholder = Column(
+            this,
+            "composite_id",
+            object : ColumnType<CompositeID>() {
+                override fun sqlType(): String = ""
+                override fun valueFromDB(value: Any): CompositeID? = null
+            }
+        )
+        return Column(this, "composite_id", EntityIDColumnType(placeholder)).apply {
+            defaultValueFun = null
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun mapIdComparison(
+        toCompare: Any?,
+        operator: (Column<*>, Expression<*>) -> Op<Boolean>
+    ): Op<Boolean> {
+        (toCompare as? EntityID<CompositeID>) ?: error("toCompare must be an EntityID<CompositeID> value")
+        return idColumns.map { column ->
+            val otherValue = if (column in toCompare.value.values) {
+                toCompare.value[column as Column<EntityID<Comparable<Any>>>]
+            } else {
+                error("Comparison CompositeID is missing a key mapping for ${column.name}")
+            }
+            operator(column, column.wrap(otherValue.value as? EntityID<*> ?: otherValue))
+        }.compoundAnd()
+    }
+
+    override fun mapIdOperator(
+        operator: (Column<*>) -> Op<Boolean>
+    ): Op<Boolean> = idColumns.map { operator(it) }.compoundAnd()
 }
