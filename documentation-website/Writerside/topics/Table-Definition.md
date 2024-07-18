@@ -1,6 +1,6 @@
 # Table Definition
 
-This page shows what table types Exposed supports and how to define and create tables. It also contains tips on configuring 
+This page shows what table types Exposed supports and how to define and create these tables. It also contains tips on configuring 
 constraints, such as `PRIMARY KEY`, `DEFAULT`, and `INDEX`. All examples use the H2 database to generate SQL.
 
 ## Table Types
@@ -9,7 +9,7 @@ The most primitive table type is `Table`. It is located in the **org.jetbrains.e
 To configure a custom name for a table, which will be used in actual SQL queries, pass it to the `name` parameter of the `Table()` constructor.
 Otherwise, Exposed will generate it from the full class name or the class name without the suffix 'Table', if present.
 
-For example, to create a simple table with an integer `id` column and a string `name` column, use the following code depending on the table name of choice:
+For example, to create a simple table with an integer `id` column and a string `name` column, use any of the following code, depending on the table name of choice:
 ```kotlin
 // Table name will be taken from object name
 object Cities : Table() {
@@ -41,7 +41,7 @@ object Cities : Table("all_cities") {
 //          "name" VARCHAR(50) NOT NULL
 //      )
 
-// Some databases, like H2, fold unquoted names to upper case
+// Some databases, like H2, fold unquoted names to upper case.
 // To keep case-sensitivity, manually quote the provided argument
 object Cities : Table("\"all_cities\"") {
     val id = integer("id")
@@ -53,12 +53,17 @@ object Cities : Table("\"all_cities\"") {
 //      )
 ```
 
-Exposed also provides the base `IdTable` class which is inherited by `IntIdTable`, `LongIdTable` (and their unsigned variants), `UUIDTable`, and `CompositeIdTable` classes from the 
-**org.jetbrains.exposed.dao.id** package of the **exposed-core** module. These tables could be declared without the `id` column, and
-IDs of the appropriate type will be generated automatically when creating new table rows. To configure a custom name 
-for the `id` column, pass it to the `columnName` parameter of the appropriate table constructor.
+Depending on what DBMS you use, the types of columns could be different in actual SQL queries.
 
-The `Cities` table could instead be defined as an `IntIdTable`, which would make the `id` column both auto-incrementing and the table's primary key:
+### IdTable Types
+
+Exposed also provides the base `IdTable` class, which is inherited by `IntIdTable`, `LongIdTable` (and their unsigned variants), `UUIDTable`, and `CompositeIdTable` classes from the 
+**org.jetbrains.exposed.dao.id** package of the **exposed-core** module.
+
+These tables could be declared without the `id` column, and IDs of the appropriate type would be generated automatically when creating new table rows.
+To configure a custom name for the `id` column, pass it to the `columnName` parameter of the appropriate table constructor.
+
+For example, the `Cities` table could instead be defined as an `IntIdTable`, which would make the `id` column both auto-incrementing and the table's primary key:
 ```kotlin
 object Cities : IntIdTable() {
     val name = varchar("name", 50)
@@ -69,7 +74,7 @@ object Cities : IntIdTable() {
 //      )
 ```
 
-Depending on what DBMS you use, the types of columns could be different in actual SQL queries.
+* For more information on `IdTable` types, see [DAO Table Types](Deep-Dive-into-DAO.md#table-types).
 
 ## Constraints
 
@@ -205,11 +210,11 @@ It is also possible to define a primary key on a table using multiple columns:
 override val primaryKey = PrimaryKey(id, name)
 ```
 
-Each kind of table in Exposed that is inherited from `IdTable` has the `primaryKey` field automatically defined.
+Except for `CompositeIdTable`, each available class in Exposed that inherits from `IdTable` has the `primaryKey` field automatically defined.
 For example, the `IntIdTable` by default has an auto-incrementing integer column, `id`, which is defined as the primary key.
 
 An `IdTable` that requires a primary key with multiple columns can be defined using `CompositeIdTable`.
-In this case, each column that is a component of the table's `id` column should be identified by `entityId()`:
+In this case, each column that is a component of the table's `id` should be identified by `entityId()`:
 ```kotlin
 object Towns : CompositeIdTable("towns") {
     val areaCode = integer("area_code").autoIncrement().entityId()
@@ -225,7 +230,8 @@ object Towns : CompositeIdTable("towns") {
 
 The `FOREIGN KEY` SQL constraint links two tables. A foreign key is a column from one table that refers to the primary key 
 or columns with a unique index from another table. To configure a foreign key on a column, use `reference()` or `optReference()` 
-methods. The latter lets the foreign key accept a `null` value.
+methods. The latter lets the foreign key accept a `null` value. To configure a foreign key on multiple columns,
+use `foreignKey()` directly within an `init` block.
 
 `reference()` and `optReference()` methods have several parameters:
 
@@ -255,7 +261,7 @@ object Citizens : IntIdTable() {
 
 If any `Cities` row will be deleted, the appropriate `Citizens` row will be deleted too.
 
-If instead the `Cities` table has configured multiple columns as the primary key (for example, both `id` and `name` columns as in the above section),
+If instead the `Cities` table has configured multiple columns as the primary key (for example, both `id` and `name` columns as in the above [section](#primary-key)),
 the `Citizens` table can refer to it by using a table-level foreign key constraint. In this case, the `Citizens` table must have defined matching columns
 to store each component value of the `Cities` table's primary key:
 ```kotlin
