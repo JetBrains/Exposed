@@ -307,10 +307,10 @@
     <chapter title="Create and query a table" id="create-and-query-table">
         <p>
             With Exposed’s DSL API, you can interact with a database using a type-safe syntax similar to SQL.
-            Before you start executing database operations, you must open a transaction.
+            Before you start executing database operations, you must open a <a href="Transactions.md">transaction</a>.
         </p>
         <p>
-            A transaction is represented by an instance of the <code>Transaction</code> class, within which you
+            A <a href="Transactions.md">transaction</a> is represented by an instance of the <code>Transaction</code> class, within which you
             can define and manipulate data using its lambda function. Exposed will automatically manage the opening
             and closing of the transaction in the background, ensuring seamless operation.
         </p>
@@ -325,14 +325,21 @@
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
                             include-lines="4-14,20-37,52-53"
                 />
+                <p>Let's break down the code and go over each section.</p>
                 <p>
+                    First, you create the tasks table using the <code>create()</code> method from <code>SchemaUtils</code>.
                     The <code>SchemaUtils</code> object holds utility methods for creating, altering, and
-                    dropping database objects. Here, you use the <code>SchemaUtils.create()</code> method
-                    to create the Tasks table.
+                    dropping database objects.
                 </p>
                 <p>
-                    Once the table has been created, you use the Table extension method <code>insert()</code>
-                    to add two new Task records. Within the <code>insert</code> block, you set the values for
+                    Once the table has been created, you use the <code>Table</code> extension method <code>insert()</code>
+                    to add two new Task records.</p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
+                            include-lines="22-31"
+                />
+                <p>
+                    Within the <code>insert</code> block, you set the values for
                     each column by using the <code>it</code> parameter. Exposed will translate the functions
                     into the following SQL queries:
                 </p>
@@ -349,6 +356,12 @@
                 <p>
                     With the <code>select()</code> extension function you then create a query to count the number
                     of rows and to retrieve the <code>isCompleted</code> value for each row in the table.
+                </p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
+                            include-lines="35-37"
+                />
+                <p>
                     Using <code>groupBy()</code> groups the results of the query by the <code>isCompleted</code>
                     column, which means it will aggregate the rows based on whether they are completed or not.
                     The expected SQL query looks like this:
@@ -358,9 +371,8 @@
                 </code-block>
                 <p>
                     It is important to note that the query will not be executed until you call a function that
-                    iterates through the result, such as <code>forEach()</code>. In this example, the
-                    <code>isCompleted</code> status will be printed for each group,
-                    along with the corresponding count of tasks.
+                    iterates through the result, such as <code>forEach()</code>. In this example, for each group
+                    we print out the <code>isCompleted</code> status and the corresponding count of tasks.
                 </p>
             </step>
         </procedure>
@@ -406,20 +418,38 @@
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
                             include-lines="14,18,38-52"
                 />
+                <p>Here's the breakdown:</p>
                 <p>
                     In the <code>Tasks.update()</code> function, you specify the condition to find the task
-                    with id equal to the one of the previously inserted task. If the condition is met,
+                    with <code>id</code> equal to the one of the previously inserted task. If the condition is met,
                     the <code>isCompleted</code> field of the found task is set to <code>true</code>.
                 </p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
+                            include-lines="40-43"
+                />
                 <p>
                     Unlike the <code>insert()</code> function, <code>update()</code> returns the number of updated rows.
                     To then retrieve the updated task, you use the <code>select()</code> function
                     with the <code>where</code> condition to only select the tasks with <code>id</code>
-                    equal to <code>taskId</code>. Using the <code>single()</code> extension function
+                    equal to <code>taskId</code>.
+                </p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
+                            include-lines="44"
+                />
+                <p>
+                    Using the <code>single()</code> extension function
                     initiates the statement and retrieves the first result found.
                 </p>
                 <p>
-                    The <code>deleteWhere()</code> function deletes the task with the specified condition.
+                    The <code>deleteWhere()</code> function, on the other hand, deletes the task with the specified condition.
+                </p>
+                <code-block lang="kotlin"
+                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
+                            include-lines="49"
+                />
+                <p>
                     Similarly to <code>update()</code>, it returns the number of rows that have been deleted.
                 </p>
             </step>
