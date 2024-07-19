@@ -220,30 +220,38 @@ class SelectTests : DatabaseTestsBase() {
     fun testInListWithMultipleColumns() {
         val tester = object : Table("tester") {
             val num1 = integer("num_1")
-            val num2 = integer("num_2")
-            val num3 = integer("num_3")
-            val num4 = integer("num_4")
+            val num2 = double("num_2")
+            val num3 = varchar("num_3", 8)
+            val num4 = long("num_4")
+        }
+
+        fun Int.toColumnValue(index: Int) = when (index) {
+            1 -> toDouble()
+            2 -> toString()
+            3 -> toLong()
+            else -> this
         }
 
         withTables(tester) {
+            addLogger(StdOutSqlLogger)
             repeat(3) { n ->
                 tester.insert {
                     it[num1] = n
-                    it[num2] = n
-                    it[num3] = n
-                    it[num4] = n
+                    it[num2] = n.toDouble()
+                    it[num3] = n.toString()
+                    it[num4] = n.toLong()
                 }
             }
             val expected = tester.selectAll().count().toInt()
 
-            val allSameNumbers = List(3) { n -> List(4) { n } }
+            val allSameNumbers = List(3) { n -> List(4) { n.toColumnValue(it) } }
             val result1 = tester.selectAll().where { tester.columns inList allSameNumbers }.toList()
             assertEquals(expected, result1.size)
 
             val result2 = tester.selectAll().where { tester.columns inList listOf(allSameNumbers.first()) }.toList()
             assertEquals(1, result2.size)
 
-            val allDifferentNumbers = List(3) { n -> List(4) { n + it } }
+            val allDifferentNumbers = List(3) { n -> List(4) { (n + it).toColumnValue(it) } }
             val result3 = tester.selectAll().where { tester.columns notInList allDifferentNumbers }.toList()
             assertEquals(expected, result3.size)
 

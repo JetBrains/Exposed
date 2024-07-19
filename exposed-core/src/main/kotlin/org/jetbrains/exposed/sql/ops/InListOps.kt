@@ -1,11 +1,6 @@
 package org.jetbrains.exposed.sql.ops
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ComplexExpression
-import org.jetbrains.exposed.sql.ExpressionWithColumnType
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
@@ -151,44 +146,39 @@ class MultipleInListOp(
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         // SQL Server does not support IN operator with tuples (or any more than 1 expression on the left-hand side)
-        if (currentDialectIfAvailable !is SQLServerDialect) {
-            super.toQueryBuilder(queryBuilder)
-        } else {
-            queryBuilder {
-                val iterator = list.iterator()
-                if (!iterator.hasNext()) {
-                    if (isInList) {
-                        +FALSE
-                    } else {
-                        +TRUE
-                    }
-                } else {
-                    // Built-in exists(AbstractQuery) cannot be used because row value constructors are not supported
-                    // Alternative: Compound AND + OR operators for each value list ->
-                    // (col_1 = ? AND col_2 = ? AND col_3 = ?) OR (col_1 = ? AND col_2 = ? AND col_3 = ?) OR ... (...)
-                    val transaction = TransactionManager.current()
-                    val columnNames = columnTypes.map { transaction.identity(it) }
-                    val firstValue = iterator.next()
+        if (currentDialectIfAvailable !is SQLServerDialect) return super.toQueryBuilder(queryBuilder)
 
-                    when {
-                        isInList -> append("EXISTS (")
-                        else -> append("NOT EXISTS (")
-                    }
-                    append("SELECT * FROM (VALUES ")
-                    registerValues(firstValue)
-                    iterator.forEach { value ->
-                        append(", ")
-                        registerValues(value)
-                    }
-                    append(") v")
-                    columnNames.appendTo(prefix = "(", postfix = ")") { +it }
-                    append(" WHERE ")
-                    columnNames.withIndex().appendTo(separator = " AND ") { (i, column) ->
-                        +"v.$column="
-                        +columnTypes[i]
-                    }
-                    append(")")
+        queryBuilder {
+            val iterator = list.iterator()
+            if (!iterator.hasNext()) {
+                if (isInList) {
+                    +FALSE
+                } else {
+                    +TRUE
                 }
+            } else {
+                // Generates compound AND & OR operators for each values list:
+                // WHERE
+                //     ((tester.num_1 = 0) AND (tester.num_2 = 0.0) AND (tester.num_3 = '0') AND (tester.num_4 = 0)) OR
+                //     ((tester.num_1 = 1) AND (tester.num_2 = 1.0) AND (tester.num_3 = '1') AND (tester.num_4 = 1)) OR
+                //     ((tester.num_1 = 2) AND (tester.num_2 = 2.0) AND (tester.num_3 = '2') AND (tester.num_4 = 2))
+
+                // Alternative: EXISTS (SELECT * FROM (VALUES (...), (...), ...) v(...) WHERE v.?=? AND ...)
+                // Built-in exists(AbstractQuery) cannot be used because above row value constructors are not supported
+
+                val valueEqualityOps = mutableListOf<Op<Boolean>>()
+                val eqOp = if (isInList) ::EqOp else ::NeqOp
+
+                iterator.forEach { value ->
+                    val valueEqualityOp = Op.build {
+                        expr.zip(value).map { (column, value) ->
+                            Op.build { eqOp(column, column.wrap(value)) }
+                        }.compoundAnd()
+                    }
+                    valueEqualityOps.add(if (isInList) valueEqualityOp else not(valueEqualityOp))
+                }
+
+                +valueEqualityOps.compoundOr()
             }
         }
     }
