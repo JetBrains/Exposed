@@ -181,7 +181,6 @@ class Column<T>(
 
         if (table != other.table) return false
         if (name != other.name) return false
-        if (columnType != other.columnType) return false
 
         return true
     }

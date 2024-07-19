@@ -103,7 +103,6 @@ class ResultRow(
         return fieldIndex[expression]
             ?: fieldIndex.keys.firstOrNull { exp ->
                 when (exp) {
-                    // exp is Column<*> && exp.table is Alias<*> -> exp.table.delegate == c
                     is Column<*> -> (exp.columnType as? EntityIDColumnType<*>)?.idColumn == expression
                     is ExpressionAlias<*> -> exp.delegate == expression
                     else -> false

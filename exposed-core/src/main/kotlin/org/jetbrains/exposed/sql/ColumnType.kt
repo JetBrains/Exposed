@@ -235,13 +235,9 @@ class EntityIDColumnType<T : Comparable<T>>(
     override fun readObject(rs: ResultSet, index: Int): Any? = idColumn.columnType.readObject(rs, index)
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
+        if (other !is EntityIDColumnType<*>) return false
 
-        return when (other) {
-            is EntityIDColumnType<*> -> idColumn == other.idColumn
-            is IColumnType<*> -> idColumn.columnType == other
-            else -> false
-        }
+        return idColumn == other.idColumn
     }
 
     override fun hashCode(): Int = 31 * super.hashCode() + idColumn.hashCode()
