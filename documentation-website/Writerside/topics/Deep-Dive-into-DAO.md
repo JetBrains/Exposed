@@ -296,64 +296,6 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     ...
 ```
 
-### Composite primary key reference
-Let's say we have the following `CompositeIdTable`:
-```kotlin
-object Directors : CompositeIdTable("directors") {
-    val name = varchar("name", 50).entityId()
-    val guildId = uuid("guild_id").autoGenerate().entityId()
-    val genre = enumeration<Genre>("genre")
-
-    override val primaryKey = PrimaryKey(name, guildId)
-}
-
-class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
-    companion object : CompositeEntityClass<Director>(Directors)
-    var genre by Directors.genre
-}
-```
-We can refactor the `StarWarsFilms` table to reference this table by adding columns to hold the appropriate primary key values and creating a table-level foreign key constraint:
-```kotlin
-object StarWarsFilms : IntIdTable() {
-    val sequelId = integer("sequel_id").uniqueIndex()
-    val name = varchar("name", 50)
-    val directorName = varchar("director_name", 50)
-    val directorGuildId = uuid("director_guild_id")
-
-    init {
-        foreignKey(directorName, directorGuildId, target = Directors.primaryKey)
-    }
-}
-
-class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
-  companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
-  var sequelId by StarWarsFilms.sequelId 
-  var name by StarWarsFilms.name
-  var director by Director referencedOn StarWarsFilms
-}
-```
-* For more information on creating table foreign key constraints, see [DSL Foreign Key](Table-Definition.md#foreign-key).
-
-
-Now you can get the director for a `StarWarsFilm` object, `movie`, in the same way you would get any other field:
-```kotlin
-movie.director // returns a Director object
-```
-Now if you wanted to get all the films made by a director, you could add a `referrersOn` field to the `Director` class:
-```kotlin
-class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
-    companion object : CompositeEntityClass<Director>(Directors)
-    var genre by Directors.genre
-    val films by StarWarsFilm referrersOn StarWarsFilms
-}
-```
-You can then access this field on a `Director` object, `director`:
-```kotlin
-director.films // returns all StarWarsFilm objects that reference this director
-```
-Using other previously mentioned infix functions, like `optionalReferencedOn`, `backReferencedOn`, and `optionalReferrersOn`,
-is also supported for referencing or referenced `CompositeEntity` objects, by using the respective overloads that accept an `IdTable` as an argument.
-These overloads will automatically resolve the foreign key constraint associated with the composite primary key.
 ### many-to-many reference
 In some cases, a many-to-many reference may be required.
 Let's assume you want to add a reference to the following Actors table to the StarWarsFilm class:
@@ -424,6 +366,65 @@ child1.parents = SizedCollection(root) // assign parent
 val child2 = Node.new { name = "child2" }
 root.children = SizedCollection(listOf(child1, child2)) // assign children
 ```
+
+### Composite primary key reference
+
+Let's say we have the following `CompositeIdTable`:
+```kotlin
+object Directors : CompositeIdTable("directors") {
+    val name = varchar("name", 50).entityId()
+    val guildId = uuid("guild_id").autoGenerate().entityId()
+    val genre = enumeration<Genre>("genre")
+
+    override val primaryKey = PrimaryKey(name, guildId)
+}
+
+class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
+    companion object : CompositeEntityClass<Director>(Directors)
+    var genre by Directors.genre
+}
+```
+We can refactor the `StarWarsFilms` table to reference this table by adding columns to hold the appropriate primary key values and creating a table-level foreign key constraint:
+```kotlin
+object StarWarsFilms : IntIdTable() {
+    val sequelId = integer("sequel_id").uniqueIndex()
+    val name = varchar("name", 50)
+    val directorName = varchar("director_name", 50)
+    val directorGuildId = uuid("director_guild_id")
+
+    init {
+        foreignKey(directorName, directorGuildId, target = Directors.primaryKey)
+    }
+}
+
+class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
+  companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
+  var sequelId by StarWarsFilms.sequelId 
+  var name by StarWarsFilms.name
+  var director by Director referencedOn StarWarsFilms
+}
+```
+* For more information on creating table foreign key constraints, see [DSL Foreign Key](Table-Definition.md#foreign-key).
+
+Now you can get the director for a `StarWarsFilm` object, `movie`, in the same way you would get any other field:
+```kotlin
+movie.director // returns a Director object
+```
+Now if you wanted to get all the films made by a director, you could add a `referrersOn` field to the `Director` class:
+```kotlin
+class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
+    companion object : CompositeEntityClass<Director>(Directors)
+    var genre by Directors.genre
+    val films by StarWarsFilm referrersOn StarWarsFilms
+}
+```
+You can then access this field on a `Director` object, `director`:
+```kotlin
+director.films // returns all StarWarsFilm objects that reference this director
+```
+Using other previously mentioned infix functions, like `optionalReferencedOn`, `backReferencedOn`, and `optionalReferrersOn`,
+is also supported for referencing or referenced `CompositeEntity` objects, by using the respective overloads that accept an `IdTable` as an argument.
+These overloads will automatically resolve the foreign key constraint associated with the composite primary key.
 
 ### Eager Loading
 **Available since 0.13.1**.
