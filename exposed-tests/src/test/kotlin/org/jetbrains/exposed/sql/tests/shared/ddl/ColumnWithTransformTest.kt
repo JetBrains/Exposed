@@ -15,12 +15,12 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
     fun testSimpleTransforms() {
         val tester = object : IntIdTable("SimpleTransforms") {
             val stringToInteger = integer("stringToInteger")
-                .transform(toColumn = { it.toInt() }, toTarget = { it.toString() })
+                .transform(unwrap = { it.toInt() }, wrap = { it.toString() })
             val nullableStringToInteger = integer("nullableStringToInteger")
                 .nullable()
-                .transform(toColumn = { it.toInt() }, toTarget = { it.toString() })
+                .transform(unwrap = { it.toInt() }, wrap = { it.toString() })
             val stringToIntegerNullable = integer("stringToIntegerNullable")
-                .transform(toColumn = { it.toInt() }, toTarget = { it.toString() })
+                .transform(unwrap = { it.toInt() }, wrap = { it.toString() })
                 .nullable()
         }
 
@@ -50,13 +50,13 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
     fun testNestedTransforms() {
         val tester = object : IntIdTable("NestedTransforms") {
             val booleanToInteger = integer("stringToInteger")
-                .transform(toTarget = { if (it != 0) "TRUE" else "FALSE" }, toColumn = { if (it == "TRUE") 1 else 0 })
-                .transform(toTarget = { it == "TRUE" }, toColumn = { if (it) "TRUE" else "FALSE" })
+                .transform(wrap = { if (it != 0) "TRUE" else "FALSE" }, unwrap = { if (it == "TRUE") 1 else 0 })
+                .transform(wrap = { it == "TRUE" }, unwrap = { if (it) "TRUE" else "FALSE" })
 
             val booleanToIntegerNullable = integer("booleanToIntegerNullable")
-                .transform(toTarget = { if (it != 0) "TRUE" else "FALSE" }, toColumn = { if (it == "TRUE") 1 else 0 })
+                .transform(wrap = { if (it != 0) "TRUE" else "FALSE" }, unwrap = { if (it == "TRUE") 1 else 0 })
                 .nullable()
-                .transform(toTarget = { it == "TRUE" }, toColumn = { if (it) "TRUE" else "FALSE" })
+                .transform(wrap = { it == "TRUE" }, unwrap = { if (it) "TRUE" else "FALSE" })
         }
 
         withTables(tester) {
@@ -79,12 +79,12 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
     }
 
     object IntListColumnType : ColumnTransformer<String, List<Int>> {
-        override fun toTarget(value: String): List<Int> {
+        override fun wrap(value: String): List<Int> {
             val result = value.split(",").map { it.toInt() }
             return result
         }
 
-        override fun toSource(value: List<Int>): String = value.joinToString(",")
+        override fun unwrap(value: List<Int>): String = value.joinToString(",")
     }
 
     @Test

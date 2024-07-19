@@ -1209,63 +1209,63 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * ```kotlin
      * object TestTable : IntIdTable() {
      *     val stringToInteger = integer("stringToInteger")
-     *         .transform(toTarget = { it.toString() }, toColumn = { it.toInt() })
+     *         .transform(wrap = { it.toString() }, unwrap = { it.toInt() })
      * }
      * ```
      *
-     * @param Target The target type of the transformation.
-     * @param TColumn The source type of the column.
-     * @param toTarget A function to transform from the source type [TColumn] to the target type [Target].
-     * @param toColumn A function to transform from the target type [Target] to the source type [TColumn].
-     * @return A new column of type [Target] with the applied transformations.
+     * @param Wrapped The type into which the value of the underlying column will be transformed.
+     * @param Unwrapped The source type of the column.
+     * @param wrap A function to transform from the source type [Unwrapped] to the target type [Wrapped].
+     * @param unwrap A function to transform from the target type [Wrapped] to the source type [Unwrapped].
+     * @return A new column of type [Wrapped] with the applied transformations.
      */
-    fun <TColumn : Any, Target : Any> Column<TColumn>.transform(
-        toTarget: (TColumn) -> Target,
-        toColumn: (Target) -> TColumn
-    ): Column<Target> = transform(ColumnTransformerImpl(toColumn, toTarget))
+    fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped>.transform(
+        wrap: (Unwrapped) -> Wrapped,
+        unwrap: (Wrapped) -> Unwrapped
+    ): Column<Wrapped> = transform(columnTransformer(unwrap, wrap))
 
     /**
      * Transforms a column by specifying a transformer.
      *
      * Sample:
      * ```kotlin
-     * object IntListColumnType : ColumnTransformer<List<Int>, String> {
-     *     override fun toTarget(value: String): List<Int> {
+     * object StringToIntListTransformer : ColumnTransformer<String, List<Int>> {
+     *     override fun wrap(value: String): List<Int> {
      *         val result = value.split(",").map { it.toInt() }
      *         return result
      *     }
      *
-     *     override fun toSource(value: List<Int>): String = value.joinToString(",")
+     *     override fun unwrap(value: List<Int>): String = value.joinToString(",")
      * }
      *
      * object TestTable : IntIdTable() {
-     *     val numbers = text("numbers").transform(IntListColumnType)
+     *     val numbers = text("numbers").transform(StringToIntListTransformer)
      * }
      * ```
      *
-     * @param Target The target type of the transformation.
-     * @param TColumn The source type of the column.
+     * @param Wrapped The type into which the value of the underlying column will be transformed.
+     * @param Unwrapped The type of the original column.
      * @param transformer An instance of [ColumnTransformer] to handle the transformations.
-     * @return A new column of type [Target] with the applied transformations.
+     * @return A new column of type [Wrapped] with the applied transformations.
      */
-    fun <TColumn : Any, Target : Any> Column<TColumn>.transform(
-        transformer: ColumnTransformer<TColumn, Target>
-    ): Column<Target> = transform(ColumnWithTransform.create(columnType, transformer))
+    fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped>.transform(
+        transformer: ColumnTransformer<Unwrapped, Wrapped>
+    ): Column<Wrapped> = transform(ColumnWithTransform(columnType, transformer))
 
     /**
      * Applies the transformation column type to the column.
      *
-     * @param TColumn The source type of the column.
-     * @param Target The target type of the transformation.
-     * @param toColumnType The [ColumnWithTransform] instance with the transformation logic.
-     * @return A new column of type [Target] with the applied transformation column type.
+     * @param Unwrapped The type of the original column.
+     * @param Wrapped The type into which the value of the underlying column will be transformed.
+     * @param wrappedColumnType The [ColumnWithTransform] instance with the transformation logic.
+     * @return A new column of type [Wrapped] with the applied transformation column type.
      */
-    private fun <TColumn : Any, Target : Any> Column<TColumn>.transform(toColumnType: ColumnWithTransform<TColumn, Target>): Column<Target> {
-        val newColumn: Column<Target> = Column(table, name, toColumnType)
+    private fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped>.transform(wrappedColumnType: ColumnWithTransform<Unwrapped, Wrapped>): Column<Wrapped> {
+        val newColumn: Column<Wrapped> = Column(table, name, wrappedColumnType)
         newColumn.foreignKey = foreignKey
-        newColumn.defaultValueFun = defaultValueFun?.let { { toColumnType.toTarget(it()) } }
+        newColumn.defaultValueFun = defaultValueFun?.let { { wrappedColumnType.wrap(it()) } }
         @Suppress("UNCHECKED_CAST")
-        newColumn.dbDefaultValue = dbDefaultValue as Expression<Target>?
+        newColumn.dbDefaultValue = dbDefaultValue as Expression<Wrapped>?
         newColumn.isDatabaseGenerated = isDatabaseGenerated
         newColumn.extraDefinitions = extraDefinitions
         return replaceColumn(this, newColumn)
@@ -1279,68 +1279,68 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * object TestTable : IntIdTable() {
      *     val nullableStringToInteger = integer("nullableStringToInteger")
      *         .nullable()
-     *         .transform(toSource = { it.toInt() }, toTarget = { it.toString() })
+     *         .transform(wrap = { it.toString() }, unwrap = { it.toInt() })
      * }
      * ```
      *
-     * @param Target The target type of the transformation.
-     * @param TColumn The source type of the column.
-     * @param toTarget A function to transform from the source type [TColumn] to the target type [Target].
-     * @param toColumn A function to transform from the target type [Target] to the source type [TColumn].
-     * @return A new column of type [Target?] with the applied transformations.
+     * @param Wrapped The type into which the value of the underlying column will be transformed.
+     * @param Unwrapped The type of the original column.
+     * @param wrap A function to transform from the source type [Unwrapped] to the target type [Wrapped].
+     * @param unwrap A function to transform from the target type [Wrapped] to the source type [Unwrapped].
+     * @return A new column of type [Wrapped]`?` with the applied transformations.
      */
     @JvmName("transformNullable")
-    fun <TColumn : Any, Target : Any> Column<TColumn?>.transform(
-        toTarget: (TColumn) -> Target,
-        toColumn: (Target) -> TColumn
-    ): Column<Target?> = transform(ColumnTransformerImpl(toColumn, toTarget))
+    fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped?>.transform(
+        wrap: (Unwrapped) -> Wrapped,
+        unwrap: (Wrapped) -> Unwrapped
+    ): Column<Wrapped?> = transform(columnTransformer(unwrap, wrap))
 
     /**
      * Transforms a nullable column by specifying a transformer.
      *
      * Sample:
      * ```kotlin
-     * object IntListColumnType : ColumnTransformer<List<Int>, String> {
-     *     override fun toTarget(value: String): List<Int> {
+     * object StringToIntListTransformer : ColumnTransformer<String, List<Int>> {
+     *     override fun wrap(value: String): List<Int> {
      *         val result = value.split(",").map { it.toInt() }
      *         return result
      *     }
      *
-     *     override fun toSource(value: List<Int>): String = value.joinToString(",")
+     *     override fun unwrap(value: List<Int>): String = value.joinToString(",")
      * }
      *
      * object TestTable : IntIdTable() {
-     *     val numbers = text("numbers").nullable().transform(IntListColumnType)
+     *     val numbers = text("numbers").nullable().transform(StringToIntListTransformer)
      * }
      * ```
      *
-     * @param Target The target type of the transformation.
-     * @param TColumn The source type of the column.
+     * @param Wrapped The type into which the value of the underlying column will be transformed.
+     * @param Unwrapped The type of the original column.
      * @param transformer An instance of [ColumnTransformer] to handle the transformations.
-     * @return A new column of type [Target?] with the applied transformations.
+     * @return A new column of type [Wrapped]`?` with the applied transformations.
      */
     @JvmName("transformNullable")
-    fun <TColumn : Any, Target : Any> Column<TColumn?>.transform(
-        transformer: ColumnTransformer<TColumn, Target>
-    ): Column<Target?> = transform(ColumnWithTransform.create(columnType, transformer))
+    fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped?>.transform(
+        transformer: ColumnTransformer<Unwrapped, Wrapped>
+    ): Column<Wrapped?> = transform(ColumnWithTransform(columnType, transformer))
 
     /**
      * Applies the transformation column type to the nullable column.
      *
-     * @param Target The target type of the transformation.
-     * @param TColumn The source type of the column.
+     * @param Wrapped The type into which the value of the underlying column will be transformed.
+     * @param Unwrapped The type of the original column.
      * @param toColumnType The [ColumnWithTransform] instance with the transformation logic.
-     * @return A new column of type [Target?] with the applied transformation column type.
+     * @return A new column of type [Wrapped]`?` with the applied transformation column type.
      */
     @JvmName("transformNullable")
-    private fun <TColumn : Any, Target : Any> Column<TColumn?>.transform(
-        toColumnType: ColumnWithTransform<TColumn, Target>
-    ): Column<Target?> {
-        val newColumn = Column<Target?>(table, name, toColumnType)
+    private fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped?>.transform(
+        toColumnType: ColumnWithTransform<Unwrapped, Wrapped>
+    ): Column<Wrapped?> {
+        val newColumn = Column<Wrapped?>(table, name, toColumnType)
         newColumn.foreignKey = foreignKey
-        newColumn.defaultValueFun = defaultValueFun?.let { { it()?.let { it1 -> toColumnType.toTarget(it1) } } }
+        newColumn.defaultValueFun = defaultValueFun?.let { { it()?.let { value -> toColumnType.wrap(value) } } }
         @Suppress("UNCHECKED_CAST")
-        newColumn.dbDefaultValue = dbDefaultValue as Expression<Target?>?
+        newColumn.dbDefaultValue = dbDefaultValue as Expression<Wrapped?>?
         newColumn.isDatabaseGenerated = isDatabaseGenerated
         newColumn.extraDefinitions = extraDefinitions
         return replaceColumn(this, newColumn)

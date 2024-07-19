@@ -25,16 +25,16 @@ class TransformationEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<TransformationEntity>(TransformationsTable)
 
     var value by TransformationsTable.value.transform(
-        toColumn = { "transformed-$it" },
-        toTarget = { it.replace("transformed-", "") }
+        unwrap = { "transformed-$it" },
+        wrap = { it.replace("transformed-", "") }
     )
 }
 
 class NullableTransformationEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<NullableTransformationEntity>(NullableTransformationsTable)
     var value by NullableTransformationsTable.value.transform(
-        toColumn = { "transformed-$it" },
-        toTarget = { it?.replace("transformed-", "") }
+        unwrap = { "transformed-$it" },
+        wrap = { it?.replace("transformed-", "") }
     )
 }
 
@@ -91,12 +91,12 @@ class EntityFieldWithTransformTest : DatabaseTestsBase() {
 
     object TableWithTransforms : IntIdTable() {
         val value = varchar("value", 50)
-            .transform(toTarget = { it.toBigDecimal() }, toColumn = { it.toString() })
+            .transform(wrap = { it.toBigDecimal() }, unwrap = { it.toString() })
     }
 
     class TableWithTransform(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<TableWithTransform>(TableWithTransforms)
-        var value by TableWithTransforms.value.transform(toTarget = { it.toInt() }, toColumn = { it.toBigDecimal() })
+        var value by TableWithTransforms.value.transform(wrap = { it.toInt() }, unwrap = { it.toBigDecimal() })
     }
 
     @Test
@@ -119,12 +119,12 @@ class EntityFieldWithTransformTest : DatabaseTestsBase() {
 
         var value by TransformationsTable.value
             .transform(
-                toColumn = { "transformed-$it" },
-                toTarget = { it.replace("transformed-", "") }
+                unwrap = { "transformed-$it" },
+                wrap = { it.replace("transformed-", "") }
             )
             .transform(
-                toCurrentTarget = { if (it.length > 5) it.slice(0..4) else it },
-                toNextTarget = { it }
+                unwrap = { if (it.length > 5) it.slice(0..4) else it },
+                wrap = { it }
             )
     }
 
@@ -144,12 +144,12 @@ class EntityFieldWithTransformTest : DatabaseTestsBase() {
 
         var value by TransformationsTable.value
             .transform(
-                toColumn = { "transformed-$it" },
-                toTarget = { it.replace("transformed-", "") }
+                unwrap = { "transformed-$it" },
+                wrap = { it.replace("transformed-", "") }
             )
             .memoizedTransform(
-                toCurrentTarget = { it + Random(10).nextInt(0, 100) },
-                toNextTarget = { it }
+                unwrap = { it + Random(10).nextInt(0, 100) },
+                wrap = { it }
             )
     }
 

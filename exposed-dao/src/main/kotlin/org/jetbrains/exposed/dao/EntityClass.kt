@@ -728,86 +728,137 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     )
 
     /**
-     * Returns a [EntityFieldWithTransform] delegate that transforms this stored [TColumn] value on every read.
+     * Returns a [EntityFieldWithTransform] delegate that transforms this stored [Unwrapped] value on every read.
      *
      * @param transformer An instance of [ColumnTransformer] to handle the transformations.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, Target : Any?> Column<TColumn>.transform(
-        transformer: ColumnTransformer<TColumn, Target>
-    ): EntityFieldWithTransform<TColumn, Target> = EntityFieldWithTransform(this, transformer, false)
+    @Deprecated(
+        "This function was replaced with more general alternative on DSL layer. " +
+            "DAOs transform() is deprecated and will be removed in future releases. " +
+            "Please use the transform function from the DSL layer.",
+        ReplaceWith(
+            "object : Table() { val c = column().transform(transformer) }"
+        )
+    )
+    fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.transform(
+        transformer: ColumnTransformer<Unwrapped, Wrapped>
+    ): EntityFieldWithTransform<Unwrapped, Wrapped> = EntityFieldWithTransform(this, transformer, false)
 
     /**
-     * Returns a [EntityFieldWithTransform] delegate that transforms this stored [TColumn] value on every read.
+     * Returns a [EntityFieldWithTransform] delegate that transforms this stored [Unwrapped] value on every read.
      *
-     * @param toColumn A pure function that converts a transformed value to a value that can be stored
+     * @param unwrap A pure function that converts a transformed value to a value that can be stored
      * in this original column type.
-     * @param toTarget A pure function that transforms a value stored in this original column type.
+     * @param wrap A pure function that transforms a value stored in this original column type.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, Target : Any?> Column<TColumn>.transform(
-        toColumn: (Target) -> TColumn,
-        toTarget: (TColumn) -> Target
-    ): EntityFieldWithTransform<TColumn, Target> = transform(ColumnTransformerImpl(toColumn, toTarget))
+    @Deprecated(
+        "This function was replaced with more general alternative on DSL layer. " +
+            "DAOs transform() is deprecated and will be removed in future releases. " +
+            "Please use the transform function from the DSL layer.",
+        ReplaceWith(
+            "object : Table() { val c = column().transform(wrap, unwrap) }"
+        )
+    )
+    fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.transform(
+        unwrap: (Wrapped) -> Unwrapped,
+        wrap: (Unwrapped) -> Wrapped
+    ): EntityFieldWithTransform<Unwrapped, Wrapped> = transform(columnTransformer(unwrap, wrap))
 
     /**
      * Returns a [EntityFieldWithTransform] that extends transformation of existing [EntityFieldWithTransform].
      *
-     * @param toCurrentTarget A function that transforms the value to the target type of previously defined transformation
-     * @param toNextTarget A function that transforms value to the target type
+     * @param unwrap A function that transforms the value to the wrapping type of previously defined transformation
+     * @param wrap A function that transforms value to the wrapping type
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, CurrentTarget : Any?, NextTarget : Any?> EntityFieldWithTransform<TColumn, CurrentTarget>.transform(
-        toCurrentTarget: (NextTarget) -> CurrentTarget,
-        toNextTarget: (CurrentTarget) -> NextTarget
-    ): EntityFieldWithTransform<TColumn, NextTarget> =
-        EntityFieldWithTransform(this.column, ColumnTransformerImpl({ this.toColumn(toCurrentTarget(it)) }, { toNextTarget(this.toTarget(it)) }), false)
+    @Deprecated(
+        "This function was replaced with more general alternative on DSL layer. " +
+            "DAOs transform() is deprecated and will be removed in future releases. " +
+            "Please use the transform function from the DSL layer.",
+        ReplaceWith(
+            "object : Table() { val c = column().transform(wrap, unwrap) }"
+        )
+    )
+    fun <TColumn : Any?, Unwrapped : Any?, Wrapped : Any?> EntityFieldWithTransform<TColumn, Unwrapped>.transform(
+        unwrap: (Wrapped) -> Unwrapped,
+        wrap: (Unwrapped) -> Wrapped
+    ): EntityFieldWithTransform<TColumn, Wrapped> =
+        EntityFieldWithTransform(this.column, columnTransformer({ this.unwrap(unwrap(it)) }, { wrap(this.wrap(it)) }), false)
 
     /**
      * Returns a [EntityFieldWithTransform] delegate that will cache the transformed value on first read of
-     * this same stored [TColumn] value.
+     * this same stored [Unwrapped] value.
      *
      * @param transformer An instance of [ColumnTransformer] to handle the transformations.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, Target : Any?> Column<TColumn>.memoizedTransform(
-        transformer: ColumnTransformer<TColumn, Target>
-    ): EntityFieldWithTransform<TColumn, Target> = EntityFieldWithTransform(this, transformer, true)
+    @Deprecated(
+        "This function was replaced with more general alternative on DSL layer. " +
+            "DAOs transform() is deprecated and will be removed in future releases. " +
+            "Please use the transform function from the DSL layer." +
+            "Memoization will not be a part of column transformation API anymore.",
+        ReplaceWith(
+            "object : Table() { val c = column().transform(transformer) }"
+        )
+    )
+    fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.memoizedTransform(
+        transformer: ColumnTransformer<Unwrapped, Wrapped>
+    ): EntityFieldWithTransform<Unwrapped, Wrapped> = EntityFieldWithTransform(this, transformer, true)
 
     /**
      * Returns a [EntityFieldWithTransform] delegate that will cache the transformed value on first read of
-     * this same stored [TColumn] value.
+     * this same stored [Unwrapped] value.
      *
-     * @param toColumn A pure function that converts a transformed value to a value that can be stored
+     * @param unwrap A pure function that converts a transformed value to a value that can be stored
      * in this original column type.
-     * @param toTarget A pure function that transforms a value stored in this original column type.
+     * @param wrap A pure function that transforms a value stored in this original column type.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, Target : Any?> Column<TColumn>.memoizedTransform(
-        toColumn: (Target) -> TColumn,
-        toTarget: (TColumn) -> Target
-    ): EntityFieldWithTransform<TColumn, Target> = memoizedTransform(ColumnTransformerImpl(toColumn, toTarget))
+    @Deprecated(
+        "This function was replaced with more general alternative on DSL layer. " +
+            "DAOs transform() is deprecated and will be removed in future releases. " +
+            "Please use the transform function from the DSL layer." +
+            "Memoization will not be a part of column transformation API anymore.",
+        ReplaceWith(
+            "object : Table() { val c = column().transform(wrap, unwrap) }"
+        )
+    )
+    fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.memoizedTransform(
+        unwrap: (Wrapped) -> Unwrapped,
+        wrap: (Unwrapped) -> Wrapped
+    ): EntityFieldWithTransform<Unwrapped, Wrapped> = memoizedTransform(columnTransformer(unwrap, wrap))
 
     /**
      * Returns a [EntityFieldWithTransform] that extends transformation of existing [EntityFieldWithTransform]
      * and caches the transformed value on first read.
      *
-     * @param toCurrentTarget A function that transforms the value to the target type of previously defined transformation
-     * @param toNextTarget A function that transforms value to the target type
+     * @param unwrap A function that transforms the value to the wrapping type of previously defined transformation
+     * @param wrap A function that transforms value to the wrapping type
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    fun <TColumn : Any?, CurrentTarget : Any?, NextTarget : Any?> EntityFieldWithTransform<TColumn, CurrentTarget>.memoizedTransform(
-        toCurrentTarget: (NextTarget) -> CurrentTarget,
-        toNextTarget: (CurrentTarget) -> NextTarget
-    ): EntityFieldWithTransform<TColumn, NextTarget> = EntityFieldWithTransform(
+    @Deprecated(
+        "This function was replaced with more general alternative on DSL layer. " +
+            "DAOs transform() is deprecated and will be removed in future releases. " +
+            "Please use the transform function from the DSL layer." +
+            "Memoization will not be a part of column transformation API anymore.",
+        ReplaceWith(
+            "object : Table() { val c = column().transform(wrap, unwrap) }"
+        )
+    )
+    fun <TColumn : Any?, Unwrapped : Any?, Wrapped : Any?> EntityFieldWithTransform<TColumn, Unwrapped>.memoizedTransform(
+        unwrap: (Wrapped) -> Unwrapped,
+        wrap: (Unwrapped) -> Wrapped
+    ): EntityFieldWithTransform<TColumn, Wrapped> = EntityFieldWithTransform(
         this.column,
-        ColumnTransformerImpl({ this.toColumn(toCurrentTarget(it)) }, { toNextTarget(this.toTarget(it)) }),
+        columnTransformer({ this.unwrap(unwrap(it)) }, { wrap(this.wrap(it)) }),
         true
     )
 

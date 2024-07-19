@@ -254,28 +254,26 @@ class EntityIDColumnType<T : Comparable<T>>(
 /**
  * An interface defining the transformation between a source column type and a target type.
  *
- * @param Target The type of the column values after transformation
- * @param Source The type of the column values without transformation
+ * @param Wrapped The type of the column values after transformation
+ * @param Unwrapped The type of the column values without transformation
  */
-interface ColumnTransformer<Source, Target> {
+interface ColumnTransformer<Unwrapped, Wrapped> {
     /**
-     * Applies transformation to the underlying column value ([Source] -> [Target])
+     * Applies back transformation to the value of the transformed type [Wrapped] to the column type [Unwrapped] ([Wrapped] -> [Unwrapped])
      */
-    fun toTarget(value: Source): Target
+    fun unwrap(value: Wrapped): Unwrapped
 
     /**
-     * Applies back transformation to the value of the transformed type [Target] to the column type [Source] ([Target] -> [Source])
+     * Applies transformation to the underlying column value ([Unwrapped] -> [Wrapped])
      */
-    fun toSource(value: Target): Source
+    fun wrap(value: Unwrapped): Wrapped
 }
 
-class ColumnTransformerImpl<Source, Target>(
-    val toSourceFn: (Target) -> Source,
-    val toTargetFn: (Source) -> Target
-) : ColumnTransformer<Source, Target> {
-    override fun toTarget(value: Source) = toTargetFn(value)
-
-    override fun toSource(value: Target) = toSourceFn(value)
+fun <Unwrapped, Wrapped>columnTransformer(unwrap: (value: Wrapped) -> Unwrapped, wrap: (value: Unwrapped) -> Wrapped): ColumnTransformer<Unwrapped, Wrapped> {
+    return object : ColumnTransformer<Unwrapped, Wrapped> {
+        override fun unwrap(value: Wrapped): Unwrapped = unwrap(value)
+        override fun wrap(value: Unwrapped): Wrapped = wrap(value)
+    }
 }
 
 /**
@@ -283,41 +281,29 @@ class ColumnTransformerImpl<Source, Target>(
  *
  * [ColumnWithTransform] is [ColumnType] by itself and can be used for defining columns.
  *
- * @param Target The type to which the column value of type [TColumn] is transformed
- * @param TColumn The type of the column
+ * @param Wrapped The type to which the column value of type [Unwrapped] is transformed
+ * @param Unwrapped The type of the column
  * @param delegate The original column's [IColumnType]
  */
-abstract class ColumnWithTransform<TColumn : Any, Target : Any>(val delegate: IColumnType<TColumn>) : ColumnType<Target>(), ColumnTransformer<TColumn, Target> {
+class ColumnWithTransform<Unwrapped : Any, Wrapped : Any>(
+    val delegate: IColumnType<Unwrapped>,
+    private val transformer: ColumnTransformer<Unwrapped, Wrapped>
+) : ColumnType<Wrapped>(), ColumnTransformer<Unwrapped, Wrapped> by transformer {
     override fun sqlType() = delegate.sqlType()
 
-    override fun valueFromDB(value: Any): Target? {
-        return delegate.valueFromDB(value)?.let { toTarget(it) }
+    override fun valueFromDB(value: Any): Wrapped? {
+        return delegate.valueFromDB(value)?.let { transformer.wrap(it) }
     }
 
-    override fun notNullValueToDB(value: Target): Any {
-        return delegate.notNullValueToDB(toSource(value))
+    override fun notNullValueToDB(value: Wrapped): Any {
+        return delegate.notNullValueToDB(transformer.unwrap(value))
     }
 
-    override fun nonNullValueToString(value: Target): String {
-        return delegate.nonNullValueToString(toSource(value))
+    override fun nonNullValueToString(value: Wrapped): String {
+        return delegate.nonNullValueToString(transformer.unwrap(value))
     }
 
     override var nullable = delegate.nullable
-
-    companion object {
-        /**
-         * Creates a new instance of [ColumnWithTransform] with the given column type and transformer.
-         *
-         * @param S The type of the column's values.
-         * @param T The Target type to which the column value is transformed.
-         * @param delegate The original column type to be transformed.
-         * @param transformer The transformer that provides the transformation logic.
-         * @return A new instance of [ColumnWithTransform] with the specified transformations.
-         */
-        fun <S : Any, T : Any> create(delegate: IColumnType<S>, transformer: ColumnTransformer<S, T>): ColumnWithTransform<S, T> {
-            return object : ColumnWithTransform<S, T>(delegate), ColumnTransformer<S, T> by transformer {}
-        }
-    }
 }
 
 // Numeric columns

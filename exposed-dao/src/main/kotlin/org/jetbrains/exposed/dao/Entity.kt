@@ -15,32 +15,34 @@ import kotlin.reflect.KProperty
  * Class responsible for enabling [Entity] field transformations, which may be useful when advanced database
  * type conversions are necessary for entity mappings.
  */
-open class EntityFieldWithTransform<TColumn, Target>(
+open class EntityFieldWithTransform<Unwrapped, Wrapped>(
     /** The original column that will be transformed */
-    val column: Column<TColumn>,
+    val column: Column<Unwrapped>,
     /** Instance of [ColumnTransformer] with the transformation logic */
-    private val transformer: ColumnTransformer<TColumn, Target>,
+    private val transformer: ColumnTransformer<Unwrapped, Wrapped>,
     /**
      * The function used to convert a transformed value to a value that can be stored in the original column type.
      * Whether the original and transformed values should be cached to avoid multiple conversion calls.
      */
     protected val cacheResult: Boolean = false
-) {
-    private var cache: Pair<TColumn, Target>? = null
+) : ColumnTransformer<Unwrapped, Wrapped> {
+    private var cache: Pair<Unwrapped, Wrapped>? = null
 
-    val toColumn: (Target) -> TColumn = { transformer.toSource(it) }
+    override fun unwrap(value: Wrapped): Unwrapped {
+        return transformer.unwrap(value)
+    }
 
     /** The function used to transform a value stored in the original column type. */
-    val toTarget: (TColumn) -> Target = { columnValue ->
-        if (cacheResult) {
+    override fun wrap(value: Unwrapped): Wrapped {
+        return if (cacheResult) {
             val localCache = cache
-            if (localCache != null && localCache.first == columnValue) {
+            if (localCache != null && localCache.first == value) {
                 localCache.second
             } else {
-                transformer.toTarget(columnValue).also { cache = columnValue to it }
+                transformer.wrap(value).also { cache = value to it }
             }
         } else {
-            transformer.toTarget(columnValue)
+            transformer.wrap(value)
         }
     }
 }
@@ -314,11 +316,11 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         }
     }
 
-    operator fun <Source, Target> EntityFieldWithTransform<Source, Target>.getValue(o: Entity<ID>, desc: KProperty<*>): Target =
-        toTarget(column.getValue(o, desc))
+    operator fun <Unwrapped, Wrapped> EntityFieldWithTransform<Unwrapped, Wrapped>.getValue(o: Entity<ID>, desc: KProperty<*>): Wrapped =
+        wrap(column.getValue(o, desc))
 
-    operator fun <Source, Target> EntityFieldWithTransform<Source, Target>.setValue(o: Entity<ID>, desc: KProperty<*>, value: Target) {
-        column.setValue(o, desc, toColumn(value))
+    operator fun <Unwrapped, Wrapped> EntityFieldWithTransform<Unwrapped, Wrapped>.setValue(o: Entity<ID>, desc: KProperty<*>, value: Wrapped) {
+        column.setValue(o, desc, unwrap(value))
     }
 
     /**
