@@ -369,7 +369,7 @@ root.children = SizedCollection(listOf(child1, child2)) // assign children
 
 ### Composite primary key reference
 
-Let's say we have the following `CompositeIdTable`:
+Assuming that we have the following `CompositeIdTable`:
 ```kotlin
 object Directors : CompositeIdTable("directors") {
     val name = varchar("name", 50).entityId()
