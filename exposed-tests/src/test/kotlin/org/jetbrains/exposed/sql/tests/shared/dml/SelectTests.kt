@@ -233,7 +233,6 @@ class SelectTests : DatabaseTestsBase() {
         }
 
         withTables(tester) {
-            addLogger(StdOutSqlLogger)
             repeat(3) { n ->
                 tester.insert {
                     it[num1] = n
