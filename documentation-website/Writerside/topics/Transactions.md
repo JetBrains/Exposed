@@ -261,28 +261,28 @@ simply relayed to the database.
 **db:** This parameter is optional and is used to select the database where the transaction should be
 settled ([see the section above](#working-with-multiple-databases)).
 
-**Transaction Repetition Attempts**
+**Transaction Maximum Attempts**
 
-Transactions also provide a property, `repetitionAttempts`, which sets the number of retries that should be made if an
-SQLException occurs inside the `transaction` block. If this property is not set, any default value provided
-in `DatabaseConfig` will be used instead:
+Transactions also provide a property, `maxAttempts`, which sets the maximum number of attempts that should be made to perform a transaction block.
+If this value is set to 1 and an SQLException occurs inside the transaction block, the exception will throw without performing a retry.
+If this property is not set, any default value provided in `DatabaseConfig` will be used instead:
 
 ```kotlin
 val db = Database.connect(
     datasource = datasource,
     databaseConfig = DatabaseConfig {
-        defaultRepetitionAttempts = 3
+        defaultMaxAttempts = 3
     }
 )
 
 // property set in transaction block overrides default DatabaseConfig
 transaction(db = db) {
-    repetitionAttempts = 25
+    maxAttempts = 25
     // operation that may need multiple attempts
 }
 ```
 
-If this property is set to a value greater than 0, `minRepetitionDelay` and `maxRepetitionDelay` can also be set in the
+If this property is set to a value greater than 1, `minRetryDelay` and `maxRetryDelay` can also be set in the
 transaction block to indicate the minimum and maximum number of milliseconds to wait before retrying.
 
 **Transaction Query Timeout**
@@ -317,5 +317,8 @@ transaction.
 To use a custom interceptor that acts on all transactions, extend the `GlobalStatementInterceptor` class instead.
 Exposed uses the Java SPI ServiceLoader to discover and load any implementations of this class. In this situation, a new
 file should be created in the *resources* folder
-named: `META-INF/services/org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor`. The contents of this file
-should be the fully qualified class names of all custom implementations.
+named:
+```
+META-INF/services/org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
+```
+The contents of this file should be the fully qualified class names of all custom implementations.
