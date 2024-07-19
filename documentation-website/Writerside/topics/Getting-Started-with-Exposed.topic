@@ -419,7 +419,7 @@
         <p>Let’s extend the app’s functionality by updating and deleting the same task.</p>
         <procedure id="update-and-delete-task-procedure">
             <step>
-                <p>In your <code>transaction()</code> function, add the following code to your implementation:</p>
+                <p>In the same <code>transaction()</code> function, add the following code to your implementation:</p>
                 <code-block lang="kotlin"
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
                             include-lines="14,18,38-52"
@@ -483,8 +483,22 @@
                 </code-block>
             </step>
         </procedure>
+        <tip>
+            It might be useful to know that if a second <code>transaction</code> is opened after the first one,
+            you will find that the table and its data has been lost
+            even though the app hasn't stopped. This is <a href="https://www.h2database.com/html/features.html#in_memory_databases">
+            expected behavior in H2 databases</a> when managing connections and transactions.
+            <p>
+                To keep the database open, add <code>;DB_CLOSE_DELAY=-1</code> to the database URL:
+            </p>
+            <code-block lang="kotlin">
+                Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
+            </code-block>
+        </tip>
     </chapter>
+
     <chapter title="Next steps" id="next-steps">
+
         <p>
             Great job! You have now implemented a simple console application that uses Exposed to fetch and modify
             task data from an in-memory database. Now that you’ve covered the basics, you are ready to
