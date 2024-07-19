@@ -3,5 +3,5 @@
 <vars>
     <var name="product" value="Writerside"/>
     <var name="exposed_version" value="0.52.0"/>
-    <var name="h2_db_version" value="2.2.220"/>
+    <var name="h2_db_version" value="2.2.224"/>
 </vars>
