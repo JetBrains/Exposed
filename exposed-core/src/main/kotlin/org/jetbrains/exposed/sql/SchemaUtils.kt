@@ -543,6 +543,7 @@ object SchemaUtils {
                 addMissingColumnsStatements(tables = tables, withLogs)
             }
             logTimeSpent("Executing alter table statements", withLogs) {
+                alterStatements.forEach { exposedLogger.info("Alter table statements to execute - $it") }
                 execStatements(inBatch, alterStatements)
                 commit()
             }
