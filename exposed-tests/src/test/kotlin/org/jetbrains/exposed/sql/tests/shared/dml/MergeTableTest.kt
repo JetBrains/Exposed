@@ -423,7 +423,6 @@ class MergeTableTest : MergeBaseTest() {
         }
 
         withTables(excludeSettings = defaultExcludeSettings, source, dest) {
-            addLogger(StdOutSqlLogger)
             source.insertAndGetId {
                 it[value] = "user-defined-value"
             }
@@ -437,7 +436,7 @@ class MergeTableTest : MergeBaseTest() {
     }
 
     @Test
-    fun testUnsupportedPostgresFeatures() {
+    fun testPostgresFeaturesAreUnsupportedInOtherDatabases() {
         withMergeTestTablesAndDefaultData(excludeSettings = TestDB.ALL_POSTGRES) { dest, source ->
             // DO NOTHING
             expectException<UnsupportedByDialectException> {

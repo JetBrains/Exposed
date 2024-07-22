@@ -3037,7 +3037,7 @@ public class org/jetbrains/exposed/sql/statements/InsertStatement : org/jetbrain
 	public static synthetic fun valuesAndDefaults$default (Lorg/jetbrains/exposed/sql/statements/InsertStatement;Ljava/util/Map;ILjava/lang/Object;)Ljava/util/Map;
 }
 
-public final class org/jetbrains/exposed/sql/statements/MergeSelectStatement : org/jetbrains/exposed/sql/statements/MergeStatement {
+public class org/jetbrains/exposed/sql/statements/MergeSelectStatement : org/jetbrains/exposed/sql/statements/MergeStatement {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/QueryAlias;Lorg/jetbrains/exposed/sql/Op;)V
 	public final fun getOn ()Lorg/jetbrains/exposed/sql/Op;
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
@@ -3104,7 +3104,7 @@ public final class org/jetbrains/exposed/sql/statements/MergeStatement$ClauseCon
 	public static fun values ()[Lorg/jetbrains/exposed/sql/statements/MergeStatement$ClauseCondition;
 }
 
-public final class org/jetbrains/exposed/sql/statements/MergeTableStatement : org/jetbrains/exposed/sql/statements/MergeStatement {
+public class org/jetbrains/exposed/sql/statements/MergeTableStatement : org/jetbrains/exposed/sql/statements/MergeStatement {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Op;)V
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 }

@@ -480,6 +480,8 @@ abstract class FunctionProvider {
         clauses: List<MergeStatement.Clause>,
         on: Op<Boolean>?
     ): String {
+        validateMergeStatement(transaction, clauses)
+
         val onCondition = (
             on?.toString() ?: run {
                 val targetKey = dest.primaryKey?.columns?.singleOrNull()
@@ -520,6 +522,8 @@ abstract class FunctionProvider {
         on: Op<Boolean>,
         prepared: Boolean
     ): String {
+        validateMergeStatement(transaction, clauses)
+
         val using = source.query.prepareSQL(transaction, prepared)
 
         val onRaw = if (currentDialect is OracleDialect) "($on)" else "$on"
@@ -530,6 +534,28 @@ abstract class FunctionProvider {
             +"ON $onRaw "
             addClausesToMergeStatement(transaction, dest, clauses)
             toString()
+        }
+    }
+
+    private fun validateMergeStatement(transaction: Transaction, clauses: List<MergeStatement.Clause>) {
+        if (currentDialect !is OracleDialect) {
+            if (clauses.any { it.deleteWhere != null }) {
+                transaction.throwUnsupportedException("'deleteWhere' parameter can be used only as a part of Oracle SQL update clause statement.")
+            }
+        }
+
+        if (currentDialect !is PostgreSQLDialect) {
+            if (clauses.any { it.action == MergeStatement.ClauseAction.DO_NOTHING }) {
+                transaction.throwUnsupportedException("DO NOTHING actions is supported only by Postgres database.")
+            }
+
+            if (clauses.any { it.overridingUserValue }) {
+                transaction.throwUnsupportedException("OVERRIDING USER VALUE modifier is supported only by Postgres database.")
+            }
+
+            if (clauses.any { it.overridingSystemValue }) {
+                transaction.throwUnsupportedException("OVERRIDING SYSTEM VALUE modifier is supported only by Postgres database.")
+            }
         }
     }
 

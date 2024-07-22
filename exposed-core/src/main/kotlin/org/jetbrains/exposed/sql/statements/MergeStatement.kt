@@ -1,11 +1,7 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
 
 /**
  * The base implementation of SQL merge command that is used by statements like [MergeSelectStatement], [MergeTableStatement]
@@ -131,13 +127,12 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
  * @property source The source [Table] from which records are taken to compare with `dest`.
  * @property on The join condition [Op<Boolean>] that specifies how to match records in both `source` and `dest`.
  */
-class MergeTableStatement(
+open class MergeTableStatement(
     dest: Table,
     private val source: Table,
     private val on: Op<Boolean>?
 ) : MergeStatement(dest) {
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
-        validateMergeStatement(transaction, clauses)
         return transaction.db.dialect.functionProvider.merge(table, source, transaction, clauses, on)
     }
 }
@@ -153,35 +148,12 @@ class MergeTableStatement(
  * @property selectQuery The source [QueryAlias] from which records are taken to compare with `dest`.
  * @property on The join condition [Op<Boolean>] that specifies how to match records in both `source` and `dest`.
  */
-class MergeSelectStatement(
+open class MergeSelectStatement(
     dest: Table,
     private val selectQuery: QueryAlias,
     val on: Op<Boolean>
 ) : MergeStatement(dest) {
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
-        validateMergeStatement(transaction, clauses)
         return transaction.db.dialect.functionProvider.mergeSelect(table, selectQuery, transaction, clauses, on, prepared)
-    }
-}
-
-private fun validateMergeStatement(transaction: Transaction, clauses: List<MergeStatement.Clause>) {
-    if (currentDialect !is OracleDialect) {
-        if (clauses.any { it.deleteWhere != null }) {
-            transaction.throwUnsupportedException("'deleteWhere' parameter can be used only as a part of Oracle SQL update clause statement.")
-        }
-    }
-
-    if (currentDialect !is PostgreSQLDialect) {
-        if (clauses.any { it.action == MergeStatement.ClauseAction.DO_NOTHING }) {
-            transaction.throwUnsupportedException("DO NOTHING actions is supported only by Postgres database.")
-        }
-
-        if (clauses.any { it.overridingUserValue }) {
-            transaction.throwUnsupportedException("OVERRIDING USER VALUE modifier is supported only by Postgres database.")
-        }
-
-        if (clauses.any { it.overridingSystemValue }) {
-            transaction.throwUnsupportedException("OVERRIDING SYSTEM VALUE modifier is supported only by Postgres database.")
-        }
     }
 }
