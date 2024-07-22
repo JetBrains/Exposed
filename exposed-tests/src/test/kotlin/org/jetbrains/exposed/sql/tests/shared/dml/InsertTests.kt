@@ -735,4 +735,19 @@ class InsertTests : DatabaseTestsBase() {
             assertNotNull(entry[tester.defaultDate])
         }
     }
+
+    @Test
+    fun testDatabaseGeneratedUUIDasPrimaryKey() {
+        val randomPGUUID = object : CustomFunction<UUID>("gen_random_uuid", UUIDColumnType()) {}
+
+        val tester = object : IdTable<UUID>("testTestTest") {
+            override val id = uuid("id").defaultExpression(randomPGUUID).entityId()
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            val result = tester.insert {}
+            assertNotNull(result[tester.id])
+        }
+    }
 }
