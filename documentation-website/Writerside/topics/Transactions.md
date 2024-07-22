@@ -264,7 +264,7 @@ settled ([see the section above](#working-with-multiple-databases)).
 **Transaction Maximum Attempts**
 
 Transactions also provide a property, `maxAttempts`, which sets the maximum number of attempts that should be made to perform a transaction block.
-If this value is set to 1 and an SQLException occurs inside the transaction block, the exception will throw without performing a retry.
+If this value is set to 1 and an SQLException occurs inside the transaction block, the exception will be thrown without performing a retry.
 If this property is not set, any default value provided in `DatabaseConfig` will be used instead:
 
 ```kotlin
