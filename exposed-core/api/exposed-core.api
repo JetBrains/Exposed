@@ -1080,6 +1080,7 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun greaterEqEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public abstract fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/EqOp;
 	public abstract fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/EqOp;
+	public abstract fun inList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public abstract fun inList (Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public abstract fun inList (Lkotlin/Triple;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public abstract fun inList (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -1133,6 +1134,7 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun neq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun neq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun notEqSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/NotEqSubQueryOp;
+	public abstract fun notInList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public abstract fun notInList (Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public abstract fun notInList (Lkotlin/Triple;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public abstract fun notInList (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -1207,6 +1209,7 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun greaterEqEntityID (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public static fun hasFlag (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/EqOp;
 	public static fun hasFlag (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/EqOp;
+	public static fun inList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public static fun inList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public static fun inList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lkotlin/Triple;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public static fun inList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -1262,6 +1265,7 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun neq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun neq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun notEqSubQuery (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/NotEqSubQueryOp;
+	public static fun notInList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public static fun notInList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public static fun notInList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lkotlin/Triple;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public static fun notInList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -2204,6 +2208,7 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun greaterEqEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/EqOp;
 	public fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/EqOp;
+	public fun inList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public fun inList (Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public fun inList (Lkotlin/Triple;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public fun inList (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -2257,6 +2262,7 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun neq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public fun neq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public fun notEqSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/NotEqSubQueryOp;
+	public fun notInList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public fun notInList (Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public fun notInList (Lkotlin/Triple;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public fun notInList (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -2905,6 +2911,15 @@ public final class org/jetbrains/exposed/sql/ops/InTableOp : org/jetbrains/expos
 	public final fun getExpr ()Lorg/jetbrains/exposed/sql/Expression;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
 	public final fun isInTable ()Z
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/sql/ops/MultipleInListOp : org/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp {
+	public fun <init> (Ljava/util/List;Ljava/lang/Iterable;Z)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/Iterable;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun getExpr ()Ljava/lang/Object;
+	public fun getExpr ()Ljava/util/List;
+	public synthetic fun registerValues (Lorg/jetbrains/exposed/sql/QueryBuilder;Ljava/lang/Object;)V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 

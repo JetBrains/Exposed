@@ -131,20 +131,24 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testInList01() {
+    fun testInListWithSingleExpression01() {
         withCitiesAndUsers { _, users, _ ->
-            val r = users.selectAll().where {
+            val r1 = users.selectAll().where {
                 users.id inList listOf("andrey", "alex")
             }.orderBy(users.name).toList()
 
-            assertEquals(2, r.size)
-            assertEquals("Alex", r[0][users.name])
-            assertEquals("Andrey", r[1][users.name])
+            assertEquals(2, r1.size)
+            assertEquals("Alex", r1[0][users.name])
+            assertEquals("Andrey", r1[1][users.name])
+
+            val r2 = users.selectAll().where { users.id notInList listOf("ABC", "DEF") }.toList()
+
+            assertEquals(users.selectAll().count().toInt(), r2.size)
         }
     }
 
     @Test
-    fun testInList02() {
+    fun testInListWithSingleExpression02() {
         withCitiesAndUsers { cities, _, _ ->
             val cityIds = cities.selectAll().map { it[cities.id] }.take(2)
             val r = cities.selectAll().where { cities.id inList cityIds }
@@ -154,8 +158,8 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testInList03() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+    fun testInListWithPairExpressions01() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _ ->
             val r = users.selectAll().where {
                 users.id to users.name inList listOf("andrey" to "Andrey", "alex" to "Alex")
             }.orderBy(users.name).toList()
@@ -167,8 +171,8 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testInList04() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+    fun testInListWithPairExpressions02() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _ ->
             val r = users.selectAll().where { users.id to users.name inList listOf("andrey" to "Andrey") }.toList()
 
             assertEquals(1, r.size)
@@ -177,8 +181,8 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testInList05() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+    fun testInListWithPairExpressionsAndEmptyList() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _ ->
             val r = users.selectAll().where { users.id to users.name inList emptyList() }.toList()
 
             assertEquals(0, r.size)
@@ -186,8 +190,8 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testInList06() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
+    fun testNotInListWithPairExpressionsAndEmptyList() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _ ->
             val r = users.selectAll().where { users.id to users.name notInList emptyList() }.toList()
 
             assertEquals(users.selectAll().count().toInt(), r.size)
@@ -195,18 +199,68 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testInList07() {
-        withCitiesAndUsers(listOf(TestDB.SQLITE, TestDB.SQLSERVER)) { _, users, _ ->
-            val r = users.selectAll().where {
-                Triple(users.id, users.name, users.cityId) notInList listOf(Triple("alex", "Alex", null))
+    fun testInListWithTripleExpressions() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _ ->
+            val userExpressions = Triple(users.id, users.name, users.cityId)
+            val r1 = users.selectAll().where {
+                userExpressions notInList listOf(Triple("alex", "Alex", null))
             }.toList()
 
-            assertEquals(users.selectAll().count().toInt() - 1, r.size)
+            assertEquals(users.selectAll().count().toInt() - 1, r1.size)
+
+            val r2 = users.selectAll().where {
+                userExpressions inList listOf(Triple("andrey", "Andrey", 1))
+            }.toList()
+
+            assertEquals(1, r2.size)
         }
     }
 
     @Test
-    fun testInList08() {
+    fun testInListWithMultipleColumns() {
+        val tester = object : Table("tester") {
+            val num1 = integer("num_1")
+            val num2 = double("num_2")
+            val num3 = varchar("num_3", 8)
+            val num4 = long("num_4")
+        }
+
+        fun Int.toColumnValue(index: Int) = when (index) {
+            1 -> toDouble()
+            2 -> toString()
+            3 -> toLong()
+            else -> this
+        }
+
+        withTables(tester) {
+            repeat(3) { n ->
+                tester.insert {
+                    it[num1] = n
+                    it[num2] = n.toDouble()
+                    it[num3] = n.toString()
+                    it[num4] = n.toLong()
+                }
+            }
+            val expected = tester.selectAll().count().toInt()
+
+            val allSameNumbers = List(3) { n -> List(4) { n.toColumnValue(it) } }
+            val result1 = tester.selectAll().where { tester.columns inList allSameNumbers }.toList()
+            assertEquals(expected, result1.size)
+
+            val result2 = tester.selectAll().where { tester.columns inList listOf(allSameNumbers.first()) }.toList()
+            assertEquals(1, result2.size)
+
+            val allDifferentNumbers = List(3) { n -> List(4) { (n + it).toColumnValue(it) } }
+            val result3 = tester.selectAll().where { tester.columns notInList allDifferentNumbers }.toList()
+            assertEquals(expected, result3.size)
+
+            val result4 = tester.selectAll().where { tester.columns notInList emptyList() }.toList()
+            assertEquals(expected, result4.size)
+        }
+    }
+
+    @Test
+    fun testInListWithEntityIDColumns() {
         withTables(EntityTests.Posts, EntityTests.Boards, EntityTests.Categories) {
             val board1 = EntityTests.Board.new {
                 this.name = "Board1"
