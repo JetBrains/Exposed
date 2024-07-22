@@ -371,7 +371,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         DateTimeZone.setDefault(DateTimeZone.UTC)
         assertEquals("UTC", DateTimeZone.getDefault().id)
 
-        val nowWithTimeZone = DateTime.now()
+        val nowWithTimeZone = DateTime.parse("2024-07-18T13:19:44.000").withZone(DateTimeZone.UTC)
         val timestampWithTimeZoneLiteral = timestampWithTimeZoneLiteral(nowWithTimeZone)
 
         val testTable = object : IntIdTable("t") {

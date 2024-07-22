@@ -213,10 +213,10 @@ class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
     override fun nonNullValueAsDefaultString(value: DateTime): String {
         val dialect = currentDialect
         return when {
-            dialect is PostgreSQLDialect ->
-                "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0')}+00'::timestamp with time zone"
+            dialect is PostgreSQLDialect -> // +00 appended because PostgreSQL stores it in UTC time zone
+                "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0').trimEnd('.')}+00'::timestamp with time zone"
             (dialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
-                "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value).trimEnd('0')}'"
+                "'${DEFAULT_DATE_TIME_STRING_FORMATTER.print(value)}'"
             dialect is MysqlDialect -> "'${MYSQL_FRACTION_DATE_TIME_AS_DEFAULT_FORMATTER.print(value)}'"
             else -> super.nonNullValueAsDefaultString(value)
         }

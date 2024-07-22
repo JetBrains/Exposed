@@ -11,6 +11,9 @@ import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
+import java.time.format.DateTimeFormatter.ISO_LOCAL_TIME
+import java.time.format.DateTimeFormatterBuilder
 import java.util.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
@@ -94,12 +97,13 @@ private val MYSQL_TIME_AS_DEFAULT_STRING_FORMATTER by lazy {
 
 // Example result: 2023-07-07 14:42:29.343
 private val POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
-    DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss.SSS",
-        Locale.ROOT
-    )
+    DateTimeFormatterBuilder()
+        .parseCaseInsensitive()
+        .append(ISO_LOCAL_DATE)
+        .appendLiteral(' ')
+        .append(ISO_LOCAL_TIME)
+        .toFormatter(Locale.ROOT)
 }
-
 private val MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
         "yyyy-MM-dd HH:mm:ss.SSSSSS",
@@ -421,10 +425,10 @@ class KotlinOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumn
         val dialect = currentDialect
         return when {
             dialect is PostgreSQLDialect -> // +00 appended because PostgreSQL stores it in UTC time zone
-                "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER).trimEnd('0').trimEnd('.')}+00'::timestamp with time zone"
+                "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}+00'::timestamp with time zone"
 
             dialect is H2Dialect && dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
-                "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER).trimEnd('0').trimEnd('.')}'"
+                "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
 
             dialect is MysqlDialect -> "'${value.format(MYSQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
 
