@@ -10,7 +10,8 @@
     <toc-element topic="Getting-Started-with-Exposed.md"/>
     <toc-element topic="Exposed-Modules.md"/>
     <toc-element topic="Database-and-DataSource.md"/>
-    <toc-element topic="Table-Definition.md">
+    <toc-element toc-title="Working with Tables">
+        <toc-element topic="Table-Definition.md"/>
         <toc-element topic="Data-Types.md"/>
         <toc-element topic="SQL-Functions.md"/>
     </toc-element>

@@ -40,11 +40,14 @@ class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
 
 ## Table types
 In addition to `IntIdTable`, the following `IdTable` subclasses are available:
-* `LongIdTable` - `Long` id column
-* `UIntIdTable` - `UInt` id column
-* `ULongIdTable` - `ULong` id column
-* `UUIDTable` - `UUID` id column
-* `CompositeIdTable` - multiple columns make up the table id
+
+<deflist type="medium">
+<def title="LongIdTable"><code>Long</code> id column</def>
+<def title="UIntIdTable"><code>UInt</code> id column</def>
+<def title="ULongIdTable"><code>ULong</code> id column</def>
+<def title="UUIDTable"><code>UUID</code> id column</def>
+<def title="CompositeIdTable">Multiple columns make up the table id</def>
+</deflist>
 
 To define a custom column type as the primary key and id, use a typed `IdTable` directly and override the `id` column:
 ```kotlin
@@ -114,7 +117,7 @@ val movies = StarWarsFilm.all()
 val movies = StarWarsFilm.find { StarWarsFilms.sequelId eq 8 }
 val movie = StarWarsFilm.findById(5)
 ```
-* For a list of available predicates, see [DSL Where expression](Deep-Dive-into-DSL.md#where-expression).
+<tip>For a list of available predicates, see <a href="Deep-Dive-into-DSL.md#where-expression">DSL Where expression</a>.</tip>
 
 Read a value from a property similar to any property in a Kotlin class:
 ```kotlin
@@ -284,7 +287,7 @@ class User(id: EntityID<Int>) : IntEntity(id) {
 }
 ```
 
-Without using the `infix` call, the `orderBy` method is chained after `referrersOn`:
+Without using the [infix notation](https://kotlinlang.org/docs/functions.html#infix-notation), the `orderBy` method is chained after `referrersOn`:
 
 ```kotlin
 class User(id: EntityID<Int>) : IntEntity(id) {
@@ -404,7 +407,7 @@ class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
   var director by Director referencedOn StarWarsFilms
 }
 ```
-* For more information on creating table foreign key constraints, see [DSL Foreign Key](Table-Definition.md#foreign-key).
+<tip>For more information on creating table foreign key constraints, see <a href="Table-Definition.md#foreign-key">DSL Foreign Key</a>.</tip>
 
 Now you can get the director for a `StarWarsFilm` object, `movie`, in the same way you would get any other field:
 ```kotlin
@@ -422,8 +425,9 @@ You can then access this field on a `Director` object, `director`:
 ```kotlin
 director.films // returns all StarWarsFilm objects that reference this director
 ```
-Using other previously mentioned infix functions, like `optionalReferencedOn`, `backReferencedOn`, and `optionalReferrersOn`,
-is also supported for referencing or referenced `CompositeEntity` objects, by using the respective overloads that accept an `IdTable` as an argument.
+Using other previously mentioned [infix functions](https://kotlinlang.org/docs/functions.html#infix-notation),
+like `optionalReferencedOn`, `backReferencedOn`, and `optionalReferrersOn`, is also supported for referencing or referenced `CompositeEntity` objects,
+by using the respective overloads that accept an `IdTable` as an argument.
 These overloads will automatically resolve the foreign key constraint associated with the composite primary key.
 
 ### Eager Loading

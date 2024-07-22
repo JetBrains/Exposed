@@ -9,48 +9,47 @@ The most primitive table type is `Table`. It is located in the **org.jetbrains.e
 To configure a custom name for a table, which will be used in actual SQL queries, pass it to the `name` parameter of the `Table()` constructor.
 Otherwise, Exposed will generate it from the full class name or the class name without the suffix 'Table', if present.
 
-For example, to create a simple table with an integer `id` column and a string `name` column, use any of the following code, depending on the table name of choice:
+For example, to create a simple table with an integer `id` column and a string `name` column, use any of the following options:
+
+Omit the `name` parameter to generate the table name from the object name:
 ```kotlin
-// Table name will be taken from object name
 object Cities : Table() {
     val id = integer("id")
     val name = varchar("name", 50)
 }
-// SQL: CREATE TABLE IF NOT EXISTS CITIES (
-//          ID INT NOT NULL,
-//          "name" VARCHAR(50) NOT NULL
-//      )
-
-// Table name will be taken from object name without 'Table' suffix
+```
+```sql
+CREATE TABLE IF NOT EXISTS CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
+```
+Omit the `name` parameter to generate the table name from the object name, with any 'Table' suffix removed:
+```kotlin
 object CitiesTable : Table() {
     val id = integer("id")
     val name = varchar("name", 50)
 }
-// SQL: CREATE TABLE IF NOT EXISTS CITIES (
-//          ID INT NOT NULL,
-//          "name" VARCHAR(50) NOT NULL
-//      )
-
-// Table name will be taken from provided argument
+```
+```sql
+CREATE TABLE IF NOT EXISTS CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
+```
+Provide an argument to `name` to generate a specific table name:
+```kotlin
 object Cities : Table("all_cities") {
     val id = integer("id")
     val name = varchar("name", 50)
 }
-// SQL: CREATE TABLE IF NOT EXISTS ALL_CITIES (
-//          ID INT NOT NULL,
-//          "name" VARCHAR(50) NOT NULL
-//      )
-
-// Some databases, like H2, fold unquoted names to upper case.
-// To keep case-sensitivity, manually quote the provided argument
+```
+```sql
+CREATE TABLE IF NOT EXISTS ALL_CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
+```
+Some databases, like H2, fold unquoted identifiers to upper case. To keep table name case-sensitivity, manually quote the provided argument:
+```kotlin
 object Cities : Table("\"all_cities\"") {
     val id = integer("id")
     val name = varchar("name", 50)
 }
-// SQL: CREATE TABLE IF NOT EXISTS "all_cities" (
-//          ID INT NOT NULL,
-//          "name" VARCHAR(50) NOT NULL
-//      )
+```
+```sql
+CREATE TABLE IF NOT EXISTS "all_cities" (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
 ```
 
 Depending on what DBMS you use, the types of columns could be different in actual SQL queries.
@@ -68,13 +67,12 @@ For example, the `Cities` table could instead be defined as an `IntIdTable`, whi
 object Cities : IntIdTable() {
     val name = varchar("name", 50)
 }
-// SQL: CREATE TABLE IF NOT EXISTS CITIES (
-//          ID INT AUTO_INCREMENT PRIMARY KEY,
-//          "name" VARCHAR(50) NOT NULL
-//      )
+```
+```sql
+CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
 ```
 
-* For more information on `IdTable` types, see [DAO Table Types](Deep-Dive-into-DAO.md#table-types).
+<tip>For more information on <code>IdTable</code> types, see <a href="Deep-Dive-into-DAO.md#table-types">DAO Table Types</a>.</tip>
 
 ## Constraints
 
@@ -200,14 +198,18 @@ of `NOT NULL` and `UNIQUE` constraints.  To change the column set, add columns, 
 For example, to define the `name` column as the primary key, use the following code. The "Cities_name" string 
 will be used as the constraint name in the actual SQL query, if provided; otherwise a name will be generated based on the table's name.
 ```kotlin
-// SQL: CONSTRAINT Cities_name PRIMARY KEY ("name")
 override val primaryKey = PrimaryKey(name, name = "Cities_name")
+```
+```sql
+CONSTRAINT Cities_name PRIMARY KEY ("name")
 ```
 
 It is also possible to define a primary key on a table using multiple columns:
 ```kotlin
-// SQL: CONSTRAINT pk_Cities PRIMARY KEY (ID, "name")
 override val primaryKey = PrimaryKey(id, name)
+```
+```sql
+CONSTRAINT pk_Cities PRIMARY KEY (ID, "name")
 ```
 
 Except for `CompositeIdTable`, each available class in Exposed that inherits from `IdTable` has the `primaryKey` field automatically defined.
@@ -225,6 +227,7 @@ object Towns : CompositeIdTable("towns") {
     override val primaryKey = PrimaryKey(areaCode, latitude, longitude)
 }
 ```
+<tip>For more information on <code>CompositeIdTable</code> types, see <a href="Deep-Dive-into-DAO.md#table-types">DAO Table Types</a>.</tip>
 
 ### Foreign Key
 
@@ -235,19 +238,37 @@ use `foreignKey()` directly within an `init` block.
 
 `reference()` and `optReference()` methods have several parameters:
 
-* `name: String` is a name for the foreign key column, which will be used in actual SQL queries.
-* `ref: Column<T>` is a target column from another parent table.
-* `onDelete: ReferenceOption? = null` is an action for when a linked row from a parent table will be deleted.
-* `onUpdate: ReferenceOption? = null` is an action for when a value in a referenced column will be changed.
-* `fkName: String? = null` is a name for the foreign key constraint.
+`name: String`
+: A name for the foreign key column, which will be used in actual SQL queries.
+
+`ref: Column<T>`
+: A target column from another parent table.
+
+`onDelete: ReferenceOption? = null`
+: An action for when a linked row from a parent table will be deleted.
+
+`onUpdate: ReferenceOption? = null`
+: An action for when a value in a referenced column will be changed.
+
+`fkName: String? = null`
+: A name for the foreign key constraint.
 
 Enum class `ReferenceOption` has five values:
 
-* `RESTRICT` is an option that restricts changes on a referenced column, and the default option for most dialects.
-* `NO_ACTION` is the same as RESTRICT in some, but not all, databases, and the default option for Oracle and SQL Server dialects.
-* `CASCADE` is an option that allows updating or deleting the referring rows.
-* `SET_NULL` is an option that sets the referring column values to null.
-* `SET_DEFAULT` is an option that sets the referring column values to the default value.
+`RESTRICT`
+: An option that restricts changes on a referenced column, and the default option for most dialects.
+
+`NO_ACTION`
+: The same as RESTRICT in some, but not all, databases, and the default option for Oracle and SQL Server dialects.
+
+`CASCADE`
+: An option that allows updating or deleting the referring rows.
+
+`SET_NULL`
+: An option that sets the referring column values to null.
+
+`SET_DEFAULT`
+: An option that sets the referring column values to the default value.
 
 Consider the following `Citizens` table. This table has the `name` and `city` columns. If the `Cities` table has 
 configured the `name` column as the primary key, the `Citizens` table can refer to it by its `city` column, which is a foreign key. To 
