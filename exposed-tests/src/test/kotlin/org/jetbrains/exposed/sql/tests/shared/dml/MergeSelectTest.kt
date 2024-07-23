@@ -210,4 +210,20 @@ class MergeSelectTest : MergeBaseTest() {
             assertEquals(1000, dest.getByKey("in-source-and-dest-4")[dest.value])
         }
     }
+
+    @Test
+    fun testDoNothingInPostgres() {
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES) { dest, source ->
+            dest.mergeFrom(sourceQuery, on = { defaultOnCondition() }) {
+                whenNotMatchedDoNothing(and = sourceQuery[source.value] greater 1)
+                whenNotMatchedInsert {
+                    it[dest.key] = sourceQuery[source.key]
+                    it[dest.value] = sourceQuery[source.value] + 100
+                }
+            }
+
+            assertEquals(101, dest.selectAll().where { dest.key eq "only-in-source-1" }.first()[dest.value])
+            assertNull(dest.selectAll().where { dest.key inList listOf("only-in-source-2", "only-in-source-3") }.firstOrNull())
+        }
+    }
 }

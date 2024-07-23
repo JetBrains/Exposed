@@ -32,13 +32,22 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
     /**
      * Defines an insert operation to be performed when there is no matching record in the destination table.
      *
+     * @param overridingUserValue Postgres only. Indicates whether to use the `OVERRIDING USER VALUE` clause for the insert.
+     * @param overridingSystemValue Postgres only. Indicates whether to use the `OVERRIDING SYSTEM VALUE` clause for the insert.
      * @param and An additional optional condition [Op<Boolean>] to refine when the insert should take place.
      * @param body A lambda to configure the [InsertStatement] in which the required columns and corresponding
      * values are specified for the insert operation.
      */
-    fun whenNotMatchedInsert(and: Op<Boolean>? = null, body: (InsertStatement<Int>) -> Unit) {
+    fun whenNotMatchedInsert(
+        and: Op<Boolean>? = null,
+        overridingUserValue: Boolean = false,
+        overridingSystemValue: Boolean = false,
+        body: (InsertStatement<Int>) -> Unit
+    ) {
         val arguments = InsertStatement<Int>(table).apply(body).arguments!!.first()
-        clauses.add(Clause(ClauseAction.INSERT, arguments, and))
+        clauses.add(
+            Clause(ClauseCondition.NOT_MATCHED, ClauseAction.INSERT, arguments, and, null, overridingSystemValue, overridingUserValue)
+        )
     }
 
     /**
@@ -52,7 +61,7 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
      */
     fun whenMatchedUpdate(and: Op<Boolean>? = null, deleteWhere: Op<Boolean>? = null, body: (UpdateStatement) -> Unit) {
         val arguments = UpdateStatement(table, limit = 1).apply(body).firstDataSet
-        clauses.add(Clause(ClauseAction.UPDATE, arguments, and, deleteWhere))
+        clauses.add(Clause(ClauseCondition.MATCHED, ClauseAction.UPDATE, arguments, and, deleteWhere))
     }
 
     /**
@@ -62,20 +71,89 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
      * should be performed.
      */
     fun whenMatchedDelete(and: Op<Boolean>? = null) {
-        clauses.add(Clause(ClauseAction.DELETE, emptyList(), and))
+        clauses.add(Clause(ClauseCondition.MATCHED, ClauseAction.DELETE, emptyList(), and))
+    }
+
+    /**
+     * Postgres only. Specifies that no operation should be performed when a matching record is found in the destination table.
+     *
+     * @param and An additional optional condition [Op<Boolean>] to determine when the do-nothing operation
+     * should be performed.
+     */
+    fun whenMatchedDoNothing(and: Op<Boolean>? = null) {
+        clauses.add(Clause(ClauseCondition.MATCHED, ClauseAction.DO_NOTHING, emptyList(), and))
+    }
+
+    /**
+     * Postgres only. Specifies that no operation should be performed when no matching record is found in the destination table.
+     *
+     * @param and An additional optional condition [Op<Boolean>] to determine when the do-nothing operation
+     * should be performed.
+     */
+    fun whenNotMatchedDoNothing(and: Op<Boolean>? = null) {
+        clauses.add(Clause(ClauseCondition.NOT_MATCHED, ClauseAction.DO_NOTHING, emptyList(), and))
     }
 
     data class Clause(
+        val type: ClauseCondition,
         val action: ClauseAction,
         val arguments: List<Pair<Column<*>, Any?>>,
         val and: Op<Boolean>?,
-        /**
-         * deleteWhere is applicable only to Oracle SQL database which has no dedicated "when delete" clause
-         */
-        val deleteWhere: Op<Boolean>? = null
+        /** deleteWhere is applicable only to Oracle SQL database which has no dedicated "when delete" clause */
+        val deleteWhere: Op<Boolean>? = null,
+        /** Postgres clause modifier to override the system value */
+        val overridingSystemValue: Boolean = false,
+        /** Postgres clause modifier to override the user value */
+        val overridingUserValue: Boolean = false,
     )
 
+    enum class ClauseCondition {
+        MATCHED, NOT_MATCHED
+    }
+
     enum class ClauseAction {
-        INSERT, UPDATE, DELETE
+        INSERT, UPDATE, DELETE, DO_NOTHING
+    }
+}
+
+/**
+ * Represents an SQL MERGE statement. It encapsulates the logic to perform conditional updates, insertions,
+ * or deletions.
+ *
+ * Here is only the part specific for the Table as a source implementation.
+ * Look into [MergeStatement] to find the base implementation of that command.
+ *
+ * @property dest The destination [Table] where records will be merged into.
+ * @property source The source [Table] from which records are taken to compare with `dest`.
+ * @property on The join condition [Op<Boolean>] that specifies how to match records in both `source` and `dest`.
+ */
+open class MergeTableStatement(
+    dest: Table,
+    private val source: Table,
+    private val on: Op<Boolean>?
+) : MergeStatement(dest) {
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
+        return transaction.db.dialect.functionProvider.merge(table, source, transaction, clauses, on)
+    }
+}
+
+/**
+ * Represents an SQL MERGE statement. It encapsulates the logic to perform conditional updates, insertions,
+ * or deletions.
+ *
+ * Here is only the part specific for the Query as a source implementation.
+ * Look into [MergeStatement] to find the base implementation of that command.
+ *
+ * @property dest The destination [Table] where records will be merged into.
+ * @property selectQuery The source [QueryAlias] from which records are taken to compare with `dest`.
+ * @property on The join condition [Op<Boolean>] that specifies how to match records in both `source` and `dest`.
+ */
+open class MergeSelectStatement(
+    dest: Table,
+    private val selectQuery: QueryAlias,
+    val on: Op<Boolean>
+) : MergeStatement(dest) {
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
+        return transaction.db.dialect.functionProvider.mergeSelect(table, selectQuery, transaction, clauses, on, prepared)
     }
 }
