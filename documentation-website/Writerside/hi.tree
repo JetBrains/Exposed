@@ -8,14 +8,16 @@
 
     <toc-element topic="Home.topic"/>
     <toc-element topic="Getting-Started-with-Exposed.md"/>
+    <toc-element topic="Exposed-Modules.md"/>
     <toc-element topic="Database-and-DataSource.md"/>
-    <toc-element topic="Transactions.md"/>
-    <toc-element topic="Deep-Dive-into-DSL.md"/>
-    <toc-element topic="Deep-Dive-into-DAO.md"/>
-    <toc-element topic="Exposed-Modules.md">
+    <toc-element toc-title="Working with Tables">
+        <toc-element topic="Table-Definition.md"/>
         <toc-element topic="Data-Types.md"/>
         <toc-element topic="SQL-Functions.md"/>
     </toc-element>
+    <toc-element topic="Transactions.md"/>
+    <toc-element topic="Deep-Dive-into-DSL.md"/>
+    <toc-element topic="Deep-Dive-into-DAO.md"/>
     <toc-element topic="Frequently-Asked-Questions.md"/>
     <toc-element topic="Samples.md"/>
     <toc-element topic="Migration-Guide.md"/>

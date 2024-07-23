@@ -37,26 +37,111 @@ class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
   var director by StarWarsFilms.director
 }
 ```
+
+## Table types
+In addition to `IntIdTable`, the following `IdTable` subclasses are available:
+
+<deflist type="medium">
+<def title="LongIdTable"><code>Long</code> id column</def>
+<def title="UIntIdTable"><code>UInt</code> id column</def>
+<def title="ULongIdTable"><code>ULong</code> id column</def>
+<def title="UUIDTable"><code>UUID</code> id column</def>
+<def title="CompositeIdTable">Multiple columns make up the table id</def>
+</deflist>
+
+To define a custom column type as the primary key and id, use a typed `IdTable` directly and override the `id` column:
+```kotlin
+object Directors : IdTable<String>("directors") {
+    override val id: Column<EntityID<String>> = varchar("id", 32).entityId()
+    val name = varchar("name", 50)
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+class Director(id: EntityID<String>) : Entity<String>(id) {
+    companion object : EntityClass<String, Director>(Directors)
+    var name by Directors.name
+}
+```
+
+To define multiple columns as part of the primary key and id, use `CompositeIdTable` and mark each composite column using `entityId()`.
+Each component column will be available for CRUD operations either individually (as for any standard column) or all together as part of the `id` column:
+```kotlin
+object Directors : CompositeIdTable("directors") {
+    val name = varchar("name", 50).entityId()
+    val guildId = uuid("guild_id").autoGenerate().entityId()
+    val genre = enumeration<Genre>("genre")
+
+    override val primaryKey = PrimaryKey(name, guildId)
+}
+
+class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
+    companion object : CompositeEntityClass<Director>(Directors)
+    var genre by Directors.genre
+}
+```
+
 ## Basic CRUD operations
 ### Create
 ```kotlin
 val movie = StarWarsFilm.new {
-  name = "The Last Jedi"
-  sequelId = 8
-  director = "Rian Johnson"
+    name = "The Last Jedi"
+    sequelId = 8
+    director = "Rian Johnson"
+}
+```
+
+To provide a manual id value to a new entity, pass the value as an argument to the `id` parameter:
+```kotlin
+StarWarsFilm.new(id = 2) {
+    name = "The Rise of Skywalker"
+    sequelId = 9
+    director = "J.J. Abrams"
+}
+```
+If the entity is a `CompositeEntity`, the id value can be constructed by creating a component column-to-value association using `CompositeID`:
+```kotlin
+val newId = CompositeID {
+    it[Directors.name] = "J.J. Abrams"
+    it[Directors.guildId] = UUID.randomUUID()
+}
+
+Director.new(newId) {
+    genre = Genre.SCI_FI
 }
 ```
 ### Read
-To get entities use one of the following
+To get entities use one of the following methods:
 ```kotlin
 val movies = StarWarsFilm.all()
 val movies = StarWarsFilm.find { StarWarsFilms.sequelId eq 8 }
 val movie = StarWarsFilm.findById(5)
 ```
-* For a list of available predicates, see [DSL Where expression](Deep-Dive-into-DSL.md#where-expression).  
-  Read a value from a property similar to any property in a Kotlin class:
+<tip>For a list of available predicates, see <a href="Deep-Dive-into-DSL.md#where-expression">DSL Where expression</a>.</tip>
+
+Read a value from a property similar to any property in a Kotlin class:
 ```kotlin
 val name = movie.name
+```
+<note>
+An entity's <code>id</code> property is wrapped as an instance of the <code>EntityID</code> class.
+To access the actual wrapped value, for example the stored <code>Int</code> from a <code>StarWarsFilm</code> entity, use <code>EntityID.value</code>:
+<code-block lang="kotlin">
+val id: Int = movie.id.value
+</code-block>
+</note>
+
+If the entity is a `CompositeEntity`, its `id` property can be used to refer to all composite columns and to get entities,
+much like the `id` column of its associated `CompositeIdTable`:
+```kotlin
+val directorId = CompositeID {
+    it[Directors.name] = "George Lucas"
+    it[Directors.guildId] = "..."
+}
+
+val director = Director.findById(directorId)
+// this will deconstruct in SQL to both component columns
+val directors = Director.find { Directors.id eq directorId }
 ```
 #### Sort (Order-by)
 Ascending order:
@@ -72,7 +157,10 @@ Update the value of a property similar to any property in a Kotlin class:
 ```kotlin
 movie.name = "Episode VIII – The Last Jedi"
 ```
-* Note: Exposed doesn't make an immediate update when you set a new value for Entity, it just stores it on the inner map. "Flushing" values to the database occurs at the end of the transaction, or before the next ` select *` from the database.
+<note>
+Exposed doesn't make an immediate update when you set a new value for <code>Entity</code>, it just stores it on the inner map.
+"Flushing" values to the database occurs at the end of the transaction, or before the next <code>SELECT *</code> from the database.
+</note>
 
 Search for an entity by its id and apply an update:
 ```kotlin
@@ -199,7 +287,7 @@ class User(id: EntityID<Int>) : IntEntity(id) {
 }
 ```
 
-Without using the `infix` call, the `orderBy` method is chained after `referrersOn`:
+Without using the [infix notation](https://kotlinlang.org/docs/functions.html#infix-notation), the `orderBy` method is chained after `referrersOn`:
 
 ```kotlin
 class User(id: EntityID<Int>) : IntEntity(id) {
@@ -281,6 +369,66 @@ child1.parents = SizedCollection(root) // assign parent
 val child2 = Node.new { name = "child2" }
 root.children = SizedCollection(listOf(child1, child2)) // assign children
 ```
+
+### Composite primary key reference
+
+Assuming that we have the following `CompositeIdTable`:
+```kotlin
+object Directors : CompositeIdTable("directors") {
+    val name = varchar("name", 50).entityId()
+    val guildId = uuid("guild_id").autoGenerate().entityId()
+    val genre = enumeration<Genre>("genre")
+
+    override val primaryKey = PrimaryKey(name, guildId)
+}
+
+class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
+    companion object : CompositeEntityClass<Director>(Directors)
+    var genre by Directors.genre
+}
+```
+We can refactor the `StarWarsFilms` table to reference this table by adding columns to hold the appropriate primary key values and creating a table-level foreign key constraint:
+```kotlin
+object StarWarsFilms : IntIdTable() {
+    val sequelId = integer("sequel_id").uniqueIndex()
+    val name = varchar("name", 50)
+    val directorName = varchar("director_name", 50)
+    val directorGuildId = uuid("director_guild_id")
+
+    init {
+        foreignKey(directorName, directorGuildId, target = Directors.primaryKey)
+    }
+}
+
+class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
+  companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
+  var sequelId by StarWarsFilms.sequelId 
+  var name by StarWarsFilms.name
+  var director by Director referencedOn StarWarsFilms
+}
+```
+<tip>For more information on creating table foreign key constraints, see <a href="Table-Definition.md#foreign-key">DSL Foreign Key</a>.</tip>
+
+Now you can get the director for a `StarWarsFilm` object, `movie`, in the same way you would get any other field:
+```kotlin
+movie.director // returns a Director object
+```
+Now if you wanted to get all the films made by a director, you could add a `referrersOn` field to the `Director` class:
+```kotlin
+class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
+    companion object : CompositeEntityClass<Director>(Directors)
+    var genre by Directors.genre
+    val films by StarWarsFilm referrersOn StarWarsFilms
+}
+```
+You can then access this field on a `Director` object, `director`:
+```kotlin
+director.films // returns all StarWarsFilm objects that reference this director
+```
+Using other previously mentioned [infix functions](https://kotlinlang.org/docs/functions.html#infix-notation),
+like `optionalReferencedOn`, `backReferencedOn`, and `optionalReferrersOn`, is also supported for referencing or referenced `CompositeEntity` objects,
+by using the respective overloads that accept an `IdTable` as an argument.
+These overloads will automatically resolve the foreign key constraint associated with the composite primary key.
 
 ### Eager Loading
 **Available since 0.13.1**.
