@@ -486,6 +486,11 @@ public abstract class org/jetbrains/exposed/sql/ColumnSet : org/jetbrains/expose
 	public final fun slice (Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/FieldSet;
 }
 
+public abstract interface class org/jetbrains/exposed/sql/ColumnTransformer {
+	public abstract fun unwrap (Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun wrap (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
 public abstract class org/jetbrains/exposed/sql/ColumnType : org/jetbrains/exposed/sql/IColumnType {
 	public fun <init> ()V
 	public fun <init> (Z)V
@@ -508,10 +513,24 @@ public abstract class org/jetbrains/exposed/sql/ColumnType : org/jetbrains/expos
 }
 
 public final class org/jetbrains/exposed/sql/ColumnTypeKt {
+	public static final fun columnTransformer (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/ColumnTransformer;
 	public static final fun getAutoIncColumnType (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/AutoIncColumnType;
 	public static final fun isAutoInc (Lorg/jetbrains/exposed/sql/IColumnType;)Z
 	public static final fun resolveColumnType (Lkotlin/reflect/KClass;Lorg/jetbrains/exposed/sql/ColumnType;)Lorg/jetbrains/exposed/sql/ColumnType;
 	public static synthetic fun resolveColumnType$default (Lkotlin/reflect/KClass;Lorg/jetbrains/exposed/sql/ColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/ColumnType;
+}
+
+public final class org/jetbrains/exposed/sql/ColumnWithTransform : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/ColumnTransformer {
+	public fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/ColumnTransformer;)V
+	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/IColumnType;
+	public fun getNullable ()Z
+	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun setNullable (Z)V
+	public fun sqlType ()Ljava/lang/String;
+	public fun unwrap (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun wrap (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public abstract class org/jetbrains/exposed/sql/ComparisonOp : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/ComplexExpression, org/jetbrains/exposed/sql/Op$OpBoolean {
@@ -2462,6 +2481,10 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public final fun short (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun text (Ljava/lang/String;Ljava/lang/String;Z)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun text$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun transform (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun transform (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnTransformer;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun transformNullable (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun transformNullable (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnTransformer;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun ubyte (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun uinteger (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun ulong (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;

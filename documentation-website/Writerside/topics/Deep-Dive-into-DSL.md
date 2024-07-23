@@ -766,3 +766,65 @@ The values specified in the statement block will be used for the insert statemen
 In the example above, if the original row was inserted with a user-defined <code>rating</code>, then <code>replace()</code> was executed with a block that omitted the <code>rating</code> column, 
 the newly inserted row would store the default rating value. This is because the old row was completely deleted first.
 </note>
+
+## Column transformation
+
+Column transformations allow to define custom transformations between database column types and application's data types. 
+This can be particularly useful when you need to store data in one format but work with it in another format within your application.
+
+Consider the following example, where we define a table to store meal times and transform these times into meal types:
+
+```kotlin
+enum class Meal {
+    BREAKFAST,
+    LUNCH,
+    DINNER
+}
+
+object Meals : Table() {
+    val mealTime: Column<Meal> = time("meal_time")
+        .transform(
+            wrap = {
+                when {
+                    it.hour < 10 -> Meal.BREAKFAST
+                    it.hour < 15 -> Meal.LUNCH
+                    else -> Meal.DINNER
+                }
+            },
+            unwrap = {
+                when (it) {
+                    Meal.BREAKFAST -> LocalTime(8, 0)
+                    Meal.LUNCH -> LocalTime(12, 0)
+                    Meal.DINNER -> LocalTime(18, 0)
+                }
+            }
+        )
+}
+```
+
+The `transform` function is used to apply custom transformations to the `mealTime` column:
+
+- The `wrap` function transforms the stored `LocalTime` values into `Meal` enums. It checks the hour of the stored time and returns the corresponding meal type.
+- The `unwrap` function transforms `Meal` enums back into `LocalTime` values for storage in the database.
+
+Transformation could be also defined as an implementation of `ColumnTransformer` interface and reused among different tables:
+
+```kotlin
+class MealTimeTransformer : ColumnTransformer<LocalTime, Meal> {
+    override fun wrap(value: LocalTime): Meal = when {
+        value.hour < 10 -> Meal.BREAKFAST
+        value.hour < 15 -> Meal.LUNCH
+        else -> Meal.DINNER
+    }
+
+    override fun unwrap(value: Meal): LocalTime = when (value) {
+        Meal.BREAKFAST -> LocalTime(8, 0)
+        Meal.LUNCH -> LocalTime(12, 0)
+        Meal.DINNER -> LocalTime(18, 0)
+    }
+}
+
+object Meals : Table() {
+    val mealTime: Column<Meal> = time("meal_time").transform(MealTimeTransformer())
+}
+```

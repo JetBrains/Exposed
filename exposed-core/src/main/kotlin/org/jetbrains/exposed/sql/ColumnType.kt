@@ -251,6 +251,61 @@ class EntityIDColumnType<T : Comparable<T>>(
     override fun hashCode(): Int = 31 * super.hashCode() + idColumn.hashCode()
 }
 
+/**
+ * An interface defining the transformation between a source column type and a target type.
+ *
+ * @param Wrapped The type of the column values after transformation
+ * @param Unwrapped The type of the column values without transformation
+ */
+interface ColumnTransformer<Unwrapped, Wrapped> {
+    /**
+     * Returns the underlying column value without a transformation applied ([Wrapped] -> [Unwrapped]).
+     */
+    fun unwrap(value: Wrapped): Unwrapped
+
+    /**
+     * Applies transformation to the underlying column value ([Unwrapped] -> [Wrapped])
+     */
+    fun wrap(value: Unwrapped): Wrapped
+}
+
+fun <Unwrapped, Wrapped>columnTransformer(unwrap: (value: Wrapped) -> Unwrapped, wrap: (value: Unwrapped) -> Wrapped): ColumnTransformer<Unwrapped, Wrapped> {
+    return object : ColumnTransformer<Unwrapped, Wrapped> {
+        override fun unwrap(value: Wrapped): Unwrapped = unwrap(value)
+        override fun wrap(value: Unwrapped): Wrapped = wrap(value)
+    }
+}
+
+/**
+ * A class that provides the transformation between a source column type and a target type.
+ *
+ * [ColumnWithTransform] is [ColumnType] by itself and can be used for defining columns.
+ *
+ * @param Wrapped The type to which the column value of type [Unwrapped] is transformed
+ * @param Unwrapped The type of the column
+ * @param delegate The original column's [IColumnType]
+ */
+class ColumnWithTransform<Unwrapped : Any, Wrapped : Any>(
+    val delegate: IColumnType<Unwrapped>,
+    private val transformer: ColumnTransformer<Unwrapped, Wrapped>
+) : ColumnType<Wrapped>(), ColumnTransformer<Unwrapped, Wrapped> by transformer {
+    override fun sqlType() = delegate.sqlType()
+
+    override fun valueFromDB(value: Any): Wrapped? {
+        return delegate.valueFromDB(value)?.let { transformer.wrap(it) }
+    }
+
+    override fun notNullValueToDB(value: Wrapped): Any {
+        return delegate.notNullValueToDB(transformer.unwrap(value))
+    }
+
+    override fun nonNullValueToString(value: Wrapped): String {
+        return delegate.nonNullValueToString(transformer.unwrap(value))
+    }
+
+    override var nullable = delegate.nullable
+}
+
 // Numeric columns
 
 /**
