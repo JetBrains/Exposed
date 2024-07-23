@@ -1214,7 +1214,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * ```
      *
      * @param Wrapped The type into which the value of the underlying column will be transformed.
-     * @param Unwrapped The source type of the column.
+     * @param Unwrapped The type of the original column.
      * @param wrap A function to transform from the source type [Unwrapped] to the target type [Wrapped].
      * @param unwrap A function to transform from the target type [Wrapped] to the source type [Unwrapped].
      * @return A new column of type [Wrapped] with the applied transformations.

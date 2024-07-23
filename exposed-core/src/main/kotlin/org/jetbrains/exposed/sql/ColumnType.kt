@@ -259,7 +259,7 @@ class EntityIDColumnType<T : Comparable<T>>(
  */
 interface ColumnTransformer<Unwrapped, Wrapped> {
     /**
-     * Applies back transformation to the value of the transformed type [Wrapped] to the column type [Unwrapped] ([Wrapped] -> [Unwrapped])
+     * Returns the underlying column value without a transformation applied ([Wrapped] -> [Unwrapped]).
      */
     fun unwrap(value: Wrapped): Unwrapped
 
