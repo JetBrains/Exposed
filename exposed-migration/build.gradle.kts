@@ -1,5 +1,7 @@
 plugins {
     id("java")
+
+    alias(libs.plugins.dokka)
 }
 
 repositories {

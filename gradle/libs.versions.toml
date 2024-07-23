@@ -1,5 +1,6 @@
 [versions]
 kotlin = "1.9.21"
+dokka = "1.9.20"
 detekt = "1.23.6" # When upgrading, also upgrade in detekt.yml and add corresponding detekt-formatting jar file.
 binary-compatibility-validator = "0.16.2"
 docker-compose = "0.17.5"
@@ -82,6 +83,7 @@ mssql = { group = "com.microsoft.sqlserver", name = "mssql-jdbc", version.ref = 
 logcaptor = { group = "io.github.hakky54", name = "logcaptor", version.ref = "logcaptor" }
 
 [plugins]
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

@@ -1,7 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") apply true
+    kotlin("jvm")
+    alias(libs.plugins.dokka)
 }
 
 repositories {

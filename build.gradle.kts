@@ -1,3 +1,4 @@
+import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configurePublishing
 import org.jetbrains.exposed.gradle.testDb
@@ -7,6 +8,12 @@ plugins {
     id(libs.plugins.detekt.get().pluginId) apply true
     alias(libs.plugins.binary.compatibility.validator)
     id(libs.plugins.docker.compose.get().pluginId)
+
+    alias(libs.plugins.dokka)
+}
+
+tasks.withType<DokkaMultiModuleTask> {
+    outputDirectory.set(project.file("docs/api"))
 }
 
 repositories {
