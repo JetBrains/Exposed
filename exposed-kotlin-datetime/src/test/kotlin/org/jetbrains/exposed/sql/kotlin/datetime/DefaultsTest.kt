@@ -395,7 +395,7 @@ class DefaultsTest : DatabaseTestsBase() {
         java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
         assertEquals("UTC", ZoneId.systemDefault().id)
 
-        val nowWithTimeZone = OffsetDateTime.now()
+        val nowWithTimeZone = OffsetDateTime.parse("2024-07-18T13:19:44.000+00:00")
         val timestampWithTimeZoneLiteral = timestampWithTimeZoneLiteral(nowWithTimeZone)
 
         val testTable = object : IntIdTable("t") {
