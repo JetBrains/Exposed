@@ -797,4 +797,17 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testFloatDefaultColumnValue() {
+        val tester = object : Table("testFloatDefaultColumnValue") {
+            val float = float("float_value").default(30.0f)
+            val double = double("double_value").default(30.0)
+            val floatExpression = float("float_expression_value").defaultExpression(floatLiteral(30.0f))
+            val doubleExpression = double("double_expression_value").defaultExpression(doubleLiteral(30.0))
+        }
+        withTables(tester) {
+            assertEqualLists(emptyList(), SchemaUtils.statementsRequiredToActualizeScheme(tester))
+        }
+    }
 }
