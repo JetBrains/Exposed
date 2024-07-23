@@ -8,6 +8,8 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.kotlin.datetime.CurrentTimestamp
+import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -718,6 +720,34 @@ class InsertTests : DatabaseTestsBase() {
             }.single()
             assertEquals("custom-id-value", result1[tester.id].value)
             assertEquals("custom-id-value", result1[tester.customId])
+        }
+    }
+
+    @Test
+    fun testInsertReturnsValuesFromDefaultExpression() {
+        val tester = object : Table() {
+            val defaultDate = timestamp(name = "default_date").defaultExpression(CurrentTimestamp)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            val entry = tester.insert {}
+
+            assertNotNull(entry[tester.defaultDate])
+        }
+    }
+
+    @Test
+    fun testDatabaseGeneratedUUIDasPrimaryKey() {
+        val randomPGUUID = object : CustomFunction<UUID>("gen_random_uuid", UUIDColumnType()) {}
+
+        val tester = object : IdTable<UUID>("testTestTest") {
+            override val id = uuid("id").defaultExpression(randomPGUUID).entityId()
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            val result = tester.insert {}
+            assertNotNull(result[tester.id])
         }
     }
 }

@@ -183,7 +183,7 @@ open class InsertStatement<Key : Any>(
         val inserted = if (arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
         // According to the `processResults()` method when supportsOnlyIdentifiersInGeneratedKeys is false
         // all the columns could be taken from result set
-        val rs = if (autoIncColumns.isNotEmpty() || !currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
+        val rs = if (columnsGeneratedOnDB().isNotEmpty() || !currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
             resultSet
         } else {
             null
@@ -215,7 +215,7 @@ open class InsertStatement<Key : Any>(
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi = when {
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause
-        autoIncColumns.isNotEmpty() && currentDialect is PostgreSQLDialect ->
+        columnsGeneratedOnDB().isNotEmpty() && currentDialect is PostgreSQLDialect ->
             transaction.connection.prepareStatement(sql, true)
 
         autoIncColumns.isNotEmpty() ->
@@ -251,4 +251,17 @@ open class InsertStatement<Key : Any>(
             ?.idColumn
             ?.takeIf { it.columnType is UUIDColumnType }
             ?.defaultValueFun != null
+
+    /**
+     * Returns the list of columns with default values that can not be taken locally.
+     * It is the columns defined with `defaultExpression()`, `databaseGenerated()`
+     */
+    private fun columnsWithDatabaseDefaults() = targets.flatMap { it.columns }.filter { it.defaultValueFun == null && it.dbDefaultValue != null }
+
+    /**
+     * Returns all the columns for which value can not be derived without actual request.
+     *
+     * At the current moment it is the auto increment columns and columns with database side generated defaults
+     */
+    private fun columnsGeneratedOnDB(): Collection<Column<*>> = (autoIncColumns + columnsWithDatabaseDefaults()).toSet()
 }
