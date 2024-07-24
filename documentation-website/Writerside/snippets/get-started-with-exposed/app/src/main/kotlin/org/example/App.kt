@@ -15,9 +15,9 @@ fun main() {
         // print sql to std-out
         addLogger(StdOutSqlLogger)
 
-        //...
+        // ...
 
-        SchemaUtils.create (Tasks)
+        SchemaUtils.create(Tasks)
 
         val taskId = Tasks.insert {
             it[title] = "Learn Exposed"
@@ -32,11 +32,11 @@ fun main() {
 
         println("Created new tasks with ids $taskId and $secondTaskId.")
 
-        Tasks.select(Tasks.id.count(), Tasks.isCompleted).groupBy(Tasks.isCompleted).forEach{
+        Tasks.select(Tasks.id.count(), Tasks.isCompleted).groupBy(Tasks.isCompleted).forEach {
             println("${it[Tasks.isCompleted]}: ${it[Tasks.id.count()]} ")
         }
 
-        //Update a task
+        // Update a task
         Tasks.update({ Tasks.id eq taskId }) {
             it[isCompleted] = true
         }
@@ -45,7 +45,7 @@ fun main() {
 
         println("Updated task details: $updatedTask")
 
-        //Delete a task
+        // Delete a task
         Tasks.deleteWhere { id eq secondTaskId }
 
         println("Remaining tasks: ${Tasks.selectAll().toList()}")
