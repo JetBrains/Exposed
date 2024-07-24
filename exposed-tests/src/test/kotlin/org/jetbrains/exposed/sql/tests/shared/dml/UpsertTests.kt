@@ -11,8 +11,10 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.sql.statements.BatchUpsertStatement
-import org.jetbrains.exposed.sql.tests.*
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -247,12 +249,18 @@ class UpsertTests : DatabaseTestsBase() {
             val incrementCount = listOf(Words.count to Words.count.plus(1))
 
             repeat(3) {
-                Words.upsert(onUpdate = incrementCount) {
+                Words.upsert(onUpdate = { incrementCount }) {
                     it[word] = testWord
                 }
             }
 
             assertEquals(3, Words.selectAll().single()[Words.count])
+
+            val updatedCount = 1000
+            Words.upsert(onUpdate = { listOf(Words.count to intLiteral(updatedCount)) }) {
+                it[word] = testWord
+            }
+            assertEquals(updatedCount, Words.selectAll().single()[Words.count])
         }
     }
 
@@ -274,7 +282,7 @@ class UpsertTests : DatabaseTestsBase() {
                 tester.gains to tester.gains.plus(tester.amount),
                 tester.losses to tester.losses.minus(tester.amount)
             )
-            tester.upsert(onUpdate = adjustGainAndLoss) {
+            tester.upsert(onUpdate = { adjustGainAndLoss }) {
                 it[item] = "Item B"
                 it[gains] = 200
                 it[losses] = 0
@@ -284,7 +292,7 @@ class UpsertTests : DatabaseTestsBase() {
             assertEquals(200, insertResult[tester.gains])
             assertEquals(0, insertResult[tester.losses])
 
-            tester.upsert(onUpdate = adjustGainAndLoss) {
+            tester.upsert(onUpdate = { adjustGainAndLoss }) {
                 it[item] = itemA
                 it[gains] = 200
                 it[losses] = 0
@@ -312,7 +320,7 @@ class UpsertTests : DatabaseTestsBase() {
             assertEquals("Phrase", tester.selectAll().single()[tester.phrase])
 
             val phraseConcat = concat(" - ", listOf(tester.word, tester.phrase))
-            tester.upsert(onUpdate = listOf(tester.phrase to phraseConcat)) { // expression in update
+            tester.upsert(onUpdate = { listOf(tester.phrase to phraseConcat) }) { // expression in update
                 it[word] = testWord
             }
             assertEquals("$testWord - $defaultPhrase", tester.selectAll().single()[tester.phrase])
@@ -322,6 +330,59 @@ class UpsertTests : DatabaseTestsBase() {
                 it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar"))
             }
             assertEquals("foobar", tester.selectAll().where { tester.word eq "$testWord 2" }.single()[tester.phrase])
+        }
+    }
+
+    @Test
+    fun testUpsertWithManualUpdateUsingInsertValues() {
+        val tester = object : Table("tester") {
+            val id = integer("id").uniqueIndex()
+            val word = varchar("name", 64)
+            val count = integer("count").default(1)
+        }
+
+        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+            tester.insert {
+                it[id] = 1
+                it[word] = "Word A"
+            }
+            assertEquals(1, tester.selectAll().single()[tester.count])
+
+            // H2_Mysql & H2_Mariadb syntax does not allow VALUES() syntax to come first in complex expression
+            // Syntax must be column=(1 + VALUES(column)), not column=(VALUES(column) + 1)
+            tester.upsert(
+                onUpdate = { listOf(tester.count to intLiteral(100).times(tester.count.asForInsert())) }
+            ) {
+                it[id] = 1
+                it[word] = "Word B"
+                it[count] = 9
+            }
+            val result = tester.selectAll().single()
+            assertEquals(900, result[tester.count])
+
+            val newWords = listOf(
+                Triple(2, "Word B", 2),
+                Triple(1, "Word A", 3),
+                Triple(3, "Word C", 4)
+            )
+            tester.batchUpsert(
+                newWords,
+                onUpdate = {
+                    listOf(
+                        tester.word to concat(tester.word, stringLiteral(" || "), tester.count.asForInsert()),
+                        tester.count to intLiteral(1).plus(tester.count.asForInsert())
+                    )
+                },
+            ) { (id, word, count) ->
+                this[tester.id] = id
+                this[tester.word] = word
+                this[tester.count] = count
+            }
+
+            assertEquals(3, tester.selectAll().count())
+            val updatedWord = tester.selectAll().where { tester.word like "% || %" }.single()
+            assertEquals("Word A || 3", updatedWord[tester.word])
+            assertEquals(4, updatedWord[tester.count])
         }
     }
 
@@ -513,7 +574,7 @@ class UpsertTests : DatabaseTestsBase() {
             val lettersWithDuplicates = alphabet + vowels
             val incrementCount = listOf(Words.count to Words.count.plus(1))
 
-            Words.batchUpsert(lettersWithDuplicates, onUpdate = incrementCount) { letter ->
+            Words.batchUpsert(lettersWithDuplicates, onUpdate = { incrementCount }) { letter ->
                 this[Words.word] = letter
             }
 
@@ -561,7 +622,7 @@ class UpsertTests : DatabaseTestsBase() {
             val firstThreeVowels = vowels.take(3)
             Words.batchUpsert(
                 lettersWithDuplicates,
-                onUpdate = incrementCount,
+                onUpdate = { incrementCount },
                 // PostgresNG throws IndexOutOfBound if shouldReturnGeneratedValues == true
                 // Related issue in pgjdbc-ng repository: https://github.com/impossibl/pgjdbc-ng/issues/545
                 shouldReturnGeneratedValues = false,

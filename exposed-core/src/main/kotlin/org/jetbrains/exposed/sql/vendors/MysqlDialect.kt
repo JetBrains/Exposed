@@ -239,46 +239,46 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     override fun upsert(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-        onUpdateExclude: List<Column<*>>?,
+        expression: String,
+        onUpdate: List<Pair<Column<*>, Any?>>,
+        keyColumns: List<Column<*>>,
         where: Op<Boolean>?,
-        transaction: Transaction,
-        vararg keys: Column<*>
+        transaction: Transaction
     ): String {
-        if (keys.isNotEmpty()) {
+        if (keyColumns.isNotEmpty()) {
             transaction.throwUnsupportedException("MySQL doesn't support specifying conflict keys in UPSERT clause")
         }
         if (where != null) {
             transaction.throwUnsupportedException("MySQL doesn't support WHERE in UPSERT clause")
         }
 
-        val isAliasSupported = when (val dialect = transaction.db.dialect) {
-            is MysqlDialect -> dialect !is MariaDBDialect && dialect.fullVersion >= "8.0.19"
-            else -> false // H2_MySQL mode also uses this function provider & requires older version
-        }
-
         return with(QueryBuilder(true)) {
-            appendInsertToUpsertClause(table, data, transaction)
-            if (isAliasSupported) {
+            +insert(false, table, data.unzip().first, expression, transaction)
+            if (isUpsertAliasSupported(transaction.db.dialect)) {
                 +" AS NEW"
             }
 
             +" ON DUPLICATE KEY UPDATE "
-            onUpdate?.appendTo { (columnToUpdate, updateExpression) ->
+            onUpdate.appendTo { (columnToUpdate, updateExpression) ->
                 append("${transaction.identity(columnToUpdate)}=$updateExpression")
-            } ?: run {
-                val updateColumns = getUpdateColumnsForUpsert(data.unzip().first, onUpdateExclude, null)
-                updateColumns.appendTo { column ->
-                    val columnName = transaction.identity(column)
-                    if (isAliasSupported) {
-                        append("$columnName=NEW.$columnName")
-                    } else {
-                        append("$columnName=VALUES($columnName)")
-                    }
-                }
             }
             toString()
         }
+    }
+
+    override fun asForInsert(columnName: String, queryBuilder: QueryBuilder) {
+        queryBuilder {
+            if (isUpsertAliasSupported(currentDialect)) {
+                +"NEW.$columnName"
+            } else {
+                +"VALUES($columnName)"
+            }
+        }
+    }
+
+    private fun isUpsertAliasSupported(dialect: DatabaseDialect): Boolean = when (dialect) {
+        is MysqlDialect -> dialect !is MariaDBDialect && dialect.fullVersion >= "8.0.19"
+        else -> false // H2_MySQL mode also uses this function provider & requires older unsupported version
     }
 
     override fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {

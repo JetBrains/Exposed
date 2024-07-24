@@ -271,29 +271,28 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     override fun upsert(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-        onUpdateExclude: List<Column<*>>?,
+        expression: String,
+        onUpdate: List<Pair<Column<*>, Any?>>,
+        keyColumns: List<Column<*>>,
         where: Op<Boolean>?,
-        transaction: Transaction,
-        vararg keys: Column<*>
+        transaction: Transaction
     ): String {
-        val keyColumns = getKeyColumnsForUpsert(table, *keys)
-        if (keyColumns.isNullOrEmpty()) {
+        if (keyColumns.isEmpty()) {
             transaction.throwUnsupportedException("UPSERT requires a unique key or constraint as a conflict target")
         }
 
-        val updateColumns = getUpdateColumnsForUpsert(data.unzip().first, onUpdateExclude, keyColumns)
-
         return with(QueryBuilder(true)) {
-            appendInsertToUpsertClause(table, data, transaction)
+            +insert(false, table, data.unzip().first, expression, transaction)
 
             +" ON CONFLICT "
             keyColumns.appendTo(prefix = "(", postfix = ")") { column ->
                 append(transaction.identity(column))
             }
 
-            +" DO"
-            appendUpdateToUpsertClause(table, updateColumns, onUpdate, transaction, isAliasNeeded = false)
+            +" DO UPDATE SET "
+            onUpdate.appendTo { (columnToUpdate, updateExpression) ->
+                append("${transaction.identity(columnToUpdate)}=$updateExpression")
+            }
 
             where?.let {
                 +" WHERE "
@@ -302,6 +301,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             toString()
         }
     }
+
+    override fun asForInsert(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"EXCLUDED.$columnName" } }
 
     override fun delete(
         ignore: Boolean,

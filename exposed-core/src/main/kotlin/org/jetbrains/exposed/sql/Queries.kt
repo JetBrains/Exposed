@@ -484,8 +484,9 @@ fun <T : Table> T.updateReturning(
  *
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match.
  * If no columns are provided, primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
- * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
- * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdate Lambda accepting a list of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert. To specify manually that the insert
+ * value should be used, for example in an expression, invoke `asForInsert()` on the desired column.
  * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found.
@@ -493,11 +494,12 @@ fun <T : Table> T.updateReturning(
  */
 fun <T : Table> T.upsert(
     vararg keys: Column<*>,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdate: (UpsertStatement<Long>.() -> List<Pair<Column<*>, Expression<*>>>)? = null,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
-) = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() }).apply {
+) = UpsertStatement<Long>(this, keys = keys, onUpdate?.let { mutableListOf() }, onUpdateExclude, where?.let { SqlExpressionBuilder.it() }).apply {
+    onUpdate?.let { this.onUpdate!!.addAll(this.it()) }
     body(this)
     execute(TransactionManager.current())
 }
@@ -509,8 +511,9 @@ fun <T : Table> T.upsert(
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are
  * provided, primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
  * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
- * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
- * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdate Lambda accepting a list of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert. To specify manually that the insert
+ * value should be used, for example in an expression, invoke `asForInsert()` on the desired column.
  * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found.
@@ -521,14 +524,15 @@ fun <T : Table> T.upsert(
 fun <T : Table> T.upsertReturning(
     vararg keys: Column<*>,
     returning: List<Expression<*>> = columns,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdate: (UpsertStatement<Long>.() -> List<Pair<Column<*>, Expression<*>>>)? = null,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): ReturningStatement {
-    val update = UpsertStatement<Long>(this, *keys, onUpdate = onUpdate, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() })
-    body(update)
-    return ReturningStatement(this, returning, update)
+    val upsert = UpsertStatement<Long>(this, keys = keys, onUpdate?.let { mutableListOf() }, onUpdateExclude, where?.let { SqlExpressionBuilder.it() })
+    onUpdate?.let { upsert.onUpdate!!.addAll(upsert.it()) }
+    body(upsert)
+    return ReturningStatement(this, returning, upsert)
 }
 
 /**
@@ -537,8 +541,9 @@ fun <T : Table> T.upsertReturning(
  * @param data Collection of values to use in batch upsert.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
- * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
- * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdate Lambda accepting a list of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert. To specify manually that the insert
+ * value should be used, for example in an expression, invoke `asForInsert()` on the desired column.
  * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found.
@@ -549,7 +554,7 @@ fun <T : Table> T.upsertReturning(
 fun <T : Table, E : Any> T.batchUpsert(
     data: Iterable<E>,
     vararg keys: Column<*>,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdate: (BatchUpsertStatement.() -> List<Pair<Column<*>, Expression<*>>>)? = null,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
@@ -564,8 +569,9 @@ fun <T : Table, E : Any> T.batchUpsert(
  * @param data Sequence of values to use in batch upsert.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
- * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
- * If left null, all columns will be updated with the values provided for the insert.
+ * @param onUpdate Lambda accepting a list of pairs of specific columns to update and the expressions to update them with.
+ * If left null, all columns will be updated with the values provided for the insert. To specify manually that the insert
+ * value should be used, for example in an expression, invoke `asForInsert()` on the desired column.
  * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found.
@@ -576,7 +582,7 @@ fun <T : Table, E : Any> T.batchUpsert(
 fun <T : Table, E : Any> T.batchUpsert(
     data: Sequence<E>,
     vararg keys: Column<*>,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdate: (BatchUpsertStatement.() -> List<Pair<Column<*>, Expression<*>>>)? = null,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
@@ -587,7 +593,7 @@ fun <T : Table, E : Any> T.batchUpsert(
 
 private fun <T : Table, E> T.batchUpsert(
     data: Iterator<E>,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdate: (BatchUpsertStatement.() -> List<Pair<Column<*>, Expression<*>>>)? = null,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
@@ -597,11 +603,13 @@ private fun <T : Table, E> T.batchUpsert(
     BatchUpsertStatement(
         this,
         *keys,
-        onUpdate = onUpdate,
+        onUpdate = onUpdate?.let { mutableListOf() },
         onUpdateExclude = onUpdateExclude,
         where = where?.let { SqlExpressionBuilder.it() },
         shouldReturnGeneratedValues = shouldReturnGeneratedValues
-    )
+    ).apply {
+        onUpdate?.let { this.onUpdate!!.addAll(this.it()) }
+    }
 }
 
 /**
