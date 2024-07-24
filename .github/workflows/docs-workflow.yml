@@ -40,9 +40,22 @@ jobs:
       - name: Remove artifacts
         run: rm -rf artifacts
 
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Build API documentation with Dokka
+        run: ./gradlew dokkaHtmlMultiModule
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
           branch: documentation-website
           title: 'docs: Update documentation website'
           commit-message: Update documentation website
+
