@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
@@ -109,24 +108,16 @@ class UpsertTests : DatabaseTestsBase() {
 
         withTables(excludeSettings = TestDB.ALL_H2_V1, tester) { testDb ->
             val primaryKeyValues = Pair("User A", "Key A")
-            if (testDb == TestDB.ORACLE) {
-                // Oracle explicitly prohibits using key columns in update clause
-                // throws 'ORA-38104: Columns referenced in the ON Clause cannot be updated'
-                expectException<ExposedSQLException> {
-                    upsertOnlyKeyColumns(primaryKeyValues)
-                }
-            } else {
-                // insert new row
-                upsertOnlyKeyColumns(primaryKeyValues)
-                // 'update' existing row to have identical values
-                upsertOnlyKeyColumns(primaryKeyValues)
+            // insert new row
+            upsertOnlyKeyColumns(primaryKeyValues)
+            // 'update' existing row to have identical values
+            upsertOnlyKeyColumns(primaryKeyValues)
 
-                val result = tester.selectAll().singleOrNull()
-                assertNotNull(result)
+            val result = tester.selectAll().singleOrNull()
+            assertNotNull(result)
 
-                val resultValues = Pair(result[tester.userId], result[tester.keyId])
-                assertEquals(primaryKeyValues, resultValues)
-            }
+            val resultValues = Pair(result[tester.userId], result[tester.keyId])
+            assertEquals(primaryKeyValues, resultValues)
         }
     }
 
@@ -289,6 +280,10 @@ class UpsertTests : DatabaseTestsBase() {
                 it[item] = "Item B"
                 it[gains] = 200
                 it[losses] = 0
+                // `amount` must be passed explicitly now due to usage of that column inside the custom onUpdate statement
+                // There is an option to call `tester.amount.defaultValueFun?.let { it() }!!`,
+                // it looks ugly but prevents regression on changes in default value
+                it[amount] = 25
             }
 
             val insertResult = tester.selectAll().where { tester.item neq itemA }.single()
@@ -777,5 +772,46 @@ class UpsertTests : DatabaseTestsBase() {
     private object Words : Table("words") {
         val word = varchar("name", 64).uniqueIndex()
         val count = integer("count").default(1)
+    }
+
+    @Test
+    fun testDefaultValuesAndNullableColumnsNotInArguments() {
+        val tester = object : UUIDTable("test_batch_insert_defaults") {
+            val number = integer("number")
+            val default = varchar("default", 128).default("default")
+            val defaultExpression = varchar("defaultExpression", 128).defaultExpression(stringLiteral("defaultExpression"))
+            val nullable = varchar("nullable", 128).nullable()
+            val nullableDefaultNull = varchar("nullableDefaultNull", 128).nullable().default(null)
+            val nullableDefaultNotNull = varchar("nullableDefaultNotNull", 128).nullable().default("nullableDefaultNotNull")
+            val databaseGenerated = integer("databaseGenerated").withDefinition("DEFAULT 1").databaseGenerated()
+        }
+
+        val testerWithFakeDefaults = object : UUIDTable("test_batch_insert_defaults") {
+            val number = integer("number")
+            val default = varchar("default", 128).default("default-fake")
+            val defaultExpression = varchar("defaultExpression", 128).defaultExpression(stringLiteral("defaultExpression-fake"))
+            val nullable = varchar("nullable", 128).nullable().default("null-fake")
+            val nullableDefaultNull = varchar("nullableDefaultNull", 128).nullable().default("null-fake")
+            val nullableDefaultNotNull = varchar("nullableDefaultNotNull", 128).nullable().default("nullableDefaultNotNull-fake")
+            val databaseGenerated = integer("databaseGenerated").default(-1)
+        }
+
+        withTables(excludeSettings = listOf(TestDB.H2_V1), tester) {
+            val statement = testerWithFakeDefaults.batchUpsert(listOf(1, 2, 3)) {
+                this[testerWithFakeDefaults.number] = 10
+            }
+            statement.forEach {
+                println("id: ${it[testerWithFakeDefaults.id]}")
+            }
+
+            testerWithFakeDefaults.selectAll().forEach {
+                assertEquals("default", it[testerWithFakeDefaults.default])
+                assertEquals("defaultExpression", it[testerWithFakeDefaults.defaultExpression])
+                assertEquals(null, it[testerWithFakeDefaults.nullable])
+                assertEquals(null, it[testerWithFakeDefaults.nullableDefaultNull])
+                assertEquals("nullableDefaultNotNull", it[testerWithFakeDefaults.nullableDefaultNotNull])
+                assertEquals(1, it[testerWithFakeDefaults.databaseGenerated])
+            }
+        }
     }
 }

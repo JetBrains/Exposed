@@ -3091,7 +3091,6 @@ public abstract class org/jetbrains/exposed/sql/statements/BaseBatchInsertStatem
 	public fun prepared (Lorg/jetbrains/exposed/sql/Transaction;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;
 	public fun set (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)V
 	public fun setArguments (Ljava/util/List;)V
-	protected fun valuesAndDefaults (Ljava/util/Map;)Ljava/util/Map;
 }
 
 public final class org/jetbrains/exposed/sql/statements/BatchDataInconsistentException : java/lang/Exception {
@@ -3134,7 +3133,6 @@ public class org/jetbrains/exposed/sql/statements/BatchUpsertStatement : org/jet
 	public final fun getOnUpdateExclude ()Ljava/util/List;
 	public final fun getWhere ()Lorg/jetbrains/exposed/sql/Op;
 	public fun insertValue (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
-	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 	public fun prepared (Lorg/jetbrains/exposed/sql/Transaction;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;
 	public fun storeUpdateValues (Lkotlin/jvm/functions/Function2;)V
@@ -3197,6 +3195,7 @@ public class org/jetbrains/exposed/sql/statements/InsertStatement : org/jetbrain
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Table;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun arguments ()Ljava/lang/Iterable;
 	public fun arguments ()Ljava/util/List;
+	protected final fun clientDefaultColumns ()Ljava/util/List;
 	protected fun execInsertFunction (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;)Lkotlin/Pair;
 	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Integer;
 	public synthetic fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Object;
@@ -3208,7 +3207,6 @@ public class org/jetbrains/exposed/sql/statements/InsertStatement : org/jetbrain
 	public final fun getOrNull (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Object;
 	public final fun getResultedValues ()Ljava/util/List;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
-	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Z
 	protected final fun isEntityIdClientSideGeneratedUUID (Lorg/jetbrains/exposed/sql/Column;)Z
 	public final fun isIgnore ()Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
@@ -3216,6 +3214,8 @@ public class org/jetbrains/exposed/sql/statements/InsertStatement : org/jetbrain
 	public fun setArguments (Ljava/util/List;)V
 	public final fun setInsertedCount (I)V
 	protected final fun toSqlString (Ljava/util/List;Z)Ljava/lang/String;
+	protected final fun valuesAndClientDefaults (Ljava/util/Map;)Ljava/util/Map;
+	public static synthetic fun valuesAndClientDefaults$default (Lorg/jetbrains/exposed/sql/statements/InsertStatement;Ljava/util/Map;ILjava/lang/Object;)Ljava/util/Map;
 	protected fun valuesAndDefaults (Ljava/util/Map;)Ljava/util/Map;
 	public static synthetic fun valuesAndDefaults$default (Lorg/jetbrains/exposed/sql/statements/InsertStatement;Ljava/util/Map;ILjava/lang/Object;)Ljava/util/Map;
 }
@@ -3482,7 +3482,6 @@ public class org/jetbrains/exposed/sql/statements/UpsertStatement : org/jetbrain
 	public final fun getOnUpdateExclude ()Ljava/util/List;
 	public final fun getWhere ()Lorg/jetbrains/exposed/sql/Op;
 	public fun insertValue (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
-	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 	public fun prepared (Lorg/jetbrains/exposed/sql/Transaction;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;
 	public fun storeUpdateValues (Lkotlin/jvm/functions/Function2;)V

@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.statements
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
+import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 /**
@@ -54,8 +55,9 @@ open class BatchUpsertStatement(
         val keyColumns = if (functionProvider is MysqlFunctionProvider) keys.toList() else getKeyColumns(keys = keys)
         val insertValues = arguments!!.first()
         val insertValuesSql = insertValues.toSqlString(prepared)
+        val updateExcludeColumns = (onUpdateExclude ?: emptyList()) + if (dialect is OracleDialect) keyColumns else emptyList()
         val updateExpressions = updateValues.takeIf { it.isNotEmpty() }?.toList()
-            ?: getUpdateExpressions(insertValues.unzip().first, onUpdateExclude, keyColumns)
+            ?: getUpdateExpressions(insertValues.unzip().first, updateExcludeColumns, keyColumns)
         return functionProvider.upsert(table, insertValues, insertValuesSql, updateExpressions, keyColumns, where, transaction)
     }
 
@@ -73,10 +75,5 @@ open class BatchUpsertStatement(
         }
 
         return super.prepared(transaction, sql)
-    }
-
-    override fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
-        return isEntityIdClientSideGeneratedUUID(column) ||
-            super.isColumnValuePreferredFromResultSet(column, value)
     }
 }
