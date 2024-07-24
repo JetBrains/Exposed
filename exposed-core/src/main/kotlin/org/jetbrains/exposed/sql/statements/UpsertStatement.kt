@@ -47,11 +47,6 @@ open class UpsertStatement<Key : Any>(
         }
     }
 
-    override fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
-        return isEntityIdClientSideGeneratedUUID(column) ||
-            super.isColumnValuePreferredFromResultSet(column, value)
-    }
-
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
         // We must return values from upsert because returned id could be different depending on insert or upsert happened
         if (!currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {

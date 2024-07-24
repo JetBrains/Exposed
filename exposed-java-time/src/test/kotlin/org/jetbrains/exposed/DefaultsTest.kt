@@ -126,10 +126,12 @@ class DefaultsTest : DatabaseTestsBase() {
             TableWithDBDefault.cIndex = 0
             val db1 = DBDefault.new { field = "1" }
             val db2 = DBDefault.new { field = "2" }
+            val db3 = DBDefault.new { field = "3" }
             flushCache()
             assertEquals(0, db1.clientDefault)
             assertEquals(1, db2.clientDefault)
-            assertEquals(2, TableWithDBDefault.cIndex)
+            assertEquals(2, db3.clientDefault)
+            assertEquals(3, TableWithDBDefault.cIndex)
         }
     }
 
@@ -310,7 +312,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }
 
-        withTables(foo) {
+        // MySql 5 is excluded because it does not support `CURRENT_DATE()` as a default value
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), foo) {
             val id = foo.insertAndGetId {
                 it[foo.name] = "bar"
             }

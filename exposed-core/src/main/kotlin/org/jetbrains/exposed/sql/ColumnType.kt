@@ -877,7 +877,11 @@ class BlobColumnType(
         else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
     }
 
-    override fun nonNullValueToString(value: ExposedBlob): String = currentDialect.dataTypeProvider.hexToDb(value.hexString())
+    override fun nonNullValueToString(value: ExposedBlob): String {
+        // For H2 Blobs the original dataTypeProvider must be taken (even if H2 in other DB mode)
+        return ((currentDialect as? H2Dialect)?.originalDataTypeProvider ?: currentDialect.dataTypeProvider)
+            .hexToDb(value.hexString())
+    }
 
     override fun readObject(rs: ResultSet, index: Int) = when {
         currentDialect is SQLServerDialect -> rs.getBytes(index)?.let(::ExposedBlob)

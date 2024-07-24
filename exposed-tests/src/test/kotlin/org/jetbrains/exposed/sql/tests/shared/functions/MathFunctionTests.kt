@@ -172,7 +172,8 @@ class MathFunctionTests : FunctionsTestBase() {
         }
 
         // MySQL and MariaDB are the only supported databases that allow referencing another column in a default expression
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB, foo) {
+        // MySQL 5 does not support functions in default values.
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB + TestDB.MYSQL_V5, foo) {
             val id = foo.insertAndGetId {
                 it[foo.integer] = -100
                 it[foo.double] = 100.70

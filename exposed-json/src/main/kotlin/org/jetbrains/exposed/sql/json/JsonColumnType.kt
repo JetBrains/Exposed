@@ -71,6 +71,13 @@ open class JsonColumnType<T : Any>(
         }
         super.setParameter(stmt, index, parameterValue)
     }
+
+    override fun nonNullValueAsDefaultString(value: T): String {
+        return when {
+            currentDialect is H2Dialect -> "JSON '${notNullValueToDB(value)}'"
+            else -> "'${notNullValueToDB(value)}'"
+        }
+    }
 }
 
 /**

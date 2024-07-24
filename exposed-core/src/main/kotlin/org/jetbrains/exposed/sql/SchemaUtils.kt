@@ -214,7 +214,10 @@ object SchemaUtils {
 
                                     is MariaDBDialect -> processed.trim('\'')
                                     is MysqlDialect -> "_utf8mb4\\'${processed.trim('(', ')', '\'')}\\'"
-                                    else -> processed.trim('\'')
+                                    else -> when {
+                                        processed.startsWith('\'') && processed.endsWith('\'') -> processed.trim('\'')
+                                        else -> processed
+                                    }
                                 }
                             }
 

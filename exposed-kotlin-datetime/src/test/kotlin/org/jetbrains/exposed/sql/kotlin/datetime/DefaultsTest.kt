@@ -114,7 +114,8 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testDefaultsWithExplicit02() {
-        withTables(TableWithDBDefault) {
+        // MySql 5 is excluded because it does not support `CURRENT_DATE()` as a default value
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), TableWithDBDefault) {
             val created = listOf(
                 DBDefault.new {
                     field = "2"
@@ -307,7 +308,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }
 
-        withTables(foo) {
+        // MySql 5 is excluded because it does not support `CURRENT_DATE()` as a default value
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), foo) {
             val id = foo.insertAndGetId {
                 it[foo.name] = "bar"
             }

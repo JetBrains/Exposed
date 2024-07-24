@@ -250,7 +250,7 @@ class EntityCache(private val transaction: Transaction) {
                 // TooGenericExceptionCaught suppress also can be removed
                 val toFlushString = toFlush.joinToString("; ") {
                         entry ->
-                    entry.writeValues.map { writeValue -> "${writeValue.key.name}=${writeValue.value}" }.joinToString { ", " }
+                    entry.writeValues.map { writeValue -> "${writeValue.key.name}=${writeValue.value}" }.joinToString(", ")
                 }
 
                 exposedLogger.error("ArrayIndexOutOfBoundsException on attempt to make flush inserts. Table: ${table.tableName}, entries: ($toFlushString)", cause)
