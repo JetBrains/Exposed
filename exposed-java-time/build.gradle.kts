@@ -2,8 +2,9 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    kotlin("jvm") apply true
-    alias(libs.plugins.serialization) apply true
+    kotlin("jvm")
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.dokka)
 }
 
 repositories {

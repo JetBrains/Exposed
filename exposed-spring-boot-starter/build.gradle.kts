@@ -2,7 +2,9 @@ import org.gradle.api.tasks.testing.logging.*
 import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
-    kotlin("jvm") apply true
+    kotlin("jvm")
+
+    alias(libs.plugins.dokka)
 }
 
 repositories {

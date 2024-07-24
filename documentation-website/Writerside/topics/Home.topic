@@ -18,9 +18,9 @@
                summary="Start exploring Exposed step-by-step by building our sample project from scratch">
                 Getting Started with Exposed
             </a>
-            <a href="Frequently-Asked-Questions.md" type="server"
-               summary="Frequently Asked Questions">
-                FAQ
+            <a href="https://jetbrains.github.io/Exposed/api/index.html" type="server"
+               summary="API Documentation">
+                API
             </a>
         </spotlight>
 
