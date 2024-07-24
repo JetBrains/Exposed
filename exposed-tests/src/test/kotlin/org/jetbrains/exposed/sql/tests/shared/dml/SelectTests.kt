@@ -626,7 +626,7 @@ class SelectTests : DatabaseTestsBase() {
         val updatedText = "${text}_updated"
 
         withCitiesAndUsers { cities, _, _ ->
-            val query = cities.selectAll().withDistinct(true).where { cities.name eq "Munich" }.limit(1).groupBy(cities.name)
+            val query = cities.selectAll().where { cities.name eq "Munich" }.limit(1).groupBy(cities.id, cities.name)
             val originalQuery = query.copy() // this remains unchanged by later chaining
             val originalSql = query.prepareSQL(this, false)
 
