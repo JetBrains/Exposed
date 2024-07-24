@@ -654,25 +654,25 @@ abstract class FunctionProvider {
      *
      * @param table Table to either insert values into or update values from.
      * @param data Pairs of columns to use for insert or update and values to insert or update.
+     * @param expression Expression with the values to use in the insert clause.
      * @param onUpdate List of pairs of specific columns to update and the expressions to update them with.
-     * @param onUpdateExclude List of specific columns to exclude from updating.
+     * @param keyColumns Columns to include in the condition that determines a unique constraint match.
      * @param where Condition that determines which rows to update, if a unique violation is found.
      * @param transaction Transaction where the operation is executed.
      */
     open fun upsert(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-        onUpdateExclude: List<Column<*>>?,
+        expression: String,
+        onUpdate: List<Pair<Column<*>, Any?>>,
+        keyColumns: List<Column<*>>,
         where: Op<Boolean>?,
-        transaction: Transaction,
-        vararg keys: Column<*>
+        transaction: Transaction
     ): String {
         if (where != null) {
             transaction.throwUnsupportedException("MERGE implementation of UPSERT doesn't support single WHERE clause")
         }
-        val keyColumns = getKeyColumnsForUpsert(table, *keys)
-        if (keyColumns.isNullOrEmpty()) {
+        if (keyColumns.isEmpty()) {
             transaction.throwUnsupportedException("UPSERT requires a unique key or constraint as a conflict target")
         }
 
@@ -680,7 +680,7 @@ abstract class FunctionProvider {
         val autoIncColumn = table.autoIncColumn
         val nextValExpression = autoIncColumn?.autoIncColumnType?.nextValExpression
         val dataColumnsWithoutAutoInc = autoIncColumn?.let { dataColumns - autoIncColumn } ?: dataColumns
-        val updateColumns = getUpdateColumnsForUpsert(dataColumns, onUpdateExclude, keyColumns)
+        val tableIdentifier = transaction.identity(table)
 
         return with(QueryBuilder(true)) {
             +"MERGE INTO "
@@ -699,8 +699,11 @@ abstract class FunctionProvider {
                 append("T.$columnName=S.$columnName")
             }
 
-            +" WHEN MATCHED THEN"
-            appendUpdateToUpsertClause(table, updateColumns, onUpdate, transaction, isAliasNeeded = true)
+            +" WHEN MATCHED THEN UPDATE SET "
+            onUpdate.appendTo { (columnToUpdate, updateExpression) ->
+                val aliasExpression = updateExpression.toString().replace(tableIdentifier, "T")
+                append("T.${transaction.identity(columnToUpdate)}=$aliasExpression")
+            }
 
             +" WHEN NOT MATCHED THEN INSERT "
             dataColumnsWithoutAutoInc.appendTo(prefix = "(") { column ->
@@ -721,71 +724,13 @@ abstract class FunctionProvider {
     }
 
     /**
-     * Returns the columns to be used in the conflict condition of an upsert statement.
+     * Appends to a [queryBuilder] the SQL syntax for a column that represents the same values from the INSERT clause
+     * of an [upsert] command.
+     *
+     * @param columnName Name of the column for update.
+     * @param queryBuilder Query builder to append the SQL syntax to.
      */
-    protected fun getKeyColumnsForUpsert(table: Table, vararg keys: Column<*>): List<Column<*>>? {
-        return keys.toList().ifEmpty {
-            table.primaryKey?.columns?.toList() ?: table.indices.firstOrNull { it.unique }?.columns
-        }
-    }
-
-    /** Returns the columns to be used in the update clause of an upsert statement. */
-    protected fun getUpdateColumnsForUpsert(
-        dataColumns: List<Column<*>>,
-        toExclude: List<Column<*>>?,
-        keyColumns: List<Column<*>>?
-    ): List<Column<*>> {
-        val updateColumns = toExclude?.let { dataColumns - it.toSet() } ?: dataColumns
-        return keyColumns?.let { keys ->
-            updateColumns.filter { it !in keys }.ifEmpty { updateColumns }
-        } ?: updateColumns
-    }
-
-    /**
-     * Appends the complete default SQL insert (no ignore) command to [this] QueryBuilder.
-     */
-    protected fun QueryBuilder.appendInsertToUpsertClause(table: Table, data: List<Pair<Column<*>, Any?>>, transaction: Transaction) {
-        val valuesSql = if (data.isEmpty()) {
-            ""
-        } else {
-            data.appendTo(QueryBuilder(true), prefix = "VALUES (", postfix = ")") { (column, value) ->
-                registerArgument(column, value)
-            }.toString()
-        }
-        val insertStatement = insert(false, table, data.unzip().first, valuesSql, transaction)
-
-        +insertStatement
-    }
-
-    /**
-     * Appends an SQL update command for a derived table (with or without alias identifiers) to [this] QueryBuilder.
-     */
-    protected fun QueryBuilder.appendUpdateToUpsertClause(
-        table: Table,
-        updateColumns: List<Column<*>>,
-        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-        transaction: Transaction,
-        isAliasNeeded: Boolean
-    ) {
-        +" UPDATE SET "
-        onUpdate?.appendTo { (columnToUpdate, updateExpression) ->
-            if (isAliasNeeded) {
-                val aliasExpression = updateExpression.toString().replace(transaction.identity(table), "T")
-                append("T.${transaction.identity(columnToUpdate)}=$aliasExpression")
-            } else {
-                append("${transaction.identity(columnToUpdate)}=$updateExpression")
-            }
-        } ?: run {
-            updateColumns.appendTo { column ->
-                val columnName = transaction.identity(column)
-                if (isAliasNeeded) {
-                    append("T.$columnName=S.$columnName")
-                } else {
-                    append("$columnName=EXCLUDED.$columnName")
-                }
-            }
-        }
-    }
+    open fun asForInsert(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"S.$columnName" } }
 
     /**
      * Returns the SQL command that deletes one or more rows of a table.

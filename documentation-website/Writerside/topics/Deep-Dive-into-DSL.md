@@ -673,8 +673,15 @@ StarWarsFilms.upsert {
 
 If none of the optional arguments are provided to `upsert()`, the statements in the `body` block will be used for both the insert and update parts of the operation.
 This means that, for example, if a table mapping has columns with default values and these columns are omitted from the `body` block, the default values will be
-used for insertion as well as for the update operation. If the update operation should differ from the insert operation, then `onUpdate` should be provided an
+used for insertion as well as for the update operation.
+
+<note>
+If the update operation should differ from the insert operation, then <code>onUpdate</code> should be provided an
 argument with the specific columns to update, as seen in the example below.
+
+If the update operation involves functions that should use the values that would have been inserted, then these columns
+should be marked using `asForInsert()`, as seen in the example below.
+</note>
 
 Using another example, PostgreSQL allows more control over which key constraint columns to check for conflict, whether different
 values should be used for an update, and whether the update statement should have a `WHERE` clause:
@@ -682,12 +689,22 @@ values should be used for an update, and whether the update statement should hav
 val incrementSequelId = listOf(StarWarsFilms.sequelId to StarWarsFilms.sequelId.plus(1))
 StarWarsFilms.upsert(
     StarWarsFilms.sequelId,
-    onUpdate = incrementSequelId,
+    onUpdate = { incrementSequelId },
     where = { StarWarsFilms.director like stringLiteral("JJ%") }
 ) {
     it[sequelId] = 9
     it[name] = "The Rise of Skywalker"
     it[director] = "JJ Abrams"
+}
+
+StarWarsFilms.upsert(
+    onUpdate = { listOf(
+        StarWarsFilms.director to concat(StarWarsFilms.director.asForInsert(), stringLiteral(" || "), StarWarsFilms.director)
+    ) }
+) {
+    it[sequelId] = 9
+    it[name] = "The Rise of Skywalker"
+    it[director] = "Rian Johnson"
 }
 ```
 If the update operation should be identical to the insert operation except for a few columns,

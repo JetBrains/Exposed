@@ -91,7 +91,7 @@ class ReturningTests : DatabaseTestsBase() {
 
             val result2 = Items.upsertReturning(
                 returning = listOf(Items.name, Items.price),
-                onUpdate = listOf(Items.price to Items.price.times(10.0))
+                onUpdate = { listOf(Items.price to Items.price.times(10.0)) }
             ) {
                 it[id] = 1
                 it[name] = "B"
