@@ -31,12 +31,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     /** The set of columns on which a query should be executed, contained by a [ColumnSet]. */
     abstract val set: FieldSet
 
-    protected abstract fun copyInstance(): T
-
-    /** Creates a new query instance using all stored properties of this query. */
-    override fun copy(): T = copyInstance().apply { copyTo(this) }
-
-    open fun copyTo(other: T) {
+    protected fun copyTo(other: AbstractQuery<T>) {
         other.orderByExpressions = orderByExpressions.toMutableList()
         other.limit = limit
         other.offset = offset

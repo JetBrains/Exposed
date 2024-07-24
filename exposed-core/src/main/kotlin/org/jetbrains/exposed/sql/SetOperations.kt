@@ -140,7 +140,9 @@ class Union(
         }
     }
 
-    override fun copyInstance() = Union(firstStatement, secondStatement)
+    override fun copy() = Union(firstStatement, secondStatement).also {
+        copyTo(it)
+    }
 }
 
 /** Represents an SQL operation that combines all results from two queries, with duplicates included. */
@@ -157,7 +159,9 @@ class UnionAll(
         }
     }
 
-    override fun copyInstance() = UnionAll(firstStatement, secondStatement)
+    override fun copy() = UnionAll(firstStatement, secondStatement).also {
+        copyTo(it)
+    }
 }
 
 /** Represents an SQL operation that returns only the common rows from two query results, without any duplicates. */
@@ -165,7 +169,9 @@ class Intersect(
     firstStatement: AbstractQuery<*>,
     secondStatement: AbstractQuery<*>
 ) : SetOperation("INTERSECT", firstStatement, secondStatement) {
-    override fun copyInstance() = Intersect(firstStatement, secondStatement)
+    override fun copy() = Intersect(firstStatement, secondStatement).also {
+        copyTo(it)
+    }
 
     override fun withDistinct(value: Boolean): SetOperation = this
 
@@ -191,7 +197,9 @@ class Except(
         else -> "EXCEPT"
     }
 
-    override fun copyInstance() = Intersect(firstStatement, secondStatement)
+    override fun copy() = Intersect(firstStatement, secondStatement).also {
+        copyTo(it)
+    }
 
     override fun withDistinct(value: Boolean): SetOperation = this
 
