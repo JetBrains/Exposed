@@ -199,15 +199,6 @@ object SchemaUtils {
                         else -> processForDefaultValue(exp)
                     }
 
-                    is Float, is Double -> value.toString().let {
-                        when {
-                            // MySQL returns floating-point numbers without a decimal part as integer strings, whereas other databases append a trailing zero.
-                            // For example, the value 30f would be `"30"` in MySQL but `"30.0"` in other databases.
-                            currentDialect is MysqlDialect && it.endsWith(".0") -> it.replace(".0", "")
-                            else -> it
-                        }
-                    }
-
                     else -> {
                         when {
                             column.columnType is JsonColumnMarker -> {
