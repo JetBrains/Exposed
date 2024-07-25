@@ -13,6 +13,8 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -132,6 +134,29 @@ class EntityCacheNotUpdatedOnCommitIssue1380 : DatabaseTestsBase() {
             TestEntity.findById(entity1.id)?.delete()
             commit()
             assertNull(TestEntity.findById(entity1.id))
+        }
+    }
+}
+
+class AccessToPrimaryKeyFailsWithClassCastExceptionYT409 : DatabaseTestsBase() {
+
+    @Test
+    fun testCustomEntityIdColumnAccess() {
+        val tester = object : IdTable<String>() {
+
+            val value = varchar("value", 128)
+
+            override val primaryKey: PrimaryKey = PrimaryKey(value)
+            override val id: Column<EntityID<String>> = value.entityId()
+        }
+
+        withTables(tester) {
+            tester.insert {
+                it[tester.value] = "test-value"
+            }
+            val entry = tester.selectAll().first()
+            assertEquals("test-value", entry[tester.value])
+            assertEquals("test-value", entry[tester.id].value)
         }
     }
 }
