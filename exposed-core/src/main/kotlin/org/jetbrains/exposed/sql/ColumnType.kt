@@ -501,6 +501,18 @@ class FloatColumnType : ColumnType<Float>() {
         is String -> value.toFloat()
         else -> error("Unexpected value of type Float: $value of ${value::class.qualifiedName}")
     }
+
+    override fun nonNullValueAsDefaultString(value: Float): String {
+        return value.toString().let {
+            when {
+                // MySQL returns floating-point numbers from metadata without a decimal part as integer strings, whereas other databases
+                // append a trailing zero.
+                // For example, the value 30f would be `"30"` in MySQL but `"30.0"` in other databases.
+                currentDialect is MysqlDialect && it.endsWith(".0") -> it.replace(".0", "")
+                else -> it
+            }
+        }
+    }
 }
 
 /**
@@ -515,6 +527,18 @@ class DoubleColumnType : ColumnType<Double>() {
         is Number -> value.toDouble()
         is String -> value.toDouble()
         else -> error("Unexpected value of type Double: $value of ${value::class.qualifiedName}")
+    }
+
+    override fun nonNullValueAsDefaultString(value: Double): String {
+        return value.toString().let {
+            when {
+                // MySQL returns floating-point numbers from metadata without a decimal part as integer strings, whereas other databases
+                // append a trailing zero.
+                // For example, the value 30f would be `"30"` in MySQL but `"30.0"` in other databases.
+                currentDialect is MysqlDialect && it.endsWith(".0") -> it.replace(".0", "")
+                else -> it
+            }
+        }
     }
 }
 

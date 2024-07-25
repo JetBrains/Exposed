@@ -797,6 +797,8 @@ public final class org/jetbrains/exposed/sql/DivideOp$Companion {
 
 public final class org/jetbrains/exposed/sql/DoubleColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> ()V
+	public fun nonNullValueAsDefaultString (D)Ljava/lang/String;
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Double;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -972,6 +974,8 @@ public final class org/jetbrains/exposed/sql/FirstValue : org/jetbrains/exposed/
 
 public final class org/jetbrains/exposed/sql/FloatColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> ()V
+	public fun nonNullValueAsDefaultString (F)Ljava/lang/String;
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Float;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
