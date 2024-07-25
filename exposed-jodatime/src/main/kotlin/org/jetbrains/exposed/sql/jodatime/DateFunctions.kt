@@ -9,11 +9,25 @@ import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.joda.time.DateTime
+import org.joda.time.LocalTime
 
 /** Represents an SQL function that extracts the date part from a given datetime [expr]. */
 class Date<T : DateTime?>(val expr: Expression<T>) : Function<DateTime>(DateColumnType(false)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         currentDialect.functionProvider.date(expr, queryBuilder)
+    }
+}
+
+/** Represents an SQL function that extracts the time part from a given datetime [expr]. */
+class Time<T : DateTime?>(val expr: Expression<T>) : Function<LocalTime>(LocalTimeColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        val dialect = currentDialect
+        val functionProvider = when (dialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.SQLServer, H2Dialect.H2CompatibilityMode.PostgreSQL ->
+                (dialect as H2Dialect).originalFunctionProvider
+            else -> dialect.functionProvider
+        }
+        functionProvider.time(expr, queryBuilder)
     }
 }
 
@@ -122,6 +136,9 @@ class Second<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColu
 /** Returns the date from this datetime expression. */
 fun <T : DateTime?> Expression<T>.date() = Date(this)
 
+/** Returns the time from this datetime expression. */
+fun <T : DateTime?> Expression<T>.time() = Time(this)
+
 /** Returns the year from this datetime expression, as an integer. */
 fun <T : DateTime?> Expression<T>.year() = Year(this)
 
@@ -146,6 +163,9 @@ fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, Dat
 /** Returns the specified [value] as a date with time query parameter. */
 fun dateTimeParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(true))
 
+/** Returns the specified [value] as a time query parameter. */
+fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, LocalTimeColumnType())
+
 /** Returns the specified [value] as a date with time and time zone query parameter. */
 fun timestampWithTimeZoneParam(value: DateTime): Expression<DateTime> =
     QueryParameter(value, DateTimeWithTimeZoneColumnType())
@@ -155,6 +175,9 @@ fun dateLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType
 
 /** Returns the specified [value] as a date with time literal. */
 fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
+
+/** Returns the specified [value] as a time literal. */
+fun timeLiteral(value: LocalTime): LiteralOp<LocalTime> = LiteralOp(LocalTimeColumnType(), value)
 
 /** Returns the specified [value] as a date with time and time zone literal. */
 fun timestampWithTimeZoneLiteral(value: DateTime): LiteralOp<DateTime> =
@@ -175,6 +198,14 @@ fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) =
 @Suppress("FunctionNaming")
 fun CustomDateFunction(functionName: String, vararg params: Expression<*>) =
     CustomFunction<DateTime?>(functionName, DateColumnType(false), *params)
+
+/**
+ * Calls a custom SQL function with the specified [functionName], that returns a time only,
+ * and passing [params] as its arguments.
+ */
+@Suppress("FunctionNaming")
+fun CustomTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalTime?> =
+    CustomFunction(functionName, LocalTimeColumnType(), *params)
 
 /**
  * Calls a custom SQL function with the specified [functionName], that returns both a date and a time with time zone,

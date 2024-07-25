@@ -73,7 +73,19 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     ): Unit = TransactionManager.current().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression, use LIKE instead.")
 
     override fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
-        append("SUBSTR(", expr, ", INSTR(", expr, ", ' ') + 1, LENGTH(", expr, ") - INSTR(", expr, ", ' ') - 1)")
+        append(
+            "SUBSTR(", expr, ", INSTR(", expr, ", ' ') + 1,\n",
+            "CASE\n",
+            "    WHEN INSTR(", expr, ", 'Z') > 0 THEN\n",
+            "        INSTR(", expr, ", 'Z') - 1\n",
+            "    WHEN INSTR(", expr, ", '+') > 0 THEN\n",
+            "        INSTR(", expr, ", '+') - 1\n",
+            "    WHEN INSTR(", expr, ", '-') > 0 THEN\n",
+            "        INSTR(", expr, ", '-') - 1\n",
+            "    ELSE\n",
+            "        LENGTH(", expr, ")\n",
+            "END- INSTR(", expr, ", ' '))"
+        )
     }
 
     override fun <T> year(expr: Expression<T>, queryBuilder: QueryBuilder): Unit = queryBuilder {
