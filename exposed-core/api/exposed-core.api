@@ -1828,10 +1828,14 @@ public final class org/jetbrains/exposed/sql/QueriesKt {
 public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/AbstractQuery {
 	public fun <init> (Lorg/jetbrains/exposed/sql/FieldSet;Lorg/jetbrains/exposed/sql/Op;)V
 	public final fun adjustColumnSet (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
+	public final fun adjustComments (Lorg/jetbrains/exposed/sql/Query$CommentPosition;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Query;
+	public static synthetic fun adjustComments$default (Lorg/jetbrains/exposed/sql/Query;Lorg/jetbrains/exposed/sql/Query$CommentPosition;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun adjustHaving (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun adjustSelect (Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun adjustSlice (Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun adjustWhere (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
+	public final fun comment (Ljava/lang/String;Lorg/jetbrains/exposed/sql/Query$CommentPosition;)Lorg/jetbrains/exposed/sql/Query;
+	public static synthetic fun comment$default (Lorg/jetbrains/exposed/sql/Query;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Query$CommentPosition;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Query;
 	public fun copy ()Lorg/jetbrains/exposed/sql/Query;
 	public synthetic fun copy ()Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun count ()J
@@ -1842,6 +1846,7 @@ public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/Abstrac
 	public static synthetic fun fetchBatchedResults$default (Lorg/jetbrains/exposed/sql/Query;ILorg/jetbrains/exposed/sql/SortOrder;ILjava/lang/Object;)Ljava/lang/Iterable;
 	public fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/Query;
 	public synthetic fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
+	public final fun getComments ()Ljava/util/Map;
 	public final fun getDistinct ()Z
 	public final fun getGroupedByColumns ()Ljava/util/List;
 	public final fun getHaving ()Lorg/jetbrains/exposed/sql/Op;
@@ -1861,6 +1866,14 @@ public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/Abstrac
 	public final fun where (Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/sql/AbstractQuery;
 	public fun withDistinct (Z)Lorg/jetbrains/exposed/sql/Query;
+}
+
+public final class org/jetbrains/exposed/sql/Query$CommentPosition : java/lang/Enum {
+	public static final field BACK Lorg/jetbrains/exposed/sql/Query$CommentPosition;
+	public static final field FRONT Lorg/jetbrains/exposed/sql/Query$CommentPosition;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Query$CommentPosition;
+	public static fun values ()[Lorg/jetbrains/exposed/sql/Query$CommentPosition;
 }
 
 public final class org/jetbrains/exposed/sql/QueryAlias : org/jetbrains/exposed/sql/ColumnSet {

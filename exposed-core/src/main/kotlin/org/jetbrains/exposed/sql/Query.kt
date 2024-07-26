@@ -38,6 +38,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     var where: Op<Boolean>? = where
         private set
 
+    /** The stored comments and their [CommentPosition]s in this `SELECT` query. */
+    var comments: Map<CommentPosition, String> = mutableMapOf()
+        private set
+
     override val queryToExecute: Statement<ResultSet>
         get() {
             val distinctExpressions = set.fields.distinct()
@@ -55,6 +59,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         copy.groupedByColumns = groupedByColumns.toMutableList()
         copy.having = having
         copy.forUpdate = forUpdate
+        copy.comments = comments.toMutableMap()
     }
 
     override fun forUpdate(option: ForUpdateOption): Query {
@@ -115,6 +120,22 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      */
     fun adjustHaving(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { having = having.body() }
 
+    /**
+     * Changes the [content] of the [comments] field at the specified [position] in this query.
+     *
+     * @param position The [CommentPosition] in the query that should be assigned a new value.
+     * @param content The content of the comment that should be set. If left `null`, any comment at the specified
+     * [position] will be removed.
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testSelectWithComment
+     */
+    fun adjustComments(position: CommentPosition, content: String? = null): Query = apply {
+        content?.let {
+            (comments as MutableMap)[position] = content
+        } ?: run {
+            (comments as MutableMap).remove(position)
+        }
+    }
+
     /** Whether this `SELECT` query already has a stored value option for performing locking reads. */
     fun hasCustomForUpdateState() = forUpdate != null
 
@@ -137,6 +158,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         require(set.fields.isNotEmpty()) { "Can't prepare SELECT statement without columns or expressions to retrieve" }
 
         builder {
+            comments[CommentPosition.FRONT]?.let { comment ->
+                append("/*$comment*/ ")
+            }
+
             append("SELECT ")
 
             if (count) {
@@ -188,6 +213,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                     append(" $querySuffix")
                 }
             }
+
+            comments[CommentPosition.BACK]?.let { comment ->
+                append(" /*$comment*/")
+            }
         }
         return builder.toString()
     }
@@ -235,6 +264,24 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
             error("WHERE clause is specified twice. Old value = '$it', new value = '$predicate'")
         }
         where = predicate
+        return this
+    }
+
+    /**
+     * Appends an SQL comment, with [content] wrapped by `/* */`, at the specified [CommentPosition] in this `SELECT` query.
+     *
+     * Adding some comments may be useful for tracking, embedding metadata, or for special instructions, like using
+     * `/*FORCE_MASTER*/` for some cloud databases to force the statement to run in the master database.
+     *
+     * @throws IllegalStateException If a comment has already been appended at the specified [position]. An existing
+     * comment can be removed or altered by [adjustComments].
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testSelectWithComment
+     */
+    fun comment(content: String, position: CommentPosition = CommentPosition.FRONT): Query {
+        comments[position]?.let {
+            error("Comment at $position position is specified twice. Old value = '$it', new value = '$content'")
+        }
+        (comments as MutableMap)[position] = content
         return this
     }
 
@@ -372,6 +419,15 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
         } finally {
             limit = oldLimit
         }
+    }
+
+    /** Represents the position at which an SQL comment will be added in a `SELECT` query. */
+    enum class CommentPosition {
+        /** The start of the query, before the keyword `SELECT`. */
+        FRONT,
+
+        /** The end of the query, after all clauses. */
+        BACK
     }
 }
 

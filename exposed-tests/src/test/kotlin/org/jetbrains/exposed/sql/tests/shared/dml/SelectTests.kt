@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNull
@@ -616,6 +617,37 @@ class SelectTests : DatabaseTestsBase() {
 
             val veryLongString = "1".repeat(255)
             assertEquals(0, stringTable.selectAll().where { stringTable.name eq veryLongString }.count())
+        }
+    }
+
+    @Test
+    fun testSelectWithComment() {
+        val text = "additional_info"
+        val updatedText = "${text}_updated"
+
+        withCitiesAndUsers { cities, _, _ ->
+            val query = cities.selectAll().where { cities.name eq "Munich" }.limit(1).groupBy(cities.id, cities.name)
+            val originalQuery = query.copy() // this remains unchanged by later chaining
+            val originalSql = query.prepareSQL(this, false)
+
+            val commentedFrontSql = query.comment(text).prepareSQL(this, false)
+            assertEquals("/*$text*/ $originalSql", commentedFrontSql)
+
+            val commentedTwiceSql = query.comment(text, Query.CommentPosition.BACK).prepareSQL(this, false)
+            assertEquals("/*$text*/ $originalSql /*$text*/", commentedTwiceSql)
+
+            expectException<IllegalStateException> { // comment already exists at start of query
+                query.comment("Testing").toList()
+            }
+
+            val commentedBackSql = query
+                .adjustComments(Query.CommentPosition.FRONT) // not setting new content removes comment at that position
+                .adjustComments(Query.CommentPosition.BACK, updatedText)
+                .prepareSQL(this, false)
+            assertEquals("$originalSql /*$updatedText*/", commentedBackSql)
+
+            assertEquals(originalQuery.count(), originalQuery.comment(text).count())
+            assertEquals(originalQuery.count(), originalQuery.comment(text, Query.CommentPosition.BACK).count())
         }
     }
 }
