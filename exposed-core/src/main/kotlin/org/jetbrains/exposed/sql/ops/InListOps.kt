@@ -167,18 +167,21 @@ class MultipleInListOp(
                 // Built-in exists(AbstractQuery) cannot be used because above row value constructors are not supported
 
                 val valueEqualityOps = mutableListOf<Op<Boolean>>()
-                val eqOp = if (isInList) ::EqOp else ::NeqOp
 
                 iterator.forEach { value ->
                     val valueEqualityOp = Op.build {
                         expr.zip(value).map { (column, value) ->
-                            Op.build { eqOp(column, column.wrap(value)) }
+                            Op.build { EqOp(column, column.wrap(value)) }
                         }.compoundAnd()
                     }
                     valueEqualityOps.add(if (isInList) valueEqualityOp else not(valueEqualityOp))
                 }
 
-                +valueEqualityOps.compoundOr()
+                if (isInList) {
+                    +valueEqualityOps.compoundOr()
+                } else {
+                    +valueEqualityOps.compoundAnd()
+                }
             }
         }
     }
