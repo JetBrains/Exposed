@@ -1,9 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.entities
 
-import org.jetbrains.exposed.dao.CompositeEntity
-import org.jetbrains.exposed.dao.CompositeEntityClass
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
@@ -13,10 +10,14 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentTestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.junit.Test
+import java.sql.Connection
 import java.util.*
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
@@ -437,5 +438,144 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             assertEquals(officeB, publisherA.office)
             assertEqualCollections(publisherA.allOffices.toList(), listOf(officeB))
         }
+    }
+
+    // fails because of bug in SQL Server notInList logic - see link to fix in PR details
+//    @Test
+//    fun testInListWithCompositeIdEntities() {
+//        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers) {
+//            val id1: EntityID<CompositeID> = Publishers.insertAndGetId {
+//                it[name] = "Publisher A"
+//            }
+//            val id2: EntityID<CompositeID> = Publishers.insertAndGetId {
+//                it[name] = "Publisher B"
+//            }
+//
+//            val compositeIds = listOf(id1.value, id2.value)
+//            val keyColumns = Publishers.idColumns.toList()
+//            val result1 = Publishers.selectAll().where { keyColumns inList compositeIds }.count()
+//            assertEquals(2, result1)
+//            val result2 = Publishers.selectAll().where { keyColumns notInList compositeIds }.count()
+//            assertEquals(0, result2)
+//
+//            val result3 = Publishers.selectAll().where { Publishers.id inList compositeIds }.count()
+//            assertEquals(2, result3)
+//            val result4 = Publishers.selectAll().where { Publishers.id notInList compositeIds }.count()
+//            assertEquals(0, result4)
+//        }
+//    }
+
+    @Test
+    fun testPreloadReferencesOnCompositeIdEntities() {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
+            val publisherA = Publisher.new {
+                name = "Publisher A"
+            }
+            val authorA = Author.new {
+                publisher = publisherA
+                penName = "Author A"
+            }
+            val authorB = Author.new {
+                publisher = publisherA
+                penName = "Author B"
+            }
+            val bookA = Book.new {
+                title = "Book A"
+                author = authorA
+            }
+            val reviewIdValue = CompositeID {
+                it[Reviews.content] = "Not bad"
+                it[Reviews.rank] = 12345
+            }
+            val reviewA: Review = Review.new(reviewIdValue) {
+                book = bookA
+            }
+            val officeAIdValue = CompositeID {
+                it[Offices.zipCode] = "1A2 3B4"
+                it[Offices.name] = "Office A"
+                it[Offices.areaCode] = 789
+            }
+            val officeA = Office.new(officeAIdValue) {}
+            val officeBIdValue = CompositeID {
+                it[Offices.zipCode] = "5C6 7D8"
+                it[Offices.name] = "Office B"
+                it[Offices.areaCode] = 456
+            }
+            val officeB = Office.new(officeBIdValue) {
+                publisher = publisherA
+            }
+
+            commit()
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                maxAttempts = 1
+                // preload referencedOn references - child to single parent
+                Author.find { Authors.id eq authorA.id }.first().load(Author::publisher)
+                val foundAuthor = Author.testCache(authorA.id)
+                assertNotNull(foundAuthor)
+                assertEquals(publisherA.id, Publisher.testCache(foundAuthor.readCompositeIDValues(Publishers))?.id)
+            }
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                maxAttempts = 1
+                // preload optionalReferencedOn references - child to single parent?
+                Office.all().with(Office::publisher)
+                val foundOfficeA = Office.testCache(officeA.id)
+                assertNotNull(foundOfficeA)
+                val foundOfficeB = Office.testCache(officeB.id)
+                assertNotNull(foundOfficeB)
+                assertNull(foundOfficeA.readValues[Offices.publisherId])
+                assertNull(foundOfficeA.readValues[Offices.publisherIsbn])
+                assertEquals(publisherA.id, Publisher.testCache(foundOfficeB.readCompositeIDValues(Publishers))?.id)
+            }
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                maxAttempts = 1
+                // preload backReferencedOn - parent to single child
+                val cache = TransactionManager.current().entityCache
+                Book.find { Books.id eq bookA.id }.first().load(Book::review)
+                val result = cache.getReferrers<Review>(bookA.id, Reviews.book)?.map { it.id }.orEmpty()
+                assertEqualLists(listOf(reviewA.id), result)
+            }
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                maxAttempts = 1
+                // preload optionalBackReferencedOn - parent to single child?
+                val cache = TransactionManager.current().entityCache
+                Publisher.find { Publishers.id eq publisherA.id }.first().load(Publisher::office)
+                val result = cache.getReferrers<Office>(publisherA.id, Offices.publisherId)?.map { it.id }.orEmpty()
+                assertEqualLists(listOf(officeB.id), result)
+            }
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                maxAttempts = 1
+                // preload referrersOn - parent to multiple children
+                val cache = TransactionManager.current().entityCache
+                Publisher.find { Publishers.id eq publisherA.id }.first().load(Publisher::authors)
+                val result = cache.getReferrers<Author>(publisherA.id, Authors.publisherId)?.map { it.id }.orEmpty()
+                assertEqualLists(listOf(authorA.id, authorB.id), result)
+            }
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                maxAttempts = 1
+                // preload optionalReferrersOn - parent to multiple children?
+                val cache = TransactionManager.current().entityCache
+                Publisher.all().with(Publisher::allOffices)
+                val result = cache.getReferrers<Office>(publisherA.id, Offices.publisherId)?.map { it.id }.orEmpty()
+                assertEqualLists(listOf(officeB.id), result)
+            }
+        }
+    }
+
+    private fun Entity<*>.readCompositeIDValues(table: CompositeIdTable): EntityID<CompositeID> {
+        val referenceColumns = this.klass.table.foreignKeys.single().references
+        return EntityID(
+            CompositeID {
+                referenceColumns.forEach { (child, parent) ->
+                    it[parent as Column<EntityID<Comparable<Any>>>] = this.readValues[child] as Comparable<Any>
+                }
+            },
+            table
+        )
     }
 }

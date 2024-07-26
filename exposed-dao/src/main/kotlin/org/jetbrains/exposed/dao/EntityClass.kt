@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
+import org.jetbrains.exposed.dao.id.CompositeID
+import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
@@ -915,7 +917,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
                 val findQuery = find { refColumn inList toLoad }
                 val entities = getEntities(forUpdate, findQuery)
 
-                val result = entities.groupBy { it.readValues[refColumn] }
+                val result = entities.groupByReference(refColumn = refColumn)
 
                 distinctRefIds.forEach { id ->
                     cache.getOrPutReferrers(id, refColumn) { result[id]?.let { SizedCollection(it) } ?: emptySized() }.also {
@@ -939,7 +941,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             val findQuery = wrapRows(finalQuery)
             val entities = getEntities(forUpdate, findQuery).distinct()
 
-            entities.groupBy { it.readValues[refColumn] }.forEach { (id, values) ->
+            entities.groupByReference(refColumn = refColumn).forEach { (id, values) ->
                 val parentEntityId: EntityID<*> = parentTable.selectAll().where { refColumn.referee as Column<SID> eq id }
                     .single()[parentTable.id]
 
@@ -954,11 +956,78 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         }
     }
 
+    internal fun warmUpAllReferences(
+        references: List<CompositeID>,
+        refColumns: Map<Column<*>, Column<*>>,
+        delegateRefColumn: Column<*>,
+        forUpdate: Boolean? = null
+    ): List<T> {
+        val parentTable = refColumns.values.firstOrNull()?.table as? CompositeIdTable
+        requireNotNull(parentTable) { "RefColumns should have reference to CompositeIdTable" }
+        if (references.isEmpty()) return emptyList()
+        val distinctRefIds = references.distinct().map { EntityID(it, parentTable) }
+        val transaction = TransactionManager.current()
+        val cache = transaction.entityCache
+        val keepLoadedReferenceOutOfTransaction = transaction.db.config.keepLoadedReferencesOutOfTransaction
+        if (refColumns.keys.all { it.columnType is EntityIDColumnType<*> }) {
+            val toLoad = distinctRefIds.filter {
+                cache.referrers[delegateRefColumn]?.containsKey(it)?.not() ?: true
+            }
+            if (toLoad.isNotEmpty()) {
+                val findQuery = find { refColumns.keys.toList() inList toLoad.map { it.value } }
+                val entities = getEntities(forUpdate, findQuery)
+                val result = entities.groupByReference<CompositeID>(refColumns = refColumns)
+
+                distinctRefIds.forEach { id ->
+                    cache.getOrPutReferrers(id, delegateRefColumn) { result[id.value]?.let { SizedCollection(it) } ?: emptySized() }.also {
+                        if (keepLoadedReferenceOutOfTransaction) {
+                            cache.find(this, id as EntityID<ID>)?.storeReferenceInCache(delegateRefColumn, it)
+                        }
+                    }
+                }
+            }
+
+            return distinctRefIds.flatMap { cache.getReferrers<T>(it, delegateRefColumn)?.toList().orEmpty() }
+        } else {
+            val baseQuery = searchQuery(Op.build { refColumns.keys.toList() inList distinctRefIds.map { it.value } })
+            val findQuery = wrapRows(baseQuery)
+            val entities = getEntities(forUpdate, findQuery).distinct()
+            val result = entities.groupByReference<CompositeID>(refColumns = refColumns)
+
+            result.forEach { (id, values) ->
+                val parentEntityId: EntityID<*> = parentTable.selectAll().where { parentTable.id eq id }.single()[parentTable.id]
+
+                cache.getOrPutReferrers(parentEntityId, delegateRefColumn) { SizedCollection(values) }.also {
+                    if (keepLoadedReferenceOutOfTransaction) {
+                        val childEntity = find { refColumns.keys.toList() inList listOf(id) }.firstOrNull()
+                        childEntity?.storeReferenceInCache(delegateRefColumn, it)
+                    }
+                }
+            }
+            return entities
+        }
+    }
+
     private fun getEntities(forUpdate: Boolean?, findQuery: SizedIterable<T>): List<T> = when (forUpdate) {
         true -> findQuery.forUpdate()
         false -> findQuery.notForUpdate()
         else -> findQuery
     }.toList()
+
+    private fun <R> List<T>.groupByReference(
+        refColumn: Column<R>? = null,
+        refColumns: Map<Column<*>, Column<*>>? = null
+    ): Map<R, List<T>> {
+        return refColumn?.let {
+            groupBy { it.readValues[refColumn] }
+        } ?: groupBy { entity ->
+            CompositeID {
+                refColumns?.forEach { (child, parent) ->
+                    it[parent as Column<EntityID<Comparable<Any>>>] = entity.readValues[child] as Comparable<Any>
+                }
+            } as R
+        }
+    }
 
     @Suppress("ComplexMethod")
     internal fun <SID : Comparable<SID>> warmUpLinkedReferences(
