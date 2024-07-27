@@ -257,6 +257,12 @@ class SelectTests : DatabaseTestsBase() {
 
             val result4 = tester.selectAll().where { tester.columns notInList emptyList() }.toList()
             assertEquals(expected, result4.size)
+
+            val result5 = tester.selectAll().where { tester.columns notInList allSameNumbers }.toList()
+            assertEquals(0, result5.size)
+
+            val result6 = tester.selectAll().where { tester.columns inList emptyList() }.toList()
+            assertEquals(0, result6.size)
         }
     }
 
