@@ -828,3 +828,48 @@ object Meals : Table() {
     val mealTime: Column<Meal> = time("meal_time").transform(MealTimeTransformer())
 }
 ```
+
+## Custom Select Queries
+
+A `Query` instance, which can be instantiated by calling `selectAll()` or `select()` on a `Table` or `Join`, has many extension functions for building complex queries.
+Some of these have already been mentioned above, like [where()](Deep-Dive-into-DSL.md#where-expression), [groupBy()](Deep-Dive-into-DSL.md#group-by), and [orderBy()](Deep-Dive-into-DSL.md#order-by).
+
+If a `SELECT` query with a special clause is required, a custom extension function can be implemented to enable its use with other standard queries.
+
+For example, MySQL index hints, which follow the table name in SQL, can be implemented on a `SELECT` query by using the following custom function and class:
+```kotlin
+fun Query.indexHint(hint: String) = IndexHintQuery(this, hint)
+
+class IndexHintQuery(
+    val source: Query,
+    val indexHint: String
+) : Query(source.set, source.where) {
+
+    init {
+        // copies any stored properties from the original query
+        source.copyTo(this)
+    }
+
+    override fun prepareSQL(builder: QueryBuilder): String {
+        val originalSql = super.prepareSQL(builder)
+        val fromTableSql = " FROM ${transaction.identity(set.source as Table)} "
+        return originalSql.replace(fromTableSql, "$fromTableSql$indexHint ")
+    }
+
+    override fun copy(): IndexHintQuery = IndexHintQuery(source.copy(), indexHint).also { copy ->
+        copyTo(copy)
+    }
+}
+
+transaction {
+    val originalQuery = StarWarsFilms
+        .selectAll()
+        .withDistinct()
+        .where { StarWarsFilms.sequelId less 5 }
+        .groupBy(StarWarsFilms.director)
+    
+    val queryWithHint = originalQuery
+        .indexHint("FORCE INDEX (PRIMARY)")
+        .orderBy(StarWarsFilms.sequelId)
+}
+```

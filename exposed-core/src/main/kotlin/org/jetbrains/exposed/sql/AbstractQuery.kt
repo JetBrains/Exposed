@@ -31,7 +31,12 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     /** The set of columns on which a query should be executed, contained by a [ColumnSet]. */
     abstract val set: FieldSet
 
-    protected fun copyTo(other: AbstractQuery<T>) {
+    /**
+     * Copies all stored properties of this `SELECT` query into the properties of [other].
+     *
+     * Override this function to additionally copy any properties that are not part of the primary constructor.
+     */
+    open fun copyTo(other: T) {
         other.orderByExpressions = orderByExpressions.toMutableList()
         other.limit = limit
         other.offset = offset
