@@ -127,14 +127,12 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         val outOfTransaction = TransactionManager.currentOrNull() == null
         if (outOfTransaction && reference in referenceCache) return getReferenceFromCache(reference)
         return executeAsPartOfEntityLifecycle {
-            val isNotCompositeIdReference = hasSingleReferenceWithReferee(allReferences)
-            val refValue = if (isNotCompositeIdReference) {
+            val isSingleIdReference = hasSingleReferenceWithReferee(allReferences)
+            val refValue = if (isSingleIdReference) {
                 reference.getValue(o, desc)
             } else {
-                CompositeID {
-                    allReferences.forEach { (child, parent) ->
-                        it[parent as Column<EntityID<Comparable<Any>>>] = child.getValue(o, desc) as Comparable<Any>
-                    }
+                getCompositeID {
+                    allReferences.map { (child, parent) -> parent to child.getValue(o, desc) }
                 }
             }
             when {
@@ -152,7 +150,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                     val castReferee = reference.referee<REF>()!!
                     val baseReferee = (castReferee.columnType as? EntityIDColumnType<REF>)?.idColumn ?: castReferee
                     factory.findWithCacheCondition({
-                        if (isNotCompositeIdReference) {
+                        if (isSingleIdReference) {
                             reference.referee!!.getValue(this, desc) == refValue
                         } else {
                             allReferences.all {
@@ -191,22 +189,14 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         val outOfTransaction = TransactionManager.currentOrNull() == null
         if (outOfTransaction && reference in referenceCache) return getReferenceFromCache(reference)
         return executeAsPartOfEntityLifecycle {
-            val isNotCompositeIdReference = hasSingleReferenceWithReferee(allReferences)
-            val refValue = if (isNotCompositeIdReference) {
+            val isSingleIdReference = hasSingleReferenceWithReferee(allReferences)
+            val refValue = if (isSingleIdReference) {
                 reference.getValue(o, desc)
             } else {
                 val childValues = allReferences.map { (child, parent) ->
-                    (parent as Column<EntityID<Comparable<Any?>>>) to (child.getValue(o, desc) as? Comparable<Any?>)
+                    parent to child.getValue(o, desc)
                 }
-                if (childValues.any { it.second == null }) {
-                    null
-                } else {
-                    CompositeID {
-                        childValues.forEach { (parent, childValue) ->
-                            it[parent] = childValue!!
-                        }
-                    }
-                }
+                if (childValues.any { it.second == null }) null else getCompositeID { childValues }
             }
             when {
                 refValue == null -> null
@@ -222,7 +212,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                 }
                 else -> {
                     factory.findWithCacheCondition({
-                        if (isNotCompositeIdReference) {
+                        if (isSingleIdReference) {
                             reference.referee!!.getValue(this, desc) == refValue
                         } else {
                             allReferences.all {

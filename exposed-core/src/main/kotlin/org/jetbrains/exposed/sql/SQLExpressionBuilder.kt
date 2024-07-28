@@ -2,6 +2,7 @@
 
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
@@ -899,6 +900,24 @@ interface ISqlExpressionBuilder {
         MultipleInListOp(this, list, isInList = true)
 
     /**
+     * Checks if all columns in this `List` are equal to any of the [CompositeID]s from [list].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
+     **/
+    @Suppress("UNCHECKED_CAST")
+    @JvmName("inListCompositeIDs")
+    @LowPriorityInOverloadResolution
+    infix fun List<Column<*>>.inList(list: Iterable<CompositeID>): InListOrNotInListBaseOp<List<*>> {
+        val componentList = list.map { id ->
+            List(this.size) { i ->
+                val component = id[this[i] as Column<Comparable<Any>>]
+                component.takeIf { this[i].columnType is EntityIDColumnType<*> } ?: (component as EntityID<*>).value
+            }
+        }
+        return this inList componentList
+    }
+
+    /**
      * Checks if this [EntityID] column is equal to any element from [list].
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithEntityIDColumns
@@ -908,6 +927,18 @@ interface ISqlExpressionBuilder {
     infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = true)
+    }
+
+    /**
+     * Checks if this [EntityID] column is equal to any element from [list].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
+     */
+    @Suppress("UNCHECKED_CAST")
+    @JvmName("inListCompositeEntityIds")
+    infix fun <ID : EntityID<CompositeID>> Column<ID>.inList(list: Iterable<CompositeID>): InListOrNotInListBaseOp<List<*>> {
+        val idTable = (columnType as EntityIDColumnType<CompositeID>).idColumn.table as CompositeIdTable
+        return idTable.idColumns.toList() inList list
     }
 
     /**
@@ -949,6 +980,24 @@ interface ISqlExpressionBuilder {
         MultipleInListOp(this, list, isInList = false)
 
     /**
+     * Checks if all columns in this `List` are not equal to any of the [CompositeID]s from [list].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
+     **/
+    @Suppress("UNCHECKED_CAST")
+    @JvmName("notInListCompositeIDs")
+    @LowPriorityInOverloadResolution
+    infix fun List<Column<*>>.notInList(list: Iterable<CompositeID>): InListOrNotInListBaseOp<List<*>> {
+        val componentList = list.map { id ->
+            List(this.size) { i ->
+                val component = id[this[i] as Column<Comparable<Any>>]
+                component.takeIf { this[i].columnType is EntityIDColumnType<*> } ?: (component as EntityID<*>).value
+            }
+        }
+        return this notInList componentList
+    }
+
+    /**
      * Checks if this [EntityID] column is not equal to any element from [list].
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testInListWithEntityIDColumns
@@ -958,6 +1007,18 @@ interface ISqlExpressionBuilder {
     infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
+    }
+
+    /**
+     * Checks if this [EntityID] column is not equal to any element from [list].
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
+     */
+    @Suppress("UNCHECKED_CAST")
+    @JvmName("notInListCompositeEntityIds")
+    infix fun <ID : EntityID<CompositeID>> Column<ID>.notInList(list: Iterable<CompositeID>): InListOrNotInListBaseOp<List<*>> {
+        val idTable = (columnType as EntityIDColumnType<CompositeID>).idColumn.table as CompositeIdTable
+        return idTable.idColumns.toList() notInList list
     }
 
     // "IN (TABLE ...)" comparisons

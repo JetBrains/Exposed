@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadOnlyProperty
@@ -106,7 +107,7 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
     /** The list of columns and their [SortOrder] for ordering referred entities in one-to-many relationship. */
     private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
 
-    private val allReferences = references ?: run {
+    val allReferences = references ?: run {
         reference.referee ?: error("Column $reference is not a reference")
 
         if (factory.table != reference.table) {
@@ -118,9 +119,9 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
 
     @Suppress("UNCHECKED_CAST", "NestedBlockDepth")
     override operator fun getValue(thisRef: Parent, property: KProperty<*>): SizedIterable<Child> {
-        val isNotCompositeIdReference = hasSingleReferenceWithReferee(allReferences)
+        val isSingleIdReference = hasSingleReferenceWithReferee(allReferences)
         val value: REF = thisRef.run {
-            if (isNotCompositeIdReference) {
+            if (isSingleIdReference) {
                 val refereeColumn = reference.referee<REF>()!!
                 val refereeValue = refereeColumn.lookup()
                 when {
@@ -129,17 +130,14 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
                     else -> refereeValue
                 }
             } else {
-                val refereeValue = CompositeID {
-                    allReferences.forEach { (_, parent) ->
-                        it[parent as Column<EntityID<Comparable<Any>>>] = parent.lookup() as Comparable<Any>
-                    }
-                }
-                refereeValue as REF
+                getCompositeID {
+                    allReferences.map { (_, parent) -> parent to parent.lookup() }
+                } as REF
             }
         }
         if (thisRef.id._value == null || value == null) return emptySized()
 
-        val condition = if (isNotCompositeIdReference) {
+        val condition = if (isSingleIdReference) {
             reference eq value
         } else {
             value as CompositeID
@@ -236,41 +234,81 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
         }
     }
 
+    fun Entity<*>.getReferenceId(
+        delegateRefColumn: Column<*>,
+        refColumns: Map<Column<*>, Column<*>>,
+        isSingleIdReference: Boolean
+    ): Any? {
+        return if (isSingleIdReference) {
+            delegateRefColumn.lookup()
+        } else {
+            val childValues = refColumns.keys.map { it.lookup() }
+            if (childValues.any { it == null }) {
+                null
+            } else {
+                getCompositeID {
+                    refColumns.values.mapIndexed { i, parent -> parent to childValues[i] }
+                }
+            }
+        }
+    }
+
+    fun Entity<*>.getCompositeReferrerId(refColumns: Map<Column<*>, Column<*>>) = getCompositeID {
+        refColumns.map { (child, parent) -> child to (parent.lookup() as EntityID<*>).value }
+    }
+
     val directRelations = filterRelationsForEntity(entity, relations)
     directRelations.forEach { prop ->
         when (val refObject = getReferenceObjectFromDelegatedProperty(entity, prop)) {
             is Reference<*, *, *> -> {
-                (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
-                    this.map { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
-                        val castReferee = refColumn.referee<Comparable<Comparable<*>>>()!!
-                        val baseReferee = castReferee.takeUnless {
-                            it.columnType is EntityIDColumnType<*> && refIds.first() !is EntityID<*>
-                        } ?: (castReferee.columnType as EntityIDColumnType<Comparable<Comparable<*>>>).idColumn
-                        refObject.factory.find { baseReferee inList refIds.distinct() }.toList()
+                (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).allReferences.let { refColumns ->
+                    val isSingleIdReference = hasSingleReferenceWithReferee(refColumns)
+                    val delegateRefColumn = refObject.reference
+                    this.map { entity ->
+                        entity.getReferenceId(delegateRefColumn, refColumns, isSingleIdReference) as ID
+                    }.takeIf { it.isNotEmpty() }?.let { refIds ->
+                        val condition = if (isSingleIdReference) {
+                            val castReferee = (delegateRefColumn as Column<ID>).referee()!!
+                            val baseReferee = castReferee.takeUnless {
+                                it.columnType is EntityIDColumnType<*> && refIds.first() !is EntityID<*>
+                            } ?: (castReferee.columnType as EntityIDColumnType<ID>).idColumn
+                            baseReferee inList refIds.distinct()
+                        } else {
+                            refColumns.values.toList() inList (refIds.distinct() as List<CompositeID>)
+                        }
+                        refObject.factory.find(condition).toList()
                     }.orEmpty()
-                    storeReferenceCache(refColumn, prop)
+                    storeReferenceCache(delegateRefColumn, prop)
                 }
             }
             is OptionalReference<*, *, *> -> {
-                (refObject as OptionalReference<Comparable<Comparable<*>>, *, Entity<*>>).reference.let { refColumn ->
-                    this.mapNotNull { it.run { refColumn.lookup() } }.takeIf { it.isNotEmpty() }?.let { refIds ->
-                        refObject.factory.find { refColumn.referee<Comparable<Comparable<*>>>()!! inList refIds.distinct() }.toList()
+                (refObject as OptionalReference<Comparable<Comparable<*>>, *, Entity<*>>).allReferences.let { refColumns ->
+                    val isSingleIdReference = hasSingleReferenceWithReferee(refColumns)
+                    val delegateRefColumn = refObject.reference
+                    this.mapNotNull { entity ->
+                        entity.getReferenceId(delegateRefColumn, refColumns, isSingleIdReference) as? ID
+                    }.takeIf { it.isNotEmpty() }?.let { refIds ->
+                        val condition = if (isSingleIdReference) {
+                            (delegateRefColumn as Column<ID>).referee()!! inList refIds.distinct()
+                        } else {
+                            refColumns.values.toList() inList (refIds.distinct() as List<CompositeID>)
+                        }
+                        refObject.factory.find(condition).toList()
                     }.orEmpty()
-                    storeReferenceCache(refColumn, prop)
+                    storeReferenceCache(delegateRefColumn, prop)
                 }
             }
             is Referrers<*, *, *, *, *> -> {
-                (refObject as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
-                    val refIds = this.map { it.run { refColumn.referee<Any>()!!.lookup() } }
-                    refObject.factory.warmUpReferences(refIds, refColumn)
-                    storeReferenceCache(refColumn, prop)
-                }
-            }
-            is OptionalReferrers<*, *, *, *, *> -> {
-                (refObject as OptionalReferrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
-                    val refIds = this.mapNotNull { it.run { refColumn.referee<Any?>()!!.lookup() } }
-                    refObject.factory.warmUpOptReferences(refIds, refColumn)
-                    storeReferenceCache(refColumn, prop)
+                (refObject as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).allReferences.let { refColumns ->
+                    val delegateRefColumn = refObject.reference
+                    if (hasSingleReferenceWithReferee(refColumns)) {
+                        val refIds = this.map { it.run { delegateRefColumn.referee<Any>()!!.lookup() } }
+                        refObject.factory.warmUpReferences(refIds, delegateRefColumn)
+                    } else {
+                        val refIds = this.map { it.getCompositeReferrerId(refColumns) }
+                        refObject.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn)
+                    }
+                    storeReferenceCache(delegateRefColumn, prop)
                 }
             }
             is InnerTableLink<*, *, *, *> -> {
@@ -285,17 +323,29 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                 }
             }
             is BackReference<*, *, *, *, *> -> {
-                (refObject.delegate as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
-                    val refIds = this.map { it.run { refColumn.referee<Any>()!!.lookup() } }
-                    refObject.delegate.factory.warmUpReferences(refIds, refColumn)
-                    storeReferenceCache(refColumn, prop)
+                (refObject.delegate as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).allReferences.let { refColumns ->
+                    val delegateRefColumn = refObject.delegate.reference
+                    if (hasSingleReferenceWithReferee(refColumns)) {
+                        val refIds = this.map { it.run { delegateRefColumn.referee<Any>()!!.lookup() } }
+                        refObject.delegate.factory.warmUpReferences(refIds, delegateRefColumn)
+                    } else {
+                        val refIds = this.map { it.getCompositeReferrerId(refColumns) }
+                        refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn)
+                    }
+                    storeReferenceCache(delegateRefColumn, prop)
                 }
             }
             is OptionalBackReference<*, *, *, *, *> -> {
-                (refObject.delegate as OptionalReferrers<ID, Entity<ID>, *, Entity<*>, Any>).reference.let { refColumn ->
-                    val refIds = this.map { it.run { refColumn.referee<Any>()!!.lookup() } }
-                    refObject.delegate.factory.warmUpOptReferences(refIds, refColumn)
-                    storeReferenceCache(refColumn, prop)
+                (refObject.delegate as OptionalReferrers<ID, Entity<ID>, *, Entity<*>, Any>).allReferences.let { refColumns ->
+                    val delegateRefColumn = refObject.delegate.reference
+                    if (hasSingleReferenceWithReferee(refColumns)) {
+                        val refIds = this.map { it.run { delegateRefColumn.referee<Any>()!!.lookup() } }
+                        refObject.delegate.factory.warmUpOptReferences(refIds, delegateRefColumn)
+                    } else {
+                        val refIds = this.map { it.getCompositeReferrerId(refColumns) }
+                        refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn)
+                    }
+                    storeReferenceCache(delegateRefColumn, prop)
                 }
             }
             else -> error("Relation delegate has an unknown type")
@@ -362,4 +412,11 @@ internal fun hasSingleReferenceWithReferee(allReferences: Map<Column<*>, Column<
 internal fun allReferencesMatch(allReferences: Map<Column<*>, Column<*>>, parentTable: IdTable<*>): Boolean {
     val parentIdColumns = parentTable.idColumns
     return allReferences.values.size == parentIdColumns.size && allReferences.values.containsAll(parentIdColumns)
+}
+
+@Suppress("UNCHECKED_CAST")
+internal fun getCompositeID(entries: () -> List<Pair<Column<*>, *>>): CompositeID = CompositeID {
+    entries().forEach { (key, value) ->
+        it[key as Column<EntityID<Comparable<Any>>>] = value as Comparable<Any>
+    }
 }
