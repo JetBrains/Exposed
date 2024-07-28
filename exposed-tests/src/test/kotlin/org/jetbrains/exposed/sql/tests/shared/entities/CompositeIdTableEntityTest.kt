@@ -440,33 +440,32 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         }
     }
 
-    // fails because of bug in SQL Server notInList logic - see link to fix in PR details
-//    @Test
-//    fun testInListWithCompositeIdEntities() {
-//        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers) {
-//            val id1: EntityID<CompositeID> = Publishers.insertAndGetId {
-//                it[name] = "Publisher A"
-//            }
-//            val id2: EntityID<CompositeID> = Publishers.insertAndGetId {
-//                it[name] = "Publisher B"
-//            }
-//
-//            val compositeIds = listOf(id1.value, id2.value)
-//            val keyColumns = Publishers.idColumns.toList()
-//            val result1 = Publishers.selectAll().where { keyColumns inList compositeIds }.count()
-//            assertEquals(2, result1)
-//            val result2 = Publishers.selectAll().where { keyColumns notInList compositeIds }.count()
-//            assertEquals(0, result2)
-//
-//            val result3 = Publishers.selectAll().where { Publishers.id inList compositeIds }.count()
-//            assertEquals(2, result3)
-//            val result4 = Publishers.selectAll().where { Publishers.id notInList compositeIds }.count()
-//            assertEquals(0, result4)
-//        }
-//    }
+    @Test
+    fun testInListWithCompositeIdEntities() {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), Publishers) {
+            val id1: EntityID<CompositeID> = Publishers.insertAndGetId {
+                it[name] = "Publisher A"
+            }
+            val id2: EntityID<CompositeID> = Publishers.insertAndGetId {
+                it[name] = "Publisher B"
+            }
+
+            val compositeIds = listOf(id1.value, id2.value)
+            val keyColumns = Publishers.idColumns.toList()
+            val result1 = Publishers.selectAll().where { keyColumns inList compositeIds }.count()
+            assertEquals(2, result1)
+            val result2 = Publishers.selectAll().where { keyColumns notInList compositeIds }.count()
+            assertEquals(0, result2)
+
+            val result3 = Publishers.selectAll().where { Publishers.id inList compositeIds }.count()
+            assertEquals(2, result3)
+            val result4 = Publishers.selectAll().where { Publishers.id notInList compositeIds }.count()
+            assertEquals(0, result4)
+        }
+    }
 
     @Test
-    fun testPreloadReferencesOnCompositeIdEntities() {
+    fun testPreloadReferencedOn() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
             val publisherA = Publisher.new {
                 name = "Publisher A"
@@ -475,20 +474,9 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 publisher = publisherA
                 penName = "Author A"
             }
-            val authorB = Author.new {
+            Author.new {
                 publisher = publisherA
                 penName = "Author B"
-            }
-            val bookA = Book.new {
-                title = "Book A"
-                author = authorA
-            }
-            val reviewIdValue = CompositeID {
-                it[Reviews.content] = "Not bad"
-                it[Reviews.rank] = 12345
-            }
-            val reviewA: Review = Review.new(reviewIdValue) {
-                book = bookA
             }
             val officeAIdValue = CompositeID {
                 it[Offices.zipCode] = "1A2 3B4"
@@ -509,7 +497,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
-                // preload referencedOn references - child to single parent
+                // preload referencedOn - child to single parent
                 Author.find { Authors.id eq authorA.id }.first().load(Author::publisher)
                 val foundAuthor = Author.testCache(authorA.id)
                 assertNotNull(foundAuthor)
@@ -518,7 +506,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
-                // preload optionalReferencedOn references - child to single parent?
+                // preload optionalReferencedOn - child to single parent?
                 Office.all().with(Office::publisher)
                 val foundOfficeA = Office.testCache(officeA.id)
                 assertNotNull(foundOfficeA)
@@ -528,6 +516,41 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 assertNull(foundOfficeA.readValues[Offices.publisherIsbn])
                 assertEquals(publisherA.id, Publisher.testCache(foundOfficeB.readCompositeIDValues(Publishers))?.id)
             }
+        }
+    }
+
+    @Test
+    fun testPreloadBackReferencedOn() {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
+            val publisherA = Publisher.new {
+                name = "Publisher A"
+            }
+            val officeAIdValue = CompositeID {
+                it[Offices.zipCode] = "1A2 3B4"
+                it[Offices.name] = "Office A"
+                it[Offices.areaCode] = 789
+            }
+            Office.new(officeAIdValue) {}
+            val officeBIdValue = CompositeID {
+                it[Offices.zipCode] = "5C6 7D8"
+                it[Offices.name] = "Office B"
+                it[Offices.areaCode] = 456
+            }
+            val officeB = Office.new(officeBIdValue) {
+                publisher = publisherA
+            }
+            val bookA = Book.new {
+                title = "Book A"
+            }
+            val reviewIdValue = CompositeID {
+                it[Reviews.content] = "Not bad"
+                it[Reviews.rank] = 12345
+            }
+            val reviewA: Review = Review.new(reviewIdValue) {
+                book = bookA
+            }
+
+            commit()
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
@@ -546,6 +569,39 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 val result = cache.getReferrers<Office>(publisherA.id, Offices.publisherId)?.map { it.id }.orEmpty()
                 assertEqualLists(listOf(officeB.id), result)
             }
+        }
+    }
+
+    @Test
+    fun testPreloadReferrersOn() {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
+            val publisherA = Publisher.new {
+                name = "Publisher A"
+            }
+            val authorA = Author.new {
+                publisher = publisherA
+                penName = "Author A"
+            }
+            val authorB = Author.new {
+                publisher = publisherA
+                penName = "Author B"
+            }
+            val officeAIdValue = CompositeID {
+                it[Offices.zipCode] = "1A2 3B4"
+                it[Offices.name] = "Office A"
+                it[Offices.areaCode] = 789
+            }
+            Office.new(officeAIdValue) {}
+            val officeBIdValue = CompositeID {
+                it[Offices.zipCode] = "5C6 7D8"
+                it[Offices.name] = "Office B"
+                it[Offices.areaCode] = 456
+            }
+            val officeB = Office.new(officeBIdValue) {
+                publisher = publisherA
+            }
+
+            commit()
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1

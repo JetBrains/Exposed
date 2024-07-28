@@ -119,9 +119,9 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
 
     @Suppress("UNCHECKED_CAST", "NestedBlockDepth")
     override operator fun getValue(thisRef: Parent, property: KProperty<*>): SizedIterable<Child> {
-        val isNotCompositeIdReference = hasSingleReferenceWithReferee(allReferences)
+        val isSingleIdReference = hasSingleReferenceWithReferee(allReferences)
         val value: REF = thisRef.run {
-            if (isNotCompositeIdReference) {
+            if (isSingleIdReference) {
                 val refereeColumn = reference.referee<REF>()!!
                 val refereeValue = refereeColumn.lookup()
                 when {
@@ -130,17 +130,14 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
                     else -> refereeValue
                 }
             } else {
-                val refereeValue = CompositeID {
-                    allReferences.forEach { (_, parent) ->
-                        it[parent as Column<EntityID<Comparable<Any>>>] = parent.lookup() as Comparable<Any>
-                    }
-                }
-                refereeValue as REF
+                getCompositeID {
+                    allReferences.map { (_, parent) -> parent to parent.lookup() }
+                } as REF
             }
         }
         if (thisRef.id._value == null || value == null) return emptySized()
 
-        val condition = if (isNotCompositeIdReference) {
+        val condition = if (isSingleIdReference) {
             reference eq value
         } else {
             value as CompositeID
@@ -240,31 +237,24 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
     fun Entity<*>.getReferenceId(
         delegateRefColumn: Column<*>,
         refColumns: Map<Column<*>, Column<*>>,
-        isNotCompositeIdReference: Boolean
+        isSingleIdReference: Boolean
     ): Any? {
-        return if (isNotCompositeIdReference) {
+        return if (isSingleIdReference) {
             delegateRefColumn.lookup()
         } else {
             val childValues = refColumns.keys.map { it.lookup() }
             if (childValues.any { it == null }) {
                 null
             } else {
-                CompositeID {
-                    refColumns.values.forEachIndexed { i, parent ->
-                        it[parent as Column<EntityID<Comparable<Any>>>] = childValues[i] as Comparable<Any>
-                    }
+                getCompositeID {
+                    refColumns.values.mapIndexed { i, parent -> parent to childValues[i] }
                 }
             }
         }
     }
 
-    fun Entity<*>.getCompositeReferrerId(refColumns: Map<Column<*>, Column<*>>): CompositeID {
-        return CompositeID {
-            refColumns.forEach { (child, parent) ->
-                val parentValue = (parent.lookup() as EntityID<*>).value
-                it[child as Column<EntityID<Comparable<Any>>>] = parentValue as Comparable<Any>
-            }
-        }
+    fun Entity<*>.getCompositeReferrerId(refColumns: Map<Column<*>, Column<*>>) = getCompositeID {
+        refColumns.map { (child, parent) -> child to (parent.lookup() as EntityID<*>).value }
     }
 
     val directRelations = filterRelationsForEntity(entity, relations)
@@ -272,12 +262,12 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
         when (val refObject = getReferenceObjectFromDelegatedProperty(entity, prop)) {
             is Reference<*, *, *> -> {
                 (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).allReferences.let { refColumns ->
-                    val isNotCompositeIdReference = hasSingleReferenceWithReferee(refColumns)
+                    val isSingleIdReference = hasSingleReferenceWithReferee(refColumns)
                     val delegateRefColumn = refObject.reference
                     this.map { entity ->
-                        entity.getReferenceId(delegateRefColumn, refColumns, isNotCompositeIdReference) as ID
+                        entity.getReferenceId(delegateRefColumn, refColumns, isSingleIdReference) as ID
                     }.takeIf { it.isNotEmpty() }?.let { refIds ->
-                        val condition = if (isNotCompositeIdReference) {
+                        val condition = if (isSingleIdReference) {
                             val castReferee = (delegateRefColumn as Column<ID>).referee()!!
                             val baseReferee = castReferee.takeUnless {
                                 it.columnType is EntityIDColumnType<*> && refIds.first() !is EntityID<*>
@@ -293,12 +283,12 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
             }
             is OptionalReference<*, *, *> -> {
                 (refObject as OptionalReference<Comparable<Comparable<*>>, *, Entity<*>>).allReferences.let { refColumns ->
-                    val isNotCompositeIdReference = hasSingleReferenceWithReferee(refColumns)
+                    val isSingleIdReference = hasSingleReferenceWithReferee(refColumns)
                     val delegateRefColumn = refObject.reference
                     this.mapNotNull { entity ->
-                        entity.getReferenceId(delegateRefColumn, refColumns, isNotCompositeIdReference) as? ID
+                        entity.getReferenceId(delegateRefColumn, refColumns, isSingleIdReference) as? ID
                     }.takeIf { it.isNotEmpty() }?.let { refIds ->
-                        val condition = if (isNotCompositeIdReference) {
+                        val condition = if (isSingleIdReference) {
                             (delegateRefColumn as Column<ID>).referee()!! inList refIds.distinct()
                         } else {
                             refColumns.values.toList() inList (refIds.distinct() as List<CompositeID>)
@@ -316,7 +306,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                         refObject.factory.warmUpReferences(refIds, delegateRefColumn)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
-                        refObject.factory.warmUpAllReferences(refIds, refColumns, delegateRefColumn)
+                        refObject.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn)
                     }
                     storeReferenceCache(delegateRefColumn, prop)
                 }
@@ -340,7 +330,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                         refObject.delegate.factory.warmUpReferences(refIds, delegateRefColumn)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
-                        refObject.delegate.factory.warmUpAllReferences(refIds, refColumns, delegateRefColumn)
+                        refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn)
                     }
                     storeReferenceCache(delegateRefColumn, prop)
                 }
@@ -353,7 +343,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                         refObject.delegate.factory.warmUpOptReferences(refIds, delegateRefColumn)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
-                        refObject.delegate.factory.warmUpAllReferences(refIds, refColumns, delegateRefColumn)
+                        refObject.delegate.factory.warmUpCompositeIdReferences(refIds, refColumns, delegateRefColumn)
                     }
                     storeReferenceCache(delegateRefColumn, prop)
                 }
@@ -422,4 +412,11 @@ internal fun hasSingleReferenceWithReferee(allReferences: Map<Column<*>, Column<
 internal fun allReferencesMatch(allReferences: Map<Column<*>, Column<*>>, parentTable: IdTable<*>): Boolean {
     val parentIdColumns = parentTable.idColumns
     return allReferences.values.size == parentIdColumns.size && allReferences.values.containsAll(parentIdColumns)
+}
+
+@Suppress("UNCHECKED_CAST")
+internal fun getCompositeID(entries: () -> List<Pair<Column<*>, *>>): CompositeID = CompositeID {
+    entries().forEach { (key, value) ->
+        it[key as Column<EntityID<Comparable<Any>>>] = value as Comparable<Any>
+    }
 }

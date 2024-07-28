@@ -911,9 +911,7 @@ interface ISqlExpressionBuilder {
         val componentList = list.map { id ->
             List(this.size) { i ->
                 val component = id[this[i] as Column<Comparable<Any>>]
-                component.takeIf {
-                    it !is EntityID<*> || this[i].columnType is EntityIDColumnType<*>
-                } ?: (component as EntityID<*>).value
+                component.takeIf { this[i].columnType is EntityIDColumnType<*> } ?: (component as EntityID<*>).value
             }
         }
         return this inList componentList
@@ -993,9 +991,7 @@ interface ISqlExpressionBuilder {
         val componentList = list.map { id ->
             List(this.size) { i ->
                 val component = id[this[i] as Column<Comparable<Any>>]
-                component.takeIf {
-                    it !is EntityID<*> || this[i].columnType is EntityIDColumnType<*>
-                } ?: (component as EntityID<*>).value
+                component.takeIf { this[i].columnType is EntityIDColumnType<*> } ?: (component as EntityID<*>).value
             }
         }
         return this notInList componentList

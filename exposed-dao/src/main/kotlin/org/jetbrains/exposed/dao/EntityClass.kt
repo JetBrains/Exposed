@@ -956,7 +956,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         }
     }
 
-    internal fun warmUpAllReferences(
+    internal fun warmUpCompositeIdReferences(
         references: List<CompositeID>,
         refColumns: Map<Column<*>, Column<*>>,
         delegateRefColumn: Column<*>,
@@ -1014,19 +1014,12 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         else -> findQuery
     }.toList()
 
-    private fun <R> List<T>.groupByReference(
-        refColumn: Column<R>? = null,
-        refColumns: Map<Column<*>, Column<*>>? = null
-    ): Map<R, List<T>> {
-        return refColumn?.let {
-            groupBy { it.readValues[refColumn] }
-        } ?: groupBy { entity ->
-            CompositeID {
-                refColumns?.forEach { (child, parent) ->
-                    it[parent as Column<EntityID<Comparable<Any>>>] = entity.readValues[child] as Comparable<Any>
-                }
-            } as R
-        }
+    private fun <R> List<T>.groupByReference(refColumn: Column<R>): Map<R, List<T>> = groupBy { it.readValues[refColumn] }
+
+    private fun <R> List<T>.groupByReference(refColumns: Map<Column<*>, Column<*>>): Map<R, List<T>> = groupBy { entity ->
+        getCompositeID {
+            refColumns.map { (child, parent) -> parent to entity.readValues[child] }
+        } as R
     }
 
     @Suppress("ComplexMethod")
