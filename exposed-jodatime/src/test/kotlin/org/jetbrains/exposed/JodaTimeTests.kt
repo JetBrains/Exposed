@@ -27,6 +27,7 @@ import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import org.joda.time.LocalTime
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -34,6 +35,8 @@ class JodaTimeTests : DatabaseTestsBase() {
     init {
         DateTimeZone.setDefault(DateTimeZone.UTC)
     }
+
+    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
 
     @Test
     fun jodaTimeFunctions() {
@@ -272,7 +275,7 @@ class JodaTimeTests : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withTables(excludeSettings = TestDB.ALL_MARIADB + TestDB.MYSQL_V5, testTable) { testDB ->
+        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB, testTable) { testDB ->
             // Cairo time zone
             DateTimeZone.setDefault(DateTimeZone.forID("Africa/Cairo"))
             assertEquals("Africa/Cairo", DateTimeZone.getDefault().id)
@@ -343,7 +346,7 @@ class JodaTimeTests : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withDb(db = TestDB.ALL_MARIADB + TestDB.MYSQL_V5) {
+        withDb(db = timestampWithTimeZoneUnsupportedDB) {
             expectException<UnsupportedByDialectException> {
                 SchemaUtils.create(testTable)
             }
@@ -356,27 +359,29 @@ class JodaTimeTests : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withDb(excludeSettings = TestDB.ALL_MARIADB + TestDB.MYSQL_V5) {
-            try {
-                // UTC time zone
-                DateTimeZone.setDefault(DateTimeZone.UTC)
-                assertEquals("UTC", DateTimeZone.getDefault().id)
+        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1, testTable) {
+            // UTC time zone
+            DateTimeZone.setDefault(DateTimeZone.UTC)
+            assertEquals("UTC", DateTimeZone.getDefault().id)
 
-                SchemaUtils.create(testTable)
+            SchemaUtils.create(testTable)
 
-                val now = DateTime.now(DateTimeZone.getDefault())
-                val nowId = testTable.insertAndGetId {
-                    it[timestampWithTimeZone] = now
-                }
-
-                assertEquals(
-                    DateTime(now.year, now.monthOfYear, now.dayOfMonth, 0, 0),
-                    testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
-                        .single()[testTable.timestampWithTimeZone.date()]
-                )
-            } finally {
-                SchemaUtils.drop(testTable)
+            val now = DateTime.parse("2023-05-04T05:04:01.123123123+00:00")
+            val nowId = testTable.insertAndGetId {
+                it[timestampWithTimeZone] = now
             }
+
+            assertEquals(
+                DateTime(now.year, now.monthOfYear, now.dayOfMonth, 0, 0),
+                testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
+                    .single()[testTable.timestampWithTimeZone.date()]
+            )
+
+            assertEquals(
+                now.toLocalTime(),
+                testTable.select(testTable.timestampWithTimeZone.time()).where { testTable.id eq nowId }
+                    .single()[testTable.timestampWithTimeZone.time()]
+            )
         }
     }
 
@@ -424,6 +429,32 @@ class JodaTimeTests : DatabaseTestsBase() {
             }.single()
             assertEqualDateTime(datesInput.last(), result2[lastDate])
             assertEqualLists(result2[firstTwoDatetimes], datetimeInput.take(2))
+        }
+    }
+
+    @Test
+    fun testSelectByTimeLiteralEquality() {
+        val tableWithTime = object : IntIdTable("TableWithTime") {
+            val time = time("time")
+        }
+        withTables(tableWithTime) {
+            val localTime = LocalTime(13, 0)
+            val localTimeLiteral = timeLiteral(localTime)
+
+            // UTC time zone
+            DateTimeZone.setDefault(DateTimeZone.UTC)
+            assertEquals("UTC", DateTimeZone.getDefault().id)
+
+            tableWithTime.insert {
+                it[time] = localTime
+            }
+
+            assertEquals(
+                localTime,
+                tableWithTime.select(tableWithTime.id, tableWithTime.time)
+                    .where { tableWithTime.time eq localTimeLiteral }
+                    .single()[tableWithTime.time]
+            )
         }
     }
 }
