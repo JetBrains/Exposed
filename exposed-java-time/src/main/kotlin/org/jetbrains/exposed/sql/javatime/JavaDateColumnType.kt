@@ -7,10 +7,12 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.*
 import java.sql.ResultSet
 import java.time.*
+import java.time.ZoneOffset.UTC
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.format.DateTimeFormatter.ISO_LOCAL_TIME
 import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
 import java.util.*
 
 private val DEFAULT_DATE_STRING_FORMATTER by lazy {
@@ -51,10 +53,16 @@ private val DEFAULT_TIME_STRING_FORMATTER by lazy {
 
 // Example result: 2023-07-07 14:42:29.343+02:00 or 2023-07-07 12:42:29.343Z
 private val SQLITE_OFFSET_DATE_TIME_FORMATTER by lazy {
-    DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss.SSS[XXX]",
-        Locale.ROOT
-    )
+    DateTimeFormatterBuilder()
+        .appendPattern("yyyy-MM-dd HH:mm:ss")
+        .optionalStart()
+        .appendPattern(".SSS")
+        .optionalEnd()
+        .optionalStart()
+        .appendPattern("XXX")
+        .optionalEnd()
+        .toFormatter()
+        .withLocale(Locale.ROOT)
 }
 
 // For UTC time zone, MySQL rejects the 'Z' and will only accept the offset '+00:00'
@@ -380,9 +388,15 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
 
     override fun valueFromDB(value: Any): OffsetDateTime = when (value) {
         is OffsetDateTime -> value
+        is ZonedDateTime -> value.toOffsetDateTime()
         is String -> {
             if (currentDialect is SQLiteDialect) {
-                OffsetDateTime.parse(value, SQLITE_OFFSET_DATE_TIME_FORMATTER)
+                val temporalAccessor = SQLITE_OFFSET_DATE_TIME_FORMATTER.parse(value)
+                if (temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS)) {
+                    OffsetDateTime.from(temporalAccessor)
+                } else {
+                    OffsetDateTime.from(LocalDateTime.from(temporalAccessor).atOffset(UTC))
+                }
             } else {
                 OffsetDateTime.parse(value)
             }
@@ -392,6 +406,7 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
 
     override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
+        is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java)
         else -> rs.getObject(index, OffsetDateTime::class.java)
     }
 
