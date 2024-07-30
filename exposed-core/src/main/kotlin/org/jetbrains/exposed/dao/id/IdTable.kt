@@ -37,6 +37,34 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
 
     /** All base columns that make up this [IdTable]'s identifier column. */
     val idColumns = HashSet<Column<out Comparable<*>>>()
+        get() = field.validate()
+
+    private var idColumnsValidated: Boolean = false
+    private var inTableInitialization: Boolean = false
+
+    private fun <F : HashSet<Column<out Comparable<*>>>> F.validate(): F {
+        if (idColumnsValidated || inTableInitialization) return this
+
+        val primaryKeyColumns = primaryKey?.columns?.toSet().orEmpty()
+        return when {
+//            primaryKeyColumns.isEmpty() || minus(primaryKeyColumns).isNotEmpty() -> {
+//                val message = "Table definition must include a primary key with all id columns: ${joinToString { it.name }}"
+//                exposedLogger.error(message)
+//                error(message)
+//            }
+            this == primaryKeyColumns -> {
+                idColumnsValidated = true
+                this
+            }
+            else -> {
+                primaryKeyColumns.minus(this).forEach { missingColumn ->
+                    @Suppress("UNCHECKED_CAST")
+                    add(missingColumn as Column<Comparable<*>>)
+                }
+                this
+            }
+        }
+    }
 
     /**
      * Adds a column to [idColumns].
@@ -44,12 +72,14 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
      * @throws IllegalStateException If more than one column is added to an [IdTable] that is not a [CompositeIdTable].
      */
     internal fun <S : Comparable<S>> addIdColumn(newColumn: Column<EntityID<S>>) {
+        inTableInitialization = true
         if (idColumns.isNotEmpty() && this !is CompositeIdTable) {
             val message = "CompositeIdTable should be used if multiple EntityID key columns are required"
             exposedLogger.error(message)
             error(message)
         }
         idColumns.add(newColumn)
+        inTableInitialization = false
     }
 
     /**

@@ -8,7 +8,12 @@ import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.exists
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentTestDB
@@ -107,6 +112,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         val publisherId = integer("publisher_id").nullable()
         val publisherIsbn = uuid("publisher_isbn").nullable()
 
+        override val primaryKey = PrimaryKey(zipCode, name, areaCode)
         init {
             foreignKey(publisherId, publisherIsbn, target = Publishers.primaryKey)
         }
@@ -131,6 +137,29 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(tables = allTables).isEmpty())
             } finally {
                 SchemaUtils.drop(tables = allTables)
+            }
+        }
+    }
+
+    @Test
+    fun testCreateWithPrimaryKeyAndIdColumnMismatch() {
+        val completeTable = object : CompositeIdTable("complete_table") {
+            val age = integer("age").entityId()
+            val name = varchar("name", 50).entityId()
+            override val primaryKey = PrimaryKey(age, name)
+        }
+        val missingIdsTable = object : CompositeIdTable("missing_ids_table") {
+            val age = integer("age")
+            val name = varchar("name", 50)
+            override val primaryKey = PrimaryKey(age, name)
+        }
+
+        withDb {
+            listOf(completeTable, missingIdsTable).forEach { table ->
+                SchemaUtils.create(table)
+                table.select(table.id).toList()
+                assertEquals(2, table.idColumns.count())
+                SchemaUtils.drop(table)
             }
         }
     }
@@ -346,6 +375,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         val zipCode = varchar("zip_code", 8).entityId()
         val name = varchar("name", 64).entityId()
         val population = long("population").nullable()
+        override val primaryKey = PrimaryKey(zipCode, name)
     }
 
     class Town(id: EntityID<CompositeID>) : CompositeEntity(id) {

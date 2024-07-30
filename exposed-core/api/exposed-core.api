@@ -6,6 +6,7 @@ public final class org/jetbrains/exposed/dao/id/CompositeID : java/lang/Comparab
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun get (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Comparable;
 	public fun hashCode ()I
+	public final fun setWithEntityID (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/dao/id/EntityID;)V
 	public final fun setWithEntityIdValue (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)V
 	public final fun setWithNullableEntityIdValue (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)V
 	public fun toString ()Ljava/lang/String;

@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
+import org.jetbrains.exposed.dao.id.CompositeID
+import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -10,9 +12,14 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.junit.Test
+import java.sql.Connection
 import java.util.*
 import kotlin.reflect.jvm.isAccessible
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 object ViaTestData {
     object NumbersTable : UUIDTable() {
@@ -277,6 +284,85 @@ class ViaTests : DatabaseTestsBase() {
 
             root.children.forEachIndexed { index, node ->
                 assertEquals("#$index", node.name)
+            }
+        }
+    }
+
+    object Projects : IntIdTable("projects") {
+        val name = varchar("name", 50)
+    }
+    class Project(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Project>(Projects)
+
+        var name by Projects.name
+        val tasks by Task via ProjectTasks
+    }
+
+    object ProjectTasks : CompositeIdTable("project_tasks") {
+        val project = reference("project", Projects, onDelete = ReferenceOption.CASCADE)
+        val task = reference("task", Tasks, onDelete = ReferenceOption.CASCADE)
+        val approved = bool("approved")
+
+        override val primaryKey = PrimaryKey(project, task)
+    }
+    class ProjectTask(id: EntityID<CompositeID>) : CompositeEntity(id) {
+        companion object : CompositeEntityClass<ProjectTask>(ProjectTasks)
+
+        var approved by ProjectTasks.approved
+    }
+
+    object Tasks : IntIdTable("tasks") {
+        val title = varchar("title", 64)
+    }
+    class Task(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<Task>(Tasks)
+
+        var title by Tasks.title
+        val approved by ProjectTasks.approved
+    }
+
+    @Test
+    fun testAdditionalLinkDataUsingCompositeIdInnerTable() {
+        withTables(Projects, Tasks, ProjectTasks) {
+            val p1 = Project.new { name = "Project 1" }
+            val p2 = Project.new { name = "Project 2" }
+            val t1 = Task.new { title = "Task 1" }
+            val t2 = Task.new { title = "Task 2" }
+            val t3 = Task.new { title = "Task 3" }
+
+            ProjectTask.new(
+                CompositeID {
+                    it[ProjectTasks.task] = t1.id
+                    it[ProjectTasks.project] = p1.id
+                }
+            ) { approved = true }
+            ProjectTask.new(
+                CompositeID {
+                    it[ProjectTasks.task] = t2.id
+                    it[ProjectTasks.project] = p2.id
+                }
+            ) { approved = false }
+            ProjectTask.new(
+                CompositeID {
+                    it[ProjectTasks.task] = t3.id
+                    it[ProjectTasks.project] = p2.id
+                }
+            ) { approved = false }
+
+            commit()
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                maxAttempts = 1
+                Project.all().with(Project::tasks)
+                val cache = TransactionManager.current().entityCache
+
+                val p1Tasks = cache.getReferrers<Task>(p1.id, ProjectTasks.project)?.toList().orEmpty()
+                assertEqualLists(p1Tasks.map { it.id }, listOf(t1.id))
+                assertTrue { p1Tasks.all { task -> task.approved } }
+
+                val p2Tasks = cache.getReferrers<Task>(p2.id, ProjectTasks.project)?.toList().orEmpty()
+                assertEqualLists(p2Tasks.map { it.id }, listOf(t2.id, t3.id))
+                assertFalse { p1Tasks.all { task -> !task.approved } }
             }
         }
     }
