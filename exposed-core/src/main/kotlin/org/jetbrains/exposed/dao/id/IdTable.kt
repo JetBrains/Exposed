@@ -35,22 +35,27 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
     /** The identity column of this [IdTable], for storing values of type [T] wrapped as [EntityID] instances. */
     abstract val id: Column<EntityID<T>>
 
-    /** All base columns that make up this [IdTable]'s identifier column. */
-    val idColumns = HashSet<Column<out Comparable<*>>>()
+    private val _idColumns = HashSet<Column<out Comparable<*>>>()
 
-    /**
-     * Adds a column to [idColumns].
-     *
-     * @throws IllegalStateException If more than one column is added to an [IdTable] that is not a [CompositeIdTable].
-     */
-    internal fun <S : Comparable<S>> addIdColumn(newColumn: Column<EntityID<S>>) {
-        if (idColumns.isNotEmpty() && this !is CompositeIdTable) {
+    /** All base columns that make up this [IdTable]'s identifier column. */
+    val idColumns: Set<Column<out Comparable<*>>>
+        get() = _idColumns.ifEmpty {
+            val message = "Table definition must include id columns. Please use Column.entityId() or IdTable.addIdColumn()."
+            exposedLogger.error(message)
+            error(message)
+        }
+
+    /** Adds a column to [idColumns] so that it can be used as a component of the [id] property. */
+    protected fun <S : Comparable<S>> addIdColumn(newColumn: Column<EntityID<S>>) {
+        if (_idColumns.isNotEmpty() && this !is CompositeIdTable) {
             val message = "CompositeIdTable should be used if multiple EntityID key columns are required"
             exposedLogger.error(message)
             error(message)
         }
-        idColumns.add(newColumn)
+        _idColumns.add(newColumn)
     }
+
+    internal fun <S : Comparable<S>> addIdColumnInternal(newColumn: Column<EntityID<S>>) { addIdColumn(newColumn) }
 
     /**
      * Returns a boolean operator comparing each of this table's [idColumns] to its corresponding

@@ -618,7 +618,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             it.dbDefaultValue = dbDefaultValue?.let { it as Expression<EntityID<T>> }
             it.extraDefinitions = extraDefinitions
         }
-        (table as IdTable<T>).addIdColumn(newColumn)
+        (table as IdTable<T>).addIdColumnInternal(newColumn)
         return replaceColumn(this, newColumn)
     }
 

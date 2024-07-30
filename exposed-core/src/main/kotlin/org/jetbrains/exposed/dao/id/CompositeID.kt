@@ -24,6 +24,14 @@ class CompositeID private constructor() : Comparable<CompositeID> {
         values[column] = value?.let { EntityID(value, column.table as IdTable<T>) }
     }
 
+    @JvmName("setWithEntityID")
+    operator fun <T : Comparable<T>, ID : EntityID<T>> set(column: Column<ID>, value: ID) {
+        require(values.isEmpty() || values.keys.first().table == column.table) {
+            "CompositeID key columns must all come from the same IdTable ${values.keys.first().table.tableName}"
+        }
+        values[column] = value
+    }
+
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Comparable<T>> get(column: Column<T>): T = values[column] as T
 
