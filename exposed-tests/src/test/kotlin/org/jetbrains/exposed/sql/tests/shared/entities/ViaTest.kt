@@ -304,6 +304,11 @@ class ViaTests : DatabaseTestsBase() {
         val approved = bool("approved")
 
         override val primaryKey = PrimaryKey(project, task)
+
+        init {
+            addIdColumn(project)
+            addIdColumn(task)
+        }
     }
     class ProjectTask(id: EntityID<CompositeID>) : CompositeEntity(id) {
         companion object : CompositeEntityClass<ProjectTask>(ProjectTasks)

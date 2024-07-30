@@ -142,12 +142,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun testCreateWithPrimaryKeyAndIdColumnMismatch() {
-        val completeTable = object : CompositeIdTable("complete_table") {
-            val age = integer("age").entityId()
-            val name = varchar("name", 50).entityId()
-            override val primaryKey = PrimaryKey(age, name)
-        }
+    fun testCreateWithMissingIdColumns() {
         val missingIdsTable = object : CompositeIdTable("missing_ids_table") {
             val age = integer("age")
             val name = varchar("name", 50)
@@ -155,12 +150,15 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         }
 
         withDb {
-            listOf(completeTable, missingIdsTable).forEach { table ->
-                SchemaUtils.create(table)
-                table.select(table.id).toList()
-                assertEquals(2, table.idColumns.count())
-                SchemaUtils.drop(table)
+            // table can be created with no issue
+            SchemaUtils.create(missingIdsTable)
+
+            expectException<IllegalStateException> {
+                // but trying to use id property requires idColumns not being empty
+                missingIdsTable.select(missingIdsTable.id).toList()
             }
+
+            SchemaUtils.drop(missingIdsTable)
         }
     }
 

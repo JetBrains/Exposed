@@ -51,8 +51,9 @@ public abstract class org/jetbrains/exposed/dao/id/IdTable : org/jetbrains/expos
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	protected final fun addIdColumn (Lorg/jetbrains/exposed/sql/Column;)V
 	public abstract fun getId ()Lorg/jetbrains/exposed/sql/Column;
-	public final fun getIdColumns ()Ljava/util/HashSet;
+	public final fun getIdColumns ()Ljava/util/Set;
 }
 
 public class org/jetbrains/exposed/dao/id/IntIdTable : org/jetbrains/exposed/dao/id/IdTable {
