@@ -1,5 +1,42 @@
-# 0.52.0
+# 0.53.0
+Infrastructure:
+* SQLite driver 3.46.0.1
+* Spring Framework 6.1.11
+* Spring Boot 3.3.2
+* junit-bom 5.10.3
 
+Features:
+* feat: Add time extension function for temporal expressions in Kotlin and Java by @joc-a in https://github.com/JetBrains/Exposed/pull/2121
+* feat: EXPOSED-435 Allow insertReturning() to set isIgnore = true by @bog-walk in https://github.com/JetBrains/Exposed/pull/2148
+* feat: EXPOSED-77 Support entity class for table with composite primary key by @bog-walk in https://github.com/JetBrains/Exposed/pull/1987
+* feat: EXPOSED-446 Support N-column inList equality comparisons by @bog-walk in https://github.com/JetBrains/Exposed/pull/2157
+* feat: EXPOSED-450 Merge command: PostgreSQL improvements by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2161
+* feat: EXPOSED-388 Support for column type converters by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2143
+* Adding comment text for a query SQL by @xJoeWoo in https://github.com/JetBrains/Exposed/pull/2088
+* feat: EXPOSED-459 Open AbstractQuery.copyTo() to allow custom Query class extension by @bog-walk in https://github.com/JetBrains/Exposed/pull/2173
+* feat: EXPOSED-461 Add time column in Joda-Time module by @joc-a in https://github.com/JetBrains/Exposed/pull/2175
+
+Bug fixes:
+* fix: EXPOSED-424 ClassCastException exception when using `fetchBatchedResults` with `alias` by @joc-a in https://github.com/JetBrains/Exposed/pull/2140
+* fix: EXPOSED-407 compositeMoney() nullability definition issues by @bog-walk in https://github.com/JetBrains/Exposed/pull/2137
+* fix: EXPOSED-415 SchemaUtils incorrectly generates ALTER statements for existing nullable columns by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2136
+* fix: EXPOSED-363 LocalTime and literal(LocalTime) are not the same by @joc-a in https://github.com/JetBrains/Exposed/pull/2152
+* fix: EXPOSED-432 CurrentDate default is generated as null in MariaDB by @joc-a in https://github.com/JetBrains/Exposed/pull/2149
+* fix: Allow column reference in default expressions for MySQL and MariaDB by @joc-a in https://github.com/JetBrains/Exposed/pull/2159
+* fix: EXPOSED-430 Insert and BatchInsert do not return default values by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2158
+* fix: EXPOSED-452 Flaky H2_Oracle test `testTimestampWithTimeZoneDefaults` by @joc-a in https://github.com/JetBrains/Exposed/pull/2169
+* EXPOSED-457 The column default value always compares unequal by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2170
+* EXPOSED-409 Custom primary key. Access to the primary key fails with ClassCastException by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2151
+* fix: EXPOSED-447 Eager loading does not work with composite PK entity by @bog-walk in https://github.com/JetBrains/Exposed/pull/2177
+
+Docs:
+* chore: Add migration sample by @joc-a in https://github.com/JetBrains/Exposed/pull/2144
+* docs: Change repetitionAttempts to maxAttempts in website docs by @bog-walk in https://github.com/JetBrains/Exposed/pull/2164
+* docs: EXPOSED-445 Add documentation for DSL & DAO composite primary keys by @bog-walk in https://github.com/JetBrains/Exposed/pull/2165
+* docs: EXPOSED-419 Rework the getting started tutorial by @vnikolova in https://github.com/JetBrains/Exposed/pull/2160
+* Configure API documentation for Exposed by @e5l in https://github.com/JetBrains/Exposed/pull/2171
+
+# 0.52.0
 Breaking changes: 
 * feat: EXPOSED-295 Support subqueries with preceding LATERAL by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2095
 
