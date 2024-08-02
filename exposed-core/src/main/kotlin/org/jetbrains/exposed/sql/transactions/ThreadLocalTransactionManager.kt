@@ -253,12 +253,22 @@ fun <T> transaction(
         val outerManager = outer.db.transactionManager
 
         val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
+        @Suppress("TooGenericExceptionCaught")
         try {
             transaction.statement().also {
                 if (outer.db.useNestedTransactions) {
                     transaction.commit()
                 }
             }
+        } catch (cause: Throwable) {
+            val currentStatement = transaction.currentStatement
+            transaction.rollbackLoggingException {
+                exposedLogger.warn(
+                    "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                    it
+                )
+            }
+            throw cause
         } finally {
             TransactionManager.resetCurrent(outerManager)
         }
