@@ -26,7 +26,7 @@ class GroupByTests : DatabaseTestsBase() {
                     "Munich" -> assertEquals(2, userCount)
                     "Prague" -> assertEquals(0, userCount)
                     "St. Petersburg" -> assertEquals(1, userCount)
-                    else -> error("Unknow city $cityName")
+                    else -> error("Unknown city $cityName")
                 }
                 assertEquals(userCount, userCountAlias)
             }
