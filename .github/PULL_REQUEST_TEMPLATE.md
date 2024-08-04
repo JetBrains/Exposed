@@ -28,7 +28,7 @@ Affected databases:
 - [ ] Postgres
 - [ ] SqlServer
 - [ ] H2
-- [ ] SQLight
+- [ ] SQLite
 
 #### Checklist
 
