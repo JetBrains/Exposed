@@ -19,7 +19,7 @@ mysql80 = "8.0.33"
 oracle12 = "12.2.0.1"
 postgre = "42.7.3"
 postgreNG = "0.8.9"
-sqlLite3 = "3.46.0.1"
+sqlite3 = "3.46.0.1"
 sqlserver = "9.4.1.jre8"
 
 springFramework = "6.1.11"
@@ -74,7 +74,7 @@ mysql51 = { group = "mysql", name = "mysql-connector-java", version.ref = "mysql
 mysql = { group = "mysql", name = "mysql-connector-java", version.ref = "mysql80" }
 pgjdbc-ng = { group = "com.impossibl.pgjdbc-ng", name = "pgjdbc-ng", version.ref = "postgreNG" }
 postgre = { group = "org.postgresql", name = "postgresql", version.ref = "postgre" }
-sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlLite3" }
+sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite3" }
 maria-db2 = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariaDB_v2" }
 maria-db3 = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariaDB_v3" }
 oracle12 = { group = "com.oracle.database.jdbc", name = "ojdbc8", version.ref = "oracle12" }

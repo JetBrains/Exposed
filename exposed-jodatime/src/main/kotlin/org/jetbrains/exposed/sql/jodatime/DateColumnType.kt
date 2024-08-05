@@ -13,6 +13,10 @@ import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.ISODateTimeFormat
 import java.sql.ResultSet
+import java.time.OffsetDateTime
+import java.time.ZoneOffset.UTC
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoField
 import java.util.*
 
 private val DEFAULT_DATE_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd").withLocale(Locale.ROOT) }
@@ -20,6 +24,20 @@ private val DEFAULT_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormat.forPatte
 private val MYSQL_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss").withLocale(Locale.ROOT) }
 private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy { DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss.SSS") }
 private val SQLITE_DATE_STRING_FORMATTER by lazy { ISODateTimeFormat.yearMonthDay() }
+
+// Example result: 2023-07-07 14:42:29.343+02:00 or 2023-07-07 12:42:29.343Z
+private val SQLITE_OFFSET_DATE_TIME_FORMATTER by lazy {
+    java.time.format.DateTimeFormatterBuilder()
+        .appendPattern("yyyy-MM-dd HH:mm:ss")
+        .optionalStart()
+        .appendPattern(".SSS")
+        .optionalEnd()
+        .optionalStart()
+        .appendPattern("XXX")
+        .optionalEnd()
+        .toFormatter()
+        .withLocale(Locale.ROOT)
+}
 
 private val SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER by lazy {
     DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSZZ").withLocale(Locale.ROOT)
@@ -106,7 +124,7 @@ class DateColumnType(val time: Boolean) : ColumnType<DateTime>(), IDateColumnTyp
                 else -> DEFAULT_DATE_STRING_FORMATTER.parseDateTime(value)
             }
             is java.time.LocalDateTime -> DateTime.parse(value.toString())
-            is java.time.OffsetDateTime -> valueFromDB(value.toLocalDateTime()) as DateTime
+            is OffsetDateTime -> valueFromDB(value.toLocalDateTime()) as DateTime
             else -> valueFromDB(value.toString()) as DateTime
         }
         return when (time) {
@@ -236,17 +254,29 @@ class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
     override fun sqlType(): String = currentDialect.dataTypeProvider.timestampWithTimeZoneType()
 
     override fun nonNullValueToString(value: DateTime): String = when (currentDialect) {
-        is SQLiteDialect -> "'${SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
+        is SQLiteDialect -> {
+            val instant = java.time.Instant.ofEpochMilli(value.millis)
+            val offsetDateTime = OffsetDateTime.ofInstant(instant, value.zone.toTimeZone().toZoneId())
+            "'${offsetDateTime.format(SQLITE_OFFSET_DATE_TIME_FORMATTER)}'"
+        }
         is MysqlDialect -> "'${SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
         is OracleDialect -> oracleDateTimeWithTimezoneLiteral(value.toDateTime(DateTimeZone.getDefault()))
         else -> "'${DEFAULT_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)}'"
     }
 
     override fun valueFromDB(value: Any): DateTime = when (value) {
-        is java.time.OffsetDateTime -> DateTime.parse(value.toString())
+        is OffsetDateTime -> DateTime.parse(value.toString())
+        is ZonedDateTime -> DateTime.parse(value.toOffsetDateTime().toString())
         is String -> {
             if (currentDialect is SQLiteDialect) {
-                DateTime.parse(value, SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER)
+                val temporalAccessor = SQLITE_OFFSET_DATE_TIME_FORMATTER.parse(value)
+                val offsetDateTime = if (temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS)) {
+                    OffsetDateTime.from(temporalAccessor)
+                } else {
+                    OffsetDateTime.from(java.time.LocalDateTime.from(temporalAccessor).atOffset(UTC))
+                }
+                val dateTimeZone: DateTimeZone = DateTimeZone.forID(offsetDateTime.toZonedDateTime().offset.id)
+                DateTime(offsetDateTime.toInstant().toEpochMilli(), dateTimeZone)
             } else {
                 DateTime.parse(value)
             }
@@ -257,12 +287,16 @@ class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
 
     override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
-        is OracleDialect -> rs.getObject(index, java.sql.Timestamp::class.java)
-        else -> rs.getObject(index, java.time.OffsetDateTime::class.java)
+        is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java)
+        else -> rs.getObject(index, OffsetDateTime::class.java)
     }
 
     override fun notNullValueToDB(value: DateTime): Any = when (currentDialect) {
-        is SQLiteDialect -> SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)
+        is SQLiteDialect -> {
+            val instant = java.time.Instant.ofEpochMilli(value.millis)
+            val offsetDateTime = OffsetDateTime.ofInstant(instant, value.zone.toTimeZone().toZoneId())
+            offsetDateTime.format(SQLITE_OFFSET_DATE_TIME_FORMATTER)
+        }
         is MysqlDialect -> SQLITE_AND_MYSQL_DATE_TIME_WITH_TIME_ZONE_FORMATTER.print(value)
         else -> java.sql.Timestamp(value.millis)
     }

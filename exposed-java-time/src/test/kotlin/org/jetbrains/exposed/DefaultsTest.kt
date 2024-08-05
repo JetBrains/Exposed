@@ -24,6 +24,7 @@ import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
 import java.time.*
@@ -202,6 +203,7 @@ class DefaultsTest : DatabaseTestsBase() {
                     is OracleDialect -> "SYSDATE"
                     is SQLServerDialect -> "GETDATE()"
                     is MysqlDialect -> if (dialect.isFractionDateTimeSupported()) "NOW(6)" else "NOW()"
+                    is SQLiteDialect -> "CURRENT_TIMESTAMP"
                     else -> "NOW()"
                 }
             }
@@ -239,15 +241,18 @@ class DefaultsTest : DatabaseTestsBase() {
             else -> "NULL"
         }
 
-        withTables(listOf(TestDB.SQLITE), testTable) {
+        withTables(testTable) { testDb ->
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
+            val dType = currentDialectTest.dataTypeProvider.dateType()
             val longType = currentDialectTest.dataTypeProvider.longType()
             val timeType = currentDialectTest.dataTypeProvider.timeType()
             val varcharType = currentDialectTest.dataTypeProvider.varcharType(100)
             val q = db.identifierManager.quoteString
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
-                "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()}${
+                    testDb.takeIf { it != TestDB.SQLITE }?.let { " PRIMARY KEY" } ?: ""
+                }, " +
                 "${"s".inProperCase()} $varcharType${testTable.s.constraintNamePart()} DEFAULT 'test' NOT NULL, " +
                 "${"sn".inProperCase()} $varcharType${testTable.sn.constraintNamePart()} DEFAULT 'testNullable' NULL, " +
                 "${"l".inProperCase()} ${currentDialectTest.dataTypeProvider.longType()}${testTable.l.constraintNamePart()} DEFAULT 42 NOT NULL, " +
@@ -255,7 +260,7 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t1".inProperCase()} $dtType${testTable.t1.constraintNamePart()} ${currentDT.itOrNull()}, " +
                 "${"t2".inProperCase()} $dtType${testTable.t2.constraintNamePart()} ${nowExpression.itOrNull()}, " +
                 "${"t3".inProperCase()} $dtType${testTable.t3.constraintNamePart()} ${dtLiteral.itOrNull()}, " +
-                "${"t4".inProperCase()} DATE${testTable.t4.constraintNamePart()} ${dLiteral.itOrNull()}, " +
+                "${"t4".inProperCase()} $dType${testTable.t4.constraintNamePart()} ${dLiteral.itOrNull()}, " +
                 "${"t5".inProperCase()} $dtType${testTable.t5.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
                 "${"t6".inProperCase()} $dtType${testTable.t6.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
                 "${"t7".inProperCase()} $longType${testTable.t7.constraintNamePart()} ${durLiteral.itOrNull()}, " +
@@ -406,12 +411,14 @@ class DefaultsTest : DatabaseTestsBase() {
             else -> "NULL"
         }
 
-        withTables(excludeSettings = TestDB.ALL_MARIADB + TestDB.MYSQL_V5 + TestDB.SQLITE, testTable) {
+        withTables(excludeSettings = TestDB.ALL_MARIADB + TestDB.MYSQL_V5, testTable) { testDb ->
             val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                 "${"t".inProperCase()} (" +
-                "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
+                "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()}${
+                    testDb.takeIf { it != TestDB.SQLITE }?.let { " PRIMARY KEY" } ?: ""
+                }, " +
                 "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
                 "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
                 "${"t3".inProperCase()} $timestampWithTimeZoneType${testTable.t3.constraintNamePart()} ${CurrentTimestampWithTimeZone.itOrNull()}" +
@@ -433,8 +440,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val id1 = testTable.insertAndGetId { }
 
             val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
-            assertEqualDateTime(nowWithTimeZone, row1[testTable.t1])
-            assertEqualDateTime(nowWithTimeZone, row1[testTable.t2])
+            assertEquals(nowWithTimeZone, row1[testTable.t1])
+            assertEquals(nowWithTimeZone, row1[testTable.t2])
             val dbDefault = row1[testTable.t3]
             assertEquals(dbDefault.offset, nowWithTimeZone.offset)
             assertTrue { dbDefault.toLocalDateTime() >= nowWithTimeZone.toLocalDateTime() }
