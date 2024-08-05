@@ -312,10 +312,7 @@ interface ISqlExpressionBuilder {
     @LowPriorityInOverloadResolution
     infix fun <T> ExpressionWithColumnType<T>.eq(t: T): Op<Boolean> = when {
         t == null -> isNull()
-        columnType.isEntityIdentifier() -> {
-            val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<*>
-            table.mapIdComparison(t, ::EqOp)
-        }
+        columnType.isEntityIdentifier() -> (this as Column<*>).table.mapIdComparison(t, ::EqOp)
         else -> EqOp(this, wrap(t))
     }
 
@@ -362,10 +359,7 @@ interface ISqlExpressionBuilder {
     @LowPriorityInOverloadResolution
     infix fun <T> ExpressionWithColumnType<T>.neq(other: T): Op<Boolean> = when {
         other == null -> isNotNull()
-        columnType.isEntityIdentifier() -> {
-            val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<*>
-            table.mapIdComparison(other, ::NeqOp)
-        }
+        columnType.isEntityIdentifier() -> (this as Column<*>).table.mapIdComparison(other, ::NeqOp)
         else -> NeqOp(this, wrap(other))
     }
 
@@ -504,7 +498,7 @@ interface ISqlExpressionBuilder {
 
     /** Returns `true` if this expression is null, `false` otherwise. */
     fun <T> Expression<T>.isNull() = if (this is Column<*> && columnType.isEntityIdentifier()) {
-        (table as IdTable<*>).mapIdOperator(::IsNullOp)
+        table.mapIdOperator(::IsNullOp)
     } else {
         IsNullOp(this)
     }
@@ -518,7 +512,7 @@ interface ISqlExpressionBuilder {
 
     /** Returns `true` if this expression is not null, `false` otherwise. */
     fun <T> Expression<T>.isNotNull() = if (this is Column<*> && columnType.isEntityIdentifier()) {
-        (table as IdTable<*>).mapIdOperator(::IsNotNullOp)
+        table.mapIdOperator(::IsNotNullOp)
     } else {
         IsNotNullOp(this)
     }
