@@ -19,7 +19,7 @@ class H2Tests : DatabaseTestsBase() {
     @Test
     fun testH2VersionIsCorrect() {
         val systemTestName = System.getProperty("exposed.test.name")
-        withDb(TestDB.ALL_H2) { db ->
+        withDb(TestDB.ALL_H2) {
             val dialect = currentDialect
             if (dialect is H2Dialect) {
                 val version = exec("SELECT H2VERSION();") {

@@ -13,4 +13,4 @@ exposed-core = { module= "org.jetbrains.exposed:exposed-core", version.ref = "ex
 exposed-jdbc = { module= "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed"}
 
 [plugins]
-jvm = { id = "org.jetbrains.kotlin.jvm", version = "1.9.22" }
+jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.0.0" }

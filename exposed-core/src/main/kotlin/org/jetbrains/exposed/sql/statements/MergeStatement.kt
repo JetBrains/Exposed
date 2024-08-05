@@ -123,7 +123,7 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
  * Here is only the part specific for the Table as a source implementation.
  * Look into [MergeStatement] to find the base implementation of that command.
  *
- * @property dest The destination [Table] where records will be merged into.
+ * @param dest The destination [Table] where records will be merged into.
  * @property source The source [Table] from which records are taken to compare with `dest`.
  * @property on The join condition [Op<Boolean>] that specifies how to match records in both `source` and `dest`.
  */
@@ -144,7 +144,7 @@ open class MergeTableStatement(
  * Here is only the part specific for the Query as a source implementation.
  * Look into [MergeStatement] to find the base implementation of that command.
  *
- * @property dest The destination [Table] where records will be merged into.
+ * @param dest The destination [Table] where records will be merged into.
  * @property selectQuery The source [QueryAlias] from which records are taken to compare with `dest`.
  * @property on The join condition [Op<Boolean>] that specifies how to match records in both `source` and `dest`.
  */

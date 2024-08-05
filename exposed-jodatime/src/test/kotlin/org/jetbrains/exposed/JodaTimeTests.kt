@@ -128,7 +128,7 @@ class JodaTimeTests : DatabaseTestsBase() {
                     it[event] = "B"
                 }
 
-                val inYear2000 = testTable.defaultDate.castTo<String>(TextColumnType()) like "2000%"
+                val inYear2000 = testTable.defaultDate.castTo(TextColumnType()) like "2000%"
                 assertEquals(1, testTable.selectAll().where { inYear2000 }.count())
 
                 val todayResult1 = testTable.selectAll().where { testTable.defaultDate eq today }.single()
@@ -188,7 +188,7 @@ class JodaTimeTests : DatabaseTestsBase() {
 
             val year2023 = if (currentDialectTest is PostgreSQLDialect) {
                 // PostgreSQL requires explicit type cast to resolve function date_part
-                dateParam(mayTheFourth).castTo<DateTime>(DateColumnType(false)).year()
+                dateParam(mayTheFourth).castTo(DateColumnType(false)).year()
             } else {
                 dateParam(mayTheFourth).year()
             }
@@ -389,7 +389,7 @@ class JodaTimeTests : DatabaseTestsBase() {
     fun testCurrentDateTimeFunction() {
         val fakeTestTable = object : IntIdTable("fakeTable") {}
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, fakeTestTable) { db ->
+        withTables(excludeSettings = TestDB.ALL_H2_V1, fakeTestTable) {
             fun currentDbDateTime(): DateTime {
                 return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
             }
@@ -405,8 +405,8 @@ class JodaTimeTests : DatabaseTestsBase() {
         val defaultDates = listOf(today)
         val defaultDateTimes = listOf(DateTime.now())
         val tester = object : Table("array_tester") {
-            val dates = array<DateTime>("dates", DateColumnType(false)).default(defaultDates)
-            val datetimes = array<DateTime>("datetimes", DateColumnType(true)).default(defaultDateTimes)
+            val dates = array("dates", DateColumnType(false)).default(defaultDates)
+            val datetimes = array("datetimes", DateColumnType(true)).default(defaultDateTimes)
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL - TestDB.H2_V2 - TestDB.H2_V2_PSQL, tester) {

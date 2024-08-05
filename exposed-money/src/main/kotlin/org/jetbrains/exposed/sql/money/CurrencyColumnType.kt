@@ -16,13 +16,13 @@ import javax.money.Monetary
 @Suppress("MagicNumber")
 class CurrencyColumnType : ColumnType<CurrencyUnit>() {
 
-    override fun sqlType(): String = currentDialect.dataTypeProvider.varcharType(colLength)
+    override fun sqlType(): String = currentDialect.dataTypeProvider.varcharType(COLUMN_LENGTH)
 
     override fun validateValueBeforeUpdate(value: CurrencyUnit?) {
         if (value is CurrencyUnit) {
             val valueLength = value.currencyCode.codePointCount(0, value.currencyCode.length)
-            require(valueLength <= colLength) {
-                "Value can't be stored to database column because exceeds length ($valueLength > $colLength)"
+            require(valueLength <= COLUMN_LENGTH) {
+                "Value can't be stored to database column because exceeds length ($valueLength > $COLUMN_LENGTH)"
             }
         }
     }
@@ -50,19 +50,19 @@ class CurrencyColumnType : ColumnType<CurrencyUnit>() {
 
         other as VarCharColumnType
 
-        return colLength == other.colLength
+        return COLUMN_LENGTH == other.colLength
     }
 
     override fun hashCode(): Int {
         var result = super.hashCode()
-        result = 31 * result + colLength
+        result = 31 * result + COLUMN_LENGTH
         return result
     }
 
     private fun escape(value: String): String = value.map { charactersToEscape[it] ?: it }.joinToString("")
 
     companion object {
-        private const val colLength = 3
+        private const val COLUMN_LENGTH = 3
 
         private val charactersToEscape = mapOf(
             '\'' to "\'\'",

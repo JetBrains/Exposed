@@ -12,7 +12,7 @@ import kotlin.math.ceil
 /**
  * Symmetric-key block ciphers for performing encryption and decryption.
  *
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testEncryptedColumnTypeWithAString
+ * @sample org.jetbrains.exposed.crypt.EncryptedColumnTests.testEncryptedColumnTypeWithAString
  */
 object Algorithms {
     @Suppress("MagicNumber")

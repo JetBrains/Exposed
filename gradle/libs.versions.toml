@@ -1,5 +1,5 @@
 [versions]
-kotlin = "1.9.21"
+kotlin = "2.0.0"
 dokka = "1.9.20"
 detekt = "1.23.6" # When upgrading, also upgrade in detekt.yml and add corresponding detekt-formatting jar file.
 binary-compatibility-validator = "0.16.3"

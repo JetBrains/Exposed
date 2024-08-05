@@ -14,7 +14,7 @@ class LateralJoinTests : DatabaseTestsBase() {
 
     @Test
     fun testLateralJoinQuery() {
-        withTestTablesAndDefaultData { parent, child, testDb ->
+        withTestTablesAndDefaultData { parent, child, _ ->
             val query = parent.joinQuery(
                 joinType = JoinType.CROSS,
                 lateral = true
@@ -30,7 +30,7 @@ class LateralJoinTests : DatabaseTestsBase() {
 
     @Test
     fun testLateralJoinQueryAlias() {
-        withTestTablesAndDefaultData { parent, child, testDb ->
+        withTestTablesAndDefaultData { parent, child, _ ->
             // Cross join
             child.selectAll().where { child.value greater parent.value }.limit(1).alias("subquery")
                 .let { subqueryAlias ->
@@ -61,7 +61,7 @@ class LateralJoinTests : DatabaseTestsBase() {
 
     @Test
     fun testLateralDirectTableJoin() {
-        withTestTables { parent, child, testDb ->
+        withTestTables { parent, child, _ ->
             // Explicit notation
             expectException<IllegalArgumentException> {
                 parent.join(child, JoinType.LEFT, onColumn = parent.id, otherColumn = child.parent, lateral = true)

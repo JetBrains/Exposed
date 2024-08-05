@@ -15,7 +15,7 @@ class ReplaceColumnTests : DatabaseTestsBase() {
         withTables(IDTable) {
             expectException<DuplicateColumnException> {
                 // Duplicate the id column by replacing the IDTable.code by a column with the name "id"
-                val id = Column<Int>(IDTable, IDTable.id.name, (IDTable.id.columnType as EntityIDColumnType<Int>).idColumn.columnType)
+                val id = Column(IDTable, IDTable.id.name, (IDTable.id.columnType as EntityIDColumnType<Int>).idColumn.columnType)
                 IDTable.replaceColumn(IDTable.code, id)
             }
         }

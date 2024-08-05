@@ -645,7 +645,7 @@ class DDLTests : DatabaseTestsBase() {
             val byteCol = binary("byteCol", 1).clientDefault { byteArrayOf(0) }
         }
 
-        fun SizedIterable<ResultRow>.readAsString() = map { it[t.binary]?.let { String(it) } }
+        fun SizedIterable<ResultRow>.readAsString() = map { result -> result[t.binary]?.let { String(it) } }
 
         withTables(t) {
             t.insert { it[t.binary] = "Hello!".toByteArray() }

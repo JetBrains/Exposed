@@ -103,7 +103,7 @@ class DatabaseConfig private constructor(
         /**
          * Amount of entities to keep in an EntityCache per an Entity class.
          * Applicable only when `exposed-dao` module is used.
-         * This can be overridden on a per-transaction basis via [EntityCache.maxEntitiesToStore].
+         * This can be overridden on a per-transaction basis via `EntityCache.maxEntitiesToStore`.
          * All entities will be kept by default.
          */
         var maxEntitiesToStoreInCachePerEntity: Int = Int.MAX_VALUE,

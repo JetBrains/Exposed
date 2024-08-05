@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql.tests.h2
 
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
@@ -246,6 +248,7 @@ class MultiDatabaseTest {
         TransactionManager.defaultDatabase = null
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
     @Test // this test always fails for one reason or another
     fun `when the default database is changed, coroutines should respect that`(): Unit = runBlocking {
         assertEquals("jdbc:h2:mem:db1", db1.name) // These two asserts fail sometimes for reasons that escape me

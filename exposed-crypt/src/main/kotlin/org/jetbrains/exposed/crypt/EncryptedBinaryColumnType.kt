@@ -35,9 +35,7 @@ class EncryptedBinaryColumnType(
 
         other as EncryptedBinaryColumnType
 
-        if (encryptor != other.encryptor) return false
-
-        return true
+        return encryptor == other.encryptor
     }
 
     override fun hashCode(): Int {

@@ -427,7 +427,7 @@ fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
  * @param where Condition that determines which rows to update.
  * @param limit Maximum number of rows to update.
  * @return The number of updated rows.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdateWithJoin01
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
  */
 fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })

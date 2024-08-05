@@ -22,7 +22,7 @@ fun <T : Any> nullableTransactionScope() = TransactionStore<T>()
 
 /**
  * Class responsible for implementing property delegates of read-write properties in
- * the current transaction's [UserDataHolder].
+ * the current transaction's `UserDataHolder`.
  */
 class TransactionStore<T : Any>(val init: (Transaction.() -> T)? = null) : ReadWriteProperty<Any?, T?> {
 

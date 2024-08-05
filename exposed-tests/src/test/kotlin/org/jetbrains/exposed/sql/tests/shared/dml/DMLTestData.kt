@@ -66,7 +66,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
     val cities = DMLTestsData.Cities
     val userData = DMLTestsData.UserData
 
-    withTables(exclude, cities, users, userData) { db ->
+    withTables(exclude, cities, users, userData) {
         val saintPetersburgId = cities.insert {
             it[name] = "St. Petersburg"
         } get cities.id

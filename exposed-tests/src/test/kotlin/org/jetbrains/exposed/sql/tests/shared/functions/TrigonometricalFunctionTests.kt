@@ -42,7 +42,7 @@ class TrigonometricalFunctionTests : FunctionsTestBase() {
 
     @Test
     fun testCosFunction() {
-        withTable { testDb ->
+        withTable {
             assertExpressionEqual(BigDecimal("1"), CosFunction(intLiteral(0)))
             assertExpressionEqual(BigDecimal("0.5403023"), CosFunction(intLiteral(1)))
             assertExpressionEqual(BigDecimal("0.96638998"), CosFunction(doubleLiteral(0.26)))

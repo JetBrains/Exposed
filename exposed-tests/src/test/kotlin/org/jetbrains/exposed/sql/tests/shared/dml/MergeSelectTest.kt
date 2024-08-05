@@ -101,7 +101,7 @@ class MergeSelectTest : MergeBaseTest() {
 
     @Test
     fun testDelete() {
-        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.ALL_ORACLE_LIKE) { dest, source ->
+        withMergeTestTablesAndDefaultData(excludeSettings = TestDB.ALL_ORACLE_LIKE) { dest, _ ->
             dest.mergeFrom(
                 sourceQuery,
                 on = { defaultOnCondition() },

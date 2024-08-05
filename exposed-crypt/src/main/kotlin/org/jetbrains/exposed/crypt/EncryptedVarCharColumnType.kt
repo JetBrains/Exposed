@@ -38,9 +38,7 @@ class EncryptedVarCharColumnType(
 
         other as EncryptedVarCharColumnType
 
-        if (encryptor != other.encryptor) return false
-
-        return true
+        return encryptor == other.encryptor
     }
 
     override fun hashCode(): Int {

@@ -392,7 +392,6 @@ class CaseWhen<T>(
     val cases: MutableList<Pair<Expression<Boolean>, Expression<out T>>> = mutableListOf()
 
     /** Adds a conditional expression with a [result] if the expression evaluates to `true`. */
-    @Suppress("UNCHECKED_CAST")
     fun When(cond: Expression<Boolean>, result: Expression<T>): CaseWhen<T> {
         cases.add(cond to result)
         return this

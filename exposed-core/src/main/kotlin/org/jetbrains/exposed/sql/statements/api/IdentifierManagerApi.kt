@@ -64,7 +64,7 @@ abstract class IdentifierManagerApi {
     private val identifiersInProperCaseCache = IdentifiersCache<String>()
     private val quotedIdentifiersCache = IdentifiersCache<String>()
 
-    private fun String.isIdentifier() = !isEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
+    private fun String.isIdentifier() = isNotEmpty() && first().isIdentifierStart() && all { it.isIdentifierStart() || it in '0'..'9' }
     private fun Char.isIdentifierStart(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_' || this in extraNameCharacters
 
     private fun String.isAKeyword(): Boolean = checkedKeywordsCache.getOrPut(lowercase()) {

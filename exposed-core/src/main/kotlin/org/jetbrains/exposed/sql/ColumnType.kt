@@ -987,9 +987,7 @@ class EnumerationColumnType<T : Enum<T>>(
 
         other as EnumerationColumnType<*>
 
-        if (klass != other.klass) return false
-
-        return true
+        return klass == other.klass
     }
 
     override fun hashCode(): Int {
@@ -1044,9 +1042,7 @@ class EnumerationNameColumnType<T : Enum<T>>(
 
         other as EnumerationNameColumnType<*>
 
-        if (klass != other.klass) return false
-
-        return true
+        return klass == other.klass
     }
 
     override fun hashCode(): Int {
@@ -1134,7 +1130,7 @@ class ArrayColumnType<E>(
 
     override fun notNullValueToDB(value: List<E>): Any = value.map { e -> e?.let { delegate.notNullValueToDB(it) } }.toTypedArray()
 
-    override fun valueToString(value: List<E>?): String = if (value != null) nonNullValueToString(value) else super.valueToString(value)
+    override fun valueToString(value: List<E>?): String = if (value != null) nonNullValueToString(value) else super.valueToString(null)
 
     override fun nonNullValueToString(value: List<E>): String {
         val prefix = if (currentDialect is H2Dialect) "ARRAY [" else "ARRAY["

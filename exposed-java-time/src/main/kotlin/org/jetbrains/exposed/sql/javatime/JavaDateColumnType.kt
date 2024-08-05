@@ -9,8 +9,6 @@ import java.sql.ResultSet
 import java.time.*
 import java.time.ZoneOffset.UTC
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
-import java.time.format.DateTimeFormatter.ISO_LOCAL_TIME
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 import java.util.*
@@ -96,9 +94,9 @@ private val MYSQL_TIME_AS_DEFAULT_STRING_FORMATTER by lazy {
 private val POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
     DateTimeFormatterBuilder()
         .parseCaseInsensitive()
-        .append(ISO_LOCAL_DATE)
+        .append(DateTimeFormatter.ISO_LOCAL_DATE)
         .appendLiteral(' ')
-        .append(ISO_LOCAL_TIME)
+        .append(DateTimeFormatter.ISO_LOCAL_TIME)
         .toFormatter(Locale.ROOT)
 }
 private val MYSQL_FRACTION_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER by lazy {
@@ -197,11 +195,10 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
     override fun nonNullValueToString(value: LocalDateTime): String {
         val instant = Instant.from(value.atZone(ZoneId.systemDefault()))
 
-        val dialect = currentDialect
-        return when {
-            dialect is SQLiteDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
-            dialect is OracleDialect -> oracleDateTimeLiteral(instant)
-            dialect is MysqlDialect -> {
+        return when (val dialect = currentDialect) {
+            is SQLiteDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
+            is OracleDialect -> oracleDateTimeLiteral(instant)
+            is MysqlDialect -> {
                 val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER else MYSQL_DATE_TIME_STRING_FORMATTER
                 "'${formatter.format(instant)}'"
             }
@@ -322,14 +319,13 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
 
     override fun nonNullValueToString(value: Instant): String {
-        val dialect = currentDialect
-        return when {
-            dialect is OracleDialect -> oracleDateTimeLiteral(value)
+        return when (val dialect = currentDialect) {
+            is OracleDialect -> oracleDateTimeLiteral(value)
 
-            dialect is SQLiteDialect ->
+            is SQLiteDialect ->
                 "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value)}'"
 
-            dialect is MysqlDialect -> {
+            is MysqlDialect -> {
                 val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER else MYSQL_DATE_TIME_STRING_FORMATTER
                 "'${formatter.format(value)}'"
             }
