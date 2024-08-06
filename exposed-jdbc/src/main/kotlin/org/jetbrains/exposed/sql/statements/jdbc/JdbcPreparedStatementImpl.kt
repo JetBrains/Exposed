@@ -7,9 +7,12 @@ import org.jetbrains.exposed.sql.statements.StatementResult
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import java.io.ByteArrayInputStream
+import java.io.FileInputStream
 import java.io.InputStream
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.SQLFeatureNotSupportedException
 import java.sql.Statement
 import java.sql.Types
 
@@ -77,11 +80,32 @@ class JdbcPreparedStatementImpl(
         }
     }
 
+    private fun streamHasKnownLength(inputStream: InputStream) =
+        when {
+            // streams with known length where available matches the actual length
+            inputStream is ByteArrayInputStream -> true
+            // this will not work for filesystem sockets or fifos, but it's the best we can do
+            // unless java introduces a new method in InputStream for checking the number of bytes
+            // available (not only the number of bytes that can be read without blocking).
+            inputStream is FileInputStream && inputStream.available() < Int.MAX_VALUE -> true
+            else -> false
+        }
+
+    @SuppressWarnings("SwallowedException")
     override fun setInputStream(index: Int, inputStream: InputStream, setAsBlobObject: Boolean) {
         if (setAsBlobObject) {
             statement.setBlob(index, inputStream)
         } else {
-            statement.setBinaryStream(index, inputStream, inputStream.available())
+            try {
+                if (streamHasKnownLength(inputStream)) {
+                    statement.setBinaryStream(index, inputStream, inputStream.available())
+                } else {
+                    statement.setBinaryStream(index, inputStream)
+                }
+            } catch (e: SQLFeatureNotSupportedException) {
+                // not all drivers support setBinaryStream, fallback to byte-array
+                statement.setBytes(index, inputStream.readBytes())
+            }
         }
     }
 
