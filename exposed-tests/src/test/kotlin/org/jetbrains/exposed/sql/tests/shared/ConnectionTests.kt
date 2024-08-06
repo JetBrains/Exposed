@@ -27,16 +27,16 @@ class ConnectionTests : DatabaseTestsBase() {
             }.toSet()
             val expected = when ((db.dialect as H2Dialect).isSecondVersion) {
                 false -> setOf(
-                    ColumnMetadata("ID", Types.BIGINT, false, 19, true, null),
-                    ColumnMetadata("FIRSTNAME", Types.VARCHAR, true, 80, false, null),
-                    ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, false, "Doe"),
-                    ColumnMetadata("AGE", Types.INTEGER, false, 10, false, "18"),
+                    ColumnMetadata("ID", Types.BIGINT, false, 19, null, true, null),
+                    ColumnMetadata("FIRSTNAME", Types.VARCHAR, true, 80, null, false, null),
+                    ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, null, false, "Doe"),
+                    ColumnMetadata("AGE", Types.INTEGER, false, 10, null, false, "18"),
                 )
                 true -> setOf(
-                    ColumnMetadata("ID", Types.BIGINT, false, 64, true, null),
-                    ColumnMetadata("FIRSTNAME", Types.VARCHAR, true, 80, false, null),
-                    ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, false, "Doe"),
-                    ColumnMetadata("AGE", Types.INTEGER, false, 32, false, "18"),
+                    ColumnMetadata("ID", Types.BIGINT, false, 64, null, true, null),
+                    ColumnMetadata("FIRSTNAME", Types.VARCHAR, true, 80, null, false, null),
+                    ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, null, false, "Doe"),
+                    ColumnMetadata("AGE", Types.INTEGER, false, 32, null, false, "18"),
                 )
             }
             assertEquals(expected, columnMetadata)

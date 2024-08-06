@@ -333,7 +333,9 @@ object SchemaUtils {
 
                     val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameUnquoted().inProperCase()
 
-                    ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName)
+                    val incorrectSizeOrScale = isIncorrectSizeOrScale(existingCol, columnType)
+
+                    ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName, incorrectSizeOrScale)
                 }.filterValues { it.hasDifferences() }
 
                 redoColumns.flatMapTo(statements) { (col, changedState) -> col.modifyStatements(changedState) }
@@ -377,6 +379,19 @@ object SchemaUtils {
                 }
                 columnMeta.defaultDbValue != columnDefaultValue
             }
+        }
+    }
+
+    private fun isIncorrectSizeOrScale(columnMeta: ColumnMetadata, columnType: IColumnType<*>): Boolean {
+        // ColumnMetadata.scale can only be non-null if ColumnMetadata.size is non-null
+        if (columnMeta.size == null) return false
+
+        return when (columnType) {
+            is DecimalColumnType -> columnType.precision != columnMeta.size || columnType.scale != columnMeta.scale
+            is CharColumnType -> columnType.colLength != columnMeta.size
+            is VarCharColumnType -> columnType.colLength != columnMeta.size
+            is BinaryColumnType -> columnType.length != columnMeta.size
+            else -> false
         }
     }
 

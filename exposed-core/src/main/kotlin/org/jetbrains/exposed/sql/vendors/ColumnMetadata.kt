@@ -12,12 +12,14 @@ data class ColumnMetadata(
      * @see java.sql.Types
      */
     val type: Int,
-    /** Whether the column if nullable or not. */
+    /** Whether the column is nullable or not. */
     val nullable: Boolean,
     /** Optional size of the column. */
     val size: Int?,
-    /** Is the column auto increment */
+    /** Optional amount of fractional digits allowed in the column. */
+    val scale: Int?,
+    /** Whether the column is auto-incremented. */
     val autoIncrement: Boolean,
-    /** Default value */
+    /** Default value of the column. */
     val defaultDbValue: String?,
 )

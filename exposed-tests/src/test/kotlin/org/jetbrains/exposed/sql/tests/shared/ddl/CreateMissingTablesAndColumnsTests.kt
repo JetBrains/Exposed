@@ -15,12 +15,13 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
 import org.junit.Test
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 import kotlin.properties.Delegates
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -808,6 +809,56 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
         withTables(tester) {
             assertEqualLists(emptyList(), SchemaUtils.statementsRequiredToActualizeScheme(tester))
+        }
+    }
+
+    @Test
+    fun testColumnTypesWithDefinedSizeAndScale() {
+        val originalTable = object : Table("tester") {
+            val tax = decimal("tax", 3, 1)
+            val address = varchar("address", 8)
+            val zip = binary("zip", 1)
+            val province = char("province", 1)
+        }
+        val newTable = object : Table("tester") {
+            val tax = decimal("tax", 6, 3)
+            val address = varchar("address", 16)
+            val zip = binary("zip", 2)
+            val province = char("province", 2)
+        }
+
+        // SQLite doesn't support alter table with add column, so it doesn't generate alter statements
+        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+            val taxValue = 123.456.toBigDecimal()
+            val addressValue = "A".repeat(16)
+            val zipValue = "BB".toByteArray()
+            val provinceValue = "CC"
+
+            try {
+                SchemaUtils.create(originalTable)
+
+                expectException<IllegalArgumentException> {
+                    originalTable.insert {
+                        it[tax] = taxValue
+                        it[address] = addressValue
+                        it[zip] = zipValue
+                        it[province] = provinceValue
+                    }
+                }
+
+                val alterStatements = SchemaUtils.statementsRequiredToActualizeScheme(newTable)
+                assertEquals(4, alterStatements.size)
+                alterStatements.forEach { exec(it) }
+
+                newTable.insert {
+                    it[tax] = taxValue
+                    it[address] = addressValue
+                    it[zip] = zipValue
+                    it[province] = provinceValue
+                }
+            } finally {
+                SchemaUtils.drop(originalTable)
+            }
         }
     }
 }
