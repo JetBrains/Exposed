@@ -147,7 +147,7 @@ open class CompositeIdTable(name: String = "") : IdTable<CompositeID>(name) {
     @Suppress("UNCHECKED_CAST")
     override fun mapIdComparison(
         toCompare: Any?,
-        operator: (Column<*>, Expression<*>) -> Op<Boolean>
+        booleanOperator: (Column<*>, Expression<*>) -> Op<Boolean>
     ): Op<Boolean> {
         (toCompare as? EntityID<CompositeID>) ?: error("toCompare must be an EntityID<CompositeID> value")
         return idColumns.map { column ->
@@ -156,11 +156,11 @@ open class CompositeIdTable(name: String = "") : IdTable<CompositeID>(name) {
             } else {
                 error("Comparison CompositeID is missing a key mapping for ${column.name}")
             }
-            operator(column, column.wrap(otherValue.value as? EntityID<*> ?: otherValue))
+            booleanOperator(column, column.wrap(otherValue.value as? EntityID<*> ?: otherValue))
         }.compoundAnd()
     }
 
     override fun mapIdOperator(
-        operator: (Column<*>) -> Op<Boolean>
-    ): Op<Boolean> = idColumns.map { operator(it) }.compoundAnd()
+        booleanOperator: (Column<*>) -> Op<Boolean>
+    ): Op<Boolean> = idColumns.map { booleanOperator(it) }.compoundAnd()
 }
