@@ -125,10 +125,11 @@ open class InsertStatement<Key : Any>(
             }
             pairs.forEach { (col, value) ->
                 if (value != DefaultValueMarker) {
+                    val unwrappedValue = value?.let { (col.columnType as? ColumnWithTransform<Any, Any>)?.unwrapRecursive(it) } ?: value
                     if (isColumnValuePreferredFromResultSet(col, value)) {
-                        map.getOrPut(col) { value }
+                        map.getOrPut(col) { unwrappedValue }
                     } else {
-                        map[col] = value
+                        map[col] = unwrappedValue
                     }
                 }
             }

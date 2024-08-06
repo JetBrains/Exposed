@@ -1,12 +1,14 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ColumnTransformer
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.ddl.ColumnWithTransformTest.ColumnWithTransformTable.simple
 import org.junit.Test
 import kotlin.test.assertNull
 
@@ -49,7 +51,7 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
     @Test
     fun testNestedTransforms() {
         val tester = object : IntIdTable("NestedTransforms") {
-            val booleanToInteger = integer("stringToInteger")
+            val booleanToInteger = integer("booleanToInteger")
                 .transform(wrap = { if (it != 0) "TRUE" else "FALSE" }, unwrap = { if (it == "TRUE") 1 else 0 })
                 .transform(wrap = { it == "TRUE" }, unwrap = { if (it) "TRUE" else "FALSE" })
 
@@ -85,6 +87,27 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
 
         override fun unwrap(value: List<Int>): String = value.joinToString(",")
+    }
+
+    @Test
+    fun testReadTransformedValuesFromInsertStatement() {
+        val tester = object : IntIdTable("SimpleTransforms") {
+            val stringToInteger = integer("stringToInteger")
+                .transform(unwrap = { it.toInt() }, wrap = { it.toString() })
+            val booleanToInteger = integer("booleanToInteger")
+                .transform(wrap = { if (it != 0) "TRUE" else "FALSE" }, unwrap = { if (it == "TRUE") 1 else 0 })
+                .transform(wrap = { it == "TRUE" }, unwrap = { if (it) "TRUE" else "FALSE" })
+        }
+
+        withTables(tester) {
+            val statement = tester.insert {
+                it[stringToInteger] = "1"
+                it[booleanToInteger] = true
+            }
+
+            assertEquals("1", statement[tester.stringToInteger])
+            assertEquals(true, statement[tester.booleanToInteger])
+        }
     }
 
     @Test
@@ -125,4 +148,48 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
             assertNull(entry2[tester.nullableNumbers])
         }
     }
+
+    object ColumnWithTransformTable : IntIdTable() {
+        val simple = long("simple")
+            .transform(LongToDataHolderTransformer())
+        val chained = long("chained")
+            .transform(LongToDataHolderTransformer())
+            .transform(DataHolderToStringTransformer())
+    }
+
+    class FileSizeDao(id: EntityID<Int>) : IntEntity(id) {
+        var simple by ColumnWithTransformTable.simple
+        var chained by ColumnWithTransformTable.chained
+
+        companion object : IntEntityClass<FileSizeDao>(ColumnWithTransformTable)
+    }
+
+    @Test
+    fun testTransformedValuesWithDAO() {
+        withTables(ColumnWithTransformTable) {
+            val entity = FileSizeDao.new {
+                this.simple = ColumnWithTransformDataHolder(120)
+                this.chained = "240"
+            }
+
+            val row = ColumnWithTransformTable.selectAll().first()
+            assertEquals(ColumnWithTransformDataHolder(120), row[simple])
+            assertEquals("240", row[ColumnWithTransformTable.chained])
+
+            assertEquals(ColumnWithTransformDataHolder(120), entity.simple)
+            assertEquals("240", entity.chained)
+        }
+    }
+}
+
+data class ColumnWithTransformDataHolder(val value: Long)
+
+class LongToDataHolderTransformer : ColumnTransformer<Long, ColumnWithTransformDataHolder> {
+    override fun wrap(value: Long): ColumnWithTransformDataHolder = ColumnWithTransformDataHolder(value)
+    override fun unwrap(value: ColumnWithTransformDataHolder): Long = value.value
+}
+
+class DataHolderToStringTransformer : ColumnTransformer<ColumnWithTransformDataHolder, String> {
+    override fun wrap(value: ColumnWithTransformDataHolder): String = value.value.toString()
+    override fun unwrap(value: String): ColumnWithTransformDataHolder = ColumnWithTransformDataHolder(value.toLong())
 }

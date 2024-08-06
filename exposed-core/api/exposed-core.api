@@ -531,6 +531,7 @@ public final class org/jetbrains/exposed/sql/ColumnWithTransform : org/jetbrains
 	public fun setNullable (Z)V
 	public fun sqlType ()Ljava/lang/String;
 	public fun unwrap (Ljava/lang/Object;)Ljava/lang/Object;
+	public final fun unwrapRecursive (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun wrap (Ljava/lang/Object;)Ljava/lang/Object;
 }
