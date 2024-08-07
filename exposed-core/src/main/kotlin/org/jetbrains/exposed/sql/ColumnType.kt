@@ -285,6 +285,14 @@ class ColumnWithTransform<Unwrapped : Any, Wrapped : Any>(
     val delegate: IColumnType<Unwrapped>,
     private val transformer: ColumnTransformer<Unwrapped, Wrapped>
 ) : ColumnType<Wrapped>(), ColumnTransformer<Unwrapped, Wrapped> by transformer {
+    fun unwrapRecursive(value: Wrapped): Any {
+        return if (delegate is ColumnWithTransform<*, *>) {
+            (delegate as ColumnWithTransform<Any, Unwrapped>).unwrapRecursive(unwrap(value))
+        } else {
+            unwrap(value)
+        }
+    }
+
     override fun sqlType() = delegate.sqlType()
 
     override fun valueFromDB(value: Any): Wrapped? {
