@@ -64,7 +64,7 @@ class ConnectionExceptions {
 
     private fun `_transaction repetition works even if rollback throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        Class.forName(TestDB.H2_V2.driver).newInstance()
+        Class.forName(TestDB.H2_V2.driver).getDeclaredConstructor().newInstance()
 
         val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
@@ -100,7 +100,7 @@ class ConnectionExceptions {
 
     private fun `_transaction repetition works when commit throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        Class.forName(TestDB.H2_V2.driver).newInstance()
+        Class.forName(TestDB.H2_V2.driver).getDeclaredConstructor().newInstance()
 
         val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
@@ -126,7 +126,7 @@ class ConnectionExceptions {
 
     private fun `_transaction throws exception if all commits throws exception`(connectionDecorator: (Connection) -> ConnectionSpy) {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        Class.forName(TestDB.H2_V2.driver).newInstance()
+        Class.forName(TestDB.H2_V2.driver).getDeclaredConstructor().newInstance()
 
         val wrappingDataSource = WrappingDataSource(TestDB.H2_V2, connectionDecorator)
         val db = Database.connect(datasource = wrappingDataSource)
@@ -182,7 +182,7 @@ class ConnectionExceptions {
     }
 
     @After
-    fun `teardown`() {
+    fun teardown() {
         TransactionManager.resetCurrent(null)
     }
 }

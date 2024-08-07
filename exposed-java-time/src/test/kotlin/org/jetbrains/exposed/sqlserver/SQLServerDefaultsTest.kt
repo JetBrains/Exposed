@@ -42,7 +42,7 @@ class SQLServerDefaultsTest : DatabaseTestsBase() {
 
                 val names = listOf("name")
                 val batchInsert: List<ResultRow> =
-                    temporalTable.batchInsert(names, shouldReturnGeneratedValues = true) { name ->
+                    temporalTable.batchInsert(names, shouldReturnGeneratedValues = true) {
                         this[temporalTable.name] = "name"
                     }
                 val id = batchInsert.first()[temporalTable.id]

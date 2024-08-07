@@ -16,7 +16,7 @@ abstract class MergeBaseTest : DatabaseTestsBase() {
 
     protected fun withMergeTestTables(excludeSettings: Collection<TestDB> = emptyList(), statement: Transaction.(dest: Dest, source: Source) -> Unit) = withTables(
         excludeSettings = defaultExcludeSettings + excludeSettings, Source, Dest
-    ) { db ->
+    ) {
         statement(Dest, Source)
     }
 

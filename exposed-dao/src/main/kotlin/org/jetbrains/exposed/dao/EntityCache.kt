@@ -206,7 +206,9 @@ class EntityCache(private val transaction: Transaction) {
 
     internal fun removeTablesReferrers(tables: Collection<Table>, isInsert: Boolean) {
         val insertedTablesSet = tables.toSet()
-        val columnsToInvalidate = tables.flatMapTo(hashSetOf()) { it.columns.mapNotNull { it.takeIf { it.referee != null } } }
+        val columnsToInvalidate = tables.flatMapTo(hashSetOf()) { table ->
+            table.columns.mapNotNull { column -> column.takeIf { it.referee != null } }
+        }
 
         columnsToInvalidate.forEach {
             referrers.remove(it)
@@ -228,8 +230,8 @@ class EntityCache(private val transaction: Transaction) {
     internal fun flushInserts(table: IdTable<*>) {
         var toFlush: List<Entity<*>> = inserts.remove(table)?.toList().orEmpty()
         while (toFlush.isNotEmpty()) {
-            val partition = toFlush.partition {
-                it.writeValues.none {
+            val partition = toFlush.partition { entity ->
+                entity.writeValues.none {
                     val (key, value) = it
                     key.referee == table.id && value is EntityID<*> && value._value == null
                 }

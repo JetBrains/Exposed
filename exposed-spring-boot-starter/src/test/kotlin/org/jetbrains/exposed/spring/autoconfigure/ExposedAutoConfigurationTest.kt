@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.CompletableFuture
 
 @SpringBootTest(
-    classes = [org.jetbrains.exposed.spring.Application::class, ExposedAutoConfigurationTest.CustomDatabaseConfigConfiguration::class],
+    classes = [Application::class, ExposedAutoConfigurationTest.CustomDatabaseConfigConfiguration::class],
     properties = ["spring.datasource.url=jdbc:h2:mem:test", "spring.datasource.driver-class-name=org.h2.Driver"]
 )
 open class ExposedAutoConfigurationTest {
@@ -87,7 +87,7 @@ open class ExposedAutoConfigurationTest {
 }
 
 @SpringBootTest(
-    classes = [org.jetbrains.exposed.spring.Application::class],
+    classes = [Application::class],
     properties = [
         "spring.datasource.url=jdbc:h2:mem:test",
         "spring.datasource.driver-class-name=org.h2.Driver",

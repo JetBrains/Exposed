@@ -109,7 +109,7 @@ interface TransactionManager {
      * Returns a [Transaction] instance.
      *
      * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
-     * an existing transaction with the database not configured to [useNestedTransactions].
+     * an existing transaction with the database not configured to `useNestedTransactions`.
      */
     fun newTransaction(
         isolation: Int = defaultIsolationLevel,
@@ -252,7 +252,7 @@ internal inline fun TransactionInterface.closeLoggingException(log: (Exception) 
 }
 
 /**
- * The [TransactionManager] instance that is associated with [this] database.
+ * The [TransactionManager] instance that is associated with this [Database].
  *
  * @throws [RuntimeException] If a manager has not been registered for the database.
  */

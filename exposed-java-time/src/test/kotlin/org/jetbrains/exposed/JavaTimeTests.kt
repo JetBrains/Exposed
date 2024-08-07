@@ -217,7 +217,7 @@ class JavaTimeTests : DatabaseTestsBase() {
                     it[event] = "B"
                 }
 
-                val inYear2000 = testTable.defaultDate.castTo<String>(TextColumnType()) like "2000%"
+                val inYear2000 = testTable.defaultDate.castTo(TextColumnType()) like "2000%"
                 assertEquals(1, testTable.selectAll().where { inYear2000 }.count())
 
                 val todayResult1 = testTable.selectAll().where { testTable.defaultDate eq today }.single()
@@ -277,7 +277,7 @@ class JavaTimeTests : DatabaseTestsBase() {
 
             val year2023 = if (currentDialectTest is PostgreSQLDialect) {
                 // PostgreSQL requires explicit type cast to resolve function date_part
-                dateParam(mayTheFourth).castTo<LocalDate>(JavaLocalDateColumnType()).year()
+                dateParam(mayTheFourth).castTo(JavaLocalDateColumnType()).year()
             } else {
                 dateParam(mayTheFourth).year()
             }
@@ -526,7 +526,7 @@ class JavaTimeTests : DatabaseTestsBase() {
     fun testCurrentDateTimeFunction() {
         val fakeTestTable = object : IntIdTable("fakeTable") {}
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, fakeTestTable) { db ->
+        withTables(excludeSettings = TestDB.ALL_H2_V1, fakeTestTable) {
             fun currentDbDateTime(): LocalDateTime {
                 return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
             }
@@ -542,8 +542,8 @@ class JavaTimeTests : DatabaseTestsBase() {
         val defaultDates = listOf(today)
         val defaultDateTimes = listOf(LocalDateTime.now())
         val tester = object : Table("array_tester") {
-            val dates = array<LocalDate>("dates", JavaLocalDateColumnType()).default(defaultDates)
-            val datetimes = array<LocalDateTime>("datetimes", JavaLocalDateTimeColumnType()).default(defaultDateTimes)
+            val dates = array("dates", JavaLocalDateColumnType()).default(defaultDates)
+            val datetimes = array("datetimes", JavaLocalDateTimeColumnType()).default(defaultDateTimes)
         }
 
         withTables(excludeSettings = TestDB.entries - TestDB.POSTGRESQL - TestDB.H2_V2, tester) {

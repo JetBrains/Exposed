@@ -210,7 +210,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
     }
 
-    private const val onConflictIgnore = "ON CONFLICT DO NOTHING"
+    private const val ON_CONFLICT_IGNORE = "ON CONFLICT DO NOTHING"
 
     override fun insert(
         ignore: Boolean,
@@ -220,7 +220,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         transaction: Transaction
     ): String {
         val def = super.insert(false, table, columns, expr, transaction)
-        return if (ignore) "$def $onConflictIgnore" else def
+        return if (ignore) "$def $ON_CONFLICT_IGNORE" else def
     }
 
     override fun update(
@@ -233,7 +233,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
         }
-        return super.update(target, columnsAndValues, limit, where, transaction)
+        return super.update(target, columnsAndValues, null, where, transaction)
     }
 
     override fun update(
@@ -313,7 +313,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         if (limit != null) {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in DELETE clause.")
         }
-        return super.delete(ignore, table, where, limit, transaction)
+        return super.delete(ignore, table, where, null, transaction)
     }
 
     override fun explain(

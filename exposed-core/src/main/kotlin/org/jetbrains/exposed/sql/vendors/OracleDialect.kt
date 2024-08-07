@@ -301,7 +301,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         if (limit != null) {
             transaction.throwUnsupportedException("Oracle doesn't support LIMIT in DELETE clause.")
         }
-        return super.delete(ignore, table, where, limit, transaction)
+        return super.delete(ignore, table, where, null, transaction)
     }
 
     override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {

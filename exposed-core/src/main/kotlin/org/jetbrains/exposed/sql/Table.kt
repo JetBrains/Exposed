@@ -616,7 +616,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <T : Comparable<T>> Column<T>.entityId(): Column<EntityID<T>> {
         val newColumn = Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also {
             it.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
-            it.dbDefaultValue = dbDefaultValue?.let { it as Expression<EntityID<T>> }
+            it.dbDefaultValue = dbDefaultValue?.let { default -> default as Expression<EntityID<T>> }
             it.extraDefinitions = extraDefinitions
         }
         (table as IdTable<T>).addIdColumnInternal(newColumn)
@@ -677,7 +677,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * database's 2-byte integer type with a check constraint that ensures storage of only values
      * between 0 and [UByte.MAX_VALUE] inclusive.
      */
-    fun ubyte(name: String): Column<UByte> = registerColumn<UByte>(name, UByteColumnType()).apply {
+    fun ubyte(name: String): Column<UByte> = registerColumn(name, UByteColumnType()).apply {
         check("${generatedCheckPrefix}byte_$name") { it.between(0u, UByte.MAX_VALUE) }
     }
 
@@ -689,7 +689,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * **Note:** If the database being used is not MySQL or MariaDB, this column will use the database's 4-byte
      * integer type with a check constraint that ensures storage of only values between 0 and [UShort.MAX_VALUE] inclusive.
      */
-    fun ushort(name: String): Column<UShort> = registerColumn<UShort>(name, UShortColumnType()).apply {
+    fun ushort(name: String): Column<UShort> = registerColumn(name, UShortColumnType()).apply {
         check("$generatedCheckPrefix$name") { it.between(0u, UShort.MAX_VALUE) }
     }
 
@@ -702,7 +702,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * 8-byte integer type with a check constraint that ensures storage of only values
      * between 0 and [UInt.MAX_VALUE] inclusive.
      */
-    fun uinteger(name: String): Column<UInt> = registerColumn<UInt>(name, UIntegerColumnType()).apply {
+    fun uinteger(name: String): Column<UInt> = registerColumn(name, UIntegerColumnType()).apply {
         check("$generatedCheckPrefix$name") { it.between(0u, UInt.MAX_VALUE) }
     }
 
@@ -816,7 +816,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * If [useObjectIdentifier] is `true`, then the column will use the `OID` type on PostgreSQL
      * for storing large binary objects. The parameter must not be `true` for other databases.
      *
-     * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testBlob
+     * @sample org.jetbrains.exposed.sql.tests.shared.types.BlobColumnTypeTests.testBlob
      */
     fun blob(name: String, useObjectIdentifier: Boolean = false): Column<ExposedBlob> =
         registerColumn(name, BlobColumnType(useObjectIdentifier))
@@ -891,7 +891,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * **Note** This column type is only supported by H2 and PostgreSQL dialects.
      *
-     * **Note** The base column type associated with storing elements of type [T] will be resolved according to
+     * **Note** The base column type associated with storing elements of type [E] will be resolved according to
      * the internal mapping in [resolveColumnType]. To avoid this type reflection, or if a mapping does not exist
      * for the elements being stored, please provide an explicit column type to the [array] overload. If the elements
      * to be stored are nullable, an explicit column type will also need to be provided.

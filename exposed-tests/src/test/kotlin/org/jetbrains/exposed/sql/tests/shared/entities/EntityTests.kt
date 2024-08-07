@@ -269,7 +269,7 @@ class EntityTests : DatabaseTestsBase() {
 
             Board.all().forEach {
                 it.posts.count() to it.posts.toList()
-                Post.find { Posts.board eq it.id }.joinToString { it.board?.name.orEmpty() }
+                Post.find { Posts.board eq it.id }.joinToString { post -> post.board?.name.orEmpty() }
             }
         }
     }

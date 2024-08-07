@@ -1,6 +1,11 @@
 # Breaking Changes
 
+## 0.54.0
+
+* All objects that are part of the sealed class `ForUpdateOption` are now converted to `data object`.
+
 ## 0.51.0
+
 * The `exposed-spring-boot-starter` module no longer provides the entire [spring-boot-starter-data-jdbc](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jdbc) module.
   It now provides just the [spring-boot-starter-jdbc](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-jdbc).
   If there was a reliance on this transitive dependency, please directly include a dependency on Spring Data JDBC in your build files.
@@ -18,7 +23,7 @@
 
 ## 0.49.0
 
-For SQLite database, Exposed now requires bumping the SQLite JDBC driver version to a minimum of 3.45.0.0.
+* For SQLite database, Exposed now requires bumping the SQLite JDBC driver version to a minimum of 3.45.0.0.
 
 ## 0.48.0
 
@@ -39,10 +44,10 @@ For SQLite database, Exposed now requires bumping the SQLite JDBC driver version
 
 ## 0.47.0
 
-The function `SchemaUtils.checkExcessiveIndices` is used to check both excessive indices and excessive foreign key
-constraints. It now has a different behavior and deals with excessive indices only. Also, its return type is now
-`List<Index>` instead of `Unit`. A new function, `SchemaUtils.checkExcessiveForeignKeyConstraints`, deals with excessive
-foreign key constraints and has a return type `List<ForeignKeyConstraint>`.
+* The function `SchemaUtils.checkExcessiveIndices` is used to check both excessive indices and excessive foreign key 
+  constraints. It now has a different behavior and deals with excessive indices only. Also, its return type is now
+  `List<Index>` instead of `Unit`. A new function, `SchemaUtils.checkExcessiveForeignKeyConstraints`, deals with excessive
+  foreign key constraints and has a return type `List<ForeignKeyConstraint>`.
 
 ## 0.46.0
 

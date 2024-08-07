@@ -3783,6 +3783,9 @@ public abstract class org/jetbrains/exposed/sql/vendors/ForUpdateOption {
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdate : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdate;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MariaDB {
@@ -3791,6 +3794,9 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MariaDB {
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MariaDB$LockInShareMode : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MariaDB$LockInShareMode;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL {
@@ -3799,10 +3805,16 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL {
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$LockInShareMode : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$LockInShareMode;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$Oracle {
@@ -3811,6 +3823,9 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$Oracle {
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$Oracle$ForUpdateNoWait : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$Oracle$ForUpdateNoWait;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$Oracle$ForUpdateWait : org/jetbrains/exposed/sql/vendors/ForUpdateOption {

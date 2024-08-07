@@ -27,7 +27,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
         val numbers = array<Int>("numbers").default(listOf(5))
         val strings = array<String?>("strings", TextColumnType()).default(emptyList())
         val doubles = array<Double>("doubles").nullable()
-        val byteArray = array<ByteArray>("byte_array", BinaryColumnType(32)).nullable()
+        val byteArray = array("byte_array", BinaryColumnType(32)).nullable()
     }
 
     @Test
@@ -99,7 +99,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
     fun testArrayMaxSize() {
         val maxArraySize = 5
         val sizedTester = object : Table("sized_tester") {
-            val numbers = array<Int>("numbers", IntegerColumnType(), maxArraySize).default(emptyList())
+            val numbers = array("numbers", IntegerColumnType(), maxArraySize).default(emptyList())
         }
 
         withTestTableAndExcludeSettings(sizedTester) {

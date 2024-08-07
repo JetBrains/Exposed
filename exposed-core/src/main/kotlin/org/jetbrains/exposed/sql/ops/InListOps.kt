@@ -169,9 +169,9 @@ class MultipleInListOp(
                 val valueEqualityOps = mutableListOf<Op<Boolean>>()
 
                 iterator.forEach { value ->
-                    val valueEqualityOp = Op.build {
+                    val valueEqualityOp = build {
                         expr.zip(value).map { (column, value) ->
-                            Op.build { EqOp(column, column.wrap(value)) }
+                            build { EqOp(column, column.wrap(value)) }
                         }.compoundAnd()
                     }
                     valueEqualityOps.add(if (isInList) valueEqualityOp else not(valueEqualityOp))

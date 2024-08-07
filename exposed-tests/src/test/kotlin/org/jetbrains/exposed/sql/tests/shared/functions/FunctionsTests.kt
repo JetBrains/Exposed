@@ -560,7 +560,7 @@ class FunctionsTests : DatabaseTestsBase() {
     fun testCustomOperator() {
         // implement a + operator using CustomOperator
         infix fun Expression<*>.plus(operand: Int) =
-            CustomOperator<Int>("+", IntegerColumnType(), this, intParam(operand))
+            CustomOperator("+", IntegerColumnType(), this, intParam(operand))
 
         withCitiesAndUsers { _, _, userData ->
             userData
@@ -587,7 +587,7 @@ class FunctionsTests : DatabaseTestsBase() {
                 }
             }
 
-            val coalesceExp2 = Coalesce(users.cityId, Op.nullOp<Int>(), intLiteral(1000))
+            val coalesceExp2 = Coalesce(users.cityId, Op.nullOp(), intLiteral(1000))
 
             users.select(users.cityId, coalesceExp2).forEach {
                 val cityId = it[users.cityId]

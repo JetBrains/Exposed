@@ -342,7 +342,7 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this [EntityID] expression is equal to some [other] expression. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(
-        other: Expression<in V>
+        other: Expression<V>
     ): Op<Boolean> = when (other as Expression<*>) {
         is Op.NULL -> isNull()
         else -> EqOp(this, other)
@@ -380,7 +380,7 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this [EntityID] expression is not equal to some [other] expression. */
     infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(
-        other: Expression<in V>
+        other: Expression<V>
     ): Op<Boolean> = when (other as Expression<*>) {
         is Op.NULL -> isNotNull()
         else -> NeqOp(this, other)
@@ -751,7 +751,7 @@ interface ISqlExpressionBuilder {
     infix fun Expression<EntityID<String>>.notLike(pattern: LikePattern): LikeEscapeOp =
         LikeEscapeOp(this, stringParam(pattern.pattern), false, pattern.escapeChar)
 
-    /** Checks if this expression doesn't match the specified [pattern]. */
+    /** Checks if this expression doesn't match the specified pattern. */
     infix fun <T : String?> Expression<T>.notLike(expression: ExpressionWithColumnType<String>): LikeEscapeOp =
         LikeEscapeOp(this, expression, false, null)
 
