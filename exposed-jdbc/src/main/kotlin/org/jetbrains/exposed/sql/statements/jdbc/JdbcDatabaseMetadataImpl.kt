@@ -167,16 +167,12 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
         val autoIncrement = getString("IS_AUTOINCREMENT") == "YES"
         val type = getInt("DATA_TYPE")
+        val name = getString("COLUMN_NAME")
+        val nullable = getBoolean("NULLABLE")
+        val size = getInt("COLUMN_SIZE").takeIf { it != 0 }
+        val scale = getInt("DECIMAL_DIGITS").takeIf { it != 0 }
 
-        return ColumnMetadata(
-            getString("COLUMN_NAME"),
-            type,
-            getBoolean("NULLABLE"),
-            getInt("COLUMN_SIZE").takeIf { it != 0 },
-            autoIncrement,
-            // Not sure this filters enough but I dont think we ever want to have sequences here
-            defaultDbValue?.takeIf { !autoIncrement },
-        )
+        return ColumnMetadata(name, type, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
     }
 
     /**

@@ -12,6 +12,8 @@ data class ColumnDiff(
     val defaults: Boolean,
     /** Whether the existing column identifier matches and has the correct casing. */
     val caseSensitiveName: Boolean,
+    /** Whether the size and scale of the existing column, if applicable, is correct. */
+    val sizeAndScale: Boolean,
 ) {
     /** Returns `true` if there is a difference between the column definition and the existing column in the database. */
     fun hasDifferences() = this != NoneChanged
@@ -23,6 +25,7 @@ data class ColumnDiff(
             autoInc = false,
             defaults = false,
             caseSensitiveName = false,
+            sizeAndScale = false,
         )
 
         /** A [ColumnDiff] with differences for every matched property. */
@@ -31,6 +34,7 @@ data class ColumnDiff(
             autoInc = true,
             defaults = true,
             caseSensitiveName = true,
+            sizeAndScale = true,
         )
     }
 }

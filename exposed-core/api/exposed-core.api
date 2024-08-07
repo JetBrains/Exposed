@@ -446,18 +446,20 @@ public final class org/jetbrains/exposed/sql/Column : org/jetbrains/exposed/sql/
 
 public final class org/jetbrains/exposed/sql/ColumnDiff {
 	public static final field Companion Lorg/jetbrains/exposed/sql/ColumnDiff$Companion;
-	public fun <init> (ZZZZ)V
+	public fun <init> (ZZZZZ)V
 	public final fun component1 ()Z
 	public final fun component2 ()Z
 	public final fun component3 ()Z
 	public final fun component4 ()Z
-	public final fun copy (ZZZZ)Lorg/jetbrains/exposed/sql/ColumnDiff;
-	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/ColumnDiff;ZZZZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/ColumnDiff;
+	public final fun component5 ()Z
+	public final fun copy (ZZZZZ)Lorg/jetbrains/exposed/sql/ColumnDiff;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/ColumnDiff;ZZZZZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/ColumnDiff;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAutoInc ()Z
 	public final fun getCaseSensitiveName ()Z
 	public final fun getDefaults ()Z
 	public final fun getNullability ()Z
+	public final fun getSizeAndScale ()Z
 	public final fun hasDifferences ()Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -3618,20 +3620,22 @@ public final class org/jetbrains/exposed/sql/transactions/experimental/Suspended
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ColumnMetadata {
-	public fun <init> (Ljava/lang/String;IZLjava/lang/Integer;ZLjava/lang/String;)V
+	public fun <init> (Ljava/lang/String;IZLjava/lang/Integer;Ljava/lang/Integer;ZLjava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()I
 	public final fun component3 ()Z
 	public final fun component4 ()Ljava/lang/Integer;
-	public final fun component5 ()Z
-	public final fun component6 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;IZLjava/lang/Integer;ZLjava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/ColumnMetadata;
-	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/vendors/ColumnMetadata;Ljava/lang/String;IZLjava/lang/Integer;ZLjava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/vendors/ColumnMetadata;
+	public final fun component5 ()Ljava/lang/Integer;
+	public final fun component6 ()Z
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;IZLjava/lang/Integer;Ljava/lang/Integer;ZLjava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/ColumnMetadata;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/vendors/ColumnMetadata;Ljava/lang/String;IZLjava/lang/Integer;Ljava/lang/Integer;ZLjava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/vendors/ColumnMetadata;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAutoIncrement ()Z
 	public final fun getDefaultDbValue ()Ljava/lang/String;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getNullable ()Z
+	public final fun getScale ()Ljava/lang/Integer;
 	public final fun getSize ()Ljava/lang/Integer;
 	public final fun getType ()I
 	public fun hashCode ()I
