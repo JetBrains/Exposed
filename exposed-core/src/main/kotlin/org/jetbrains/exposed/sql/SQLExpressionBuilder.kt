@@ -505,7 +505,7 @@ interface ISqlExpressionBuilder {
 
     /** Returns `true` if this string expression is null or empty, `false` otherwise. */
     fun <T : String?> Expression<T>.isNullOrEmpty() = if (this is Column<*> && columnType.isEntityIdentifier()) {
-        (table as IdTable<*>).mapIdOperator(::IsNullOp)
+        table.mapIdOperator(::IsNullOp)
     } else {
         IsNullOp(this)
     }.or { this@isNullOrEmpty.charLength() eq 0 }
