@@ -378,4 +378,19 @@ class ConditionsTests : DatabaseTestsBase() {
             )
         }
     }
+
+    @Test
+    fun testNullOrEmpty() {
+        val tester = object : IntIdTable("tester") {
+            val name = text("name").nullable()
+        }
+
+        withTables(tester) {
+            tester.insert { it[name] = null }
+            tester.insert { it[name] = "" }
+            tester.insert { it[name] = "Something" }
+
+            assertEquals(2, tester.selectAll().where { tester.name.isNullOrEmpty() }.count())
+        }
+    }
 }

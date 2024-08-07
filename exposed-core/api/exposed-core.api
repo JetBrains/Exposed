@@ -1128,6 +1128,7 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public abstract fun isNotNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun isNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
+	public abstract fun isNullOrEmpty (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun lag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Lag;
 	public abstract fun lastValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LastValue;
 	public abstract fun lead (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Lead;
@@ -1261,6 +1262,7 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public static fun isNotNull (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun isNull (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
+	public static fun isNullOrEmpty (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun lag (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Lag;
 	public static synthetic fun lag$default (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Lag;
 	public static fun lastValue (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LastValue;
@@ -2279,6 +2281,7 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public fun isNotNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public fun isNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
+	public fun isNullOrEmpty (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public fun lag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Lag;
 	public fun lastValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LastValue;
 	public fun lead (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Lead;
