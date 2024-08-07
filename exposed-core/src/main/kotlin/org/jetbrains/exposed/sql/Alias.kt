@@ -1,5 +1,10 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.id.CompositeID
+import org.jetbrains.exposed.dao.id.CompositeIdTable
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
@@ -54,9 +59,52 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
     override fun hashCode(): Int = tableNameWithAlias.hashCode()
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T : Any?> get(original: Column<T>): Column<T> =
-        delegate.columns.find { it == original }?.let { it.clone() as? Column<T> }
+    operator fun <T : Any?> get(original: Column<T>): Column<T> {
+        // CompositeIdTable id is not a typical database-registered column
+        val delegateColumn = if (delegate is CompositeIdTable && original.columnType.isEntityIdentifier()) {
+            delegate.id
+        } else {
+            delegate.columns.find { it == original }
+        }
+        return delegateColumn?.let { it.clone() as? Column<T> }
             ?: error("Column not found in original table")
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun mapIdComparison(
+        toCompare: Any?,
+        booleanOperator: (Column<*>, Expression<*>) -> Op<Boolean>,
+    ): Op<Boolean> = when (delegate) {
+        is CompositeIdTable -> {
+            (toCompare as? EntityID<CompositeID>) ?: error("toCompare must be an EntityID<CompositeID> value")
+            delegateIdColumns.map { column ->
+                val delegateColumn = originalColumn(column)
+                val otherValue = if (delegateColumn in toCompare.value.values) {
+                    toCompare.value[delegateColumn as Column<EntityID<Comparable<Any>>>]
+                } else {
+                    error("Comparison CompositeID is missing a key mapping for ${delegateColumn?.name}")
+                }
+                booleanOperator(column, column.wrap(otherValue.value as? EntityID<*> ?: otherValue))
+            }.compoundAnd()
+        }
+        is IdTable<*> -> {
+            val singleId = delegateIdColumns.single()
+            booleanOperator(singleId, singleId.wrap(toCompare))
+        }
+        else -> error("idColumns for mapping are only available from IdTable instances")
+    }
+
+    override fun mapIdOperator(
+        booleanOperator: (Column<*>) -> Op<Boolean>
+    ): Op<Boolean> {
+        require(delegate is IdTable<*>) { "idColumns for mapping are only available from IdTable instances" }
+        return delegateIdColumns.map { booleanOperator(it) }.compoundAnd()
+    }
+
+    private val delegateIdColumns: List<Column<*>> = columns
+        .takeIf { delegate is IdTable<*> }
+        ?.filter { originalColumn(it) in (delegate as IdTable<*>).idColumns }
+        .orEmpty()
 }
 
 /** Represents a temporary SQL identifier, [alias], for a [delegate] expression. */

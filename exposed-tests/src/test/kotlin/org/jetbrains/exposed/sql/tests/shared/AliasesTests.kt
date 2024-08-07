@@ -5,6 +5,7 @@ import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData
@@ -12,6 +13,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class AliasesTests : DatabaseTestsBase() {
     @Test
@@ -41,9 +43,9 @@ class AliasesTests : DatabaseTestsBase() {
             val sliceColumns = stables.columns + fAlias[fcAlias]
             val stats = stables.join(fAlias, JoinType.LEFT, stables.id, fAlias[facilities.stableId])
                 .select(sliceColumns)
-                .groupBy(*sliceColumns.toTypedArray()).map {
+                .groupBy(*sliceColumns.toTypedArray()).associate {
                     it[stables.name] to it[fAlias[fcAlias]]
-                }.toMap()
+                }
             assertEquals(2, stats.size)
             assertEquals(1, stats["Stables1"])
             assertNull(stats["Stables2"])
@@ -230,6 +232,29 @@ class AliasesTests : DatabaseTestsBase() {
             val foreignKey = facilities.columns.find { it.name == "stable_id" }?.foreignKey
             val aliasForeignKey = facilitiesAlias.columns.find { it.name == "stable_id" }?.foreignKey
             assertEquals(foreignKey, aliasForeignKey)
+        }
+    }
+
+    @Test
+    fun testIsNullAndEqWithAliasedIdTable() {
+        val tester = object : IntIdTable("tester") {
+            val amount = integer("amount")
+        }
+
+        withTables(tester) {
+            val t1 = tester.insertAndGetId { it[amount] = 99 }
+
+            val counter = tester.alias("counter")
+
+            val result1 = counter.selectAll().where {
+                counter[tester.id].isNull() or (counter[tester.id] neq t1)
+            }.toList()
+            assertTrue { result1.isEmpty() }
+
+            val result2 = counter.selectAll().where {
+                counter[tester.id].isNotNull() and (counter[tester.id] eq t1)
+            }.single()
+            assertEquals(99, result2[counter[tester.amount]])
         }
     }
 }

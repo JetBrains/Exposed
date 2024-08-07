@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
@@ -639,6 +640,30 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <ID : Comparable<ID>> entityId(name: String, table: IdTable<ID>): Column<EntityID<ID>> {
         val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn as Column<ID>
         return entityId(name, originalColumn)
+    }
+
+    /**
+     * Returns a boolean operator comparing each of an IdTable's `idColumns` to its corresponding
+     * value in [toCompare], using the specified SQL [booleanOperator].
+     *
+     * @throws IllegalStateException If this is not an [IdTable], or if [toCompare] is either not
+     * a matching id type or it does not contain a key for each component column.
+     */
+    internal open fun mapIdComparison(
+        toCompare: Any?,
+        booleanOperator: (Column<*>, Expression<*>) -> Op<Boolean>
+    ): Op<Boolean> {
+        require(this is IdTable<*>) { "idColumns for mapping are only available from IdTable instances" }
+        val singleId = idColumns.single()
+        return booleanOperator(singleId, singleId.wrap(toCompare))
+    }
+
+    /** Returns a boolean operator with each of an IdTable's `idColumns` using the specified SQL [booleanOperator]. */
+    internal open fun mapIdOperator(
+        booleanOperator: (Column<*>) -> Op<Boolean>
+    ): Op<Boolean> {
+        require(this is IdTable<*>) { "idColumns for mapping are only available from IdTable instances" }
+        return booleanOperator(idColumns.single())
     }
 
     // Numeric columns

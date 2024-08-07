@@ -399,6 +399,24 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun testIsNullAndEqWithAlias() {
+        withTables(Towns) {
+            val townAValue = CompositeID {
+                it[Towns.zipCode] = "1A2 3B4"
+                it[Towns.name] = "Town A"
+            }
+            val townAId = Towns.insertAndGetId { it[id] = townAValue }
+
+            val smallCity = Towns.alias("small_city")
+
+            val result = smallCity.selectAll().where {
+                smallCity[Towns.id].isNotNull() and (smallCity[Towns.id] eq townAId)
+            }.single()
+            assertNull(result[smallCity[Towns.population]])
+        }
+    }
+
+    @Test
     fun testInsertAndSelectReferencedEntities() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
             val publisherA = Publisher.new {

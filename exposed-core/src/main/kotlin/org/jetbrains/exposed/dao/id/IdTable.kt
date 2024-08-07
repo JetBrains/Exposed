@@ -56,26 +56,6 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
     }
 
     internal fun <S : Comparable<S>> addIdColumnInternal(newColumn: Column<EntityID<S>>) { addIdColumn(newColumn) }
-
-    /**
-     * Returns a boolean operator comparing each of this table's [idColumns] to its corresponding
-     * value in [toCompare], using the specified SQL [operator].
-     *
-     * @throws IllegalStateException If [toCompare] is either not a matching id type or it does not contain a key for
-     * each component column.
-     */
-    internal open fun mapIdComparison(
-        toCompare: Any?,
-        operator: (Column<*>, Expression<*>) -> Op<Boolean>
-    ): Op<Boolean> {
-        val singleId = idColumns.single()
-        return operator(singleId, singleId.wrap(toCompare))
-    }
-
-    /** Returns a boolean operator with each of this table's [idColumns] using the specified SQL [operator]. */
-    internal open fun mapIdOperator(
-        operator: (Column<*>) -> Op<Boolean>
-    ): Op<Boolean> = operator(idColumns.single())
 }
 
 /**
@@ -167,7 +147,7 @@ open class CompositeIdTable(name: String = "") : IdTable<CompositeID>(name) {
     @Suppress("UNCHECKED_CAST")
     override fun mapIdComparison(
         toCompare: Any?,
-        operator: (Column<*>, Expression<*>) -> Op<Boolean>
+        booleanOperator: (Column<*>, Expression<*>) -> Op<Boolean>
     ): Op<Boolean> {
         (toCompare as? EntityID<CompositeID>) ?: error("toCompare must be an EntityID<CompositeID> value")
         return idColumns.map { column ->
@@ -176,11 +156,11 @@ open class CompositeIdTable(name: String = "") : IdTable<CompositeID>(name) {
             } else {
                 error("Comparison CompositeID is missing a key mapping for ${column.name}")
             }
-            operator(column, column.wrap(otherValue.value as? EntityID<*> ?: otherValue))
+            booleanOperator(column, column.wrap(otherValue.value as? EntityID<*> ?: otherValue))
         }.compoundAnd()
     }
 
     override fun mapIdOperator(
-        operator: (Column<*>) -> Op<Boolean>
-    ): Op<Boolean> = idColumns.map { operator(it) }.compoundAnd()
+        booleanOperator: (Column<*>) -> Op<Boolean>
+    ): Op<Boolean> = idColumns.map { booleanOperator(it) }.compoundAnd()
 }
