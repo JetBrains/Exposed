@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.crypt
 
 import org.jetbrains.exposed.sql.BinaryColumnType
+import org.jetbrains.exposed.sql.ColumnTransformer
+import org.jetbrains.exposed.sql.ColumnWithTransform
 
 /**
  * Binary column for storing encrypted binary strings of a specific [length], using the provided [encryptor].
@@ -10,37 +12,10 @@ import org.jetbrains.exposed.sql.BinaryColumnType
 class EncryptedBinaryColumnType(
     private val encryptor: Encryptor,
     length: Int
-) : BinaryColumnType(length) {
-    override fun nonNullValueToString(value: ByteArray): String {
-        return super.nonNullValueToString(notNullValueToDB(value))
-    }
+) : ColumnWithTransform<ByteArray, ByteArray>(BinaryColumnType(length), ByteArrayEncryptionTransformer(encryptor))
 
-    override fun notNullValueToDB(value: ByteArray): ByteArray = encryptor.encrypt(String(value)).toByteArray()
+class ByteArrayEncryptionTransformer(private val encryptor: Encryptor) : ColumnTransformer<ByteArray, ByteArray> {
+    override fun unwrap(value: ByteArray) = encryptor.encrypt(String(value)).toByteArray()
 
-    override fun valueFromDB(value: Any): ByteArray {
-        val encryptedByte = super.valueFromDB(value)
-        return encryptor.decrypt(String(encryptedByte)).toByteArray()
-    }
-
-    override fun validateValueBeforeUpdate(value: ByteArray?) {
-        if (value != null) {
-            super.validateValueBeforeUpdate(notNullValueToDB(value))
-        }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as EncryptedBinaryColumnType
-
-        return encryptor == other.encryptor
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + encryptor.hashCode()
-        return result
-    }
+    override fun wrap(value: ByteArray) = encryptor.decrypt(String(value)).toByteArray()
 }

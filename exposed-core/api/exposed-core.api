@@ -524,7 +524,7 @@ public final class org/jetbrains/exposed/sql/ColumnTypeKt {
 	public static synthetic fun resolveColumnType$default (Lkotlin/reflect/KClass;Lorg/jetbrains/exposed/sql/ColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/ColumnType;
 }
 
-public final class org/jetbrains/exposed/sql/ColumnWithTransform : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/ColumnTransformer {
+public class org/jetbrains/exposed/sql/ColumnWithTransform : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/ColumnTransformer {
 	public fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/ColumnTransformer;)V
 	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/IColumnType;
 	public fun getNullable ()Z
