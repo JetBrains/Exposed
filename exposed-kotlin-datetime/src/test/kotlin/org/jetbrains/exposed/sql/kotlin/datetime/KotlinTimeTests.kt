@@ -618,7 +618,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val date: Column<LocalDate> = date("date").index().defaultExpression(CurrentDate)
         }
         withTables(testTable) {
-            val statements = SchemaUtils.statementsRequiredForDatabaseMigration(testTable)
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
             assertTrue(statements.isEmpty())
         }
     }

@@ -2114,8 +2114,6 @@ public final class org/jetbrains/exposed/sql/SchemaUtils {
 	public final fun setSchema (Lorg/jetbrains/exposed/sql/Schema;Z)V
 	public static synthetic fun setSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;Lorg/jetbrains/exposed/sql/Schema;ZILjava/lang/Object;)V
 	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;
-	public final fun statementsRequiredForDatabaseMigration ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
-	public static synthetic fun statementsRequiredForDatabaseMigration$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
 	public final fun statementsRequiredToActualizeScheme ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public static synthetic fun statementsRequiredToActualizeScheme$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
 	public final fun withDataBaseLock (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/jvm/functions/Function0;)V
