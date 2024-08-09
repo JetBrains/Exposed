@@ -725,12 +725,12 @@ abstract class FunctionProvider {
 
     /**
      * Appends to a [queryBuilder] the SQL syntax for a column that represents the same values from the INSERT clause
-     * of an [upsert] command.
+     * of an [upsert] command, which should be used in the UPDATE clause.
      *
      * @param columnName Name of the column for update.
      * @param queryBuilder Query builder to append the SQL syntax to.
      */
-    open fun asForInsert(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"S.$columnName" } }
+    open fun insertValue(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"S.$columnName" } }
 
     /**
      * Returns the SQL command that deletes one or more rows of a table.

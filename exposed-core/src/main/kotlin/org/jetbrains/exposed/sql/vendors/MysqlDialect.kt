@@ -266,7 +266,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun asForInsert(columnName: String, queryBuilder: QueryBuilder) {
+    override fun insertValue(columnName: String, queryBuilder: QueryBuilder) {
         queryBuilder {
             if (isUpsertAliasSupported(currentDialect)) {
                 +"NEW.$columnName"

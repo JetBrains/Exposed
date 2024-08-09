@@ -302,7 +302,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun asForInsert(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"EXCLUDED.$columnName" } }
+    override fun insertValue(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"EXCLUDED.$columnName" } }
 
     override fun delete(
         ignore: Boolean,
