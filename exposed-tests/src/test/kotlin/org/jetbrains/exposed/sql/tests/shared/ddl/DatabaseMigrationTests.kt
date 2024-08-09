@@ -44,7 +44,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 assertTrue(script.exists())
                 assertEquals("src/test/resources/$scriptName.sql", script.path)
 
-                val expectedStatements: List<String> = SchemaUtils.statementsRequiredForDatabaseMigration(singlePKTable)
+                val expectedStatements: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable)
                 assertEquals(1, expectedStatements.size)
 
                 val fileStatements: List<String> = script.bufferedReader().readLines().map { it.trimEnd(';') }
@@ -80,7 +80,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 // Create initial script
                 val initialScript = File("$directory/$name.sql")
                 initialScript.createNewFile()
-                val statements = SchemaUtils.statementsRequiredForDatabaseMigration(noPKTable)
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(noPKTable)
                 statements.forEach {
                     initialScript.appendText(it)
                 }
@@ -88,7 +88,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 // Generate script with the same name of initial script
                 val newScript = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = directory, scriptName = name)
 
-                val expectedStatements: List<String> = SchemaUtils.statementsRequiredForDatabaseMigration(singlePKTable)
+                val expectedStatements: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable)
                 assertEquals(1, expectedStatements.size)
 
                 val fileStatements: List<String> = newScript.bufferedReader().readLines().map { it.trimEnd(';') }
@@ -131,7 +131,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 assertNull(primaryKey)
 
                 val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
-                val statements = SchemaUtils.statementsRequiredForDatabaseMigration(singlePKTable)
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable)
                 assertEquals(expected, statements.single())
             } finally {
                 SchemaUtils.drop(noPKTable)
@@ -157,7 +157,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 }
 
                 SchemaUtils.create(table)
-                val actual = SchemaUtils.statementsRequiredForDatabaseMigration(table)
+                val actual = MigrationUtils.statementsRequiredForDatabaseMigration(table)
                 assertEqualLists(emptyList(), actual)
             } finally {
                 SchemaUtils.drop(table)
@@ -177,7 +177,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 SchemaUtils.create(quotedTable)
                 assertTrue(quotedTable.exists())
 
-                val statements = SchemaUtils.statementsRequiredForDatabaseMigration(quotedTable)
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(quotedTable)
                 assertTrue(statements.isEmpty())
             } finally {
                 SchemaUtils.drop(quotedTable)
@@ -210,7 +210,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 SchemaUtils.create(testTableWithTwoIndices)
                 assertTrue(testTableWithTwoIndices.exists())
 
-                val statements = SchemaUtils.statementsRequiredForDatabaseMigration(testTableWithOneIndex)
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTableWithOneIndex)
                 assertEquals(1, statements.size)
             } finally {
                 SchemaUtils.drop(testTableWithTwoIndices)
@@ -240,7 +240,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 SchemaUtils.create(testTableWithIndex)
                 assertTrue(testTableWithIndex.exists())
 
-                val statements = SchemaUtils.statementsRequiredForDatabaseMigration(testTableWithoutIndex)
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTableWithoutIndex)
                 assertEquals(1, statements.size)
             } finally {
                 SchemaUtils.drop(testTableWithIndex)
