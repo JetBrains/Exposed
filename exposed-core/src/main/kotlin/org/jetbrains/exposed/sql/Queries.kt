@@ -511,13 +511,13 @@ fun <T : Table> T.upsert(
 )
 fun <T : Table> T.upsert(
     vararg keys: Column<*>,
-    onUpdate: (UpsertStatement<Long>.() -> List<Pair<Column<*>, Expression<*>>>)? = null,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): UpsertStatement<Long> {
     val upsert = UpsertStatement<Long>(this, keys = keys, null, onUpdateExclude, where?.let { SqlExpressionBuilder.it() })
-    onUpdate?.let { upsert.updateValues.putAll(it.invoke(upsert)) }
+    onUpdate?.let { upsert.updateValues.putAll(it) }
     body(upsert)
     upsert.execute(TransactionManager.current())
     return upsert
@@ -562,13 +562,13 @@ fun <T : Table> T.upsertReturning(
 fun <T : Table> T.upsertReturning(
     vararg keys: Column<*>,
     returning: List<Expression<*>> = columns,
-    onUpdate: (UpsertStatement<Long>.() -> List<Pair<Column<*>, Expression<*>>>)? = null,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): ReturningStatement {
     val upsert = UpsertStatement<Long>(this, keys = keys, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() })
-    onUpdate?.let { upsert.updateValues.putAll(it.invoke(upsert)) }
+    onUpdate?.let { upsert.updateValues.putAll(it) }
     body(upsert)
     return ReturningStatement(this, returning, upsert)
 }
@@ -610,7 +610,7 @@ fun <T : Table, E : Any> T.batchUpsert(
 fun <T : Table, E : Any> T.batchUpsert(
     data: Iterable<E>,
     vararg keys: Column<*>,
-    onUpdate: (BatchUpsertStatement.() -> List<Pair<Column<*>, Expression<*>>>)? = null,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
@@ -656,7 +656,7 @@ fun <T : Table, E : Any> T.batchUpsert(
 fun <T : Table, E : Any> T.batchUpsert(
     data: Sequence<E>,
     vararg keys: Column<*>,
-    onUpdate: (BatchUpsertStatement.() -> List<Pair<Column<*>, Expression<*>>>)? = null,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
@@ -667,7 +667,7 @@ fun <T : Table, E : Any> T.batchUpsert(
 
 private fun <T : Table, E> T.batchUpsert(
     data: Iterator<E>,
-    onUpdate: (BatchUpsertStatement.() -> List<Pair<Column<*>, Expression<*>>>)? = null,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
@@ -681,7 +681,7 @@ private fun <T : Table, E> T.batchUpsert(
         where = where?.let { SqlExpressionBuilder.it() },
         shouldReturnGeneratedValues = shouldReturnGeneratedValues
     ).apply {
-        onUpdate?.let { updateValues.putAll(it.invoke(this)) }
+        onUpdate?.let { updateValues.putAll(it) }
     }
 }
 

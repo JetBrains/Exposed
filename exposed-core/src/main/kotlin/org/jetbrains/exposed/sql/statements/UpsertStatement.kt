@@ -23,8 +23,8 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 open class UpsertStatement<Key : Any>(
     table: Table,
     vararg val keys: Column<*>,
-    @Deprecated("This property will be removed in future releases. Use function `onUpdate()` instead.", level = DeprecationLevel.ERROR)
-    val onUpdate: MutableList<Pair<Column<*>, Expression<*>>>? = null,
+    @Deprecated("This property will be removed in future releases. Use function `onUpdate()` instead.", level = DeprecationLevel.WARNING)
+    val onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
     val onUpdateExclude: List<Column<*>>?,
     val where: Op<Boolean>?
 ) : InsertStatement<Key>(table), UpsertBuilder {
