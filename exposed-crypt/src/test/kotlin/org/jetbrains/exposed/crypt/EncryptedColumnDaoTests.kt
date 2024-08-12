@@ -4,8 +4,6 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
