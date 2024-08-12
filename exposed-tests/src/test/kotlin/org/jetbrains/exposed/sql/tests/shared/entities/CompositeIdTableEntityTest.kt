@@ -16,7 +16,6 @@ import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
@@ -433,7 +432,6 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 val town = Town[id]
                 town.population = 2000
-                // triggers batch update statement on composite ID table
             }
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 val town = Town[id]

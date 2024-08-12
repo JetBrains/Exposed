@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql.statements
 
+import org.jetbrains.exposed.dao.id.CompositeID
+import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
@@ -7,7 +9,6 @@ import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import java.util.*
 
 /**
  * Represents the SQL statement that batch updates rows of a table.
@@ -45,12 +46,22 @@ open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, 
 
     override fun <T, S : T?> update(column: Column<T>, value: Expression<S>) = error("Expressions unsupported in batch update")
 
-    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String =
-        "${super.prepareSQL(transaction, prepared)} WHERE ${transaction.identity(table.id)} = ?"
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
+        val updateSql = super.prepareSQL(transaction, prepared)
+        val idEqCondition = if (table is CompositeIdTable) {
+            table.idColumns.joinToString(separator = " AND ") { "${transaction.identity(it)} = ?" }
+        } else {
+            "${transaction.identity(table.id)} = ?"
+        }
+        return "$updateSql WHERE $idEqCondition"
+    }
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = data.map { (id, row) ->
-        firstDataSet.map { it.first.columnType to row[it.first] } + (table.id.columnType to id)
+        val idArgs = (id.value as? CompositeID)?.values?.map {
+            it.key.columnType to it.value
+        } ?: listOf(table.id.columnType to id)
+        firstDataSet.map { it.first.columnType to row[it.first] } + idArgs
     }
 }
