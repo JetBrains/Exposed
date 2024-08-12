@@ -27,7 +27,6 @@ class EncryptedColumnDaoTests : DatabaseTestsBase() {
     @Test
     fun testEncryptedColumnsWithDao() {
         withTables(TestTable) {
-            addLogger(StdOutSqlLogger)
             val varcharValue = "varchar"
             val binaryValue = "binary".toByteArray()
 
