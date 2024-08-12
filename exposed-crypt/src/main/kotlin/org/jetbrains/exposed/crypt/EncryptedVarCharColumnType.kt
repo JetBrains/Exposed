@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.crypt
 
+import org.jetbrains.exposed.sql.ColumnTransformer
+import org.jetbrains.exposed.sql.ColumnWithTransform
 import org.jetbrains.exposed.sql.VarCharColumnType
 
 /**
@@ -10,40 +12,11 @@ import org.jetbrains.exposed.sql.VarCharColumnType
  */
 class EncryptedVarCharColumnType(
     private val encryptor: Encryptor,
-    colLength: Int,
-) : VarCharColumnType(colLength) {
-    override fun nonNullValueToString(value: String): String {
-        return super.nonNullValueToString(notNullValueToDB(value))
-    }
+    colLength: Int
+) : ColumnWithTransform<String, String>(VarCharColumnType(colLength), StringEncryptionTransformer(encryptor))
 
-    override fun notNullValueToDB(value: String): String {
-        return encryptor.encrypt(value)
-    }
+class StringEncryptionTransformer(private val encryptor: Encryptor) : ColumnTransformer<String, String> {
+    override fun unwrap(value: String) = encryptor.encrypt(value)
 
-    override fun valueFromDB(value: Any): String {
-        val encryptedStr = super.valueFromDB(value)
-        return encryptor.decrypt(encryptedStr)
-    }
-
-    override fun validateValueBeforeUpdate(value: String?) {
-        if (value != null) {
-            super.validateValueBeforeUpdate(notNullValueToDB(value))
-        }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as EncryptedVarCharColumnType
-
-        return encryptor == other.encryptor
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + encryptor.hashCode()
-        return result
-    }
+    override fun wrap(value: String) = encryptor.decrypt(value)
 }

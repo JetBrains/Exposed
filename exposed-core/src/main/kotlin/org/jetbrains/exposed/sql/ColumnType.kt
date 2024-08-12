@@ -281,7 +281,7 @@ fun <Unwrapped, Wrapped>columnTransformer(unwrap: (value: Wrapped) -> Unwrapped,
  * @param Unwrapped The type of the column
  * @param delegate The original column's [IColumnType]
  */
-class ColumnWithTransform<Unwrapped : Any, Wrapped : Any>(
+open class ColumnWithTransform<Unwrapped : Any, Wrapped : Any>(
     val delegate: IColumnType<Unwrapped>,
     private val transformer: ColumnTransformer<Unwrapped, Wrapped>
 ) : ColumnType<Wrapped>(), ColumnTransformer<Unwrapped, Wrapped> by transformer {
