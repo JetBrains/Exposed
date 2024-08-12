@@ -16,6 +16,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
@@ -413,6 +414,31 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 smallCity[Towns.id].isNotNull() and (smallCity[Towns.id] eq townAId)
             }.single()
             assertNull(result[smallCity[Towns.population]])
+        }
+    }
+
+    @Test
+    fun testFlushingUpdatedEntity() {
+        withTables(Towns) {
+            val id = CompositeID {
+                it[Towns.zipCode] = "1A2 3B4"
+                it[Towns.name] = "Town A"
+            }
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                Town.new(id) {
+                    population = 1000
+                }
+            }
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                val town = Town[id]
+                town.population = 2000
+                // triggers batch update statement on composite ID table
+            }
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                val town = Town[id]
+                assertEquals(2000, town.population)
+            }
         }
     }
 
