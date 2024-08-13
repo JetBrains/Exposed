@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql.statements
 
+import org.jetbrains.exposed.sql.AbstractQuery
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.vendors.H2Dialect
@@ -22,5 +24,27 @@ open class ReplaceStatement<Key : Any>(table: Table) : InsertStatement<Key>(tabl
             else -> dialect.functionProvider
         }
         return functionProvider.replace(table, values.unzip().first, valuesSql, transaction, prepared)
+    }
+}
+
+/**
+ * Represents the SQL statement that uses data retrieved from a [selectQuery] to either insert a new row into a table,
+ * or, if insertion would violate a unique constraint, first delete the existing row before inserting a new row.
+ *
+ * @param columns Columns to either insert values into or delete values from then insert into.
+ * @param selectQuery Source SELECT query that provides the values to insert.
+ */
+open class ReplaceSelectStatement(
+    columns: List<Column<*>>,
+    selectQuery: AbstractQuery<*>
+) : InsertSelectStatement(columns, selectQuery) {
+    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
+        val querySql = selectQuery.prepareSQL(transaction, prepared)
+        val dialect = transaction.db.dialect
+        val functionProvider = when (dialect.h2Mode) {
+            H2Dialect.H2CompatibilityMode.MySQL, H2Dialect.H2CompatibilityMode.MariaDB -> MysqlFunctionProvider()
+            else -> dialect.functionProvider
+        }
+        return functionProvider.replace(targets.single(), columns, querySql, transaction, prepared)
     }
 }

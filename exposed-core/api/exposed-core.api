@@ -1817,6 +1817,8 @@ public final class org/jetbrains/exposed/sql/QueriesKt {
 	public static final fun mergeFrom (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/statements/MergeTableStatement;
 	public static synthetic fun mergeFrom$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/MergeTableStatement;
 	public static final fun replace (Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReplaceStatement;
+	public static final fun replace (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/AbstractQuery;Ljava/util/List;)Ljava/lang/Integer;
+	public static synthetic fun replace$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/AbstractQuery;Ljava/util/List;ILjava/lang/Object;)Ljava/lang/Integer;
 	public static final fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public static final fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
 	public static final fun select (Lorg/jetbrains/exposed/sql/Query;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
@@ -3210,6 +3212,11 @@ public final class org/jetbrains/exposed/sql/statements/MergeStatement$ClauseCon
 
 public class org/jetbrains/exposed/sql/statements/MergeTableStatement : org/jetbrains/exposed/sql/statements/MergeStatement {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Op;)V
+	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
+}
+
+public class org/jetbrains/exposed/sql/statements/ReplaceSelectStatement : org/jetbrains/exposed/sql/statements/InsertSelectStatement {
+	public fun <init> (Ljava/util/List;Lorg/jetbrains/exposed/sql/AbstractQuery;)V
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 }
 
