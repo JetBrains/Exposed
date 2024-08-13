@@ -7,7 +7,6 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -123,21 +122,26 @@ class LongIdTableEntityTest : DatabaseTestsBase() {
             val cId = LongIdTables.Cities.insertAndGetId {
                 it[name] = "City A"
             }
-            LongIdTables.Towns.insert {
+            val tId = LongIdTables.Towns.insertAndGetId {
                 it[cityId] = cId.value
             }
 
-            // lazy loaded reference
+            // lazy loaded referencedOn
             val town1 = LongIdTables.Town.all().single()
             assertEquals(cId, town1.city.id)
 
-            // eager loaded reference
+            // eager loaded referencedOn
             val town1WithCity = LongIdTables.Town.all().with(LongIdTables.Town::city).single()
             assertEquals(cId, town1WithCity.city.id)
 
+            // lazy loaded referrersOn
             val city1 = LongIdTables.City.all().single()
             val towns = city1.towns
             assertEquals(cId, towns.first().city.id)
+
+            // eager loaded referrersOn
+            val city1WithTowns = LongIdTables.City.all().with(LongIdTables.City::towns).single()
+            assertEquals(tId, city1WithTowns.towns.first().id)
         }
     }
 }

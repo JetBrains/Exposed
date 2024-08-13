@@ -942,7 +942,10 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             val entities = getEntities(forUpdate, findQuery).distinct()
 
             entities.groupByReference(refColumn = refColumn).forEach { (id, values) ->
-                val parentEntityId: EntityID<*> = parentTable.selectAll().where { refColumn.referee as Column<SID> eq id }
+                val castReferee = refColumn.referee
+                    .takeUnless { it?.columnType is EntityIDColumnType<*> && id !is EntityID<*> }
+                    ?: (refColumn.referee?.columnType as EntityIDColumnType<*>).idColumn
+                val parentEntityId: EntityID<*> = parentTable.selectAll().where { castReferee as Column<SID> eq id }
                     .single()[parentTable.id]
 
                 cache.getOrPutReferrers(parentEntityId, refColumn) { SizedCollection(values) }.also {

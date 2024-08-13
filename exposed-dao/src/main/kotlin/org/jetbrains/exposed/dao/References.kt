@@ -257,6 +257,13 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
         refColumns.map { (child, parent) -> child to (parent.lookup() as EntityID<*>).value }
     }
 
+    fun Entity<*>.getRefereeId(refereeColumn: Column<*>, delegateRefColumn: Column<*>): Any {
+        val refereeValue = refereeColumn.lookup()
+        return refereeValue.takeUnless {
+            delegateRefColumn.columnType !is EntityIDColumnType<*> && it is EntityID<*>
+        } ?: (refereeValue as EntityID<*>).value
+    }
+
     val directRelations = filterRelationsForEntity(entity, relations)
     directRelations.forEach { prop ->
         when (val refObject = getReferenceObjectFromDelegatedProperty(entity, prop)) {
@@ -302,7 +309,8 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                 (refObject as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).allReferences.let { refColumns ->
                     val delegateRefColumn = refObject.reference
                     if (hasSingleReferenceWithReferee(refColumns)) {
-                        val refIds = this.map { it.run { delegateRefColumn.referee<Any>()!!.lookup() } }
+                        val castReferee = delegateRefColumn.referee<Any>()!!
+                        val refIds = this.map { entity -> entity.getRefereeId(castReferee, delegateRefColumn) }
                         refObject.factory.warmUpReferences(refIds, delegateRefColumn)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
@@ -326,7 +334,8 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                 (refObject.delegate as Referrers<ID, Entity<ID>, *, Entity<*>, Any>).allReferences.let { refColumns ->
                     val delegateRefColumn = refObject.delegate.reference
                     if (hasSingleReferenceWithReferee(refColumns)) {
-                        val refIds = this.map { it.run { delegateRefColumn.referee<Any>()!!.lookup() } }
+                        val castReferee = delegateRefColumn.referee<Any>()!!
+                        val refIds = this.map { entity -> entity.getRefereeId(castReferee, delegateRefColumn) }
                         refObject.delegate.factory.warmUpReferences(refIds, delegateRefColumn)
                     } else {
                         val refIds = this.map { it.getCompositeReferrerId(refColumns) }
