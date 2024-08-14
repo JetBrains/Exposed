@@ -417,6 +417,30 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun testFlushingUpdatedEntity() {
+        withTables(Towns) {
+            val id = CompositeID {
+                it[Towns.zipCode] = "1A2 3B4"
+                it[Towns.name] = "Town A"
+            }
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                Town.new(id) {
+                    population = 1000
+                }
+            }
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                val town = Town[id]
+                town.population = 2000
+            }
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                val town = Town[id]
+                assertEquals(2000, town.population)
+            }
+        }
+    }
+
+    @Test
     fun testInsertAndSelectReferencedEntities() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), tables = allTables) {
             val publisherA = Publisher.new {
