@@ -221,11 +221,13 @@ public final class org/jetbrains/exposed/sql/ArrayColumnType : org/jetbrains/exp
 
 public final class org/jetbrains/exposed/sql/AutoIncColumnType : org/jetbrains/exposed/sql/IColumnType {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Lorg/jetbrains/exposed/sql/Sequence;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAutoincSeq ()Ljava/lang/String;
 	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/ColumnType;
 	public final fun getNextValExpression ()Lorg/jetbrains/exposed/sql/NextVal;
 	public fun getNullable ()Z
+	public final fun getSequence ()Lorg/jetbrains/exposed/sql/Sequence;
 	public fun hashCode ()I
 	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
@@ -2132,6 +2134,7 @@ public final class org/jetbrains/exposed/sql/Sequence {
 	public final fun getIncrementBy ()Ljava/lang/Long;
 	public final fun getMaxValue ()Ljava/lang/Long;
 	public final fun getMinValue ()Ljava/lang/Long;
+	public final fun getName ()Ljava/lang/String;
 	public final fun getStartWith ()Ljava/lang/Long;
 }
 
@@ -2424,6 +2427,7 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public static synthetic fun array$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Lorg/jetbrains/exposed/sql/ColumnType;Ljava/lang/Integer;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun autoGenerate (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun autoIncrement (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun autoIncrement (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Sequence;)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun autoIncrement$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun autoinc (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun autoinc$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;

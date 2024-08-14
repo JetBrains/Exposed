@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
@@ -62,6 +63,48 @@ class SequencesTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun `testInsertWithCustomSequence`() {
+        val customSequence = Sequence(
+            name = "my_sequence",
+            startWith = 4,
+            incrementBy = 2,
+            minValue = 1,
+            maxValue = 100,
+            cycle = true,
+            cache = 20
+        )
+        val tester = object : Table("tester") {
+            val id = integer("id").autoIncrement(customSequence)
+            var name = varchar("name", 25)
+
+            override val primaryKey = PrimaryKey(id, name)
+        }
+        withDb {
+            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
+                try {
+                    SchemaUtils.create(tester)
+                    assertTrue(customSequence.exists())
+
+                    var testerId = tester.insert {
+                        it[name] = "Hichem"
+                    } get tester.id
+
+                    assertEquals(customSequence.startWith, testerId.toLong())
+
+                    testerId = tester.insert {
+                        it[name] = "Andrey"
+                    } get tester.id
+
+                    assertEquals(customSequence.startWith!! + customSequence.incrementBy!!, testerId.toLong())
+                } finally {
+                    SchemaUtils.drop(tester)
+                    assertFalse(customSequence.exists())
+                }
+            }
+        }
+    }
+
+    @Test
     fun `test insert int IdTable with sequences`() {
         withTables(DeveloperWithLongId) {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
@@ -88,7 +131,49 @@ class SequencesTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test insert LongIdTable with auth-increment with sequence`() {
+    fun `testInsertInIdTableWithCustomSequence`() {
+        val customSequence = Sequence(
+            name = "my_sequence",
+            startWith = 4,
+            incrementBy = 2,
+            minValue = 1,
+            maxValue = 100,
+            cycle = true,
+            cache = 20
+        )
+        val tester = object : IdTable<Long>("tester") {
+            override val id = long("id").autoIncrement(customSequence).entityId()
+            var name = varchar("name", 25)
+
+            override val primaryKey = PrimaryKey(id, name)
+        }
+        withDb {
+            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
+                try {
+                    SchemaUtils.create(tester)
+                    assertTrue(customSequence.exists())
+
+                    var testerId = tester.insert {
+                        it[name] = "Hichem"
+                    } get tester.id
+
+                    assertEquals(customSequence.startWith, testerId.value)
+
+                    testerId = tester.insert {
+                        it[name] = "Andrey"
+                    } get tester.id
+
+                    assertEquals(customSequence.startWith!! + customSequence.incrementBy!!, testerId.value)
+                } finally {
+                    SchemaUtils.drop(tester)
+                    assertFalse(customSequence.exists())
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test insert LongIdTable with auto-increment with sequence`() {
         withDb {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
@@ -147,6 +232,37 @@ class SequencesTests : DatabaseTestsBase() {
                     assertTrue(myseq.exists())
                 } finally {
                     SchemaUtils.dropSequence(myseq)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testExistingSequencesForAutoIncrementWithCustomSequence() {
+        val customSequence = Sequence(
+            name = "my_sequence",
+            startWith = 4,
+            incrementBy = 2,
+            minValue = 1,
+            maxValue = 100,
+            cycle = true,
+            cache = 20
+        )
+        val tableWithExplicitSequenceName = object : IdTable<Long>() {
+            override val id: Column<EntityID<Long>> = long("id").autoIncrement(customSequence).entityId()
+        }
+
+        withDb {
+            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
+                try {
+                    SchemaUtils.create(tableWithExplicitSequenceName)
+
+                    val sequences = currentDialectTest.sequences()
+
+                    assertTrue(sequences.isNotEmpty())
+                    assertTrue(sequences.any { it == customSequence.name.inProperCase() })
+                } finally {
+                    SchemaUtils.drop(tableWithExplicitSequenceName)
                 }
             }
         }

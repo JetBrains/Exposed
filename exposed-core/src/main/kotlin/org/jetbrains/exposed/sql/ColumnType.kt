@@ -136,9 +136,21 @@ class AutoIncColumnType<T>(
     private val fallbackSeqName: String
 ) : IColumnType<T> by delegate {
 
-    private val nextValValue = run {
-        val sequence = Sequence(_autoincSeq ?: fallbackSeqName)
-        if (delegate is IntegerColumnType) sequence.nextIntVal() else sequence.nextLongVal()
+    private var _sequence: Sequence? = null
+
+    /** The sequence used to generate new values for this auto-increment column. */
+    val sequence: Sequence?
+        get() = _sequence ?: autoincSeq?.let {
+            Sequence(
+                it,
+                startWith = 1,
+                minValue = 1,
+                maxValue = Long.MAX_VALUE
+            )
+        }
+
+    constructor(delegate: ColumnType<T>, sequence: Sequence) : this(delegate, sequence.name, sequence.name) {
+        _sequence = sequence
     }
 
     /** The name of the sequence used to generate new values for this auto-increment column. */
@@ -148,7 +160,9 @@ class AutoIncColumnType<T>(
 
     /** The SQL expression that advances the sequence of this auto-increment column. */
     val nextValExpression: NextVal<*>?
-        get() = nextValValue.takeIf { autoincSeq != null }
+        get() = autoincSeq?.let {
+            if (delegate is IntegerColumnType) sequence?.nextIntVal() else sequence?.nextLongVal()
+        }
 
     private fun resolveAutoIncType(columnType: IColumnType<*>): String = when {
         columnType is EntityIDColumnType<*> -> resolveAutoIncType(columnType.idColumn.columnType)
@@ -178,6 +192,7 @@ class AutoIncColumnType<T>(
             delegate != other.delegate -> false
             _autoincSeq != other._autoincSeq -> false
             fallbackSeqName != other.fallbackSeqName -> false
+            sequence != other.sequence -> false
             else -> true
         }
     }
@@ -186,6 +201,7 @@ class AutoIncColumnType<T>(
         var result = delegate.hashCode()
         result = 31 * result + (_autoincSeq?.hashCode() ?: 0)
         result = 31 * result + fallbackSeqName.hashCode()
+        result = 31 * result + (sequence?.hashCode() ?: 0)
         return result
     }
 }
@@ -265,7 +281,7 @@ interface ColumnTransformer<Unwrapped, Wrapped> {
     fun wrap(value: Unwrapped): Wrapped
 }
 
-fun <Unwrapped, Wrapped>columnTransformer(unwrap: (value: Wrapped) -> Unwrapped, wrap: (value: Unwrapped) -> Wrapped): ColumnTransformer<Unwrapped, Wrapped> {
+fun <Unwrapped, Wrapped> columnTransformer(unwrap: (value: Wrapped) -> Unwrapped, wrap: (value: Unwrapped) -> Wrapped): ColumnTransformer<Unwrapped, Wrapped> {
     return object : ColumnTransformer<Unwrapped, Wrapped> {
         override fun unwrap(value: Wrapped): Unwrapped = unwrap(value)
         override fun wrap(value: Unwrapped): Wrapped = wrap(value)

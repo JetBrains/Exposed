@@ -17,7 +17,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
  * @param cache Specifies how many sequence numbers are to be pre-allocated and stored in memory for faster access.
  */
 class Sequence(
-    private val name: String,
+    val name: String,
     val startWith: Long? = null,
     val incrementBy: Long? = null,
     val minValue: Long? = null,

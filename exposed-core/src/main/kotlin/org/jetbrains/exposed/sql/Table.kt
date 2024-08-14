@@ -924,6 +924,17 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Make @receiver column an auto-increment column to generate its values in a database.
      * **Note:** Only integer and long columns are supported (signed and unsigned types).
      * Some databases, like PostgreSQL, support auto-increment via sequences.
+     * In this case, a sequence should be provided using the [sequence] param.
+     *
+     * @param sequence a parameter to provide a sequence
+     */
+    fun <N : Any> Column<N>.autoIncrement(sequence: Sequence): Column<N> =
+        cloneWithAutoInc(sequence).also { replaceColumn(this, it) }
+
+    /**
+     * Make @receiver column an auto-increment column to generate its values in a database.
+     * **Note:** Only integer and long columns are supported (signed and unsigned types).
+     * Some databases, like PostgreSQL, support auto-increment via sequences.
      * In this case a name should be provided using the [idSeqName] param and Exposed will create a sequence.
      * If a sequence already exists in the database just use its name in [idSeqName].
      *
@@ -1571,6 +1582,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         else -> error("Unsupported column type for auto-increment $columnType")
     }
 
+    private fun <T> Column<T>.cloneWithAutoInc(sequence: Sequence): Column<T> = when (columnType) {
+        is AutoIncColumnType -> this
+        is ColumnType -> this.withColumnType(AutoIncColumnType(columnType, sequence))
+        else -> error("Unsupported column type for auto-increment $columnType")
+    }
+
     // DDL statements
 
     internal fun primaryKeyConstraint(): String? {
@@ -1636,16 +1653,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     private fun createAutoIncColumnSequence(): List<String> {
-        return autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
-            Sequence(
-                it,
-                startWith = 1,
-                minValue = 1,
-                maxValue = Long.MAX_VALUE
-            )
-        }
-            ?.createStatement()
-            .orEmpty()
+        return autoIncColumn?.autoIncColumnType?.sequence?.createStatement().orEmpty()
     }
 
     override fun modifyStatement(): List<String> =
@@ -1665,7 +1673,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             }
         }
 
-        val dropSequence = autoIncColumn?.autoIncColumnType?.autoincSeq?.let { Sequence(it).dropStatement() }.orEmpty()
+        val dropSequence = autoIncColumn?.autoIncColumnType?.sequence?.dropStatement().orEmpty()
 
         return listOf(dropTable) + dropSequence
     }

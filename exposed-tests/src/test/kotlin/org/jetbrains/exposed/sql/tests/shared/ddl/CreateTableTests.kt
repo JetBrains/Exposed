@@ -308,14 +308,7 @@ class CreateTableTests : DatabaseTestsBase() {
         withDb {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
-                    Sequence(
-                        it,
-                        startWith = 1,
-                        minValue = 1,
-                        maxValue = Long.MAX_VALUE
-                    ).createStatement().single()
-                },
+                child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -389,14 +382,7 @@ class CreateTableTests : DatabaseTestsBase() {
         withDb {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
-                    Sequence(
-                        it,
-                        startWith = 1,
-                        minValue = 1,
-                        maxValue = Long.MAX_VALUE
-                    ).createStatement().single()
-                },
+                child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -424,14 +410,7 @@ class CreateTableTests : DatabaseTestsBase() {
         withDb {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
-                    Sequence(
-                        it,
-                        startWith = 1,
-                        minValue = 1,
-                        maxValue = Long.MAX_VALUE
-                    ).createStatement().single()
-                },
+                child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -462,14 +441,7 @@ class CreateTableTests : DatabaseTestsBase() {
         withDb {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
-                    Sequence(
-                        it,
-                        startWith = 1,
-                        minValue = 1,
-                        maxValue = Long.MAX_VALUE
-                    ).createStatement().single()
-                },
+                child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -507,14 +479,7 @@ class CreateTableTests : DatabaseTestsBase() {
             val t = TransactionManager.current()
             val updateCascadePart = if (testDb != TestDB.ORACLE) " ON UPDATE CASCADE" else ""
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
-                    Sequence(
-                        it,
-                        startWith = 1,
-                        minValue = 1,
-                        maxValue = Long.MAX_VALUE
-                    ).createStatement().single()
-                },
+                child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
@@ -553,14 +518,7 @@ class CreateTableTests : DatabaseTestsBase() {
         withDb {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
-                child.autoIncColumn?.autoIncColumnType?.autoincSeq?.let {
-                    Sequence(
-                        it,
-                        startWith = 1,
-                        minValue = 1,
-                        maxValue = Long.MAX_VALUE
-                    ).createStatement().single()
-                },
+                child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${t.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
