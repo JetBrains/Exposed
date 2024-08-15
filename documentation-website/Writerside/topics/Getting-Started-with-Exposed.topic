@@ -3,6 +3,7 @@
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        id="Getting-Started-with-Exposed" title="Get started with Exposed, an ORM framework for Kotlin">
+    <show-structure for="chapter,procedure" depth="2"/>
     <tldr>
         <var name="example_name" value="get-started-with-exposed"/>
         <include from="lib.topic" element-id="code_example"/>

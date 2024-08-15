@@ -1,4 +1,6 @@
-# Table Definition
+<show-structure for="chapter,procedure" depth="2"/>
+
+# Defining Tables
 
 This page shows what table types Exposed supports and how to define and create these tables. It also contains tips on configuring 
 constraints, such as `PRIMARY KEY`, `DEFAULT`, and `INDEX`. All examples use the H2 database to generate SQL.

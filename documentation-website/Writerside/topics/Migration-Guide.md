@@ -1,6 +1,4 @@
-# Migration Guide
-
-## Migrating from 0.45.0 to 0.46.0
+# Migrating from 0.45.0 to 0.46.0
 
 While Exposed provides migration support in the code itself (by using the `@Deprecated` annotation and `ReplaceWith` quickfix),
 this document serves as a reference point for the migration steps necessary to switch to the new query DSL.

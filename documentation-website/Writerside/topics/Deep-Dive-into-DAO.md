@@ -1,6 +1,7 @@
+<show-structure for="chapter,procedure" depth="2"/>
+
 # Deep Dive into DAO
 
-## Overview
 The DAO (Data Access Object) API of Exposed, is similar to ORM frameworks like Hibernate with a Kotlin-specific API.  
 A DB table is represented by an `object` inherited from `org.jetbrains.exposed.sql.Table` like this:
 ```kotlin
@@ -181,7 +182,7 @@ val updatedMovie2 = StarWarsFilm.findSingleByAndUpdate(StarWarsFilms.name eq "Th
 movie.delete() 
 ```
 ## Referencing
-### many-to-one reference
+### Many-to-one reference
 Let's say you have this table:
 ```kotlin
 object Users : IntIdTable() {
@@ -299,7 +300,7 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     ...
 ```
 
-### many-to-many reference
+### Many-to-many reference
 In some cases, a many-to-many reference may be required.
 Let's assume you want to add a reference to the following Actors table to the StarWarsFilm class:
 ```kotlin
@@ -431,7 +432,9 @@ by using the respective overloads that accept an `IdTable` as an argument.
 These overloads will automatically resolve the foreign key constraint associated with the composite primary key.
 
 ### Eager Loading
-**Available since 0.13.1**.
+>This feature is available since version 0.13.1.
+{style="note"}
+
 References in Exposed are lazily loaded, meaning queries to fetch the data for the reference are made at the moment the reference is first utilised. For scenarios wherefore you know you will require references ahead of time, Exposed can eager load them at the time of the parent query, this is prevents the classic "N+1" problem as references can be aggregated and loaded in a single query.
 To eager load a reference you can call the "load" function and pass the DAO's reference as a KProperty:
 ```kotlin
@@ -445,12 +448,13 @@ Similarly, you can eagerly load references on Collections of DAO's such as Lists
 ```kotlin
 StarWarsFilm.all().with(StarWarsFilm::actors)
 ```
-NOTE: References that are eagerly loaded are stored inside the transaction cache;
-this means that they are not available in other transactions
-and thus must be loaded and referenced inside the same transaction.
-As of [0.35.1](https://github.com/JetBrains/Exposed/blob/master/docs/ChangeLog.md#0351:~:text=References%20can%20be%20stored%20within%20an%20Entity%20with%20enabled%20keepLoadedReferencesOutOfTransaction%20config%20parameter.%20It%20will%20allow%20getting%20referenced%20values%20outside%20the%20transaction%20block.),
-enabling `keepLoadedReferencesOutOfTransaction` in `DatabaseConfig`
-will allow getting referenced values outside the transaction block.
+>References that are eagerly loaded are stored inside the transaction cache;
+>this means that they are not available in other transactions
+>and thus must be loaded and referenced inside the same transaction.
+>As of [0.35.1](https://github.com/JetBrains/Exposed/blob/master/docs/ChangeLog.md#0351:~:text=References%20can%20be%20stored%20within%20an%20Entity%20with%20enabled%20keepLoadedReferencesOutOfTransaction%20config%20parameter.%20It%20will%20allow%20getting%20referenced%20values%20outside%20the%20transaction%20block.),
+>enabling `keepLoadedReferencesOutOfTransaction` in `DatabaseConfig`
+>will allow getting referenced values outside the transaction block.
+{style="note"}
 
 #### Eager loading for Text Fields
 Some database drivers do not load text content immediately (for performance and memory reasons) which means that you can obtain the column value only within the open transaction.

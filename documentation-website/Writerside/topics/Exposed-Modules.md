@@ -1,4 +1,6 @@
-# Exposed Modules
+<show-structure for="chapter,procedure" depth="2"/>
+
+# Modules
 
 ## Dependencies
 
@@ -158,7 +160,7 @@ Dependencies mapping listed below is similar (by functionality) to the previous 
 ### JDBC driver and logging
 
 You also need a JDBC driver for the database system you are using
-(see [Databases](Database-and-DataSource.md)) and a logger
+(see [Working with Databases](Working-with-Database.md)) and a logger
 for `addLogger(StdOutSqlLogger)`.
 Example (Gradle
 syntax):

@@ -1,6 +1,6 @@
-# Deep Dive into DSL
+<show-structure for="chapter,procedure" depth="2"/>
 
-## Overview
+# Deep Dive into DSL
 
 The DSL (Domain-Specific Language) API of Exposed is similar to actual SQL statements, but with the type safety that Kotlin offers.
 

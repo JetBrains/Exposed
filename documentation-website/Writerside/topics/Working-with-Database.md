@@ -1,42 +1,42 @@
-# Working with Database
+<show-structure for="chapter,procedure" depth="2"/>
+
+# Working with Databases
 
 In Exposed, the `Database` class represents a database instance, and encapsulates the necessary connection
 details and configuration required to interact with a specific database.
 
 ## Connecting to a Database
 
-To connect to a database using `Database`, you need to provide the appropriate JDBC driver and connection URL. Here's an example of how to establish a
-connection:
+Every database access using Exposed is started by obtaining a connection and creating a transaction.
+
+First of all, you have to tell Exposed how to connect to a database by using the `Database.connect` function.
+It won't create a real database connection but will only provide a descriptor for future usage.
+
+A real connection will be instantiated later by calling the `transaction` lambda
+(see [Transactions](Transactions.md) for more details).
+
+Use the following to get a Database instance by simply providing connection parameters:
 
 ```kotlin
 val db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 ```
 
-The `Database.connect` function tells Exposed _how_ to connect to a database, but won't _create_ a database connection. It only provides a
-descriptor for future usage. A connection will be created later by calling the `transaction` lambda (see [Transaction](Working-with-Transaction.md) for more
-details).
-
-<note>
-Starting from Exposed 0.10, executing this code more than once per database will create leaks in your application; hence, it is recommended to
-  store it for later use.
-</note>
-
-Creating a database only when it is accessed for the first time can be done like this:
-
-```kotlin
+<note>Executing this code more than once per database will create leaks in your application, hence it is recommended to store it for later use:
+<code-block lang="kotlin">
 object DbSettings {
-    val db by lazy {
-        Database.connect(/* setup connection */)
-    }
+   val db by lazy { 
+       Database.connect(/* setup connection */)
+   }
 }
-```
+</code-block>
+</note>
 
 ### H2
 
 In order to use H2, you need to add the H2 driver dependency:
 
 ```kotlin
-implementation("com.h2database:h2:2.1.214")
+implementation("com.h2database:h2:2.2.224")
 ```
 
 Then connect to a database:
@@ -58,12 +58,29 @@ option:
 Database.connect("jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;", "org.h2.Driver")
 ```
 
-### MariaDB/MySQL
+### MariaDB
 
 Add dependency:
 
 ```kotlin
-implementation("mysql:mysql-connector-java:8.0.2")
+implementation("org.mariadb.jdbc:mariadb-java-client:3.3.1")
+```
+Connect to database:
+
+```kotlin
+Database.connect("jdbc:mariadb://localhost:3306/test",
+    driver = "org.mariadb.jdbc.Driver",
+    user = "root",
+    password = "your_pwd"
+)
+```
+
+### MySQL
+
+Add dependency:
+
+```kotlin
+implementation("mysql:mysql-connector-java:8.0.33")
 ```
 
 Connect to database:
@@ -101,7 +118,7 @@ Database.connect(
 Add dependency:
 
 ```kotlin
-implementation("org.postgresql:postgresql:42.2.2")  
+implementation("org.postgresql:postgresql:42.7.1")  
 ```
 
 Connect to database:
@@ -120,7 +137,7 @@ Database.connect(
 Add dependency:
 
 ```kotlin
-implementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", "0.8.3")  
+implementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", "0.8.9")  
 ```
 
 Connect to database:
@@ -139,7 +156,7 @@ Database.connect(
 Add dependency:
 
 ```kotlin
-implementation("com.microsoft.sqlserver:mssql-jdbc:6.4.0.jre7")  
+implementation("com.microsoft.sqlserver:mssql-jdbc:9.4.1.jre8")
 ```
 
 Connect to database:
@@ -158,7 +175,7 @@ Database.connect(
 Add the dependency:
 
 ```kotlin
-implementation("org.xerial:sqlite-jdbc:3.30.1")  
+implementation("org.xerial:sqlite-jdbc:3.44.1.0")
 ```
 
 Connect to database:

@@ -15,12 +15,12 @@
 
         <spotlight>
             <a href="Getting-Started-with-Exposed.topic" type="learn"
-               summary="Start exploring Exposed step-by-step by building our sample project from scratch">
-                Getting Started with Exposed
+               summary="Learn how to create and query tables in Kotlin with Exposed DSL API">
+                Get Started with Exposed
             </a>
             <a href="https://jetbrains.github.io/Exposed/api/index.html" type="server"
-               summary="API Documentation">
-                API
+               summary="External API Documentation">
+                API Reference
             </a>
         </spotlight>
 
@@ -30,11 +30,9 @@
                summary="Learn how to configure Exposed in the existing project using Gradle or Maven build systems">
                 Adding Dependencies
             </a>
-            <a href="Table-Definition.md" summary="Start creating your first tables and get familiar with the column types">
-                Tables and Columns ABC
-            </a>
+            <a href="Table-Definition.md" summary="Start creating your first tables and get familiar with the column types"/>
             <a href="Deep-Dive-into-DSL.md" summary="Learn how to write database queries using Exposed query DSL">
-                Querying Database
+                Querying a Database
             </a>
             <a href="Deep-Dive-into-DAO.md"
                summary="Learn how to perform basic CRUD (Create, Read, Update, Delete) operations using entities mapping">
