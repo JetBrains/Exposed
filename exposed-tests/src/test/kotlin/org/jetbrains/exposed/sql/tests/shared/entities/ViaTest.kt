@@ -1,8 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.dao.id.CompositeID
-import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -291,46 +289,74 @@ class ViaTests : DatabaseTestsBase() {
     object Projects : IntIdTable("projects") {
         val name = varchar("name", 50)
     }
-
     class Project(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Project>(Projects)
 
         var name by Projects.name
-        val tasks by Task via ProjectTasks
+        var tasks by TaskWithApproval via ProjectTasks
     }
 
-    object ProjectTasks : CompositeIdTable("project_tasks") {
+    object ProjectTasks : Table("project_tasks") {
         val project = reference("project", Projects, onDelete = ReferenceOption.CASCADE)
         val task = reference("task", Tasks, onDelete = ReferenceOption.CASCADE)
         val approved = bool("approved")
+        val sprint = integer("sprint")
 
         override val primaryKey = PrimaryKey(project, task)
-
-        init {
-            addIdColumn(project)
-            addIdColumn(task)
-        }
-    }
-
-    class ProjectTask(id: EntityID<CompositeID>) : CompositeEntity(id) {
-        companion object : CompositeEntityClass<ProjectTask>(ProjectTasks)
-
-        var approved by ProjectTasks.approved
     }
 
     object Tasks : IntIdTable("tasks") {
         val title = varchar("title", 64)
     }
-
     class Task(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Task>(Tasks)
 
         var title by Tasks.title
-        val approved by ProjectTasks.approved
+        var projects by ProjectWithApproval via ProjectTasks
+    }
+
+    class ProjectWithApproval(
+        val project: Project,
+        val approved: Boolean,
+        val sprint: Int
+    ) : InnerTableLinkEntity<Int>(project) {
+        companion object : InnerTableLinkEntityClass<Int, ProjectWithApproval>(Projects) {
+            override fun createInstance(entityId: EntityID<Int>, row: ResultRow?): ProjectWithApproval {
+                return row?.let {
+                    ProjectWithApproval(Project.wrapRow(it), it[ProjectTasks.approved], it[ProjectTasks.sprint])
+                } ?: ProjectWithApproval(Project(entityId), false, 0)
+            }
+        }
+
+        override fun getInnerTableLinkValue(column: Column<*>): Any = when (column) {
+            ProjectTasks.approved -> approved
+            ProjectTasks.sprint -> sprint
+            else -> error("Column does not exist in intermediate table")
+        }
+    }
+
+    class TaskWithApproval(
+        val task: Task,
+        val approved: Boolean,
+        val sprint: Int
+    ) : InnerTableLinkEntity<Int>(task) {
+        companion object : InnerTableLinkEntityClass<Int, TaskWithApproval>(Tasks) {
+            override fun createInstance(entityId: EntityID<Int>, row: ResultRow?): TaskWithApproval {
+                return row?.let {
+                    TaskWithApproval(Task.wrapRow(it), it[ProjectTasks.approved], it[ProjectTasks.sprint])
+                } ?: TaskWithApproval(Task(entityId), false, 0)
+            }
+        }
+
+        override fun getInnerTableLinkValue(column: Column<*>): Any = when (column) {
+            ProjectTasks.approved -> approved
+            ProjectTasks.sprint -> sprint
+            else -> error("Column does not exist in intermediate table")
+        }
     }
 
     @Test
-    fun testAdditionalLinkDataUsingCompositeIdInnerTable() {
+    fun testAdditionalLinkDataUsingInnerTableLinkEntities() {
         withTables(Projects, Tasks, ProjectTasks) {
             val p1 = Project.new { name = "Project 1" }
             val p2 = Project.new { name = "Project 2" }
@@ -338,39 +364,44 @@ class ViaTests : DatabaseTestsBase() {
             val t2 = Task.new { title = "Task 2" }
             val t3 = Task.new { title = "Task 3" }
 
-            ProjectTask.new(
-                CompositeID {
-                    it[ProjectTasks.task] = t1.id
-                    it[ProjectTasks.project] = p1.id
-                }
-            ) { approved = true }
-            ProjectTask.new(
-                CompositeID {
-                    it[ProjectTasks.task] = t2.id
-                    it[ProjectTasks.project] = p2.id
-                }
-            ) { approved = false }
-            ProjectTask.new(
-                CompositeID {
-                    it[ProjectTasks.task] = t3.id
-                    it[ProjectTasks.project] = p2.id
-                }
-            ) { approved = false }
+            p1.tasks = SizedCollection(TaskWithApproval(t1, true, 1))
+            p2.tasks = SizedCollection(TaskWithApproval(t2, true, 2), TaskWithApproval(t3, false, 3))
+
+            assertFalse(p1.tasks.single().approved)
+            p1.tasks = SizedCollection(TaskWithApproval(t1, true, 1))
+            assertTrue(p1.tasks.single().approved)
 
             commit()
 
+            // test that all child entities set on the parent can be loaded by parent
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 Project.all().with(Project::tasks)
                 val cache = TransactionManager.current().entityCache
 
-                val p1Tasks = cache.getReferrers<Task>(p1.id, ProjectTasks.project)?.toList().orEmpty()
-                assertEqualLists(p1Tasks.map { it.id }, listOf(t1.id))
-                assertTrue { p1Tasks.all { task -> task.approved } }
+                val p1Task = cache.getReferrers<TaskWithApproval>(p1.id, ProjectTasks.project)?.single()
+                assertEquals(t1.id, p1Task?.id)
+                assertEquals(t1.id, p1Task?.task?.id)
+                assertEquals(true, p1Task?.approved)
+                assertEquals(1, p1Task?.sprint)
 
-                val p2Tasks = cache.getReferrers<Task>(p2.id, ProjectTasks.project)?.toList().orEmpty()
+                val p2Tasks = cache.getReferrers<TaskWithApproval>(p2.id, ProjectTasks.project)?.toList().orEmpty()
                 assertEqualLists(p2Tasks.map { it.id }, listOf(t2.id, t3.id))
-                assertFalse { p1Tasks.all { task -> !task.approved } }
+                assertEqualLists(p2Tasks.map { it.approved }, listOf(true, false))
+                assertEqualLists(p2Tasks.map { it.sprint }, listOf(2, 3))
+            }
+
+            // test that all parent entities can then be found by the child entity without setting again
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                maxAttempts = 1
+                Task.all().with(Task::projects)
+                val cache = TransactionManager.current().entityCache
+
+                val t1Project = cache.getReferrers<ProjectWithApproval>(t1.id, ProjectTasks.task)?.single()
+                assertEquals(p1.id, t1Project?.id)
+                assertEquals(p1.id, t1Project?.project?.id)
+                assertEquals(true, t1Project?.approved)
+                assertEquals(1, t1Project?.sprint)
             }
         }
     }

@@ -23,6 +23,7 @@ class EntityCache(private val transaction: Transaction) {
     internal val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     private val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     internal val referrers = HashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
+    private val innerTableLinks by lazy { LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>() }
 
     /**
      * The amount of entities to store in this [EntityCache] per [Entity] class.
@@ -55,7 +56,11 @@ class EntityCache(private val transaction: Transaction) {
             }
         }
 
-    private fun getMap(f: EntityClass<*, *>): MutableMap<Any, Entity<*>> = getMap(f.table)
+    private fun getMap(f: EntityClass<*, *>): MutableMap<Any, Entity<*>> = if (f is InnerTableLinkEntityClass<*, *>) {
+        innerTableLinks.getOrPut(f.table) { LimitedHashMap() }
+    } else {
+        getMap(f.table)
+    }
 
     private fun getMap(table: IdTable<*>): MutableMap<Any, Entity<*>> = data.getOrPut(table) {
         LimitedHashMap()
@@ -293,6 +298,7 @@ class EntityCache(private val transaction: Transaction) {
         inserts.clear()
         updates.clear()
         clearReferrersCache()
+        innerTableLinks.clear()
     }
 
     /** Clears this [EntityCache] of stored data that maps cached parent entities to their referencing child entities. */

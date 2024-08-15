@@ -321,13 +321,13 @@ class User(id: EntityID<Int>) : IntEntity(id) {
 
 ### Many-to-many reference
 In some cases, a many-to-many reference may be required.
-Let's assume you want to add a reference to the following Actors table to the StarWarsFilm class:
+Let's assume you want to add a reference to the following `Actors` table to the `StarWarsFilm` class:
 ```kotlin
-object Actors: IntIdTable() {
+object Actors : IntIdTable() {
     val firstname = varchar("firstname", 50)
     val lastname = varchar("lastname", 50)
 }
-class Actor(id: EntityID<Int>): IntEntity(id) {
+class Actor(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<Actor>(Actors)
     var firstname by Actors.firstname
     var lastname by Actors.lastname
@@ -345,21 +345,119 @@ Add a reference to `StarWarsFilm`:
 ```kotlin
 class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
-    ...
+    // ...
     var actors by Actor via StarWarsFilmActors
-    ...
+    // ...
 }
 ```
-Note: You can set up IDs manually inside a transaction like this:
+Note: You can set up IDs manually inside a transaction and set all referenced actors like this:
 ```kotlin
 transaction {
-    // only works with UUIDTable and UUIDEntity
-    StarWarsFilm.new (UUID.randomUUID()){
-        ...
-        actors = SizedCollection(listOf(actor))
+    StarWarsFilm.new(421) {
+        // ...
+        actors = SizedCollection(actor1, actor2)
     }
 }
 ```
+Now you can access all actors (and their fields) for a `StarWarsFilm` object, `film`, in the same way you would get any other field:
+```kotlin
+film.actors.first() // returns an Actor object
+film.actors.map { it.lastname } // returns a List<String>
+```
+If the intermediate table is defined with more than just the two reference columns, these additional columns can be accessed in two ways, both detailed below.
+
+Given a `StarWarsFilmActors` table with the extra column `roleName`:
+```kotlin
+object StarWarsFilmActors : Table() {
+    val starWarsFilm = reference("starWarsFilm", StarWarsFilms)
+    val actor = reference("actor", Actors)
+    val roleName = varchar("role_name", 64)
+    override val primaryKey = PrimaryKey(starWarsFilm, actor)
+}
+```
+**The first approach** assumes that the value stored in this extra column will be accessed from the `Actor` class:
+```kotlin
+class Actor(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<Actor>(Actors)
+    var firstname by Actors.firstname
+    var lastname by Actors.lastname
+    var roleName by StarWarsFilmActors.roleName
+}
+```
+This extra value can then be set, for example, when a new `Actor` is created or when it is provided to the parent entity's field,
+and accessed like any other field:
+```kotlin
+val actor1 = Actor.new {
+    firstname = "Harrison"
+    lastname = "Ford"
+    roleName = "Han Solo"
+}
+// or
+film.actors = SizedCollection(actor1, actor2.apply { roleName = "Ben Solo" })
+
+StarWarsFilm.all().first.actors.map { it.roleName }
+```
+**The second approach** assumes that the `Actor` class should not be given an extra field and that the extra value stored should
+be accessed through an object that holds both the child entity and the additional data.
+
+To both allow this and still take advantage of the underlying DAO cache, a new entity class has to be defined using `InnerTableLinkEntity`,
+which details how to get and set the additional column values from the intermediate table through two overrides:
+```kotlin
+class ActorWithRole(
+    val actor: Actor,
+    val roleName: String
+) : InnerTableLinkEntity<Int>(actor) {
+    override fun getInnerTableLinkValue(column: Column<*>): Any = when (column) {
+        StarWarsFilmActors.roleName -> roleName
+        else -> error("Column does not exist in intermediate table")
+    }
+        
+    companion object : InnerTableLinkEntityClass<Int, ActorWithRole>(Actors) {
+        override fun createInstance(entityId: EntityID<Int>, row: ResultRow?) = row?.let {
+            ActorWithRole(Actor.wrapRow(it), it[StarWarsFilmActors.roleName])
+        } ?: ActorWithRole(Actor(entityId), "")
+    }
+}
+```
+The original entity class reference now looks like this:
+```kotlin
+class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
+    // ...
+    var actors by ActorWithRole via StarWarsFilmActors
+}
+class Actor(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<Actor>(Actors)
+    var firstname by Actors.firstname
+    var lastname by Actors.lastname
+}
+```
+This extra value can then be set by providing a new `ActorWithRole` instance to the parent entity field, and accessed as before:
+```kotlin
+film.actors = SizedCollection(
+    ActorWithRole(actor1, "Han Solo"),
+    ActorWithRole(actor2, "Ben Solo")
+)
+
+StarWarsFilm.all().first.actors.map { it.roleName }
+```
+<note>
+If only some additional columns in the intermediate table should be used during batch insert, these can be specified by using
+<code>via()</code> with an argument provided to <code>additionalColumns</code>.
+<code-block>
+class StarWarsFilm(id: EntityID&lt;Int&gt;) : IntEntity(id) {
+    companion object : IntEntityClass&lt;StarWarsFilm&gt;(StarWarsFilms)
+    // ...
+    var actors by ActorWithRole.via(
+        sourceColumn = StarWarsFilmActors.starWarsFilm,
+        targetColumn = StarWarsFilmActors.actor,
+        additionalColumns = listOf(StarWarsFilmActors.roleName)
+    )
+}
+</code-block>
+Setting this parameter to an <code>emptyList()</code> means all additional columns will be ignored.
+</note>
+
 ### Parent-Child reference
 Parent-child reference is very similar to many-to-many version, but an intermediate table contains both references to the same table.
 Let's assume you want to build a hierarchical entity which could have parents and children. Our tables and an entity mapping will look like

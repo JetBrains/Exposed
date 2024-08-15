@@ -78,6 +78,16 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
 
     private val referenceCache by lazy { HashMap<Column<*>, Any?>() }
 
+    private val writeInnerTableLinkValues by lazy { HashMap<Column<*>, Any?>() }
+
+    /**
+     * Returns the initial column-value mapping for an entity involved in an [InnerTableLink] relation
+     * before being flushed and inserted into the database.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
+     */
+    open fun getInnerTableLinkValue(column: Column<*>): Any? = writeInnerTableLinkValues[column]
+
     internal fun isNewEntity(): Boolean {
         val cache = TransactionManager.current().entityCache
         return cache.inserts[klass.table]?.contains(this) ?: false
@@ -273,6 +283,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     @Suppress("UNCHECKED_CAST", "USELESS_CAST")
     fun <T> Column<T>.lookup(): T = when {
         writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
+        writeInnerTableLinkValues.containsKey(this) -> getInnerTableLinkValue(this) as T
         id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T
         columnType.nullable -> readValues[this]
         else -> readValues[this]!!
@@ -280,6 +291,10 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
 
     operator fun <T> Column<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
         klass.invalidateEntityInCache(o)
+        if (this !in klass.table.columns) {
+            writeInnerTableLinkValues[this] = value
+            return
+        }
         val currentValue = _readValues?.getOrNull(this)
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
             val entityCache = TransactionManager.current().entityCache
@@ -337,14 +352,19 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
      *
      * @param sourceColumn The intermediate table's reference column for the child entity class.
      * @param targetColumn The intermediate table's reference column for the parent entity class.
+     * @param additionalColumns Any additional columns from the intermediate table that should be included when inserting.
+     * If left `null`, all columns additional to the [sourceColumn] and [targetColumn] will be included in the insert
+     * statement and will require a value if defaults are not defined. Provide an empty list as an argument if all
+     * additional columns should be ignored.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.NodesTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.Node
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.NodeToNodes
      */
     fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(
         sourceColumn: Column<EntityID<ID>>,
-        targetColumn: Column<EntityID<TID>>
-    ) = InnerTableLink(sourceColumn.table, this@Entity.id.table, this@via, sourceColumn, targetColumn)
+        targetColumn: Column<EntityID<TID>>,
+        additionalColumns: List<Column<*>>? = null
+    ) = InnerTableLink(sourceColumn.table, this@Entity.id.table, this@via, sourceColumn, targetColumn, additionalColumns)
 
     /**
      * Deletes this [Entity] instance, both from the cache and from the database.

@@ -20,6 +20,8 @@ import kotlin.reflect.KProperty
  * this will be inferred from the provided intermediate [table] columns.
  * @param _targetColumn The intermediate table's reference column for the parent entity class. If left `null`,
  * this will be inferred from the provided intermediate [table] columns.
+ * @param additionalColumns Any additional columns from the intermediate table that should be included when inserting.
+ * If left `null`, these will be inferred from the provided intermediate [table] columns.
  */
 @Suppress("UNCHECKED_CAST")
 class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparable<ID>, Target : Entity<ID>>(
@@ -28,6 +30,7 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
     val target: EntityClass<ID, Target>,
     _sourceColumn: Column<EntityID<SID>>? = null,
     _targetColumn: Column<EntityID<ID>>? = null,
+    additionalColumns: List<Column<*>>? = null,
 ) : ReadWriteProperty<Source, SizedIterable<Target>> {
     /** The list of columns and their [SortOrder] for ordering referred entities in many-to-many relationship. */
     private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
@@ -46,6 +49,11 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
             requireNotNull(_targetColumn) { "Both source and target columns should be specified" }
             require(_sourceColumn.referee?.table == sourceTable) {
                 "Column $_sourceColumn point to wrong table, expected ${sourceTable.tableName}"
+            }
+        }
+        additionalColumns?.let {
+            require(it.all { column -> column.table == table }) {
+                "All additional columns should be from the same intermediate table ${table.tableName}"
             }
         }
     }
@@ -69,6 +77,9 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
 
         columns to entityTables
     }
+
+    private val additionalColumns = additionalColumns
+        ?: (table.columns - sourceColumn - targetColumn).filter { !it.columnType.isAutoInc }
 
     override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
         if (o.id._value == null && !o.isNewEntity()) return emptySized()
@@ -110,11 +121,17 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         entityCache.referrers[sourceColumn]?.remove(o.id)
 
         val targetIds = value.map { it.id }
+        val targetValues = value.map { target ->
+            target.id to additionalColumns.associateWith { target.getInnerTableLinkValue(it) }
+        }
         executeAsPartOfEntityLifecycle {
             table.deleteWhere { (sourceColumn eq o.id) and (targetColumn notInList targetIds) }
-            table.batchInsert(targetIds.filter { !existingIds.contains(it) }, shouldReturnGeneratedValues = false) { targetId ->
+            table.batchInsert(targetValues.filter { !existingIds.contains(it.first) }, shouldReturnGeneratedValues = false) { (targetId, additionalValues) ->
                 this[sourceColumn] = o.id
                 this[targetColumn] = targetId
+                additionalValues.forEach { (column, value) ->
+                    this[column as Column<Any?>] = value
+                }
             }
         }
 
@@ -122,7 +139,9 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         tx.registerChange(o.klass, o.id, EntityChangeType.Updated)
 
         // linked entities updated
-        val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
+        val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.let {
+            (it as? InnerTableLinkEntity<ID>)?.wrapped?.klass ?: it.klass
+        }
         if (targetClass != null) {
             existingIds.plus(targetIds).forEach {
                 tx.registerChange(targetClass, it, EntityChangeType.Updated)
@@ -140,4 +159,52 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
 
     /** Modifies this reference to sort entities by a column specified in [expression] using ascending order. **/
     infix fun orderBy(expression: Expression<*>) = orderBy(listOf(expression to SortOrder.ASC))
+}
+
+/**
+ * Base class for an [Entity] instance identified by a [wrapped] entity comprised of any ID value.
+ *
+ * Instances of this base class should be used when needing to represent referenced entities in a many-to-many relation
+ * from fields defined using `via`, which require additional columns in the intermediate table. These additional
+ * columns should be added as constructor properties and the property-column mapping should be defined by
+ * [getInnerTableLinkValue].
+ *
+ * @param WID ID type of the [wrapped] entity instance.
+ * @property wrapped The referenced (parent) entity whose unique ID value identifies this [InnerTableLinkEntity] instance.
+ * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
+ */
+abstract class InnerTableLinkEntity<WID : Comparable<WID>>(val wrapped: Entity<WID>) : Entity<WID>(wrapped.id) {
+    /**
+     * Returns the initial column-property mapping for an [InnerTableLinkEntity] instance
+     * before being flushed and inserted into the database.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
+     */
+    abstract override fun getInnerTableLinkValue(column: Column<*>): Any?
+}
+
+/**
+ * Base class representing the [EntityClass] that manages [InnerTableLinkEntity] instances and
+ * maintains their relation to the provided [table] of the wrapped entity.
+ *
+ * This should be used, as a companion object to [InnerTableLinkEntity], when needing to represent referenced entities
+ * in a many-to-many relation from fields defined using `via`, which require additional columns in the intermediate table.
+ * These additional columns will be retrieved as part of a queries [ResultRow] and the column-property mapping to create
+ * new instances should be defined by [createInstance].
+ *
+ * @param WID ID type of the wrapped entity instance.
+ * @param E The [InnerTableLinkEntity] type that is managed by this class.
+ * @param [table] The [IdTable] object that stores rows mapped to the wrapped entity of this class.
+ * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
+ */
+abstract class InnerTableLinkEntityClass<WID : Comparable<WID>, out E : InnerTableLinkEntity<WID>>(
+    table: IdTable<WID>
+) : EntityClass<WID, E>(table, null, null) {
+    /**
+     * Creates a new [InnerTableLinkEntity] instance by using the provided [row] to both create the wrapped entity
+     * and any additional columns.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
+     */
+    abstract override fun createInstance(entityId: EntityID<WID>, row: ResultRow?): E
 }

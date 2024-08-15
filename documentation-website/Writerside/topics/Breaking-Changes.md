@@ -27,6 +27,22 @@
 * The transformation of a nullable column (`Column<Unwrapped?>.transform()`) requires handling null values.
   This enables conversions from `null` to a non-nullable value, and vice versa.
 * In H2 the definition of json column with default value changed from `myColumn JSON DEFAULT '{"key": "value"}'` to `myColumn JSON DEFAULT JSON '{"key": "value"}'`
+* Additional columns from intermediate tables (defined for use with DAO `via()` for many-to-many relations) are no longer ignored on batch insert of references.
+    These columns are now included in the generated SQL and a value will be required when setting references, unless column defaults are defined.
+
+To continue to ignore these columns, use the non-infix version of `via()` and provide an empty list to `additionalColumns` (or a list of specific columns to include):
+```kotlin
+// given an intermediate table StarWarsFilmActors with extra columns that should be ignored
+class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
+    // ...
+    var actors by Actor.via(
+        sourceColumn = StarWarsFilmActors.starWarsFilm,
+        targetColumn = StarWarsFilmActors.actor,
+        additionalColumns = emptyList()
+    )
+}
+```
 
 ## 0.54.0
 
