@@ -23,7 +23,7 @@ class EntityCache(private val transaction: Transaction) {
     internal val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     private val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     internal val referrers = HashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
-    private val innerTableLinks by lazy { LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>() }
+    internal val innerTableLinks by lazy { LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>() }
 
     /**
      * The amount of entities to store in this [EntityCache] per [Entity] class.

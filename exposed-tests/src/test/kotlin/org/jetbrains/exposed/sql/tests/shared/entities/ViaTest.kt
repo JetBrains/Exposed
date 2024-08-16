@@ -10,6 +10,8 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertFalse
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.junit.Test
@@ -364,7 +366,7 @@ class ViaTests : DatabaseTestsBase() {
             val t2 = Task.new { title = "Task 2" }
             val t3 = Task.new { title = "Task 3" }
 
-            p1.tasks = SizedCollection(TaskWithApproval(t1, true, 1))
+            p1.tasks = SizedCollection(TaskWithApproval(t1, false, 1))
             p2.tasks = SizedCollection(TaskWithApproval(t2, true, 2), TaskWithApproval(t3, false, 3))
 
             assertFalse(p1.tasks.single().approved)

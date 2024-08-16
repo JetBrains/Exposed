@@ -78,16 +78,6 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
 
     private val referenceCache by lazy { HashMap<Column<*>, Any?>() }
 
-    private val writeInnerTableLinkValues by lazy { HashMap<Column<*>, Any?>() }
-
-    /**
-     * Returns the initial column-value mapping for an entity involved in an [InnerTableLink] relation
-     * before being flushed and inserted into the database.
-     *
-     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
-     */
-    open fun getInnerTableLinkValue(column: Column<*>): Any? = writeInnerTableLinkValues[column]
-
     internal fun isNewEntity(): Boolean {
         val cache = TransactionManager.current().entityCache
         return cache.inserts[klass.table]?.contains(this) ?: false
@@ -283,7 +273,6 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     @Suppress("UNCHECKED_CAST", "USELESS_CAST")
     fun <T> Column<T>.lookup(): T = when {
         writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
-        writeInnerTableLinkValues.containsKey(this) -> getInnerTableLinkValue(this) as T
         id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T
         columnType.nullable -> readValues[this]
         else -> readValues[this]!!
@@ -291,10 +280,6 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
 
     operator fun <T> Column<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
         klass.invalidateEntityInCache(o)
-        if (this !in klass.table.columns) {
-            writeInnerTableLinkValues[this] = value
-            return
-        }
         val currentValue = _readValues?.getOrNull(this)
         if (writeValues.containsKey(this as Column<out Any?>) || currentValue != value) {
             val entityCache = TransactionManager.current().entityCache

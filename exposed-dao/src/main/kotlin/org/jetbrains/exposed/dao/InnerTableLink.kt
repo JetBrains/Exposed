@@ -78,8 +78,10 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         columns to entityTables
     }
 
-    private val additionalColumns = additionalColumns
-        ?: (table.columns - sourceColumn - targetColumn).filter { !it.columnType.isAutoInc }
+    private val additionalColumns = (additionalColumns
+        ?: (table.columns - sourceColumn - targetColumn).filter { !it.columnType.isAutoInc })
+        .takeIf { it.isEmpty() || target is InnerTableLinkEntityClass<ID, *> }
+        ?: error("Target entity must extend InnerTableLinkEntity to properly store and cache additional column data")
 
     override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
         if (o.id._value == null && !o.isNewEntity()) return emptySized()
@@ -117,16 +119,33 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         val entityCache = tx.entityCache
         entityCache.flush()
         val oldValue = getValue(o, unused)
-        val existingIds = oldValue.map { it.id }.toSet()
+        val existingValues = oldValue.mapIdToAdditionalValues()
+        val existingIds = existingValues.keys
+        val additionalColumnsExist = additionalColumns.isNotEmpty()
+        if (additionalColumnsExist) {
+            entityCache.innerTableLinks[target.table]?.remove(o.id.value)
+        }
         entityCache.referrers[sourceColumn]?.remove(o.id)
 
-        val targetIds = value.map { it.id }
-        val targetValues = value.map { target ->
-            target.id to additionalColumns.associateWith { target.getInnerTableLinkValue(it) }
-        }
+        val targetValues = value.mapIdToAdditionalValues()
+        val targetIds = targetValues.keys
         executeAsPartOfEntityLifecycle {
-            table.deleteWhere { (sourceColumn eq o.id) and (targetColumn notInList targetIds) }
-            table.batchInsert(targetValues.filter { !existingIds.contains(it.first) }, shouldReturnGeneratedValues = false) { (targetId, additionalValues) ->
+            val deleteCondition = if (additionalColumnsExist) {
+                val targetAdditionalValues = targetValues.map { it.value.values.toList() + it.key }
+                (sourceColumn eq o.id) and (additionalColumns + targetColumn notInList targetAdditionalValues)
+            } else {
+                (sourceColumn eq o.id) and (targetColumn notInList targetIds)
+            }
+            val newTargets = targetValues.filter { (targetId, additionalValues) ->
+                if (additionalColumnsExist) {
+                    targetId !in existingIds ||
+                        existingValues[targetId]?.entries?.containsAll(additionalValues.entries) == false
+                } else {
+                    targetId !in existingIds
+                }
+            }
+            table.deleteWhere { deleteCondition }
+            table.batchInsert(newTargets.entries, shouldReturnGeneratedValues = false) { (targetId, additionalValues) ->
                 this[sourceColumn] = o.id
                 this[targetColumn] = targetId
                 additionalValues.forEach { (column, value) ->
@@ -146,6 +165,12 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
             existingIds.plus(targetIds).forEach {
                 tx.registerChange(targetClass, it, EntityChangeType.Updated)
             }
+        }
+    }
+
+    private fun SizedIterable<Target>.mapIdToAdditionalValues(): Map<EntityID<ID>, Map<Column<*>, Any?>> {
+        return associate { target ->
+            target.id to additionalColumns.associateWith { (target as InnerTableLinkEntity<ID>).getInnerTableLinkValue(it) }
         }
     }
 
@@ -180,7 +205,7 @@ abstract class InnerTableLinkEntity<WID : Comparable<WID>>(val wrapped: Entity<W
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
      */
-    abstract override fun getInnerTableLinkValue(column: Column<*>): Any?
+    abstract fun getInnerTableLinkValue(column: Column<*>): Any?
 }
 
 /**

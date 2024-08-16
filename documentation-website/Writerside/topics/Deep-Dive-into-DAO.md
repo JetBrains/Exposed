@@ -321,7 +321,7 @@ class User(id: EntityID<Int>) : IntEntity(id) {
 
 ### Many-to-many reference
 In some cases, a many-to-many reference may be required.
-Let's assume you want to add a reference to the following `Actors` table to the `StarWarsFilm` class:
+Assuming that you want to add a reference to the following `Actors` table to the previous `StarWarsFilm` class:
 ```kotlin
 object Actors : IntIdTable() {
     val firstname = varchar("firstname", 50)
@@ -364,7 +364,8 @@ Now you can access all actors (and their fields) for a `StarWarsFilm` object, `f
 film.actors.first() // returns an Actor object
 film.actors.map { it.lastname } // returns a List<String>
 ```
-If the intermediate table is defined with more than just the two reference columns, these additional columns can be accessed in two ways, both detailed below.
+If the intermediate table is defined with more than just the two reference columns, these additional columns can also be accessed by
+calling `via()` on a special wrapping entity class, `InnerTableLinkEntity`, as shown below.
 
 Given a `StarWarsFilmActors` table with the extra column `roleName`:
 ```kotlin
@@ -375,31 +376,7 @@ object StarWarsFilmActors : Table() {
     override val primaryKey = PrimaryKey(starWarsFilm, actor)
 }
 ```
-**The first approach** assumes that the value stored in this extra column will be accessed from the `Actor` class:
-```kotlin
-class Actor(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<Actor>(Actors)
-    var firstname by Actors.firstname
-    var lastname by Actors.lastname
-    var roleName by StarWarsFilmActors.roleName
-}
-```
-This extra value can then be set, for example, when a new `Actor` is created or when it is provided to the parent entity's field,
-and accessed like any other field:
-```kotlin
-val actor1 = Actor.new {
-    firstname = "Harrison"
-    lastname = "Ford"
-    roleName = "Han Solo"
-}
-// or
-film.actors = SizedCollection(actor1, actor2.apply { roleName = "Ben Solo" })
-
-StarWarsFilm.all().first.actors.map { it.roleName }
-```
-**The second approach** assumes that the `Actor` class should not be given an extra field and that the extra value stored should
-be accessed through an object that holds both the child entity and the additional data.
-
+The extra value stored can be accessed through an object that holds both the child entity and the additional data.
 To both allow this and still take advantage of the underlying DAO cache, a new entity class has to be defined using `InnerTableLinkEntity`,
 which details how to get and set the additional column values from the intermediate table through two overrides:
 ```kotlin
