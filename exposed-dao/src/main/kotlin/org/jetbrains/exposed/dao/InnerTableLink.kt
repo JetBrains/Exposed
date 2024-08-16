@@ -78,8 +78,7 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         columns to entityTables
     }
 
-    private val additionalColumns = (additionalColumns
-        ?: (table.columns - sourceColumn - targetColumn).filter { !it.columnType.isAutoInc })
+    private val additionalColumns = (additionalColumns ?: (table.columns - sourceColumn - targetColumn).filter { !it.columnType.isAutoInc })
         .takeIf { it.isEmpty() || target is InnerTableLinkEntityClass<ID, *> }
         ?: error("Target entity must extend InnerTableLinkEntity to properly store and cache additional column data")
 
