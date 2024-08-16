@@ -190,7 +190,7 @@ Or in-memory database:
 Database.connect("jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC")  
 ```  
 
-For both: set SQLite compatible isolation level: [FAQ](Frequently-Asked-Questions.md).
+Set SQLite compatible [isolation level](https://www.sqlite.org/isolation.html):
 
 ```kotlin
 TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE

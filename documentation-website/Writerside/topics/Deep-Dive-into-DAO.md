@@ -451,7 +451,7 @@ StarWarsFilm.all().with(StarWarsFilm::actors)
 >References that are eagerly loaded are stored inside the transaction cache;
 >this means that they are not available in other transactions
 >and thus must be loaded and referenced inside the same transaction.
->As of [0.35.1](https://github.com/JetBrains/Exposed/blob/master/docs/ChangeLog.md#0351:~:text=References%20can%20be%20stored%20within%20an%20Entity%20with%20enabled%20keepLoadedReferencesOutOfTransaction%20config%20parameter.%20It%20will%20allow%20getting%20referenced%20values%20outside%20the%20transaction%20block.),
+>As of [0.35.1](https://github.com/JetBrains/Exposed/blob/main/CHANGELOG.md#0351),
 >enabling `keepLoadedReferencesOutOfTransaction` in `DatabaseConfig`
 >will allow getting referenced values outside the transaction block.
 {style="note"}
