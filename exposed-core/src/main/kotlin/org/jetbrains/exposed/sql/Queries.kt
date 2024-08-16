@@ -358,6 +358,23 @@ fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<
 }
 
 /**
+ * Represents the SQL statement that uses data retrieved from a [selectQuery] to either insert a new row into a table,
+ * or, if insertion would violate a unique constraint, first delete the existing row before inserting a new row.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @param selectQuery Source `SELECT` query that provides the values to insert.
+ * @param columns Columns to either insert values into or delete values from then insert into. This defaults to all
+ * columns in the table that are not auto-increment columns without a valid sequence to generate new values.
+ * @return The number of inserted (and possibly deleted) rows, or `null` if nothing was retrieved after statement execution.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceSelect
+ */
+fun <T : Table> T.replace(
+    selectQuery: AbstractQuery<*>,
+    columns: List<Column<*>> = this.columns.filter { it.isValidIfAutoIncrement() }
+): Int? = ReplaceSelectStatement(columns, selectQuery).execute(TransactionManager.current())
+
+/**
  * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table.
  *
  * @param selectQuery Source `SELECT` query that provides the values to insert.
@@ -368,7 +385,7 @@ fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<
  */
 fun <T : Table> T.insert(
     selectQuery: AbstractQuery<*>,
-    columns: List<Column<*>> = this.columns.filter { !it.columnType.isAutoInc || it.autoIncColumnType?.nextValExpression != null }
+    columns: List<Column<*>> = this.columns.filter { it.isValidIfAutoIncrement() }
 ): Int? = InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
 
 /**
@@ -384,8 +401,11 @@ fun <T : Table> T.insert(
  */
 fun <T : Table> T.insertIgnore(
     selectQuery: AbstractQuery<*>,
-    columns: List<Column<*>> = this.columns.filter { !it.columnType.isAutoInc || it.autoIncColumnType?.nextValExpression != null }
+    columns: List<Column<*>> = this.columns.filter { it.isValidIfAutoIncrement() }
 ): Int? = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
+
+private fun Column<*>.isValidIfAutoIncrement(): Boolean =
+    !columnType.isAutoInc || autoIncColumnType?.nextValExpression != null
 
 /**
  * Represents the SQL statement that inserts new rows into a table and returns specified data from the inserted rows.

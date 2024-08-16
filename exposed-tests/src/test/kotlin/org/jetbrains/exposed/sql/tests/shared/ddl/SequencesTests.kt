@@ -63,19 +63,10 @@ class SequencesTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `testInsertWithCustomSequence`() {
-        val customSequence = Sequence(
-            name = "my_sequence",
-            startWith = 4,
-            incrementBy = 2,
-            minValue = 1,
-            maxValue = 100,
-            cycle = true,
-            cache = 20
-        )
+    fun testInsertWithCustomSequence() {
         val tester = object : Table("tester") {
-            val id = integer("id").autoIncrement(customSequence)
-            var name = varchar("name", 25)
+            val id = integer("id").autoIncrement(myseq)
+            val name = varchar("name", 25)
 
             override val primaryKey = PrimaryKey(id, name)
         }
@@ -83,22 +74,22 @@ class SequencesTests : DatabaseTestsBase() {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
                     SchemaUtils.create(tester)
-                    assertTrue(customSequence.exists())
+                    assertTrue(myseq.exists())
 
                     var testerId = tester.insert {
                         it[name] = "Hichem"
                     } get tester.id
 
-                    assertEquals(customSequence.startWith, testerId.toLong())
+                    assertEquals(myseq.startWith, testerId.toLong())
 
                     testerId = tester.insert {
                         it[name] = "Andrey"
                     } get tester.id
 
-                    assertEquals(customSequence.startWith!! + customSequence.incrementBy!!, testerId.toLong())
+                    assertEquals(myseq.startWith!! + myseq.incrementBy!!, testerId.toLong())
                 } finally {
                     SchemaUtils.drop(tester)
-                    assertFalse(customSequence.exists())
+                    assertFalse(myseq.exists())
                 }
             }
         }
@@ -131,19 +122,10 @@ class SequencesTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `testInsertInIdTableWithCustomSequence`() {
-        val customSequence = Sequence(
-            name = "my_sequence",
-            startWith = 4,
-            incrementBy = 2,
-            minValue = 1,
-            maxValue = 100,
-            cycle = true,
-            cache = 20
-        )
+    fun testInsertInIdTableWithCustomSequence() {
         val tester = object : IdTable<Long>("tester") {
-            override val id = long("id").autoIncrement(customSequence).entityId()
-            var name = varchar("name", 25)
+            override val id = long("id").autoIncrement(myseq).entityId()
+            val name = varchar("name", 25)
 
             override val primaryKey = PrimaryKey(id, name)
         }
@@ -151,22 +133,22 @@ class SequencesTests : DatabaseTestsBase() {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
                     SchemaUtils.create(tester)
-                    assertTrue(customSequence.exists())
+                    assertTrue(myseq.exists())
 
                     var testerId = tester.insert {
                         it[name] = "Hichem"
                     } get tester.id
 
-                    assertEquals(customSequence.startWith, testerId.value)
+                    assertEquals(myseq.startWith, testerId.value)
 
                     testerId = tester.insert {
                         it[name] = "Andrey"
                     } get tester.id
 
-                    assertEquals(customSequence.startWith!! + customSequence.incrementBy!!, testerId.value)
+                    assertEquals(myseq.startWith!! + myseq.incrementBy!!, testerId.value)
                 } finally {
                     SchemaUtils.drop(tester)
-                    assertFalse(customSequence.exists())
+                    assertFalse(myseq.exists())
                 }
             }
         }
@@ -239,17 +221,8 @@ class SequencesTests : DatabaseTestsBase() {
 
     @Test
     fun testExistingSequencesForAutoIncrementWithCustomSequence() {
-        val customSequence = Sequence(
-            name = "my_sequence",
-            startWith = 4,
-            incrementBy = 2,
-            minValue = 1,
-            maxValue = 100,
-            cycle = true,
-            cache = 20
-        )
         val tableWithExplicitSequenceName = object : IdTable<Long>() {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(customSequence).entityId()
+            override val id: Column<EntityID<Long>> = long("id").autoIncrement(myseq).entityId()
         }
 
         withDb {
@@ -260,7 +233,7 @@ class SequencesTests : DatabaseTestsBase() {
                     val sequences = currentDialectTest.sequences()
 
                     assertTrue(sequences.isNotEmpty())
-                    assertTrue(sequences.any { it == customSequence.name.inProperCase() })
+                    assertTrue(sequences.any { it == myseq.name.inProperCase() })
                 } finally {
                     SchemaUtils.drop(tableWithExplicitSequenceName)
                 }
@@ -340,18 +313,18 @@ class SequencesTests : DatabaseTestsBase() {
 
     private object Developer : Table() {
         val id = integer("id")
-        var name = varchar("name", 25)
+        val name = varchar("name", 25)
 
         override val primaryKey = PrimaryKey(id, name)
     }
 
     private object DeveloperWithLongId : LongIdTable() {
-        var name = varchar("name", 25)
+        val name = varchar("name", 25)
     }
 
     private object DeveloperWithAutoIncrementBySequence : IdTable<Long>() {
         override val id: Column<EntityID<Long>> = long("id").autoIncrement("id_seq").entityId()
-        var name = varchar("name", 25)
+        val name = varchar("name", 25)
     }
 
     private val myseq = Sequence(

@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.junit.Test
 import java.util.*
+import kotlin.test.assertContentEquals
 
 class ReplaceTests : DatabaseTestsBase() {
 
@@ -20,6 +21,58 @@ class ReplaceTests : DatabaseTestsBase() {
         val serverID = varchar("serverID", 64).default("")
 
         override val primaryKey = PrimaryKey(username)
+    }
+
+    @Test
+    fun testReplaceSelect() {
+        withTables(replaceNotSupported, NewAuth) { testDb ->
+            NewAuth.batchReplace(listOf("username1", "username2")) { // inserts 2 new non-conflict rows with defaults
+                this[NewAuth.username] = it
+                this[NewAuth.session] = "session".toByteArray()
+            }
+
+            val result1 = NewAuth.selectAll().toList()
+            assertTrue(result1.all { it[NewAuth.timestamp] == 0L })
+            assertTrue(result1.all { it[NewAuth.serverID].isEmpty() })
+
+            val timeNow = System.currentTimeMillis()
+            val specialId = "special server id"
+            val allRowsWithNewDefaults = NewAuth.select(NewAuth.username, NewAuth.session, longLiteral(timeNow), stringLiteral(specialId))
+
+            val affectedRowCount = NewAuth.replace(allRowsWithNewDefaults)
+            // MySQL returns 1 for every insert + 1 for every delete on conflict, while others only count inserts
+            val expectedRowCount = if (testDb in TestDB.ALL_MYSQL_LIKE) 4 else 2
+            assertEquals(expectedRowCount, affectedRowCount)
+
+            val result2 = NewAuth.selectAll().toList()
+            assertTrue(result2.all { it[NewAuth.timestamp] == timeNow })
+            assertTrue(result2.all { it[NewAuth.serverID] == specialId })
+        }
+    }
+
+    @Test
+    fun testReplaceSelectWithSpecificColumns() {
+        withTables(replaceNotSupported, NewAuth) { testDb ->
+            val (name1, name2, oldSession) = Triple("username1", "username2", "session1".toByteArray())
+            NewAuth.batchReplace(listOf(name1, name2)) { // inserts 2 new non-conflict rows with defaults
+                this[NewAuth.username] = it
+                this[NewAuth.session] = oldSession
+            }
+
+            val newSession = "session2"
+            val name1Row = NewAuth.select(NewAuth.username, stringLiteral(newSession)).where { NewAuth.username eq name1 }
+
+            val affectedRowCount = NewAuth.replace(name1Row, columns = listOf(NewAuth.username, NewAuth.session))
+            // MySQL returns 1 for every insert + 1 for every delete on conflict, while others only count inserts
+            val expectedRowCount = if (testDb in TestDB.ALL_MYSQL_LIKE) 2 else 1
+            assertEquals(expectedRowCount, affectedRowCount)
+
+            val name1Result = NewAuth.selectAll().where { NewAuth.username eq name1 }.single()
+            assertContentEquals(newSession.toByteArray(), name1Result[NewAuth.session])
+
+            val name2Result = NewAuth.selectAll().where { NewAuth.username eq name2 }.single()
+            assertContentEquals(oldSession, name2Result[NewAuth.session])
+        }
     }
 
     @Test

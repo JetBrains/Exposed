@@ -616,15 +616,15 @@ PostgresSQL [here](https://jdbc.postgresql.org/documentation/logging/).
 
 ## Insert From Select
 
-If you want to use `INSERT INTO ... SELECT ` SQL clause try Exposed analog `Table.insert(Query)`.
+If you want to use the `INSERT INTO ... SELECT ` SQL clause try the function `Table.insert(Query)`:
 
 ```kotlin
 val substring = users.name.substring(1, 2)
 cities.insert(users.select(substring).orderBy(users.id).limit(2))
 ```
 
-By default it will try to insert into all non auto-increment `Table` columns in order they defined in Table instance. If you want to specify columns or change the
-order, provide list of columns as second parameter:
+By default, it will try to insert into all non auto-increment `Table` columns in the order they are defined in the `Table` instance. If you want to specify columns or change the
+order, provide a list of columns as the second parameter:
 
 ```kotlin
 val userCount = users.selectAll().count()
@@ -766,6 +766,29 @@ The values specified in the statement block will be used for the insert statemen
 In the example above, if the original row was inserted with a user-defined <code>rating</code>, then <code>replace()</code> was executed with a block that omitted the <code>rating</code> column, 
 the newly inserted row would store the default rating value. This is because the old row was completely deleted first.
 </note>
+
+The `REPLACE INTO ... SELECT ` SQL clause can be used by instead providing a query to `replace()`:
+
+```kotlin
+val allRowsWithLowRating: Query = StarWarsFilms.selectAll().where {
+    StarWarsFilms.rating less 5.0
+}
+StarWarsFilms.replace(allRowsWithLowRating)
+```
+
+By default, it will try to insert into all non auto-increment `Table` columns in the order they are defined in the `Table` instance.
+If the columns need to be specified or the order should be changed, provide a list of columns as the second parameter:
+
+```kotlin
+val oneYearLater = StarWarsFilms.releaseYear.plus(1)
+val allRowsWithNewYear: Query = StarWarsFilms.select(
+    oneYearLater, StarWarsFilms.sequelId, StarWarsFilms.director, StarWarsFilms.name
+)
+StarWarsFilms.replace(
+    allRowsWithNewYear,
+    columns = listOf(StarWarsFilms.releaseYear, StarWarsFilms.sequelId, StarWarsFilms.director, StarWarsFilms.name)
+)
+```
 
 ## Column transformation
 
