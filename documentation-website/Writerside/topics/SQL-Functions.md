@@ -1,3 +1,5 @@
+<show-structure for="chapter,procedure" depth="2"/>
+
 # SQL Functions
 
 Exposed provides basic support for classic SQL functions. This topic consists of definitions for those functions, and their 

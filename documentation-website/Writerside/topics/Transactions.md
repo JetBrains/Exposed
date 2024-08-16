@@ -1,6 +1,6 @@
-# Transactions
+<show-structure for="chapter,procedure" depth="2"/>
 
-## Overview
+# Working with Transactions
 
 CRUD operations in Exposed must be called from within a _transaction._ Transactions encapsulate a set of DSL operations.
 To create and execute a transaction with default parameters, simply pass a function block to the `transaction` function:
@@ -14,7 +14,7 @@ transaction {
 Transactions are executed synchronously on the current thread, so they _will block_ other parts of your application! If
 you need to execute a transaction asynchronously, consider running it on a separate `Thread`.
 
-### Accessing returned values
+## Accessing returned values
 
 Although you can modify variables from your code within the transaction block, `transaction` supports returning a value
 directly, enabling immutability:
@@ -26,11 +26,11 @@ val jamesList = transaction {
 // jamesList is now a List<ResultRow> containing Users data
 ```
 
-<note>
-`Blob` and `text` fields won't be available outside a transaction if you don't load them directly. For `text`
-fields you can also use the `eagerLoading` param when defining the Table to make the text fields available outside the
-transaction.
-</note>
+
+>`Blob` and `text` fields won't be available outside a transaction if you don't load them directly. For `text`
+>fields you can also use the `eagerLoading` param when defining the Table to make the text fields available outside the
+>transaction.
+{style="note"}
 
 ```kotlin
 // without eagerLoading
@@ -49,12 +49,11 @@ val documentsWithContent = transaction {
 }
 ```
 
-### Working with multiple databases
+## Working with multiple databases
 
-_This functionality supported since 0.10.1 version_
 
-When you want to work with different databases then you have to store database reference returned
-by `Database.connect()` and provide it to `transaction` function as first parameter.
+If you want to work with different databases, you have to store the database reference returned by `Database.connect()` and provide it
+to `transaction` function as the first parameter. The `transaction` block without parameters will work with the latest connected database.
 
 ```kotlin
 val db1 = connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")
@@ -72,7 +71,7 @@ transaction(db1) {
 Entities (see [DAO API](Deep-Dive-into-DAO.md) page) `stick` to a transaction that was used to load that entity. That means that all
 changes persist to the same database and what cross-database references are prohibited and will throw exceptions.
 
-### Setting default database
+## Setting default database
 
 `transaction` block without parameters will use the default database.
 As before 0.10.1 this will be the latest _connected_ database.
@@ -83,7 +82,7 @@ val db = Database.connect()
 TransactionManager.defaultDatabase = db
 ```
 
-### Using nested transactions
+## Using nested transactions
 
 By default, a nested `transaction` block shares the transaction resources of its parent `transaction` block, so any
 effect on the child affects the parent:
@@ -117,10 +116,12 @@ transaction but only the code inside the current `transaction`.
 Exposed uses SQL `SAVEPOINT` functionality to mark the current transaction at the beginning of a `transaction` block and
 release it on exit.
 
-Using savepoint could affect performance, so please read the documentation on your DBMS for more details.
+Using `SAVEPOINT` could affect performance, so please read the documentation of the DBMS you use for more details.
 
 ```kotlin
-val db = Database.connect()
+val db = Database.connect(
+    // connection parameters
+)
 db.useNestedTransactions = true
 
 transaction {
@@ -140,7 +141,7 @@ transaction {
 }
 ```
 
-### Working with Coroutines
+## Working with Coroutines
 
 In the modern world, non-blocking and asynchronous code is popular.
 Kotlin has [Coroutines](https://kotlinlang.org/docs/reference/coroutines-overview.html), which provide an imperative way to
@@ -219,13 +220,13 @@ runBlocking {
 This function will accept the same parameters as `newSuspendedTransaction()` above but returns its future result as an
 implementation of `Deferred`, which you can `await` on to achieve your result.
 
-<note>
-`newSuspendedTransaction` and `suspendedTransactionAsync` are always executed in a new transaction to prevent
-concurrency issues when query execution order could be changed by the `CoroutineDispatcher`. This means that nesting
-these suspend transactions may not result in the same behavior as nested `transaction`s (when `useNestedTransactions = false`), as was shown in [the previous section](#using-nested-transactions).
-</note>
 
-### Advanced parameters and usage
+>`newSuspendedTransaction` and `suspendedTransactionAsync` are always executed in a new transaction to prevent
+>concurrency issues when query execution order could be changed by the `CoroutineDispatcher`. This means that nesting
+>these suspend transactions may not result in the same behavior as nested `transaction`s (when `useNestedTransactions = false`), as was shown in [the previous section](#using-nested-transactions).
+{style="note"}
+
+## Advanced parameters and usage
 
 For specific functionality, transactions can be created with the additional
 parameters: `transactionIsolation`, `readOnly`, and `db`:
@@ -236,7 +237,9 @@ transaction (Connection.TRANSACTION_SERIALIZABLE, true, db = db) {
 }
 ```
 
-**Transaction Isolation:** This parameter, defined in the SQL standard, specifies what is supposed to happen when
+### `transactionIsolation`
+
+The `transactionIsolation` parameter, defined in the SQL standard, specifies what is supposed to happen when
 multiple transactions execute concurrently on the database. This value does NOT affect Exposed operation directly, but
 is sent to the database, where it is expected to be obeyed. Allowable values are defined in `java.sql.Connection` and
 are as follows:
@@ -254,14 +257,18 @@ are as follows:
   inconsistency.
 * **TRANSACTION_SERIALIZABLE**: The strictest setting. Prevents dirty reads, non-repeatable reads, and phantom reads.
 
-**readOnly:** This parameter indicates whether any database connection used by the transaction is in read-only mode, and
+### `readOnly`
+
+The `readOnly` parameter indicates whether any database connection used by the transaction is in read-only mode, and
 is set to `false` by default. Much like with `transactionIsolation`, this value is not directly used by Exposed, but is
 simply relayed to the database.
 
-**db:** This parameter is optional and is used to select the database where the transaction should be
+### `db`
+
+The `db` parameter is optional and is used to select the database where the transaction should be
 settled ([see the section above](#working-with-multiple-databases)).
 
-**Transaction Maximum Attempts**
+### `maxAttempts`
 
 Transactions also provide a property, `maxAttempts`, which sets the maximum number of attempts that should be made to perform a transaction block.
 If this value is set to 1 and an SQLException occurs inside the transaction block, the exception will be thrown without performing a retry.
@@ -285,7 +292,7 @@ transaction(db = db) {
 If this property is set to a value greater than 1, `minRetryDelay` and `maxRetryDelay` can also be set in the
 transaction block to indicate the minimum and maximum number of milliseconds to wait before retrying.
 
-**Transaction Query Timeout**
+### `queryTimeout`
 
 Another advanced property available in a transaction block is `queryTimeout`. This sets the number of seconds to wait
 for each statement in the block to execute before timing out:
@@ -301,10 +308,11 @@ transaction {
 }
 ```
 
-**Note** As is the case for `transactionIsolation` and `readOnly` properties, this value is not directly managed by
-Exposed, but is simply relayed to the JDBC driver. Some drivers may not support implementing this limit.
+>As is the case for `transactionIsolation` and `readOnly` properties, this value is not directly managed by
+>Exposed, but is simply relayed to the JDBC driver. Some drivers may not support implementing this limit.
+{style="note"}
 
-### Statement Interceptors
+## Statement Interceptors
 
 DSL operations within a transaction create SQL statements, on which commands like *Execute*, *Commit*, and *Rollback*
 are issued. Exposed provides

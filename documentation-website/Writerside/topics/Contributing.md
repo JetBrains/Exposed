@@ -1,3 +1,5 @@
+<show-structure for="chapter,procedure" depth="3"/>
+
 # Contributing to Exposed
 
 We're delighted that you're considering contributing to Exposed!
@@ -37,9 +39,9 @@ Make sure that default is used as default docker context:
 docker context list
 ```
 
-### Code
+## Code
 
-#### Pull Requests
+### Pull Requests
 
 Contributions are made using Github [pull requests](https://help.github.com/en/articles/about-pull-requests):
 
@@ -58,7 +60,7 @@ Contributions are made using Github [pull requests](https://help.github.com/en/a
 10. Finally, make sure to run the `apiCheck` Gradle task. If it's not successful, run the `apiDump` Gradle task. Further information can be
    found [here](https://github.com/Kotlin/binary-compatibility-validator).
 
-#### Style Guides
+### Style Guides
 
 A few things to remember:
 
@@ -77,7 +79,7 @@ Test functions:
 * In the definition of test functions, use a block body instead of an assignment operator. 
   For example, do write `fun testMyTest() { withDb{} }`, and avoid writing `fun testMyTest() = withDb{}`.
 
-#### Commit messages
+### Commit messages
 
 * Commit messages should be written in English.
 * Their title should be prefixed according to [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary).
@@ -86,7 +88,7 @@ Test functions:
 * When applicable, prefix the commit message with EXPOSED-{NUM} where {NUM} represents the YouTrack issue number.
 * Add the related bug reference to a commit message (bug number after a hash character between round braces).
 
-### Documentation
+## Documentation
 
 There are multiple ways in which you can contribute to Exposed docs:
 
@@ -94,12 +96,12 @@ There are multiple ways in which you can contribute to Exposed docs:
 - Submit a pull request containing your proposed changes. 
 Ensure that these modifications are applied directly within the `documentation-website` directory.
 
-### Community Support
+## Community Support
 
 If you'd like to help others, please join our Exposed [channel](https://kotlinlang.slack.com/archives/C0CG7E0A1) on the Kotlin Slack workspace and
 help out. It's also a great way to learn!
 
-### Issues and Feature Requests
+## Issues and Feature Requests
 
 If you encounter a bug or have an idea for a new feature, please submit it to us through [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED),
 our issue tracker.

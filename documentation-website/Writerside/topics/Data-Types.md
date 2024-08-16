@@ -1,3 +1,5 @@
+<show-structure for="chapter,procedure" depth="3"/>
+
 # Data Types
 
 Exposed supports the following data types in the table definition:
@@ -61,13 +63,13 @@ them when defining a `customEnumeration`.
 
 For a class like `enum class Foo { BAR, BAZ }`, you can use the provided code below for your specific database:
 
-**MySQL, H2**
+### MySQL, H2
 ```Kotlin
 val existingEnumColumn = customEnumeration("enumColumn", { value -> Foo.valueOf(value as String) }, { it.name })
 val newEnumColumn = customEnumeration("enumColumn", "ENUM('BAR', 'BAZ')", { value -> Foo.valueOf(value as String) }, { it.name })
 ```
 
-**PostgreSQL**
+### PostgreSQL
 
 PostgreSQL requires that ENUM is defined as a separate type, so you have to create it before creating your table. 
 Also, the PostgreSQL JDBC driver returns `PGobject` instances for such values, so a `PGobject` with its type manually set to the ENUM type needs to be used for the `toDb` parameter.
