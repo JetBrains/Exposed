@@ -210,7 +210,7 @@ class AutoIncColumnType<T>(
 val IColumnType<*>.isAutoInc: Boolean
     get() = this is AutoIncColumnType || (this is EntityIDColumnType<*> && idColumn.columnType.isAutoInc)
 
-/** Returns the name of the auto-increment sequence of this column. */
+/** Returns this column's type cast as [AutoIncColumnType] or `null` if the cast fails. */
 val Column<*>.autoIncColumnType: AutoIncColumnType<*>?
     get() = (columnType as? AutoIncColumnType)
         ?: (columnType as? EntityIDColumnType<*>)?.idColumn?.columnType as? AutoIncColumnType
