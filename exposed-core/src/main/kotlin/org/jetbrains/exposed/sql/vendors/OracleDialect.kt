@@ -271,13 +271,13 @@ internal object OracleFunctionProvider : FunctionProvider() {
     override fun upsert(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-        onUpdateExclude: List<Column<*>>?,
+        expression: String,
+        onUpdate: List<Pair<Column<*>, Any?>>,
+        keyColumns: List<Column<*>>,
         where: Op<Boolean>?,
-        transaction: Transaction,
-        vararg keys: Column<*>
+        transaction: Transaction
     ): String {
-        val statement = super.upsert(table, data, onUpdate, onUpdateExclude, where, transaction, *keys)
+        val statement = super.upsert(table, data, expression, onUpdate, keyColumns, where, transaction)
 
         val dualTable = data.appendTo(QueryBuilder(true), prefix = "(SELECT ", postfix = " FROM DUAL) S") { (column, value) ->
             registerArgument(column, value)

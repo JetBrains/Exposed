@@ -217,25 +217,25 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     override fun upsert(
         table: Table,
         data: List<Pair<Column<*>, Any?>>,
-        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
-        onUpdateExclude: List<Column<*>>?,
+        expression: String,
+        onUpdate: List<Pair<Column<*>, Any?>>,
+        keyColumns: List<Column<*>>,
         where: Op<Boolean>?,
-        transaction: Transaction,
-        vararg keys: Column<*>
+        transaction: Transaction
     ): String = with(QueryBuilder(true)) {
-        appendInsertToUpsertClause(table, data, transaction)
+        +insert(false, table, data.unzip().first, expression, transaction)
 
         +" ON CONFLICT"
-        val keyColumns = getKeyColumnsForUpsert(table, *keys) ?: emptyList()
         if (keyColumns.isNotEmpty()) {
             keyColumns.appendTo(prefix = " (", postfix = ")") { column ->
                 append(transaction.identity(column))
             }
         }
 
-        +" DO"
-        val updateColumns = getUpdateColumnsForUpsert(data.unzip().first, onUpdateExclude, keyColumns)
-        appendUpdateToUpsertClause(table, updateColumns, onUpdate, transaction, isAliasNeeded = false)
+        +" DO UPDATE SET "
+        onUpdate.appendTo { (columnToUpdate, updateExpression) ->
+            append("${transaction.identity(columnToUpdate)}=$updateExpression")
+        }
 
         where?.let {
             +" WHERE "
@@ -243,6 +243,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         }
         toString()
     }
+
+    override fun insertValue(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"EXCLUDED.$columnName" } }
 
     override fun delete(
         ignore: Boolean,

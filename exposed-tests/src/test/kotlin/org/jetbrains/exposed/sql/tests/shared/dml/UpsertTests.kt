@@ -11,8 +11,11 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.sql.statements.BatchUpsertStatement
-import org.jetbrains.exposed.sql.tests.*
+import org.jetbrains.exposed.sql.statements.UpdateStatement
+import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -244,15 +247,28 @@ class UpsertTests : DatabaseTestsBase() {
     fun testUpsertWithManualUpdateAssignment() {
         withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
             val testWord = "Test"
-            val incrementCount = listOf(Words.count to Words.count.plus(1))
 
             repeat(3) {
-                Words.upsert(onUpdate = incrementCount) {
+                Words.upsert {
                     it[word] = testWord
+
+                    it.onUpdate { update ->
+                        update[count] = count + 1
+                    }
                 }
             }
 
             assertEquals(3, Words.selectAll().single()[Words.count])
+
+            val updatedCount = 1000
+            Words.upsert {
+                it[word] = testWord
+
+                it.onUpdate { update ->
+                    update[count] = updatedCount
+                }
+            }
+            assertEquals(updatedCount, Words.selectAll().single()[Words.count])
         }
     }
 
@@ -265,29 +281,34 @@ class UpsertTests : DatabaseTestsBase() {
             val losses = integer("losses").default(100)
         }
 
+        fun adjustGainAndLoss(statement: UpdateStatement) {
+            statement[tester.gains] = tester.gains.plus(tester.amount)
+            statement[tester.losses] = tester.losses.minus(tester.amount)
+        }
+
         withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
             val itemA = tester.upsert {
                 it[item] = "Item A"
             } get tester.item
 
-            val adjustGainAndLoss = listOf(
-                tester.gains to tester.gains.plus(tester.amount),
-                tester.losses to tester.losses.minus(tester.amount)
-            )
-            tester.upsert(onUpdate = adjustGainAndLoss) {
+            tester.upsert {
                 it[item] = "Item B"
                 it[gains] = 200
                 it[losses] = 0
+
+                it.onUpdate { update -> adjustGainAndLoss(update) }
             }
 
             val insertResult = tester.selectAll().where { tester.item neq itemA }.single()
             assertEquals(200, insertResult[tester.gains])
             assertEquals(0, insertResult[tester.losses])
 
-            tester.upsert(onUpdate = adjustGainAndLoss) {
+            tester.upsert {
                 it[item] = itemA
                 it[gains] = 200
                 it[losses] = 0
+
+                it.onUpdate { update -> adjustGainAndLoss(update) }
             }
 
             val updateResult = tester.selectAll().where { tester.item eq itemA }.single()
@@ -311,9 +332,12 @@ class UpsertTests : DatabaseTestsBase() {
             }
             assertEquals("Phrase", tester.selectAll().single()[tester.phrase])
 
-            val phraseConcat = concat(" - ", listOf(tester.word, tester.phrase))
-            tester.upsert(onUpdate = listOf(tester.phrase to phraseConcat)) { // expression in update
+            tester.upsert { // expression in update
                 it[word] = testWord
+
+                it.onUpdate { update ->
+                    update[phrase] = concat(" - ", listOf(tester.word, tester.phrase))
+                }
             }
             assertEquals("$testWord - $defaultPhrase", tester.selectAll().single()[tester.phrase])
 
@@ -322,6 +346,60 @@ class UpsertTests : DatabaseTestsBase() {
                 it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar"))
             }
             assertEquals("foobar", tester.selectAll().where { tester.word eq "$testWord 2" }.single()[tester.phrase])
+        }
+    }
+
+    @Test
+    fun testUpsertWithManualUpdateUsingInsertValues() {
+        val tester = object : Table("tester") {
+            val id = integer("id").uniqueIndex()
+            val word = varchar("name", 64)
+            val count = integer("count").default(1)
+        }
+
+        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+            tester.insert {
+                it[id] = 1
+                it[word] = "Word A"
+            }
+            assertEquals(1, tester.selectAll().single()[tester.count])
+
+            // H2_Mysql & H2_Mariadb syntax does not allow VALUES() syntax to come first in complex expression
+            // Syntax must be column=(1 + VALUES(column)), not column=(VALUES(column) + 1)
+            tester.upsert {
+                it[id] = 1
+                it[word] = "Word B"
+                it[count] = 9
+
+                it.onUpdate { update ->
+                    update[count] = intLiteral(100) times insertValue(count)
+                }
+            }
+            val result = tester.selectAll().single()
+            assertEquals(900, result[tester.count])
+
+            val newWords = listOf(
+                Triple(2, "Word B", 2),
+                Triple(1, "Word A", 3),
+                Triple(3, "Word C", 4)
+            )
+            tester.batchUpsert(
+                newWords,
+            ) { (id, word, count) ->
+                this[tester.id] = id
+                this[tester.word] = word
+                this[tester.count] = count
+
+                onUpdate {
+                    it[tester.word] = concat(tester.word, stringLiteral(" || "), insertValue(tester.count))
+                    it[tester.count] = intLiteral(1) plus insertValue(tester.count)
+                }
+            }
+
+            assertEquals(3, tester.selectAll().count())
+            val updatedWord = tester.selectAll().where { tester.word like "% || %" }.single()
+            assertEquals("Word A || 3", updatedWord[tester.word])
+            assertEquals(4, updatedWord[tester.count])
         }
     }
 
@@ -511,10 +589,13 @@ class UpsertTests : DatabaseTestsBase() {
             val vowels = listOf("A", "E", "I", "O", "U")
             val alphabet = ('A'..'Z').map { it.toString() }
             val lettersWithDuplicates = alphabet + vowels
-            val incrementCount = listOf(Words.count to Words.count.plus(1))
 
-            Words.batchUpsert(lettersWithDuplicates, onUpdate = incrementCount) { letter ->
+            Words.batchUpsert(lettersWithDuplicates) { letter ->
                 this[Words.word] = letter
+
+                onUpdate {
+                    it[Words.count] = Words.count + 1
+                }
             }
 
             assertEquals(alphabet.size.toLong(), Words.selectAll().count())
@@ -556,18 +637,20 @@ class UpsertTests : DatabaseTestsBase() {
             val vowels = listOf("A", "E", "I", "O", "U")
             val alphabet = ('A'..'Z').map { it.toString() }
             val lettersWithDuplicates = alphabet + vowels
-            val incrementCount = listOf(Words.count to Words.count.plus(1))
 
             val firstThreeVowels = vowels.take(3)
             Words.batchUpsert(
                 lettersWithDuplicates,
-                onUpdate = incrementCount,
                 // PostgresNG throws IndexOutOfBound if shouldReturnGeneratedValues == true
                 // Related issue in pgjdbc-ng repository: https://github.com/impossibl/pgjdbc-ng/issues/545
                 shouldReturnGeneratedValues = false,
                 where = { Words.word inList firstThreeVowels }
             ) { letter ->
                 this[Words.word] = letter
+
+                onUpdate {
+                    it[Words.count] = Words.count + 1
+                }
             }
 
             assertEquals(alphabet.size.toLong(), Words.selectAll().count())
