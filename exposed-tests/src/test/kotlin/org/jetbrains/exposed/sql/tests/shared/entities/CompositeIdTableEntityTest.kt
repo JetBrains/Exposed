@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentTestDB
@@ -198,7 +199,8 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             // test all id column components are accessible from single ResultRow access
             val idResult = result[Publishers.id]
             assertIs<EntityID<CompositeID>>(idResult)
-            assertEquals(result[Publishers.pubId], idResult.value[Publishers.pubId])
+            val pubIdResult = idResult.value[Publishers.pubId]
+            assertEquals(result[Publishers.pubId], pubIdResult)
             assertEquals(result[Publishers.isbn], idResult.value[Publishers.isbn])
 
             // test that using composite id column in DSL query builder works
@@ -218,6 +220,10 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 val fake = EntityID(CompositeID { it[Publishers.pubId] = 7 }, Publishers)
                 Publishers.selectAll().where { Publishers.id eq fake }
             }
+
+            // test equality comparison succeeds with partial match to composite column unwrapped value
+            val pubIdValue: Int = pubIdResult.value
+            assertEquals(0, Publishers.selectAll().where { Publishers.pubId neq pubIdValue }.count())
         }
     }
 
@@ -329,6 +335,11 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             val p2 = Publisher.find { Publishers.id eq p1.id }.single()
             assertEquals(p1, p2)
+
+            // test select using partial match to composite column unwrapped value
+            val existingIsbnValue: UUID = p1.id.value[Publishers.isbn].value
+            val p3 = Publisher.find { Publishers.isbn eq existingIsbnValue }.single()
+            assertEquals(p1, p3)
         }
     }
 
@@ -362,6 +373,11 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val result = Publisher.all().single()
             assertEquals("Publisher B", result.name)
             assertEquals(p2.id, result.id)
+
+            // test delete using partial match to composite column unwrapped value
+            val existingPubIdValue: Int = p2.id.value[Publishers.pubId].value
+            Publishers.deleteWhere { pubId eq existingPubIdValue }
+            assertEquals(0, Publisher.all().count())
         }
     }
 

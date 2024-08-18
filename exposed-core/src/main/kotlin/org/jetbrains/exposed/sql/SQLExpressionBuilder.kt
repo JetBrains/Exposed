@@ -337,7 +337,7 @@ interface ISqlExpressionBuilder {
         @Suppress("UNCHECKED_CAST")
         val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
         val entityID = EntityID(t, table)
-        return if (table is CompositeIdTable) table.mapIdComparison(entityID, ::EqOp) else EqOp(this, wrap(entityID))
+        return if (columnType.isEntityIdentifier()) table.mapIdComparison(entityID, ::EqOp) else EqOp(this, wrap(entityID))
     }
 
     /** Checks if this [EntityID] expression is equal to some [other] expression. */
@@ -375,7 +375,7 @@ interface ISqlExpressionBuilder {
         @Suppress("UNCHECKED_CAST")
         val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
         val entityID = EntityID(t, table)
-        return if (table is CompositeIdTable) table.mapIdComparison(entityID, ::NeqOp) else NeqOp(this, wrap(entityID))
+        return if (columnType.isEntityIdentifier()) table.mapIdComparison(entityID, ::NeqOp) else NeqOp(this, wrap(entityID))
     }
 
     /** Checks if this [EntityID] expression is not equal to some [other] expression. */
