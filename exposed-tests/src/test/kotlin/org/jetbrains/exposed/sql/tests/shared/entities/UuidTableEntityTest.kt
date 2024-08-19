@@ -7,7 +7,6 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -170,21 +169,26 @@ class UUIDTableEntityTest : DatabaseTestsBase() {
             val cId = UUIDTables.Cities.insertAndGetId {
                 it[name] = "City A"
             }
-            UUIDTables.Towns.insert {
+            val tId = UUIDTables.Towns.insertAndGetId {
                 it[cityId] = cId.value
             }
 
-            // lazy loaded reference
+            // lazy loaded referencedOn
             val town1 = UUIDTables.Town.all().single()
             assertEquals(cId, town1.city.id)
 
-            // eager loaded reference
+            // eager loaded referencedOn
             val town1WithCity = UUIDTables.Town.all().with(UUIDTables.Town::city).single()
             assertEquals(cId, town1WithCity.city.id)
 
+            // lazy loaded referrersOn
             val city1 = UUIDTables.City.all().single()
             val towns = city1.towns
             assertEquals(cId, towns.first().city.id)
+
+            // eager loaded referrersOn
+            val city1WithTowns = UUIDTables.City.all().with(UUIDTables.City::towns).single()
+            assertEquals(tId, city1WithTowns.towns.first().id)
         }
     }
 }

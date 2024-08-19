@@ -4,7 +4,10 @@ import org.jetbrains.exposed.dao.ULongEntity
 import org.jetbrains.exposed.dao.ULongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.ULongIdTable
+import org.jetbrains.exposed.dao.with
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.exists
+import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
@@ -78,6 +81,35 @@ class ULongIdTableEntityTest : DatabaseTestsBase() {
             assertEquals(false, allPeople.contains(Pair("Tanu Arora", "Pune")))
         }
     }
+
+    @Test
+    fun testForeignKeyBetweenULongAndEntityIDColumns() {
+        withTables(ULongIdTables.Cities, ULongIdTables.Towns) {
+            val cId = ULongIdTables.Cities.insertAndGetId {
+                it[name] = "City A"
+            }
+            val tId = ULongIdTables.Towns.insertAndGetId {
+                it[cityId] = cId.value
+            }
+
+            // lazy loaded referencedOn
+            val town1 = ULongIdTables.Town.all().single()
+            assertEquals(cId, town1.city.id)
+
+            // eager loaded referencedOn
+            val town1WithCity = ULongIdTables.Town.all().with(ULongIdTables.Town::city).single()
+            assertEquals(cId, town1WithCity.city.id)
+
+            // lazy loaded referrersOn
+            val city1 = ULongIdTables.City.all().single()
+            val towns = city1.towns
+            assertEquals(cId, towns.first().city.id)
+
+            // eager loaded referrersOn
+            val city1WithTowns = ULongIdTables.City.all().with(ULongIdTables.City::towns).single()
+            assertEquals(tId, city1WithTowns.towns.first().id)
+        }
+    }
 }
 
 object ULongIdTables {
@@ -89,6 +121,7 @@ object ULongIdTables {
         companion object : ULongEntityClass<City>(Cities)
 
         var name by Cities.name
+        val towns by Town referrersOn Towns.cityId
     }
 
     object People : ULongIdTable() {
@@ -101,5 +134,15 @@ object ULongIdTables {
 
         var name by People.name
         var city by City referencedOn People.cityId
+    }
+
+    object Towns : ULongIdTable("towns") {
+        val cityId: Column<ULong> = ulong("city_id").references(Cities.id)
+    }
+
+    class Town(id: EntityID<ULong>) : ULongEntity(id) {
+        companion object : ULongEntityClass<Town>(Towns)
+
+        var city by City referencedOn Towns.cityId
     }
 }
