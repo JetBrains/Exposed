@@ -214,7 +214,7 @@ class Database private constructor(
          */
         @Deprecated(
             message = "Use Database.connect() with a connection pool DataSource instead. This may be removed in future releases.",
-            level = DeprecationLevel.WARNING
+            level = DeprecationLevel.ERROR
         )
         fun connectPool(
             datasource: ConnectionPoolDataSource,

@@ -36,12 +36,6 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** Whether the database supports `SELECT FOR UPDATE` statements. */
     abstract val supportsSelectForUpdate: Boolean
 
-    @Deprecated(
-        message = "it's temporary solution which will be replaced in a future releases. Do not use it in your code",
-        level = DeprecationLevel.HIDDEN
-    )
-    abstract val currentScheme: String
-
     /** Clears and resets any stored information about the database's current schema to default values. */
     abstract fun resetCurrentScheme()
 

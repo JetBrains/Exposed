@@ -3461,7 +3461,6 @@ public abstract class org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMe
 	public abstract fun columns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
-	public abstract synthetic fun getCurrentScheme ()Ljava/lang/String;
 	public final fun getDatabase ()Ljava/lang/String;
 	public abstract fun getDatabaseDialectName ()Ljava/lang/String;
 	public abstract fun getDatabaseProductVersion ()Ljava/lang/String;

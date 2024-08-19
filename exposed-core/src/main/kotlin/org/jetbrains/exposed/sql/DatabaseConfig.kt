@@ -20,19 +20,19 @@ class DatabaseConfig private constructor(
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMaxAttempts"),
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     val defaultRepetitionAttempts: Int,
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMinRetryDelay"),
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     val defaultMinRepetitionDelay: Long,
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMaxRetryDelay"),
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     val defaultMaxRepetitionDelay: Long,
     val defaultReadOnly: Boolean,
@@ -140,7 +140,7 @@ class DatabaseConfig private constructor(
         @Deprecated(
             message = "This property will be removed in future releases",
             replaceWith = ReplaceWith("defaultMaxAttempts"),
-            level = DeprecationLevel.WARNING
+            level = DeprecationLevel.ERROR
         )
         var defaultRepetitionAttempts: Int
             get() = defaultMaxAttempts
@@ -149,7 +149,7 @@ class DatabaseConfig private constructor(
         @Deprecated(
             message = "This property will be removed in future releases",
             replaceWith = ReplaceWith("defaultMinRetryDelay"),
-            level = DeprecationLevel.WARNING
+            level = DeprecationLevel.ERROR
         )
         var defaultMinRepetitionDelay: Long
             get() = defaultMinRetryDelay
@@ -158,7 +158,7 @@ class DatabaseConfig private constructor(
         @Deprecated(
             message = "This property will be removed in future releases",
             replaceWith = ReplaceWith("defaultMaxRetryDelay"),
-            level = DeprecationLevel.WARNING
+            level = DeprecationLevel.ERROR
         )
         var defaultMaxRepetitionDelay: Long
             get() = defaultMaxRetryDelay
