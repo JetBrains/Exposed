@@ -6,11 +6,11 @@ import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentTestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
-import java.lang.IllegalArgumentException
 
 class UpdateTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
@@ -92,6 +92,20 @@ class UpdateTests : DatabaseTestsBase() {
                 assertEquals(it[users.name], it[userData.comment])
                 assertEquals(0, it[userData.value])
             }
+
+            val userAlias = users.selectAll().where { users.cityId neq 1 }.alias("u2")
+            val joinWithSubQuery = userData.innerJoin(userAlias, { userData.user_id }, { userAlias[users.id] })
+            joinWithSubQuery.update {
+                it[userData.value] = 123
+            }
+
+            joinWithSubQuery.selectAll().forEach {
+                assertEquals(123, it[userData.value])
+            }
+
+            if (currentTestDB in TestDB.ALL_H2_V1) { // h2_v1 treats 'U2' query as a table/view dependent on USERS
+                exec("${users.dropStatement().single()} CASCADE")
+            }
         }
     }
 
@@ -107,6 +121,22 @@ class UpdateTests : DatabaseTestsBase() {
             join.selectAll().forEach {
                 assertEquals(it[users.name], it[userData.comment])
                 assertEquals(123, it[userData.value])
+            }
+
+            val singleJoinQuery = userData.joinQuery(
+                on = { userData.user_id eq it[users.id] },
+                joinPart = { users.selectAll().where { users.cityId neq 1 } }
+            )
+            val doubleJoinQuery = singleJoinQuery.joinQuery(
+                on = { userData.user_id eq it[users.id] },
+                joinPart = { users.selectAll().where { users.name like "%ey" } }
+            )
+            doubleJoinQuery.update {
+                it[userData.value] = 0
+            }
+
+            doubleJoinQuery.selectAll().forEach {
+                assertEquals(0, it[userData.value])
             }
         }
     }
@@ -131,7 +161,6 @@ class UpdateTests : DatabaseTestsBase() {
             }
 
             val join = tableA.innerJoin(tableB)
-            val joinWithConstraint = tableA.innerJoin(tableB, { tableA.id }, { tableB.tableAId }) { tableB.bar eq "foo" }
 
             if (testingDb in supportWhere) {
                 join.update({ tableA.foo eq "foo" }) {
@@ -141,10 +170,21 @@ class UpdateTests : DatabaseTestsBase() {
                     assertEquals("baz", it[tableB.bar])
                 }
 
+                val joinWithConstraint = tableA.innerJoin(tableB, { tableA.id }, { tableB.tableAId }) { tableB.bar eq "foo" }
                 joinWithConstraint.update({ tableA.foo eq "foo" }) {
                     it[tableB.bar] = "baz"
                 }
                 assertEquals(0, joinWithConstraint.selectAll().count())
+
+                val subquery = tableA.selectAll().where { tableA.foo eq "foo" }.alias("sq")
+                val joinWithSubquery = tableB.innerJoin(subquery, { tableB.tableAId }, { subquery[tableA.id] })
+                joinWithSubquery.update({ tableB.bar eq "baz" }) {
+                    it[tableB.bar] = "zip"
+                }
+
+                joinWithSubquery.selectAll().single().also {
+                    assertEquals("zip", it[tableB.bar])
+                }
             } else {
                 expectException<UnsupportedByDialectException> {
                     join.update({ tableA.foo eq "foo" }) {
