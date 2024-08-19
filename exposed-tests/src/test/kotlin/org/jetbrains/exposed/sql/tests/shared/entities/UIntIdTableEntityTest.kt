@@ -4,7 +4,10 @@ import org.jetbrains.exposed.dao.UIntEntity
 import org.jetbrains.exposed.dao.UIntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UIntIdTable
+import org.jetbrains.exposed.dao.with
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.exists
+import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
@@ -78,6 +81,35 @@ class UIntIdTableEntityTest : DatabaseTestsBase() {
             assertEquals(false, allPeople.contains(Pair("Tanu Arora", "Pune")))
         }
     }
+
+    @Test
+    fun testForeignKeyBetweenUIntAndEntityIDColumns() {
+        withTables(UIntIdTables.Cities, UIntIdTables.Towns) {
+            val cId = UIntIdTables.Cities.insertAndGetId {
+                it[name] = "City A"
+            }
+            val tId = UIntIdTables.Towns.insertAndGetId {
+                it[cityId] = cId.value
+            }
+
+            // lazy loaded referencedOn
+            val town1 = UIntIdTables.Town.all().single()
+            assertEquals(cId, town1.city.id)
+
+            // eager loaded referencedOn
+            val town1WithCity = UIntIdTables.Town.all().with(UIntIdTables.Town::city).single()
+            assertEquals(cId, town1WithCity.city.id)
+
+            // lazy loaded referrersOn
+            val city1 = UIntIdTables.City.all().single()
+            val towns = city1.towns
+            assertEquals(cId, towns.first().city.id)
+
+            // eager loaded referrersOn
+            val city1WithTowns = UIntIdTables.City.all().with(UIntIdTables.City::towns).single()
+            assertEquals(tId, city1WithTowns.towns.first().id)
+        }
+    }
 }
 
 object UIntIdTables {
@@ -89,6 +121,7 @@ object UIntIdTables {
         companion object : UIntEntityClass<City>(Cities)
 
         var name by Cities.name
+        val towns by Town referrersOn Towns.cityId
     }
 
     object People : UIntIdTable() {
@@ -101,5 +134,15 @@ object UIntIdTables {
 
         var name by People.name
         var city by City referencedOn People.cityId
+    }
+
+    object Towns : UIntIdTable("towns") {
+        val cityId: Column<UInt> = uinteger("city_id").references(Cities.id)
+    }
+
+    class Town(id: EntityID<UInt>) : UIntEntity(id) {
+        companion object : UIntEntityClass<Town>(Towns)
+
+        var city by City referencedOn Towns.cityId
     }
 }
