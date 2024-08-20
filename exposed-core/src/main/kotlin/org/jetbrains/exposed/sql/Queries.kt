@@ -118,7 +118,7 @@ fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(I
  * @return Count of deleted rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
  */
-fun <T : Table> T.deleteWhere(limit: Int? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
+inline fun <T : Table> T.deleteWhere(limit: Int? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
     DeleteStatement.where(TransactionManager.current(), this@deleteWhere, op(SqlExpressionBuilder), false, limit)
 
 @Deprecated(
@@ -142,7 +142,7 @@ fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op
  * @param op Condition that determines which rows to delete.
  * @return Count of deleted rows.
  */
-fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
+inline fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
     DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, op(SqlExpressionBuilder), true, limit)
 
 /**
@@ -163,9 +163,9 @@ fun Table.deleteAll(): Int =
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testDeleteReturning
  */
-fun <T : Table> T.deleteReturning(
+inline fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+    noinline where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
 ): ReturningStatement {
     val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, false, null)
     return ReturningStatement(this, returning, delete)
@@ -185,12 +185,12 @@ fun <T : Table> T.deleteReturning(
  * @return The number of deleted rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDeleteWithSingleJoin
  */
-fun Join.delete(
+inline fun Join.delete(
     targetTable: Table,
     vararg targetTables: Table,
     ignore: Boolean = false,
     limit: Int? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+    noinline where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
 ): Int {
     val targets = listOf(targetTable) + targetTables
     val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, ignore, limit, targets)
@@ -202,7 +202,9 @@ fun Join.delete(
  *
  * @sample org.jetbrains.exposed.sql.tests.h2.H2Tests.insertInH2
  */
-fun <T : Table> T.insert(body: T.(InsertStatement<Number>) -> Unit): InsertStatement<Number> = InsertStatement<Number>(this).apply {
+inline fun <T : Table> T.insert(
+    body: T.(InsertStatement<Number>) -> Unit
+): InsertStatement<Number> = InsertStatement<Number>(this).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -213,7 +215,9 @@ fun <T : Table> T.insert(body: T.(InsertStatement<Number>) -> Unit): InsertState
  * @return The generated ID for the new row.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testGeneratedKey04
  */
-fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>) -> Unit): EntityID<Key> =
+inline fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
+    body: T.(InsertStatement<EntityID<Key>>) -> Unit
+): EntityID<Key> =
     InsertStatement<EntityID<Key>>(this, false).run {
         body(this)
         execute(TransactionManager.current())
@@ -366,7 +370,9 @@ private fun <E, S : BaseBatchInsertStatement> executeBatch(
  *
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetIdWithPredefinedId
  */
-fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
+inline fun <T : Table> T.insertIgnore(
+    body: T.(UpdateBuilder<*>) -> Unit
+): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -381,7 +387,9 @@ fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatem
  * @return The generated ID for the new row, or `null` if none was retrieved after statement execution.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetId01
  */
-fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit): EntityID<Key>? =
+inline fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
+    body: T.(UpdateBuilder<*>) -> Unit
+): EntityID<Key>? =
     InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
         body(this)
         when (execute(TransactionManager.current())) {
@@ -398,7 +406,9 @@ fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<
  *
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceWithExpression
  */
-fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
+inline fun <T : Table> T.replace(
+    body: T.(UpdateBuilder<*>) -> Unit
+): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -463,7 +473,7 @@ private fun Column<*>.isValidIfAutoIncrement(): Boolean =
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testInsertReturning
  */
-fun <T : Table> T.insertReturning(
+inline fun <T : Table> T.insertReturning(
     returning: List<Expression<*>> = columns,
     ignoreErrors: Boolean = false,
     body: T.(InsertStatement<Number>) -> Unit
@@ -481,7 +491,11 @@ fun <T : Table> T.insertReturning(
  * @return The number of updated rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdate01
  */
-fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
+inline fun <T : Table> T.update(
+    noinline where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    limit: Int? = null,
+    body: T.(UpdateStatement) -> Unit
+): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
     return query.execute(TransactionManager.current()) ?: 0
@@ -495,7 +509,11 @@ fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
  * @return The number of updated rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
  */
-fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
+inline fun Join.update(
+    noinline where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    limit: Int? = null,
+    body: (UpdateStatement) -> Unit
+): Int {
     val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
     body(query)
     return query.execute(TransactionManager.current()) ?: 0
@@ -509,9 +527,9 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpdateReturning
  */
-fun <T : Table> T.updateReturning(
+inline fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    noinline where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpdateStatement) -> Unit
 ): ReturningStatement {
     val update = UpdateStatement(this, null, where?.let { SqlExpressionBuilder.it() })
@@ -539,11 +557,11 @@ fun <T : Table> T.updateReturning(
  * @param where Condition that determines which rows to update, if a unique violation is found.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testUpsertWithUniqueIndexConflict
  */
-fun <T : Table> T.upsert(
+inline fun <T : Table> T.upsert(
     vararg keys: Column<*>,
-    onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
+    noinline onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    noinline where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ) = UpsertStatement<Long>(this, keys = keys, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() }).apply {
     onUpdate?.let { storeUpdateValues(it) }
@@ -588,12 +606,12 @@ fun <T : Table> T.upsert(
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpsertReturning
  */
-fun <T : Table> T.upsertReturning(
+inline fun <T : Table> T.upsertReturning(
     vararg keys: Column<*>,
     returning: List<Expression<*>> = columns,
-    onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
+    noinline onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    noinline where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): ReturningStatement {
     val upsert = UpsertStatement<Long>(this, keys = keys, onUpdateExclude, where?.let { SqlExpressionBuilder.it() })
@@ -756,9 +774,9 @@ fun Table.exists(): Boolean = currentDialect.tableExists(this)
  *             when records are matched or not matched.
  * @return A [MergeTableStatement] which represents the MERGE operation with the configured actions.
  */
-fun <D : Table, S : Table> D.mergeFrom(
+inline fun <D : Table, S : Table> D.mergeFrom(
     source: S,
-    on: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    noinline on: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
     return MergeTableStatement(this, source, on = on?.invoke(SqlExpressionBuilder)).apply {
@@ -779,7 +797,7 @@ fun <D : Table, S : Table> D.mergeFrom(
  *             when records are matched or not matched.
  * @return A [MergeSelectStatement] which represents the MERGE operation with the configured actions.
  */
-fun <T : Table> T.mergeFrom(
+inline fun <T : Table> T.mergeFrom(
     selectQuery: QueryAlias,
     on: SqlExpressionBuilder.() -> Op<Boolean>,
     body: MergeSelectStatement.() -> Unit
