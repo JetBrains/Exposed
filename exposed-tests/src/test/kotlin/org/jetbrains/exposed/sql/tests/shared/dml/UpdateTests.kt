@@ -6,11 +6,11 @@ import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentTestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
-import java.lang.IllegalArgumentException
 
 class UpdateTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
@@ -131,7 +131,6 @@ class UpdateTests : DatabaseTestsBase() {
             }
 
             val join = tableA.innerJoin(tableB)
-            val joinWithConstraint = tableA.innerJoin(tableB, { tableA.id }, { tableB.tableAId }) { tableB.bar eq "foo" }
 
             if (testingDb in supportWhere) {
                 join.update({ tableA.foo eq "foo" }) {
@@ -141,6 +140,7 @@ class UpdateTests : DatabaseTestsBase() {
                     assertEquals("baz", it[tableB.bar])
                 }
 
+                val joinWithConstraint = tableA.innerJoin(tableB, { tableA.id }, { tableB.tableAId }) { tableB.bar eq "foo" }
                 joinWithConstraint.update({ tableA.foo eq "foo" }) {
                     it[tableB.bar] = "baz"
                 }
@@ -150,6 +150,50 @@ class UpdateTests : DatabaseTestsBase() {
                     join.update({ tableA.foo eq "foo" }) {
                         it[tableB.bar] = "baz"
                     }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testUpdateWithJoinQuery() {
+        withCitiesAndUsers(exclude = TestDB.ALL_H2_V1 + TestDB.SQLITE) { _, users, userData ->
+            // single join query using join()
+            val userAlias = users.selectAll().where { users.cityId neq 1 }.alias("u2")
+            val joinWithSubQuery = userData.innerJoin(userAlias, { userData.user_id }, { userAlias[users.id] })
+            joinWithSubQuery.update {
+                it[userData.value] = 123
+            }
+
+            joinWithSubQuery.selectAll().forEach {
+                assertEquals(123, it[userData.value])
+            }
+
+            if (currentTestDB !in TestDB.ALL_H2) { // does not support either multi-table joins or update(where)
+                // single join query using join() with update(where)
+                joinWithSubQuery.update({ userData.comment like "Comment%" }) {
+                    it[userData.value] = 0
+                }
+
+                joinWithSubQuery.selectAll().forEach {
+                    assertEquals(0, it[userData.value])
+                }
+
+                // multiple join queries using joinQuery()
+                val singleJoinQuery = userData.joinQuery(
+                    on = { userData.user_id eq it[users.id] },
+                    joinPart = { users.selectAll().where { users.cityId neq 1 } }
+                )
+                val doubleJoinQuery = singleJoinQuery.joinQuery(
+                    on = { userData.user_id eq it[users.id] },
+                    joinPart = { users.selectAll().where { users.name like "%ey" } }
+                )
+                doubleJoinQuery.update {
+                    it[userData.value] = 99
+                }
+
+                doubleJoinQuery.selectAll().forEach {
+                    assertEquals(99, it[userData.value])
                 }
             }
         }
