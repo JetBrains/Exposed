@@ -76,7 +76,7 @@ class ThreadLocalTransactionManager(
             return field
         }
 
-        @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel")
+        @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel", level = DeprecationLevel.ERROR)
         @TestOnly
         set
 

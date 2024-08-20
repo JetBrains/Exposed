@@ -34,29 +34,24 @@ class RollbackTransactionTest : DatabaseTestsBase() {
 
     @Test
     fun testRollbackWithSavepoints() {
-        withTables(RollbackTable) {
-            try {
-                db.useNestedTransactions = true
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
-                    maxAttempts = 1
-                    RollbackTable.insert { it[RollbackTable.value] = "before-dummy" }
-                    transaction {
-                        assertEquals(1L, RollbackTable.selectAll().where { RollbackTable.value eq "before-dummy" }.count())
-                        RollbackTable.insert { it[RollbackTable.value] = "inner-dummy" }
-                        rollback()
-                    }
+        withTables(RollbackTable, configure = { useNestedTransactions = true }) {
+            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
+                maxAttempts = 1
+                RollbackTable.insert { it[RollbackTable.value] = "before-dummy" }
+                transaction {
                     assertEquals(1L, RollbackTable.selectAll().where { RollbackTable.value eq "before-dummy" }.count())
-                    assertEquals(0L, RollbackTable.selectAll().where { RollbackTable.value eq "inner-dummy" }.count())
-                    RollbackTable.insert { it[RollbackTable.value] = "after-dummy" }
-                    assertEquals(1L, RollbackTable.selectAll().where { RollbackTable.value eq "after-dummy" }.count())
+                    RollbackTable.insert { it[RollbackTable.value] = "inner-dummy" }
                     rollback()
                 }
-                assertEquals(0L, RollbackTable.selectAll().where { RollbackTable.value eq "before-dummy" }.count())
+                assertEquals(1L, RollbackTable.selectAll().where { RollbackTable.value eq "before-dummy" }.count())
                 assertEquals(0L, RollbackTable.selectAll().where { RollbackTable.value eq "inner-dummy" }.count())
-                assertEquals(0L, RollbackTable.selectAll().where { RollbackTable.value eq "after-dummy" }.count())
-            } finally {
-                db.useNestedTransactions = false
+                RollbackTable.insert { it[RollbackTable.value] = "after-dummy" }
+                assertEquals(1L, RollbackTable.selectAll().where { RollbackTable.value eq "after-dummy" }.count())
+                rollback()
             }
+            assertEquals(0L, RollbackTable.selectAll().where { RollbackTable.value eq "before-dummy" }.count())
+            assertEquals(0L, RollbackTable.selectAll().where { RollbackTable.value eq "inner-dummy" }.count())
+            assertEquals(0L, RollbackTable.selectAll().where { RollbackTable.value eq "after-dummy" }.count())
         }
     }
 }
