@@ -82,9 +82,13 @@ internal object H2FunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("H2 doesn't support WHERE in UPDATE with join clause.")
         }
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
-            ?: transaction.throwUnsupportedException("H2 supports a join updates with a single table columns to update.")
+            ?: transaction.throwUnsupportedException(
+                "H2 doesn't support UPDATE with join clause that uses columns from multiple tables."
+            )
         val joinPart = targets.joinParts.singleOrNull()
-            ?: transaction.throwUnsupportedException("H2 supports a join updates with only one table to join.")
+            ?: transaction.throwUnsupportedException(
+                "H2 doesn't support UPDATE with join clause that uses multiple tables to join."
+            )
         if (joinPart.joinType != JoinType.INNER) {
             exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
         }

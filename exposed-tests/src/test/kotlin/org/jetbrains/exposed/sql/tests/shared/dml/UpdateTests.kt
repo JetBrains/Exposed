@@ -92,20 +92,6 @@ class UpdateTests : DatabaseTestsBase() {
                 assertEquals(it[users.name], it[userData.comment])
                 assertEquals(0, it[userData.value])
             }
-
-            val userAlias = users.selectAll().where { users.cityId neq 1 }.alias("u2")
-            val joinWithSubQuery = userData.innerJoin(userAlias, { userData.user_id }, { userAlias[users.id] })
-            joinWithSubQuery.update {
-                it[userData.value] = 123
-            }
-
-            joinWithSubQuery.selectAll().forEach {
-                assertEquals(123, it[userData.value])
-            }
-
-            if (currentTestDB in TestDB.ALL_H2_V1) { // h2_v1 treats 'U2' query as a table/view dependent on USERS
-                exec("${users.dropStatement().single()} CASCADE")
-            }
         }
     }
 
@@ -121,22 +107,6 @@ class UpdateTests : DatabaseTestsBase() {
             join.selectAll().forEach {
                 assertEquals(it[users.name], it[userData.comment])
                 assertEquals(123, it[userData.value])
-            }
-
-            val singleJoinQuery = userData.joinQuery(
-                on = { userData.user_id eq it[users.id] },
-                joinPart = { users.selectAll().where { users.cityId neq 1 } }
-            )
-            val doubleJoinQuery = singleJoinQuery.joinQuery(
-                on = { userData.user_id eq it[users.id] },
-                joinPart = { users.selectAll().where { users.name like "%ey" } }
-            )
-            doubleJoinQuery.update {
-                it[userData.value] = 0
-            }
-
-            doubleJoinQuery.selectAll().forEach {
-                assertEquals(0, it[userData.value])
             }
         }
     }
@@ -175,21 +145,55 @@ class UpdateTests : DatabaseTestsBase() {
                     it[tableB.bar] = "baz"
                 }
                 assertEquals(0, joinWithConstraint.selectAll().count())
-
-                val subquery = tableA.selectAll().where { tableA.foo eq "foo" }.alias("sq")
-                val joinWithSubquery = tableB.innerJoin(subquery, { tableB.tableAId }, { subquery[tableA.id] })
-                joinWithSubquery.update({ tableB.bar eq "baz" }) {
-                    it[tableB.bar] = "zip"
-                }
-
-                joinWithSubquery.selectAll().single().also {
-                    assertEquals("zip", it[tableB.bar])
-                }
             } else {
                 expectException<UnsupportedByDialectException> {
                     join.update({ tableA.foo eq "foo" }) {
                         it[tableB.bar] = "baz"
                     }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testUpdateWithJoinQuery() {
+        withCitiesAndUsers(exclude = TestDB.ALL_H2_V1 + TestDB.SQLITE) { _, users, userData ->
+            // single join query using join()
+            val userAlias = users.selectAll().where { users.cityId neq 1 }.alias("u2")
+            val joinWithSubQuery = userData.innerJoin(userAlias, { userData.user_id }, { userAlias[users.id] })
+            joinWithSubQuery.update {
+                it[userData.value] = 123
+            }
+
+            joinWithSubQuery.selectAll().forEach {
+                assertEquals(123, it[userData.value])
+            }
+
+            if (currentTestDB !in TestDB.ALL_H2) { // does not support either multi-table joins or update(where)
+                // single join query using join() with update(where)
+                joinWithSubQuery.update({ userData.comment like "Comment%" }) {
+                    it[userData.value] = 0
+                }
+
+                joinWithSubQuery.selectAll().forEach {
+                    assertEquals(0, it[userData.value])
+                }
+
+                // multiple join queries using joinQuery()
+                val singleJoinQuery = userData.joinQuery(
+                    on = { userData.user_id eq it[users.id] },
+                    joinPart = { users.selectAll().where { users.cityId neq 1 } }
+                )
+                val doubleJoinQuery = singleJoinQuery.joinQuery(
+                    on = { userData.user_id eq it[users.id] },
+                    joinPart = { users.selectAll().where { users.name like "%ey" } }
+                )
+                doubleJoinQuery.update {
+                    it[userData.value] = 99
+                }
+
+                doubleJoinQuery.selectAll().forEach {
+                    assertEquals(99, it[userData.value])
                 }
             }
         }
