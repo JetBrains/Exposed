@@ -14,7 +14,6 @@ import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.junit.Test
 import java.sql.Connection
@@ -1649,51 +1648,40 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testEagerLoadingWithStringParentId() {
-        withDb { testDb ->
-            val db = testDb.connect {
-                keepLoadedReferencesOutOfTransaction = true
+        withTables(Countries, Dishes, configure = { keepLoadedReferencesOutOfTransaction = true }) {
+            val lebanonId = Countries.insertAndGetId {
+                it[id] = "LB"
+                it[name] = "Lebanon"
             }
-            transaction(db) {
-                try {
-                    SchemaUtils.create(Countries, Dishes)
+            val lebanon = Country.findById(lebanonId)!!
 
-                    val lebanonId = Countries.insertAndGetId {
-                        it[id] = "LB"
-                        it[name] = "Lebanon"
-                    }
-                    val lebanon = Country.findById(lebanonId)!!
+            Dish.new {
+                name = "Kebbeh"
+                country = lebanon
+            }
 
-                    Dish.new {
-                        name = "Kebbeh"
-                        country = lebanon
-                    }
+            Dish.new {
+                name = "Mjaddara"
+                country = lebanon
+            }
 
-                    Dish.new {
-                        name = "Mjaddara"
-                        country = lebanon
-                    }
+            Dish.new {
+                name = "Fatteh"
+                country = lebanon
+            }
 
-                    Dish.new {
-                        name = "Fatteh"
-                        country = lebanon
-                    }
+            debug = true
 
-                    debug = true
+            Country.all().with(Country::dishes)
 
-                    Country.all().with(Country::dishes)
-
-                    statementStats
-                        .filterKeys { it.startsWith("SELECT ") }
-                        .forEach { (_, stats) ->
-                            val (count, _) = stats
-                            assertEquals(1, count)
-                        }
-
-                    debug = false
-                } finally {
-                    SchemaUtils.drop(Dishes, Countries)
+            statementStats
+                .filterKeys { it.startsWith("SELECT ") }
+                .forEach { (_, stats) ->
+                    val (count, _) = stats
+                    assertEquals(1, count)
                 }
-            }
+
+            debug = false
         }
     }
 
@@ -1729,39 +1717,28 @@ class EntityTests : DatabaseTestsBase() {
      */
     @Test
     fun testEagerLoadingWithReferenceDifferentFromParentId() {
-        withDb { testDb ->
-            val db = testDb.connect {
-                keepLoadedReferencesOutOfTransaction = true
+        withTables(Customers, Orders, configure = { keepLoadedReferencesOutOfTransaction = true }) {
+            val customer1 = Customer.new {
+                emailAddress = "customer1@testing.com"
+                name = "Customer1"
             }
-            transaction(db) {
-                try {
-                    SchemaUtils.create(Customers, Orders)
 
-                    val customer1 = Customer.new {
-                        emailAddress = "customer1@testing.com"
-                        name = "Customer1"
-                    }
-
-                    val order1 = Order.new {
-                        name = "Order1"
-                        customer = customer1
-                    }
-
-                    val order2 = Order.new {
-                        name = "Order2"
-                        customer = customer1
-                    }
-
-                    Customer.all().with(Customer::orders)
-
-                    val cache = this.entityCache
-
-                    assertEquals(true, cache.getReferrers<Order>(customer1.id, Orders.customer)?.contains(order1))
-                    assertEquals(true, cache.getReferrers<Order>(customer1.id, Orders.customer)?.contains(order2))
-                } finally {
-                    SchemaUtils.drop(Orders, Customers)
-                }
+            val order1 = Order.new {
+                name = "Order1"
+                customer = customer1
             }
+
+            val order2 = Order.new {
+                name = "Order2"
+                customer = customer1
+            }
+
+            Customer.all().with(Customer::orders)
+
+            val cache = this.entityCache
+
+            assertEquals(true, cache.getReferrers<Order>(customer1.id, Orders.customer)?.contains(order1))
+            assertEquals(true, cache.getReferrers<Order>(customer1.id, Orders.customer)?.contains(order2))
         }
     }
 

@@ -412,9 +412,7 @@ class UpsertTests : DatabaseTestsBase() {
             val losses = integer("losses")
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
-            db.useNestedTransactions = true
-
+        withTables(excludeSettings = TestDB.ALL_H2_V1, tester, configure = { useNestedTransactions = true }) {
             val itemA = "Item A"
             tester.upsert {
                 it[item] = itemA
@@ -456,8 +454,6 @@ class UpsertTests : DatabaseTestsBase() {
             assertEquals(insertCode, updateCode)
             assertEquals(insertGains, updateGains)
             assertNotEquals(insertLosses, updateLosses)
-
-            db.useNestedTransactions = false
         }
     }
 

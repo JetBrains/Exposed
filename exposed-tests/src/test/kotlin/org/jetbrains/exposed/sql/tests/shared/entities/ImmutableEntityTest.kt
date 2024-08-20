@@ -38,10 +38,9 @@ class ImmutableEntityTest : DatabaseTestsBase() {
         val etag by Schema.Organization.etag
     }
 
-    @Test fun immutableEntityReadAfterUpdate() {
-        withTables(Schema.Organization) {
-            db.useNestedTransactions = true
-
+    @Test
+    fun immutableEntityReadAfterUpdate() {
+        withTables(Schema.Organization, configure = { useNestedTransactions = true }) {
             transaction {
                 Schema.Organization.insert {
                     it[name] = "JetBrains"
@@ -59,10 +58,9 @@ class ImmutableEntityTest : DatabaseTestsBase() {
         }
     }
 
-    @Test fun immutableEntityCacheInvalidation() {
-        withTables(Schema.Organization) {
-            db.useNestedTransactions = true
-
+    @Test
+    fun immutableEntityCacheInvalidation() {
+        withTables(Schema.Organization, configure = { useNestedTransactions = true }) {
             transaction {
                 Schema.Organization.insert {
                     it[name] = "JetBrains"

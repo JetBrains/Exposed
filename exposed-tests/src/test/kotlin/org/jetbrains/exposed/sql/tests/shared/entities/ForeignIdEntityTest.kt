@@ -42,9 +42,7 @@ class ForeignIdEntityTest : DatabaseTestsBase() {
     @Test
     fun foreignIdEntityUpdate() {
         // reproducer for https://github.com/JetBrains/Exposed/issues/880
-        withTables(Schema.Projects, Schema.ProjectConfigs) {
-            db.useNestedTransactions = true
-
+        withTables(Schema.Projects, Schema.ProjectConfigs, configure = { useNestedTransactions = true }) {
             transaction {
                 val projectId = Project.new { name = "Space" }.id.value
                 ProjectConfig.new(projectId) { setting = true }

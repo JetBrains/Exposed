@@ -1,6 +1,11 @@
 package org.jetbrains.exposed.sql.tests
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.Key
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
@@ -53,10 +58,13 @@ abstract class DatabaseTestsBase {
     @Parameterized.Parameter(2)
     lateinit var testName: String
 
-    fun withDb(dbSettings: TestDB, statement: Transaction.(TestDB) -> Unit) {
+    fun withDb(dbSettings: TestDB, configure: (DatabaseConfig.Builder.() -> Unit)? = null, statement: Transaction.(TestDB) -> Unit) {
         Assume.assumeTrue(dialect == dbSettings)
 
-        if (dbSettings !in registeredOnShutdown) {
+        val unregistered = dbSettings !in registeredOnShutdown
+        val newConfiguration = configure != null && !unregistered
+
+        if (unregistered) {
             dbSettings.beforeConnection()
             Runtime.getRuntime().addShutdownHook(
                 thread(false) {
@@ -65,9 +73,13 @@ abstract class DatabaseTestsBase {
                 }
             )
             registeredOnShutdown += dbSettings
-            dbSettings.db = dbSettings.connect()
+            dbSettings.db = dbSettings.connect(configure ?: {})
         }
 
+        val registeredDb = dbSettings.db!!
+        if (newConfiguration) {
+            dbSettings.db = dbSettings.connect(configure ?: {})
+        }
         val database = dbSettings.db!!
         transaction(database.transactionManager.defaultIsolationLevel, db = database) {
             maxAttempts = 1
@@ -75,9 +87,19 @@ abstract class DatabaseTestsBase {
             currentTestDB = dbSettings
             statement(dbSettings)
         }
+
+        // revert any new configuration to not be carried over to the next test in suite
+        if (configure != null) {
+            dbSettings.db = registeredDb
+        }
     }
 
-    fun withDb(db: Collection<TestDB>? = null, excludeSettings: Collection<TestDB> = emptyList(), statement: Transaction.(TestDB) -> Unit) {
+    fun withDb(
+        db: Collection<TestDB>? = null,
+        excludeSettings: Collection<TestDB> = emptyList(),
+        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+        statement: Transaction.(TestDB) -> Unit
+    ) {
         if (db != null && dialect !in db) {
             Assume.assumeFalse(true)
             return
@@ -93,13 +115,18 @@ abstract class DatabaseTestsBase {
             return
         }
 
-        withDb(dialect, statement)
+        withDb(dialect, configure, statement)
     }
 
-    fun withTables(excludeSettings: Collection<TestDB>, vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
+    fun withTables(
+        excludeSettings: Collection<TestDB>,
+        vararg tables: Table,
+        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+        statement: Transaction.(TestDB) -> Unit
+    ) {
         Assume.assumeFalse(dialect in excludeSettings)
 
-        withDb(dialect) {
+        withDb(dialect, configure = configure) {
             try {
                 SchemaUtils.drop(*tables)
             } catch (_: Throwable) {
@@ -124,7 +151,12 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withSchemas(excludeSettings: List<TestDB>, vararg schemas: Schema, statement: Transaction.() -> Unit) {
+    fun withSchemas(
+        excludeSettings: List<TestDB>,
+        vararg schemas: Schema,
+        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+        statement: Transaction.() -> Unit
+    ) {
         if (dialect !in TestDB.enabledDialects()) {
             Assume.assumeFalse(true)
             return
@@ -135,7 +167,7 @@ abstract class DatabaseTestsBase {
             return
         }
 
-        withDb(dialect) {
+        withDb(dialect, configure) {
             if (currentDialectTest.supportsCreateSchema) {
                 SchemaUtils.createSchema(*schemas)
                 try {
@@ -150,12 +182,12 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables(vararg tables: Table, statement: Transaction.(TestDB) -> Unit) {
-        withTables(excludeSettings = emptyList(), tables = tables, statement = statement)
+    fun withTables(vararg tables: Table, configure: (DatabaseConfig.Builder.() -> Unit)? = null, statement: Transaction.(TestDB) -> Unit) {
+        withTables(excludeSettings = emptyList(), tables = tables, configure = configure, statement = statement)
     }
 
-    fun withSchemas(vararg schemas: Schema, statement: Transaction.() -> Unit) {
-        withSchemas(excludeSettings = emptyList(), schemas = schemas, statement = statement)
+    fun withSchemas(vararg schemas: Schema, configure: (DatabaseConfig.Builder.() -> Unit)? = null, statement: Transaction.() -> Unit) {
+        withSchemas(excludeSettings = emptyList(), schemas = schemas, configure = configure, statement = statement)
     }
 
     fun addIfNotExistsIfSupported() = if (currentDialectTest.supportsIfNotExists) {
