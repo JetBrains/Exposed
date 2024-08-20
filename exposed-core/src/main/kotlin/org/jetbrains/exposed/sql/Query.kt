@@ -83,7 +83,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     @Deprecated(
         message = "As part of SELECT DSL design changes, this will be removed in future releases.",
         replaceWith = ReplaceWith("adjustSelect { body.invoke() }"),
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     fun adjustSlice(body: ColumnSet.(FieldSet) -> FieldSet): Query = apply { set = set.source.body(set) }
 

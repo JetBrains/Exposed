@@ -34,7 +34,7 @@ class ThreadLocalTransactionManager(
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMaxAttempts"),
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     override var defaultRepetitionAttempts: Int
         get() = defaultMaxAttempts
@@ -43,7 +43,7 @@ class ThreadLocalTransactionManager(
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMinRetryDelay"),
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     override var defaultMinRepetitionDelay: Long
         get() = defaultMinRetryDelay
@@ -52,7 +52,7 @@ class ThreadLocalTransactionManager(
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMaxRetryDelay"),
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     override var defaultMaxRepetitionDelay: Long
         get() = defaultMaxRetryDelay

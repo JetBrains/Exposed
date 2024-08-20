@@ -11,7 +11,7 @@ import kotlin.sequences.Sequence
 @Deprecated(
     message = "As part of SELECT DSL design changes, this will be removed in future releases.",
     replaceWith = ReplaceWith("selectAll().where { where.invoke() }", "import org.jetbrains.exposed.sql.selectAll"),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 inline fun FieldSet.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = Query(this, SqlExpressionBuilder.where())
 
@@ -26,7 +26,7 @@ inline fun Query.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = 
 @Deprecated(
     message = "As part of SELECT DSL design changes, this will be removed in future releases.",
     replaceWith = ReplaceWith("selectAll().where(where)", "import org.jetbrains.exposed.sql.selectAll"),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun FieldSet.select(where: Op<Boolean>): Query = Query(this, where)
 
@@ -53,7 +53,7 @@ fun FieldSet.selectAll(): Query = Query(this, null)
         "selectAll().where { where.invoke() }.fetchBatchedResults(batchSize)",
         "import org.jetbrains.exposed.sql.selectAll"
     ),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun FieldSet.selectBatched(
     batchSize: Int = 1000,
@@ -80,7 +80,7 @@ fun Query.selectBatched(
         "selectAll().fetchBatchedResults(batchSize)",
         "import org.jetbrains.exposed.sql.selectAll"
     ),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun FieldSet.selectAllBatched(
     batchSize: Int = 1000
