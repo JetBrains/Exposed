@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       id="DSL-CRUD-operations" title="CRUD operations" help-id="Deep-Dive-into-DSL;CRUD-operations">
+
+    <show-structure for="chapter,procedure" depth="2"/>
+
+    <p>CRUD stands for Create Read Update Delete, which are four basic operations for a database to support. This
+        section shows how to perform SQL CRUD operations
+        using Kotlin DSL.</p>
+    <chapter title="Create" id="create">
+        <p>Exposed provides several functions to insert rows into a table:</p>
+
+        <chapter id="insert">
+            <title><code>insert</code></title>
+            <p>To create a new table row, use the <code>insert</code> query. If the same row already exists in the table,
+                it throws an exception.</p>
+            <code-block lang="kotlin">
+                Cities.insert {
+                    it[name] = &quot;St. Petersburg&quot;
+                    it[country] = Country.RUSSIA
+                    it[population] = 500
+                }
+            </code-block>
+            <p>The example corresponds to the following SQL statement:</p>
+            <code-block lang="sql">
+                INSERT INTO CITIES (COUNTRY, &quot;NAME&quot;, POPULATION) VALUES ('RUSSIA', 'St. Petersburg', 300)
+            </code-block>
+        </chapter>
+
+        <chapter id="insertAndGetId">
+            <title><code>insertAndGetId</code></title>
+            <tldr>
+                <p>Supported on: MySQL, PostgreSQL, and SQLite</p>
+                <p>Table types: <code>IntIdTable()</code> </p>
+            </tldr>
+            <p>To add a new row and return its ID, use <code>insertAndGetId</code>. If the same row already exists in
+                the table, it throws an exception.</p>
+
+            <code-block lang="kotlin">
+                val id = Cities.insertAndGetId {
+                    it[name] = &quot;St. Petersburg&quot;
+                    it[country] = Country.RUSSIA
+                    it[population] = 500
+                }
+            </code-block>
+            <code-block lang="sql">
+                INSERT INTO CITIES (COUNTRY, &quot;NAME&quot;, POPULATION) VALUES ('RUSSIA', 'St. Petersburg', 300)
+            </code-block>
+        </chapter>
+
+        <chapter id="insertIgnore">
+            <title><code>insertIgnore</code></title>
+            <tldr>
+                <p>Supported on: MySQL, PostgreSQL, and SQLite</p>
+            </tldr>
+            <p>To allow insert statements to be executed without throwing any errors, use <code>insertIgnore</code>.
+                This may be useful, for example, when insertion conflicts are possible:</p>
+
+            <code-block lang="kotlin">
+                StarWarsFilms.insert {
+                    it[sequelId] = 8 // column pre-defined with a unique index
+                    it[name] = &quot;The Last Jedi&quot;
+                    it[director] = &quot;Rian Johnson&quot;
+                }
+
+                StarWarsFilms.insertIgnore {
+                    it[sequelId] = 8
+                    it[name] = &quot;The Rise of Skywalker&quot;
+                    it[director] = &quot;JJ Abrams&quot;
+                }
+            </code-block>
+            <p>
+                If <code>insert</code> was used instead of <code>insertIgnore</code>, this would throw a constraint violation exception
+                Instead, this new row is ignored and discarded.
+            </p>
+        </chapter>
+
+        <chapter id="insertIgnoreAndGetId">
+            <title><code>insertIgnoreAndGetId</code></title>
+            <tldr>
+                <p>Supported on: MySQL, PostgreSQL, and SQLite</p>
+                <p>Table types: <code>IntIdTable()</code> </p>
+            </tldr>
+            <p><code>insertIgnoreAndGetId</code> adds a new row and returns its ID. If the same row already
+                exists in the table, it ignores it and doesn't throw an exception.</p>
+
+            <code-block lang="kotlin">
+                val id = Cities.insertIgnoreAndGetId {
+                    it[name] = &quot;St. Petersburg&quot;
+                    it[country] = Country.RUSSIA
+                    it[population] = 500
+                }
+            </code-block>
+            <code-block lang="sql">
+                INSERT IGNORE INTO CITIES (COUNTRY, &quot;NAME&quot;, POPULATION) VALUES ('RUSSIA', 'St. Petersburg', 300)            </code-block>
+        </chapter>
+
+        <chapter id="batch-insert">
+            <title><code>batchInsert</code></title>
+            <p><code>batchInsert</code> allows mapping a list of entities into table rows in a single SQL statement.
+                It is more efficient than using the <code>insert</code> query for each row as it initiates only one statement.
+            </p>
+            <p>The following example uses a simple list:</p>
+
+            <code-block lang="kotlin">
+                val cityNames = listOf(&quot;Paris&quot;, &quot;Moscow&quot;, &quot;Helsinki&quot;)
+                val allCitiesID = cities.batchInsert(cityNames) { name -&gt;
+                    this[cities.name] = name
+                }
+            </code-block>
+
+            <p>Here is an example that uses a list of data class instances:</p>
+
+            <code-block lang="kotlin">
+                data class SWFilmData(val sequelId: Int, val name: String, val director: String)
+
+                transaction {
+                    // ...
+                    val films = listOf(
+                        SWFilmData(5, &quot;The Empire Strikes Back&quot;, &quot;Irvin Kershner&quot;),
+                        SWFilmData(4, &quot;A New Hope&quot;, &quot;George Lucas&quot;),
+                        SWFilmData(7, &quot;The Force Awakens&quot;, &quot;JJ Abrams&quot;)
+                    )
+
+                    StarWarsFilms.batchInsert(films) { (id, name, director) -&gt;
+                        this[StarWarsFilms.sequelId] = id
+                        this[StarWarsFilms.name] = name
+                        this[StarWarsFilms.director] = director
+                    }
+
+                    StarWarsFilms.selectAll().count() // 3
+                }
+            </code-block>
+            <note>
+                The <code>batchInsert</code> function will still create multiple <code>INSERT</code> statements when
+                interacting with your database.
+                <p>To convert the <code>INSERT</code> statements into a <code>BULK INSERT</code>, use the
+                    <code>rewriteBatchedInserts=true</code>
+                    (or <code>rewriteBatchedStatements=true</code>)
+                    option of your relevant JDBC driver.</p>
+                <p>For more information, see the documentation for this option for <a
+                    href="https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_rewriteBatchedStatements">MySQL</a>
+                    and
+                    <a href="https://jdbc.postgresql.org/documentation/use/">PostgresSQL</a>.</p>
+            </note>
+
+            <p>If you don't need to get the newly generated values, such as the auto-incremented ID, set the
+                <code>shouldReturnGeneratedValues</code> parameter to <code>false</code>. This increases the
+                performance of batch inserts by batching them in chunks, instead of always waiting for the database to
+                synchronize the newly inserted object state.</p>
+            <p>If you want to check if <code>rewriteBatchedInserts</code> and <code>batchInsert</code> are working
+                correctly, you need to enable JDBC logging for your driver. This is necessary, as Exposed will always
+                show the non-rewritten multiple inserts. For more information, see
+                <a href="https://jdbc.postgresql.org/documentation/logging/">how to enable logging in
+                    PostgresSQL</a>.</p>
+        </chapter>
+    </chapter>
+    <chapter title="Read" id="read">
+        <chapter id="select">
+            <title><code>select</code></title>
+            <p>The <code>select()</code> function allows you to select specific columns or/and expressions.</p>
+
+            <code-block lang="kotlin">
+                val filmAndDirector = StarWarsFilms.select(StarWarsFilms.name, StarWarsFilms.director).map {
+                    it[StarWarsFilms.name] to it[StarWarsFilms.director]
+                }
+            </code-block>
+
+            <p>If you want to select only distinct value then use <code>withDistinct()</code> function:</p>
+
+            <code-block lang="kotlin">
+                val directors =
+                    StarWarsFilms.select(StarWarsFilms.director).where { StarWarsFilms.sequelId less 5 }.withDistinct()
+                        .map {
+                            it[StarWarsFilms.director]
+                        }
+            </code-block>
+        </chapter>
+        <chapter id="selectAll">
+            <title><code>selectAll</code></title>
+            <p>To retrieve records from a table, use the <code>selectAll()</code> method:</p>
+            <code-block lang="kotlin">
+                val query: Query = StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq 8 }
+            </code-block>
+            <p><code>Query</code> inherits <code>Iterable</code> so it is possible to traverse it using <code>map()</code>
+                or <code>forEach()</code>:
+                </p>
+
+            <code-block lang="kotlin">
+                StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq 8 }.forEach {
+                    println(it[StarWarsFilms.name])
+                }
+            </code-block>
+        </chapter>
+
+    </chapter>
+    <chapter title="Update" id="update">
+
+        <p>To update a record, use the <code>update()</code> function.
+            By default, it returns the number of updated rows.
+        </p>
+        <code-block lang="kotlin">
+            val updatedCount = StarWarsFilms.update({ StarWarsFilms.name like &quot;Episode%&quot; }) {
+                it[StarWarsFilms.director] = StarWarsFilms.director.upperCase()
+            }
+        </code-block>
+        <p>To update a column value using an expression, such as an increment, use <code>update</code> function
+            or setter:</p>
+
+        <code-block lang="kotlin">
+            StarWarsFilms.update({ StarWarsFilms.sequelId eq 8 }) {
+                with(SqlExpressionBuilder) {
+                    it.update(StarWarsFilms.sequelId, StarWarsFilms.sequelId + 1)
+                    // or
+                    it[StarWarsFilms.sequelId] = StarWarsFilms.sequelId + 1
+                }
+            }
+        </code-block>
+
+    </chapter>
+    <chapter title="Delete" id="delete">
+        <p>Use the <code>deleteWhere()</code> function to delete records and return a count of the number of deleted rows.</p>
+        <code-block lang="kotlin">
+            StarWarsFilms.deleteWhere { StarWarsFilms.sequelId eq 8 }
+        </code-block>
+
+    </chapter>
+    <chapter title="Insert Or Update" id="insert-or-update">
+        <p>Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if
+            a duplicate constraint already exists.
+            The supported functionality of <code>upsert()</code> is dependent on the specific
+            database being used.
+            For example, MySQL's <code>INSERT ... ON DUPLICATE KEY UPDATE</code> statement automatically assesses the
+            primary key and unique indices
+            for a duplicate value, so using the function in Exposed would look like this:</p>
+
+        <code-block lang="kotlin">
+            // inserts a new row
+            StarWarsFilms.upsert {
+                it[sequelId] = 9 // column pre-defined with a unique index
+                it[name] = &quot;The Rise of Skywalker&quot;
+                it[director] = &quot;Rian Johnson&quot;
+            }
+            // updates existing row with the correct [director]
+            StarWarsFilms.upsert {
+                it[sequelId] = 9
+                it[name] = &quot;The Rise of Skywalker&quot;
+                it[director] = &quot;JJ Abrams&quot;
+            }
+        </code-block>
+        <p>If none of the optional arguments are provided to <code>upsert()</code>, and an <code>onUpdate()</code> block
+            is omitted, the statements in the <code>body</code> block will be used for both the insert and update parts
+            of the operation.
+            This means that, for example, if a table mapping has columns with default values and these columns are
+            omitted from the <code>body</code> block, the default values will be
+            used for insertion as well as for the update operation.</p>
+        <note>
+            If the update operation should differ from the insert operation, then <code>onUpdate()</code> should be used
+            in the lambda block to set
+            the specific columns to update, as seen in the example below.
+            <p>If the update operation involves functions that should use the values that would have been inserted, then
+                these columns
+                should be marked using <code>insertValue()</code>, as seen in the example below.</p>
+        </note>
+        <p>Using another example, PostgreSQL allows more control over which key constraint columns to check for
+            conflict, whether different
+            values should be used for an update, and whether the update statement should have a <code>WHERE</code>
+            clause:</p>
+
+        <code-block lang="kotlin">
+            StarWarsFilms.upsert(
+                StarWarsFilms.sequelId,
+                where = { StarWarsFilms.director like stringLiteral(&quot;JJ%&quot;) }
+            ) {
+                it[sequelId] = 9
+                it[name] = &quot;The Rise of Skywalker&quot;
+                it[director] = &quot;JJ Abrams&quot;
+
+                it.onUpdate { update -&gt;
+                    update[sequelId] = sequelId + 1
+                }
+            }
+
+            StarWarsFilms.upsert {
+                it[sequelId] = 9
+                it[name] = &quot;The Rise of Skywalker&quot;
+                it[director] = &quot;Rian Johnson&quot;
+
+                it.onUpdate { update -&gt;
+                    update[director] = concat(
+                        insertValue(StarWarsFilms.director),
+                        stringLiteral(&quot; || &quot;),
+                        StarWarsFilms.director
+                    )
+                }
+            }
+        </code-block>
+        <p>If the update operation should be identical to the insert operation except for a few columns,
+            then <code>onUpdateExclude</code> should be provided an argument with the specific columns to exclude.
+            This parameter could also be used for the reverse case when only a small subset of columns should be updated
+            but duplicating the insert values is tedious:</p>
+
+        <code-block lang="kotlin">
+            // on conflict, all columns EXCEPT [director] are updated with values from the lambda block
+            StarWarsFilms.upsert(onUpdateExclude = listOf(StarWarsFilms.director)) {
+                it[sequelId] = 9
+                it[name] = &quot;The Rise of Skywalker&quot;
+                it[director] = &quot;JJ Abrams&quot;
+            }
+
+// on conflict, ONLY column [director] is updated with value from the lambda block
+            StarWarsFilms.upsert(
+                onUpdateExclude = StarWarsFilms.columns - setOf(StarWarsFilms.director)
+            ) {
+                it[sequelId] = 9
+                it[name] = &quot;The Rise of Skywalker&quot;
+                it[director] = &quot;JJ Abrams&quot;
+            }
+        </code-block>
+        <p>If a specific database supports user-defined key columns and none are provided, the table's primary key is
+            used. If there
+            is no defined primary key, the first unique index is used. If there are no unique indices, each database
+            handles this case
+            differently, so it is strongly advised that keys are defined to avoid unexpected results.</p>
+        <note>
+            Databases that do not support a specific Insert or Update command implement the standard <code>MERGE INTO
+            ... USING</code> statement with aliases and a derived table column list.
+            These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode).
+            Any columns defined as key constraints (to be used in the <code>ON</code> clause) must be included in the
+            statement block to avoid throwing an error.
+        </note>
+    </chapter>
+    <chapter title="Replace" id="replace">
+        <tldr>
+            <p>Supported on: SQLite, MySQL, and MariaDB </p>
+        </tldr>
+        <p>
+            The <code>replace()</code>
+            method acts in a similar manner to an <code>upsert()</code>. The only difference is that
+            if an insertion would violate a unique constraint, the existing row is deleted before the new row is inserted.
+        </p>
+
+        <code-block lang="kotlin">
+            object StarWarsFilms : Table() {
+                val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;).uniqueIndex()
+                val releaseYear: Column&lt;Int&gt; = integer(&quot;release_year&quot;)
+                val name: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
+                val director: Column&lt;String&gt; = varchar(&quot;director&quot;, 50)
+                val rating: Column&lt;Double&gt; = double(&quot;rating&quot;).default(10.0)
+
+                override val primaryKey = PrimaryKey(sequelId, releaseYear)
+            }
+
+            transaction {
+                // ...
+                // inserts a new row with default rating
+                StarWarsFilms.replace {
+                    it[sequelId] = 9
+                    it[releaseYear] = 2019
+                    it[name] = &quot;The Rise of Skywalker&quot;
+                    it[director] = &quot;JJ Abrams&quot;
+                }
+                // deletes existing row and inserts new row with set [rating]
+                StarWarsFilms.replace {
+                    it[sequelId] = 9
+                    it[releaseYear] = 2019
+                    it[name] = &quot;The Rise of Skywalker&quot;
+                    it[director] = &quot;JJ Abrams&quot;
+                    it[rating] = 5.2
+                }
+            }
+        </code-block>
+        <p>Unlike <code>upsert()</code>, none of the supporting databases allows a <code>WHERE</code> clause.
+            Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there
+            is no parameter for a custom key set.</p>
+        <p>The values specified in the statement block will be used for the insert statement, and any omitted columns
+            are set to their default values, if applicable.</p>
+        <p>
+            In the example above, if the original row was inserted with a user-defined <code>rating</code> and <code>replace()</code>
+            was executed with a block that omitted the <code>rating</code> column,
+            the newly inserted row would store the default rating value. This is because the old row was completely
+            deleted first.
+        </p>
+        <p>The <code>REPLACE INTO ... SELECT </code> SQL clause can be used by instead providing a query to <code>replace()</code>:
+        </p>
+
+        <code-block lang="kotlin">
+            val allRowsWithLowRating: Query = StarWarsFilms.selectAll().where {
+                StarWarsFilms.rating less 5.0
+            }
+            StarWarsFilms.replace(allRowsWithLowRating)
+        </code-block>
+        <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
+            are defined in the <code>Table</code> instance.
+            If the columns need to be specified or the order should be changed, provide a list of columns as the second
+            parameter:</p>
+
+        <code-block lang="kotlin">
+            val oneYearLater = StarWarsFilms.releaseYear.plus(1)
+            val allRowsWithNewYear: Query = StarWarsFilms.select(
+                oneYearLater, StarWarsFilms.sequelId, StarWarsFilms.director, StarWarsFilms.name
+            )
+            StarWarsFilms.replace(
+                allRowsWithNewYear,
+                columns = listOf(
+                    StarWarsFilms.releaseYear,
+                    StarWarsFilms.sequelId,
+                    StarWarsFilms.director,
+                    StarWarsFilms.name
+                )
+            )
+        </code-block>
+    </chapter>
+    <chapter id="insertedCount" title="Retrieve the count of modified rows">
+        <p>Some databases return a count of the number of rows inserted, updated, or deleted by the CRUD operation.
+            For <code>insert</code>, <code>upsert</code>, and <code>replace</code>, this value can be accessed
+            using the statement class property <code>insertedCount</code>:</p>
+
+        <code-block lang="kotlin">
+            val insertStatement = StarWarsFilms.insertIgnore {
+                it[name] = &quot;The Last Jedi&quot;
+                it[sequelId] = 8
+                it[director] = &quot;Rian Johnson&quot;
+            }
+            val rowCount: Int = insertStatement.insertedCount
+        </code-block>
+    </chapter>
+    <chapter title="Return data from modified rows" id="returning-data-from-modified-rows">
+        <tldr>
+            <p>Supported on: PostgreSQL and SQLite</p>
+        </tldr>
+        <p>Some databases allow the return of additional data every time a row is either inserted, updated, or deleted.
+            This can be accomplished by using one of the following functions:
+        </p>
+        <list>
+            <li><code>insertReturning()</code></li>
+            <li><code>upsertReturning()</code></li>
+            <li><code>updateReturning()</code></li>
+            <li><code>deleteReturning()</code></li>
+        </list>
+        <p>
+            Each of them take a list of the required table columns
+            as an argument. If not provided, all table columns will be returned by default:
+        </p>
+
+        <code-block lang="kotlin">
+            object Projects : Table(&quot;projects&quot;) {
+                val title = varchar(&quot;title&quot;, 64)
+                val budget = integer(&quot;budget&quot;)
+                val created = datetime(&quot;created&quot;).defaultExpression(CurrentDateTime)
+            }
+
+            // returns all table columns by default
+            val created: LocalDateTime = Projects.insertReturning {
+                it[title] = &quot;Project A&quot;
+                it[budget] = 100
+            }.single()[Projects.created]
+
+            val updatedBudgets: List&lt;Int&gt; = Projects.updateReturning(listOf(Projects.budget)) {
+                it[budget] = Projects.budget.times(5)
+            }.map {
+                it[Projects.budget]
+            }
+        </code-block>
+        <note>
+            Unlike the base variants of these CRUD operations, a <code>ReturningStatement</code> behaves like a
+            <code>Query</code> by also extending <code>Iterable</code>,
+            so it will not be run by the database until the first attempt to iterate over its results.
+        </note>
+    </chapter>
+</topic>

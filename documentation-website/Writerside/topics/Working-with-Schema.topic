@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Working with Schema" id="Working-with-Schema">
+    <p>You can create a schema or drop an existing one:</p>
+
+    <code-block lang="Kotlin">
+        val schema = Schema(&quot;my_schema&quot;) // my_schema is the schema name.
+// Creates a Schema
+        SchemaUtils.createSchema(schema)
+// Drops a Schema
+        SchemaUtils.dropSchema(schema)
+    </code-block>
+    <p>Also, you can specify the schema owner like this (some databases require the explicit owner) :</p>
+
+    <code-block lang="Kotlin">
+        val schema = Schema(&quot;my_schema&quot;, authorization = &quot;owner&quot;)
+    </code-block>
+    <p>If you have many schemas and you want to set a default one, you can use:</p>
+
+    <code-block lang="Kotlin">
+        SchemaUtils.setSchema(schema)
+    </code-block>
+</topic>

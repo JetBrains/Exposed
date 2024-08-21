@@ -31,7 +31,7 @@
                 Adding Dependencies
             </a>
             <a href="Table-Definition.md" summary="Start creating your first tables and get familiar with the column types"/>
-            <a href="Deep-Dive-into-DSL.md" summary="Learn how to write database queries using Exposed query DSL">
+            <a href="DSL-CRUD-operations.topic" summary="Learn how to write database queries using Exposed query DSL">
                 Querying a Database
             </a>
             <a href="Deep-Dive-into-DAO.md"

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Working with Sequence" id="Working-with-Sequence">
+
+    <p>If you want to use Sequence, Exposed allows you to:</p>
+    <chapter title="Define a Sequence" id="define-a-sequence">
+
+        <code-block lang="Kotlin">
+            val myseq = Sequence("my_sequence") // my_sequence is the sequence name.
+        </code-block>
+        <p>Several parameters can be specified to control the properties of the sequence:</p>
+
+        <code-block lang="Kotlin">
+            private val myseq = Sequence(
+                name = &quot;my_sequence&quot;,
+                startWith = 4,
+                incrementBy = 2,
+                minValue = 1,
+                maxValue = 10,
+                cycle = true,
+                cache = 20
+            )
+        </code-block>
+    </chapter>
+    <chapter title="Create and Drop a Sequence" id="create-and-drop-a-sequence">
+
+        <code-block lang="Kotlin">
+            // Creates a sequence
+            SchemaUtils.createSequence(myseq)
+// Drops a sequence
+            SchemaUtils.dropSequence(myseq)
+        </code-block>
+    </chapter>
+    <chapter title="Use the NextVal function" id="use-the-nextval-function">
+        <p>You can use the nextVal function like this:</p>
+
+        <code-block lang="Kotlin">
+            val nextVal = myseq.nextVal()
+            val id = StarWarsFilms.insertAndGetId {
+                it[id] = nextVal
+                it[name] = &quot;The Last Jedi&quot;
+                it[sequelId] = 8
+                it[director] = &quot;Rian Johnson&quot;
+            }
+        </code-block>
+
+        <code-block lang="Kotlin">
+            val firstValue = StarWarsFilms.select(nextVal).single()[nextVal]
+        </code-block>
+    </chapter>
+</topic>

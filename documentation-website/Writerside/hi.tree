@@ -18,8 +18,14 @@
         <toc-element topic="Table-Definition.md"/>
         <toc-element topic="Data-Types.md"/>
         <toc-element topic="SQL-Functions.md"/>
+        <toc-element topic="Working-with-Schema.topic"/>
     </toc-element>
-    <toc-element topic="Deep-Dive-into-DSL.md"/>
+    <toc-element toc-title="Deep Dive into DSL">
+        <toc-element topic="DSL-overview.topic"/>
+        <toc-element topic="DSL-CRUD-operations.topic"/>
+        <toc-element topic="Working-with-Sequence.topic"/>
+        <toc-element topic="DSL-Querying-data.topic"/>
+    </toc-element>
     <toc-element topic="Deep-Dive-into-DAO.md"/>
     <toc-element toc-title="Releases">
         <toc-element topic="Breaking-Changes.md"/>

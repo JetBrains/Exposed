@@ -184,7 +184,7 @@ integer("number").check { (it greaterEq 0) and (it lessEq Int.MAX_VALUE) }
   This applies to the specific `DateColumnType` in all 3 date/time modules and means `LocalDate` comparisons can now be done directly without conversions.
 * __H2, PostgreSQL__ Using `replace()` now throws an exception as the REPLACE command is not supported by these databases.
   If `replace()` was being used to perform an insert or update operation, all usages should instead be switched to `upsert()`.
-  [See documentation for UPSERT details](Deep-Dive-into-DSL.md#insert-or-update)
+  [See documentation for UPSERT details](DSL-CRUD-operations.topic#insert-or-update)
 * Operator classes `exists` and `notExists` have been renamed to `Exists` and `NotExists`.
   The functions `exists()` and `notExists()` have been introduced to return an instance of their respectively-named classes and to avoid unresolved reference issues.
   Any usages of these classes should be renamed to their capitalized forms.

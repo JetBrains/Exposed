@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Querying data" id="DSL-Querying-data" help-id="Querying-data">
+    <show-structure for="chapter,procedure" depth="2"/>
+    <chapter id="where-expression">
+        <title>Working with <code>where</code> expressions</title>
+        <p>The query expression <code>where</code> expects a boolean operator (ie: <code>Op&lt;Boolean&gt;</code>).
+            Allowed conditions are:</p>
+
+        <deflist type="medium">
+            <def id="eq">
+                <title><code>eq</code></title>
+                Equal
+            </def>
+            <def id="neq">
+                <title><code>neq</code></title>
+                Not equal
+            </def>
+            <def id="isNull">
+                <title><code>isNull()</code></title>
+            </def>
+            <def id="isNotNull">
+                <title><code>isNotNull()</code></title>
+            </def>
+            <def id="less">
+                <title><code>less</code></title>
+                Less than
+            </def>
+            <def id="lessEq">
+                <title><code>lessEq</code></title>
+                Less than or equal
+            </def>
+            <def id="greater">
+                <title><code>greater</code></title>
+                Greater than
+            </def>
+            <def id="greaterEq">
+                <title><code>greaterEq</code></title>
+                Greater than or equal
+            </def>
+            <def id="like">
+                <title><code>like</code></title>
+                Matches a pattern
+            </def>
+            <def id="notLike">
+                <title><code>notLike</code></title>
+                Does not match a pattern
+            </def>
+            <def id="exists">
+                <title><code>exists</code></title>
+                Exists
+            </def>
+            <def id="notExists">
+                <title><code>notExists</code></title>
+                Does not exist
+            </def>
+            <def id="regexp">
+                <title><code>regexp</code></title>
+                Matches the regular expression
+            </def>
+            <def id="inList">
+                <title><code>inList</code></title>
+                Equal to an element in list
+            </def>
+            <def id="notInList">
+                <title><code>notInList</code></title>
+                Not equal to an element in list
+            </def>
+            <def id="between">
+                <title><code>between</code></title>
+                Between two values
+            </def>
+            <def id="match">
+                <title><code>match</code></title>
+                MySQL MATCH AGAINST
+            </def>
+            <def id="isDistinctFrom">
+                <title><code>isDistinctFrom</code></title>
+                null-safe equality comparison
+            </def>
+            <def id="isNotDistinctFrom">
+                <title><code>isNotDistinctFrom</code></title>
+                null-safe equality comparison
+            </def>
+        </deflist>
+
+
+        <p>Allowed logical conditions are:</p>
+
+        <deflist>
+            <def id="not">
+                <title><code>not</code></title>
+            </def>
+            <def id="and">
+                <title><code>and</code></title>
+            </def>
+            <def id="or">
+                <title><code>or</code></title>
+            </def>
+            <def id="andIfNotNull">
+                <title><code>andIfNotNull</code></title>
+            </def>
+            <def id="orIfNotNull">
+                <title><code>orIfNotNull</code></title>
+            </def>
+            <def id="compoundAnd">
+                <title><code>compoundAnd()</code></title>
+            </def>
+            <def id="compoundOr">
+                <title><code>compoundOr()</code></title>
+            </def>
+        </deflist>
+    </chapter>
+    <chapter id="conditional-where">
+        <title>Conditional <code>where</code></title>
+        <p>It is a rather common case to have a query with a <code>where</code> clause that depends on some other code's
+            conditions. Moreover, independent or nested conditions could
+            make it more complicated to prepare such <code>where</code> clauses.
+        </p>
+        <p>
+            Let's imagine that we have a form on a website where a user can optionally filter "Star Wars"
+            films by a director and/or a sequel.
+        </p>
+
+        <code-block lang="Kotlin">
+            val query = StarWarsFilms.selectAll()
+            directorName?.let {
+                query.andWhere { StarWarsFilms.director eq it }
+            }
+            sequelId?.let {
+                query.andWhere { StarWarsFilms.sequelId eq it }
+            }
+        </code-block>
+        <p>But what if we want to conditionally select from another table and join it only when a condition is true?
+            You have to use <code>adjustColumnSet</code> and <code>adjustSelect</code> functions, which allow to extend
+            and modify <code>join</code> and <code>select</code> parts of a query (see kdoc
+            on that functions):</p>
+
+        <code-block lang="Kotlin">
+            actorName?.let {
+                query.adjustColumnSet { innerJoin(Actors, { StarWarsFilms.sequelId }, { Actors.sequelId }) }
+                    .adjustSelect { select(fields + Actors.columns).set }
+                    .andWhere { Actors.name eq actorName }
+            }
+        </code-block>
+        <chapter title="Check for a match in a pattern" id="check-for-a-match-in-a-pattern">
+
+            <code-block lang="kotlin">
+                StarWarsFilms.selectAll().where { StarWarsFilms.name like &quot;The %&quot; }
+            </code-block>
+            <p><code>notLike</code> is also available to check for expressions that do not match the provided pattern.
+            </p>
+            <p>To perform a pattern match that supports regular expressions, use <code>regexp</code> instead:</p>
+
+            <code-block lang="kotlin">
+                StarWarsFilms.selectAll().where { StarWarsFilms.name regexp &quot;^The(\\s\\w+){2}\$&quot; }
+            </code-block>
+        </chapter>
+        <chapter title="Check for a match in a range" id="check-for-a-match-in-a-range">
+
+            <code-block lang="kotlin">
+                StarWarsFilms.selectAll().where { StarWarsFilms.sequelId.between(4, 6) }
+            </code-block>
+            <p>The <code>between</code> operator returns <code>true</code> if the expression is between the lower and
+                upper range values (inclusive).
+                Date and time values are also supported as arguments.</p>
+        </chapter>
+        <chapter title="Check for a match in a collection" id="check-for-a-match-in-a-collection">
+
+            <code-block lang="kotlin">
+                StarWarsFilms.selectAll().where { StarWarsFilms.sequelId inList listOf(6, 4) }
+            </code-block>
+            <p><code>inList</code> also accepts multiple expressions to check for equality, either as a
+                <code>Pair</code> or a <code>Triple</code>:</p>
+
+            <code-block lang="kotlin">
+                val topRated = listOf(5 to &quot;Empire Strikes Back&quot;, 4 to &quot;A New Hope&quot;)
+                StarWarsFilms.selectAll().where {
+                    StarWarsFilms.sequelId to StarWarsFilms.name inList topRated
+                }
+            </code-block>
+            <p><code>notInList</code> is available to check for expressions that are not equal to any elements in the
+                provided collection.</p>
+            <p>In addition to the <code>IN</code> operator, the <code>ANY</code> and <code>ALL</code> operators are
+                available with any preceding comparison operator:</p>
+
+            <code-block lang="kotlin">
+                StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq anyFrom(arrayOf(6, 4)) }
+            </code-block>
+            <p><code>anyFrom()</code> and <code>allFrom()</code> also accept subqueries, tables, and array expressions
+                as arguments.</p>
+        </chapter>
+    </chapter>
+    <chapter title="Aggregating and sorting data" id="aggregate-and-sort">
+        <chapter title="Count" id="count">
+            <p><code>count()</code> is a method of <code>Query</code> that is used like in the example below:</p>
+
+            <code-block lang="kotlin">
+                val count = StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq 8 }.count()
+            </code-block>
+        </chapter>
+        <chapter title="Order by" id="order-by">
+            <p><code>orderBy()</code> accepts a list of columns mapped to boolean indicates if sorting should be ascending or descending.
+                Example:</p>
+
+            <code-block lang="kotlin">
+                StarWarsFilms.selectAll().orderBy(StarWarsFilms.sequelId to SortOrder.ASC)
+            </code-block>
+        </chapter>
+        <chapter title="Group by" id="group-by">
+            <p>In <code>groupBy</code>, define fields and their functions (such as <code>count</code>) by the <code>select()</code>
+                method.</p>
+
+            <code-block lang="kotlin">
+                StarWarsFilms
+                    .select(StarWarsFilms.sequelId.count(), StarWarsFilms.director)
+                    .groupBy(StarWarsFilms.director)
+            </code-block>
+            <p>Available functions are:</p>
+
+            <deflist type="compact">
+                <def id="count-def">
+                    <title><code>count</code></title>
+                </def>
+                <def id="sum">
+                    <title><code>sum</code></title>
+                </def>
+                <def id="average">
+                    <title><code>average</code></title>
+                </def>
+                <def id="min">
+                    <title><code>min</code></title>
+                </def>
+                <def id="max">
+                    <title><code>max</code></title>
+                </def>
+            </deflist>
+        </chapter>
+    </chapter>
+    <chapter title="Limiting result sets" id="limit-result-sets">
+        <p>You can use the <code>limit</code> function to prevent loading large data sets or use it for pagination with second <code>offset</code>
+            parameter.</p>
+
+        <code-block lang="kotlin">
+            // Take 2 films after the first one.
+            StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq Actors.sequelId }.limit(2, offset = 1)
+        </code-block>
+    </chapter>
+    <chapter title="Joining tables" id="join-tables">
+        <chapter title="Join" id="join">
+            <p>For the join examples below, consider the following tables:</p>
+
+            <code-block lang="kotlin">
+                object StarWarsFilms : IntIdTable() {
+                    val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;).uniqueIndex()
+                    val name: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
+                    val director: Column&lt;String&gt; = varchar(&quot;director&quot;, 50)
+                }
+                object Actors : IntIdTable() {
+                    val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;).uniqueIndex()
+                    val name: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
+                }
+                object Roles : Table() {
+                    val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;)
+                    val actorId: Column&lt;EntityID&lt;Int&gt;&gt; = reference(&quot;actor_id&quot;, Actors)
+                    val characterName: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
+                }
+            </code-block>
+            <p>Join to count how many actors star in each movie:</p>
+
+            <code-block lang="kotlin">
+                Actors.join(StarWarsFilms, JoinType.INNER, onColumn = Actors.sequelId, otherColumn = StarWarsFilms.sequelId)
+                    .select(Actors.name.count(), StarWarsFilms.name)
+                    .groupBy(StarWarsFilms.name)
+            </code-block>
+            <p>Instead of specifying <code>onColumn</code> and <code>otherColumn</code>, <code>additionalConstraint</code>
+                can be used (and allows specifying
+                other types of join conditions).</p>
+
+            <code-block lang="kotlin">
+                Actors.join(
+                    StarWarsFilms,
+                    JoinType.INNER,
+                    additionalConstraint = { StarWarsFilms.sequelId eq Actors.sequelId })
+                    .select(Actors.name.count(), StarWarsFilms.name)
+                    .groupBy(StarWarsFilms.name)
+            </code-block>
+            <p>When joining on a foreign key, the more concise <code>innerJoin</code> can be used:</p>
+
+            <code-block lang="kotlin">
+                (Actors innerJoin Roles)
+                    .select(Roles.characterName.count(), Actors.name)
+                    .groupBy(Actors.name)
+                    .toList()
+            </code-block>
+            <p>This is equivalent to the following:</p>
+
+            <code-block lang="kotlin">
+                Actors.join(Roles, JoinType.INNER, onColumn = Actors.id, otherColumn = Roles.actorId)
+                    .select(Roles.characterName.count(), Actors.name)
+                    .groupBy(Actors.name)
+                    .toList()
+            </code-block>
+        </chapter>
+        <chapter title="Union" id="union">
+            <p>You can combine the results of multiple queries using <code>.union(...)</code>.
+                Per the SQL specification, the queries must have the same number of columns, and not be marked for update.
+                Subqueries may be combined when supported by the database.</p>
+
+            <code-block lang="kotlin">
+                val lucasDirectedQuery =
+                    StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.director eq &quot;George Lucas&quot; }
+                val abramsDirectedQuery =
+                    StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.director eq &quot;J.J. Abrams&quot; }
+                val filmNames = lucasDirectedQuery.union(abramsDirectedQuery).map { it[StarWarsFilms.name] }
+            </code-block>
+            <p>Only unique rows are returned by default. Duplicates may be returned using <code>.unionAll()</code>.</p>
+
+            <code-block lang="kotlin">
+                val lucasDirectedQuery =
+                    StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.director eq &quot;George Lucas&quot; }
+                val originalTrilogyQuery =
+                    StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.sequelId inList (3..5) }
+                val filmNames = lucasDirectedQuery.unionAll(originalTrilogyQuery).map { it[StarWarsFilms.name] }
+            </code-block>
+        </chapter>
+    </chapter>
+    <chapter title="Mapping fields with alias" id="alias">
+        <p>Aliases allow preventing ambiguity between field names and table names.
+            Use the aliased var instead of original one:</p>
+
+        <code-block lang="Kotlin">
+            val filmTable1 = StarWarsFilms.alias(&quot;ft1&quot;)
+            filmTable1.selectAll() // can be used in joins etc'
+        </code-block>
+        <p>Also, aliases allow you to use the same table in a join multiple times:</p>
+
+        <code-block lang="Kotlin">
+            val sequelTable = StarWarsFilms.alias(&quot;sql&quot;)
+            val originalAndSequelNames = StarWarsFilms
+                .innerJoin(sequelTable, { StarWarsFilms.sequelId }, { sequelTable[StarWarsFilms.id] })
+                .select(StarWarsFilms.name, sequelTable[StarWarsFilms.name])
+                .map { it[StarWarsFilms.name] to it[sequelTable[StarWarsFilms.name]] }
+        </code-block>
+        <p>And they can be used when selecting from sub-queries:</p>
+
+        <code-block lang="kotlin">
+            val starWarsFilms = StarWarsFilms
+                .select(StarWarsFilms.id, StarWarsFilms.name)
+                .alias(&quot;swf&quot;)
+            val id = starWarsFilms[StarWarsFilms.id]
+            val name = starWarsFilms[StarWarsFilms.name]
+            starWarsFilms
+                .select(id, name)
+                .map { it[id] to it[name] }
+        </code-block>
+    </chapter>
+    <chapter title="Insert From Select" id="insert-from-select">
+        <p>If you want to use the <code>INSERT INTO ... SELECT </code> SQL clause try the function <code>Table.insert(Query)</code>:
+        </p>
+
+        <code-block lang="kotlin">
+            val substring = users.name.substring(1, 2)
+            cities.insert(users.select(substring).orderBy(users.id).limit(2))
+        </code-block>
+        <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
+            are defined in the <code>Table</code> instance. If you want to specify columns or change the
+            order, provide a list of columns as the second parameter:</p>
+
+        <code-block lang="kotlin">
+            val userCount = users.selectAll().count()
+            users.insert(
+                users.select(
+                    stringParam(&quot;Foo&quot;),
+                    Random().castTo&lt;String&gt;(VarCharColumnType()).substring(1, 10)
+                ), columns = listOf(users.name, users.id)
+            )
+        </code-block>
+    </chapter>
+    <chapter title="Column transformation" id="column-transformation">
+        <p>Column transformations allow to define custom transformations between database column types and application's
+            data types.
+            This can be particularly useful when you need to store data in one format but work with it in another format
+            within your application.</p>
+        <p>Consider the following example, where we define a table to store meal times and transform these times into
+            meal types:</p>
+
+        <code-block lang="kotlin">
+            enum class Meal {
+                BREAKFAST,
+                LUNCH,
+                DINNER
+            }
+
+            object Meals : Table() {
+                val mealTime: Column&lt;Meal&gt; = time(&quot;meal_time&quot;)
+                    .transform(
+                        wrap = {
+                            when {
+                                it.hour &lt; 10 -&gt; Meal.BREAKFAST
+                                it.hour &lt; 15 -&gt; Meal.LUNCH
+                                else -&gt; Meal.DINNER
+                            }
+                        },
+                        unwrap = {
+                            when (it) {
+                                Meal.BREAKFAST -&gt; LocalTime(8, 0)
+                                Meal.LUNCH -&gt; LocalTime(12, 0)
+                                Meal.DINNER -&gt; LocalTime(18, 0)
+                            }
+                        }
+                    )
+            }
+        </code-block>
+        <p>The <code>transform</code> function is used to apply custom transformations to the <code>mealTime</code>
+            column:</p>
+        <list>
+            <li>The <code>wrap</code> function transforms the stored <code>LocalTime</code> values into
+                <code>Meal</code> enums. It checks the hour of the stored time and returns the corresponding meal type.
+            </li>
+            <li>The <code>unwrap</code> function transforms <code>Meal</code> enums back into <code>LocalTime</code>
+                values for storage in the database.
+            </li>
+        </list>
+        <p>Transformation could be also defined as an implementation of <code>ColumnTransformer</code> interface and
+            reused among different tables:</p>
+
+        <code-block lang="kotlin">
+            class MealTimeTransformer : ColumnTransformer&lt;LocalTime, Meal&gt; {
+                override fun wrap(value: LocalTime): Meal = when {
+                    value.hour &lt; 10 -&gt; Meal.BREAKFAST
+                    value.hour &lt; 15 -&gt; Meal.LUNCH
+                    else -&gt; Meal.DINNER
+                }
+
+                override fun unwrap(value: Meal): LocalTime = when (value) {
+                    Meal.BREAKFAST -&gt; LocalTime(8, 0)
+                    Meal.LUNCH -&gt; LocalTime(12, 0)
+                    Meal.DINNER -&gt; LocalTime(18, 0)
+                }
+            }
+
+            object Meals : Table() {
+                val mealTime: Column&lt;Meal&gt; = time(&quot;meal_time&quot;).transform(MealTimeTransformer())
+            }
+        </code-block>
+    </chapter>
+    <chapter title="Custom Select Queries" id="custom-select-queries">
+        <p>A <code>Query</code> instance, which can be instantiated by calling <code>selectAll()</code> or <code>select()</code>
+            on a <code>Table</code> or <code>Join</code>, has many extension functions for building complex queries.
+            Some of these have already been mentioned above, like <a anchor="where-expression">where()</a>, <a
+                 anchor="group-by">groupBy()</a>, and <a anchor="order-by">orderBy()</a>.
+        </p>
+        <p>If a <code>SELECT</code> query with a special clause is required, a custom extension function can be
+            implemented to enable its use with other standard queries.</p>
+        <p>For example, MySQL index hints, which follow the table name in SQL, can be implemented on a
+            <code>SELECT</code> query by using the following custom function and class:</p>
+
+        <code-block lang="kotlin">
+            fun Query.indexHint(hint: String) = IndexHintQuery(this, hint)
+
+            class IndexHintQuery(
+                val source: Query,
+                val indexHint: String
+            ) : Query(source.set, source.where) {
+
+                init {
+                    // copies any stored properties from the original query
+                    source.copyTo(this)
+                }
+
+                override fun prepareSQL(builder: QueryBuilder): String {
+                    val originalSql = super.prepareSQL(builder)
+                    val fromTableSql = &quot; FROM ${transaction.identity(set.source as Table)} &quot;
+                    return originalSql.replace(fromTableSql, &quot;$fromTableSql$indexHint &quot;)
+                }
+
+                override fun copy(): IndexHintQuery = IndexHintQuery(source.copy(), indexHint).also { copy -&gt;
+                    copyTo(copy)
+                }
+            }
+
+            transaction {
+                val originalQuery = StarWarsFilms
+                    .selectAll()
+                    .withDistinct()
+                    .where { StarWarsFilms.sequelId less 5 }
+                    .groupBy(StarWarsFilms.director)
+
+                val queryWithHint = originalQuery
+                    .indexHint(&quot;FORCE INDEX (PRIMARY)&quot;)
+                    .orderBy(StarWarsFilms.sequelId)
+            }
+        </code-block>
+    </chapter>
+</topic>

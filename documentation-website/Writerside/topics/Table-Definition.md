@@ -7,6 +7,8 @@ constraints, such as `PRIMARY KEY`, `DEFAULT`, and `INDEX`. All examples use the
 
 ## Table Types
 
+### Table
+
 The most primitive table type is `Table`. It is located in the **org.jetbrains.exposed.sql** package of the **exposed-core** module.
 To configure a custom name for a table, which will be used in actual SQL queries, pass it to the `name` parameter of the `Table()` constructor.
 Otherwise, Exposed will generate it from the full class name or the class name without the suffix 'Table', if present.
@@ -56,7 +58,7 @@ CREATE TABLE IF NOT EXISTS "all_cities" (ID INT NOT NULL, "name" VARCHAR(50) NOT
 
 Depending on what DBMS you use, the types of columns could be different in actual SQL queries.
 
-### IdTable Types
+### IdTable
 
 Exposed also provides the base `IdTable` class, which is inherited by `IntIdTable`, `LongIdTable` (and their unsigned variants), `UUIDTable`, and `CompositeIdTable` classes from the 
 **org.jetbrains.exposed.dao.id** package of the **exposed-core** module.
