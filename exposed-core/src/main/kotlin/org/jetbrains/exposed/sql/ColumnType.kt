@@ -324,6 +324,10 @@ open class ColumnWithTransform<Unwrapped : Any, Wrapped : Any>(
     }
 
     override var nullable = delegate.nullable
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        return delegate.setParameter(stmt, index, value)
+    }
 }
 
 // Numeric columns
