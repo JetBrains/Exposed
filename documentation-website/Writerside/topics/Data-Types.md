@@ -288,9 +288,9 @@ a custom `ColumnType` class can be implemented to achieve the same functionality
 The following examples describe different ways to customize a column type, register a column with the custom type,
 and then start using it in transactions.
 
-### Ltree type
+### Hierarchical tree-like data
 
-PostgreSQL provides a data type, `ltree`, to represent hierarchical tree-like data.
+PostgreSQL provides a data type, [`ltree`](https://www.postgresql.org/docs/current/ltree.html), to represent hierarchical tree-like data.
 
 The hierarchy labels are stored as strings, so the existing `StringColumnType` class be extended with a few overrides:
 ```kotlin
@@ -357,9 +357,9 @@ class IsDescendantOrEqOp<T : String?>(
 ) : ComparisonOp(left, right, "<@")
 ```
 
-### Year type
+### Date and time data
 
-MySQL and MariaDB provide a data type, `YEAR`, for 1-byte storage of year values in the range of 1901 to 2155.
+MySQL and MariaDB provide a data type, [`YEAR`](https://dev.mysql.com/doc/refman/8.4/en/year.html), for 1-byte storage of year values in the range of 1901 to 2155.
 
 This example assumes that the column accepts string input values, but a numerical format is also possible, in which case
 `IntegerColumnType` could be extended instead:
@@ -410,9 +410,9 @@ transaction {
 }
 ```
 
-### Range type
+### Ranges of data
 
-PostgreSQL provides multiple range data types of different subtypes.
+PostgreSQL provides multiple [range data types](https://www.postgresql.org/docs/16/rangetypes.html) of different subtypes.
 
 If more than one range subtype needs to be used, a base `RangeColumnType` class could be first introduced with the minimum common logic:
 ```kotlin
@@ -510,9 +510,10 @@ class RangeIsContainedOp<R : ClosedRange<*>?>(
 ) : ComparisonOp(left, right, "<@")
 ```
 
-### Set type
+### Predefined string data
 
-MySQL and MariaDB provide a data type, `SET`, for strings that can have zero or more values from a defined list of permitted values.
+MySQL and MariaDB provide a data type, [`SET`](https://dev.mysql.com/doc/refman/8.4/en/set.html),
+for strings that can have zero or more values from a defined list of permitted values.
 This could be useful, for example, when storing a list of Kotlin enum constants.
 
 To use this type, a new `ColumnType` could be implemented with all the necessary overrides. This example instead takes advantage of
@@ -590,9 +591,9 @@ fun <T : Enum<T>> Expression<List<T>>.findInSet(enum: T) =
     CustomFunction("FIND_IN_SET", IntegerColumnType(), stringParam(enum.name), this)
 ```
 
-### Hstore type
+### Key-Value pair data
 
-PostgreSQL provides a data type, `hstore`, to store key-value data pairs in a single text string.
+PostgreSQL provides a data type, [`hstore`](https://www.postgresql.org/docs/16/hstore.html), to store key-value data pairs in a single text string.
 
 The existing `StringColumnType` class can be extended with a few overrides:
 ```kotlin
@@ -662,9 +663,9 @@ fun <T : Map<String, String>> Expression<T>.getValue(key: String) =
     CustomOperator("->", TextColumnType(), this, stringParam(key))
 ```
 
-### Citext type
+### Case insensitive data
 
-PostgreSQL provides a data type, `citext`, that represents a case-insensitive string type.
+PostgreSQL provides a data type, [`citext`](https://www.postgresql.org/docs/16/citext.html), that represents a case-insensitive string type.
 
 The existing `StringColumnType` class can be extended with a few overrides:
 ```kotlin
