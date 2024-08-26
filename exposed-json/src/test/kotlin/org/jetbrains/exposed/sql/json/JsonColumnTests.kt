@@ -406,4 +406,23 @@ class JsonColumnTests : DatabaseTestsBase() {
             assertEquals(newData2, newResult?.get(tester.jsonColumn))
         }
     }
+
+    @Test
+    fun testJsonWithTransformer() {
+        val tester = object : Table("tester") {
+            val numbers: Column<DoubleArray> = json<IntArray>("numbers", Json.Default).transform(
+                wrap = { DoubleArray(it.size) { i -> 1.0 * it[i] } },
+                unwrap = { IntArray(it.size) { i -> it[i].toInt() } }
+            )
+        }
+
+        withTables(tester) {
+            val data = doubleArrayOf(1.0, 2.0, 3.0)
+            tester.insert {
+                it[numbers] = data
+            }
+
+            assertContentEquals(data, tester.selectAll().single()[tester.numbers])
+        }
+    }
 }
