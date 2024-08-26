@@ -87,10 +87,8 @@ class ExplainTests : DatabaseTestsBase() {
             }
             explainAndIncrement {
                 cities.upsert {
-                    onInsert {
-                        it[cities.id] = 1
-                        it[cities.name] = cityName
-                    }
+                    it[id] = 1
+                    it[name] = cityName
                 }
             }
             // update statements

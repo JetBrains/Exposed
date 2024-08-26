@@ -398,10 +398,8 @@ class JsonColumnTests : DatabaseTestsBase() {
 
             val newData2 = newData.copy(active = false)
             tester.upsert {
-                onInsert {
-                    it[tester.id] = newId
-                    it[tester.jsonColumn] = newData2
-                }
+                it[id] = newId
+                it[jsonColumn] = newData2
             }
 
             val newResult = tester.selectAll().where { tester.id eq newId }.singleOrNull()

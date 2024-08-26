@@ -82,27 +82,20 @@ class ReturningTests : DatabaseTestsBase() {
         withTables(TestDB.ALL - returningSupportedDb, Items) {
             // return all columns by default
             val result1 = Items.upsertReturning {
-                onInsert {
-                    it[Items.name] = "A"
-                    it[Items.price] = 99.0
-                }
+                it[name] = "A"
+                it[price] = 99.0
             }.single()
             assertEquals(1, result1[Items.id].value)
             assertEquals("A", result1[Items.name])
             assertEquals(99.0, result1[Items.price])
 
             val result2 = Items.upsertReturning(
-                returning = listOf(Items.name, Items.price)
+                returning = listOf(Items.name, Items.price),
+                onUpdate = { it[Items.price] = Items.price times 10.0 }
             ) {
-                onInsert {
-                    it[Items.id] = 1
-                    it[Items.name] = "B"
-                    it[Items.price] = 200.0
-                }
-
-                onUpdate {
-                    it[Items.price] = Items.price times 10.0
-                }
+                it[id] = 1
+                it[name] = "B"
+                it[price] = 200.0
             }.single()
             assertEquals("A", result2[Items.name])
             assertEquals(990.0, result2[Items.price])
@@ -112,11 +105,9 @@ class ReturningTests : DatabaseTestsBase() {
                 onUpdateExclude = listOf(Items.price),
                 where = { Items.price greater 500.0 }
             ) {
-                onInsert {
-                    it[Items.id] = 1
-                    it[Items.name] = "B"
-                    it[Items.price] = 200.0
-                }
+                it[id] = 1
+                it[name] = "B"
+                it[price] = 200.0
             }.single()
             assertEquals("B", result3[Items.name])
 

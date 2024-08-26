@@ -385,10 +385,8 @@ class EntityTests : DatabaseTestsBase() {
             val newPrice = 50.0
             val conflictKeys = if (testDb in TestDB.ALL_MYSQL_LIKE) emptyArray<Column<*>>() else arrayOf(Items.name)
             Items.upsert(*conflictKeys) {
-                onInsert {
-                    it[Items.name] = itemA.name
-                    it[Items.price] = newPrice
-                }
+                it[name] = itemA.name
+                it[price] = newPrice
             }
             assertEquals(oldPrice, itemA.price)
             assertNull(Item.testCache(itemA.id))
@@ -400,10 +398,8 @@ class EntityTests : DatabaseTestsBase() {
             val newPricePlusExtra = 100.0
             val newItems = List(5) { i -> "Item ${'A' + i}" to newPricePlusExtra }
             Items.batchUpsert(newItems, *conflictKeys, shouldReturnGeneratedValues = false) { (name, price) ->
-                onInsert {
-                    it[Items.name] = name
-                    it[Items.price] = price
-                }
+                this[Items.name] = name
+                this[Items.price] = price
             }
             assertEquals(newPrice, itemA.price)
             assertNull(Item.testCache(itemA.id))
