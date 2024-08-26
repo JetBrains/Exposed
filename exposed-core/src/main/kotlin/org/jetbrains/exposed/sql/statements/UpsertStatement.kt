@@ -71,17 +71,27 @@ open class UpsertStatement<Key : Any>(
  */
 sealed interface UpsertBuilder {
     /**
-     * Calls the specified function [body] with an [UpsertBuilder] as its receiver and an [UpdateStatement]
-     * as its argument, allowing values to be assigned to the UPDATE clause of an upsert statement.
+     * Calls the specified function [body] with an [InsertStatement] as its argument,
+     * allowing values to be assigned to the INSERT clause of an upsert statement.
+     *
+     * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testUpsertWithManualUpdateAssignment
+     */
+    fun onInsert(body: (InsertStatement<*>) -> Unit) {
+        (this as InsertStatement<*>).apply { body.invoke(this) }
+    }
+
+    /**
+     * Calls the specified function [body] with an [UpdateStatement] as its argument,
+     * allowing values to be assigned to the UPDATE clause of an upsert statement.
      *
      * To specify manually that the insert value should be used when updating a column, for example within an expression
      * or function, invoke `insertValue()` with the desired column as the function argument.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testUpsertWithManualUpdateUsingInsertValues
      */
-    fun onUpdate(body: UpsertBuilder.(UpdateStatement) -> Unit) {
+    fun onUpdate(body: ((UpdateStatement) -> Unit)) {
         val arguments = UpdateStatement((this as InsertStatement<*>).table, null).apply {
-            body.invoke(this@UpsertBuilder, this)
+            body.invoke(this)
         }.firstDataSet
         when (this) {
             is UpsertStatement<*> -> updateValues.putAll(arguments)

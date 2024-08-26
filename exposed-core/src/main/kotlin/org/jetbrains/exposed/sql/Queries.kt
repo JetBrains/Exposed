@@ -476,8 +476,10 @@ fun <T : Table> T.updateReturning(
 /**
  * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
  *
+ * Set the columns with values on insert using `UpsertStatement.onInsert()` within the [body] lambda block.
+ *
  * To set specific columns with values on update that differ from the values that would be inserted, use `UpsertStatement.onUpdate()`
- * within the [body] lambda block. If `onUpdate()` is omitted, all columns will be updated with the values provided for the insert.
+ *  If `onUpdate()` is omitted, all columns will be updated with the values provided for the insert.
  * To specify manually that the insert value should be used when setting an update, for example in a function or expression,
  * invoke `insertValue()` with the desired column as the function argument.
  *
@@ -498,7 +500,7 @@ fun <T : Table> T.upsert(
     vararg keys: Column<*>,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-    body: T.(UpsertStatement<Long>) -> Unit
+    body: UpsertStatement<Long>.() -> Unit
 ) = UpsertStatement<Long>(this, keys = keys, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() }).apply {
     body(this)
     execute(TransactionManager.current())
@@ -506,18 +508,18 @@ fun <T : Table> T.upsert(
 
 @Deprecated(
     "This `upsert()` with `onUpdate` parameter will be removed in future releases. " +
-        "Please use function `UpsertStatement.onUpdate()` in `body` lambda block instead.",
+        "Please use functions `UpsertStatement.onUpdate()` and UpsertStatement.onInsert()` in `body` lambda block instead.",
     level = DeprecationLevel.WARNING
 )
 fun <T : Table> T.upsert(
     vararg keys: Column<*>,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): UpsertStatement<Long> {
     val upsert = UpsertStatement<Long>(this, keys = keys, null, onUpdateExclude, where?.let { SqlExpressionBuilder.it() })
-    onUpdate?.let { upsert.updateValues.putAll(it) }
+    upsert.updateValues.putAll(onUpdate)
     body(upsert)
     upsert.execute(TransactionManager.current())
     return upsert
@@ -526,6 +528,8 @@ fun <T : Table> T.upsert(
 /**
  * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would
  * violate a unique constraint, and also returns specified data from the modified rows.
+ *
+ * Set the columns with values on insert using `UpsertStatement.onInsert()` within the [body] lambda block.
  *
  * To set specific columns with values on update that differ from the values that would be inserted, use `UpsertStatement.onUpdate()`
  * within the [body] lambda block. If `onUpdate()` is omitted, all columns will be updated with the values provided for the insert.
@@ -547,7 +551,7 @@ fun <T : Table> T.upsertReturning(
     returning: List<Expression<*>> = columns,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-    body: T.(UpsertStatement<Long>) -> Unit
+    body: UpsertStatement<Long>.() -> Unit
 ): ReturningStatement {
     val upsert = UpsertStatement<Long>(this, keys = keys, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() })
     body(upsert)
@@ -556,19 +560,19 @@ fun <T : Table> T.upsertReturning(
 
 @Deprecated(
     "This `upsertReturning()` with `onUpdate` parameter will be removed in future releases. " +
-        "Please use function `UpsertStatement.onUpdate()` in `body` lambda block instead.",
+        "Please use functions `UpsertStatement.onUpdate()` and UpsertStatement.onInsert()` in `body` lambda block instead.",
     level = DeprecationLevel.WARNING
 )
 fun <T : Table> T.upsertReturning(
     vararg keys: Column<*>,
     returning: List<Expression<*>> = columns,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
+    onUpdate: List<Pair<Column<*>, Expression<*>>>,
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): ReturningStatement {
     val upsert = UpsertStatement<Long>(this, keys = keys, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() })
-    onUpdate?.let { upsert.updateValues.putAll(it) }
+    upsert.updateValues.putAll(onUpdate)
     body(upsert)
     return ReturningStatement(this, returning, upsert)
 }
