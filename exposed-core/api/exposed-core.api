@@ -3064,12 +3064,13 @@ public class org/jetbrains/exposed/sql/statements/BatchUpdateStatement : org/jet
 }
 
 public class org/jetbrains/exposed/sql/statements/BatchUpsertStatement : org/jetbrains/exposed/sql/statements/BaseBatchInsertStatement, org/jetbrains/exposed/sql/statements/UpsertBuilder {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/sql/Op;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/sql/Op;Z)V
 	public fun <init> (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Lorg/jetbrains/exposed/sql/Op;Z)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Lorg/jetbrains/exposed/sql/Op;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun arguments ()Ljava/lang/Iterable;
 	public fun arguments ()Ljava/util/List;
 	public final fun getKeys ()[Lorg/jetbrains/exposed/sql/Column;
+	public final fun getOnUpdate ()Ljava/util/List;
 	public final fun getOnUpdateExclude ()Ljava/util/List;
 	public final fun getWhere ()Lorg/jetbrains/exposed/sql/Op;
 	public fun insertValue (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
@@ -3411,6 +3412,7 @@ public class org/jetbrains/exposed/sql/statements/UpsertStatement : org/jetbrain
 	public synthetic fun arguments ()Ljava/lang/Iterable;
 	public fun arguments ()Ljava/util/List;
 	public final fun getKeys ()[Lorg/jetbrains/exposed/sql/Column;
+	public final fun getOnUpdate ()Ljava/util/List;
 	public final fun getOnUpdateExclude ()Ljava/util/List;
 	public final fun getWhere ()Lorg/jetbrains/exposed/sql/Op;
 	public fun insertValue (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;

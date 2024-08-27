@@ -371,7 +371,6 @@ class UpsertTests : DatabaseTestsBase() {
                 it[word] = "Word B"
                 it[count] = 9
             }
-
             val result = tester.selectAll().single()
             assertEquals(900, result[tester.count])
 
@@ -438,9 +437,7 @@ class UpsertTests : DatabaseTestsBase() {
                 rollback()
             }
 
-            tester.upsert(
-                onUpdateExclude = listOf(tester.code, tester.gains)
-            ) {
+            tester.upsert(onUpdateExclude = listOf(tester.code, tester.gains)) {
                 it[item] = itemA
                 it[gains] = 200
                 it[losses] = 0

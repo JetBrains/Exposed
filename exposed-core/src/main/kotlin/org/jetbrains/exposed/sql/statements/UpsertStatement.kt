@@ -37,8 +37,15 @@ open class UpsertStatement<Key : Any>(
         onUpdateExclude: List<Column<*>>?,
         where: Op<Boolean>?
     ) : this(table, keys = keys, onUpdateExclude, where) {
-        onUpdate?.let { updateValues.putAll(it) }
+        onUpdate?.let {
+            this.onUpdate = it
+            updateValues.putAll(it)
+        }
     }
+
+    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.WARNING)
+    var onUpdate: List<Pair<Column<*>, Expression<*>>>? = null
+        private set
 
     internal val updateValues: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
