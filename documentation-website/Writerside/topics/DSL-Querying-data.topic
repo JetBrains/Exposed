@@ -7,112 +7,176 @@
     <show-structure for="chapter,procedure" depth="2"/>
     <chapter id="where-expression">
         <title>Working with <code>where</code> expressions</title>
-        <p>The query expression <code>where</code> expects a boolean operator (ie: <code>Op&lt;Boolean&gt;</code>).
-            Allowed conditions are:</p>
+        <p>The query expression <code>where</code> expects a boolean operator (<code>Op&lt;Boolean&gt;</code>).
+            We've split the allowed conditions in different categories:</p>
+        <list>
+            <li><a anchor="basic">Basic conditions</a>.</li>
+            <li><a anchor="logical-conditions">Logical conditions</a>.</li>
+            <li><a anchor="check-for-a-match-in-a-pattern">Conditions that check for a match in a pattern</a>.</li>
+            <li><a anchor="check-for-a-match-in-a-range">Conditions that check for a match in a range</a>.</li>
+            <li><a anchor="check-for-a-match-in-a-collection">Conditions that check for a match in a collection</a>.</li>
+        </list>
+        <chapter title="Basic conditions" id="basic">
+            <deflist type="medium">
+                <def id="eq">
+                    <title><code>eq</code></title>
+                    Checks if an expression is equal to some value.
+                </def>
+                <def id="neq">
+                    <title><code>neq</code></title>
+                    Checks if an expression is not equal to some value.
+                </def>
+                <def id="isNull">
+                    <title><code>isNull()</code></title>
+                    Returns <code>true</code> if this expression is null, <code>false</code> otherwise.
+                </def>
+                <def id="isNotNull">
+                    <title><code>isNotNull()</code></title>
+                    Returns <code>false</code> if this expression is null, <code>true</code> otherwise.
+                </def>
+                <def id="less">
+                    <title><code>less</code></title>
+                    Checks if an expression is less than some value.
+                </def>
+                <def id="lessEq">
+                    <title><code>lessEq</code></title>
+                    Checks if an expression is less than or equal to some value.
+                </def>
+                <def id="greater">
+                    <title><code>greater</code></title>
+                    Checks if an expression is greater than some value.
+                </def>
+                <def id="greaterEq">
+                    <title><code>greaterEq</code></title>
+                    Checks if an expression is greater than or equal to some value.
+                </def>
+                <def id="exists">
+                    <title><code>exists</code></title>
+                </def>
+                <def id="notExists">
+                    <title><code>notExists</code></title>
+                </def>
+                <def id="isDistinctFrom">
+                    <title><code>isDistinctFrom</code></title>
+                    Checks if this expression is not equal to another value, with null treated as a comparable value.
+                </def>
+                <def id="isNotDistinctFrom">
+                    <title><code>isNotDistinctFrom</code></title>
+                    Checks if an expression is equal to another value, with null treated as a comparable value.
+                </def>
+            </deflist>
 
-        <deflist type="medium">
-            <def id="eq">
-                <title><code>eq</code></title>
-                Equal
-            </def>
-            <def id="neq">
-                <title><code>neq</code></title>
-                Not equal
-            </def>
-            <def id="isNull">
-                <title><code>isNull()</code></title>
-            </def>
-            <def id="isNotNull">
-                <title><code>isNotNull()</code></title>
-            </def>
-            <def id="less">
-                <title><code>less</code></title>
-                Less than
-            </def>
-            <def id="lessEq">
-                <title><code>lessEq</code></title>
-                Less than or equal
-            </def>
-            <def id="greater">
-                <title><code>greater</code></title>
-                Greater than
-            </def>
-            <def id="greaterEq">
-                <title><code>greaterEq</code></title>
-                Greater than or equal
-            </def>
-            <def id="like">
-                <title><code>like</code></title>
-                Matches a pattern
-            </def>
-            <def id="notLike">
-                <title><code>notLike</code></title>
-                Does not match a pattern
-            </def>
-            <def id="exists">
-                <title><code>exists</code></title>
-                Exists
-            </def>
-            <def id="notExists">
-                <title><code>notExists</code></title>
-                Does not exist
-            </def>
-            <def id="regexp">
-                <title><code>regexp</code></title>
-                Matches the regular expression
-            </def>
-            <def id="inList">
-                <title><code>inList</code></title>
-                Equal to an element in list
-            </def>
-            <def id="notInList">
-                <title><code>notInList</code></title>
-                Not equal to an element in list
-            </def>
-            <def id="between">
-                <title><code>between</code></title>
-                Between two values
-            </def>
-            <def id="match">
-                <title><code>match</code></title>
-                MySQL MATCH AGAINST
-            </def>
-            <def id="isDistinctFrom">
-                <title><code>isDistinctFrom</code></title>
-                null-safe equality comparison
-            </def>
-            <def id="isNotDistinctFrom">
-                <title><code>isNotDistinctFrom</code></title>
-                null-safe equality comparison
-            </def>
-        </deflist>
+        </chapter>
+        <chapter id="logical-conditions" title="Logical conditions">
+            <deflist>
+                <def id="not">
+                    <title><code>not</code></title>
+                    Returns the inverse of an expression.
+                </def>
+                <def id="and">
+                    <title><code>and</code></title>
+                    Returns the result of performing a logical <code>and</code> operation between two expressions.
+                </def>
+                <def id="or">
+                    <title><code>or</code></title>
+                    Returns the result of performing a logical <code>or</code> operation between two expressions.
+                </def>
+                <def id="andIfNotNull">
+                    <title><code>andIfNotNull</code></title>
+                    Returns the result of performing a logical <code>and</code> operation between two expressions if
+                    the second one is not null.
+                </def>
+                <def id="orIfNotNull">
+                    <title><code>orIfNotNull</code></title>
+                    Returns the result of performing a logical <code>or</code> operation between two expressions if
+                    the second is not null.
+                </def>
+                <def id="compoundAnd">
+                    <title><code>compoundAnd()</code></title>
+                    Reduces a list to a single expression by performing an <code>and</code> operation between all the
+                    expressions in the list.
+                </def>
+                <def id="compoundOr">
+                    <title><code>compoundOr()</code></title>
+                    Reduces a list to a single expression by performing an <code>or</code> operation between all the
+                    expressions in the list.
+                </def>
+            </deflist>
+        </chapter>
+        <chapter title="Check for a match in a pattern" id="check-for-a-match-in-a-pattern">
+            <deflist>
+                <def id="like">
+                    <title><code>like</code></title>
+                    Checks if an expression matches the specified pattern.
+                    <code-block lang="kotlin">
+                        StarWarsFilms.selectAll().where { StarWarsFilms.name like &quot;The %&quot; }
+                    </code-block>
+                </def>
+                <def id="notLike">
+                    <title><code>notLike</code></title>
+                    Checks if an expression doesn't match the specified pattern.
+                </def>
+                <def id="regexp">
+                    <title><code>regexp</code></title>
+                    Checks if an expression matches a regular expression.
+                    <code-block lang="kotlin">
+                        StarWarsFilms.selectAll().where { StarWarsFilms.name regexp &quot;^The(\\s\\w+){2}\$&quot; }
+                    </code-block>
+                </def>
+                <def id="match">
+                    <title><code>match</code></title>
+                    Checks whether an expression matches a given pattern.
+                </def>
+            </deflist>
+    </chapter>
+        <chapter title="Check for a match in a range" id="check-for-a-match-in-a-range">
+            <deflist>
+                <def id="between">
+                    <title><code>between(from: T, to: T)</code></title>
+                    Checks if an expression is between the values from and to. Returns <code>true</code> if the
+                    expression is between the lower and upper range values (inclusive). Date and time values are also
+                    supported as arguments.
+                    <code-block lang="kotlin">
+                        StarWarsFilms.selectAll().where { StarWarsFilms.sequelId.between(4, 6) }
+                    </code-block>
+                </def>
+            </deflist>
+        </chapter>
+        <chapter title="Check for a match in a collection" id="check-for-a-match-in-a-collection">
+            <deflist>
+                <def id="inList">
+                    <title><code>inList</code></title>
+                    <p>
+                        Checks if an expression is equal to any element from list.
+                    </p>
+                    <code-block lang="kotlin">
+                        StarWarsFilms.selectAll().where { StarWarsFilms.sequelId inList listOf(6, 4) }
+                    </code-block>
+                    <p><code>inList</code> also accepts multiple expressions to check for equality, either as a
+                        <code>Pair</code> or a <code>Triple</code>:</p>
 
+                    <code-block lang="kotlin">
+                        val topRated = listOf(5 to &quot;Empire Strikes Back&quot;, 4 to &quot;A New Hope&quot;)
+                        StarWarsFilms.selectAll().where {
+                            StarWarsFilms.sequelId to StarWarsFilms.name inList topRated
+                        }
+                    </code-block>
+                </def>
+                <def id="notInList">
+                    <title><code>notInList</code></title>
+                    Checks if an expression is not equal to any element in the provided collection.
+                </def>
+            </deflist>
 
-        <p>Allowed logical conditions are:</p>
+            <p>In addition to the <code>IN</code> operator, the <code>ANY</code> and <code>ALL</code> operators are
+                available with any preceding comparison operator:</p>
 
-        <deflist>
-            <def id="not">
-                <title><code>not</code></title>
-            </def>
-            <def id="and">
-                <title><code>and</code></title>
-            </def>
-            <def id="or">
-                <title><code>or</code></title>
-            </def>
-            <def id="andIfNotNull">
-                <title><code>andIfNotNull</code></title>
-            </def>
-            <def id="orIfNotNull">
-                <title><code>orIfNotNull</code></title>
-            </def>
-            <def id="compoundAnd">
-                <title><code>compoundAnd()</code></title>
-            </def>
-            <def id="compoundOr">
-                <title><code>compoundOr()</code></title>
-            </def>
-        </deflist>
+            <code-block lang="kotlin">
+                StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq anyFrom(arrayOf(6, 4)) }
+            </code-block>
+            <p><code>anyFrom()</code> and <code>allFrom()</code> also accept subqueries, tables, and array expressions
+                as arguments.</p>
+        </chapter>
     </chapter>
     <chapter id="conditional-where">
         <title>Conditional <code>where</code></title>
@@ -146,53 +210,6 @@
                     .andWhere { Actors.name eq actorName }
             }
         </code-block>
-        <chapter title="Check for a match in a pattern" id="check-for-a-match-in-a-pattern">
-
-            <code-block lang="kotlin">
-                StarWarsFilms.selectAll().where { StarWarsFilms.name like &quot;The %&quot; }
-            </code-block>
-            <p><code>notLike</code> is also available to check for expressions that do not match the provided pattern.
-            </p>
-            <p>To perform a pattern match that supports regular expressions, use <code>regexp</code> instead:</p>
-
-            <code-block lang="kotlin">
-                StarWarsFilms.selectAll().where { StarWarsFilms.name regexp &quot;^The(\\s\\w+){2}\$&quot; }
-            </code-block>
-        </chapter>
-        <chapter title="Check for a match in a range" id="check-for-a-match-in-a-range">
-
-            <code-block lang="kotlin">
-                StarWarsFilms.selectAll().where { StarWarsFilms.sequelId.between(4, 6) }
-            </code-block>
-            <p>The <code>between</code> operator returns <code>true</code> if the expression is between the lower and
-                upper range values (inclusive).
-                Date and time values are also supported as arguments.</p>
-        </chapter>
-        <chapter title="Check for a match in a collection" id="check-for-a-match-in-a-collection">
-
-            <code-block lang="kotlin">
-                StarWarsFilms.selectAll().where { StarWarsFilms.sequelId inList listOf(6, 4) }
-            </code-block>
-            <p><code>inList</code> also accepts multiple expressions to check for equality, either as a
-                <code>Pair</code> or a <code>Triple</code>:</p>
-
-            <code-block lang="kotlin">
-                val topRated = listOf(5 to &quot;Empire Strikes Back&quot;, 4 to &quot;A New Hope&quot;)
-                StarWarsFilms.selectAll().where {
-                    StarWarsFilms.sequelId to StarWarsFilms.name inList topRated
-                }
-            </code-block>
-            <p><code>notInList</code> is available to check for expressions that are not equal to any elements in the
-                provided collection.</p>
-            <p>In addition to the <code>IN</code> operator, the <code>ANY</code> and <code>ALL</code> operators are
-                available with any preceding comparison operator:</p>
-
-            <code-block lang="kotlin">
-                StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq anyFrom(arrayOf(6, 4)) }
-            </code-block>
-            <p><code>anyFrom()</code> and <code>allFrom()</code> also accept subqueries, tables, and array expressions
-                as arguments.</p>
-        </chapter>
     </chapter>
     <chapter title="Aggregating and sorting data" id="aggregate-and-sort">
         <chapter title="Count" id="count">
@@ -211,7 +228,7 @@
             </code-block>
         </chapter>
         <chapter title="Group by" id="group-by">
-            <p>In <code>groupBy</code>, define fields and their functions (such as <code>count</code>) by the <code>select()</code>
+            <p>In <code>groupBy</code>, define fields and their functions by the <code>select()</code>
                 method.</p>
 
             <code-block lang="kotlin">
@@ -219,25 +236,8 @@
                     .select(StarWarsFilms.sequelId.count(), StarWarsFilms.director)
                     .groupBy(StarWarsFilms.director)
             </code-block>
-            <p>Available functions are:</p>
-
-            <deflist type="compact">
-                <def id="count-def">
-                    <title><code>count</code></title>
-                </def>
-                <def id="sum">
-                    <title><code>sum</code></title>
-                </def>
-                <def id="average">
-                    <title><code>average</code></title>
-                </def>
-                <def id="min">
-                    <title><code>min</code></title>
-                </def>
-                <def id="max">
-                    <title><code>max</code></title>
-                </def>
-            </deflist>
+            <p>Available field functions are: <code>count</code>, <code>sum</code>, <code>average</code>, <code>min</code>
+                and <code>max</code>.</p>
         </chapter>
     </chapter>
     <chapter title="Limiting result sets" id="limit-result-sets">
@@ -356,96 +356,6 @@
             starWarsFilms
                 .select(id, name)
                 .map { it[id] to it[name] }
-        </code-block>
-    </chapter>
-    <chapter title="Insert From Select" id="insert-from-select">
-        <p>If you want to use the <code>INSERT INTO ... SELECT </code> SQL clause try the function <code>Table.insert(Query)</code>:
-        </p>
-
-        <code-block lang="kotlin">
-            val substring = users.name.substring(1, 2)
-            cities.insert(users.select(substring).orderBy(users.id).limit(2))
-        </code-block>
-        <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
-            are defined in the <code>Table</code> instance. If you want to specify columns or change the
-            order, provide a list of columns as the second parameter:</p>
-
-        <code-block lang="kotlin">
-            val userCount = users.selectAll().count()
-            users.insert(
-                users.select(
-                    stringParam(&quot;Foo&quot;),
-                    Random().castTo&lt;String&gt;(VarCharColumnType()).substring(1, 10)
-                ), columns = listOf(users.name, users.id)
-            )
-        </code-block>
-    </chapter>
-    <chapter title="Column transformation" id="column-transformation">
-        <p>Column transformations allow to define custom transformations between database column types and application's
-            data types.
-            This can be particularly useful when you need to store data in one format but work with it in another format
-            within your application.</p>
-        <p>Consider the following example, where we define a table to store meal times and transform these times into
-            meal types:</p>
-
-        <code-block lang="kotlin">
-            enum class Meal {
-                BREAKFAST,
-                LUNCH,
-                DINNER
-            }
-
-            object Meals : Table() {
-                val mealTime: Column&lt;Meal&gt; = time(&quot;meal_time&quot;)
-                    .transform(
-                        wrap = {
-                            when {
-                                it.hour &lt; 10 -&gt; Meal.BREAKFAST
-                                it.hour &lt; 15 -&gt; Meal.LUNCH
-                                else -&gt; Meal.DINNER
-                            }
-                        },
-                        unwrap = {
-                            when (it) {
-                                Meal.BREAKFAST -&gt; LocalTime(8, 0)
-                                Meal.LUNCH -&gt; LocalTime(12, 0)
-                                Meal.DINNER -&gt; LocalTime(18, 0)
-                            }
-                        }
-                    )
-            }
-        </code-block>
-        <p>The <code>transform</code> function is used to apply custom transformations to the <code>mealTime</code>
-            column:</p>
-        <list>
-            <li>The <code>wrap</code> function transforms the stored <code>LocalTime</code> values into
-                <code>Meal</code> enums. It checks the hour of the stored time and returns the corresponding meal type.
-            </li>
-            <li>The <code>unwrap</code> function transforms <code>Meal</code> enums back into <code>LocalTime</code>
-                values for storage in the database.
-            </li>
-        </list>
-        <p>Transformation could be also defined as an implementation of <code>ColumnTransformer</code> interface and
-            reused among different tables:</p>
-
-        <code-block lang="kotlin">
-            class MealTimeTransformer : ColumnTransformer&lt;LocalTime, Meal&gt; {
-                override fun wrap(value: LocalTime): Meal = when {
-                    value.hour &lt; 10 -&gt; Meal.BREAKFAST
-                    value.hour &lt; 15 -&gt; Meal.LUNCH
-                    else -&gt; Meal.DINNER
-                }
-
-                override fun unwrap(value: Meal): LocalTime = when (value) {
-                    Meal.BREAKFAST -&gt; LocalTime(8, 0)
-                    Meal.LUNCH -&gt; LocalTime(12, 0)
-                    Meal.DINNER -&gt; LocalTime(18, 0)
-                }
-            }
-
-            object Meals : Table() {
-                val mealTime: Column&lt;Meal&gt; = time(&quot;meal_time&quot;).transform(MealTimeTransformer())
-            }
         </code-block>
     </chapter>
     <chapter title="Custom Select Queries" id="custom-select-queries">

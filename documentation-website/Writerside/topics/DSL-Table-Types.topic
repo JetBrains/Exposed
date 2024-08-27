@@ -29,6 +29,77 @@
             }
         </code-block>
     </chapter>
+    <chapter title="Column transformation" id="column-transformation">
+        <p>Column transformations allow to define custom transformations between database column types and application's
+            data types.
+            This can be particularly useful when you need to store data in one format but work with it in another format
+            within your application.</p>
+        <p>Consider the following example, where we define a table to store meal times and transform these times into
+            meal types:</p>
+
+        <code-block lang="kotlin">
+            enum class Meal {
+                BREAKFAST,
+                LUNCH,
+                DINNER
+            }
+
+            object Meals : Table() {
+                val mealTime: Column&lt;Meal&gt; = time(&quot;meal_time&quot;)
+                    .transform(
+                        wrap = {
+                            when {
+                                it.hour &lt; 10 -&gt; Meal.BREAKFAST
+                                it.hour &lt; 15 -&gt; Meal.LUNCH
+                                else -&gt; Meal.DINNER
+                            }
+                        },
+                        unwrap = {
+                            when (it) {
+                                Meal.BREAKFAST -&gt; LocalTime(8, 0)
+                                Meal.LUNCH -&gt; LocalTime(12, 0)
+                                Meal.DINNER -&gt; LocalTime(18, 0)
+                            }
+                        }
+                    )
+            }
+        </code-block>
+        <p>The <code>transform</code> function is used to apply custom transformations to the <code>mealTime</code>
+            column:</p>
+        <list>
+            <li>The <code>wrap</code> function transforms the stored <code>LocalTime</code> values into
+                <code>Meal</code> enums. It checks the hour of the stored time and returns the corresponding meal type.
+            </li>
+            <li>The <code>unwrap</code> function transforms <code>Meal</code> enums back into <code>LocalTime</code>
+                values for storage in the database.
+            </li>
+        </list>
+        <p>Transformation could be also defined as an implementation of <code>ColumnTransformer</code> interface and
+            reused among different tables:</p>
+
+        <code-block lang="kotlin">
+            class MealTimeTransformer : ColumnTransformer&lt;LocalTime, Meal&gt; {
+                override fun wrap(value: LocalTime): Meal = when {
+                    value.hour &lt; 10 -&gt; Meal.BREAKFAST
+                    value.hour &lt; 15 -&gt; Meal.LUNCH
+                    else -&gt; Meal.DINNER
+                }
+
+                override fun unwrap(value: Meal): LocalTime = when (value) {
+                    Meal.BREAKFAST -&gt; LocalTime(8, 0)
+                    Meal.LUNCH -&gt; LocalTime(12, 0)
+                    Meal.DINNER -&gt; LocalTime(18, 0)
+                }
+            }
+
+            object Meals : Table() {
+                val mealTime: Column&lt;Meal&gt; = time(&quot;meal_time&quot;).transform(MealTimeTransformer())
+            }
+        </code-block>
+        <tip>
+            For more information on column types and table definition, see <a href="Table-Definition.topic" />.
+        </tip>
+    </chapter>
     <seealso style="cards">
         <category ref="related">
             <a href="Table-Definition.topic"/>

@@ -332,6 +332,28 @@
             statement block to avoid throwing an error.
         </note>
     </chapter>
+    <chapter title="Insert From Select" id="insert-from-select">
+        <p>If you want to use the <code>INSERT INTO ... SELECT </code> SQL clause try the function <code>Table.insert(Query)</code>:
+        </p>
+
+        <code-block lang="kotlin">
+            val substring = users.name.substring(1, 2)
+            cities.insert(users.select(substring).orderBy(users.id).limit(2))
+        </code-block>
+        <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
+            are defined in the <code>Table</code> instance. If you want to specify columns or change the
+            order, provide a list of columns as the second parameter:</p>
+
+        <code-block lang="kotlin">
+            val userCount = users.selectAll().count()
+            users.insert(
+                users.select(
+                    stringParam(&quot;Foo&quot;),
+                    Random().castTo&lt;String&gt;(VarCharColumnType()).substring(1, 10)
+                ), columns = listOf(users.name, users.id)
+            )
+        </code-block>
+    </chapter>
     <chapter title="Replace" id="replace">
         <tldr>
             <p>Supported on: SQLite, MySQL, and MariaDB </p>
