@@ -279,3 +279,439 @@ Teams
     .selectAll()
     .where { stringParam("Member A") eq anyFrom(Teams.memberNames.slice(1, 4)) }
 ```
+
+## Custom Data Types
+
+If a database-specific data type is not immediately supported by Exposed, any existing and open column type class can be extended or
+a custom `ColumnType` class can be implemented to achieve the same functionality.
+
+The following examples describe different ways to customize a column type, register a column with the custom type,
+and then start using it in transactions.
+
+### Hierarchical tree-like data
+
+PostgreSQL provides a data type, [`ltree`](https://www.postgresql.org/docs/current/ltree.html), to represent hierarchical tree-like data.
+
+The hierarchy labels are stored as strings, so the existing `StringColumnType` class be extended with a few overrides:
+```kotlin
+import org.postgresql.util.PGobject
+
+class LTreeColumnType : StringColumnType() {
+    override fun sqlType(): String = "LTREE"
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val parameterValue: PGobject? = value?.let {
+            PGobject().apply {
+                type = sqlType()
+                this.value = value as? String
+            }
+        }
+        super.setParameter(stmt, index, parameterValue)
+    }
+}
+```
+
+> When setting an object in a prepared statement with JDBC, any unknown data type without a JDBC mapping is set as a varying character string.
+> To avoid a casting exception due to PostgreSQL's stricter type system, the type of the set parameter should be manually declared,
+> by using a `PGobject` in `setParamater()`, as shown in the example above.
+{style="note"}
+
+A table extension function can then be added to register a new column with this type:
+```kotlin
+fun Table.ltree(name: String): Column<String> = registerColumn(name, LTreeColumnType())
+
+object TestTable : Table("test_table") {
+    val path = ltree("path")
+
+    init {
+        index(customIndexName = "path_gist_idx", indexType = "GIST", columns = arrayOf(path))
+        index(customIndexName = "path_idx", indexType = "BTREE", columns = arrayOf(path))
+    }
+}
+```
+
+> To use the `ltree` data type, the extension must first be enabled in the database by running `exec("CREATE EXTENSION ltree;")`.
+{style="note"}
+
+String values representing hierarchy labels can then be inserted and queried from the `path` column.
+The following block shows an update of all records that have a stored `path` either equal to or a descendant of the path `Top.Science`,
+by setting a subpath of the first 2 labels as the updated value:
+```kotlin
+transaction {
+    TestTable.update(
+        where = { TestTable.path isDescendantOrEq "Top.Science" }
+    ) {
+        it[path] = path.subltree(0, 2)
+    }
+}
+
+fun <T : String?> Expression<T>.subltree(start: Int, end: Int) =
+    CustomStringFunction("SUBLTREE", this, intParam(start), intParam(end))
+
+infix fun <T : String?> ExpressionWithColumnType<T>.isDescendantOrEq(other: T) =
+    IsDescendantOrEqOp(this, wrap(other))
+
+class IsDescendantOrEqOp<T : String?>(
+    left: Expression<T>,
+    right: Expression<T>
+) : ComparisonOp(left, right, "<@")
+```
+
+### Date and time data
+
+MySQL and MariaDB provide a data type, [`YEAR`](https://dev.mysql.com/doc/refman/8.4/en/year.html), for 1-byte storage of year values in the range of 1901 to 2155.
+
+This example assumes that the column accepts string input values, but a numerical format is also possible, in which case
+`IntegerColumnType` could be extended instead:
+```kotlin
+class YearColumnType : StringColumnType(), IDateColumnType {
+    override fun sqlType(): String = "YEAR"
+
+    override val hasTimePart: Boolean = false
+
+    override fun valueFromDB(value: Any): String = when (value) {
+        is java.sql.Date -> value.toString().substringBefore('-')
+        else -> error("Retrieved unexpected value of type ${value::class.simpleName}")
+    }
+}
+
+fun Table.year(name: String): Column<String> = registerColumn(name, YearColumnType())
+```
+
+The `IDateColumnType` interface is implemented to ensure that any default expressions are handled appropriately. For example,
+a new object `CurrentYear` can be added as a default to avoid issues with the strict column typing:
+```kotlin
+object CurrentYear : Function<String>(YearColumnType()) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder { +"CURRENT_DATE" }
+    }
+}
+
+object TestTable : Table("test_table") {
+    val established = year("established").defaultExpression(CurrentYear)
+}
+```
+
+String values of different formats (depending on the enabled `sql_mode`) can then be inserted and queried from the `year` column:
+```kotlin
+transaction {
+    // disable strict mode to allow truncation of full date strings
+    exec("SET sql_mode=''")
+    
+    val yearData = listOf("1901", "2000", "2023-08-22", "2155")
+    TestTable.batchInsert(yearData) { year ->
+        this[TestTable.established] = year
+    }
+
+    TestTable
+        .selectAll()
+        .where { TestTable.established less CurrentYear }
+        .toList()
+}
+```
+
+### Ranges of data
+
+PostgreSQL provides multiple [range data types](https://www.postgresql.org/docs/16/rangetypes.html) of different subtypes.
+
+If more than one range subtype needs to be used, a base `RangeColumnType` class could be first introduced with the minimum common logic:
+```kotlin
+import org.postgresql.util.PGobject
+
+abstract class RangeColumnType<T : Comparable<T>, R : ClosedRange<T>>(
+    val subType: ColumnType<T>,
+) : ColumnType<R>() {
+    abstract fun List<String>.toRange(): R
+
+    override fun nonNullValueToString(value: R): String {
+        return "[${value.start},${value.endInclusive}]"
+    }
+
+    override fun nonNullValueAsDefaultString(value: R): String {
+        return "'${nonNullValueToString(value)}'"
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val parameterValue: PGobject? = value?.let {
+            PGobject().apply {
+                type = sqlType()
+                this.value = nonNullValueToString(it as R)
+            }
+        }
+        super.setParameter(stmt, index, parameterValue)
+    }
+
+    override fun valueFromDB(value: Any): R? = when (value) {
+        is PGobject -> value.value?.let {
+            val components = it.trim('[', ')').split(',')
+            components.toRange()
+        }
+        else -> error("Retrieved unexpected value of type ${value::class.simpleName}")
+    }
+}
+```
+
+A class for the type `int4range` that accepts `IntRange` values could then be implemented:
+```kotlin
+class IntRangeColumnType : RangeColumnType<Int, IntRange>(IntegerColumnType()) {
+    override fun sqlType(): String = "INT4RANGE"
+
+    override fun List<String>.toRange(): IntRange {
+        return IntRange(first().toInt(), last().toInt() - 1)
+    }
+}
+
+fun Table.intRange(name: String): Column<IntRange> = registerColumn(name, IntRangeColumnType())
+```
+
+If a custom Kotlin implementation for a `DateRange` is set up (using `Iterable` and `ClosedRange`),
+then a class for the type `daterange` can also be added. This implementation would require a dependency on `exposed-kotlin-datetime`:
+```kotlin
+class DateRangeColumnType : RangeColumnType<LocalDate, DateRange>(KotlinLocalDateColumnType()) {
+    override fun sqlType(): String = "DATERANGE"
+
+    override fun List<String>.toRange(): DateRange {
+        val endInclusive = LocalDate.parse(last()).minus(1, DateTimeUnit.DAY)
+        return DateRange(LocalDate.parse(first()), endInclusive)
+    }
+}
+
+fun Table.dateRange(name: String): Column<DateRange> = registerColumn(name, DateRangeColumnType())
+```
+
+These new column types can be used in a table definition:
+```kotlin
+object TestTable : Table("test_table") {
+    val amounts = intRange("amounts").default(1..10)
+    val holidays = dateRange("holidays")
+}
+```
+
+With the addition of some custom functions, the stored data can then be queried to return the upper bound of the date range
+for all records that have an integer range within the specified bounds:
+```kotlin
+transaction {
+    val holidayEnd = TestTable.holidays.upperBound()
+    TestTable
+        .select(holidayEnd)
+        .where { TestTable.amounts isContainedBy 0..100 }
+        .toList()
+}
+
+fun <T : Comparable<T>, CR : ClosedRange<T>, R : CR?> ExpressionWithColumnType<R>.upperBound()
+    = CustomFunction("UPPER", (columnType as RangeColumnType<T, CR>).subType, this)
+
+infix fun <R : ClosedRange<*>?> ExpressionWithColumnType<R>.isContainedBy(other: R) =
+    RangeIsContainedOp(this, wrap(other))
+
+class RangeIsContainedOp<R : ClosedRange<*>?>(
+    left: Expression<R>,
+    right: Expression<R>
+) : ComparisonOp(left, right, "<@")
+```
+
+### Predefined string data
+
+MySQL and MariaDB provide a data type, [`SET`](https://dev.mysql.com/doc/refman/8.4/en/set.html),
+for strings that can have zero or more values from a defined list of permitted values.
+This could be useful, for example, when storing a list of Kotlin enum constants.
+
+To use this type, a new `ColumnType` could be implemented with all the necessary overrides. This example instead takes advantage of
+the existing logic in `StringColumnType` as the base for database storage, then uses a custom `ColumnTransformer` to achieve the final
+transformation between a set of enum constants and a string:
+```kotlin
+class SetColumnType<T : Enum<T>>(
+    private val enumClass: KClass<T>
+) : StringColumnType() {
+    // uses reflection to retrieve elements of the enum class
+    private val enumConstants by lazy {
+        enumClass.java.enumConstants?.map { it.name } ?: emptyList()
+    }
+
+    override fun sqlType(): String = enumConstants
+        .takeUnless { it.isEmpty() }
+        ?.let { "SET(${it.joinToString { e -> "'$e'" }})" }
+        ?: error("SET column must be defined with a list of permitted values")
+}
+
+inline fun <reified T : Enum<T>> Table.set(name: String): Column<String> =
+    registerColumn(name, SetColumnType(T::class))
+
+class EnumListColumnType<T : Enum<T>>(
+    private val enumClass: KClass<T>
+) : ColumnTransformer<String, List<T>> {
+    private val enumConstants by lazy {
+        enumClass.java.enumConstants?.associateBy { it.name } ?: emptyMap()
+    }
+
+    override fun unwrap(value: List<T>): String {
+        return value.joinToString(separator = ",") { it.name }
+    }
+
+    override fun wrap(value: String): List<T> = value
+        .takeUnless { it.isEmpty() }?.let {
+            it.split(',').map { e ->
+                enumConstants[e]
+                    ?: error("$it can't be associated with any value from ${enumClass.qualifiedName}")
+            }
+        }
+        ?: emptyList()
+}
+```
+
+> See [column transformations](Deep-Dive-into-DSL.md#column-transformation) for more details about `ColumnTransformer`.
+{style="note"}
+
+The new column type and transformer can then be used in a table definition:
+```kotlin
+enum class Vowel { A, E, I, O, U }
+
+object TestTable : Table("test_table") {
+    val vowel: Column<List<Vowel>> = set<Vowel>("vowel")
+        .transform(EnumListColumnType(Vowel::class))
+        .default(listOf(Vowel.A, Vowel.E))
+}
+```
+
+Lists of enum constants can then be inserted and queried from the `set` column. The following block shows a query for all records that
+have `Vowel.O` stored at any position in the `set` column string:
+```kotlin
+transaction {
+    TestTable.insert { it[vowel] = listOf(Vowel.U, Vowel.E) }
+    TestTable.insert { it[vowel] = emptyList() }
+    TestTable.insert { it[vowel] = Vowel.entries }
+
+    TestTable
+        .selectAll()
+        .where { TestTable.vowel.findInSet(Vowel.O) greater 0 }
+        .toList()
+}
+
+fun <T : Enum<T>> Expression<List<T>>.findInSet(enum: T) =
+    CustomFunction("FIND_IN_SET", IntegerColumnType(), stringParam(enum.name), this)
+```
+
+### Key-Value pair data
+
+PostgreSQL provides a data type, [`hstore`](https://www.postgresql.org/docs/16/hstore.html), to store key-value data pairs in a single text string.
+
+The existing `StringColumnType` class can be extended with a few overrides:
+```kotlin
+import org.postgresql.util.PGobject
+
+class HStoreColumnType : TextColumnType() {
+    override fun sqlType(): String = "HSTORE"
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val parameterValue: PGobject? = value?.let {
+            PGobject().apply {
+                type = sqlType()
+                this.value = value as? String
+            }
+        }
+        super.setParameter(stmt, index, parameterValue)
+    }
+}
+```
+
+A table extension function can then be added to register a new column with this type.
+This example assumes that the input values will be of type `Map<String, String>`, so `transform()` is used on the string column to handle parsing:
+```kotlin
+fun Table.hstore(name: String): Column<String> = registerColumn(name, HStoreColumnType())
+
+object TestTable : Table("test_table") {
+    val bookDetails = hstore("book_details").transform(
+        wrap = {
+            it.trim('{', '}').split(", ")
+                .associate { pair ->
+                    pair.substringBefore("=") to pair.substringAfter("=")
+                }
+        },
+        unwrap = {
+            it.entries.joinToString(separator = ",") { (k, v) ->
+                "\"$k\"=>\"$v\""
+            }
+        }
+    )
+}
+```
+
+> See [column transformations](Deep-Dive-into-DSL.md#column-transformation) for more details about `transform()`.
+{style="note"}
+
+> To use the `hstore` data type, the extension must first be enabled in the database by running `exec("CREATE EXTENSION hstore;")`.
+{style="note"}
+
+Map values representing key-value pairs of strings can then be inserted and queried from the `bookDetails` column.
+The following block queries the value associated with the `title` key from all `bookDetails` records:
+```kotlin
+transaction {
+    TestTable.insert {
+        it[bookDetails] = mapOf(
+            "title" to "Kotlin in Action",
+            "edition" to "2"
+        )
+    }
+
+    val bookTitle = TestTable.bookDetails.getValue("title")
+    TestTable
+        .select(bookTitle)
+        .toList()
+}
+
+fun <T : Map<String, String>> Expression<T>.getValue(key: String) =
+    CustomOperator("->", TextColumnType(), this, stringParam(key))
+```
+
+### Case insensitive data
+
+PostgreSQL provides a data type, [`citext`](https://www.postgresql.org/docs/16/citext.html), that represents a case-insensitive string type.
+
+The existing `StringColumnType` class can be extended with a few overrides:
+```kotlin
+import org.postgresql.util.PGobject
+
+class CitextColumnType(
+    colLength: Int
+) : VarCharColumnType(colLength) {
+    override fun sqlType(): String = "CITEXT"
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        val parameterValue: PGobject? = value?.let {
+            PGobject().apply {
+                type = sqlType()
+                this.value = value as? String
+            }
+        }
+        super.setParameter(stmt, index, parameterValue)
+    }
+}
+```
+
+A table extension function can then be added to register a new column with this type:
+```kotlin
+fun Table.citext(name: String, length: Int): Column<String> =
+    registerColumn(name, CitextColumnType(length))
+
+object TestTable : Table("test_table") {
+    val firstName = citext("first_name", 32)
+}
+```
+
+> To use the `citext` data type, the extension must first be enabled in the database by running `exec("CREATE EXTENSION citext;")`.
+{style="note"}
+
+String values can then be inserted and queried from the `firstName` column in a case-insensitive manner:
+```kotlin
+transaction {
+    val allNames = listOf("Anna", "Anya", "Agna")
+    TestTable.batchInsert(allNames) { name ->
+        this[TestTable.firstName] = name
+    }
+
+    TestTable
+        .selectAll()
+        .where { TestTable.firstName like "an%" }
+        .toList()
+}
+```
