@@ -408,7 +408,7 @@ class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
   var director by Director referencedOn StarWarsFilms
 }
 ```
-<tip>For more information on creating table foreign key constraints, see <a href="Table-Definition.md#foreign-key">DSL Foreign Key</a>.</tip>
+<tip>For more information on creating table foreign key constraints, see <a href="Table-Definition.topic#foreign-key">DSL Foreign Key</a>.</tip>
 
 Now you can get the director for a `StarWarsFilm` object, `movie`, in the same way you would get any other field:
 ```kotlin

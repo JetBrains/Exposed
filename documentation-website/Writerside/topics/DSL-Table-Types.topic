@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Table types" id="DSL-Table-Types">
+    <show-structure for="chapter,procedure" depth="2"/>
+    <p>
+        The DSL API of Exposed provides two classes to define tables:
+    </p>
+    <list>
+        <li>The core <a anchor="table"><code>Table</code></a> class.</li>
+        <li>
+            The <a anchor="IntIdTable"><code>IntIdTable</code></a> class for simplified <code>id</code> columns.
+        </li>
+    </list>
+    <include from="Table-Definition.topic" element-id="table" id="table"/>
+    <chapter id="IntIdTable" title="IntIdTable">
+        <p>
+            For tables that use a standard <code>id</code> column as the primary key, you can simplify the table definition by
+            using <code>IntIdTable</code>. <code>IntIdTable</code> automatically provides an auto-incrementing <code>id</code> column
+            of type <code>Int</code>:
+        </p>
+        <code-block lang="kotlin">
+            object StarWarsFilms : IntIdTable() {
+                val sequelId = integer(&quot;sequel_id&quot;).uniqueIndex()
+                val name = varchar(&quot;name&quot;, 50)
+                val director = varchar(&quot;director&quot;, 50)
+            }
+        </code-block>
+    </chapter>
+    <seealso style="cards">
+        <category ref="related">
+            <a href="Table-Definition.topic"/>
+            <a href="Data-Types.md"/>
+        </category>
+    </seealso>
+</topic>

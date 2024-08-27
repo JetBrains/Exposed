@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Exposed, an ORM framework for Kotlin" id="About">
+    <p>
+        Exposed is a lightweight SQL library on top of a JDBC driver for the Kotlin programming language. It offers
+        two approaches for database access: the Domain-Specific Language (DSL) API and the Data Access Object (DAO) API.
+    </p>
+    <p>
+        The Domain-Specific Language (DSL) API of Exposed provides a Kotlin-based abstraction for interacting with databases
+        . It closely <a href="DSL-CRUD-operations.topic">mirrors actual SQL statements</a>, allowing you to work
+        with familiar SQL concepts while benefiting from the type safety that Kotlin offers.
+    </p>
+    <p>
+        <a href="Deep-Dive-into-DAO.md">The Data Access Object (DAO) API</a> of Exposed provides an object-oriented approach for interacting with a database,
+        similar to traditional Object-Relational Mapping (ORM) frameworks like Hibernate.
+        This API is less verbose and provides a more intuitive and Kotlin-centric way to interact with your database.
+    </p>
+    <p>
+        Exposed's flexibility allows you to choose the approach that best suits your project's needs, whether you
+        prefer the direct control of SQL with the DSL API or the higher-level abstraction of the DAO API.
+    </p>
+    <p>
+        The official mascot of Exposed is the cuttlefish, which is well-known for its outstanding mimicry ability that enables it
+        to blend seamlessly into any environment. Similar to our mascot, Exposed can be used to mimic a variety of
+        database engines, which helps you to build applications without dependencies on any specific database engine
+        and to switch between them with very little or no changes.
+    </p>
+    <chapter title="Supported databases" id="supported-databases">
+        Exposed currently supports the following databases:
+        <list>
+            <li>
+                <a href="https://www.h2database.com/html/main.html">H2</a> (versions 2.x)
+            </li>
+            <li>
+                <a href="https://github.com/mariadb-corporation/mariadb-connector-j">MariaDB</a>
+            </li>
+            <li>
+                <a href="https://github.com/mysql/mysql-connector-j">MySQL</a>
+            </li>
+            <li>
+                <a href="https://www.oracle.com/ca-en/database/technologies/appdev/jdbc-downloads.html">Oracle</a>
+            </li>
+            <li>
+                <a href="https://jdbc.postgresql.org/">PostgreSQL</a> (as well as PostgreSQL using the
+                <a href="https://impossibl.github.io/pgjdbc-ng/">pgjdbc-ng</a> JDBC driver)
+            </li>
+            <li>
+                <a href="https://github.com/microsoft/mssql-jdbc">Microsoft SQL Server</a>
+            </li>
+            <li>
+                <a href="https://github.com/xerial/sqlite-jdbc">SQLite</a>
+            </li>
+        </list>
+    </chapter>
+    <seealso style="cards">
+        <category ref="learn-more">
+            <a href="Exposed-Modules.md"/>
+            <a href="Getting-Started-with-Exposed.topic"/>
+        </category>
+    </seealso>
+</topic>

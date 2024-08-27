@@ -7,6 +7,7 @@
                   start-page="Home.topic">
 
     <toc-element topic="Home.topic" toc-title="Home"/>
+    <toc-element topic="About.topic" toc-title="About"/>
     <toc-element topic="Getting-Started-with-Exposed.topic" toc-title="Get started with Exposed"/>
     <toc-element topic="Exposed-Modules.md"/>
     <toc-element toc-title="Databases">
@@ -15,13 +16,13 @@
         <toc-element topic="Transactions.md"/>
     </toc-element>
     <toc-element toc-title="Schemas">
-        <toc-element topic="Table-Definition.md"/>
+        <toc-element topic="Table-Definition.topic"/>
         <toc-element topic="Data-Types.md"/>
         <toc-element topic="SQL-Functions.md"/>
         <toc-element topic="Working-with-Schema.topic"/>
     </toc-element>
     <toc-element toc-title="Deep Dive into DSL">
-        <toc-element topic="DSL-overview.topic"/>
+        <toc-element topic="DSL-Table-Types.topic"/>
         <toc-element topic="DSL-CRUD-operations.topic"/>
         <toc-element topic="Working-with-Sequence.topic"/>
         <toc-element topic="DSL-Querying-data.topic"/>

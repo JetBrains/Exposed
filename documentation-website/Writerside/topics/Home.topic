@@ -30,7 +30,7 @@
                summary="Learn how to configure Exposed in the existing project using Gradle or Maven build systems">
                 Adding Dependencies
             </a>
-            <a href="Table-Definition.md" summary="Start creating your first tables and get familiar with the column types"/>
+            <a href="Table-Definition.topic" summary="Start creating your first tables and get familiar with the column types"/>
             <a href="DSL-CRUD-operations.topic" summary="Learn how to write database queries using Exposed query DSL">
                 Querying a Database
             </a>
