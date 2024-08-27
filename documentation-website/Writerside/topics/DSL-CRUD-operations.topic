@@ -257,9 +257,8 @@
             omitted from the <code>body</code> block, the default values will be
             used for insertion as well as for the update operation.</p>
         <note>
-            If the update operation should differ from the insert operation, then <code>onUpdate()</code> should be used
-            in the lambda block to set
-            the specific columns to update, as seen in the example below.
+            If the update operation should differ from the insert operation, then <code>onUpdate()</code> should be
+            provided an argument to set the specific columns to update, as seen in the example below.
             <p>If the update operation involves functions that should use the values that would have been inserted, then
                 these columns
                 should be marked using <code>insertValue()</code>, as seen in the example below.</p>
@@ -272,29 +271,22 @@
         <code-block lang="kotlin">
             StarWarsFilms.upsert(
                 StarWarsFilms.sequelId,
+                onUpdate = { it[StarWarsFilms.sequelId] = StarWarsFilms.sequelId + 1 },
                 where = { StarWarsFilms.director like stringLiteral(&quot;JJ%&quot;) }
             ) {
                 it[sequelId] = 9
                 it[name] = &quot;The Rise of Skywalker&quot;
                 it[director] = &quot;JJ Abrams&quot;
-
-                it.onUpdate { update -&gt;
-                    update[sequelId] = sequelId + 1
-                }
             }
 
-            StarWarsFilms.upsert {
+            StarWarsFilms.upsert(
+                onUpdate = {
+                    it[StarWarsFilms.director] = concat(insertValue(StarWarsFilms.director), stringLiteral(" || "), StarWarsFilms.director)
+                }
+            ) {
                 it[sequelId] = 9
                 it[name] = &quot;The Rise of Skywalker&quot;
                 it[director] = &quot;Rian Johnson&quot;
-
-                it.onUpdate { update -&gt;
-                    update[director] = concat(
-                        insertValue(StarWarsFilms.director),
-                        stringLiteral(&quot; || &quot;),
-                        StarWarsFilms.director
-                    )
-                }
             }
         </code-block>
         <p>If the update operation should be identical to the insert operation except for a few columns,
