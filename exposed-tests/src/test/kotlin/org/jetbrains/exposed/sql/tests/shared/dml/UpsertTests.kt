@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.sql.statements.BatchUpsertStatement
 import org.jetbrains.exposed.sql.statements.UpdateStatement
+import org.jetbrains.exposed.sql.statements.UpsertBuilder
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -25,6 +26,7 @@ import kotlin.properties.Delegates
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
+@Suppress("LargeClass")
 class UpsertTests : DatabaseTestsBase() {
     // these DB require key columns from ON clause to be included in the derived source table (USING clause)
     private val upsertViaMergeDB = TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.ORACLE
@@ -249,24 +251,16 @@ class UpsertTests : DatabaseTestsBase() {
             val testWord = "Test"
 
             repeat(3) {
-                Words.upsert {
+                Words.upsert(onUpdate = { it[Words.count] = Words.count + 1 }) {
                     it[word] = testWord
-
-                    it.onUpdate { update ->
-                        update[count] = count + 1
-                    }
                 }
             }
 
             assertEquals(3, Words.selectAll().single()[Words.count])
 
             val updatedCount = 1000
-            Words.upsert {
+            Words.upsert(onUpdate = { it[Words.count] = 1000 }) {
                 it[word] = testWord
-
-                it.onUpdate { update ->
-                    update[count] = updatedCount
-                }
             }
             assertEquals(updatedCount, Words.selectAll().single()[Words.count])
         }
@@ -281,9 +275,9 @@ class UpsertTests : DatabaseTestsBase() {
             val losses = integer("losses").default(100)
         }
 
-        fun adjustGainAndLoss(statement: UpdateStatement) {
-            statement[tester.gains] = tester.gains.plus(tester.amount)
-            statement[tester.losses] = tester.losses.minus(tester.amount)
+        fun UpsertBuilder.adjustGainAndLoss(statement: UpdateStatement) {
+            statement[tester.gains] = tester.gains + tester.amount
+            statement[tester.losses] = tester.losses - insertValue(tester.amount)
         }
 
         withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
@@ -291,29 +285,27 @@ class UpsertTests : DatabaseTestsBase() {
                 it[item] = "Item A"
             } get tester.item
 
-            tester.upsert {
+            tester.upsert(onUpdate = { adjustGainAndLoss(it) }) {
                 it[item] = "Item B"
                 it[gains] = 200
                 it[losses] = 0
-
-                it.onUpdate { update -> adjustGainAndLoss(update) }
             }
 
             val insertResult = tester.selectAll().where { tester.item neq itemA }.single()
+            assertEquals(25, insertResult[tester.amount])
             assertEquals(200, insertResult[tester.gains])
             assertEquals(0, insertResult[tester.losses])
 
-            tester.upsert {
+            tester.upsert(onUpdate = { adjustGainAndLoss(it) }) {
                 it[item] = itemA
+                it[amount] = 10
                 it[gains] = 200
                 it[losses] = 0
-
-                it.onUpdate { update -> adjustGainAndLoss(update) }
             }
 
             val updateResult = tester.selectAll().where { tester.item eq itemA }.single()
             assertEquals(125, updateResult[tester.gains])
-            assertEquals(75, updateResult[tester.losses])
+            assertEquals(90, updateResult[tester.losses])
         }
     }
 
@@ -332,12 +324,10 @@ class UpsertTests : DatabaseTestsBase() {
             }
             assertEquals("Phrase", tester.selectAll().single()[tester.phrase])
 
-            tester.upsert { // expression in update
+            tester.upsert(
+                onUpdate = { it[tester.phrase] = concat(" - ", listOf(tester.word, tester.phrase)) }
+            ) { // expression in update
                 it[word] = testWord
-
-                it.onUpdate { update ->
-                    update[phrase] = concat(" - ", listOf(tester.word, tester.phrase))
-                }
             }
             assertEquals("$testWord - $defaultPhrase", tester.selectAll().single()[tester.phrase])
 
@@ -366,14 +356,12 @@ class UpsertTests : DatabaseTestsBase() {
 
             // H2_Mysql & H2_Mariadb syntax does not allow VALUES() syntax to come first in complex expression
             // Syntax must be column=(1 + VALUES(column)), not column=(VALUES(column) + 1)
-            tester.upsert {
+            tester.upsert(
+                onUpdate = { it[tester.count] = intLiteral(100) times insertValue(tester.count) }
+            ) {
                 it[id] = 1
                 it[word] = "Word B"
                 it[count] = 9
-
-                it.onUpdate { update ->
-                    update[count] = intLiteral(100) times insertValue(count)
-                }
             }
             val result = tester.selectAll().single()
             assertEquals(900, result[tester.count])
@@ -385,15 +373,14 @@ class UpsertTests : DatabaseTestsBase() {
             )
             tester.batchUpsert(
                 newWords,
+                onUpdate = {
+                    it[tester.word] = concat(tester.word, stringLiteral(" || "), insertValue(tester.count))
+                    it[tester.count] = intLiteral(1) plus insertValue(tester.count)
+                }
             ) { (id, word, count) ->
                 this[tester.id] = id
                 this[tester.word] = word
                 this[tester.count] = count
-
-                onUpdate {
-                    it[tester.word] = concat(tester.word, stringLiteral(" || "), insertValue(tester.count))
-                    it[tester.count] = intLiteral(1) plus insertValue(tester.count)
-                }
             }
 
             assertEquals(3, tester.selectAll().count())
@@ -586,12 +573,11 @@ class UpsertTests : DatabaseTestsBase() {
             val alphabet = ('A'..'Z').map { it.toString() }
             val lettersWithDuplicates = alphabet + vowels
 
-            Words.batchUpsert(lettersWithDuplicates) { letter ->
+            Words.batchUpsert(
+                lettersWithDuplicates,
+                onUpdate = { it[Words.count] = Words.count + 1 }
+            ) { letter ->
                 this[Words.word] = letter
-
-                onUpdate {
-                    it[Words.count] = Words.count + 1
-                }
             }
 
             assertEquals(alphabet.size.toLong(), Words.selectAll().count())
@@ -637,16 +623,13 @@ class UpsertTests : DatabaseTestsBase() {
             val firstThreeVowels = vowels.take(3)
             Words.batchUpsert(
                 lettersWithDuplicates,
+                onUpdate = { it[Words.count] = Words.count + 1 },
                 // PostgresNG throws IndexOutOfBound if shouldReturnGeneratedValues == true
                 // Related issue in pgjdbc-ng repository: https://github.com/impossibl/pgjdbc-ng/issues/545
                 shouldReturnGeneratedValues = false,
                 where = { Words.word inList firstThreeVowels }
             ) { letter ->
                 this[Words.word] = letter
-
-                onUpdate {
-                    it[Words.count] = Words.count + 1
-                }
             }
 
             assertEquals(alphabet.size.toLong(), Words.selectAll().count())

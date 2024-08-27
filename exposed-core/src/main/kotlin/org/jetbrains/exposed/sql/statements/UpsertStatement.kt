@@ -23,11 +23,30 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 open class UpsertStatement<Key : Any>(
     table: Table,
     vararg val keys: Column<*>,
-    @Deprecated("This property will be removed in future releases. Use function `onUpdate()` instead.", level = DeprecationLevel.WARNING)
-    val onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
     val onUpdateExclude: List<Column<*>>?,
     val where: Op<Boolean>?
 ) : InsertStatement<Key>(table), UpsertBuilder {
+    @Deprecated(
+        "This constructor with `onUpdate` that takes a List may be removed in future releases.",
+        level = DeprecationLevel.WARNING
+    )
+    constructor(
+        table: Table,
+        vararg keys: Column<*>,
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: List<Column<*>>?,
+        where: Op<Boolean>?
+    ) : this(table, keys = keys, onUpdateExclude, where) {
+        onUpdate?.let {
+            this.onUpdate = it
+            updateValues.putAll(it)
+        }
+    }
+
+    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.WARNING)
+    var onUpdate: List<Pair<Column<*>, Expression<*>>>? = null
+        private set
+
     internal val updateValues: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
@@ -71,17 +90,12 @@ open class UpsertStatement<Key : Any>(
  */
 sealed interface UpsertBuilder {
     /**
-     * Calls the specified function [body] with an [UpsertBuilder] as its receiver and an [UpdateStatement]
-     * as its argument, allowing values to be assigned to the UPDATE clause of an upsert statement.
-     *
-     * To specify manually that the insert value should be used when updating a column, for example within an expression
-     * or function, invoke `insertValue()` with the desired column as the function argument.
-     *
-     * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testUpsertWithManualUpdateUsingInsertValues
+     * Calls the specified function [onUpdate] with an [UpdateStatement] as its argument,
+     * allowing values to be stored as part of the UPDATE clause of the upsert statement associated with this builder.
      */
-    fun onUpdate(body: UpsertBuilder.(UpdateStatement) -> Unit) {
+    fun storeUpdateValues(onUpdate: UpsertBuilder.(UpdateStatement) -> Unit) {
         val arguments = UpdateStatement((this as InsertStatement<*>).table, null).apply {
-            body.invoke(this@UpsertBuilder, this)
+            onUpdate.invoke(this@UpsertBuilder, this)
         }.firstDataSet
         when (this) {
             is UpsertStatement<*> -> updateValues.putAll(arguments)

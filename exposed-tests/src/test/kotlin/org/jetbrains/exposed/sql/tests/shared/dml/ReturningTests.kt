@@ -90,15 +90,12 @@ class ReturningTests : DatabaseTestsBase() {
             assertEquals(99.0, result1[Items.price])
 
             val result2 = Items.upsertReturning(
-                returning = listOf(Items.name, Items.price)
+                returning = listOf(Items.name, Items.price),
+                onUpdate = { it[Items.price] = Items.price times 10.0 }
             ) {
                 it[id] = 1
                 it[name] = "B"
                 it[price] = 200.0
-
-                it.onUpdate { update ->
-                    update[price] = price times 10.0
-                }
             }.single()
             assertEquals("A", result2[Items.name])
             assertEquals(990.0, result2[Items.price])

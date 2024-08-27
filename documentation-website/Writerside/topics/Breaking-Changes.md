@@ -3,6 +3,39 @@
 ## 0.54.0
 
 * All objects that are part of the sealed class `ForUpdateOption` are now converted to `data object`.
+* The `onUpdate` parameter in `upsert()`, `upsertReturning()`, and `batchUpsert()` will no longer accept a list of column-value pairs as an argument.
+  The parameter now takes a lambda block with an `UpdateStatement` as its argument, so that column-value assignments for the UPDATE clause can be set
+  in a similar way to `update()`.
+  This enables the use of `insertValue(column)` in expressions to specify that the same value to be inserted into a column should be used when updating.
+```kotlin
+// before
+TestTable.upsert(
+    onUpdate = listOf(Words.count to Words.count.plus(1))
+) {
+    it[word] = "Kotlin"
+    it[count] = 3
+}
+
+// after
+TestTable.upsert(
+    onUpdate = {
+        it[Words.count] = Words.count + 1
+    }
+) {
+    it[word] = "Kotlin"
+    it[count] = 3
+}
+
+// after - with new value from insert used in update expression
+TestTable.upsert(
+    onUpdate = {
+        it[Words.count] = Words.count + insertValue(Words.count)
+    }
+) {
+    it[word] = "Kotlin"
+    it[count] = 3
+}
+```
 
 ## 0.51.0
 

@@ -675,38 +675,34 @@ If none of the optional arguments are provided to `upsert()`, and an `onUpdate()
 This means that, for example, if a table mapping has columns with default values and these columns are omitted from the `body` block, the default values will be
 used for insertion as well as for the update operation.
 
-<note>
-If the update operation should differ from the insert operation, then <code>onUpdate()</code> should be used in the lambda block to set
-the specific columns to update, as seen in the example below.
-
-If the update operation involves functions that should use the values that would have been inserted, then these columns
-should be marked using `insertValue()`, as seen in the example below.
-</note>
+> If the update operation should differ from the insert operation, then `onUpdate` should be provided an argument to set
+> the specific columns to update, as seen in the example below.
+>
+> If the update operation involves functions that should use the values that would have been inserted, then these columns
+> should be marked using `insertValue()`, as seen in the example below.
+{style="note"}
 
 Using another example, PostgreSQL allows more control over which key constraint columns to check for conflict, whether different
 values should be used for an update, and whether the update statement should have a `WHERE` clause:
 ```kotlin
 StarWarsFilms.upsert(
     StarWarsFilms.sequelId,
+    onUpdate = { it[StarWarsFilms.sequelId] = StarWarsFilms.sequelId + 1 },
     where = { StarWarsFilms.director like stringLiteral("JJ%") }
 ) {
     it[sequelId] = 9
     it[name] = "The Rise of Skywalker"
     it[director] = "JJ Abrams"
-    
-    it.onUpdate { update ->
-        update[sequelId] = sequelId + 1
-    }
 }
 
-StarWarsFilms.upsert {
+StarWarsFilms.upsert(
+    onUpdate = {
+        it[StarWarsFilms.director] = concat(insertValue(StarWarsFilms.director), stringLiteral(" || "), StarWarsFilms.director)
+    }
+) {
     it[sequelId] = 9
     it[name] = "The Rise of Skywalker"
     it[director] = "Rian Johnson"
-
-    it.onUpdate { update ->
-        update[director] = concat(insertValue(StarWarsFilms.director), stringLiteral(" || "), StarWarsFilms.director)
-    }
 }
 ```
 If the update operation should be identical to the insert operation except for a few columns,
@@ -733,11 +729,10 @@ If a specific database supports user-defined key columns and none are provided, 
 is no defined primary key, the first unique index is used. If there are no unique indices, each database handles this case
 differently, so it is strongly advised that keys are defined to avoid unexpected results.
 
-<note>
-Databases that do not support a specific Insert or Update command implement the standard <code>MERGE INTO ... USING</code> statement with aliases and a derived table column list. 
-These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode). 
-Any columns defined as key constraints (to be used in the <code>ON</code> clause) must be included in the statement block to avoid throwing an error.
-</note>
+> Databases that do not support a specific Insert or Update command implement the standard `MERGE INTO ... USING` statement with aliases and a derived table column list. 
+> These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode). 
+> Any columns defined as key constraints (to be used in the `ON` clause) must be included in the statement block to avoid throwing an error.
+{style="note"}
 
 ## Replace
 

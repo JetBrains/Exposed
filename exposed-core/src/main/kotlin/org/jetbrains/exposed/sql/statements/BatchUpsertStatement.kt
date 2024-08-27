@@ -20,12 +20,32 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 open class BatchUpsertStatement(
     table: Table,
     vararg val keys: Column<*>,
-    @Deprecated("This property will be removed in future releases. Use function `onUpdate()` instead.", level = DeprecationLevel.WARNING)
-    val onUpdate: List<Pair<Column<*>, Expression<*>>>? = null,
     val onUpdateExclude: List<Column<*>>?,
     val where: Op<Boolean>?,
     shouldReturnGeneratedValues: Boolean = true
 ) : BaseBatchInsertStatement(table, ignore = false, shouldReturnGeneratedValues), UpsertBuilder {
+    @Deprecated(
+        "This constructor with `onUpdate` that takes a List may be removed in future releases.",
+        level = DeprecationLevel.WARNING
+    )
+    constructor(
+        table: Table,
+        vararg keys: Column<*>,
+        onUpdate: List<Pair<Column<*>, Expression<*>>>?,
+        onUpdateExclude: List<Column<*>>?,
+        where: Op<Boolean>?,
+        shouldReturnGeneratedValues: Boolean
+    ) : this(table, keys = keys, onUpdateExclude, where, shouldReturnGeneratedValues) {
+        onUpdate?.let {
+            this.onUpdate = it
+            updateValues.putAll(it)
+        }
+    }
+
+    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.WARNING)
+    var onUpdate: List<Pair<Column<*>, Expression<*>>>? = null
+        private set
+
     internal val updateValues: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
