@@ -4,10 +4,11 @@
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="Working with Sequence" id="Working-with-Sequence">
-
-    <p>If you want to use Sequence, Exposed allows you to:</p>
-    <chapter title="Define a Sequence" id="define-a-sequence">
-
+    <show-structure for="chapter,procedure" depth="2"/>
+    <p>A sequence is a database object that automatically generates integer values in sequential order. It is particularly
+        useful in generating unique identifiers and primary keys.</p>
+    <chapter title="Define a sequence" id="define-a-sequence">
+        To define a sequence in Exposed, use the <code>Sequence</code> class:
         <code-block lang="Kotlin">
             val myseq = Sequence("my_sequence") // my_sequence is the sequence name.
         </code-block>
@@ -25,20 +26,23 @@
             )
         </code-block>
     </chapter>
-    <chapter title="Create and Drop a Sequence" id="create-and-drop-a-sequence">
-
+    <chapter title="Create a sequence" id="create-a-sequence">
+        To create a sequence, use the <code>createSequence()</code> method provided by <code>SchemaUtils</code>:
         <code-block lang="Kotlin">
-            // Creates a sequence
             SchemaUtils.createSequence(myseq)
-// Drops a sequence
+        </code-block>
+    </chapter>
+    <chapter title="Drop a sequence" id="drop-a-sequence">
+        To drop a sequence, use the <code>dropSequence()</code> method provided by <code>SchemaUtils</code>:
+        <code-block lang="Kotlin">
             SchemaUtils.dropSequence(myseq)
         </code-block>
     </chapter>
-    <chapter title="Use the NextVal function" id="use-the-nextval-function">
-        <p>You can use the nextVal function like this:</p>
+    <chapter title="Access the next value" id="access-next-value">
+        <p>You can access the next value in a sequence by using the <code>nextIntVal()</code> function:</p>
 
         <code-block lang="Kotlin">
-            val nextVal = myseq.nextVal()
+            val nextVal = myseq.nextIntVal()
             val id = StarWarsFilms.insertAndGetId {
                 it[id] = nextVal
                 it[name] = &quot;The Last Jedi&quot;
