@@ -251,9 +251,7 @@ class UpsertTests : DatabaseTestsBase() {
             val testWord = "Test"
 
             repeat(3) {
-                Words.upsert(
-                    onUpdate = { it[Words.count] = Words.count + 1 }
-                ) {
+                Words.upsert(onUpdate = { it[Words.count] = Words.count + 1 }) {
                     it[word] = testWord
                 }
             }
@@ -261,9 +259,7 @@ class UpsertTests : DatabaseTestsBase() {
             assertEquals(3, Words.selectAll().single()[Words.count])
 
             val updatedCount = 1000
-            Words.upsert(
-                onUpdate = { it[Words.count] = 1000 }
-            ) {
+            Words.upsert(onUpdate = { it[Words.count] = 1000 }) {
                 it[word] = testWord
             }
             assertEquals(updatedCount, Words.selectAll().single()[Words.count])
@@ -329,9 +325,7 @@ class UpsertTests : DatabaseTestsBase() {
             assertEquals("Phrase", tester.selectAll().single()[tester.phrase])
 
             tester.upsert(
-                onUpdate = {
-                    it[tester.phrase] = concat(" - ", listOf(tester.word, tester.phrase))
-                }
+                onUpdate = { it[tester.phrase] = concat(" - ", listOf(tester.word, tester.phrase)) }
             ) { // expression in update
                 it[word] = testWord
             }
@@ -363,9 +357,7 @@ class UpsertTests : DatabaseTestsBase() {
             // H2_Mysql & H2_Mariadb syntax does not allow VALUES() syntax to come first in complex expression
             // Syntax must be column=(1 + VALUES(column)), not column=(VALUES(column) + 1)
             tester.upsert(
-                onUpdate = {
-                    it[tester.count] = intLiteral(100) times insertValue(tester.count)
-                }
+                onUpdate = { it[tester.count] = intLiteral(100) times insertValue(tester.count) }
             ) {
                 it[id] = 1
                 it[word] = "Word B"
