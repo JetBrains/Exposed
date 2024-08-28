@@ -32,8 +32,7 @@
         <chapter id="insertAndGetId">
             <title><code>insertAndGetId</code></title>
             <tldr>
-                <p>Supported on: MySQL, PostgreSQL, and SQLite</p>
-                <p>Table types: <code>IntIdTable()</code> </p>
+                <p> Supported table types: <code>IdTable()</code> </p>
             </tldr>
             <p>To add a new row and return its ID, use <code>insertAndGetId</code>. If the same row already exists in
                 the table, it throws an exception.</p>
@@ -53,7 +52,7 @@
         <chapter id="insertIgnore">
             <title><code>insertIgnore</code></title>
             <tldr>
-                <p>Supported on: MySQL, PostgreSQL, and SQLite</p>
+                <p>Supported on: MySQL, MariaDB, PostgreSQL, and SQLite</p>
             </tldr>
             <p>To allow insert statements to be executed without throwing any errors, use <code>insertIgnore</code>.
                 This may be useful, for example, when insertion conflicts are possible:</p>
@@ -203,7 +202,7 @@
         </p>
         <code-block lang="kotlin">
             val updatedCount = StarWarsFilms.update({ StarWarsFilms.name like &quot;Episode%&quot; }) {
-                it[StarWarsFilms.director] = StarWarsFilms.director.upperCase()
+                it[StarWarsFilms.director] = "George Lucas"
             }
         </code-block>
         <p>To update a column value using an expression, such as an increment, use <code>update</code> function
@@ -211,20 +210,41 @@
 
         <code-block lang="kotlin">
             StarWarsFilms.update({ StarWarsFilms.sequelId eq 8 }) {
-                with(SqlExpressionBuilder) {
-                    it.update(StarWarsFilms.sequelId, StarWarsFilms.sequelId + 1)
-                    // or
-                    it[StarWarsFilms.sequelId] = StarWarsFilms.sequelId + 1
-                }
+                it.update(StarWarsFilms.sequelId, StarWarsFilms.sequelId + 1)
+                // or
+                it[StarWarsFilms.sequelId] = StarWarsFilms.sequelId + 1
             }
         </code-block>
 
     </chapter>
     <chapter title="Delete" id="delete">
-        <p>Use the <code>deleteWhere()</code> function to delete records and return a count of the number of deleted rows.</p>
-        <code-block lang="kotlin">
-            StarWarsFilms.deleteWhere { StarWarsFilms.sequelId eq 8 }
-        </code-block>
+        <chapter id="deleteWhere">
+            <title><code>deleteWhere</code></title>
+            <p>To delete records and return the count of deleted rows, use the <code>deleteWhere</code> function.</p>
+            <code-block lang="kotlin">
+                StarWarsFilms.deleteWhere { StarWarsFilms.sequelId eq 8 }
+            </code-block>
+        </chapter>
+        <chapter id="deleteIgnoreWhere">
+            <title><code>deleteIgnoreWhere</code></title>
+            <tldr>
+                <p>Supported on: MySQL and MariaDB</p>
+            </tldr>
+            <p>To delete records while ignoring any possible errors that occur during the process, use the
+                <code>deleteIgnoreWhere</code> function. The function will return the count of deleted rows.
+            </p>
+            <code-block lang="kotlin">
+                StarWarsFilms.deleteIgnoreWhere { StarWarsFilms.sequelId eq 8 }
+            </code-block>
+        </chapter>
+        <chapter id="deleteAll">
+            <title><code>deleteAll</code></title>
+            <p>To deletes all rows in a table and return the count of deleted rows, use the <code>deleteAll</code>
+                function.</p>
+            <code-block lang="kotlin">
+                StarWarsFilms.deleteAll { StarWarsFilms.sequelId eq 8 }
+            </code-block>
+        </chapter>
 
     </chapter>
     <chapter title="Insert Or Update" id="insert-or-update">
