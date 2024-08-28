@@ -4,23 +4,45 @@
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="Working with Schema" id="Working-with-Schema">
-    <p>You can create a schema or drop an existing one:</p>
+    <p>
+        A database schema defines how data is organized in a relational database. With Exposed, you can create and
+        drop a new or an existing schema.
+    </p>
+    <chapter title="Define a schema" id="define-a-sequence">
+        <p>
+            To define a schema in Exposed, use the <code>Schema</code> class:
+        </p>
+        <code-block lang="Kotlin">
+            val schema = Schema("my_schema") // my_schema is the schema name.
+        </code-block>
+        <p>Additionally, you can specify the schema owner by passing an <code>authorization</code> argument (some databases require the explicit owner) :</p>
 
-    <code-block lang="Kotlin">
-        val schema = Schema(&quot;my_schema&quot;) // my_schema is the schema name.
-// Creates a Schema
-        SchemaUtils.createSchema(schema)
-// Drops a Schema
-        SchemaUtils.dropSchema(schema)
-    </code-block>
-    <p>Also, you can specify the schema owner like this (some databases require the explicit owner) :</p>
-
-    <code-block lang="Kotlin">
-        val schema = Schema(&quot;my_schema&quot;, authorization = &quot;owner&quot;)
-    </code-block>
-    <p>If you have many schemas and you want to set a default one, you can use:</p>
-
-    <code-block lang="Kotlin">
-        SchemaUtils.setSchema(schema)
-    </code-block>
+        <code-block lang="Kotlin">
+            val schema = Schema(&quot;my_schema&quot;, authorization = &quot;owner&quot;)
+        </code-block>
+    </chapter>
+    <chapter title="Create a new schema" id="create-schema">
+        <p>
+            To create a new schema, use the <code>createSchema()</code> method provided by <code>SchemaUtils</code>:
+        </p>
+        <code-block lang="kotlin">
+            SchemaUtils.createSchema(schema)
+        </code-block>
+    </chapter>
+    <chapter title="Set a default schema" id="default-schema">
+        <p>If you have many schemas, and you want to set a default one, you can use the <code>setSchema()</code>
+            method from <code>SchemaUtils</code>:
+        </p>
+        <code-block lang="Kotlin">
+            SchemaUtils.setSchema(schema)
+        </code-block>
+    </chapter>
+    <chapter title="Drop a schema" id="drop-schema">
+        <p>
+            To drop a schema, use the <code>dropSchema()</code> method provided by <code>SchemaUtils</code>:
+        </p>
+        <code-block lang="Kotlin">
+            SchemaUtils.dropSchema(schema)
+        </code-block>
+    </chapter>
 </topic>
