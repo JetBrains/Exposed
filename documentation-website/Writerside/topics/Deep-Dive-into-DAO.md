@@ -118,7 +118,10 @@ val movies = StarWarsFilm.all()
 val movies = StarWarsFilm.find { StarWarsFilms.sequelId eq 8 }
 val movie = StarWarsFilm.findById(5)
 ```
-<tip>For a list of available predicates, see <a href="DSL-CRUD-operations.topic">DSL Where expression</a>.</tip>
+<tip>
+For a list of available predicates, see
+<a href="DSL-Querying-data.topic" anchor="where-expression">DSL Where expression</a>.
+</tip>
 
 Read a value from a property similar to any property in a Kotlin class:
 ```kotlin

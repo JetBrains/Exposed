@@ -187,7 +187,7 @@
 
             <code-block lang="kotlin">
                 val indexName = index(&quot;indexName&quot;, false, *arrayOf(name, population))
-// or inside an init block within the table object
+                // or inside an init block within the table object
                 init {
                     index(&quot;indexName&quot;, isUnique = false, name, population)
                 }

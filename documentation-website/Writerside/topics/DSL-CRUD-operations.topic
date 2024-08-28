@@ -302,7 +302,7 @@
                 it[director] = &quot;JJ Abrams&quot;
             }
 
-// on conflict, ONLY column [director] is updated with value from the lambda block
+            // on conflict, ONLY column [director] is updated with value from the lambda block
             StarWarsFilms.upsert(
                 onUpdateExclude = StarWarsFilms.columns - setOf(StarWarsFilms.director)
             ) {
