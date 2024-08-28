@@ -52,9 +52,11 @@
                 </def>
                 <def id="exists">
                     <title><code>exists</code></title>
+                    Checks if a subquery returns at least one row.
                 </def>
                 <def id="notExists">
                     <title><code>notExists</code></title>
+                    Checks if a subquery does not return any row.
                 </def>
                 <def id="isDistinctFrom">
                     <title><code>isDistinctFrom</code></title>
@@ -125,7 +127,10 @@
                 </def>
                 <def id="match">
                     <title><code>match</code></title>
-                    Checks whether an expression matches a given pattern.
+                    Checks whether an expression matches a given pattern based on a specific mode.
+                    <p>
+                        Supported only on MySQL and MariaDB.
+                    </p>
                 </def>
             </deflist>
     </chapter>
