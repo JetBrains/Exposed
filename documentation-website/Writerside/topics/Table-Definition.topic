@@ -12,7 +12,7 @@
     <chapter title="Table Types" id="table-types">
         <chapter title="Table" id="table">
             <p>In Exposed, the <code>Table</code> class is the core abstraction for defining database tables.
-                This class provides methods to define various <a href="Data-Types.md">column types</a>,
+                This class provides methods to define various <a href="Data-Types.topic">column types</a>,
                 <a href="Table-Definition.topic" anchor="constraints">constraints</a>, and other table-specific properties.
             </p>
             <p>It is located in the
@@ -21,7 +21,7 @@
                 <control>exposed-core</control>
                 module.</p>
             <p>
-                Exposed supports a variety of <a href="Data-Types.md">column types</a>, including <code>integer</code>,
+                Exposed supports a variety of <a href="Data-Types.topic">column types</a>, including <code>integer</code>,
                 <code>varchar</code>,<code>bool</code>, and more. Each column is defined by calling the appropriate
                 method on the <code>Table</code> object.
             </p>

@@ -17,7 +17,7 @@
     </toc-element>
     <toc-element toc-title="Schemas">
         <toc-element topic="Table-Definition.topic"/>
-        <toc-element topic="Data-Types.md"/>
+        <toc-element topic="Data-Types.topic"/>
         <toc-element topic="SQL-Functions.md"/>
         <toc-element topic="Working-with-Schema.topic"/>
     </toc-element>
