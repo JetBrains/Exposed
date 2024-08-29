@@ -7,8 +7,8 @@
     </variables>
     <build-profile instance="hi">
         <variables>
-            <noindex-content>true</noindex-content>
             <header-logo>exposed-logo-white.svg</header-logo>
+            <noindex-content>true</noindex-content>
         </variables>
     </build-profile>
 
