@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       id="Table-Definition" title="Defining and creating tables">
+
+    <show-structure for="chapter,procedure" depth="2"/>
+    <p>This page shows what table types Exposed supports and how to define and create these tables. It also contains
+        tips on configuring
+        constraints, such as <code>PRIMARY KEY</code>, <code>DEFAULT</code>, and <code>INDEX</code>. All examples use
+        the H2 database to generate SQL.</p>
+    <chapter title="Table Types" id="table-types">
+        <chapter id="table">
+            <title>Core <code>Table</code> class</title>
+            <p>In Exposed, the <code>Table</code> class is the core abstraction for defining database tables.
+                This class provides methods to define various <a href="Data-Types.topic">column types</a>,
+                <a href="Table-Definition.topic" anchor="constraints">constraints</a>, and other table-specific properties.
+            </p>
+            <p>It is located in the
+                <control>org.jetbrains.exposed.sql</control>
+                package of the
+                <control>exposed-core</control>
+                module.</p>
+            <p>
+                Exposed supports a variety of <a href="Data-Types.topic">column types</a>, including <code>integer</code>,
+                <code>varchar</code>,<code>bool</code>, and more. Each column is defined by calling the appropriate
+                method on the <code>Table</code> object.
+            </p>
+            <p>The following example defines a simple table with an integer <code>id</code> column and a string
+                <code>name</code> column:</p>
+            <code-block lang="kotlin">
+                object Cities : Table() {
+                    val id = integer("id")
+                    val name = varchar("name", 50)
+                }
+            </code-block>
+            <p>
+                By default, Exposed will generate the table name from the full class name:
+            </p>
+            <code-block lang="sql">
+                CREATE TABLE IF NOT EXISTS CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
+            </code-block>
+            <p>
+                If the object name contains a 'Table' suffix, Exposed will omit the suffix from the generated
+                table name:
+            </p>
+            <code-block lang="kotlin">
+                object CitiesTable : Table() {
+                    val id = integer("id")
+                    val name = varchar("name", 50)
+                }
+            </code-block>
+            <code-block lang="sql">
+                CREATE TABLE IF NOT EXISTS CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
+            </code-block>
+            <chapter id="name-from-object">
+                <title>Configure a custom table name</title>
+                To configure a custom name for a table, which will be used in actual SQL queries, pass it to the <code>name</code>
+                parameter of the <code>Table()</code> constructor.
+                <code-block lang="kotlin">
+                    object Cities : Table(&quot;all_cities&quot;) {
+                        val id = integer(&quot;id&quot;)
+                        val name = varchar(&quot;name&quot;, 50)
+                    }
+                </code-block>
+                <code-block lang="sql">
+                    CREATE TABLE IF NOT EXISTS ALL_CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
+                </code-block>
+                <p>Some databases, like H2, fold unquoted identifiers to upper case. To keep table name case-sensitivity,
+                    manually quote the provided argument:</p>
+                <code-block lang="kotlin">
+                    object Cities : Table("\"all_cities\"") {
+                        val id = integer(&quot;id&quot;)
+                        val name = varchar(&quot;name&quot;, 50)
+                    }
+                </code-block>
+                <code-block lang="sql">
+                    CREATE TABLE IF NOT EXISTS "all_cities" (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
+                </code-block>
+                <p>Depending on what DBMS you use, the types of columns could be different in actual SQL queries.</p>
+            </chapter>
+        </chapter>
+        <chapter id="idtable">
+            <title><code>IdTable</code></title>
+            <p>Exposed also provides the base <code>IdTable</code> class, which is inherited by <code>IntIdTable</code>,
+                <code>LongIdTable</code> (and their unsigned variants), <code>UUIDTable</code>, and <code>CompositeIdTable</code>
+                classes from the
+                <control>org.jetbrains.exposed.dao.id</control>
+                package of the
+                <control>exposed-core</control>
+                module.
+            </p>
+            <p>These tables could be declared without the <code>id</code> column, and IDs of the appropriate type would
+                be generated automatically when creating new table rows.
+                To configure a custom name for the <code>id</code> column, pass it to the <code>columnName</code>
+                parameter of the appropriate table constructor.</p>
+            <p>For example, the <code>Cities</code> table could instead be defined as an <code>IntIdTable</code>, which
+                would make the <code>id</code> column both auto-incrementing and the table's primary key:</p>
+
+            <code-block lang="kotlin">
+                object Cities : IntIdTable() {
+                    val name = varchar(&quot;name&quot;, 50)
+                }
+            </code-block>
+
+            <code-block lang="sql">
+                CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
+            </code-block>
+            <tip>For more information on <code>IdTable</code> types, see <a href="Deep-Dive-into-DAO.md#table-types">DAO
+                Table Types</a>.
+            </tip>
+        </chapter>
+    </chapter>
+    <chapter title="Constraints" id="constraints">
+        <chapter title="Nullable" id="nullable">
+            <p>The <code>NOT NULL</code> SQL constraint restricts the column to accept the <code>null</code> value. By
+                default, Exposed applies this constraint to
+                all the columns. To allow the column to be nullable, apply the <code>nullable()</code> method to a
+                definition of an appropriate column.</p>
+            <p>For example, to make the population column <code>nullable</code>, use the following code:</p>
+
+            <code-block lang="kotlin">
+                // SQL: POPULATION INT NULL
+                val population: Column&lt;Int?&gt; = integer(&quot;population&quot;).nullable()
+            </code-block>
+        </chapter>
+        <chapter title="Default" id="default">
+            <p>The <code>DEFAULT</code> SQL constraint provides the default value for the column. Exposed supports three
+                methods for configuring
+                default values:</p>
+            <list>
+                <li><code>default(defaultValue: T)</code> accepts a value with a type of the column.</li>
+                <li><code>defaultExpression(defaultValue: Expression&lt;T&gt;)</code> accepts an expression.</li>
+                <li><code>clientDefault(defaultValue: () -&gt; T)</code> accepts a function.</li>
+            </list>
+            <p>For example, to configure the default value for the <code>name</code> column, use the following code:</p>
+
+            <code-block lang="kotlin">
+                // SQL: &quot;NAME&quot; VARCHAR(50) DEFAULT 'Unknown'
+                val name: Column&lt;String&gt; = varchar(&quot;name&quot;, 50).default(&quot;Unknown&quot;)
+            </code-block>
+            <p>Exposed also supports marking a column as <code>databaseGenerated</code> if the default value of the
+                column is not known at the
+                time of table creation and/or if it depends on other columns. It makes it possible to omit setting a
+                value for the
+                column when inserting a new record, without getting an error. The value for the column can be set by
+                creating a TRIGGER
+                or with a DEFAULT clause, for example.</p>
+            <p>For example:</p>
+
+            <code-block lang="kotlin">
+                val name: Column&lt;String&gt; = varchar(&quot;name&quot;, 50).databaseGenerated()
+            </code-block>
+        </chapter>
+        <chapter title="Index" id="index">
+            <p>The <code>INDEX</code> SQL constraint makes traversing through tables quicker. Exposed supports the
+                <code>index()</code> method.
+                It has six parameters, most of which are optional:</p>
+            <list>
+                <li><code>val customIndexName: String? = null</code> is a custom name for the index, which will be used
+                    in actual SQL queries.
+                </li>
+                <li><code>val unique: Boolean</code> defines whether the index is unique or not.</li>
+                <li><code>val columns: List&lt;Column&lt;*&gt;&gt;</code> defines a column set.</li>
+                <li><code>val functions: List&lt;ExpressionWithColumnType&lt;*&gt;&gt;? = null</code> defines functional
+                    key parts.
+                </li>
+                <li><code>val indexType: String? = null</code> is a custom type. Can be <code>&quot;BTREE&quot;</code>
+                    or <code>&quot;HASH&quot;</code>.
+                </li>
+                <li><code>val filterCondition: (SqlExpressionBuilder.() -&gt; Op&lt;Boolean&gt;)? = null</code> defines
+                    a condition used to create a partial index.
+                </li>
+            </list>
+            <p>The simplest way to create an index is to use an extension function directly on a column. For example, to
+                apply a non-unique
+                <code>INDEX</code> constraint to the <code>name</code> column, use the following code:</p>
+
+            <code-block lang="kotlin">
+                val name = varchar(&quot;name&quot;, 50).index()
+            </code-block>
+            <p>If the parameter <code>customIndexName</code> is not set, the name of the index is determined by the
+                table and column names.</p>
+            <p>Also, Exposed supports complex indexes. If you have a frequent query for two columns, Exposed can perform
+                it more efficiently.
+                It creates a tree from the first column with the references to the second one. For example, to create a
+                non-unique complex
+                index on the <code>name</code> and <code>population</code> columns, paste the following code:</p>
+
+            <code-block lang="kotlin">
+                val indexName = index(&quot;indexName&quot;, false, *arrayOf(name, population))
+                // or inside an init block within the table object
+                init {
+                    index(&quot;indexName&quot;, isUnique = false, name, population)
+                }
+            </code-block>
+            <p>Exposed also supports creating an index with a custom type. For example, to retrieve data from the <code>name</code>
+                column faster
+                with a hash function for traversing, use the following code:</p>
+
+            <code-block lang="kotlin">
+                val indexName = index(&quot;indexName&quot;, false, *arrayOf(name), indexType = &quot;HASH&quot;)
+            </code-block>
+            <p>Some databases support functional key parts that index expressions instead of columns directly:</p>
+
+            <code-block lang="kotlin">
+                init {
+                    index(functions = listOf(name.lowerCase(), address.substring(1, 5)))
+                    uniqueIndex(
+                        columns = arrayOf(name),
+                        functions = listOf(Coalesce(address, stringLiteral(&quot;*&quot;)))
+                    )
+                }
+            </code-block>
+            <p>Operator expressions, like <code>plus()</code>, are also accepted by the <code>functions</code>
+                parameter.</p>
+            <p>Some databases support creating a partial index by defining a filter expression to improve querying
+                performance. The
+                created index will only contain entries for the table rows that match this predicate:</p>
+
+            <code-block lang="kotlin">
+                init {
+                    index(columns = arrayOf(name, flag)) { flag eq true }
+                    index(
+                        columns = arrayOf(
+                            name,
+                            population
+                        )
+                    ) { (name like &quot;A%&quot;) and (population greaterEq 10) }
+                }
+            </code-block>
+            <p>Once a table has been created, the list of its indices can be accessed using the property <code>Table.indices</code>.
+                Table indices
+                are represented by the data class <code>Index</code>, so its properties can be checked in the following
+                manner, for example:</p>
+
+            <code-block lang="kotlin">
+                Table.indices.map { it.indexName to it.createStatement().first() }
+            </code-block>
+            <note>
+                An instance of the <code>Index</code> data class can be created directly using its public constructor,
+                for the purpose of
+                evaluating or using create/modify/drop statements, for example. Doing so will not add the instance to an
+                existing table's
+                list of indices in the way that using <code>index()</code> would. Also, if an instance is created with
+                arguments provided to the
+                <code>functions</code> parameter, a <code>functionsTable</code> argument must also be provided.
+            </note>
+        </chapter>
+        <chapter title="Unique" id="unique">
+            <p>The <code>UNIQUE</code> SQL constraint restricts duplicates within this column. Exposed supports the
+                <code>uniqueIndex()</code> method which
+                creates a unique index for the column. This method is the composition of <code>UNIQUE</code> and <code>INDEX</code>
+                constraint, the quicker
+                modification of <code>UNIQUE</code> constraint.</p>
+            <p>For example, to apply <code>UNIQUE</code> and <code>INDEX</code> constraint to the <code>name</code>
+                column, use the following code:</p>
+
+            <code-block lang="kotlin">
+                val name = varchar(&quot;name&quot;, 50).uniqueIndex()
+            </code-block>
+        </chapter>
+        <chapter title="Primary Key" id="primary-key">
+            <p>The <code>PRIMARY KEY</code> SQL constraint applied to a column means each value in that column
+                identifies the row. This constraint is the composition
+                of <code>NOT NULL</code> and <code>UNIQUE</code> constraints. To change the column set, add columns, or
+                change the primary key name to a custom one, override this field of the table class.</p>
+            <p>For example, to define the <code>name</code> column as the primary key, use the following code. The
+                &quot;Cities_name&quot; string
+                will be used as the constraint name in the actual SQL query, if provided; otherwise a name will be
+                generated based on the table's name.</p>
+
+            <code-block lang="kotlin">
+                override val primaryKey = PrimaryKey(name, name = &quot;Cities_name&quot;)
+            </code-block>
+
+            <code-block lang="sql">
+                CONSTRAINT Cities_name PRIMARY KEY (&quot;name&quot;)
+            </code-block>
+            <p>It is also possible to define a primary key on a table using multiple columns:</p>
+
+            <code-block lang="kotlin">
+                override val primaryKey = PrimaryKey(id, name)
+            </code-block>
+
+            <code-block lang="sql">
+                CONSTRAINT pk_Cities PRIMARY KEY (ID, &quot;name&quot;)
+            </code-block>
+            <p>Except for <code>CompositeIdTable</code>, each available class in Exposed that inherits from <code>IdTable</code>
+                has the <code>primaryKey</code> field automatically defined.
+                For example, the <code>IntIdTable</code> by default has an auto-incrementing integer column,
+                <code>id</code>, which is defined as the primary key.</p>
+            <p>An <code>IdTable</code> that requires a primary key with multiple columns can be defined using <code>CompositeIdTable</code>.
+                In this case, each column that is a component of the table's <code>id</code> should be identified by
+                <code>entityId()</code>:</p>
+
+            <code-block lang="kotlin">
+                object Towns : CompositeIdTable(&quot;towns&quot;) {
+                    val areaCode = integer(&quot;area_code&quot;).autoIncrement().entityId()
+                    val latitude = decimal(&quot;latitude&quot;, 9, 6).entityId()
+                    val longitude = decimal(&quot;longitude&quot;, 9, 6).entityId()
+                    val name = varchar(&quot;name&quot;, 32)
+
+                    override val primaryKey = PrimaryKey(areaCode, latitude, longitude)
+                }
+            </code-block>
+            <tip>For more information on <code>CompositeIdTable</code> types, see <a
+                    href="Deep-Dive-into-DAO.md#table-types">DAO Table Types</a>.
+            </tip>
+        </chapter>
+        <chapter title="Foreign Key" id="foreign-key">
+            <p>The <code>FOREIGN KEY</code> SQL constraint links two tables. A foreign key is a column from one table
+                that refers to the primary key
+                or columns with a unique index from another table. To configure a foreign key on a column, use <code>reference()</code>
+                or <code>optReference()</code>
+                methods. The latter lets the foreign key accept a <code>null</code> value. To configure a foreign key on
+                multiple columns,
+                use <code>foreignKey()</code> directly within an <code>init</code> block.</p>
+            <p><code>reference()</code> and <code>optReference()</code> methods have several parameters:</p>
+            <deflist>
+                <def>
+                    <title><code>name: String</code></title>
+                    <p>A name for the foreign key column, which will be used in actual SQL queries.</p>
+                </def>
+                <def>
+                    <title><code>ref: Column&lt;T&gt;</code></title>
+                    <p>A target column from another parent table.</p>
+                </def>
+                <def>
+                    <title><code>onDelete: ReferenceOption? = null</code></title>
+                    <p>An action for when a linked row from a parent table will be deleted.</p>
+                </def>
+                <def>
+                    <title><code>onUpdate: ReferenceOption? = null</code></title>
+                    <p>An action for when a value in a referenced column will be changed.</p>
+                </def>
+                <def>
+                    <title><code>fkName: String? = null</code></title>
+                    <p>A name for the foreign key constraint.</p>
+                </def>
+            </deflist>
+            <p>Enum class <code>ReferenceOption</code> has five values:</p>
+            <deflist>
+                <def>
+                    <title><code>RESTRICT</code></title>
+                    <p>An option that restricts changes on a referenced column, and the default option for most
+                        dialects.</p>
+                </def>
+                <def>
+                    <title><code>NO_ACTION</code></title>
+                    <p>The same as RESTRICT in some, but not all, databases, and the default option for Oracle and SQL
+                        Server dialects.</p>
+                </def>
+                <def>
+                    <title><code>CASCADE</code></title>
+                    <p>An option that allows updating or deleting the referring rows.</p>
+                </def>
+                <def>
+                    <title><code>SET_NULL</code></title>
+                    <p>An option that sets the referring column values to null.</p>
+                </def>
+                <def>
+                    <title><code>SET_DEFAULT</code></title>
+                    <p>An option that sets the referring column values to the default value.</p>
+                </def>
+            </deflist>
+            <p>Consider the following <code>Citizens</code> table. This table has the <code>name</code> and
+                <code>city</code> columns. If the <code>Cities</code> table has
+                configured the <code>name</code> column as the primary key, the <code>Citizens</code> table can refer to
+                it by its <code>city</code> column, which is a foreign key. To
+                configure such reference and make it nullable, use the <code>optReference()</code> method:</p>
+
+            <code-block lang="kotlin">
+                object Citizens : IntIdTable() {
+                    val name = varchar(&quot;name&quot;, 50)
+                    val city = optReference(&quot;city&quot;, Cities.name, onDelete = ReferenceOption.CASCADE)
+                }
+            </code-block>
+            <p>If any <code>Cities</code> row will be deleted, the appropriate <code>Citizens</code> row will be deleted
+                too.</p>
+            <p>If instead the <code>Cities</code> table has configured multiple columns as the primary key (for example,
+                both <code>id</code> and <code>name</code> columns as in the above <a anchor="primary-key">section</a>),
+                the <code>Citizens</code> table can refer to it by using a table-level foreign key constraint. In this
+                case, the <code>Citizens</code> table must have defined matching columns
+                to store each component value of the <code>Cities</code> table's primary key:</p>
+
+            <code-block lang="kotlin">
+                object Citizens : IntIdTable() {
+                    val name = varchar(&quot;name&quot;, 50)
+                    val cityId = integer(&quot;city_id&quot;)
+                    val cityName = varchar(&quot;city_name&quot;, 50)
+
+                    init {
+                        foreignKey(cityId, cityName, target = Cities.primaryKey)
+                    }
+                }
+            </code-block>
+            <p>In the above example, the order of the referencing columns in <code>foreignKey()</code> must match the
+                order of columns defined in the target primary key.
+                If this order is uncertain, the foreign key can be defined with explicit column associations instead:
+            </p>
+
+            <code-block lang="kotlin">
+                init {
+                    foreignKey(cityId to Cities.id, cityName to Cities.name)
+                }
+            </code-block>
+        </chapter>
+        <chapter title="Check" id="check">
+            <p>The <code>CHECK</code> SQL constraint checks that all values in a column match some condition. Exposed
+                supports the <code>check()</code> method.
+                You apply this method to a column and pass the appropriate condition to it.</p>
+            <p>For example, to check that the <code>name</code> column contains strings that begin with a capital
+                letter, use the following code:</p>
+
+            <code-block lang="kotlin">
+                // SQL: CONSTRAINT check_Cities_0 CHECK (REGEXP_LIKE(&quot;NAME&quot;, '^[A-Z].*', 'c')))
+                val name = varchar(&quot;name&quot;, 50).check { it regexp &quot;^[A-Z].*&quot; }
+            </code-block>
+            <p>Some databases, like older MySQL versions, may not support <code>CHECK</code> constraints. For more
+                information, consult the relevant documentation.</p>
+        </chapter>
+    </chapter>
+    <chapter title="Creating tables" id="dsl-create-table">
+        <p>
+            To create a table within a database, you need to use the <code>SchemaUtils.create()</code>
+            method within a <a href="Transactions.md">transaction</a>:
+        </p>
+        <code-block lang="kotlin">
+            transaction {
+                SchemaUtils.create(StarWarsFilms)
+                //...
+            }
+        </code-block>
+        <p>
+            This will generate the SQL necessary to create the table based on your definition.
+        </p>
+    </chapter>
+
+</topic>

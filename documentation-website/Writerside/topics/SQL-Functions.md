@@ -57,7 +57,7 @@ val nameLengths = FooTable.select(nameLength).map { it[nameLength] }
 ```
 
 ## Aggregating functions
-These functions should be used in queries with [groupBy](Deep-Dive-into-DSL.md#group-by).
+These functions should be used in queries with [groupBy](DSL-Querying-data.topic#group-by).
 ### Min/Max/Average
 Returns minimum/maximum/average value and can be applied to any comparable expression:
 ```kotlin

@@ -10,15 +10,15 @@ A: Yes. See [Transactions](Transactions.md#working-with-multiple-databases)
 
 ### Q: Is `Array` column type supported?
 
-A: Yes. See [Data Types](Data-Types.md#how-to-use-array-types).
+A: Yes. See [Data Types](Data-Types.topic#how-to-use-array-types).
 
 ### Q: Is `upsert` supported?
 
-A: Yes. See [Insert Or Update](Deep-Dive-into-DSL.md#insert-or-update)
+A: Yes. See [Insert Or Update](DSL-CRUD-operations.topic#insert-or-update)
 
 ### Q: Is `json` type supported?
 
-A: Yes. See [JSON](Data-Types.md#how-to-use-json-and-jsonb-types)
+A: Yes. See [JSON](Data-Types.topic#how-to-use-json-and-jsonb-types)
 
 ### Q: How to get a plain SQL query which will be executed?
 

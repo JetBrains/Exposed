@@ -503,7 +503,7 @@
         <p>
             Great job! You have now implemented a simple console application that uses Exposed to fetch and modify
             task data from an in-memory database. Now that you’ve covered the basics, you are ready to
-            <a href="Deep-Dive-into-DSL.md">dive deep into the DSL API</a>.
+            <a href="DSL-CRUD-operations.topic">dive deep into the DSL API</a>.
         </p>
     </chapter>
 </topic>
