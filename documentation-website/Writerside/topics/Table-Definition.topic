@@ -10,7 +10,8 @@
         constraints, such as <code>PRIMARY KEY</code>, <code>DEFAULT</code>, and <code>INDEX</code>. All examples use
         the H2 database to generate SQL.</p>
     <chapter title="Table Types" id="table-types">
-        <chapter title="Table" id="table">
+        <chapter id="table">
+            <title>Core <code>Table</code> class</title>
             <p>In Exposed, the <code>Table</code> class is the core abstraction for defining database tables.
                 This class provides methods to define various <a href="Data-Types.topic">column types</a>,
                 <a href="Table-Definition.topic" anchor="constraints">constraints</a>, and other table-specific properties.
@@ -79,7 +80,8 @@
                 <p>Depending on what DBMS you use, the types of columns could be different in actual SQL queries.</p>
             </chapter>
         </chapter>
-        <chapter title="IdTable" id="idtable">
+        <chapter id="idtable">
+            <title><code>IdTable</code></title>
             <p>Exposed also provides the base <code>IdTable</code> class, which is inherited by <code>IntIdTable</code>,
                 <code>LongIdTable</code> (and their unsigned variants), <code>UUIDTable</code>, and <code>CompositeIdTable</code>
                 classes from the
