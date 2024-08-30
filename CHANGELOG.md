@@ -1,3 +1,50 @@
+# 0.54.0
+
+Infrastructure:
+* Kotlin 2.0.0
+* Kotlinx Serialization Json 1.7.1
+* Spring Framework 6.1.12
+* junit-bom 5.11.0
+* SQLite driver 3.46.1.0
+* Kotlinx Datetime JVM 0.6.1
+* Spring Boot 3.3.3
+* PostgreSQL driver 42.7.4
+
+Breaking changes:
+* feat!: EXPOSED-476 Update Kotlin to 2.0.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2188
+* refactor!: Move `statementsRequiredForDatabaseMigration` function from `SchemaUtils` to `MigrationUtils` by @joc-a in https://github.com/JetBrains/Exposed/pull/2195
+* feat!: EXPOSED-436 Allow using insert values on update with upsert() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2172
+
+Deprecations:
+* deprecate: Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2208
+* deprecate: Raise deprecation levels of API property setters by @bog-walk in https://github.com/JetBrains/Exposed/pull/2209
+
+Features:
+* feat: Add `isNullOrEmpty` function by @joc-a in https://github.com/JetBrains/Exposed/pull/2184
+* feat: EXPOSED-487 Add ability to pass custom sequence to auto-increment column by @joc-a in https://github.com/JetBrains/Exposed/pull/2197
+* feat: EXPOSED-486 Support REPLACE INTO ... SELECT clause by @bog-walk in https://github.com/JetBrains/Exposed/pull/2199
+
+Bug fixes:
+* fix: EXPOSED-439 Outer transaction commits rows from failed inner transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2186
+* fix: EXPOSED-464 `CurrentTimestampWithTimeZone` expression does not work as a default by @joc-a in https://github.com/JetBrains/Exposed/pull/2180
+* fix: EXPOSED-474 Unexpected value of type when using a ColumnTransfor… by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2191
+* fix: EXPOSED-472 Alias IdTable fails with isNull and eq ops by @bog-walk in https://github.com/JetBrains/Exposed/pull/2189
+* fix: EXPOSED-467 Decimal type precision and scale not checked by SchemaUtils by @bog-walk in https://github.com/JetBrains/Exposed/pull/2192
+* EXPOSED-203 Lightweight DAO insert with encryptedVarchar attemtps to … by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2194
+* fix: EXPOSED-481 Bug with batch-flushing of CompositeID entities by @bystam in https://github.com/JetBrains/Exposed/pull/2196
+* fix: EXPOSED-492 Eq/Neq op with partial CompositeID unwrapped value fails by @bog-walk in https://github.com/JetBrains/Exposed/pull/2205
+* fix: EXPOSED-485 ClassCastException when eager loading referrersOn with uuid().references() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2198
+* fix: EXPOSED-493 Update with join query throws if WHERE clause present by @bog-walk in https://github.com/JetBrains/Exposed/pull/2207
+* fix: EXPOSED-501 Column.transform() ignores custom setParameter() logic by @bog-walk in https://github.com/JetBrains/Exposed/pull/2214
+
+Docs:
+* Add links in Learn more section on documentation home page by @Selemba1000 in https://github.com/JetBrains/Exposed/pull/2187
+* chore: fix some comments by @riskrose in https://github.com/JetBrains/Exposed/pull/2185
+* docs: EXPOSED-489 Replace the header logo with a white version by @vnikolova in https://github.com/JetBrains/Exposed/pull/2202
+* docs: Add navigation structure and remove redundant topics by @vnikolova in https://github.com/JetBrains/Exposed/pull/2203
+* docs: EXPOSED-499 Add examples of custom data types by @bog-walk in https://github.com/JetBrains/Exposed/pull/2213
+* docs: Split up the "Deep dive into DSL" topic into several new topics by @vnikolova in https://github.com/JetBrains/Exposed/pull/2217
+
 # 0.53.0
 Infrastructure:
 * SQLite driver 3.46.0.1

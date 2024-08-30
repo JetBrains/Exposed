@@ -36,6 +36,7 @@ TestTable.upsert(
     it[count] = 3
 }
 ```
+* The function `statementsRequiredForDatabaseMigration` has been moved from `SchemaUtils` to `MigrationUtils` in the `exposed-migration` module.
 
 ## 0.51.0
 
