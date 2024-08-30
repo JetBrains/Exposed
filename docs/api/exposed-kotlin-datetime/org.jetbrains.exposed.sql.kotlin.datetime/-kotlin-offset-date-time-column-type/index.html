@@ -41,7 +41,7 @@
 <a class="library-name--link" href="../../../index.html">
                             exposed
                     </a>            </div>
-            <div class="library-version">0.53.0
+            <div class="library-version">0.54.0
             </div>
         </div>
         <div class="filter-section" id="filter-section">
@@ -72,10 +72,11 @@ import org.jetbrains.exposed.sql.vendors.*
 import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset.UTC
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
-import java.time.format.DateTimeFormatter.ISO_LOCAL_TIME
 import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
 import java.util.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
