@@ -586,7 +586,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
     @Test
     fun explicitFkNameIsExplicit() {
-        withTables(ExplicitTable, NonExplicitTable) {
+        withTables(PlayerTable, ExplicitTable, NonExplicitTable) {
             assertEquals("Explicit_FK_NAME", ExplicitTable.playerId.foreignKey!!.customFkName)
             assertEquals(null, NonExplicitTable.playerId.foreignKey!!.customFkName)
         }

@@ -189,7 +189,7 @@ class ViaTests : DatabaseTestsBase() {
 
     @Test
     fun testHierarchicalReferences() {
-        withTables(NodeToNodes) {
+        withTables(NodesTable, NodeToNodes) {
             val root = Node.new { name = "root" }
             val child1 = Node.new {
                 name = "child1"
@@ -219,7 +219,7 @@ class ViaTests : DatabaseTestsBase() {
 
     @Test
     fun testWarmUpOnHierarchicalEntities() {
-        withTables(NodeToNodes) {
+        withTables(NodesTable, NodeToNodes) {
             val child1 = Node.new { name = "child1" }
             val child2 = Node.new { name = "child1" }
             val root1 = Node.new {
@@ -273,7 +273,7 @@ class ViaTests : DatabaseTestsBase() {
 
     @Test
     fun testOrderBy() {
-        withTables(NodeToNodes) {
+        withTables(NodesTable, NodeToNodes) {
             val root = NodeOrdered.new { name = "root" }
             listOf("#3", "#0", "#2", "#4", "#1").forEach {
                 NodeOrdered.new {
@@ -291,6 +291,7 @@ class ViaTests : DatabaseTestsBase() {
     object Projects : IntIdTable("projects") {
         val name = varchar("name", 50)
     }
+
     class Project(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Project>(Projects)
 
@@ -310,6 +311,7 @@ class ViaTests : DatabaseTestsBase() {
             addIdColumn(task)
         }
     }
+
     class ProjectTask(id: EntityID<CompositeID>) : CompositeEntity(id) {
         companion object : CompositeEntityClass<ProjectTask>(ProjectTasks)
 
@@ -319,6 +321,7 @@ class ViaTests : DatabaseTestsBase() {
     object Tasks : IntIdTable("tasks") {
         val title = varchar("title", 64)
     }
+
     class Task(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Task>(Tasks)
 
