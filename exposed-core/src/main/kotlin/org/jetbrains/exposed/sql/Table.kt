@@ -489,6 +489,25 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns all foreign key constraints declared on the table. */
     val foreignKeys: List<ForeignKeyConstraint> get() = columns.mapNotNull { it.foreignKey } + _foreignKeys
 
+    /**
+     * Returns all sequences declared on the table, along with any auto-generated sequences that are not explicitly
+     * declared by the user but associated with the table.
+     */
+    val sequences: List<Sequence>
+        get() = columns.filter { it.columnType.isAutoInc }.mapNotNull { column ->
+            column.autoIncColumnType?.sequence
+                ?: column.takeIf { currentDialect is PostgreSQLDialect }?.let {
+                    val q = if (tableName.contains('.')) "\"" else ""
+                    val fallbackSeqName = "$q${tableName.replace("\"", "")}_${it.name}_seq$q"
+                    Sequence(
+                        fallbackSeqName,
+                        startWith = 1,
+                        minValue = 1,
+                        maxValue = Long.MAX_VALUE
+                    )
+                }
+        }
+
     private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
 
     private val generatedCheckPrefix = "chk_${tableName}_unsigned_"

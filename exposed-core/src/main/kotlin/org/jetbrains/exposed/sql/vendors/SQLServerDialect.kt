@@ -352,9 +352,16 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
 
         val statements = mutableListOf<String>()
 
+        val autoIncColumnType = column.autoIncColumnType
+        val replaceWithNewColumn = columnDiff.autoInc && autoIncColumnType != null && autoIncColumnType.sequence == null
+
         statements.add(
             buildString {
-                append(alterTablePart + "ALTER COLUMN ${transaction.identity(column)} ${column.columnType.sqlType()}")
+                if (replaceWithNewColumn) {
+                    append(alterTablePart + "ADD NEW_${transaction.identity(column)} ${column.columnType.sqlType()}")
+                } else {
+                    append(alterTablePart + "ALTER COLUMN ${transaction.identity(column)} ${column.columnType.sqlType()}")
+                }
 
                 if (columnDiff.nullability) {
                     val defaultValue = column.dbDefaultValue
@@ -390,6 +397,13 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
                     } ?: append(alterTablePart + dropConstraint)
                 }
             )
+        }
+
+        if (replaceWithNewColumn) {
+            with(statements) {
+                add(alterTablePart + "DROP COLUMN ${transaction.identity(column)}")
+                add("EXEC sp_rename '${transaction.identity(column.table)}.NEW_${transaction.identity(column)}', '${transaction.identity(column)}', 'COLUMN'")
+            }
         }
 
         return statements

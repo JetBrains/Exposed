@@ -2489,6 +2489,7 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public final fun getIndices ()Ljava/util/List;
 	public fun getPrimaryKey ()Lorg/jetbrains/exposed/sql/Table$PrimaryKey;
 	public final fun getSchemaName ()Ljava/lang/String;
+	public final fun getSequences ()Ljava/util/List;
 	public fun getTableName ()Ljava/lang/String;
 	public fun hashCode ()I
 	public final fun index (Ljava/lang/String;Z[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
@@ -3817,6 +3818,7 @@ public final class org/jetbrains/exposed/sql/vendors/DatabaseDialect$DefaultImpl
 
 public final class org/jetbrains/exposed/sql/vendors/DatabaseDialectKt {
 	public static final fun getCurrentDialect ()Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;
+	public static final fun inProperCase (Ljava/lang/String;)Ljava/lang/String;
 }
 
 public abstract class org/jetbrains/exposed/sql/vendors/ForUpdateOption {
@@ -3993,6 +3995,7 @@ public class org/jetbrains/exposed/sql/vendors/H2Dialect : org/jetbrains/exposed
 	public final fun getDelegatedDialectNameProvider ()Lorg/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider;
 	public fun getFunctionProvider ()Lorg/jetbrains/exposed/sql/vendors/FunctionProvider;
 	public final fun getH2Mode ()Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2CompatibilityMode;
+	public final fun getMajorVersion ()Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2MajorVersion;
 	public fun getName ()Ljava/lang/String;
 	public fun getNeedsSequenceToAutoInc ()Z
 	public final fun getOriginalDataTypeProvider ()Lorg/jetbrains/exposed/sql/vendors/DataTypeProvider;
@@ -4029,6 +4032,14 @@ public final class org/jetbrains/exposed/sql/vendors/H2Dialect$H2CompatibilityMo
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2CompatibilityMode;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2CompatibilityMode;
+}
+
+public final class org/jetbrains/exposed/sql/vendors/H2Dialect$H2MajorVersion : java/lang/Enum {
+	public static final field One Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2MajorVersion;
+	public static final field Two Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2MajorVersion;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2MajorVersion;
+	public static fun values ()[Lorg/jetbrains/exposed/sql/vendors/H2Dialect$H2MajorVersion;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/H2Kt {

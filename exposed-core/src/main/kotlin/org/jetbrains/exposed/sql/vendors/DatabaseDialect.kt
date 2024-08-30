@@ -36,7 +36,7 @@ interface DatabaseDialect {
     /** Returns `true` if the dialect supports returning multiple generated keys as a result of an insert operation, `false` otherwise. */
     val supportsMultipleGeneratedKeys: Boolean
 
-    /** Returns`true` if the dialect supports returning generated keys obtained from a sequence. */
+    /** Returns `true` if the dialect supports returning generated keys obtained from a sequence. */
     val supportsSequenceAsGeneratedKeys: Boolean get() = supportsCreateSequence
 
     /** Returns `true` if the dialect supports only returning generated keys that are identity columns. */
@@ -202,5 +202,5 @@ internal val currentDialectIfAvailable: DatabaseDialect?
         null
     }
 
-internal fun String.inProperCase(): String =
+fun String.inProperCase(): String =
     TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
