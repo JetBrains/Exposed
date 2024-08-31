@@ -15,7 +15,14 @@ import kotlin.reflect.KProperty
  * @param factory The [EntityClass] to use when searching for matching entities.
  */
 class View<out Target : Entity<*>> (val op: Op<Boolean>, val factory: EntityClass<*, Target>) : SizedIterable<Target> {
-    override fun limit(n: Int, offset: Long): SizedIterable<Target> = factory.find(op).limit(n, offset)
+    @Deprecated(
+        "This function will be removed in future releases.",
+        ReplaceWith("limit(n).offset(offset)"),
+        DeprecationLevel.WARNING
+    )
+    override fun limit(n: Int, offset: Long): SizedIterable<Target> = factory.find(op).limit(n).offset(offset)
+    override fun limit(count: Int): SizedIterable<Target> = factory.find(op).limit(count)
+    override fun offset(start: Long): SizedIterable<Target> = factory.find(op).offset(start)
     override fun count(): Long = factory.find(op).count()
     override fun empty(): Boolean = factory.find(op).empty()
     override fun forUpdate(option: ForUpdateOption): SizedIterable<Target> = factory.find(op).forUpdate(option)

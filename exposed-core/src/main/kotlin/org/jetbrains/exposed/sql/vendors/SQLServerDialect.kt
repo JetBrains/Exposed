@@ -283,8 +283,14 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
-        return (if (alreadyOrdered) "" else " ORDER BY(SELECT NULL)") + " OFFSET $offset ROWS FETCH NEXT $size ROWS ONLY"
+    override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String = buildString {
+        if (!alreadyOrdered) {
+            append("ORDER BY(SELECT NULL) ")
+        }
+        append("OFFSET $offset ROWS")
+        size?.let {
+            append(" FETCH NEXT $size ROWS ONLY")
+        }
     }
 
     override fun explain(

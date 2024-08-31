@@ -815,12 +815,22 @@ abstract class FunctionProvider {
      * @param offset The number of rows to skip.
      * @param alreadyOrdered Whether the query is already ordered or not.
      */
-    open fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String = buildString {
-        append("LIMIT $size")
+    open fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String = buildString {
+        size?.let {
+            append("LIMIT $size")
+        }
         if (offset > 0) {
-            append(" OFFSET $offset")
+            size?.also { append(" ") }
+            append("OFFSET $offset")
         }
     }
+
+    @Deprecated(
+        "This function will be removed in future releases.",
+        ReplaceWith("queryLimitAndOffset(size, offset, alreadyOrdered)"),
+        DeprecationLevel.WARNING
+    )
+    open fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String = queryLimitAndOffset(size, offset, alreadyOrdered)
 
     /**
      * Returns the SQL command that obtains information about a statement execution plan.

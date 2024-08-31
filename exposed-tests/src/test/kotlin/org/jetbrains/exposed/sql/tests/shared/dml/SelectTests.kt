@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertNull
 
 class SelectTests : DatabaseTestsBase() {
@@ -600,6 +601,34 @@ class SelectTests : DatabaseTestsBase() {
 
             assertEquals(originalQuery.count(), originalQuery.comment(text).count())
             assertEquals(originalQuery.count(), originalQuery.comment(text, Query.CommentPosition.BACK).count())
+        }
+    }
+
+    @Test
+    fun testSelectWithLimitAndOffset() {
+        val alphabet = object : Table("alphabet") {
+            val letter = char("letter")
+        }
+
+        withTables(alphabet) { testDb ->
+            val allLetters = ('A'..'Z').toList()
+            val amount = 10
+            val start = 8L
+
+            alphabet.batchInsert(allLetters) { letter ->
+                this[alphabet.letter] = letter
+            }
+
+            val limitResult = alphabet.selectAll().limit(amount).map { it[alphabet.letter] }
+            assertContentEquals(allLetters.take(amount), limitResult)
+
+            val limitOffsetResult = alphabet.selectAll().limit(amount).offset(start).map { it[alphabet.letter] }
+            assertContentEquals(allLetters.drop(start.toInt()).take(amount), limitOffsetResult)
+
+            if (testDb != TestDB.SQLITE && testDb !in TestDB.ALL_MYSQL_MARIADB) {
+                val offsetResult = alphabet.selectAll().offset(start).map { it[alphabet.letter] }
+                assertContentEquals(allLetters.drop(start.toInt()), offsetResult)
+            }
         }
     }
 }

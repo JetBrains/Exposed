@@ -5,6 +5,13 @@
   This enables the use of the new `Join.delete()` function, which performs a delete operation on a specific table from the join relation.
   The original statement class constructor has also been deprecated in favor of the constructor that accepts `targetsSet`, as well as another
   additional parameter `targetTables` (for specifying which table from the join relation, if applicable, to delete from).
+* The `SizedIterable.limit(n, offset)` is now deprecated in favor of 2 independent methods, `limit()` and `offset()`.
+  In supporting databases, this allows the generation of an OFFSET clause in the SELECT statement without any LIMIT clause.
+  Any existing implementations of `SizedIterable` will now require implementation of these 2 new members.
+
+  The original `FunctionProvider.queryLimit()` is also being deprecated in favor of `queryLimitAndOffset()`, which takes a
+  nullable `size` parameter to allow exclusion of the LIMIT clause. The latter deprecation only affects extensions of the
+  `FunctionProvider` class when creating a custom `VendorDialect` class.
 
 ## 0.54.0
 

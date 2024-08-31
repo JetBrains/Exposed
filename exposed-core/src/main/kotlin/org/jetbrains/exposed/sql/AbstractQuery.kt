@@ -56,11 +56,21 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     /** Modifies this query to retrieve only distinct results if [value] is set to `true`. */
     abstract fun withDistinct(value: Boolean = true): T
 
-    /** Modifies this query to return only [n] results, starting after the specified [offset]. **/
+    @Deprecated(
+        "This function will be removed in future releases.",
+        ReplaceWith("limit(n).offset(offset)"),
+        DeprecationLevel.WARNING
+    )
     override fun limit(n: Int, offset: Long): T = apply {
         limit = n
         this.offset = offset
     } as T
+
+    /** Modifies this query to return only [count] results. **/
+    override fun limit(count: Int): T = apply { limit = count } as T
+
+    /** Modifies this query to return only results starting after the specified [start]. **/
+    override fun offset(start: Long): T = apply { offset = start } as T
 
     /** Modifies this query to sort results by the specified [column], according to the provided [order]. **/
     fun orderBy(column: Expression<*>, order: SortOrder = SortOrder.ASC): T = orderBy(column to order)

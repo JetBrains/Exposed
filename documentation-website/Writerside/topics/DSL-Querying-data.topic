@@ -246,12 +246,16 @@
         </chapter>
     </chapter>
     <chapter title="Limiting result sets" id="limit-result-sets">
-        <p>You can use the <code>limit</code> function to prevent loading large data sets or use it for pagination with second <code>offset</code>
-            parameter.</p>
+        <p>You can use the <code>limit</code> function to prevent loading large data sets or to accomplish pagination by using the <code>offset</code>
+            function.</p>
 
         <code-block lang="kotlin">
             // Take 2 films after the first one.
-            StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq Actors.sequelId }.limit(2, offset = 1)
+            StarWarsFilms
+                .selectAll()
+                .where { StarWarsFilms.sequelId eq Actors.sequelId }
+                .limit(2)
+                .offset(1)
         </code-block>
     </chapter>
     <chapter title="Joining tables" id="join-tables">

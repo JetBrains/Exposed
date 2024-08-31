@@ -98,9 +98,9 @@ sealed class SetOperation(
                 }
             }
 
-            limit?.let {
+            if (limit != null || offset > 0) {
                 append(" ")
-                append(currentDialect.functionProvider.queryLimit(it, offset, true))
+                append(currentDialect.functionProvider.queryLimitAndOffset(limit, offset, true))
             }
 
             if (count) append(") subquery")

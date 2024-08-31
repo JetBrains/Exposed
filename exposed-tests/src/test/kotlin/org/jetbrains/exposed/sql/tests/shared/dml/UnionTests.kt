@@ -33,7 +33,7 @@ class UnionTests : DatabaseTestsBase() {
         withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { _, users, _ ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             val sergeyQuery = users.selectAll().where { users.id.eq("sergey") }
-            andreyQuery.union(sergeyQuery).limit(1, 1).map { it[users.id] }.apply {
+            andreyQuery.union(sergeyQuery).limit(1).offset(1).map { it[users.id] }.apply {
                 assertEquals(1, size)
                 assertEquals("sergey", single())
             }

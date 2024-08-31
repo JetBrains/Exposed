@@ -135,9 +135,13 @@ public abstract class org/jetbrains/exposed/sql/AbstractQuery : org/jetbrains/ex
 	public abstract fun getSet ()Lorg/jetbrains/exposed/sql/FieldSet;
 	protected final fun getTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
 	public fun iterator ()Ljava/util/Iterator;
+	public fun limit (I)Lorg/jetbrains/exposed/sql/AbstractQuery;
+	public synthetic fun limit (I)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun limit (IJ)Lorg/jetbrains/exposed/sql/AbstractQuery;
 	public synthetic fun limit (IJ)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun notForUpdate ()Lorg/jetbrains/exposed/sql/SizedIterable;
+	public fun offset (J)Lorg/jetbrains/exposed/sql/AbstractQuery;
+	public synthetic fun offset (J)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public final fun orderBy (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/SortOrder;)Lorg/jetbrains/exposed/sql/AbstractQuery;
 	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/AbstractQuery;
 	public synthetic fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/SizedIterable;
@@ -820,9 +824,11 @@ public final class org/jetbrains/exposed/sql/EmptySizedIterable : java/util/Iter
 	public fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun hasNext ()Z
 	public fun iterator ()Ljava/util/Iterator;
+	public fun limit (I)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun limit (IJ)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun next ()Ljava/lang/Object;
 	public fun notForUpdate ()Lorg/jetbrains/exposed/sql/SizedIterable;
+	public fun offset (J)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun remove ()V
 }
@@ -1494,8 +1500,10 @@ public final class org/jetbrains/exposed/sql/LazySizedCollection : org/jetbrains
 	public final fun getWrapper ()Ljava/util/List;
 	public final fun isLoaded ()Z
 	public fun iterator ()Ljava/util/Iterator;
+	public fun limit (I)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun limit (IJ)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun notForUpdate ()Lorg/jetbrains/exposed/sql/SizedIterable;
+	public fun offset (J)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/SizedIterable;
 }
 
@@ -2189,8 +2197,10 @@ public final class org/jetbrains/exposed/sql/SizedCollection : org/jetbrains/exp
 	public fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public final fun getDelegate ()Ljava/util/Collection;
 	public fun iterator ()Ljava/util/Iterator;
+	public fun limit (I)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun limit (IJ)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun notForUpdate ()Lorg/jetbrains/exposed/sql/SizedIterable;
+	public fun offset (J)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/SizedIterable;
 }
 
@@ -2199,8 +2209,10 @@ public abstract interface class org/jetbrains/exposed/sql/SizedIterable : java/l
 	public abstract fun count ()J
 	public abstract fun empty ()Z
 	public abstract fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
+	public abstract fun limit (I)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public abstract fun limit (IJ)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public abstract fun notForUpdate ()Lorg/jetbrains/exposed/sql/SizedIterable;
+	public abstract fun offset (J)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public abstract fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/SizedIterable;
 }
 
@@ -3958,6 +3970,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/FunctionProvider {
 	public fun month (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun nextVal (Lorg/jetbrains/exposed/sql/Sequence;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun queryLimit (IJZ)Ljava/lang/String;
+	public fun queryLimitAndOffset (Ljava/lang/Integer;JZ)Ljava/lang/String;
 	public fun random (Ljava/lang/Integer;)Ljava/lang/String;
 	public fun regexp (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;ZLorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun replace (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
