@@ -331,6 +331,19 @@ class UpsertTests : DatabaseTestsBase() {
             }
             assertEquals("$testWord - $defaultPhrase", tester.selectAll().single()[tester.phrase])
 
+            val multilinePhrase = """
+                This is a phrase with a new line
+                and some other difficult strings '
+
+                Indentation should be preserved
+            """.trimIndent()
+            tester.upsert(
+                onUpdate = { it[tester.phrase] = multilinePhrase }
+            ) {
+                it[word] = testWord
+            }
+            assertEquals(multilinePhrase, tester.selectAll().single()[tester.phrase].also { println(it) })
+
             tester.upsert { // provided expression in insert
                 it[word] = "$testWord 2"
                 it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar"))

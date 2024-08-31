@@ -260,7 +260,8 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
             +" ON DUPLICATE KEY UPDATE "
             onUpdate.appendTo { (columnToUpdate, updateExpression) ->
-                append("${transaction.identity(columnToUpdate)}=$updateExpression")
+                append("${transaction.identity(columnToUpdate)}=")
+                registerArgument(columnToUpdate, updateExpression)
             }
             toString()
         }
