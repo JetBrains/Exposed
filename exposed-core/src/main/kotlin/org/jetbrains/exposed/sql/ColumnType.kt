@@ -221,8 +221,12 @@ internal fun IColumnType<*>.rawSqlType(): IColumnType<*> = when {
     else -> this
 }
 
-internal fun IColumnType<*>.isEntityIdentifier(): Boolean {
-    return this is EntityIDColumnType<*> && (idColumn.table as IdTable<*>).id == idColumn
+/** Returns whether this column is registered to an [IdTable] and is that table's `id` column. */
+internal fun Column<*>.isEntityIdentifier(): Boolean {
+    if (columnType !is EntityIDColumnType<*>) return false
+
+    val tableToCheck = ((table as? Alias<*>)?.delegate ?: table) as? IdTable<*>
+    return tableToCheck?.id == columnType.idColumn
 }
 
 /**

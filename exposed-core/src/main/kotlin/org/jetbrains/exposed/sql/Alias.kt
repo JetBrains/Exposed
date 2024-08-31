@@ -61,7 +61,7 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any?> get(original: Column<T>): Column<T> {
         // CompositeIdTable id is not a typical database-registered column
-        val delegateColumn = if (delegate is CompositeIdTable && original.columnType.isEntityIdentifier()) {
+        val delegateColumn = if (delegate is CompositeIdTable && original.isEntityIdentifier()) {
             delegate.id
         } else {
             delegate.columns.find { it == original }

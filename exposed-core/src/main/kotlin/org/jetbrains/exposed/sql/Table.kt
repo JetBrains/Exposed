@@ -47,7 +47,7 @@ interface FieldSet {
             fields.forEach {
                 when {
                     it is CompositeColumn<*> -> unrolled.addAll(it.getRealColumns())
-                    (it as? Column<*>)?.columnType?.isEntityIdentifier() == true && it.table is CompositeIdTable -> {
+                    (it as? Column<*>)?.isEntityIdentifier() == true && it.table is CompositeIdTable -> {
                         unrolled.addAll(it.table.idColumns)
                     }
                     else -> unrolled.add(it)

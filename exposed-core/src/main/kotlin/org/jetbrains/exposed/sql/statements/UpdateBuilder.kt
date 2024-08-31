@@ -30,7 +30,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
             "Trying to set null to not nullable column $column"
         }
 
-        if (column.columnType.isEntityIdentifier() && (value as EntityID<*>).value is CompositeID) {
+        if (column.isEntityIdentifier() && (value as EntityID<*>).value is CompositeID) {
             (value.value as CompositeID).setComponentValues()
         } else {
             column.columnType.validateValueBeforeUpdate(value)
