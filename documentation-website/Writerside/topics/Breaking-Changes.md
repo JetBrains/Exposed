@@ -4,8 +4,7 @@
 * The `DeleteStatement` property `table` is now deprecated in favor of `targetsSet`, which holds a `ColumnSet` that may be a `Table` or `Join`.
   This enables the use of the new `Join.delete()` function, which performs a delete operation on a specific table from the join relation.
   The original statement class constructor has also been deprecated in favor of the constructor that accepts `targetsSet`, as well as another
-  additional parameter `targetTables` (for specifying which table from the join relation, if applicable, to delete from). The latter defaults
-  to an empty list if not defined.
+  additional parameter `targetTables` (for specifying which table from the join relation, if applicable, to delete from).
 
 ## 0.54.0
 

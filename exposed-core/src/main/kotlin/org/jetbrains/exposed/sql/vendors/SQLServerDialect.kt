@@ -74,6 +74,7 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun hexToDb(hexString: String): String = "0x$hexString"
 }
 
+@Suppress("TooManyFunctions")
 internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
         append("NEXT VALUE FOR ", seq.identifier)
