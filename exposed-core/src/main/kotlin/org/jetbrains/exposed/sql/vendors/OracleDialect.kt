@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.statements.MergeStatement
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.DELETE
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.INSERT
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.UPDATE
+import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.DatabaseMetaData
 import java.util.*
@@ -237,9 +238,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
     ): String = with(QueryBuilder(true)) {
         columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("Oracle supports a join updates with a single table columns to update.")
-        if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
-            exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
-        }
+        targets.checkJoinTypes(StatementType.UPDATE)
         +"UPDATE ("
         val columnsToSelect = columnsAndValues.flatMap {
             listOfNotNull(it.first, it.second as? Expression<*>)
@@ -302,6 +301,38 @@ internal object OracleFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("Oracle doesn't support LIMIT in DELETE clause.")
         }
         return super.delete(ignore, table, where, null, transaction)
+    }
+
+    override fun delete(
+        ignore: Boolean,
+        targets: Join,
+        targetTables: List<Table>,
+        where: Op<Boolean>?,
+        limit: Int?,
+        transaction: Transaction
+    ): String {
+        if (ignore) {
+            transaction.throwUnsupportedException("Oracle doesn't support IGNORE in DELETE from join relation")
+        }
+        val tableToDelete = targetTables.singleOrNull()
+            ?: transaction.throwUnsupportedException(
+                "Oracle doesn't support DELETE from join relation with multiple tables to delete from"
+            )
+        targets.checkJoinTypes(StatementType.DELETE)
+
+        return with(QueryBuilder(true)) {
+            +"DELETE ("
+            val subQuery = targets.select(tableToDelete.columns)
+            where?.let {
+                subQuery.adjustWhere { it }
+            }
+            subQuery.prepareSQL(this)
+            +") x"
+            limit?.let {
+                +" WHERE ROWNUM <= $it"
+            }
+            toString()
+        }
     }
 
     override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
