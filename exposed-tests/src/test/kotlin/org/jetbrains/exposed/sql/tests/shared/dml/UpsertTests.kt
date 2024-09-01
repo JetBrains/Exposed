@@ -342,7 +342,7 @@ class UpsertTests : DatabaseTestsBase() {
             ) {
                 it[word] = testWord
             }
-            assertEquals(multilinePhrase, tester.selectAll().single()[tester.phrase].also { println(it) })
+            assertEquals(multilinePhrase, tester.selectAll().single()[tester.phrase])
 
             tester.upsert { // provided expression in insert
                 it[word] = "$testWord 2"
