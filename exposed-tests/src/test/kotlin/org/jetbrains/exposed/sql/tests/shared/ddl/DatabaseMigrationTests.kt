@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 
 import org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -13,6 +14,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
+import org.junit.Before
 import org.junit.Test
 import java.io.File
 import kotlin.properties.Delegates
@@ -20,6 +22,21 @@ import kotlin.test.assertNull
 
 @OptIn(ExperimentalDatabaseMigrationApi::class)
 class DatabaseMigrationTests : DatabaseTestsBase() {
+
+    @Before
+    fun dropAllSequences() {
+        withDb {
+            if (currentDialectTest.supportsCreateSequence) {
+                val allSequences = currentDialectTest.sequences().map { name -> Sequence(name) }.toSet()
+                allSequences.forEach { sequence ->
+                    val dropStatements = sequence.dropStatement()
+                    dropStatements.forEach { statement ->
+                        exec(statement)
+                    }
+                }
+            }
+        }
+    }
 
     @Test
     fun testMigrationScriptDirectoryAndContent() {

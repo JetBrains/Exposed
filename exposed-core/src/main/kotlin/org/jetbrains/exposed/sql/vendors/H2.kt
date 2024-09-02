@@ -316,7 +316,14 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         val sequences = mutableListOf<String>()
         TransactionManager.current().exec("SELECT SEQUENCE_NAME FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
             while (rs.next()) {
-                sequences.add(rs.getString("SEQUENCE_NAME"))
+                val result = rs.getString("SEQUENCE_NAME")
+                val sequenceName = if (h2Mode == H2CompatibilityMode.Oracle) {
+                    val q = if (result.contains('.') && !result.isAlreadyQuoted()) "\"" else ""
+                    "$q$result$q"
+                } else {
+                    result
+                }
+                sequences.add(sequenceName)
             }
         }
         return sequences

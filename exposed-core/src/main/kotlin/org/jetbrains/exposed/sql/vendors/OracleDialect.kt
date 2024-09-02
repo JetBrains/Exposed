@@ -431,7 +431,10 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         val sequences = mutableListOf<String>()
         TransactionManager.current().exec("SELECT SEQUENCE_NAME FROM USER_SEQUENCES") { rs ->
             while (rs.next()) {
-                sequences.add(rs.getString("SEQUENCE_NAME"))
+                val result = rs.getString("SEQUENCE_NAME")
+                val q = if (result.contains('.') && !result.isAlreadyQuoted()) "\"" else ""
+                val sequenceName = "$q$result$q"
+                sequences.add(sequenceName)
             }
         }
         return sequences

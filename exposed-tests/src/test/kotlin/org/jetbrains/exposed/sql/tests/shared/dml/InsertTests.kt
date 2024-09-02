@@ -520,7 +520,7 @@ class InsertTests : DatabaseTestsBase() {
                 }
             } finally {
                 withDb(db) {
-                    SchemaUtils.drop()
+                    SchemaUtils.drop(testTable)
                 }
             }
         }
@@ -558,7 +558,7 @@ class InsertTests : DatabaseTestsBase() {
                 }
             } finally {
                 withDb(db) {
-                    SchemaUtils.drop()
+                    SchemaUtils.drop(testTable)
                 }
             }
         }
