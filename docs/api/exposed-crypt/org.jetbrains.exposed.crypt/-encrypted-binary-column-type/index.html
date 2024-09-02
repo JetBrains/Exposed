@@ -41,7 +41,7 @@
 <a class="library-name--link" href="../../../index.html">
                             exposed
                     </a>            </div>
-            <div class="library-version">0.53.0
+            <div class="library-version">0.54.0
             </div>
         </div>
         <div class="filter-section" id="filter-section">
@@ -62,7 +62,7 @@
   <div class="breadcrumbs"><a href="../../index.html">exposed-crypt</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.crypt</a><span class="delimiter">/</span><span class="current">EncryptedBinaryColumnType</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Encrypted</span><wbr><span>Binary</span><wbr><span>Column</span><wbr><span><span>Type</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">EncryptedBinaryColumnType</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">encryptor<span class="token operator">: </span><a href="../-encryptor/index.html">Encryptor</a><span class="token punctuation">, </span></span><span class="parameter ">length<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="../../../exposed-core/org.jetbrains.exposed.sql/-binary-column-type/index.html">BinaryColumnType</a></div><p class="paragraph">Binary column for storing encrypted binary strings of a specific <a href="../../../exposed-crypt/org.jetbrains.exposed.crypt/-encrypted-binary-column-type/length.html">length</a>, using the provided <a href="../../../exposed-crypt/org.jetbrains.exposed.crypt/-encrypted-binary-column-type/encryptor.html">encryptor</a>.</p><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import org.jetbrains.exposed.sql.Column
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">EncryptedBinaryColumnType</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">encryptor<span class="token operator">: </span><a href="../-encryptor/index.html">Encryptor</a><span class="token punctuation">, </span></span><span class="parameter ">length<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="../../../exposed-core/org.jetbrains.exposed.sql/-column-with-transform/index.html">ColumnWithTransform</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token operator">&gt; </span></div><p class="paragraph">Binary column for storing encrypted binary strings of a specific length, using the provided <a href="../../../exposed-crypt/org.jetbrains.exposed.crypt/-encrypted-binary-column-type/encryptor.html">encryptor</a>.</p><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
 
 fun main() { 
@@ -95,32 +95,32 @@ fun main() {
       </div>
       <div data-togglable="PROPERTY">
         <h2 class="">Properties</h2>
-        <div class="table"><a data-name="947660682%2FProperties%2F59265913" anchor-label="length" id="947660682%2FProperties%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+        <div class="table"><a data-name="-1607253944%2FProperties%2F59265913" anchor-label="delegate" id="-1607253944%2FProperties%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="index.html#947660682%2FProperties%2F59265913"><span><span>length</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="947660682%2FProperties%2F59265913"></span>
+                  <div><a href="../-encrypted-var-char-column-type/index.html#-1607253944%2FProperties%2F59265913"><span><span>delegate</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1607253944%2FProperties%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="index.html#947660682%2FProperties%2F59265913">length</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-encrypted-var-char-column-type/index.html#-1607253944%2FProperties%2F59265913">delegate</a><span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-i-column-type/index.html">IColumnType</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token operator">&gt;</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1242118350%2FProperties%2F59265913" anchor-label="nullable" id="1242118350%2FProperties%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+<a data-name="1086746092%2FProperties%2F59265913" anchor-label="nullable" id="1086746092%2FProperties%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="../-encrypted-var-char-column-type/index.html#1242118350%2FProperties%2F59265913"><span><span>nullable</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1242118350%2FProperties%2F59265913"></span>
+                  <div><a href="../-encrypted-var-char-column-type/index.html#1086746092%2FProperties%2F59265913"><span><span>nullable</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1086746092%2FProperties%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="../-encrypted-var-char-column-type/index.html#1242118350%2FProperties%2F59265913">nullable</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="../-encrypted-var-char-column-type/index.html#1086746092%2FProperties%2F59265913">nullable</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -129,32 +129,32 @@ fun main() {
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="">Functions</h2>
-        <div class="table"><a data-name="-1145686129%2FFunctions%2F59265913" anchor-label="equals" id="-1145686129%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+        <div class="table"><a data-name="1726157650%2FFunctions%2F59265913" anchor-label="equals" id="1726157650%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="equals.html"><span><span>equals</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1145686129%2FFunctions%2F59265913"></span>
+                  <div><a href="../-encrypted-var-char-column-type/index.html#1726157650%2FFunctions%2F59265913"><span><span>equals</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1726157650%2FFunctions%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">operator override </span><span class="token keyword">fun </span><a href="equals.html"><span class="token function">equals</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">operator override </span><span class="token keyword">fun </span><a href="../-encrypted-var-char-column-type/index.html#1726157650%2FFunctions%2F59265913"><span class="token function">equals</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1089037431%2FFunctions%2F59265913" anchor-label="hashCode" id="1089037431%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+<a data-name="-610750124%2FFunctions%2F59265913" anchor-label="hashCode" id="-610750124%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="hash-code.html"><span>hash</span><wbr><span><span>Code</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1089037431%2FFunctions%2F59265913"></span>
+                  <div><a href="../-encrypted-var-char-column-type/index.html#-610750124%2FFunctions%2F59265913"><span>hash</span><wbr><span><span>Code</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-610750124%2FFunctions%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="hash-code.html"><span class="token function">hashCode</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-encrypted-var-char-column-type/index.html#-610750124%2FFunctions%2F59265913"><span class="token function">hashCode</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -174,32 +174,32 @@ fun main() {
               </div>
             </div>
           </div>
-<a data-name="-357930619%2FFunctions%2F59265913" anchor-label="nonNullValueToString" id="-357930619%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+<a data-name="630224128%2FFunctions%2F59265913" anchor-label="nonNullValueToString" id="630224128%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="non-null-value-to-string.html"><span>non</span><wbr><span>Null</span><wbr><span>Value</span><wbr><span>To</span><wbr><span><span>String</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-357930619%2FFunctions%2F59265913"></span>
+                  <div><a href="index.html#630224128%2FFunctions%2F59265913"><span>non</span><wbr><span>Null</span><wbr><span>Value</span><wbr><span>To</span><wbr><span><span>String</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="630224128%2FFunctions%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="non-null-value-to-string.html"><span class="token function">nonNullValueToString</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#630224128%2FFunctions%2F59265913"><span class="token function">nonNullValueToString</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-1152578082%2FFunctions%2F59265913" anchor-label="notNullValueToDB" id="-1152578082%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+<a data-name="-1159590183%2FFunctions%2F59265913" anchor-label="notNullValueToDB" id="-1159590183%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="not-null-value-to-d-b.html"><span>not</span><wbr><span>Null</span><wbr><span>Value</span><wbr><span>To</span><wbr><span><span>DB</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1152578082%2FFunctions%2F59265913"></span>
+                  <div><a href="index.html#-1159590183%2FFunctions%2F59265913"><span>not</span><wbr><span>Null</span><wbr><span>Value</span><wbr><span>To</span><wbr><span><span>DB</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1159590183%2FFunctions%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="not-null-value-to-d-b.html"><span class="token function">notNullValueToDB</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#-1159590183%2FFunctions%2F59265913"><span class="token function">notNullValueToDB</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -219,47 +219,47 @@ fun main() {
               </div>
             </div>
           </div>
-<a data-name="-891199281%2FFunctions%2F59265913" anchor-label="readObject" id="-891199281%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+<a data-name="1466554165%2FFunctions%2F59265913" anchor-label="readObject" id="1466554165%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="index.html#-891199281%2FFunctions%2F59265913"><span>read</span><wbr><span><span>Object</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-891199281%2FFunctions%2F59265913"></span>
+                  <div><a href="../-encrypted-var-char-column-type/index.html#1466554165%2FFunctions%2F59265913"><span>read</span><wbr><span><span>Object</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1466554165%2FFunctions%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#-891199281%2FFunctions%2F59265913"><span class="token function">readObject</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">rs<span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html">ResultSet</a><span class="token punctuation">, </span></span><span class="parameter ">index<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-encrypted-var-char-column-type/index.html#1466554165%2FFunctions%2F59265913"><span class="token function">readObject</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">rs<span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html">ResultSet</a><span class="token punctuation">, </span></span><span class="parameter ">index<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="-196652925%2FFunctions%2F59265913" anchor-label="setParameter" id="-196652925%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+<a data-name="558835546%2FFunctions%2F59265913" anchor-label="setParameter" id="558835546%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="../-encrypted-var-char-column-type/index.html#-196652925%2FFunctions%2F59265913"><span>set</span><wbr><span><span>Parameter</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-196652925%2FFunctions%2F59265913"></span>
+                  <div><a href="../-encrypted-var-char-column-type/index.html#558835546%2FFunctions%2F59265913"><span>set</span><wbr><span><span>Parameter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="558835546%2FFunctions%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-encrypted-var-char-column-type/index.html#-196652925%2FFunctions%2F59265913"><span class="token function">setParameter</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">stmt<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.sql.statements.api/-prepared-statement-api/index.html">PreparedStatementApi</a><span class="token punctuation">, </span></span><span class="parameter ">index<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-encrypted-var-char-column-type/index.html#558835546%2FFunctions%2F59265913"><span class="token function">setParameter</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">stmt<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.sql.statements.api/-prepared-statement-api/index.html">PreparedStatementApi</a><span class="token punctuation">, </span></span><span class="parameter ">index<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="991094018%2FFunctions%2F59265913" anchor-label="sqlType" id="991094018%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+<a data-name="-1145569755%2FFunctions%2F59265913" anchor-label="sqlType" id="-1145569755%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="index.html#991094018%2FFunctions%2F59265913"><span>sql</span><wbr><span><span>Type</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="991094018%2FFunctions%2F59265913"></span>
+                  <div><a href="../-encrypted-var-char-column-type/index.html#-1145569755%2FFunctions%2F59265913"><span>sql</span><wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1145569755%2FFunctions%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#991094018%2FFunctions%2F59265913"><span class="token function">sqlType</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-encrypted-var-char-column-type/index.html#-1145569755%2FFunctions%2F59265913"><span class="token function">sqlType</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -279,17 +279,47 @@ fun main() {
               </div>
             </div>
           </div>
-<a data-name="368215650%2FFunctions%2F59265913" anchor-label="validateValueBeforeUpdate" id="368215650%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+<a data-name="1933629785%2FFunctions%2F59265913" anchor-label="unwrap" id="1933629785%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="validate-value-before-update.html"><span>validate</span><wbr><span>Value</span><wbr><span>Before</span><wbr><span><span>Update</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="368215650%2FFunctions%2F59265913"></span>
+                  <div><a href="index.html#1933629785%2FFunctions%2F59265913"><span><span>unwrap</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1933629785%2FFunctions%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="validate-value-before-update.html"><span class="token function">validateValueBeforeUpdate</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#1933629785%2FFunctions%2F59265913"><span class="token function">unwrap</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1209880262%2FFunctions%2F59265913" anchor-label="unwrapRecursive" id="-1209880262%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1209880262%2FFunctions%2F59265913"><span>unwrap</span><wbr><span><span>Recursive</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1209880262%2FFunctions%2F59265913"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-1209880262%2FFunctions%2F59265913"><span class="token function">unwrapRecursive</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1635785606%2FFunctions%2F59265913" anchor-label="validateValueBeforeUpdate" id="1635785606%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1635785606%2FFunctions%2F59265913"><span>validate</span><wbr><span>Value</span><wbr><span>Before</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1635785606%2FFunctions%2F59265913"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1635785606%2FFunctions%2F59265913"><span class="token function">validateValueBeforeUpdate</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -309,17 +339,17 @@ fun main() {
               </div>
             </div>
           </div>
-<a data-name="-403200240%2FFunctions%2F59265913" anchor-label="valueFromDB" id="-403200240%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+<a data-name="1025078517%2FFunctions%2F59265913" anchor-label="valueFromDB" id="1025078517%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="value-from-d-b.html"><span>value</span><wbr><span>From</span><wbr><span><span>DB</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-403200240%2FFunctions%2F59265913"></span>
+                  <div><a href="../-encrypted-var-char-column-type/index.html#1025078517%2FFunctions%2F59265913"><span>value</span><wbr><span>From</span><wbr><span><span>DB</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1025078517%2FFunctions%2F59265913"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="value-from-d-b.html"><span class="token function">valueFromDB</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-encrypted-var-char-column-type/index.html#1025078517%2FFunctions%2F59265913"><span class="token function">valueFromDB</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -350,6 +380,21 @@ fun main() {
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1732184896%2FFunctions%2F59265913"><span class="token function">valueToString</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="218318866%2FFunctions%2F59265913" anchor-label="wrap" id="218318866%2FFunctions%2F59265913" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-crypt:dokkaHtmlPartial/main" data-filterable-set=":exposed-crypt:dokkaHtmlPartial/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#218318866%2FFunctions%2F59265913"><span><span>wrap</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="218318866%2FFunctions%2F59265913"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#218318866%2FFunctions%2F59265913"><span class="token function">wrap</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html">ByteArray</a></div></div></div>
                 </div>
               </div>
             </div>

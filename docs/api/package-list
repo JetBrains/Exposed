@@ -3,6 +3,7 @@ $dokka.linkExtension:html
 $dokka.location:////PointingToDeclaration/exposed-migration/[root]/index.html
 $dokka.location:/MigrationUtils///PointingToDeclaration/exposed-migration/[root]/-migration-utils/index.html
 $dokka.location:/MigrationUtils/generateMigrationScript/#kotlin.Array[org.jetbrains.exposed.sql.Table]#kotlin.String#kotlin.String#kotlin.Boolean/PointingToDeclaration/exposed-migration/[root]/-migration-utils/generate-migration-script.html
+$dokka.location:/MigrationUtils/statementsRequiredForDatabaseMigration/#kotlin.Array[org.jetbrains.exposed.sql.Table]#kotlin.Boolean/PointingToDeclaration/exposed-migration/[root]/-migration-utils/statements-required-for-database-migration.html
 module:exposed-core
 org.jetbrains.exposed.dao.id
 org.jetbrains.exposed.exceptions
