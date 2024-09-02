@@ -81,6 +81,23 @@ class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
     var genre by Directors.genre
 }
 ```
+If any of the key columns have already been marked by `entityId()` in another table, they can still be identified in the
+`CompositeIdTable` using `addIdColumn()`. This might be useful for key columns that reference another `IdTable`:
+```kotlin
+object Guilds : UUIDTable("guilds")
+
+object Directors : CompositeIdTable("directors") {
+    val name = varchar("name", 50).entityId()
+    val guildId = reference("guild_id", Guilds)
+    val genre = enumeration<Genre>("genre")
+    
+    init {
+        addIdColumn(guildId)
+    }
+
+    override val primaryKey = PrimaryKey(name, guildId)
+}
+```
 
 ## Basic CRUD operations
 ### Create
@@ -143,8 +160,8 @@ val directorId = CompositeID {
     it[Directors.guildId] = "..."
 }
 
+// these will both deconstruct in SQL to the 2 component columns
 val director = Director.findById(directorId)
-// this will deconstruct in SQL to both component columns
 val directors = Director.find { Directors.id eq directorId }
 ```
 #### Sort (Order-by)
