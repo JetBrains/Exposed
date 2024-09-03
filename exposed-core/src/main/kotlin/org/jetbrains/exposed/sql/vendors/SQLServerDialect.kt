@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.statements.MergeStatement
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.DELETE
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.INSERT
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.UPDATE
+import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
@@ -73,6 +74,7 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun hexToDb(hexString: String): String = "0x$hexString"
 }
 
+@Suppress("TooManyFunctions")
 internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
         append("NEXT VALUE FOR ", seq.identifier)
@@ -202,9 +204,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("SQLServer supports a join updates with a single table columns to update.")
 
-        if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
-            exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
-        }
+        targets.checkJoinTypes(StatementType.UPDATE)
         if (limit != null) {
             +"UPDATE TOP($limit)"
         } else {
@@ -243,6 +243,44 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun delete(ignore: Boolean, table: Table, where: String?, limit: Int?, transaction: Transaction): String {
         val def = super.delete(ignore, table, where, null, transaction)
         return if (limit != null) def.replaceFirst("DELETE", "DELETE TOP($limit)") else def
+    }
+
+    override fun delete(
+        ignore: Boolean,
+        targets: Join,
+        targetTables: List<Table>,
+        where: Op<Boolean>?,
+        limit: Int?,
+        transaction: Transaction
+    ): String {
+        if (ignore) {
+            transaction.throwUnsupportedException("SQL Server doesn't support IGNORE in DELETE from join relation")
+        }
+        val tableToDelete = targetTables.singleOrNull()
+            ?: transaction.throwUnsupportedException(
+                "SQL Server doesn't support DELETE from join relation with multiple tables to delete from"
+            )
+        targets.checkJoinTypes(StatementType.DELETE)
+
+        return with(QueryBuilder(true)) {
+            +"DELETE "
+            limit?.let {
+                +"TOP($it) "
+            }
+            +"FROM "
+            if (tableToDelete is Alias<*>) {
+                +tableToDelete.alias
+            } else {
+                tableToDelete.describe(transaction, this)
+            }
+            +" FROM "
+            appendJoinPart(tableToDelete, targets, transaction, filterTargetTable = false)
+            where?.let {
+                +" AND "
+                +it
+            }
+            toString()
+        }
     }
 
     override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {

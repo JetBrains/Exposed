@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
+import kotlin.test.assertTrue
 import kotlin.test.expect
 
 class DeleteTests : DatabaseTestsBase() {
@@ -101,6 +102,94 @@ class DeleteTests : DatabaseTestsBase() {
                     userData.value eq 20
                 }
             }
+        }
+    }
+
+    @Test
+    fun testDeleteWithSingleJoin() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { _, users, userData ->
+            val join = users innerJoin userData
+            val query1 = join.selectAll().where { userData.user_id like "%ey" }
+            assertTrue { query1.count() > 0L }
+
+            join.delete(userData) { userData.user_id like "%ey" }
+            assertEquals(0, query1.count())
+
+            val query2 = join.selectAll()
+            assertTrue { query2.count() > 0L }
+
+            join.delete(userData)
+            assertEquals(0, query2.count())
+        }
+    }
+
+    @Test
+    fun testDeleteWithMultipleAliasJoins() {
+        withCitiesAndUsers(exclude = TestDB.ALL_H2 + TestDB.SQLITE) { cities, users, userData ->
+            val towns = cities.alias("towns")
+            val people = users.alias("people")
+            val stats = userData.alias("stats")
+            val aliasedJoin = Join(towns)
+                .innerJoin(people, { towns[cities.id] }, { people[users.cityId] })
+                .innerJoin(stats, { people[users.id] }, { stats[userData.user_id] })
+            val query = aliasedJoin.selectAll().where { towns[cities.name] eq "Munich" }
+            assertTrue { query.count() > 0L }
+
+            aliasedJoin.delete(stats) { towns[cities.name] eq "Munich" }
+            assertEquals(0, query.count())
+        }
+    }
+
+    @Test
+    fun testDeleteWithJoinQuery() {
+        withCitiesAndUsers(exclude = TestDB.ALL_H2_V1 + TestDB.SQLITE) { _, users, userData ->
+            val singleJoinQuery = userData.joinQuery(
+                on = { userData.user_id eq it[users.id] },
+                joinPart = { users.selectAll().where { users.cityId eq 2 } }
+            )
+            val joinCount = singleJoinQuery.selectAll().count()
+            assertTrue { joinCount > 0L }
+            val joinCountWithCondition = singleJoinQuery.selectAll().where {
+                singleJoinQuery.lastQueryAlias!![users.name] like "%ey"
+            }.count()
+            assertTrue { joinCountWithCondition > 0L }
+
+            singleJoinQuery.delete(userData) { singleJoinQuery.lastQueryAlias!![users.name] like "%ey" }
+            assertEquals(joinCount - joinCountWithCondition, singleJoinQuery.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testDeleteWithJoinAndLimit() {
+        withCitiesAndUsers(exclude = TestDB.ALL - TestDB.SQLSERVER - TestDB.ORACLE) { _, users, userData ->
+            val join = users innerJoin userData
+            val query = join.selectAll().where { userData.user_id eq "smth" }
+            val originalCount = query.count()
+            assertTrue { originalCount > 1 }
+
+            join.delete(userData, limit = 1) { userData.user_id eq "smth" }
+            assertEquals(originalCount - 1, query.count())
+        }
+    }
+
+    @Test
+    fun testDeleteIgnoreWithJoin() {
+        withCitiesAndUsers(exclude = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB) { _, users, userData ->
+            val join = users innerJoin userData
+            val query = join.selectAll().where { users.id eq "smth" }
+            assertTrue { query.count() > 0 }
+
+            expectException<ExposedSQLException> {
+                // a regular delete throws SQLIntegrityConstraintViolationException because UserData reference Users
+                // Cannot delete or update a parent row: a foreign key constraint fails
+                join.delete(users, userData) { users.id eq "smth" }
+            }
+
+            expect(2) {
+                // the error is now ignored so parent rows are skipped but child rows are deleted
+                join.delete(users, userData, ignore = true) { users.id eq "smth" }
+            }
+            assertEquals(0, query.count())
         }
     }
 }

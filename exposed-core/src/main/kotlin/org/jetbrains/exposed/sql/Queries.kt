@@ -147,8 +147,34 @@ fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
 ): ReturningStatement {
-    val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, false, null, null)
+    val delete = DeleteStatement(targetsSet = this, where?.let { SqlExpressionBuilder.it() }, false, null, null)
     return ReturningStatement(this, returning, delete)
+}
+
+/**
+ * Represents the SQL statement that deletes rows from a table in a join relation.
+ *
+ * @param targetTable The specific table from this join relation to delete rows from.
+ * @param targetTables (Optional) Other tables from this join relation to delete rows from.
+ * **Note** Targeting multiple tables for deletion is not supported by all vendors. Please check the documentation.
+ * @param ignore Whether to ignore any possible errors that occur when deleting rows.
+ * **Note** [ignore] is not supported by all vendors. Please check the documentation.
+ * @param limit Maximum number of rows to delete.
+ * **Note** [limit] is not supported by all vendors. Please check the documentation.
+ * @param where Condition that determines which rows to delete.
+ * @return The number of deleted rows.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDeleteWithSingleJoin
+ */
+fun Join.delete(
+    targetTable: Table,
+    vararg targetTables: Table,
+    ignore: Boolean = false,
+    limit: Int? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+): Int {
+    val targets = listOf(targetTable) + targetTables
+    val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, ignore, limit, null, targets)
+    return delete.execute(TransactionManager.current()) ?: 0
 }
 
 /**

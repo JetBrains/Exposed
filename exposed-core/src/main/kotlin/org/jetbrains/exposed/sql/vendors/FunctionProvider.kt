@@ -4,6 +4,7 @@ import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.MergeStatement
+import org.jetbrains.exposed.sql.statements.StatementType
 
 /**
  * Provides definitions for all the supported SQL functions.
@@ -608,10 +609,18 @@ abstract class FunctionProvider {
         transaction: Transaction
     ): String = transaction.throwUnsupportedException("UPDATE with a join clause is unsupported")
 
-    protected fun QueryBuilder.appendJoinPartForUpdateClause(tableToUpdate: Table, targets: Join, transaction: Transaction) {
-        +" FROM "
-        val joinPartsToAppend = targets.joinParts.filter { it.joinPart != tableToUpdate }
-        if (targets.table != tableToUpdate) {
+    protected fun QueryBuilder.appendJoinPart(
+        targetTable: Table,
+        targets: Join,
+        transaction: Transaction,
+        filterTargetTable: Boolean = true
+    ) {
+        val joinPartsToAppend = if (filterTargetTable) {
+            targets.joinParts.filter { it.joinPart != targetTable }
+        } else {
+            targets.joinParts
+        }
+        if (targets.table != targetTable) {
             targets.table.describe(transaction, this)
             if (joinPartsToAppend.isNotEmpty()) {
                 +", "
@@ -625,6 +634,17 @@ abstract class FunctionProvider {
         +" WHERE "
         targets.joinParts.appendTo(this, " AND ") {
             it.appendConditions(this)
+        }
+    }
+
+    protected fun QueryBuilder.appendJoinPartForUpdateClause(tableToUpdate: Table, targets: Join, transaction: Transaction) {
+        +" FROM "
+        appendJoinPart(tableToUpdate, targets, transaction, true)
+    }
+
+    internal fun Join.checkJoinTypes(statementType: StatementType) {
+        if (joinParts.any { it.joinType != JoinType.INNER }) {
+            exposedLogger.warn("All tables in ${statementType.name} statement will be joined using inner join by default")
         }
     }
 
@@ -766,6 +786,27 @@ abstract class FunctionProvider {
             }
         }
     }
+
+    /**
+     * Returns the SQL command that deletes one or more rows from a table in a join relation.
+     *
+     * **Note:** The `ignore` and `limit` parameters are not supported by all vendors; please check the documentation.
+     *
+     * @param ignore Whether to ignore errors or not.
+     * @param targets Join to delete rows from.
+     * @param targetTables Specific tables in the join to delete rows from.
+     * @param where Condition that decides the rows to delete.
+     * @param limit Maximum number of rows to delete.
+     * @param transaction Transaction where the operation is executed.
+     */
+    open fun delete(
+        ignore: Boolean,
+        targets: Join,
+        targetTables: List<Table>,
+        where: Op<Boolean>?,
+        limit: Int?,
+        transaction: Transaction
+    ): String = transaction.throwUnsupportedException("DELETE from a join relation is unsupported")
 
     /**
      * Returns the SQL command that limits and offsets the result of a query.

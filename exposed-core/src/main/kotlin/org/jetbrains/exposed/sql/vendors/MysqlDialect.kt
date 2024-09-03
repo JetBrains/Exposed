@@ -266,6 +266,38 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
     }
 
+    override fun delete(
+        ignore: Boolean,
+        targets: Join,
+        targetTables: List<Table>,
+        where: Op<Boolean>?,
+        limit: Int?,
+        transaction: Transaction
+    ): String {
+        if (limit != null) {
+            transaction.throwUnsupportedException("${currentDialect.name} doesn't support LIMIT in DELETE from join relation")
+        }
+        return with(QueryBuilder(true)) {
+            +"DELETE "
+            if (ignore) {
+                +"IGNORE "
+            }
+            targetTables.appendTo { target ->
+                when (target) {
+                    is Alias<*> -> +target.alias
+                    else -> target.describe(transaction, this)
+                }
+            }
+            +" FROM "
+            targets.describe(transaction, this)
+            where?.let {
+                +" WHERE "
+                +it
+            }
+            toString()
+        }
+    }
+
     override fun insertValue(columnName: String, queryBuilder: QueryBuilder) {
         queryBuilder {
             if (isUpsertAliasSupported(currentDialect)) {

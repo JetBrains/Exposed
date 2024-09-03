@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
@@ -248,9 +249,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
         val tableToUpdate = columnsAndValues.map { it.first.table }.distinct().singleOrNull()
             ?: transaction.throwUnsupportedException("PostgreSQL supports a join updates with a single table columns to update.")
-        if (targets.joinParts.any { it.joinType != JoinType.INNER }) {
-            exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
-        }
+        targets.checkJoinTypes(StatementType.UPDATE)
         +"UPDATE "
         tableToUpdate.describe(transaction, this)
         +" SET "
@@ -315,6 +314,39 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in DELETE clause.")
         }
         return super.delete(ignore, table, where, null, transaction)
+    }
+
+    override fun delete(
+        ignore: Boolean,
+        targets: Join,
+        targetTables: List<Table>,
+        where: Op<Boolean>?,
+        limit: Int?,
+        transaction: Transaction
+    ): String {
+        if (ignore) {
+            transaction.throwUnsupportedException("PostgreSQL doesn't support IGNORE in DELETE from join relation")
+        }
+        if (limit != null) {
+            transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in DELETE from join relation")
+        }
+        val tableToDelete = targetTables.singleOrNull()
+            ?: transaction.throwUnsupportedException(
+                "PostgreSQL doesn't support DELETE from join relation with multiple tables to delete from"
+            )
+        targets.checkJoinTypes(StatementType.DELETE)
+
+        return with(QueryBuilder(true)) {
+            +"DELETE FROM "
+            tableToDelete.describe(transaction, this)
+            +" USING "
+            appendJoinPart(tableToDelete, targets, transaction)
+            where?.let {
+                +" AND "
+                +it
+            }
+            toString()
+        }
     }
 
     override fun explain(

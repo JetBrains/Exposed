@@ -38,7 +38,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
             is DeleteStatement -> {
                 transaction.flushCache()
-                transaction.entityCache.removeTablesReferrers(listOf(statement.table), false)
+                transaction.entityCache.removeTablesReferrers(statement.targetsSet.targetTables(), false)
                 if (!isExecutedWithinEntityLifecycle) {
                     statement.targets.filterIsInstance<IdTable<*>>().forEach {
                         transaction.entityCache.data[it]?.clear()

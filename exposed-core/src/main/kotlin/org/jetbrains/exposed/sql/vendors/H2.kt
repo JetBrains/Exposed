@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.DatabaseMetaData
 import java.util.*
@@ -89,17 +90,9 @@ internal object H2FunctionProvider : FunctionProvider() {
             ?: transaction.throwUnsupportedException(
                 "H2 doesn't support UPDATE with join clause that uses multiple tables to join."
             )
-        if (joinPart.joinType != JoinType.INNER) {
-            exposedLogger.warn("All tables in UPDATE statement will be joined with inner join")
-        }
-        +"MERGE INTO "
-        tableToUpdate.describe(transaction, this)
-        +" USING "
+        targets.checkJoinTypes(StatementType.UPDATE)
 
-        (joinPart.joinPart.takeIf { it != tableToUpdate } ?: targets.table).describe(transaction, this)
-        +" ON "
-        joinPart.appendConditions(this)
-
+        appendMergeIntoUsingJoinClause(tableToUpdate, targets, joinPart, transaction)
         +" WHEN MATCHED THEN UPDATE SET "
         columnsAndValues.appendTo(this) { (col, value) ->
             append("${transaction.fullIdentity(col)}=")
@@ -111,6 +104,56 @@ internal object H2FunctionProvider : FunctionProvider() {
             +it
         }
         toString()
+    }
+
+    private fun QueryBuilder.appendMergeIntoUsingJoinClause(
+        target: Table,
+        join: Join,
+        joinPart: Join.JoinPart,
+        transaction: Transaction
+    ) {
+        +"MERGE INTO "
+        target.describe(transaction, this)
+        +" USING "
+        (joinPart.joinPart.takeIf { it != target } ?: join.table).describe(transaction, this)
+        +" ON "
+        joinPart.appendConditions(this)
+    }
+
+    override fun delete(
+        ignore: Boolean,
+        targets: Join,
+        targetTables: List<Table>,
+        where: Op<Boolean>?,
+        limit: Int?,
+        transaction: Transaction
+    ): String {
+        if (ignore) {
+            transaction.throwUnsupportedException("H2 doesn't support IGNORE in DELETE from join relation")
+        }
+        if (limit != null) {
+            transaction.throwUnsupportedException("H2 doesn't support LIMIT in DELETE from join relation")
+        }
+        val tableToDelete = targetTables.singleOrNull()
+            ?: transaction.throwUnsupportedException(
+                "H2 doesn't support DELETE from join relation with multiple tables to delete from"
+            )
+        val joinPart = targets.joinParts.singleOrNull()
+            ?: transaction.throwUnsupportedException(
+                "H2 doesn't support DELETE from join relation that uses multiple tables to join"
+            )
+        targets.checkJoinTypes(StatementType.DELETE)
+
+        return with(QueryBuilder(true)) {
+            appendMergeIntoUsingJoinClause(tableToDelete, targets, joinPart, transaction)
+            +" WHEN MATCHED"
+            where?.let {
+                +" AND "
+                +it
+            }
+            +" THEN DELETE"
+            toString()
+        }
     }
 
     /**
