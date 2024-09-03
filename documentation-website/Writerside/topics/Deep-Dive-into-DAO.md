@@ -81,8 +81,7 @@ class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
     var genre by Directors.genre
 }
 ```
-If any of the key columns have already been marked by `entityId()` in another table, they can still be identified in the
-`CompositeIdTable` using `addIdColumn()`. This might be useful for key columns that reference another `IdTable`:
+<include from="Table-Definition.topic" element-id="add-id-column-tip" />
 ```kotlin
 object Guilds : UUIDTable("guilds")
 

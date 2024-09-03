@@ -304,9 +304,9 @@
                     override val primaryKey = PrimaryKey(areaCode, latitude, longitude)
                 }
             </code-block>
-            <p>If any of the component columns are already type <code>Column&lt;EntityID&lt;?&gt;&gt;</code>, for
-                example, because they reference the <code>id</code> of another table, they can still be identified by
-                <code>addIdColumn()</code>:</p>
+            <p id="add-id-column-tip">If any of the key component columns have already been marked by <code>entityId()</code>
+                in another table, they can still be identified using <code>addIdColumn()</code>. This might be useful for
+                key columns that reference another <code>IdTable</code>:</p>
             <code-block lang="kotlin">
                 object AreaCodes : IdTable&lt;Int&gt;("area_codes") {
                     override val id = integer("code").entityId()
