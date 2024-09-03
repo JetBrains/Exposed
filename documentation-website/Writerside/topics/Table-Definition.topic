@@ -304,6 +304,28 @@
                     override val primaryKey = PrimaryKey(areaCode, latitude, longitude)
                 }
             </code-block>
+            <p id="add-id-column-tip">If any of the key component columns have already been marked by <code>entityId()</code>
+                in another table, they can still be identified using <code>addIdColumn()</code>. This might be useful for
+                key columns that reference another <code>IdTable</code>:</p>
+            <code-block lang="kotlin">
+                object AreaCodes : IdTable&lt;Int&gt;("area_codes") {
+                    override val id = integer("code").entityId()
+                    override val primaryKey = PrimaryKey(id)
+                }
+
+                object Towns : CompositeIdTable("towns") {
+                    val areaCode = reference("area_code", AreaCodes)
+                    val latitude = decimal("latitude", 9, 6).entityId()
+                    val longitude = decimal("longitude", 9, 6).entityId()
+                    val name = varchar("name", 32)
+
+                    init {
+                        addIdColumn(areaCode)
+                    }
+
+                    override val primaryKey = PrimaryKey(areaCode, latitude, longitude)
+                }
+            </code-block>
             <tip>For more information on <code>CompositeIdTable</code> types, see <a
                     href="Deep-Dive-into-DAO.md#table-types">DAO Table Types</a>.
             </tip>

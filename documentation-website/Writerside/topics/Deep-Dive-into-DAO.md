@@ -81,6 +81,22 @@ class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
     var genre by Directors.genre
 }
 ```
+<include from="Table-Definition.topic" element-id="add-id-column-tip" />
+```kotlin
+object Guilds : UUIDTable("guilds")
+
+object Directors : CompositeIdTable("directors") {
+    val name = varchar("name", 50).entityId()
+    val guildId = reference("guild_id", Guilds)
+    val genre = enumeration<Genre>("genre")
+    
+    init {
+        addIdColumn(guildId)
+    }
+
+    override val primaryKey = PrimaryKey(name, guildId)
+}
+```
 
 ## Basic CRUD operations
 ### Create
@@ -143,8 +159,8 @@ val directorId = CompositeID {
     it[Directors.guildId] = "..."
 }
 
+// these will both deconstruct in SQL to the 2 component columns
 val director = Director.findById(directorId)
-// this will deconstruct in SQL to both component columns
 val directors = Director.find { Directors.id eq directorId }
 ```
 #### Sort (Order-by)
