@@ -338,15 +338,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testAddAutoIncrementWithCustomSequenceToExistingColumn() {
-        val sequence = Sequence(
-            name = "my_sequence",
-            startWith = 4,
-            incrementBy = 2,
-            minValue = 1,
-            maxValue = 100,
-            cycle = true,
-            cache = 20
-        )
         val tableWithoutAutoIncrement = object : IdTable<Long>("test_table") {
             override val id: Column<EntityID<Long>> = long("id").entityId()
         }
@@ -461,15 +452,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testAddCustomSequenceToExistingAutoIncrementColumn() {
-        val sequence = Sequence(
-            name = "my_sequence",
-            startWith = 4,
-            incrementBy = 2,
-            minValue = 1,
-            maxValue = 100,
-            cycle = true,
-            cache = 20
-        )
         val tableWithAutoIncrement = object : IdTable<Long>("test_table") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
         }
@@ -615,15 +597,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     @Test
     fun testAddCustomSequenceToExistingAutoIncrementColumnWithSequenceName() {
         val sequenceName = "custom_sequence"
-        val sequence = Sequence(
-            name = "my_sequence",
-            startWith = 4,
-            incrementBy = 2,
-            minValue = 1,
-            maxValue = 100,
-            cycle = true,
-            cache = 20
-        )
         val tableWithAutoIncrementSequenceName = object : IdTable<Long>("test_table") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
         }
@@ -672,15 +645,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testDropAutoIncrementWithCustomSequenceOnExistingColumn() {
-        val sequence = Sequence(
-            name = "my_sequence",
-            startWith = 4,
-            incrementBy = 2,
-            minValue = 1,
-            maxValue = 100,
-            cycle = true,
-            cache = 20
-        )
         val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
         }
@@ -719,15 +683,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testDropCustomSequenceOnExistingAutoIncrementColumn() {
-        val sequence = Sequence(
-            name = "my_sequence",
-            startWith = 4,
-            incrementBy = 2,
-            minValue = 1,
-            maxValue = 100,
-            cycle = true,
-            cache = 20
-        )
         val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
         }
@@ -788,15 +743,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     @Test
     fun testAddSequenceNameToExistingAutoIncrementColumnWithCustomSequence() {
         val sequenceName = "custom_sequence"
-        val sequence = Sequence(
-            name = "my_sequence",
-            startWith = 4,
-            incrementBy = 2,
-            minValue = 1,
-            maxValue = 100,
-            cycle = true,
-            cache = 20
-        )
         val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
         }
@@ -842,4 +788,14 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             }
         }
     }
+
+    private val sequence = Sequence(
+        name = "my_sequence",
+        startWith = 4,
+        incrementBy = 2,
+        minValue = 1,
+        maxValue = 100,
+        cycle = true,
+        cache = 20
+    )
 }
