@@ -271,13 +271,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testAddAutoIncrementToExistingColumn() {
-        val tableWithoutAutoIncrement = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").entityId()
-        }
-        val tableWithAutoIncrement = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
-        }
-
         withTables(excludeSettings = listOf(TestDB.SQLITE), tableWithoutAutoIncrement) { testDb ->
             assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement, withLogs = false).size)
 
@@ -310,14 +303,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testAddAutoIncrementWithSequenceNameToExistingColumn() {
-        val sequenceName = "custom_sequence"
-        val tableWithoutAutoIncrement = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").entityId()
-        }
-        val tableWithAutoIncrementSequenceName = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
-        }
-
         withTables(excludeSettings = listOf(TestDB.SQLITE), tableWithoutAutoIncrement) {
             assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement, withLogs = false).size)
 
@@ -338,13 +323,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testAddAutoIncrementWithCustomSequenceToExistingColumn() {
-        val tableWithoutAutoIncrement = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").entityId()
-        }
-        val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
-        }
-
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
@@ -452,13 +430,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testAddCustomSequenceToExistingAutoIncrementColumn() {
-        val tableWithAutoIncrement = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
-        }
-        val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
-        }
-
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
@@ -497,14 +468,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testDropAutoIncrementWithSequenceNameOnExistingColumn() {
-        val sequenceName = "custom_sequence"
-        val tableWithAutoIncrementSequenceName = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
-        }
-        val tableWithoutAutoIncrement = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").entityId()
-        }
-
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
@@ -536,14 +499,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testDropSequenceNameOnExistingAutoIncrementColumn() {
-        val sequenceName = "custom_sequence"
-        val tableWithAutoIncrementSequenceName = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
-        }
-        val tableWithAutoIncrement = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
-        }
-
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
@@ -596,14 +551,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testAddCustomSequenceToExistingAutoIncrementColumnWithSequenceName() {
-        val sequenceName = "custom_sequence"
-        val tableWithAutoIncrementSequenceName = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
-        }
-        val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
-        }
-
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
@@ -645,13 +592,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testDropAutoIncrementWithCustomSequenceOnExistingColumn() {
-        val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
-        }
-        val tableWithoutAutoIncrement = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").entityId()
-        }
-
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
@@ -683,13 +623,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testDropCustomSequenceOnExistingAutoIncrementColumn() {
-        val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
-        }
-        val tableWithAutoIncrement = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
-        }
-
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
@@ -742,14 +675,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testAddSequenceNameToExistingAutoIncrementColumnWithCustomSequence() {
-        val sequenceName = "custom_sequence"
-        val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
-        }
-        val tableWithAutoIncrementSequenceName = object : IdTable<Long>("test_table") {
-            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
-        }
-
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
@@ -798,4 +723,22 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         cycle = true,
         cache = 20
     )
+
+    private val sequenceName = "custom_sequence"
+
+    private val tableWithoutAutoIncrement = object : IdTable<Long>("test_table") {
+        override val id: Column<EntityID<Long>> = long("id").entityId()
+    }
+
+    private val tableWithAutoIncrement = object : IdTable<Long>("test_table") {
+        override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
+    }
+
+    private val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
+        override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
+    }
+
+    private val tableWithAutoIncrementSequenceName = object : IdTable<Long>("test_table") {
+        override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
+    }
 }
