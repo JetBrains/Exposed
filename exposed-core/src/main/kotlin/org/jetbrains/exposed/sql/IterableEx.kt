@@ -9,13 +9,13 @@ interface SizedIterable<out T> : Iterable<T> {
         ReplaceWith("limit(n).offset(offset)"),
         DeprecationLevel.WARNING
     )
-    fun limit(n: Int, offset: Long = 0): SizedIterable<T>
+    fun limit(n: Int, offset: Long): SizedIterable<T>
 
     /** Returns a new [SizedIterable] containing only [count] elements. */
-    fun limit(count: Int): SizedIterable<T>
+    fun limit(count: Int): SizedIterable<T> = limit(count, 0)
 
     /** Returns a new [SizedIterable] containing only elements starting from the specified [start]. */
-    fun offset(start: Long): SizedIterable<T>
+    fun offset(start: Long): SizedIterable<T> = limit(Int.MAX_VALUE, start)
 
     /** Returns the number of elements stored. */
     fun count(): Long

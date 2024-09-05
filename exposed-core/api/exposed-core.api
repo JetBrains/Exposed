@@ -1514,7 +1514,9 @@ public abstract interface class org/jetbrains/exposed/sql/LazySizedIterable : or
 
 public final class org/jetbrains/exposed/sql/LazySizedIterable$DefaultImpls {
 	public static fun forUpdate (Lorg/jetbrains/exposed/sql/LazySizedIterable;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
+	public static fun limit (Lorg/jetbrains/exposed/sql/LazySizedIterable;I)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public static fun notForUpdate (Lorg/jetbrains/exposed/sql/LazySizedIterable;)Lorg/jetbrains/exposed/sql/SizedIterable;
+	public static fun offset (Lorg/jetbrains/exposed/sql/LazySizedIterable;J)Lorg/jetbrains/exposed/sql/SizedIterable;
 }
 
 public final class org/jetbrains/exposed/sql/Lead : org/jetbrains/exposed/sql/WindowFunction {
@@ -2219,8 +2221,9 @@ public abstract interface class org/jetbrains/exposed/sql/SizedIterable : java/l
 public final class org/jetbrains/exposed/sql/SizedIterable$DefaultImpls {
 	public static fun forUpdate (Lorg/jetbrains/exposed/sql/SizedIterable;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public static synthetic fun forUpdate$default (Lorg/jetbrains/exposed/sql/SizedIterable;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/SizedIterable;
-	public static synthetic fun limit$default (Lorg/jetbrains/exposed/sql/SizedIterable;IJILjava/lang/Object;)Lorg/jetbrains/exposed/sql/SizedIterable;
+	public static fun limit (Lorg/jetbrains/exposed/sql/SizedIterable;I)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public static fun notForUpdate (Lorg/jetbrains/exposed/sql/SizedIterable;)Lorg/jetbrains/exposed/sql/SizedIterable;
+	public static fun offset (Lorg/jetbrains/exposed/sql/SizedIterable;J)Lorg/jetbrains/exposed/sql/SizedIterable;
 }
 
 public final class org/jetbrains/exposed/sql/Slf4jSqlDebugLogger : org/jetbrains/exposed/sql/SqlLogger {
