@@ -10,11 +10,11 @@ import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.io.File
 
 object MigrationUtils {
@@ -293,3 +293,6 @@ object MigrationUtils {
         }
     }
 }
+
+internal fun String.inProperCase(): String =
+    TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
