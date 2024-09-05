@@ -278,7 +278,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             when (testDb) {
                 TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
                     assertEquals(3, statements.size)
-                    assertEquals("CREATE SEQUENCE IF NOT EXISTS test_table_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", statements[0])
+                    assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
                     assertEquals("ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')", statements[1])
                     assertEquals("ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id", statements[2])
                 }
@@ -290,7 +290,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 }
                 TestDB.ORACLE, TestDB.H2_V2_ORACLE -> {
                     assertEquals(1, statements.size)
-                    assertEquals("CREATE SEQUENCE test_table_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", statements[0])
+                    assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
                 }
                 else -> {
                     assertEquals(1, statements.size)
@@ -309,11 +309,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementSequenceName, withLogs = false)
             assertEquals(1, statements.size)
             if (currentDialectTest.supportsCreateSequence) {
-                assertEquals(
-                    "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
-                        "$sequenceName START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
-                    statements[0]
-                )
+                assertEquals(expectedCreateSequenceStatement(sequenceName), statements[0])
             } else {
                 val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
                 assertTrue(statements[0].equals("ALTER TABLE TEST_TABLE $alterColumnWord COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", ignoreCase = true))
@@ -332,11 +328,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementCustomSequence, withLogs = false)
                     assertEquals(1, statements.size)
-                    assertEquals(
-                        "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
-                            "${sequence.name} START WITH 4 INCREMENT BY 2 MINVALUE 1 MAXVALUE 100 CYCLE CACHE 20",
-                        statements[0]
-                    )
+                    assertEquals(expectedCreateSequenceStatement(sequence.name), statements[0])
                 } finally {
                     SchemaUtils.drop(tableWithoutAutoIncrement)
                 }
@@ -365,11 +357,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
                     assertEquals(2, statements.size)
                     assertEquals("ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT", statements[0])
-                    assertEquals("DROP SEQUENCE IF EXISTS test_table_id_seq", statements[1])
+                    assertEquals(expectedDropSequenceStatement("test_table_id_seq"), statements[1])
                 }
                 TestDB.ORACLE, TestDB.H2_V2_ORACLE -> {
                     assertEquals(1, statements.size)
-                    assertTrue(statements[0].equals("DROP SEQUENCE TEST_TABLE_ID_SEQ", ignoreCase = true))
+                    assertTrue(statements[0].equals(expectedDropSequenceStatement("test_table_id_seq"), ignoreCase = true))
                 }
                 else -> {
                     assertEquals(1, statements.size)
@@ -402,19 +394,15 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrement, withLogs = false).size)
 
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementSequenceName, withLogs = false)
-                    assertEquals(
-                        "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
-                            "$sequenceName START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
-                        statements[0]
-                    )
+                    assertEquals(expectedCreateSequenceStatement(sequenceName), statements[0])
                     when (testDb) {
                         TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
                             assertEquals(3, statements.size)
                             assertEquals("ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[1])
-                            assertEquals("DROP SEQUENCE IF EXISTS test_table_id_seq", statements[2])
+                            assertEquals(expectedDropSequenceStatement("test_table_id_seq"), statements[2])
                         }
                         TestDB.ORACLE, TestDB.H2_V2_ORACLE -> {
-                            assertTrue(statements[1].equals("DROP SEQUENCE TEST_TABLE_ID_SEQ", ignoreCase = true))
+                            assertTrue(statements[1].equals(expectedDropSequenceStatement("test_table_id_seq"), ignoreCase = true))
                         }
                         else -> {
                             val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
@@ -438,20 +426,16 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrement, withLogs = false).size)
 
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementCustomSequence, withLogs = false)
-                    assertEquals(
-                        "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
-                            "${sequence.name} START WITH 4 INCREMENT BY 2 MINVALUE 1 MAXVALUE 100 CYCLE CACHE 20",
-                        statements[0]
-                    )
+                    assertEquals(expectedCreateSequenceStatement(sequence.name), statements[0])
                     when (testDb) {
                         TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
                             assertEquals(3, statements.size)
                             assertEquals("ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[1])
-                            assertEquals("DROP SEQUENCE IF EXISTS test_table_id_seq", statements[2])
+                            assertEquals(expectedDropSequenceStatement("test_table_id_seq"), statements[2])
                         }
                         TestDB.ORACLE, TestDB.H2_V2_ORACLE -> {
                             assertEquals(2, statements.size)
-                            assertTrue(statements[1].equals("DROP SEQUENCE test_table_id_seq", ignoreCase = true))
+                            assertTrue(statements[1].equals(expectedDropSequenceStatement("test_table_id_seq"), ignoreCase = true))
                         }
                         else -> {
                             assertEquals(2, statements.size)
@@ -482,12 +466,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         }
                         else -> {
                             assertEquals(1, statements.size)
-                            assertTrue(
-                                statements[0].equals(
-                                    "DROP SEQUENCE${" IF EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} $sequenceName",
-                                    ignoreCase = true
-                                )
-                            )
+                            assertTrue(statements[0].equals(expectedDropSequenceStatement(sequenceName), ignoreCase = true))
                         }
                     }
                 } finally {
@@ -510,22 +489,22 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     when (testDb) {
                         TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
                             assertEquals(4, statements.size)
-                            assertEquals("CREATE SEQUENCE IF NOT EXISTS test_table_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", statements[0])
+                            assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
                             assertEquals("ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')", statements[1])
                             assertEquals("ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id", statements[2])
-                            assertEquals("DROP SEQUENCE IF EXISTS $sequenceName", statements[3])
+                            assertEquals(expectedDropSequenceStatement(sequenceName), statements[3])
                         }
                         TestDB.SQLSERVER -> {
                             assertEquals(4, statements.size)
                             assertEquals("ALTER TABLE test_table ADD NEW_id BIGINT IDENTITY(1,1)", statements[0])
                             assertEquals("ALTER TABLE test_table DROP COLUMN id", statements[1])
                             assertEquals("EXEC sp_rename 'test_table.NEW_id', 'id', 'COLUMN'", statements[2])
-                            assertEquals("DROP SEQUENCE $sequenceName", statements[3])
+                            assertEquals(expectedDropSequenceStatement(sequenceName), statements[3])
                         }
                         TestDB.ORACLE, TestDB.H2_V2_ORACLE -> {
                             assertEquals(2, statements.size)
-                            assertEquals("CREATE SEQUENCE test_table_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", statements[0])
-                            assertTrue(statements[1].equals("DROP SEQUENCE $sequenceName", ignoreCase = true))
+                            assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
+                            assertTrue(statements[1].equals(expectedDropSequenceStatement(sequenceName), ignoreCase = true))
                         }
                         TestDB.H2_V1 -> {
                             assertEquals(1, statements.size)
@@ -534,12 +513,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         else -> {
                             assertEquals(2, statements.size)
                             assertTrue(statements[0].startsWith("ALTER TABLE TEST_TABLE ALTER COLUMN ID", ignoreCase = true))
-                            assertTrue(
-                                statements[1].equals(
-                                    "DROP SEQUENCE${" IF EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} $sequenceName",
-                                    ignoreCase = true
-                                )
-                            )
+                            assertTrue(statements[1].equals(expectedDropSequenceStatement(sequenceName), ignoreCase = true))
                         }
                     }
                 } finally {
@@ -562,25 +536,12 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     when (testDb) {
                         TestDB.H2_V1 -> {
                             assertEquals(1, statements.size)
-                            assertEquals(
-                                "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
-                                    "${sequence.name} START WITH 4 INCREMENT BY 2 MINVALUE 1 MAXVALUE 100 CYCLE CACHE 20",
-                                statements[0]
-                            )
+                            assertEquals(expectedCreateSequenceStatement(sequence.name), statements[0])
                         }
                         else -> {
                             assertEquals(2, statements.size)
-                            assertEquals(
-                                "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
-                                    "${sequence.name} START WITH 4 INCREMENT BY 2 MINVALUE 1 MAXVALUE 100 CYCLE CACHE 20",
-                                statements[0]
-                            )
-                            assertTrue(
-                                statements[1].equals(
-                                    "DROP SEQUENCE${" IF EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} $sequenceName",
-                                    ignoreCase = true
-                                )
-                            )
+                            assertEquals(expectedCreateSequenceStatement(sequence.name), statements[0])
+                            assertTrue(statements[1].equals(expectedDropSequenceStatement(sequenceName), ignoreCase = true))
                         }
                     }
                 } finally {
@@ -606,12 +567,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         }
                         else -> {
                             assertEquals(1, statements.size)
-                            assertTrue(
-                                statements[0].equals(
-                                    "DROP SEQUENCE${" IF EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} ${sequence.name}",
-                                    ignoreCase = true
-                                )
-                            )
+                            assertTrue(statements[0].equals(expectedDropSequenceStatement(sequence.name), ignoreCase = true))
                         }
                     }
                 } finally {
@@ -634,22 +590,22 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     when (testDb) {
                         TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
                             assertEquals(4, statements.size)
-                            assertEquals("CREATE SEQUENCE IF NOT EXISTS test_table_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", statements[0])
+                            assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
                             assertEquals("ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')", statements[1])
                             assertEquals("ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id", statements[2])
-                            assertEquals("DROP SEQUENCE IF EXISTS ${sequence.name}", statements[3])
+                            assertEquals(expectedDropSequenceStatement(sequence.name), statements[3])
                         }
                         TestDB.SQLSERVER -> {
                             assertEquals(4, statements.size)
                             assertEquals("ALTER TABLE test_table ADD NEW_id BIGINT IDENTITY(1,1)", statements[0])
                             assertEquals("ALTER TABLE test_table DROP COLUMN id", statements[1])
                             assertEquals("EXEC sp_rename 'test_table.NEW_id', 'id', 'COLUMN'", statements[2])
-                            assertEquals("DROP SEQUENCE ${sequence.name}", statements[3])
+                            assertEquals(expectedDropSequenceStatement(sequence.name), statements[3])
                         }
                         TestDB.ORACLE, TestDB.H2_V2_ORACLE -> {
                             assertEquals(2, statements.size)
-                            assertEquals("CREATE SEQUENCE test_table_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", statements[0])
-                            assertTrue(statements[1].equals("DROP SEQUENCE ${sequence.name}", ignoreCase = true))
+                            assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
+                            assertTrue(statements[1].equals(expectedDropSequenceStatement(sequence.name), ignoreCase = true))
                         }
                         TestDB.H2_V1 -> {
                             assertEquals(1, statements.size)
@@ -658,12 +614,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         else -> {
                             assertEquals(2, statements.size)
                             assertTrue(statements[0].startsWith("ALTER TABLE TEST_TABLE ALTER COLUMN ID", ignoreCase = true))
-                            assertTrue(
-                                statements[1].equals(
-                                    "DROP SEQUENCE${" IF EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} ${sequence.name}",
-                                    ignoreCase = true
-                                )
-                            )
+                            assertTrue(statements[1].equals(expectedDropSequenceStatement(sequence.name), ignoreCase = true))
                         }
                     }
                 } finally {
@@ -686,25 +637,12 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     when (testDb) {
                         TestDB.H2_V1 -> {
                             assertEquals(1, statements.size)
-                            assertEquals(
-                                "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
-                                    "$sequenceName START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
-                                statements[0]
-                            )
+                            assertEquals(expectedCreateSequenceStatement(sequenceName), statements[0])
                         }
                         else -> {
                             assertEquals(2, statements.size)
-                            assertEquals(
-                                "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
-                                    "$sequenceName START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
-                                statements[0]
-                            )
-                            assertTrue(
-                                statements[1].equals(
-                                    "DROP SEQUENCE${" IF EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} ${sequence.name}",
-                                    ignoreCase = true
-                                )
-                            )
+                            assertEquals(expectedCreateSequenceStatement(sequenceName), statements[0])
+                            assertTrue(statements[1].equals(expectedDropSequenceStatement(sequence.name), ignoreCase = true))
                         }
                     }
                 } finally {
@@ -714,14 +652,18 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         }
     }
 
+    private fun expectedCreateSequenceStatement(sequenceName: String) =
+        "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
+            "$sequenceName START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807"
+
+    private fun expectedDropSequenceStatement(sequenceName: String) =
+        "DROP SEQUENCE${" IF EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} $sequenceName"
+
     private val sequence = Sequence(
         name = "my_sequence",
-        startWith = 4,
-        incrementBy = 2,
+        startWith = 1,
         minValue = 1,
-        maxValue = 100,
-        cycle = true,
-        cache = 20
+        maxValue = 9223372036854775807
     )
 
     private val sequenceName = "custom_sequence"
