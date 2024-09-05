@@ -497,10 +497,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         get() = columns.filter { it.columnType.isAutoInc }.mapNotNull { column ->
             column.autoIncColumnType?.sequence
                 ?: column.takeIf { currentDialect is PostgreSQLDialect }?.let {
-                    val q = if (tableName.contains('.')) "\"" else ""
-                    val fallbackSeqName = "$q${tableName.replace("\"", "")}_${it.name}_seq$q"
+                    val fallbackSequenceName = fallbackSequenceName(tableName = tableName, columnName = it.name)
                     Sequence(
-                        fallbackSeqName,
+                        fallbackSequenceName,
                         startWith = 1,
                         minValue = 1,
                         maxValue = Long.MAX_VALUE
@@ -1591,10 +1590,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this
         is ColumnType -> {
-            val q = if (tableName.contains('.')) "\"" else ""
-            val fallbackSeqName = "$q${tableName.replace("\"", "")}_${name}_seq$q"
+            val fallbackSequenceName = fallbackSequenceName(tableName = tableName, columnName = name)
             this.withColumnType(
-                AutoIncColumnType(columnType, idSeqName, fallbackSeqName)
+                AutoIncColumnType(columnType, idSeqName, fallbackSequenceName)
             )
         }
 
@@ -1730,3 +1728,8 @@ internal fun String.isAlreadyQuoted(): Boolean =
     listOf("\"", "'", "`").any { quoteString ->
         startsWith(quoteString) && endsWith(quoteString)
     }
+
+internal fun fallbackSequenceName(tableName: String, columnName: String): String {
+    val q = if (tableName.contains('.')) "\"" else ""
+    return "$q${tableName.replace("\"", "")}_${columnName}_seq$q"
+}

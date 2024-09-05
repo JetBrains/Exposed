@@ -404,9 +404,8 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
                         append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
                         append(", ALTER COLUMN $colName DROP DEFAULT")
                     } else {
-                        val q = if (column.table.tableName.contains('.')) "\"" else ""
-                        val fallbackSeqName = "$q${column.table.tableName.replace("\"", "")}_${column.name}_seq$q"
-                        append("ALTER COLUMN $colName SET DEFAULT nextval('$fallbackSeqName')")
+                        val fallbackSequenceName = fallbackSequenceName(tableName = column.table.tableName, columnName = column.name)
+                        append("ALTER COLUMN $colName SET DEFAULT nextval('$fallbackSequenceName')")
                     }
                 } else {
                     append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
@@ -433,11 +432,9 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
         if (columnDiff.autoInc && column.autoIncColumnType != null && column.autoIncColumnType?.sequence == null) {
             list.add(
                 buildString {
-                    val tr = TransactionManager.current()
-                    val colName = tr.identity(column)
+                    val fallbackSequenceName = fallbackSequenceName(tableName = column.table.tableName, columnName = column.name)
                     val q = if (column.table.tableName.contains('.')) "\"" else ""
-                    val fallbackSeqName = "$q${column.table.tableName.replace("\"", "")}_${column.name}_seq$q"
-                    append("ALTER SEQUENCE $fallbackSeqName OWNED BY $q${column.table.tableName.replace("\"", "")}.${column.name}$q")
+                    append("ALTER SEQUENCE $fallbackSequenceName OWNED BY $q${column.table.tableName.replace("\"", "")}.${column.name}$q")
                 }
             )
         }
