@@ -13,7 +13,7 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 
 /**
- * Class representing a wrapped database [connection].
+ * Class representing a wrapped JDBC database [connection].
  */
 class JdbcConnectionImpl(override val connection: Connection) : ExposedConnection<Connection> {
 

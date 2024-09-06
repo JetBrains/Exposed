@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.StatementResult
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
 import org.jetbrains.exposed.sql.transactions.transactionManager
@@ -15,7 +16,6 @@ import java.sql.ResultSet
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
-import kotlin.collections.HashMap
 
 /** Represents a key for a value of type [T]. */
 class Key<T>
@@ -51,7 +51,7 @@ open class UserDataHolder {
 open class Transaction(
     private val transactionImpl: TransactionInterface
 ) : UserDataHolder(), TransactionInterface by transactionImpl {
-    final override val db: Database = transactionImpl.db
+    final override val db: DatabaseApi = transactionImpl.db
 
     /** The current number of statements executed in this transaction. */
     var statementCount: Int = 0
