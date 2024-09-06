@@ -4,6 +4,7 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.DatabaseMetaData
 import java.util.*
@@ -238,7 +239,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     private fun resolveDelegatedDialect(): DatabaseDialect? {
         return delegatedDialect ?: delegatedDialectNameProvider?.dialectName?.lowercase()?.let {
-            val dialect = Database.dialects[it]?.invoke() ?: error("Can't resolve dialect for $it")
+            val dialect = DatabaseApi.dialects[it]?.invoke() ?: error("Can't resolve dialect for $it")
             delegatedDialect = dialect
             dialect
         }

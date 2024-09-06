@@ -1,0 +1,350 @@
+public final class org/jetbrains/exposed/r2dbc/R2dbcDatabase : org/jetbrains/exposed/sql/statements/api/DatabaseApi {
+	public static final field Companion Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
+	public fun getSupportsAlterTableWithAddColumn ()Z
+	public fun getSupportsAlterTableWithDropColumn ()Z
+	public fun getSupportsMultipleResultSets ()Z
+	public fun getUrl ()Ljava/lang/String;
+	public fun getVendor ()Ljava/lang/String;
+	public fun getVersion ()Ljava/math/BigDecimal;
+	public fun metadata (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/r2dbc/R2dbcDatabase$Companion {
+	public final fun connect (Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;
+	public final fun connect (Lio/r2dbc/spi/ConnectionFactoryOptions;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;
+	public final fun connect (Ljava/lang/String;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;
+	public static synthetic fun connect$default (Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase$Companion;Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;
+	public static synthetic fun connect$default (Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase$Companion;Lio/r2dbc/spi/ConnectionFactoryOptions;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;
+	public static synthetic fun connect$default (Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase$Companion;Ljava/lang/String;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;
+	public final fun getDefaultIsolationLevel (Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;)I
+	public final fun getR2dbcDialectName (Ljava/lang/String;)Ljava/lang/String;
+	public final fun registerR2dbcDriver (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcConnectionImpl : org/jetbrains/exposed/sql/statements/api/ExposedConnection {
+	public fun <init> (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcScope;)V
+	public fun close ()V
+	public fun commit ()V
+	public fun executeInBatch (Ljava/util/List;)V
+	public fun getAutoCommit ()Z
+	public fun getCatalog ()Ljava/lang/String;
+	public synthetic fun getConnection ()Ljava/lang/Object;
+	public fun getConnection ()Lorg/reactivestreams/Publisher;
+	public fun getReadOnly ()Z
+	public fun getSchema ()Ljava/lang/String;
+	public fun getTransactionIsolation ()I
+	public fun isClosed ()Z
+	public fun metadata (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public fun prepareStatement (Ljava/lang/String;Z)Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;
+	public fun prepareStatement (Ljava/lang/String;[Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;
+	public fun releaseSavepoint (Lorg/jetbrains/exposed/sql/statements/api/ExposedSavepoint;)V
+	public fun rollback ()V
+	public fun rollback (Lorg/jetbrains/exposed/sql/statements/api/ExposedSavepoint;)V
+	public fun setAutoCommit (Z)V
+	public fun setCatalog (Ljava/lang/String;)V
+	public fun setReadOnly (Z)V
+	public fun setSavepoint (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/api/ExposedSavepoint;
+	public fun setSchema (Ljava/lang/String;)V
+	public fun setTransactionIsolation (I)V
+}
+
+public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcDatabaseMetadataImpl : org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMetadata {
+	public static final field Companion Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcDatabaseMetadataImpl$Companion;
+	public fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/MetadataProvider;Lio/r2dbc/spi/Connection;)V
+	public fun cleanCache ()V
+	public fun columns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public fun getDatabaseDialectName ()Ljava/lang/String;
+	public fun getDatabaseProductVersion ()Ljava/lang/String;
+	public fun getDefaultIsolationLevel ()I
+	public fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
+	public final fun getMetadata ()Lorg/jetbrains/exposed/sql/vendors/MetadataProvider;
+	public fun getSchemaNames ()Ljava/util/List;
+	public fun getSupportsAlterTableWithAddColumn ()Z
+	public fun getSupportsAlterTableWithDropColumn ()Z
+	public fun getSupportsMultipleResultSets ()Z
+	public fun getSupportsSelectForUpdate ()Z
+	public fun getTableNames ()Ljava/util/Map;
+	public fun getUrl ()Ljava/lang/String;
+	public fun getVersion ()Ljava/math/BigDecimal;
+	public fun resetCurrentScheme ()V
+	public fun sequences ()Ljava/util/List;
+	public fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
+	public fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
+}
+
+public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcDatabaseMetadataImpl$Companion {
+}
+
+public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcPreparedStatementImpl : org/jetbrains/exposed/sql/statements/api/PreparedStatementApi {
+	public fun <init> (Lio/r2dbc/spi/Statement;Lio/r2dbc/spi/Connection;Z)V
+	public fun addBatch ()V
+	public fun cancel ()V
+	public fun closeIfPossible ()V
+	public fun executeBatch ()Ljava/util/List;
+	public fun executeMultiple ()Ljava/util/List;
+	public fun executeQuery ()Ljava/sql/ResultSet;
+	public fun executeUpdate ()I
+	public fun fillParameters (Ljava/lang/Iterable;)I
+	public final fun getConnection ()Lio/r2dbc/spi/Connection;
+	public fun getFetchSize ()Ljava/lang/Integer;
+	public fun getResultSet ()Ljava/sql/ResultSet;
+	public final fun getStatement ()Lio/r2dbc/spi/Statement;
+	public fun getTimeout ()Ljava/lang/Integer;
+	public final fun getWasGeneratedKeysRequested ()Z
+	public fun set (ILjava/lang/Object;)V
+	public fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
+	public fun setFetchSize (Ljava/lang/Integer;)V
+	public fun setInputStream (ILjava/io/InputStream;Z)V
+	public fun setNull (ILorg/jetbrains/exposed/sql/IColumnType;)V
+	public fun setTimeout (Ljava/lang/Integer;)V
+}
+
+public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcSavepoint : org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcScope : kotlinx/coroutines/CoroutineScope {
+	public fun <init> (Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public fun getCoroutineContext ()Lkotlin/coroutines/CoroutineContext;
+}
+
+public final class org/jetbrains/exposed/sql/transactions/R2dbcTransactionManager : org/jetbrains/exposed/sql/transactions/TransactionManager {
+	public fun <init> (Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun bindTransactionToThread (Lorg/jetbrains/exposed/sql/Transaction;)V
+	public fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
+	public fun getDefaultIsolationLevel ()I
+	public fun getDefaultMaxAttempts ()I
+	public fun getDefaultMaxRepetitionDelay ()J
+	public fun getDefaultMaxRetryDelay ()J
+	public fun getDefaultMinRepetitionDelay ()J
+	public fun getDefaultMinRetryDelay ()J
+	public fun getDefaultReadOnly ()Z
+	public fun getDefaultRepetitionAttempts ()I
+	public final fun getThreadLocal ()Ljava/lang/ThreadLocal;
+	public fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/Transaction;
+	public fun setDefaultIsolationLevel (I)V
+	public fun setDefaultMaxAttempts (I)V
+	public fun setDefaultMaxRepetitionDelay (J)V
+	public fun setDefaultMaxRetryDelay (J)V
+	public fun setDefaultMinRepetitionDelay (J)V
+	public fun setDefaultMinRetryDelay (J)V
+	public fun setDefaultReadOnly (Z)V
+	public fun setDefaultRepetitionAttempts (I)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/sql/vendors/H2Metadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
+	public fun <init> ()V
+	public fun extraNameCharacters ()Ljava/lang/String;
+	public fun getCatalog ()Ljava/lang/String;
+	public fun getCatalogs ()Ljava/lang/String;
+	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
+	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getReadOnlyMode ()Ljava/lang/String;
+	public fun getSchema ()Ljava/lang/String;
+	public fun getSchemas ()Ljava/lang/String;
+	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getUrl ()Ljava/lang/String;
+	public fun getUsername ()Ljava/lang/String;
+	public fun identifierQuoteString ()Ljava/lang/String;
+	public fun maxColumnNameLength ()I
+	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
+	public fun setReadOnlyMode (Z)Ljava/lang/String;
+	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
+	public fun sqlKeywords ()Ljava/lang/String;
+	public fun storesLowerCaseIdentifiers ()Z
+	public fun storesLowerCaseQuotedIdentifiers ()Z
+	public fun storesUpperCaseIdentifiers ()Z
+	public fun storesUpperCaseQuotedIdentifiers ()Z
+	public fun supportsAlterTableWithAddColumn ()Z
+	public fun supportsMixedCaseIdentifiers ()Z
+	public fun supportsMixedCaseQuotedIdentifiers ()Z
+	public fun supportsMultipleResultSets ()Z
+	public fun supportsSelectForUpdate ()Z
+}
+
+public final class org/jetbrains/exposed/sql/vendors/MariaDBMetadata : org/jetbrains/exposed/sql/vendors/MySQLMetadata {
+	public fun <init> ()V
+	public fun sqlKeywords ()Ljava/lang/String;
+	public fun storesUpperCaseQuotedIdentifiers ()Z
+}
+
+public abstract interface class org/jetbrains/exposed/sql/vendors/MetadataProvider {
+	public abstract fun extraNameCharacters ()Ljava/lang/String;
+	public abstract fun getCatalog ()Ljava/lang/String;
+	public abstract fun getCatalogs ()Ljava/lang/String;
+	public abstract fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
+	public abstract fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getReadOnlyMode ()Ljava/lang/String;
+	public abstract fun getSchema ()Ljava/lang/String;
+	public abstract fun getSchemas ()Ljava/lang/String;
+	public abstract fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getUrl ()Ljava/lang/String;
+	public abstract fun getUsername ()Ljava/lang/String;
+	public abstract fun identifierQuoteString ()Ljava/lang/String;
+	public abstract fun maxColumnNameLength ()I
+	public abstract fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun setReadOnlyMode (Z)Ljava/lang/String;
+	public abstract fun setSchema (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun sqlKeywords ()Ljava/lang/String;
+	public abstract fun storesLowerCaseIdentifiers ()Z
+	public abstract fun storesLowerCaseQuotedIdentifiers ()Z
+	public abstract fun storesUpperCaseIdentifiers ()Z
+	public abstract fun storesUpperCaseQuotedIdentifiers ()Z
+	public abstract fun supportsAlterTableWithAddColumn ()Z
+	public abstract fun supportsMixedCaseIdentifiers ()Z
+	public abstract fun supportsMixedCaseQuotedIdentifiers ()Z
+	public abstract fun supportsMultipleResultSets ()Z
+	public abstract fun supportsSelectForUpdate ()Z
+}
+
+public class org/jetbrains/exposed/sql/vendors/MySQLMetadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
+	public fun <init> ()V
+	public fun extraNameCharacters ()Ljava/lang/String;
+	public fun getCatalog ()Ljava/lang/String;
+	public fun getCatalogs ()Ljava/lang/String;
+	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
+	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getReadOnlyMode ()Ljava/lang/String;
+	public fun getSchema ()Ljava/lang/String;
+	public fun getSchemas ()Ljava/lang/String;
+	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getUrl ()Ljava/lang/String;
+	public fun getUsername ()Ljava/lang/String;
+	public fun identifierQuoteString ()Ljava/lang/String;
+	public fun maxColumnNameLength ()I
+	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
+	public fun setReadOnlyMode (Z)Ljava/lang/String;
+	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
+	public fun sqlKeywords ()Ljava/lang/String;
+	public fun storesLowerCaseIdentifiers ()Z
+	public fun storesLowerCaseQuotedIdentifiers ()Z
+	public fun storesUpperCaseIdentifiers ()Z
+	public fun storesUpperCaseQuotedIdentifiers ()Z
+	public fun supportsAlterTableWithAddColumn ()Z
+	public fun supportsMixedCaseIdentifiers ()Z
+	public fun supportsMixedCaseQuotedIdentifiers ()Z
+	public fun supportsMultipleResultSets ()Z
+	public fun supportsSelectForUpdate ()Z
+}
+
+public final class org/jetbrains/exposed/sql/vendors/OracleMetadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
+	public fun <init> ()V
+	public fun extraNameCharacters ()Ljava/lang/String;
+	public fun getCatalog ()Ljava/lang/String;
+	public fun getCatalogs ()Ljava/lang/String;
+	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
+	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getReadOnlyMode ()Ljava/lang/String;
+	public fun getSchema ()Ljava/lang/String;
+	public fun getSchemas ()Ljava/lang/String;
+	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getUrl ()Ljava/lang/String;
+	public fun getUsername ()Ljava/lang/String;
+	public fun identifierQuoteString ()Ljava/lang/String;
+	public fun maxColumnNameLength ()I
+	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
+	public fun setReadOnlyMode (Z)Ljava/lang/String;
+	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
+	public fun sqlKeywords ()Ljava/lang/String;
+	public fun storesLowerCaseIdentifiers ()Z
+	public fun storesLowerCaseQuotedIdentifiers ()Z
+	public fun storesUpperCaseIdentifiers ()Z
+	public fun storesUpperCaseQuotedIdentifiers ()Z
+	public fun supportsAlterTableWithAddColumn ()Z
+	public fun supportsMixedCaseIdentifiers ()Z
+	public fun supportsMixedCaseQuotedIdentifiers ()Z
+	public fun supportsMultipleResultSets ()Z
+	public fun supportsSelectForUpdate ()Z
+}
+
+public class org/jetbrains/exposed/sql/vendors/PostgreSQLMetadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
+	public fun <init> ()V
+	public fun extraNameCharacters ()Ljava/lang/String;
+	public fun getCatalog ()Ljava/lang/String;
+	public fun getCatalogs ()Ljava/lang/String;
+	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
+	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getReadOnlyMode ()Ljava/lang/String;
+	public fun getSchema ()Ljava/lang/String;
+	public fun getSchemas ()Ljava/lang/String;
+	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getUrl ()Ljava/lang/String;
+	public fun getUsername ()Ljava/lang/String;
+	public fun identifierQuoteString ()Ljava/lang/String;
+	public fun maxColumnNameLength ()I
+	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
+	public fun setReadOnlyMode (Z)Ljava/lang/String;
+	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
+	public fun sqlKeywords ()Ljava/lang/String;
+	public fun storesLowerCaseIdentifiers ()Z
+	public fun storesLowerCaseQuotedIdentifiers ()Z
+	public fun storesUpperCaseIdentifiers ()Z
+	public fun storesUpperCaseQuotedIdentifiers ()Z
+	public fun supportsAlterTableWithAddColumn ()Z
+	public fun supportsMixedCaseIdentifiers ()Z
+	public fun supportsMixedCaseQuotedIdentifiers ()Z
+	public fun supportsMultipleResultSets ()Z
+	public fun supportsSelectForUpdate ()Z
+}
+
+public final class org/jetbrains/exposed/sql/vendors/PostgreSQLNGMetadata : org/jetbrains/exposed/sql/vendors/PostgreSQLMetadata {
+	public fun <init> ()V
+	public fun maxColumnNameLength ()I
+	public fun sqlKeywords ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/sql/vendors/SQLServerMetadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
+	public fun <init> ()V
+	public fun extraNameCharacters ()Ljava/lang/String;
+	public fun getCatalog ()Ljava/lang/String;
+	public fun getCatalogs ()Ljava/lang/String;
+	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
+	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getReadOnlyMode ()Ljava/lang/String;
+	public fun getSchema ()Ljava/lang/String;
+	public fun getSchemas ()Ljava/lang/String;
+	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getUrl ()Ljava/lang/String;
+	public fun getUsername ()Ljava/lang/String;
+	public fun identifierQuoteString ()Ljava/lang/String;
+	public fun maxColumnNameLength ()I
+	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
+	public fun setReadOnlyMode (Z)Ljava/lang/String;
+	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
+	public fun sqlKeywords ()Ljava/lang/String;
+	public fun storesLowerCaseIdentifiers ()Z
+	public fun storesLowerCaseQuotedIdentifiers ()Z
+	public fun storesUpperCaseIdentifiers ()Z
+	public fun storesUpperCaseQuotedIdentifiers ()Z
+	public fun supportsAlterTableWithAddColumn ()Z
+	public fun supportsMixedCaseIdentifiers ()Z
+	public fun supportsMixedCaseQuotedIdentifiers ()Z
+	public fun supportsMultipleResultSets ()Z
+	public fun supportsSelectForUpdate ()Z
+}
+

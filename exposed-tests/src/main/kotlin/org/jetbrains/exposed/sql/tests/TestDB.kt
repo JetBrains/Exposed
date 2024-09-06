@@ -4,6 +4,7 @@ import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
 import java.util.*
@@ -117,7 +118,7 @@ enum class TestDB(
         "org.mariadb.jdbc.Driver"
     );
 
-    var db: Database? = null
+    var db: DatabaseApi? = null
 
     fun connect(configure: DatabaseConfig.Builder.() -> Unit = {}): Database {
         val config = DatabaseConfig {

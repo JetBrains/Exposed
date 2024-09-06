@@ -5,9 +5,9 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.closeStatementsAndConnection
 import org.jetbrains.exposed.sql.transactions.handleSQLException
@@ -66,7 +66,7 @@ internal class TransactionCoroutineElement(
  */
 suspend fun <T> newSuspendedTransaction(
     context: CoroutineContext? = null,
-    db: Database? = null,
+    db: DatabaseApi? = null,
     transactionIsolation: Int? = null,
     statement: suspend Transaction.() -> T
 ): T =
@@ -100,7 +100,7 @@ suspend fun <T> Transaction.withSuspendTransaction(
  */
 suspend fun <T> suspendedTransactionAsync(
     context: CoroutineContext? = null,
-    db: Database? = null,
+    db: DatabaseApi? = null,
     transactionIsolation: Int? = null,
     statement: suspend Transaction.() -> T
 ): Deferred<T> {
@@ -127,13 +127,13 @@ private fun Transaction.closeAsync() {
 private suspend fun <T> withTransactionScope(
     context: CoroutineContext?,
     currentTransaction: Transaction?,
-    db: Database? = null,
+    db: DatabaseApi? = null,
     transactionIsolation: Int?,
     body: suspend TransactionScope.() -> T
 ): T {
     val currentScope = coroutineContext[TransactionScope]
     suspend fun newScope(currentTransaction: Transaction?): T {
-        val currentDatabase: Database? = currentTransaction?.db ?: db ?: TransactionManager.currentDefaultDatabase.get()
+        val currentDatabase: DatabaseApi? = currentTransaction?.db ?: db ?: TransactionManager.currentDefaultDatabase.get()
         val manager = currentDatabase?.transactionManager ?: TransactionManager.manager
 
         val tx = lazy(LazyThreadSafetyMode.NONE) {

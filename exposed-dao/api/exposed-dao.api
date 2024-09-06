@@ -21,7 +21,7 @@ public class org/jetbrains/exposed/dao/Entity {
 	public fun delete ()V
 	public fun flush (Lorg/jetbrains/exposed/dao/EntityBatchUpdate;)Z
 	public static synthetic fun flush$default (Lorg/jetbrains/exposed/dao/Entity;Lorg/jetbrains/exposed/dao/EntityBatchUpdate;ILjava/lang/Object;)Z
-	public final fun getDb ()Lorg/jetbrains/exposed/sql/Database;
+	public final fun getDb ()Lorg/jetbrains/exposed/sql/statements/api/DatabaseApi;
 	public final fun getId ()Lorg/jetbrains/exposed/dao/id/EntityID;
 	public final fun getKlass ()Lorg/jetbrains/exposed/dao/EntityClass;
 	public final fun getReadValues ()Lorg/jetbrains/exposed/sql/ResultRow;

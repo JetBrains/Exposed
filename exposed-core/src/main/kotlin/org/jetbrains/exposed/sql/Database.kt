@@ -1,37 +1,29 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.annotations.TestOnly
+import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.DriverManager
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import javax.sql.ConnectionPoolDataSource
 import javax.sql.DataSource
 
 /**
- * Class representing the underlying database to which connections are made and on which transaction tasks are performed.
+ * Class representing the underlying JDBC database to which connections are made and on which transaction tasks are performed.
  */
 class Database private constructor(
     private val resolvedVendor: String? = null,
-    val config: DatabaseConfig,
-    val connector: () -> ExposedConnection<*>
-) {
-    /** Whether nested transaction blocks are configured to act like top-level transactions. */
-    var useNestedTransactions: Boolean = config.useNestedTransactions
-        @Deprecated("Use DatabaseConfig to define the useNestedTransactions", level = DeprecationLevel.ERROR)
-        @TestOnly
-        set
-
+    config: DatabaseConfig,
+    connector: () -> ExposedConnection<*>
+) : DatabaseApi(config, connector) {
     override fun toString(): String =
         "ExposedDatabase[${hashCode()}]($resolvedVendor${config.explicitDialect?.let { ", dialect=$it" } ?: ""})"
 
-    internal fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T {
+    override fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T {
         val transaction = TransactionManager.currentOrNull()
         return if (transaction == null) {
             val connection = connector()
@@ -45,51 +37,25 @@ class Database private constructor(
         }
     }
 
-    /** The connection URL for the database. */
-    val url: String by lazy { metadata { url } }
+    override val url: String by lazy { metadata { url } }
 
-    /** The name of the database based on the name of the underlying JDBC driver. */
-    val vendor: String by lazy {
+    override val vendor: String by lazy {
         resolvedVendor ?: metadata { databaseDialectName }
     }
 
-    /** The name of the database as a [DatabaseDialect]. */
-    val dialect by lazy {
-        config.explicitDialect ?: dialects[vendor.lowercase()]?.invoke() ?: error("No dialect registered for $name. URL=$url")
-    }
+    override val version by lazy { metadata { version } }
 
-    /** The version number of the database as a [BigDecimal]. */
-    val version by lazy { metadata { version } }
-
-    /** Whether the version number of the database is equal to or greater than the provided [version]. */
-    fun isVersionCovers(version: BigDecimal) = this.version >= version
-
-    /** Whether the database supports ALTER TABLE with an add column clause. */
-    val supportsAlterTableWithAddColumn by lazy(
+    override val supportsAlterTableWithAddColumn by lazy(
         LazyThreadSafetyMode.NONE
     ) { metadata { supportsAlterTableWithAddColumn } }
 
-    /** Whether the database supports ALTER TABLE with a drop column clause. */
-    val supportsAlterTableWithDropColumn by lazy(
+    override val supportsAlterTableWithDropColumn by lazy(
         LazyThreadSafetyMode.NONE
     ) { metadata { supportsAlterTableWithDropColumn } }
 
-    /** Whether the database supports getting multiple result sets from a single execute. */
-    val supportsMultipleResultSets by lazy(LazyThreadSafetyMode.NONE) { metadata { supportsMultipleResultSets } }
+    override val supportsMultipleResultSets by lazy(LazyThreadSafetyMode.NONE) { metadata { supportsMultipleResultSets } }
 
-    /** The database-specific class responsible for parsing and processing identifier tokens in SQL syntax. */
-    val identifierManager by lazy { metadata { identifierManager } }
-
-    /** The default number of results that should be fetched when queries are executed. */
-    var defaultFetchSize: Int? = config.defaultFetchSize
-        private set
-
-    @Deprecated("Use DatabaseConfig to define the defaultFetchSize", level = DeprecationLevel.ERROR)
-    @TestOnly
-    fun defaultFetchSize(size: Int): Database {
-        defaultFetchSize = size
-        return this
-    }
+    override val identifierManager by lazy { metadata { identifierManager } }
 
     /** Whether [Database.connect] was invoked with a [DataSource] argument. */
     internal var connectsViaDataSource = false
@@ -110,8 +76,6 @@ class Database private constructor(
     internal var dataSourceReadOnly: Boolean = false
 
     companion object {
-        internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
-
         private val connectionInstanceImpl: DatabaseConnectionAutoRegistration =
             ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull()
                 ?: error("Can't load implementation for ${DatabaseConnectionAutoRegistration::class.simpleName}")
@@ -273,6 +237,7 @@ class Database private constructor(
          * @param setupConnection Any setup that should be applied to each new connection.
          * @param databaseConfig Configuration parameters for this [Database] instance.
          * @param manager The [TransactionManager] responsible for new transactions that use this [Database] instance.
+         * @throws IllegalStateException If a corresponding database dialect cannot be resolved from the provided [url].
          */
         fun connect(
             url: String,
@@ -319,5 +284,5 @@ class Database private constructor(
 interface DatabaseConnectionAutoRegistration : (Connection) -> ExposedConnection<*>
 
 /** Returns the name of the database obtained from its connection URL. */
-val Database.name: String
+val DatabaseApi.name: String
     get() = url.substringBefore('?').substringAfterLast('/')

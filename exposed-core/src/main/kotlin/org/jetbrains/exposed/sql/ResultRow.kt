@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.withDialect
 import java.sql.ResultSet
@@ -13,7 +14,7 @@ class ResultRow(
     val fieldIndex: Map<Expression<*>, Int>,
     private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
 ) {
-    private val database: Database? = TransactionManager.currentOrNull()?.db
+    private val database: DatabaseApi? = TransactionManager.currentOrNull()?.db
 
     private val lookUpCache = ResultRowCache()
 

@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
@@ -1179,7 +1180,7 @@ abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID
     ImmutableEntityClass<ID, T>(table, entityType, ctor) {
 
     private val cacheLoadingState = Key<Any>()
-    private var _cachedValues: MutableMap<Database, MutableMap<Any, Entity<*>>> = ConcurrentHashMap()
+    private var _cachedValues: MutableMap<DatabaseApi, MutableMap<Any, Entity<*>>> = ConcurrentHashMap()
 
     override fun invalidateEntityInCache(o: Entity<ID>) {
         warmCache()
