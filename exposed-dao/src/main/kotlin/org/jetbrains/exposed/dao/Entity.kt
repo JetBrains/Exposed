@@ -410,7 +410,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         // move write values to read values
         if (_readValues != null) {
             for ((c, v) in writeValues) {
-                val unwrappedValue = if (v != null && c.columnType is ColumnWithTransform<*, *>) {
+                val unwrappedValue = if (c.columnType is ColumnWithTransform<*, *>) {
                     (c.columnType as ColumnWithTransform<Any, Any>).unwrapRecursive(v)
                 } else {
                     v

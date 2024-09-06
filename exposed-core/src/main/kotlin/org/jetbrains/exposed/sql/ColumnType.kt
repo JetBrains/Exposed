@@ -53,6 +53,7 @@ interface IColumnType<T> {
             check(nullable) { "NULL in non-nullable column" }
             "NULL"
         }
+
         else -> nonNullValueToString(value)
     }
 
@@ -70,6 +71,7 @@ interface IColumnType<T> {
             check(nullable) { "NULL in non-nullable column" }
             "NULL"
         }
+
         else -> nonNullValueAsDefaultString(value)
     }
 
@@ -96,7 +98,8 @@ interface IColumnType<T> {
      * [value] can be of any type (including [Expression])
      * */
     @Throws(IllegalArgumentException::class)
-    fun validateValueBeforeUpdate(value: T?) {}
+    fun validateValueBeforeUpdate(value: T?) {
+    }
 
     /**
      * Defines the appearance of parameter markers in prepared SQL statements.
@@ -285,7 +288,10 @@ interface ColumnTransformer<Unwrapped, Wrapped> {
     fun wrap(value: Unwrapped): Wrapped
 }
 
-fun <Unwrapped, Wrapped> columnTransformer(unwrap: (value: Wrapped) -> Unwrapped, wrap: (value: Unwrapped) -> Wrapped): ColumnTransformer<Unwrapped, Wrapped> {
+fun <Unwrapped, Wrapped> columnTransformer(
+    unwrap: (value: Wrapped) -> Unwrapped,
+    wrap: (value: Unwrapped) -> Wrapped
+): ColumnTransformer<Unwrapped, Wrapped> {
     return object : ColumnTransformer<Unwrapped, Wrapped> {
         override fun unwrap(value: Wrapped): Unwrapped = unwrap(value)
         override fun wrap(value: Unwrapped): Wrapped = wrap(value)
@@ -293,44 +299,83 @@ fun <Unwrapped, Wrapped> columnTransformer(unwrap: (value: Wrapped) -> Unwrapped
 }
 
 /**
- * A class that provides the transformation between a source column type and a target type.
+ * A class that handles the transformation between a source column type and a target type.
  *
- * [ColumnWithTransform] is [ColumnType] by itself and can be used for defining columns.
+ * [ColumnWithTransform] extends [ColumnType] and can be used to define columns.
+ *
+ * It does not apply transformations to `null` values. `null` values are passed directly
+ * to the delegated column type. If you need to transform `null` values, use [NullableColumnWithTransform] instead.
  *
  * @param Wrapped The type to which the column value of type [Unwrapped] is transformed
  * @param Unwrapped The type of the column
  * @param delegate The original column's [IColumnType]
+ * @param transformer Instance of [ColumnTransformer] that makes actual data transformation
  */
-open class ColumnWithTransform<Unwrapped : Any, Wrapped : Any>(
-    val delegate: IColumnType<Unwrapped>,
-    private val transformer: ColumnTransformer<Unwrapped, Wrapped>
-) : ColumnType<Wrapped>(), ColumnTransformer<Unwrapped, Wrapped> by transformer {
-    fun unwrapRecursive(value: Wrapped): Any {
+open class ColumnWithTransform<Unwrapped, Wrapped>(
+    val delegate: IColumnType<Unwrapped & Any>,
+    val transformer: ColumnTransformer<Unwrapped, Wrapped>
+) : ColumnType<Wrapped & Any>() {
+
+    fun unwrapRecursive(value: Wrapped?): Any? {
         return if (delegate is ColumnWithTransform<*, *>) {
-            (delegate as ColumnWithTransform<Any, Unwrapped>).unwrapRecursive(unwrap(value))
+            (delegate as ColumnWithTransform<Any, Unwrapped>).unwrapRecursive(transformer.unwrap(value as Wrapped))
         } else {
-            unwrap(value)
+            transformer.unwrap(value!!)
         }
     }
 
-    override fun sqlType() = delegate.sqlType()
+    override fun sqlType(): String = delegate.sqlType()
+
+    override var nullable: Boolean
+        get() = delegate.nullable
+        set(value) {
+            delegate.nullable = value
+        }
 
     override fun valueFromDB(value: Any): Wrapped? {
         return delegate.valueFromDB(value)?.let { transformer.wrap(it) }
     }
 
-    override fun notNullValueToDB(value: Wrapped): Any {
-        return delegate.notNullValueToDB(transformer.unwrap(value))
+    override fun valueToDB(value: Wrapped?): Any? {
+        return delegate.valueToDB(value?.let { transformer.unwrap(it) })
     }
 
-    override fun nonNullValueToString(value: Wrapped): String {
-        return delegate.nonNullValueToString(transformer.unwrap(value))
+    override fun notNullValueToDB(value: Wrapped & Any): Any {
+        return delegate.notNullValueToDB(transformer.unwrap(value)!!)
     }
-
-    override var nullable = delegate.nullable
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         return delegate.setParameter(stmt, index, value)
+    }
+}
+
+/**
+ * A class that handles the transformation between a source column type and a target type,
+ * but also supports transformations involving `null` values.
+ *
+ * [NullableColumnWithTransform] extends [ColumnType] and can be used to define columns
+ * that can transform `null` to `non-null` values and vice versa.
+ *
+ * @param Wrapped The type to which the column value of type [Unwrapped] is transformed
+ * @param Unwrapped The type of the column
+ * @param delegate The original column's [IColumnType]
+ * @param transformer Instance of [ColumnTransformer] that makes actual data transformation
+ */
+open class NullableColumnWithTransform<Unwrapped, Wrapped>(
+    delegate: IColumnType<Unwrapped & Any>,
+    transformer: ColumnTransformer<Unwrapped, Wrapped>
+) : ColumnWithTransform<Unwrapped, Wrapped>(delegate, transformer) {
+    override fun valueFromDB(value: Any): Wrapped? {
+        return transformer.wrap(delegate.valueFromDB(value) as Unwrapped)
+    }
+
+    override fun valueToDB(value: Wrapped?): Any? {
+        // All the values go through the transformer since it can map null values to non-null values
+        return delegate.valueToDB(transformer.unwrap(value as Wrapped))
+    }
+
+    override fun valueToString(value: Wrapped?): String {
+        return delegate.valueToString(transformer.unwrap(value as Wrapped))
     }
 }
 
@@ -501,11 +546,13 @@ class ULongColumnType : ColumnType<ULong>() {
             is Number -> {
                 valueFromDB(value.toString())
             }
+
             is String -> {
                 value.toBigInteger().takeIf {
                     it >= "0".toBigInteger() && it <= ULong.MAX_VALUE.toString().toBigInteger()
                 }?.toString()?.toULong()
             }
+
             else -> error("Unexpected value of type Long: $value of ${value::class.qualifiedName}")
         } ?: error("Negative value but type is ULong: $value")
     }
@@ -518,10 +565,12 @@ class ULongColumnType : ColumnType<ULong>() {
                 value.takeIf { it >= 0uL && it <= Long.MAX_VALUE.toULong() }?.toLong()
                     ?: error("Value out of range: $value")
             }
+
             dialect is PostgreSQLDialect ||
                 (dialect is H2Dialect && dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL) -> {
                 BigInteger(value.toString())
             }
+
             else -> value.toString()
         }
     }
@@ -603,6 +652,7 @@ class DecimalColumnType(
                 value.toBigDecimal()
             }
         }
+
         is Float -> {
             if (value.isNaN()) {
                 error("Unexpected value of type Float: NaN of ${value::class.qualifiedName}")
@@ -610,6 +660,7 @@ class DecimalColumnType(
                 value.toBigDecimal()
             }
         }
+
         is Long -> value.toBigDecimal()
         is Int -> value.toBigDecimal()
         is Short -> value.toLong().toBigDecimal()
@@ -984,6 +1035,7 @@ class BooleanColumnType : ColumnType<Boolean>() {
     override fun notNullValueToDB(value: Boolean): Any = when {
         (currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) ->
             nonNullValueToString(value)
+
         else -> value
     }
 
@@ -1047,6 +1099,7 @@ class EnumerationNameColumnType<T : Enum<T>>(
         is String -> {
             enumConstants[value] ?: error("$value can't be associated with any from enum ${klass.qualifiedName}")
         }
+
         is Enum<*> -> value as T
         else -> error("$value of ${value::class.qualifiedName} is not valid for enum ${klass.qualifiedName}")
     }
@@ -1181,6 +1234,7 @@ class ArrayColumnType<E>(
         when {
             value is Array<*> && isArrayOfByteArrays(value) ->
                 stmt.setArray(index, delegateType, Array(value.size) { value[it] as ByteArray })
+
             value is Array<*> -> stmt.setArray(index, delegateType, value)
             else -> super.setParameter(stmt, index, value)
         }

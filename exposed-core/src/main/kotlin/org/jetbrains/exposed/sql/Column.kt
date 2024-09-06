@@ -79,6 +79,7 @@ class Column<T>(
         val columnDefinition = when {
             isPrimaryConstraintWillBeDefined && isLastColumnInPK && !isH2withCustomPKConstraint ->
                 descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
+
             isH2withCustomPKConstraint -> descriptionDdl(true)
             else -> descriptionDdl(false)
         }
@@ -117,6 +118,7 @@ class Column<T>(
                 val constraintPart = table.primaryKeyConstraint()!!.substringBefore("(")
                 append("$rawType $constraintPart AUTOINCREMENT")
             }
+
             else -> append(columnType.sqlType())
         }
 
@@ -156,6 +158,21 @@ class Column<T>(
         if (!modify && isOneColumnPK() && !isPrimaryConstraintWillBeDefined && !isSQLiteAutoIncColumn) {
             append(" PRIMARY KEY")
         }
+    }
+
+    internal fun <R> copyWithAnotherColumnType(columnType: ColumnType<R & Any>, body: (Column<R>.() -> Unit)? = null): Column<R> {
+        val newColumn: Column<R> = Column(table, name, columnType)
+        newColumn.foreignKey = foreignKey
+        @Suppress("UNCHECKED_CAST")
+        newColumn.dbDefaultValue = dbDefaultValue as Expression<R>?
+        newColumn.isDatabaseGenerated = isDatabaseGenerated
+        newColumn.extraDefinitions = extraDefinitions
+        body?.let { newColumn.it() }
+
+        if (defaultValueFun != null) {
+            require(newColumn.defaultValueFun != null) { "defaultValueFun was lost on cloning the column" }
+        }
+        return newColumn
     }
 
     /**
