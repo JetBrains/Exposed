@@ -196,7 +196,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override fun toString(): String = "H2Dialect[$dialectName, $h2Mode]"
 
-    internal enum class H2MajorVersion {
+    enum class H2MajorVersion {
         One, Two
     }
 
@@ -204,7 +204,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         exactH2Version(TransactionManager.current())
     }
 
-    internal val majorVersion: H2MajorVersion by lazy {
+    val majorVersion: H2MajorVersion by lazy {
         when {
             version.startsWith("1.") -> H2MajorVersion.One
             version.startsWith("2.") -> H2MajorVersion.Two

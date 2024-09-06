@@ -6,9 +6,12 @@ import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveIndices
 import org.jetbrains.exposed.sql.SchemaUtils.checkMappingConsistence
 import org.jetbrains.exposed.sql.SchemaUtils.createStatements
 import org.jetbrains.exposed.sql.SchemaUtils.statementsRequiredToActualizeScheme
+import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -69,6 +72,9 @@ object MigrationUtils {
         val createStatements = logTimeSpent("Preparing create tables statements", withLogs) {
             createStatements(tables = tablesToCreate.toTypedArray())
         }
+        val createSequencesStatements = logTimeSpent("Preparing create sequences statements", withLogs) {
+            checkMissingSequences(tables = tables, withLogs).flatMap { it.createStatement() }
+        }
         val alterStatements = logTimeSpent("Preparing alter table statements", withLogs) {
             addMissingColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs)
         }
@@ -80,7 +86,7 @@ object MigrationUtils {
             ).filter { it !in (createStatements + alterStatements) }
         }
 
-        val allStatements = createStatements + alterStatements + modifyTablesStatements
+        val allStatements = createStatements + createSequencesStatements + alterStatements + modifyTablesStatements
         return allStatements
     }
 
@@ -92,7 +98,8 @@ object MigrationUtils {
         return checkMissingIndices(tables = tables, withLogs).flatMap { it.createStatement() } +
             checkUnmappedIndices(tables = tables, withLogs).flatMap { it.dropStatement() } +
             checkExcessiveForeignKeyConstraints(tables = tables, withLogs).flatMap { it.dropStatement() } +
-            checkExcessiveIndices(tables = tables, withLogs).flatMap { it.dropStatement() }
+            checkExcessiveIndices(tables = tables, withLogs).flatMap { it.dropStatement() } +
+            checkUnmappedSequences(tables = tables, withLogs).flatMap { it.dropStatement() }
     }
 
     /**
@@ -216,6 +223,65 @@ object MigrationUtils {
         return toDrop.toList()
     }
 
+    /**
+     * Checks all [tables] for any that have sequences that are missing in the database but are defined in the code. If
+     * found, this function also logs the SQL statements that can be used to create these sequences.
+     *
+     * @return List of sequences that are missing and can be created.
+     */
+    private fun checkMissingSequences(vararg tables: Table, withLogs: Boolean): List<Sequence> {
+        if (!currentDialect.supportsCreateSequence) {
+            return emptyList()
+        }
+
+        fun Collection<Sequence>.log(mainMessage: String) {
+            if (withLogs && isNotEmpty()) {
+                exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
+            }
+        }
+
+        val existingSequencesNames: Set<String> = currentDialect.sequences().toSet()
+
+        val missingSequences = mutableSetOf<Sequence>()
+
+        val mappedSequences: Set<Sequence> = tables.flatMap { table -> table.sequences }.toSet()
+
+        missingSequences.addAll(mappedSequences.filterNot { it.identifier.inProperCase() in existingSequencesNames })
+
+        missingSequences.log("Sequences missed from database (will be created):")
+        return missingSequences.toList()
+    }
+
+    /**
+     * Checks all [tables] for any that have sequences that exist in the database but are not mapped in the code. If
+     * found, this function also logs the SQL statements that can be used to drop these sequences.
+     *
+     * @return List of sequences that are unmapped and can be dropped.
+     */
+    private fun checkUnmappedSequences(vararg tables: Table, withLogs: Boolean): List<Sequence> {
+        if (!currentDialect.supportsCreateSequence || (currentDialect as? H2Dialect)?.majorVersion == H2Dialect.H2MajorVersion.One) {
+            return emptyList()
+        }
+
+        fun Collection<Sequence>.log(mainMessage: String) {
+            if (withLogs && isNotEmpty()) {
+                exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
+            }
+        }
+
+        val existingSequencesNames: Set<String> = currentDialect.sequences().toSet()
+
+        val unmappedSequences = mutableSetOf<Sequence>()
+
+        val mappedSequencesNames: Set<String> = tables.flatMap { table -> table.sequences.map { it.identifier.inProperCase() } }.toSet()
+
+        unmappedSequences.addAll(existingSequencesNames.subtract(mappedSequencesNames).map { Sequence(it) })
+
+        unmappedSequences.log("Sequences exist in database and not mapped in code:")
+
+        return unmappedSequences.toList()
+    }
+
     private inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
         return if (withLogs) {
             val start = System.currentTimeMillis()
@@ -227,3 +293,6 @@ object MigrationUtils {
         }
     }
 }
+
+internal fun String.inProperCase(): String =
+    TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

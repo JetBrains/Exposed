@@ -326,8 +326,8 @@ object SchemaUtils {
                         columnType.nullable
                     }
                     val incorrectNullability = existingCol.nullable != colNullable
-                    // Exposed doesn't support changing sequences on columns
-                    val incorrectAutoInc = existingCol.autoIncrement != columnType.isAutoInc && col.autoIncColumnType?.autoincSeq == null
+
+                    val incorrectAutoInc = isIncorrectAutoInc(existingCol, col)
 
                     val incorrectDefaults = isIncorrectDefault(dataTypeProvider, existingCol, col)
 
@@ -356,6 +356,15 @@ object SchemaUtils {
         }
 
         return statements
+    }
+
+    private fun isIncorrectAutoInc(columnMetadata: ColumnMetadata, column: Column<*>): Boolean = when {
+        !columnMetadata.autoIncrement && column.columnType.isAutoInc && column.autoIncColumnType?.sequence == null ->
+            true
+        columnMetadata.autoIncrement && column.columnType.isAutoInc && column.autoIncColumnType?.sequence != null ->
+            true
+        columnMetadata.autoIncrement && !column.columnType.isAutoInc -> true
+        else -> false
     }
 
     /**

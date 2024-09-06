@@ -489,6 +489,24 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Returns all foreign key constraints declared on the table. */
     val foreignKeys: List<ForeignKeyConstraint> get() = columns.mapNotNull { it.foreignKey } + _foreignKeys
 
+    /**
+     * Returns all sequences declared on the table, along with any auto-generated sequences that are not explicitly
+     * declared by the user but associated with the table.
+     */
+    val sequences: List<Sequence>
+        get() = columns.filter { it.columnType.isAutoInc }.mapNotNull { column ->
+            column.autoIncColumnType?.sequence
+                ?: column.takeIf { currentDialect is PostgreSQLDialect }?.let {
+                    val fallbackSequenceName = fallbackSequenceName(tableName = tableName, columnName = it.name)
+                    Sequence(
+                        fallbackSequenceName,
+                        startWith = 1,
+                        minValue = 1,
+                        maxValue = Long.MAX_VALUE
+                    )
+                }
+        }
+
     private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
 
     private val generatedCheckPrefix = "chk_${tableName}_unsigned_"
@@ -1572,10 +1590,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private fun <T> Column<T>.cloneWithAutoInc(idSeqName: String?): Column<T> = when (columnType) {
         is AutoIncColumnType -> this
         is ColumnType -> {
-            val q = if (tableName.contains('.')) "\"" else ""
-            val fallbackSeqName = "$q${tableName.replace("\"", "")}_${name}_seq$q"
+            val fallbackSequenceName = fallbackSequenceName(tableName = tableName, columnName = name)
             this.withColumnType(
-                AutoIncColumnType(columnType, idSeqName, fallbackSeqName)
+                AutoIncColumnType(columnType, idSeqName, fallbackSequenceName)
             )
         }
 
@@ -1711,3 +1728,8 @@ internal fun String.isAlreadyQuoted(): Boolean =
     listOf("\"", "'", "`").any { quoteString ->
         startsWith(quoteString) && endsWith(quoteString)
     }
+
+internal fun fallbackSequenceName(tableName: String, columnName: String): String {
+    val q = if (tableName.contains('.')) "\"" else ""
+    return "$q${tableName.replace("\"", "")}_${columnName}_seq$q"
+}

@@ -391,31 +391,55 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
-    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> = listOf(
-        buildString {
-            val tr = TransactionManager.current()
-            append("ALTER TABLE ${tr.identity(column.table)} ")
-            val colName = tr.identity(column)
-            append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
+    override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        val list = mutableListOf(
+            buildString {
+                val tr = TransactionManager.current()
+                append("ALTER TABLE ${tr.identity(column.table)} ")
+                val colName = tr.identity(column)
 
-            if (columnDiff.nullability) {
-                append(", ALTER COLUMN $colName ")
-                if (column.columnType.nullable) {
-                    append("DROP ")
+                if (columnDiff.autoInc && column.autoIncColumnType != null) {
+                    val sequence = column.autoIncColumnType?.sequence
+                    if (sequence != null) {
+                        append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
+                        append(", ALTER COLUMN $colName DROP DEFAULT")
+                    } else {
+                        val fallbackSequenceName = fallbackSequenceName(tableName = column.table.tableName, columnName = column.name)
+                        append("ALTER COLUMN $colName SET DEFAULT nextval('$fallbackSequenceName')")
+                    }
                 } else {
-                    append("SET ")
+                    append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
                 }
-                append("NOT NULL")
-            }
-            if (columnDiff.defaults) {
-                column.dbDefaultValue?.let {
-                    append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
-                } ?: run {
-                    append(",  ALTER COLUMN $colName DROP DEFAULT")
+
+                if (columnDiff.nullability) {
+                    append(", ALTER COLUMN $colName ")
+                    if (column.columnType.nullable) {
+                        append("DROP ")
+                    } else {
+                        append("SET ")
+                    }
+                    append("NOT NULL")
+                }
+                if (columnDiff.defaults) {
+                    column.dbDefaultValue?.let {
+                        append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
+                    } ?: run {
+                        append(", ALTER COLUMN $colName DROP DEFAULT")
+                    }
                 }
             }
+        )
+        if (columnDiff.autoInc && column.autoIncColumnType != null && column.autoIncColumnType?.sequence == null) {
+            list.add(
+                buildString {
+                    val fallbackSequenceName = fallbackSequenceName(tableName = column.table.tableName, columnName = column.name)
+                    val q = if (column.table.tableName.contains('.')) "\"" else ""
+                    append("ALTER SEQUENCE $fallbackSequenceName OWNED BY $q${column.table.tableName.replace("\"", "")}.${column.name}$q")
+                }
+            )
         }
-    )
+        return list
+    }
 
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
