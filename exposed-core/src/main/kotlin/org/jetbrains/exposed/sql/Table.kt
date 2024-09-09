@@ -509,7 +509,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
 
-    private val generatedCheckPrefix = "chk_${tableName}_unsigned_"
+    private val generatedUnsignedCheckPrefix = "chk_${tableName}_unsigned_"
+    private val generatedSignedCheckPrefix = "chk_${tableName}_signed_"
 
     /**
      * Returns the table name in proper case.
@@ -696,11 +697,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * between 0 and [UByte.MAX_VALUE] inclusive.
      */
     fun ubyte(name: String): Column<UByte> = registerColumn(name, UByteColumnType()).apply {
-        check("${generatedCheckPrefix}byte_$name") { it.between(0u, UByte.MAX_VALUE) }
+        check("${generatedUnsignedCheckPrefix}byte_$name") { it.between(0u, UByte.MAX_VALUE) }
     }
 
     /** Creates a numeric column, with the specified [name], for storing 2-byte integers. */
-    fun short(name: String): Column<Short> = registerColumn(name, ShortColumnType())
+    fun short(name: String): Column<Short> = registerColumn(name, ShortColumnType()).apply {
+        check("${generatedSignedCheckPrefix}short_$name") { it.between(Short.MIN_VALUE, Short.MAX_VALUE) }
+    }
 
     /** Creates a numeric column, with the specified [name], for storing 2-byte unsigned integers.
      *
@@ -708,7 +711,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * integer type with a check constraint that ensures storage of only values between 0 and [UShort.MAX_VALUE] inclusive.
      */
     fun ushort(name: String): Column<UShort> = registerColumn(name, UShortColumnType()).apply {
-        check("$generatedCheckPrefix$name") { it.between(0u, UShort.MAX_VALUE) }
+        check("$generatedUnsignedCheckPrefix$name") { it.between(0u, UShort.MAX_VALUE) }
     }
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte integers. */
@@ -721,7 +724,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * between 0 and [UInt.MAX_VALUE] inclusive.
      */
     fun uinteger(name: String): Column<UInt> = registerColumn(name, UIntegerColumnType()).apply {
-        check("$generatedCheckPrefix$name") { it.between(0u, UInt.MAX_VALUE) }
+        check("$generatedUnsignedCheckPrefix$name") { it.between(0u, UInt.MAX_VALUE) }
     }
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
@@ -1641,12 +1644,25 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 }
 
                 if (checkConstraints.isNotEmpty()) {
-                    val filteredChecks = when (currentDialect) {
+                    val filteredChecks = when (val dialect = currentDialect) {
                         is MysqlDialect -> checkConstraints.filterNot { (name, _) ->
-                            name.startsWith(generatedCheckPrefix)
+                            name.startsWith(generatedUnsignedCheckPrefix) ||
+                                name.startsWith(generatedSignedCheckPrefix)
                         }
                         is SQLServerDialect -> checkConstraints.filterNot { (name, _) ->
-                            name.startsWith("${generatedCheckPrefix}byte_")
+                            name.startsWith("${generatedUnsignedCheckPrefix}byte_") ||
+                                name.startsWith(generatedSignedCheckPrefix)
+                        }
+                        is PostgreSQLDialect -> checkConstraints.filterNot { (name, _) ->
+                            name.startsWith(generatedSignedCheckPrefix)
+                        }
+                        is H2Dialect -> {
+                            when (dialect.h2Mode) {
+                                H2Dialect.H2CompatibilityMode.Oracle -> checkConstraints
+                                else -> checkConstraints.filterNot { (name, _) ->
+                                    name.startsWith(generatedSignedCheckPrefix)
+                                }
+                            }
                         }
                         else -> checkConstraints
                     }.ifEmpty { null }
