@@ -23,6 +23,7 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun hexToDb(hexString: String): String = "X'$hexString'"
 }
 
+@Suppress("TooManyFunctions")
 internal object SQLiteFunctionProvider : FunctionProvider() {
     override fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
         append("LENGTH(", expr, ")")
@@ -257,6 +258,13 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
             transaction.throwUnsupportedException("SQLite doesn't support LIMIT in DELETE clause.")
         }
         return super.delete(ignore, table, where, limit, transaction)
+    }
+
+    override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String {
+        if (size == null && offset > 0) {
+            TransactionManager.current().throwUnsupportedException("SQLite doesn't support OFFSET clause without LIMIT")
+        }
+        return super.queryLimitAndOffset(size, offset, alreadyOrdered)
     }
 
     override fun explain(

@@ -206,9 +206,9 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                     }
                 }
 
-                limit?.let {
+                if (limit != null || offset > 0) {
                     append(" ")
-                    append(currentDialect.functionProvider.queryLimit(it, offset, orderByExpressions.isNotEmpty()))
+                    append(currentDialect.functionProvider.queryLimitAndOffset(limit, offset, orderByExpressions.isNotEmpty()))
                 }
             }
 

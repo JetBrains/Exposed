@@ -316,6 +316,15 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     override fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
         append("SUBSTRING_INDEX(", expr, ", ' ', -1)")
     }
+
+    override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String {
+        if (size == null && offset > 0) {
+            TransactionManager.current().throwUnsupportedException(
+                "${currentDialect.name} doesn't support OFFSET clause without LIMIT"
+            )
+        }
+        return super.queryLimitAndOffset(size, offset, alreadyOrdered)
+    }
 }
 
 /**

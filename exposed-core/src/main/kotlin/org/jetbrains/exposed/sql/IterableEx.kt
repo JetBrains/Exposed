@@ -4,8 +4,18 @@ import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 
 /** Represents the iterable elements of a database result. */
 interface SizedIterable<out T> : Iterable<T> {
-    /** Returns a new [SizedIterable] containing only [n] elements, starting from the specified [offset]. */
-    fun limit(n: Int, offset: Long = 0): SizedIterable<T>
+    @Deprecated(
+        "This function will be removed in future releases.",
+        ReplaceWith("limit(n).offset(offset)"),
+        DeprecationLevel.WARNING
+    )
+    fun limit(n: Int, offset: Long): SizedIterable<T>
+
+    /** Returns a new [SizedIterable] containing only [count] elements. */
+    fun limit(count: Int): SizedIterable<T> = limit(count, 0)
+
+    /** Returns a new [SizedIterable] containing only elements starting from the specified [start]. */
+    fun offset(start: Long): SizedIterable<T> = limit(Int.MAX_VALUE, start)
 
     /** Returns the number of elements stored. */
     fun count(): Long
@@ -40,7 +50,16 @@ fun <T> emptySized(): SizedIterable<T> = EmptySizedIterable()
 class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
     override fun count(): Long = 0
 
+    @Deprecated(
+        "This function will be removed in future releases.",
+        ReplaceWith("limit(n).offset(offset)"),
+        DeprecationLevel.WARNING
+    )
     override fun limit(n: Int, offset: Long): SizedIterable<T> = this
+
+    override fun limit(count: Int): SizedIterable<T> = this
+
+    override fun offset(start: Long): SizedIterable<T> = this
 
     override fun empty(): Boolean = true
 
@@ -60,12 +79,24 @@ class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
 /** Represents a [SizedIterable] that defers to the specified [delegate] collection. */
 class SizedCollection<out T>(val delegate: Collection<T>) : SizedIterable<T> {
     constructor(vararg values: T) : this(values.toList())
+
+    @Deprecated(
+        "This function will be removed in future releases.",
+        ReplaceWith("limit(n).offset(offset)"),
+        DeprecationLevel.WARNING
+    )
     override fun limit(n: Int, offset: Long): SizedIterable<T> {
         return if (offset >= Int.MAX_VALUE) {
             EmptySizedIterable()
         } else {
             SizedCollection(delegate.drop(offset.toInt()).take(n))
         }
+    }
+    override fun limit(count: Int): SizedIterable<T> = SizedCollection(delegate.take(count))
+    override fun offset(start: Long): SizedIterable<T> = if (start >= Int.MAX_VALUE) {
+        EmptySizedIterable()
+    } else {
+        SizedCollection(delegate.drop(start.toInt()))
     }
 
     override operator fun iterator() = delegate.iterator()
@@ -92,7 +123,14 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
             return _wrapper!!
         }
 
-    override fun limit(n: Int, offset: Long): SizedIterable<T> = LazySizedCollection(delegate.limit(n, offset))
+    @Deprecated(
+        "This function will be removed in future releases.",
+        ReplaceWith("limit(n).offset(offset)"),
+        DeprecationLevel.WARNING
+    )
+    override fun limit(n: Int, offset: Long): SizedIterable<T> = LazySizedCollection(delegate.limit(n).offset(offset))
+    override fun limit(count: Int): SizedIterable<T> = LazySizedCollection(delegate.limit(count))
+    override fun offset(start: Long): SizedIterable<T> = LazySizedCollection(delegate.offset(start))
     override operator fun iterator() = wrapper.iterator()
     override fun count(): Long = _wrapper?.size?.toLong() ?: countInternal()
     override fun empty() = _wrapper?.isEmpty() ?: emptyInternal()
@@ -154,7 +192,15 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
     val source = this
     return object : LazySizedIterable<R> {
         override var loadedResult: List<R>? = null
-        override fun limit(n: Int, offset: Long): SizedIterable<R> = source.copy().limit(n, offset).mapLazy(f)
+
+        @Deprecated(
+            "This function will be removed in future releases.",
+            ReplaceWith("limit(n).offset(offset)"),
+            DeprecationLevel.WARNING
+        )
+        override fun limit(n: Int, offset: Long): SizedIterable<R> = source.copy().limit(n).offset(offset).mapLazy(f)
+        override fun limit(count: Int): SizedIterable<R> = source.copy().limit(count).mapLazy(f)
+        override fun offset(start: Long): SizedIterable<R> = source.copy().offset(start).mapLazy(f)
         override fun forUpdate(option: ForUpdateOption): SizedIterable<R> = source.copy().forUpdate(option).mapLazy(f)
         override fun notForUpdate(): SizedIterable<R> = source.copy().notForUpdate().mapLazy(f)
         override fun count(): Long = source.count()

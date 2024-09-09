@@ -335,8 +335,14 @@ internal object OracleFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String {
-        return (if (offset > 0) " OFFSET $offset ROWS" else "") + " FETCH FIRST $size ROWS ONLY"
+    override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String = buildString {
+        if (offset > 0) {
+            append("OFFSET $offset ROWS")
+        }
+        size?.let {
+            if (offset > 0) append(" ")
+            append("FETCH FIRST $size ROWS ONLY")
+        }
     }
 
     override fun explain(
