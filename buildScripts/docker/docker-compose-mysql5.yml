@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
     mysql5:
         platform: linux/x86_64

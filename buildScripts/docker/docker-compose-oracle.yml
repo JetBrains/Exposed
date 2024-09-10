@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
     oracle:
         container_name: oracleDB
