@@ -348,6 +348,15 @@ class ByteColumnType : ColumnType<Byte>() {
         is String -> value.toByte()
         else -> error("Unexpected value of type Byte: $value of ${value::class.qualifiedName}")
     }
+
+    override fun valueToDB(value: Byte?): Any? {
+        return if (currentDialect is SQLServerDialect) {
+            // Workaround for SQL Server JDBC driver mysterious error for in-range values if there's a CHECK constraint
+            value?.toShort()
+        } else {
+            super.valueToDB(value)
+        }
+    }
 }
 
 /**

@@ -330,6 +330,8 @@ public final class org/jetbrains/exposed/sql/ByteColumnType : org/jetbrains/expo
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Byte;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueToDB (Ljava/lang/Byte;)Ljava/lang/Object;
+	public synthetic fun valueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/sql/Case {

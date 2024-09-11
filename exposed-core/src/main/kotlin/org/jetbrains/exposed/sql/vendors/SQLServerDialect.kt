@@ -11,8 +11,14 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.*
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
+    override fun byteType(): String = if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
+        "TINYINT"
+    } else {
+        "SMALLINT"
+    }
+
     override fun ubyteType(): String {
-        return if ((currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
+        return if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
             "SMALLINT"
         } else {
             "TINYINT"
@@ -32,7 +38,7 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun uuidToDB(value: UUID): Any = value.toString()
     override fun dateTimeType(): String = "DATETIME2"
     override fun timestampWithTimeZoneType(): String =
-        if ((currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
+        if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
             "TIMESTAMP(9) WITH TIME ZONE"
         } else {
             "DATETIMEOFFSET"
