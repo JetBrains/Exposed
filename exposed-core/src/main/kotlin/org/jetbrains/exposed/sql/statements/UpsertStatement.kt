@@ -64,8 +64,15 @@ open class UpsertStatement<Key : Any>(
         val whereArgs = QueryBuilder(true).apply {
             where?.toQueryBuilder(this)
         }.args
+        val updateArgs = updateValues.takeIf { it.isNotEmpty() }?.map {
+            Pair(
+                it.key.columnType as IColumnType<*>,
+                it.value
+            )
+        } ?: emptyList()
+
         return super.arguments().map {
-            it + whereArgs
+            it + updateArgs + whereArgs
         }
     }
 
@@ -129,6 +136,7 @@ sealed interface UpsertBuilder {
                 H2Dialect.H2CompatibilityMode.MariaDB, H2Dialect.H2CompatibilityMode.MySQL -> MysqlFunctionProvider.INSTANCE
                 else -> H2FunctionProvider
             }
+
             else -> dialect.functionProvider
         }
     }

@@ -289,8 +289,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
             }
 
             +" DO UPDATE SET "
-            onUpdate.appendTo { (columnToUpdate, updateExpression) ->
-                append("${transaction.identity(columnToUpdate)}=$updateExpression")
+            onUpdate.appendTo(this) { (columnToUpdate, updateExpression) ->
+                append("${transaction.identity(columnToUpdate)}=")
+                registerArgument(columnToUpdate, updateExpression)
             }
 
             where?.let {
