@@ -16,6 +16,12 @@
 * In Oracle and H2 Oracle, the `short` column now maps to data type `NUMBER(5)` instead of `SMALLINT` because `SMALLINT` is stored as `NUMBER(38)` in the database and
   takes up unnecessary storage.
   In Oracle, H2 Oracle, and SQLite, using the `short` column in a table now also creates a check constraint to ensure that no out-of-range values are inserted.
+* In Oracle, the `byte` column now maps to data type `NUMBER(3)` instead of `SMALLINT` because `SMALLINT` is stored as `NUMBER(38)` in the database and
+  takes up unnecessary storage.
+  In SQL Server, the `byte` column now maps to data type `SMALLINT` instead of `TINYINT` because `TINYINT`
+  [allows values from 0 to 255](https://learn.microsoft.com/en-us/sql/t-sql/data-types/int-bigint-smallint-and-tinyint-transact-sql?view=sql-server-ver16#:~:text=2%20bytes-,tinyint,-0%20to%20255).
+  In SQL Server, SQLite, Oracle, PostgreSQL, and H2 PostgreSQL, using the `byte` column in a table now also creates a check constraint to ensure that no out-of-range
+  values are inserted.
 
 ## 0.54.0
 

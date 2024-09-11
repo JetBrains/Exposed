@@ -688,7 +688,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     // Numeric columns
 
     /** Creates a numeric column, with the specified [name], for storing 1-byte integers. */
-    fun byte(name: String): Column<Byte> = registerColumn(name, ByteColumnType())
+    fun byte(name: String): Column<Byte> = registerColumn(name, ByteColumnType()).apply {
+        check("${generatedSignedCheckPrefix}byte_$name") { it.between(Byte.MIN_VALUE, Byte.MAX_VALUE) }
+    }
 
     /** Creates a numeric column, with the specified [name], for storing 1-byte unsigned integers.
      *
@@ -1651,14 +1653,19 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                         }
                         is SQLServerDialect -> checkConstraints.filterNot { (name, _) ->
                             name.startsWith("${generatedUnsignedCheckPrefix}byte_") ||
-                                name.startsWith(generatedSignedCheckPrefix)
+                                name.startsWith("${generatedSignedCheckPrefix}short")
                         }
                         is PostgreSQLDialect -> checkConstraints.filterNot { (name, _) ->
-                            name.startsWith(generatedSignedCheckPrefix)
+                            name.startsWith("${generatedSignedCheckPrefix}short")
                         }
                         is H2Dialect -> {
                             when (dialect.h2Mode) {
-                                H2Dialect.H2CompatibilityMode.Oracle -> checkConstraints
+                                H2Dialect.H2CompatibilityMode.Oracle -> checkConstraints.filterNot { (name, _) ->
+                                    name.startsWith("${generatedSignedCheckPrefix}byte")
+                                }
+                                H2Dialect.H2CompatibilityMode.PostgreSQL -> checkConstraints.filterNot { (name, _) ->
+                                    name.startsWith("${generatedSignedCheckPrefix}short")
+                                }
                                 else -> checkConstraints.filterNot { (name, _) ->
                                     name.startsWith(generatedSignedCheckPrefix)
                                 }

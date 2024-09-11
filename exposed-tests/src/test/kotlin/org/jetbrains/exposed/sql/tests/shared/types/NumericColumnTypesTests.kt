@@ -39,4 +39,39 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testByteAcceptsOnlyAllowedRange() {
+        val testTable = object : Table("test_table") {
+            val byte = byte("byte")
+        }
+
+        withTables(testTable) { testDb ->
+            val columnName = testTable.byte.nameInDatabaseCase()
+            val ddlEnding = when (testDb) {
+                in TestDB.ALL_POSTGRES_LIKE, TestDB.ORACLE, TestDB.SQLITE, TestDB.SQLSERVER ->
+                    "CHECK ($columnName BETWEEN ${Byte.MIN_VALUE} and ${Byte.MAX_VALUE}))"
+                else -> "($columnName ${testTable.byte.columnType} NOT NULL)"
+            }
+            assertTrue(testTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+
+            testTable.insert { it[byte] = Byte.MIN_VALUE }
+            testTable.insert { it[byte] = Byte.MAX_VALUE }
+            assertEquals(2, testTable.select(testTable.byte).count())
+
+            val tableName = testTable.nameInDatabaseCase()
+            assertFailAndRollback(
+                message = "CHECK constraint violation or out-of-range error for MySQL, MariaDB, and H2 (except for H2_V2_PSQL)"
+            ) {
+                val outOfRangeValue = Byte.MIN_VALUE - 1
+                exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
+            }
+            assertFailAndRollback(
+                message = "CHECK constraint violation or out-of-range error for MySQL, MariaDB, and H2 (except for H2_V2_PSQL)"
+            ) {
+                val outOfRangeValue = Byte.MAX_VALUE + 1
+                exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
+            }
+        }
+    }
 }

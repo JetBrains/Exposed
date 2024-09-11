@@ -13,7 +13,11 @@ import java.util.*
 
 @Suppress("TooManyFunctions")
 internal object OracleDataTypeProvider : DataTypeProvider() {
-    override fun byteType(): String = "SMALLINT"
+    override fun byteType(): String = if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+        "TINYINT"
+    } else {
+        "NUMBER(3)"
+    }
     override fun ubyteType(): String = "NUMBER(4)"
     override fun shortType(): String = "NUMBER(5)"
     override fun ushortType(): String = "NUMBER(6)"
