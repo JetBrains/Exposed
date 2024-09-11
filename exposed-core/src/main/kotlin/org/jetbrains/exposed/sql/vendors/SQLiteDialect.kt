@@ -235,7 +235,8 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
         +" DO UPDATE SET "
         onUpdate.appendTo { (columnToUpdate, updateExpression) ->
-            append("${transaction.identity(columnToUpdate)}=$updateExpression")
+            append("${transaction.identity(columnToUpdate)}=")
+            registerArgument(columnToUpdate, updateExpression)
         }
 
         where?.let {

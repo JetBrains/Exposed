@@ -235,6 +235,33 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testArrayColumnUpsert() {
+        withTestTableAndExcludeSettings {
+            val numbers = listOf(1, 2, 3)
+            val strings = listOf("A", "B")
+            val id1 = ArrayTestTable.insertAndGetId {
+                it[ArrayTestTable.numbers] = numbers
+                it[ArrayTestTable.strings] = strings
+            }
+
+            assertContentEquals(numbers, ArrayTestTable.selectAll().single()[ArrayTestTable.numbers])
+            assertContentEquals(strings, ArrayTestTable.selectAll().single()[ArrayTestTable.strings])
+
+            val updatedStrings = listOf("C", "D", "E")
+            ArrayTestTable.upsert(
+                onUpdate = { it[ArrayTestTable.strings] = updatedStrings }
+            ) {
+                it[id] = id1
+                it[ArrayTestTable.numbers] = numbers
+                it[ArrayTestTable.strings] = strings
+            }
+
+            assertContentEquals(numbers, ArrayTestTable.selectAll().single()[ArrayTestTable.numbers])
+            assertContentEquals(updatedStrings, ArrayTestTable.selectAll().single()[ArrayTestTable.strings])
+        }
+    }
+
     class ArrayTestDao(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<ArrayTestDao>(ArrayTestTable)
 

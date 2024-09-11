@@ -721,8 +721,11 @@ abstract class FunctionProvider {
 
             +" WHEN MATCHED THEN UPDATE SET "
             onUpdate.appendTo { (columnToUpdate, updateExpression) ->
-                val aliasExpression = updateExpression.toString().replace(tableIdentifier, "T")
-                append("T.${transaction.identity(columnToUpdate)}=$aliasExpression")
+                append("T.${transaction.identity(columnToUpdate)}=")
+                when (updateExpression) {
+                    is QueryParameter<*>, !is Expression<*> -> registerArgument(columnToUpdate.columnType, updateExpression)
+                    else -> append(updateExpression.toString().replace(tableIdentifier, "T"))
+                }
             }
 
             +" WHEN NOT MATCHED THEN INSERT "

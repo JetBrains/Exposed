@@ -3,12 +3,7 @@ package org.jetbrains.exposed.sql.statements
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.DatabaseDialect
-import org.jetbrains.exposed.sql.vendors.FunctionProvider
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
-import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.*
 
 /**
  * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
@@ -61,11 +56,9 @@ open class UpsertStatement<Key : Any>(
     }
 
     override fun arguments(): List<Iterable<Pair<IColumnType<*>, Any?>>> {
-        val whereArgs = QueryBuilder(true).apply {
-            where?.toQueryBuilder(this)
-        }.args
+        val additionalArgs = getAdditionalArgs(updateValues, where)
         return super.arguments().map {
-            it + whereArgs
+            it + additionalArgs
         }
     }
 
@@ -153,4 +146,24 @@ internal fun UpsertBuilder.getUpdateExpressions(
         updateColumns.filter { it !in keys }.ifEmpty { updateColumns }
     } ?: updateColumns
     return updateColumnsWithoutKeys.zip(updateColumnsWithoutKeys.map { insertValue(it) })
+}
+
+/** Returns the arguments used in the UPDATE and WHERE clauses for this UPSERT statement. */
+internal fun UpsertBuilder.getAdditionalArgs(
+    updateValues: Map<Column<*>, Any?>,
+    where: Op<Boolean>?
+): List<Pair<IColumnType<*>, Any?>> {
+    val noAliasExpressionRequired = when (val dialect = currentDialect) {
+        is SQLServerDialect, is OracleDialect -> false
+        is H2Dialect -> dialect.h2Mode in listOf(H2Dialect.H2CompatibilityMode.MySQL, H2Dialect.H2CompatibilityMode.MariaDB)
+        else -> true
+    }
+    return QueryBuilder(true).apply {
+        updateValues.forEach { (column, value) ->
+            if (noAliasExpressionRequired || value is QueryParameter<*> || value !is Expression<*>) {
+                registerArgument(column, value)
+            }
+        }
+        where?.toQueryBuilder(this)
+    }.args
 }

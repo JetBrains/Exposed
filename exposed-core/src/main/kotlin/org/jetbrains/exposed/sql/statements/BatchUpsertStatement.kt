@@ -60,11 +60,9 @@ open class BatchUpsertStatement(
     }
 
     override fun arguments(): List<Iterable<Pair<IColumnType<*>, Any?>>> {
-        val whereArgs = QueryBuilder(true).apply {
-            where?.toQueryBuilder(this)
-        }.args
+        val additionalArgs = getAdditionalArgs(updateValues, where)
         return super.arguments().map {
-            it + whereArgs
+            it + additionalArgs
         }
     }
 

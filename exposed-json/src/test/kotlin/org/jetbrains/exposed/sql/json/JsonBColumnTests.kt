@@ -338,4 +338,22 @@ class JsonBColumnTests : DatabaseTestsBase() {
             assertEquals(newData2, newResult?.get(tester.jsonBColumn))
         }
     }
+
+    private class KeyExistsOp(left: Expression<*>, right: Expression<*>) : ComparisonOp(left, right, "??")
+
+    private infix fun ExpressionWithColumnType<*>.keyExists(other: String) = KeyExistsOp(this, stringParam(other))
+
+    @Test
+    fun testEscapedPlaceholderInCustomOp() {
+        withJsonBTable(exclude = TestDB.ALL - TestDB.ALL_POSTGRES) { tester, _, data1, _ ->
+            // the logger is left in to test StatementContext.expandArgs()
+            addLogger(StdOutSqlLogger)
+
+            val topLevelKeyResult = tester.selectAll().where { tester.jsonBColumn keyExists "logins" }.single()
+            assertEquals(data1, topLevelKeyResult[tester.jsonBColumn])
+
+            val nestedKeyResult = tester.selectAll().where { tester.jsonBColumn keyExists "name" }.toList()
+            kotlin.test.assertTrue { nestedKeyResult.isEmpty() }
+        }
+    }
 }
