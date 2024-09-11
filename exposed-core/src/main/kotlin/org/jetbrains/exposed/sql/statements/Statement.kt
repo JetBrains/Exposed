@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.sql.ResultSet
 import java.sql.SQLException
-import java.util.*
+import java.util.Stack
 
 internal object DefaultValueMarker {
     override fun toString(): String = "DEFAULT"
@@ -127,12 +127,13 @@ fun StatementContext.expandArgs(transaction: Transaction): String {
         val quoteStack = Stack<Char>()
         var lastPos = 0
 
-        for (i in sql.indices) {
+        var i = -1
+        while (++i < sql.length) {
             val char = sql[i]
             when {
                 char == '?' && quoteStack.isEmpty() -> {
                     if (sql.getOrNull(i + 1) == '?') {
-                        i.inc()
+                        i++
                         continue
                     }
                     append(sql.substring(lastPos, i))
