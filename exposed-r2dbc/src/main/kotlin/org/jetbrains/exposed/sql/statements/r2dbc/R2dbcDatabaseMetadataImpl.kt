@@ -55,13 +55,13 @@ class R2dbcDatabaseMetadataImpl(
 
     override val defaultIsolationLevel: Int by lazyMetadata { defaultIsolationLevel }
 
-    override val supportsAlterTableWithAddColumn: Boolean by lazyMetadata { supportsAlterTableWithAddColumn() }
+    override val supportsAlterTableWithAddColumn: Boolean by lazyMetadata { propertyProvider.supportsAlterTableWithAddColumn }
 
     override val supportsAlterTableWithDropColumn: Boolean by lazyMetadata { true }
 
-    override val supportsMultipleResultSets: Boolean by lazyMetadata { supportsMultipleResultSets() }
+    override val supportsMultipleResultSets: Boolean by lazyMetadata { propertyProvider.supportsMultipleResultSets }
 
-    override val supportsSelectForUpdate: Boolean by lazyMetadata { supportsSelectForUpdate() }
+    override val supportsSelectForUpdate: Boolean by lazyMetadata { propertyProvider.supportsSelectForUpdate }
 
     override val identifierManager: IdentifierManagerApi by lazyMetadata {
         // db URL as KEY causes issues with multi-tenancy!
