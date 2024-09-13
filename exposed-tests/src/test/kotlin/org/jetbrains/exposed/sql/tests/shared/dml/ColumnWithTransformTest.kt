@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import java.util.*
@@ -134,7 +135,7 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
     }
 
-    object TransformTable : IntIdTable() {
+    object TransformTable : IntIdTable("transform-table") {
         val simple = integer("simple").transform(DataHolderTransformer())
         val chained = text("chained")
             .transform(wrap = { it.toInt() }, unwrap = { it.toString() })
@@ -279,6 +280,42 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
             val entry = tester.insert {}
             assertEquals(1, entry[tester.value].value)
             assertEquals(1, tester.selectAll().first()[tester.value].value)
+        }
+    }
+
+    @Test
+    fun testTransformBatchInsert() {
+        val tester = object : IntIdTable("transform-test-batch-insert") {
+            val v1 = integer("v1")
+                .transform(wrap = { TransformDataHolder(it) }, unwrap = { it.value })
+        }
+
+        withTables(tester) {
+            tester.batchInsert(listOf(1, 2, 3)) {
+                this[tester.v1] = TransformDataHolder(it)
+            }
+
+            assertEqualLists(listOf(1, 2, 3), tester.selectAll().orderBy(tester.v1).map { it[tester.v1].value })
+        }
+    }
+
+    @Test
+    fun testUpdate() {
+        val tester = object : IntIdTable("transform-test-update") {
+            val v1 = integer("v1")
+                .transform(wrap = { TransformDataHolder(it) }, unwrap = { it.value })
+        }
+
+        withTables(tester) {
+            val id = tester.insertAndGetId {
+                it[v1] = TransformDataHolder(1)
+            }
+
+            tester.update(where = { tester.id eq id }) {
+                it[tester.v1] = TransformDataHolder(2)
+            }
+
+            assertEquals(2, tester.selectAll().first()[tester.v1].value)
         }
     }
 }
