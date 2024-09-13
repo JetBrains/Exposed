@@ -1,25 +1,34 @@
 package org.jetbrains.exposed.sql.vendors
 
 import io.r2dbc.spi.IsolationLevel
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
 
-open class MySQLMetadata : MetadataProvider {
-    override fun identifierQuoteString(): String = "`"
+@Suppress("MagicNumber")
+internal open class MySQLPropertyProvider : PropertyProvider() {
+    override val identifierQuoteString: String
+        get() = "`"
 
-    override fun storesUpperCaseIdentifiers(): Boolean = false
+    override val storesUpperCaseQuotedIdentifiers: Boolean
+        get() = true
 
-    override fun storesUpperCaseQuotedIdentifiers(): Boolean = true
+    override val supportsMixedCaseIdentifiers: Boolean
+        get() = true
 
-    override fun storesLowerCaseIdentifiers(): Boolean = false
+    override val extraNameCharacters: String
+        get() = "#@"
 
-    override fun storesLowerCaseQuotedIdentifiers(): Boolean = false
+    override val defaultTransactionIsolation: IsolationLevel
+        get() = if (isMySQL6Plus) {
+            IsolationLevel.REPEATABLE_READ
+        } else {
+            IsolationLevel.READ_COMMITTED
+        }
 
-    override fun supportsMixedCaseIdentifiers(): Boolean = true
+    override val maxColumnNameLength: Int
+        get() = 64
 
-    override fun supportsMixedCaseQuotedIdentifiers(): Boolean = true
-
-    // SELECT WORD FROM INFORMATION_SCHEMA.KEYWORDS WHERE RESERVED - returns different???
     override fun sqlKeywords(): String {
         return "ACCESSIBLE,ADD,ANALYZE,ASC,BEFORE,CASCADE,CHANGE,CONTINUE,DATABASE,DATABASES,DAY_HOUR,DAY_MICROSECOND,DAY_MINUTE," +
             "DAY_SECOND,DELAYED,DESC,DISTINCTROW,DIV,DUAL,ELSEIF,EMPTY,ENCLOSED,ESCAPED,EXIT,EXPLAIN,FIRST_VALUE,FLOAT4,FLOAT8,FORCE," +
@@ -32,54 +41,62 @@ open class MySQLMetadata : MetadataProvider {
             "STRAIGHT_JOIN,TERMINATED,TINYBLOB,TINYINT,TINYTEXT,UNDO,UNLOCK,UNSIGNED,USAGE,USE,UTC_DATE,UTC_TIME,UTC_TIMESTAMP,VARBINARY," +
             "VARCHARACTER,VIRTUAL,WHILE,WRITE,XOR,YEAR_MONTH,ZEROFILL"
     }
+}
 
-    override fun extraNameCharacters(): String = "#@"
-
-    override fun maxColumnNameLength(): Int = 64
-
-    override fun supportsAlterTableWithAddColumn(): Boolean = true
-
-    override fun supportsMultipleResultSets(): Boolean = true
-
-    override fun supportsSelectForUpdate(): Boolean = true
-
-    // will maintenance across/between versions be required too?
-    override fun getDefaultTransactionIsolation(): IsolationLevel = if (TransactionManager.current().db.isVersionCovers(BigDecimal("6.0"))) {
-        IsolationLevel.REPEATABLE_READ
-    } else {
-        IsolationLevel.READ_COMMITTED
+@Suppress("MagicNumber")
+internal open class MySQLTypeProvider : SqlTypeProvider() {
+    override val referenceOptions: Map<ReferenceOption, Int> by lazy {
+        val options = mutableMapOf(
+            ReferenceOption.CASCADE to 0,
+            ReferenceOption.SET_NULL to 2
+        )
+        if (isMySQL6Plus) {
+            options[ReferenceOption.SET_DEFAULT] = 1
+            options[ReferenceOption.RESTRICT] = 1
+            options[ReferenceOption.NO_ACTION] = 1
+        } else {
+            options[ReferenceOption.SET_DEFAULT] = 3
+            options[ReferenceOption.RESTRICT] = 3
+            options[ReferenceOption.NO_ACTION] = 3
+        }
+        options
     }
 
+    override val bitType: DataType
+        get() = super.bitType.copy(precision = if (isMySQL6Plus) "1" else "0")
+
+    override val blobType: DataType
+        get() = super.blobType.copy(code = -4)
+
+    override val floatType: DataType
+        get() = super.floatType.copy(code = 7)
+
+    // problematic: used for both byte and bool types but returns different ids...
+    override val tinyIntType: DataType
+        get() = super.tinyIntType.copy(code = -7, precision = if (isMySQL6Plus) "1" else "0")
+
+    override val additionalTypes: Set<DataType>
+        get() = setOf(
+            DataType("BIGINT UNSIGNED", -5, numericPrecision),
+            DataType("DATETIME", 93, "26"),
+            DataType("INT", 4, numericPrecision),
+            DataType("INT UNSIGNED", 4, numericPrecision),
+            DataType("JSON", -1, "1073741824"),
+            DataType("LONGTEXT", -1, maxPrecision),
+            DataType("MEDIUMTEXT", -1, characterPrecision),
+            DataType("SMALLINT UNSIGNED", 5, numericPrecision),
+            DataType("TEXT", -1, characterPrecision),
+            DataType("TINYINT UNSIGNED", -6, numericPrecision),
+        )
+}
+
+open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), MySQLTypeProvider()) {
     override fun getUrl(): String {
         TODO("Not yet implemented")
     }
 
     override fun getUsername(): String {
         TODO("Not yet implemented")
-    }
-
-    override fun getCatalog(): String {
-        return "SELECT DATABASE()"
-    }
-
-    override fun setCatalog(value: String): String {
-        return "USE $value"
-    }
-
-    override fun getSchema(): String {
-        return "SELECT DATABASE()"
-    }
-
-    override fun setSchema(value: String): String {
-        return "USE $value"
-    }
-
-    override fun getCatalogs(): String {
-        return "SELECT SCHEMA_NAME TABLE_CAT FROM INFORMATION_SCHEMA.SCHEMATA ORDER BY SCHEMA_NAME"
-    }
-
-    override fun getSchemas(): String {
-        return "SELECT SCHEMA_NAME TABLE_SCHEM FROM INFORMATION_SCHEMA.SCHEMATA ORDER BY SCHEMA_NAME"
     }
 
     override fun getReadOnlyMode(): String {
@@ -90,68 +107,116 @@ open class MySQLMetadata : MetadataProvider {
         TODO("Not yet implemented")
     }
 
-    // how does sequences translate over?
-    override fun getTables(catalog: String?, schemaPattern: String?, tableNamePattern: String?, type: String): String {
+    override fun getCatalog(): String {
+        return "SELECT DATABASE() TABLE_CAT"
+    }
+
+    override fun setCatalog(value: String): String {
+        return "USE $value"
+    }
+
+    override fun getSchema(): String {
+        return "SELECT NULL TABLE_SCHEM"
+    }
+
+    override fun setSchema(value: String): String {
+        return "USE $value"
+    }
+
+    override fun getCatalogs(): String {
         return buildString {
-            append("SELECT TABLE_SCHEMA as TABLE_CAT, null as TABLE_SCHEM, TABLE_NAME ")
-            append("FROM INFORMATION_SCHEMA.TABLES WHERE TRUE ")
+            append("SELECT DISTINCT SCHEMA_NAME TABLE_CAT ")
+            append("FROM INFORMATION_SCHEMA.SCHEMATA ")
+            append("ORDER BY TABLE_CAT")
+        }
+    }
+
+    // what should be done to simulate retrieving an empty result set without pinging database?
+    // this should never be used with MySQL/MariaDB
+    override fun getSchemas(): String {
+        return "SELECT 1 TABLE_SCHEM FROM DUAL WHERE FALSE"
+    }
+
+    override fun getTables(catalog: String?, schemaPattern: String?, tableNamePattern: String): String {
+        return buildString {
+            append("SELECT TABLE_SCHEMA TABLE_CAT, NULL TABLE_SCHEM, TABLE_NAME ")
+            append("FROM INFORMATION_SCHEMA.TABLES ")
+            append("WHERE TABLE_NAME LIKE '$tableNamePattern' ")
             if (!catalog.isNullOrEmpty()) {
                 append("AND TABLE_SCHEMA LIKE '$catalog' ")
             }
-            if (!tableNamePattern.isNullOrEmpty()) {
-                append("AND TABLE_NAME LIKE '$tableNamePattern' ")
-            }
             append("AND TABLE_TYPE = 'BASE TABLE' ")
-            append("ORDER BY TABLE_SCHEM, TABLE_NAME")
+            append("ORDER BY TABLE_CAT, TABLE_NAME")
         }
+    }
+
+    // what should be done to simulate retrieving an empty result set without pinging database?
+    // this should never be used with MySQL/MariaDB
+    override fun getSequences(): String {
+        return "SELECT 1 SEQUENCE_NAME FROM DUAL WHERE FALSE"
     }
 
     override fun getColumns(catalog: String, schemaPattern: String, tableNamePattern: String): String {
         return buildString {
-            append("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, NUMERIC_SCALE COLUMN_SIZE,")
-            append("NUMERIC_PRECISION DECIMAL_DIGITS, IS_NULLABLE NULLABLE, COLUMN_DEFAULT COLUMN_DEF, ")
-            append("CASE WHEN EXTRA = 'auto_increment' THEN CAST(YES AS VARCHAR) ELSE CAST(NO AS VARCHAR) END IS_AUTOINCREMENT ")
+            append("SELECT TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, COLUMN_DEFAULT COLUMN_DEF, ")
+            append("CASE WHEN EXTRA = 'auto_increment' THEN 'YES' ELSE 'NO' END IS_AUTOINCREMENT, ")
+            append("NUMERIC_SCALE DECIMAL_DIGITS, ")
+            append("CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END NULLABLE, ")
+            typeProvider.appendDataPrecisions("DATA_TYPE", "COLUMN_SIZE", this)
+            append(", ")
+            typeProvider.appendDataTypes("DATA_TYPE", "DATA_TYPE", this)
+            append(" ")
             append("FROM INFORMATION_SCHEMA.COLUMNS ")
-            append("WHERE TABLE_CATALOG LIKE '$catalog' AND TABLE_SCHEMA LIKE '$schemaPattern' ")
-            append("AND TABLE_NAME LIKE '$tableNamePattern' AND COLUMN_NAME LIKE '%') ")
-            append("ORDER BY TABLE_NAME")
+            append("WHERE TABLE_SCHEMA LIKE '$schemaPattern' ")
+            append("AND TABLE_NAME LIKE '$tableNamePattern' AND COLUMN_NAME LIKE '%' ")
+            append("ORDER BY TABLE_NAME, ORDINAL_POSITION")
         }
     }
 
     override fun getPrimaryKeys(catalog: String, schema: String, table: String): String {
         return buildString {
-            append("SELECT COLUMN_NAME, COALESCE(INDEX_NAME, COLUMN_NAME) PK_NAME ")
+            append("SELECT COLUMN_NAME, INDEX_NAME PK_NAME ")
             append("FROM INFORMATION_SCHEMA.STATISTICS ")
-            append("WHERE TABLE_CATALOG LIKE $catalog AND TABLE_SCHEMA LIKE $schema AND TABLE_NAME = $table ")
-            append("AND INDEX_NAME = 'PRIMARY' ORDER BY COLUMN_NAME")
+            append("WHERE TABLE_SCHEMA LIKE '$schema' AND TABLE_NAME LIKE '$table' ")
+            append("AND INDEX_NAME = 'PRIMARY' ")
+            append("ORDER BY COLUMN_NAME")
         }
-        //        return buildString {
-//            append("SELECT c.COLUMN_NAME, tc.CONSTRAINT_NAME PK_NAME ")
-//            append("FROM INFORMATION_SCHEMA.COLUMNS c INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc ")
-//            append("ON c.TABLE_SCHEMA = tc.CONSTRAINT_SCHEMA AND c.TABLE_NAME = tc.TABLE_NAME ")
-//            append("WHERE c.TABLE_SCHEMA = '$schema' AND tc.CONSTRAINT_SCHEMA = '$schema' ")
-//            append("AND tc.TABLE_SCHEMA = '$schema' AND tc.TABLE_NAME = '$table' ")
-//            append("AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY' ORDER BY COLUMN_NAME")
-//        }
     }
 
     override fun getIndexInfo(catalog: String, schema: String, table: String): String {
         return buildString {
-            append("SELECT NON_UNIQUE, INDEX_NAME, COLUMN_NAME, FILTER_CONDITION ")
+            append("SELECT INDEX_NAME, COLUMN_NAME, NON_UNIQUE, ")
+            if (isMySQL6Plus) {
+                append("EXPRESSION FILTER_CONDITION ")
+            } else {
+                append("NULL FILTER_CONDITION ")
+            }
             append("FROM INFORMATION_SCHEMA.STATISTICS ")
-            append("WHERE TABLE_CATALOG = '$catalog' AND TABLE_SCHEMA = '$schema' AND TABLE_NAME = '$table' ")
-            append("AND (NON_UNIQUE=1) ORDER BY NON_UNIQUE, INDEX_NAME")
+            append("WHERE TABLE_SCHEMA = '$schema' AND TABLE_NAME = '$table' ")
+            append("ORDER BY NON_UNIQUE, INDEX_NAME")
         }
     }
 
     override fun getImportedKeys(catalog: String, schema: String, table: String): String {
         return buildString {
-            append("SELECT rc.CONSTRAINT_NAME,= ku.TABLE_NAME,= ku.COLUMN_NAME, ku.REFERENCED_TABLE_NAME, ")
-            append("ku.REFERENCED_COLUMN_NAME, rc.UPDATE_RULE, rc.DELETE_RULE ")
-            append("FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku ")
-            append("ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME ")
-            append("WHERE ku.TABLE_SCHEMA = '$schema' AND ku.CONSTRAINT_SCHEMA = '$schema' ")
-            append("AND rc.CONSTRAINT_SCHEMA = '$schema' AND ku.TABLE_NAME = '$table' ORDER BY ku.ORDINAL_POSITION")
+            append("SELECT tc.TABLE_NAME FKTABLE_NAME, tc.CONSTRAINT_NAME FK_NAME, ")
+            typeProvider.appendReferenceOptions("rc.UPDATE_RULE", "UPDATE_RULE", this)
+            append(", ")
+            typeProvider.appendReferenceOptions("rc.DELETE_RULE", "DELETE_RULE", this)
+            append(", ")
+            append("kcu.ORDINAL_POSITION, kcu.COLUMN_NAME FKCOLUMN_NAME, kcu.REFERENCED_TABLE_SCHEMA PKTABLE_SCHEM, ")
+            append("kcu.REFERENCED_TABLE_NAME PKTABLE_NAME, kcu.REFERENCED_COLUMN_NAME PKCOLUMN_NAME ")
+            append("FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc ")
+            append("JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc ")
+            append("ON tc.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME ")
+            append("JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu ")
+            append("ON tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME ")
+            append("WHERE tc.TABLE_SCHEMA LIKE '$schema' AND tc.TABLE_NAME LIKE '$table' ")
+            append("AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY' ")
+            append("ORDER BY PKTABLE_SCHEM, PKTABLE_NAME, FK_NAME, ORDINAL_POSITION")
         }
     }
 }
+
+private val isMySQL6Plus: Boolean
+    get() = TransactionManager.current().db.isVersionCovers(BigDecimal("6.0"))

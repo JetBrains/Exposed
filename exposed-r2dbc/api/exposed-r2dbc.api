@@ -141,210 +141,225 @@ public final class org/jetbrains/exposed/sql/transactions/R2dbcTransactionManage
 
 public final class org/jetbrains/exposed/sql/vendors/H2Metadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
 	public fun <init> ()V
-	public fun extraNameCharacters ()Ljava/lang/String;
 	public fun getCatalog ()Ljava/lang/String;
 	public fun getCatalogs ()Ljava/lang/String;
 	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
 	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getReadOnlyMode ()Ljava/lang/String;
 	public fun getSchema ()Ljava/lang/String;
 	public fun getSchemas ()Ljava/lang/String;
-	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getSequences ()Ljava/lang/String;
+	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getUrl ()Ljava/lang/String;
 	public fun getUsername ()Ljava/lang/String;
-	public fun identifierQuoteString ()Ljava/lang/String;
-	public fun maxColumnNameLength ()I
 	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
 	public fun setReadOnlyMode (Z)Ljava/lang/String;
 	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-	public fun sqlKeywords ()Ljava/lang/String;
-	public fun storesLowerCaseIdentifiers ()Z
-	public fun storesLowerCaseQuotedIdentifiers ()Z
-	public fun storesUpperCaseIdentifiers ()Z
-	public fun storesUpperCaseQuotedIdentifiers ()Z
-	public fun supportsAlterTableWithAddColumn ()Z
-	public fun supportsMixedCaseIdentifiers ()Z
-	public fun supportsMixedCaseQuotedIdentifiers ()Z
-	public fun supportsMultipleResultSets ()Z
-	public fun supportsSelectForUpdate ()Z
 }
 
 public final class org/jetbrains/exposed/sql/vendors/MariaDBMetadata : org/jetbrains/exposed/sql/vendors/MySQLMetadata {
 	public fun <init> ()V
-	public fun sqlKeywords ()Ljava/lang/String;
-	public fun storesUpperCaseQuotedIdentifiers ()Z
+	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getPropertyProvider ()Lorg/jetbrains/exposed/sql/vendors/PropertyProvider;
+	public fun getTypeProvider ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider;
 }
 
-public abstract interface class org/jetbrains/exposed/sql/vendors/MetadataProvider {
-	public abstract fun extraNameCharacters ()Ljava/lang/String;
-	public abstract fun getCatalog ()Ljava/lang/String;
-	public abstract fun getCatalogs ()Ljava/lang/String;
-	public abstract fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
-	public abstract fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun getReadOnlyMode ()Ljava/lang/String;
-	public abstract fun getSchema ()Ljava/lang/String;
-	public abstract fun getSchemas ()Ljava/lang/String;
-	public abstract fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun getUrl ()Ljava/lang/String;
-	public abstract fun getUsername ()Ljava/lang/String;
-	public abstract fun identifierQuoteString ()Ljava/lang/String;
-	public abstract fun maxColumnNameLength ()I
-	public abstract fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun setReadOnlyMode (Z)Ljava/lang/String;
-	public abstract fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun sqlKeywords ()Ljava/lang/String;
-	public abstract fun storesLowerCaseIdentifiers ()Z
-	public abstract fun storesLowerCaseQuotedIdentifiers ()Z
-	public abstract fun storesUpperCaseIdentifiers ()Z
-	public abstract fun storesUpperCaseQuotedIdentifiers ()Z
-	public abstract fun supportsAlterTableWithAddColumn ()Z
-	public abstract fun supportsMixedCaseIdentifiers ()Z
-	public abstract fun supportsMixedCaseQuotedIdentifiers ()Z
-	public abstract fun supportsMultipleResultSets ()Z
-	public abstract fun supportsSelectForUpdate ()Z
+public abstract class org/jetbrains/exposed/sql/vendors/MetadataProvider : org/jetbrains/exposed/sql/vendors/QueryProvider {
+	public fun <init> (Lorg/jetbrains/exposed/sql/vendors/PropertyProvider;Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider;)V
+	public fun getPropertyProvider ()Lorg/jetbrains/exposed/sql/vendors/PropertyProvider;
+	public fun getTypeProvider ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider;
 }
 
 public class org/jetbrains/exposed/sql/vendors/MySQLMetadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
 	public fun <init> ()V
-	public fun extraNameCharacters ()Ljava/lang/String;
 	public fun getCatalog ()Ljava/lang/String;
 	public fun getCatalogs ()Ljava/lang/String;
 	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
 	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getReadOnlyMode ()Ljava/lang/String;
 	public fun getSchema ()Ljava/lang/String;
 	public fun getSchemas ()Ljava/lang/String;
-	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getSequences ()Ljava/lang/String;
+	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getUrl ()Ljava/lang/String;
 	public fun getUsername ()Ljava/lang/String;
-	public fun identifierQuoteString ()Ljava/lang/String;
-	public fun maxColumnNameLength ()I
 	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
 	public fun setReadOnlyMode (Z)Ljava/lang/String;
 	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-	public fun sqlKeywords ()Ljava/lang/String;
-	public fun storesLowerCaseIdentifiers ()Z
-	public fun storesLowerCaseQuotedIdentifiers ()Z
-	public fun storesUpperCaseIdentifiers ()Z
-	public fun storesUpperCaseQuotedIdentifiers ()Z
-	public fun supportsAlterTableWithAddColumn ()Z
-	public fun supportsMixedCaseIdentifiers ()Z
-	public fun supportsMixedCaseQuotedIdentifiers ()Z
-	public fun supportsMultipleResultSets ()Z
-	public fun supportsSelectForUpdate ()Z
 }
 
 public final class org/jetbrains/exposed/sql/vendors/OracleMetadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
 	public fun <init> ()V
-	public fun extraNameCharacters ()Ljava/lang/String;
 	public fun getCatalog ()Ljava/lang/String;
 	public fun getCatalogs ()Ljava/lang/String;
 	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
 	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getReadOnlyMode ()Ljava/lang/String;
 	public fun getSchema ()Ljava/lang/String;
 	public fun getSchemas ()Ljava/lang/String;
-	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getSequences ()Ljava/lang/String;
+	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getUrl ()Ljava/lang/String;
 	public fun getUsername ()Ljava/lang/String;
-	public fun identifierQuoteString ()Ljava/lang/String;
-	public fun maxColumnNameLength ()I
 	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
 	public fun setReadOnlyMode (Z)Ljava/lang/String;
 	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-	public fun sqlKeywords ()Ljava/lang/String;
-	public fun storesLowerCaseIdentifiers ()Z
-	public fun storesLowerCaseQuotedIdentifiers ()Z
-	public fun storesUpperCaseIdentifiers ()Z
-	public fun storesUpperCaseQuotedIdentifiers ()Z
-	public fun supportsAlterTableWithAddColumn ()Z
-	public fun supportsMixedCaseIdentifiers ()Z
-	public fun supportsMixedCaseQuotedIdentifiers ()Z
-	public fun supportsMultipleResultSets ()Z
-	public fun supportsSelectForUpdate ()Z
 }
 
 public class org/jetbrains/exposed/sql/vendors/PostgreSQLMetadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
 	public fun <init> ()V
-	public fun extraNameCharacters ()Ljava/lang/String;
 	public fun getCatalog ()Ljava/lang/String;
 	public fun getCatalogs ()Ljava/lang/String;
 	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
 	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getReadOnlyMode ()Ljava/lang/String;
 	public fun getSchema ()Ljava/lang/String;
 	public fun getSchemas ()Ljava/lang/String;
-	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getSequences ()Ljava/lang/String;
+	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getUrl ()Ljava/lang/String;
 	public fun getUsername ()Ljava/lang/String;
-	public fun identifierQuoteString ()Ljava/lang/String;
-	public fun maxColumnNameLength ()I
 	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
 	public fun setReadOnlyMode (Z)Ljava/lang/String;
 	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-	public fun sqlKeywords ()Ljava/lang/String;
-	public fun storesLowerCaseIdentifiers ()Z
-	public fun storesLowerCaseQuotedIdentifiers ()Z
-	public fun storesUpperCaseIdentifiers ()Z
-	public fun storesUpperCaseQuotedIdentifiers ()Z
-	public fun supportsAlterTableWithAddColumn ()Z
-	public fun supportsMixedCaseIdentifiers ()Z
-	public fun supportsMixedCaseQuotedIdentifiers ()Z
-	public fun supportsMultipleResultSets ()Z
-	public fun supportsSelectForUpdate ()Z
 }
 
 public final class org/jetbrains/exposed/sql/vendors/PostgreSQLNGMetadata : org/jetbrains/exposed/sql/vendors/PostgreSQLMetadata {
 	public fun <init> ()V
-	public fun maxColumnNameLength ()I
-	public fun sqlKeywords ()Ljava/lang/String;
+	public fun getCatalog ()Ljava/lang/String;
+	public fun getCatalogs ()Ljava/lang/String;
+	public fun getPropertyProvider ()Lorg/jetbrains/exposed/sql/vendors/PropertyProvider;
+	public fun getTypeProvider ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider;
+	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public abstract class org/jetbrains/exposed/sql/vendors/PropertyProvider {
+	public fun <init> ()V
+	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
+	public fun getExtraNameCharacters ()Ljava/lang/String;
+	public fun getIdentifierQuoteString ()Ljava/lang/String;
+	public fun getMaxColumnNameLength ()I
+	public fun getStoresLowerCaseIdentifiers ()Z
+	public fun getStoresLowerCaseQuotedIdentifiers ()Z
+	public fun getStoresUpperCaseIdentifiers ()Z
+	public fun getStoresUpperCaseQuotedIdentifiers ()Z
+	public fun getSupportsAlterTableWithAddColumn ()Z
+	public fun getSupportsMixedCaseIdentifiers ()Z
+	public fun getSupportsMixedCaseQuotedIdentifiers ()Z
+	public fun getSupportsMultipleResultSets ()Z
+	public fun getSupportsSelectForUpdate ()Z
+	public abstract fun sqlKeywords ()Ljava/lang/String;
+}
+
+public abstract interface class org/jetbrains/exposed/sql/vendors/QueryProvider {
+	public abstract fun getCatalog ()Ljava/lang/String;
+	public abstract fun getCatalogs ()Ljava/lang/String;
+	public abstract fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getPropertyProvider ()Lorg/jetbrains/exposed/sql/vendors/PropertyProvider;
+	public abstract fun getReadOnlyMode ()Ljava/lang/String;
+	public abstract fun getSchema ()Ljava/lang/String;
+	public abstract fun getSchemas ()Ljava/lang/String;
+	public abstract fun getSequences ()Ljava/lang/String;
+	public abstract fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getTypeProvider ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider;
+	public abstract fun getUrl ()Ljava/lang/String;
+	public abstract fun getUsername ()Ljava/lang/String;
+	public abstract fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun setReadOnlyMode (Z)Ljava/lang/String;
+	public abstract fun setSchema (Ljava/lang/String;)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/SQLServerMetadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
 	public fun <init> ()V
-	public fun extraNameCharacters ()Ljava/lang/String;
 	public fun getCatalog ()Ljava/lang/String;
 	public fun getCatalogs ()Ljava/lang/String;
 	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
 	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getReadOnlyMode ()Ljava/lang/String;
 	public fun getSchema ()Ljava/lang/String;
 	public fun getSchemas ()Ljava/lang/String;
-	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getSequences ()Ljava/lang/String;
+	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public fun getUrl ()Ljava/lang/String;
 	public fun getUsername ()Ljava/lang/String;
-	public fun identifierQuoteString ()Ljava/lang/String;
-	public fun maxColumnNameLength ()I
 	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
 	public fun setReadOnlyMode (Z)Ljava/lang/String;
 	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-	public fun sqlKeywords ()Ljava/lang/String;
-	public fun storesLowerCaseIdentifiers ()Z
-	public fun storesLowerCaseQuotedIdentifiers ()Z
-	public fun storesUpperCaseIdentifiers ()Z
-	public fun storesUpperCaseQuotedIdentifiers ()Z
-	public fun supportsAlterTableWithAddColumn ()Z
-	public fun supportsMixedCaseIdentifiers ()Z
-	public fun supportsMixedCaseQuotedIdentifiers ()Z
-	public fun supportsMultipleResultSets ()Z
-	public fun supportsSelectForUpdate ()Z
+}
+
+public abstract class org/jetbrains/exposed/sql/vendors/SqlTypeProvider {
+	public fun <init> ()V
+	public fun getAdditionalTypes ()Ljava/util/Set;
+	public fun getArrayType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getBigIntType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getBinaryType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getBitType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getBlobType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getBooleanType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getCharType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getCharacterPrecision ()Ljava/lang/String;
+	public fun getClobType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getDataLinkType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getDateType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getDecimalType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getDistinctType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getDoubleType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getFloatType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getIntegerType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getJavaObjectType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getLongNVarcharType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getLongVarbinaryType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getLongVarcharType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getMaxPrecision ()Ljava/lang/String;
+	public fun getNCharType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getNClobType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getNVarcharType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getNullType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getNumericPrecision ()Ljava/lang/String;
+	public fun getNumericType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getOtherType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getRealType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getRefCursorType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getRefType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public abstract fun getReferenceOptions ()Ljava/util/Map;
+	public fun getRowIdType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getSmallIntType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getSqlXmlType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getStructType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getTimeType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getTimeWithTimezoneType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getTimestampType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getTimestampWithTimezoneType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getTinyIntType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getVarbinaryType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun getVarcharType ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+}
+
+public final class org/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType {
+	public fun <init> (Ljava/lang/String;ILjava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;ILjava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;Ljava/lang/String;ILjava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider$DataType;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()I
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPrecision ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
