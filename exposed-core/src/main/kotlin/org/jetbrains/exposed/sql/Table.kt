@@ -1374,12 +1374,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /**
-     * `nullTransform` is a special transformation that allows converting a non-nullable column
-     * into a nullable one.
+     * Applies a special transformation that allows a non-nullable database column
+     * to accept and/or return values as `null` on the client side.
      *
-     * This transformation doesn't affect DDL generation, but it enables reflecting non-null values
-     * from the database as `null` in Kotlin (e.g., converting an empty string from a non-nullable text column,
-     * empty lists, negative IDs, etc., to `null`).
+     * This transformation does not alter the column's definition in the database,
+     * which will still be `NON NULL`. It enables reflecting non-null values
+     * from the database as `null` in Kotlin (e.g., converting an empty string from a
+     * non-nullable text column, empty lists, negative IDs, etc., to `null`).
      *
      * @param Wrapped The type into which the value of the underlying column will be transformed.
      * @param Unwrapped The type of the original column.
@@ -1394,12 +1395,13 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     ): Column<Wrapped?> = nullTransform(columnTransformer(unwrap, wrap))
 
     /**
-     * `nullTransform` is a special transformation that allows converting a non-nullable column
-     * into a nullable one.
+     * Applies a special transformation that allows a non-nullable database column
+     * to accept and/or return values as `null` on the client side.
      *
-     * This transformation doesn't affect DDL generation, but it enables reflecting non-null values
-     * from the database as `null` in Kotlin (e.g., converting an empty string from a non-nullable text column,
-     * empty lists, negative IDs, etc., to `null`).
+     * This transformation does not alter the column's definition in the database,
+     * which will still be `NON NULL`. It enables reflecting non-null values
+     * from the database as `null` in Kotlin (e.g., converting an empty string from a
+     * non-nullable text column, empty lists, negative IDs, etc., to `null`).
      *
      * @param Wrapped The type into which the value of the underlying column will be transformed.
      * @param Unwrapped The type of the original column.
