@@ -70,7 +70,9 @@ open class InsertStatement<Key : Any>(
             if (firstAutoIncColumn != null || returnedColumns.isNotEmpty()) {
                 while (rs?.next() == true) {
                     try {
-                        val returnedValues = returnedColumns.associateTo(mutableMapOf()) { it.first to rs.getObject(it.second) }
+                        val returnedValues = returnedColumns.associateTo(mutableMapOf()) {
+                            it.first to it.first.columnType.readObject(rs, it.second)
+                        }
                         if (returnedValues.isEmpty() && firstAutoIncColumn != null) {
                             returnedValues[firstAutoIncColumn] = rs.getObject(1)
                         }
