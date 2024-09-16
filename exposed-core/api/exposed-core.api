@@ -3178,6 +3178,7 @@ public class org/jetbrains/exposed/sql/statements/InsertStatement : org/jetbrain
 
 public class org/jetbrains/exposed/sql/statements/MergeSelectStatement : org/jetbrains/exposed/sql/statements/MergeStatement {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/QueryAlias;Lorg/jetbrains/exposed/sql/Op;)V
+	public fun arguments ()Ljava/lang/Iterable;
 	public final fun getOn ()Lorg/jetbrains/exposed/sql/Op;
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 }
