@@ -19,7 +19,7 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
         withTables(testTable) { testDb ->
             val columnName = testTable.short.nameInDatabaseCase()
             val ddlEnding = when (testDb) {
-                TestDB.SQLITE, in TestDB.ALL_ORACLE_LIKE -> "CHECK ($columnName BETWEEN ${Short.MIN_VALUE} and ${Short.MAX_VALUE}))"
+                TestDB.SQLITE, TestDB.ORACLE -> "CHECK ($columnName BETWEEN ${Short.MIN_VALUE} and ${Short.MAX_VALUE}))"
                 else -> "($columnName ${testTable.short.columnType} NOT NULL)"
             }
             assertTrue(testTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
