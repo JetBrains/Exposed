@@ -709,8 +709,7 @@ class QueryParameter<T>(
         queryBuilder {
             compositeValue?.let {
                 it.values.entries.appendTo { (column, value) ->
-                    // wrap each composite key value as a QueryParameter and register it
-                    column.wrap(value).toQueryBuilder(this)
+                    registerArgument(column.columnType, value)
                 }
             } ?: registerArgument(sqlType, value)
         }
