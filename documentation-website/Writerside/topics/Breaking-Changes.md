@@ -24,6 +24,7 @@
   values are inserted.
 * The transformation of a nullable column (`Column<Unwrapped?>.transform()`) requires handling null values.
   This enables conversions from `null` to a non-nullable value, and vice versa.
+* In H2 the definition of json column with default value changed from `myColumn JSON DEFAULT '{"key": "value"}'` to `myColumn JSON DEFAULT JSON '{"key": "value"}'`
 
 ## 0.54.0
 

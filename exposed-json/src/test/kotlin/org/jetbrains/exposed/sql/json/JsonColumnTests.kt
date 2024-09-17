@@ -425,4 +425,26 @@ class JsonColumnTests : DatabaseTestsBase() {
             assertContentEquals(data, tester.selectAll().single()[tester.numbers])
         }
     }
+
+    @Test
+    fun testJsonAsDefault() {
+        val defaultUser = User("name", "team")
+        val tester = object : IntIdTable("testJsonAsDefault") {
+            val value = json<User>("value", Json.Default)
+                .default(defaultUser)
+        }
+
+        val testerDatabaseGenerated = object : IntIdTable("testJsonAsDefault") {
+            val value = json<User>("value", Json.Default)
+                .databaseGenerated()
+        }
+
+        // MySQL versions prior to 8.0.13 do not accept default values on JSON columns
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), tester) {
+            testerDatabaseGenerated.insert { }
+
+            val value = testerDatabaseGenerated.selectAll().single()[tester.value]
+            assertEquals(defaultUser, value)
+        }
+    }
 }
