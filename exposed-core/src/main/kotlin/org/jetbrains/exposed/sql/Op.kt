@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
@@ -702,7 +703,18 @@ class QueryParameter<T>(
     /** Returns the column type of this expression. */
     val sqlType: IColumnType<T & Any>
 ) : Expression<T>() {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder { registerArgument(sqlType, value) }
+    internal val compositeValue: CompositeID? = (value as? EntityID<*>)?.value as? CompositeID
+
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder {
+            compositeValue?.let {
+                it.values.entries.appendTo { (column, value) ->
+                    // wrap each composite key value as a QueryParameter and register it
+                    column.wrap(value).toQueryBuilder(this)
+                }
+            } ?: registerArgument(sqlType, value)
+        }
+    }
 }
 
 /** Returns the specified [value] as a query parameter with the same type as [column]. */

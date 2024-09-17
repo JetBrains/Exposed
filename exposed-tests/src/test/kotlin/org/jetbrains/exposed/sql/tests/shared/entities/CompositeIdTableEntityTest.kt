@@ -433,6 +433,35 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun testIdParamWithCompositeValue() {
+        withTables(Towns) {
+            val townAValue = CompositeID {
+                it[Towns.zipCode] = "1A2 3B4"
+                it[Towns.name] = "Town A"
+            }
+            val townAId = Towns.insertAndGetId {
+                it[id] = townAValue
+                it[population] = 4
+            }
+
+            val query1 = Towns.selectAll().where { Towns.id eq idParam(townAId, Towns.id) }
+            val whereClause1 = query1.prepareSQL(this, prepared = true).substringAfter("WHERE ")
+            assertEquals("(${fullIdentity(Towns.zipCode)} = ?) AND (${fullIdentity(Towns.name)} = ?)", whereClause1)
+            assertEquals(4, query1.single()[Towns.population])
+
+            val query2 = Towns.selectAll().where { idParam(townAId, Towns.id).isNotNull() }
+            val whereClause2 = query2.prepareSQL(this, prepared = true).substringAfter("WHERE ")
+            assertEquals("(${fullIdentity(Towns.zipCode)} IS NOT NULL) AND (${fullIdentity(Towns.name)} IS NOT NULL)", whereClause2)
+            assertEquals(4, query2.single()[Towns.population])
+
+            // this does not make much sense as a use case for idParam, but it is possible with single entity ids
+            val query3 = Towns.select(idParam(townAId, Towns.id))
+            val selectClause1 = query3.prepareSQL(this, prepared = true).substringBefore(" FROM ")
+            assertEquals("SELECT ?, ?", selectClause1)
+        }
+    }
+
+    @Test
     fun testFlushingUpdatedEntity() {
         withTables(Towns) {
             val id = CompositeID {
