@@ -1660,9 +1660,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                         }
                         is H2Dialect -> {
                             when (dialect.h2Mode) {
-                                H2Dialect.H2CompatibilityMode.Oracle -> checkConstraints.filterNot { (name, _) ->
-                                    name.startsWith("${generatedSignedCheckPrefix}byte")
-                                }
                                 H2Dialect.H2CompatibilityMode.PostgreSQL -> checkConstraints.filterNot { (name, _) ->
                                     name.startsWith("${generatedSignedCheckPrefix}short")
                                 }

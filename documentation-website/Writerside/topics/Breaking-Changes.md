@@ -13,9 +13,9 @@
   The original `FunctionProvider.queryLimit()` is also being deprecated in favor of `queryLimitAndOffset()`, which takes a
   nullable `size` parameter to allow exclusion of the LIMIT clause. This latter deprecation only affects extensions of the
   `FunctionProvider` class when creating a custom `VendorDialect` class.
-* In Oracle and H2 Oracle, the `short` column now maps to data type `NUMBER(5)` instead of `SMALLINT` because `SMALLINT` is stored as `NUMBER(38)` in the database and
+* In Oracle, the `short` column now maps to data type `NUMBER(5)` instead of `SMALLINT` because `SMALLINT` is stored as `NUMBER(38)` in the database and
   takes up unnecessary storage.
-  In Oracle, H2 Oracle, and SQLite, using the `short` column in a table now also creates a check constraint to ensure that no out-of-range values are inserted.
+  In Oracle and SQLite, using the `short` column in a table now also creates a check constraint to ensure that no out-of-range values are inserted.
 * In Oracle, the `byte` column now maps to data type `NUMBER(3)` instead of `SMALLINT` because `SMALLINT` is stored as `NUMBER(38)` in the database and
   takes up unnecessary storage.
   In SQL Server, the `byte` column now maps to data type `SMALLINT` instead of `TINYINT` because `TINYINT`
