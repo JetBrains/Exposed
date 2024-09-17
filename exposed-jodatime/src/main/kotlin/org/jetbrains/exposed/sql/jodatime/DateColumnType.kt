@@ -265,6 +265,7 @@ class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
     }
 
     override fun valueFromDB(value: Any): DateTime = when (value) {
+        is DateTime -> value
         is OffsetDateTime -> DateTime.parse(value.toString())
         is ZonedDateTime -> DateTime.parse(value.toOffsetDateTime().toString())
         is String -> {
