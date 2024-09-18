@@ -26,7 +26,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
 
     @LowPriorityInOverloadResolution
     open operator fun <S> set(column: Column<S>, value: S) {
-        require(column.columnType.nullable || (value != null && value !is Op.NULL)) {
+        require(column.columnType is NullableColumnWithTransform<*, *> || column.columnType.nullable || (value != null && value !is Op.NULL)) {
             "Trying to set null to not nullable column $column"
         }
 

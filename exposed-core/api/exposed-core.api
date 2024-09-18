@@ -532,19 +532,18 @@ public final class org/jetbrains/exposed/sql/ColumnTypeKt {
 	public static synthetic fun resolveColumnType$default (Lkotlin/reflect/KClass;Lorg/jetbrains/exposed/sql/ColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/ColumnType;
 }
 
-public class org/jetbrains/exposed/sql/ColumnWithTransform : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/ColumnTransformer {
+public class org/jetbrains/exposed/sql/ColumnWithTransform : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/ColumnTransformer;)V
 	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/IColumnType;
 	public fun getNullable ()Z
-	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public final fun getTransformer ()Lorg/jetbrains/exposed/sql/ColumnTransformer;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun setNullable (Z)V
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
-	public fun unwrap (Ljava/lang/Object;)Ljava/lang/Object;
 	public final fun unwrapRecursive (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun wrap (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public abstract class org/jetbrains/exposed/sql/ComparisonOp : org/jetbrains/exposed/sql/Op, org/jetbrains/exposed/sql/ComplexExpression, org/jetbrains/exposed/sql/Op$OpBoolean {
@@ -1691,6 +1690,13 @@ public final class org/jetbrains/exposed/sql/Ntile : org/jetbrains/exposed/sql/W
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
+public class org/jetbrains/exposed/sql/NullableColumnWithTransform : org/jetbrains/exposed/sql/ColumnWithTransform {
+	public fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/ColumnTransformer;)V
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
+}
+
 public final class org/jetbrains/exposed/sql/OffsetFollowingWindowFrameBound : org/jetbrains/exposed/sql/OffsetWindowFrameBound, org/jetbrains/exposed/sql/CurrentOrFollowing {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;)V
 }
@@ -2527,6 +2533,8 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public fun modifyStatement ()Ljava/util/List;
 	public final fun nameInDatabaseCase ()Ljava/lang/String;
 	public final fun nameInDatabaseCaseUnquoted ()Ljava/lang/String;
+	public final fun nullTransform (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun nullTransform (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnTransformer;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun nullable (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun nullable (Lorg/jetbrains/exposed/sql/CompositeColumn;)Lorg/jetbrains/exposed/sql/CompositeColumn;
 	public final fun optReference (Ljava/lang/String;Lorg/jetbrains/exposed/dao/id/IdTable;Lorg/jetbrains/exposed/sql/ReferenceOption;Lorg/jetbrains/exposed/sql/ReferenceOption;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;

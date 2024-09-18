@@ -855,5 +855,41 @@
                 val mealTime: Column&lt;Meal&gt; = time(&quot;meal_time&quot;).transform(MealTimeTransformer())
             }
         </code-block>
+
+    <chapter title="Null transform" id="null-transform">
+        <p>
+            Special case is <code>nullTransform()</code> method.
+            That method applies a special transformation that allows a non-nullable database column
+            to accept and/or return values as `null` on the client side.
+        </p>
+
+        <p>
+            This transformation does not alter the column's definition in the database,
+            which will still be <code>NON NULL</code>. It enables reflecting non-null values
+            from the database as <code>null</code> in Kotlin (e.g., converting an empty string from a
+            non-nullable text column, empty lists, negative IDs, etc., to <code>null</code>).
+        </p>
+
+        <code-block lang="kotlin">
+            class MealTimeNullTransformer : ColumnTransformer&lt;LocalTime, Meal?&gt; {
+                override fun wrap(value: LocalTime): Meal? = when {
+                    value.hour &lt; 10 -&gt; Meal.BREAKFAST
+                    value.hour &lt; 15 -&gt; Meal.LUNCH
+                    else -&gt; Meal.DINNER
+                }
+
+                override fun unwrap(value: Meal?): LocalTime = when (value) {
+                    Meal.BREAKFAST -&gt; LocalTime(8, 0)
+                    Meal.LUNCH -&gt; LocalTime(12, 0)
+                    Meal.DINNER -&gt; LocalTime(18, 0)
+                    else -&gt; LocalTime(0, 0)
+                }
+            }
+
+            object Meals : Table() {
+                val mealTime: Column&lt;Meal?&gt; = time(&quot;meal_time&quot;).transform(MealTimeNullTransformer())
+            }
+        </code-block>
+    </chapter>
     </chapter>
 </topic>

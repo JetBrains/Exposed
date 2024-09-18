@@ -22,6 +22,8 @@
   [allows values from 0 to 255](https://learn.microsoft.com/en-us/sql/t-sql/data-types/int-bigint-smallint-and-tinyint-transact-sql?view=sql-server-ver16#:~:text=2%20bytes-,tinyint,-0%20to%20255).
   In SQL Server, SQLite, Oracle, PostgreSQL, and H2 PostgreSQL, using the `byte` column in a table now also creates a check constraint to ensure that no out-of-range
   values are inserted.
+* The transformation of a nullable column (`Column<Unwrapped?>.transform()`) requires handling null values.
+  This enables conversions from `null` to a non-nullable value, and vice versa.
 
 ## 0.54.0
 

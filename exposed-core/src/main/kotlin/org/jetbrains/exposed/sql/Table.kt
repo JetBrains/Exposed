@@ -1311,24 +1311,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped>.transform(
         transformer: ColumnTransformer<Unwrapped, Wrapped>
-    ): Column<Wrapped> = transform(ColumnWithTransform(columnType, transformer))
-
-    /**
-     * Applies the transformation column type to the column.
-     *
-     * @param Unwrapped The type of the original column.
-     * @param Wrapped The type into which the value of the underlying column will be transformed.
-     * @param wrappedColumnType The [ColumnWithTransform] instance with the transformation logic.
-     * @return A new column of type [Wrapped] with the applied transformation column type.
-     */
-    private fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped>.transform(wrappedColumnType: ColumnWithTransform<Unwrapped, Wrapped>): Column<Wrapped> {
-        val newColumn: Column<Wrapped> = Column(table, name, wrappedColumnType)
-        newColumn.foreignKey = foreignKey
-        newColumn.defaultValueFun = defaultValueFun?.let { { wrappedColumnType.wrap(it()) } }
-        @Suppress("UNCHECKED_CAST")
-        newColumn.dbDefaultValue = dbDefaultValue as Expression<Wrapped>?
-        newColumn.isDatabaseGenerated = isDatabaseGenerated
-        newColumn.extraDefinitions = extraDefinitions
+    ): Column<Wrapped> {
+        val newColumn = copyWithAnotherColumnType(ColumnWithTransform(this.columnType, transformer)) {
+            defaultValueFun = this@transform.defaultValueFun?.let { { transformer.wrap(it()) } }
+        }
         return replaceColumn(this, newColumn)
     }
 
@@ -1340,7 +1326,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * object TestTable : IntIdTable() {
      *     val nullableStringToInteger = integer("nullableStringToInteger")
      *         .nullable()
-     *         .transform(wrap = { it.toString() }, unwrap = { it.toInt() })
+     *         .transform(wrap = { it?.toString() }, unwrap = { it?.toInt() })
      * }
      * ```
      *
@@ -1352,8 +1338,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     @JvmName("transformNullable")
     fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped?>.transform(
-        wrap: (Unwrapped) -> Wrapped,
-        unwrap: (Wrapped) -> Unwrapped
+        wrap: (Unwrapped?) -> Wrapped?,
+        unwrap: (Wrapped?) -> Unwrapped?
     ): Column<Wrapped?> = transform(columnTransformer(unwrap, wrap))
 
     /**
@@ -1361,13 +1347,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * Sample:
      * ```kotlin
-     * object StringToIntListTransformer : ColumnTransformer<String, List<Int>> {
-     *     override fun wrap(value: String): List<Int> {
-     *         val result = value.split(",").map { it.toInt() }
-     *         return result
-     *     }
+     * object StringToIntListTransformer : ColumnTransformer<String?, List<Int>?> {
+     *     override fun wrap(value: String?): List<Int>? = value?.split(",")?.map { it.toInt() }
      *
-     *     override fun unwrap(value: List<Int>): String = value.joinToString(",")
+     *     override fun unwrap(value: List<Int>): String = value?.joinToString(",")
      * }
      *
      * object TestTable : IntIdTable() {
@@ -1382,28 +1365,56 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     @JvmName("transformNullable")
     fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped?>.transform(
-        transformer: ColumnTransformer<Unwrapped, Wrapped>
-    ): Column<Wrapped?> = transform(ColumnWithTransform(columnType, transformer))
+        transformer: ColumnTransformer<Unwrapped?, Wrapped?>
+    ): Column<Wrapped?> {
+        val newColumn = copyWithAnotherColumnType<Wrapped?>(NullableColumnWithTransform(this.columnType, transformer)) {
+            defaultValueFun = this@transform.defaultValueFun?.let { { it()?.let { value -> transformer.wrap(value) } } }
+        }
+        return replaceColumn(this, newColumn)
+    }
 
     /**
-     * Applies the transformation column type to the nullable column.
+     * Applies a special transformation that allows a non-nullable database column
+     * to accept and/or return values as `null` on the client side.
+     *
+     * This transformation does not alter the column's definition in the database,
+     * which will still be `NON NULL`. It enables reflecting non-null values
+     * from the database as `null` in Kotlin (e.g., converting an empty string from a
+     * non-nullable text column, empty lists, negative IDs, etc., to `null`).
      *
      * @param Wrapped The type into which the value of the underlying column will be transformed.
      * @param Unwrapped The type of the original column.
-     * @param toColumnType The [ColumnWithTransform] instance with the transformation logic.
-     * @return A new column of type [Wrapped]`?` with the applied transformation column type.
+     * @param wrap A function to transform from the source type [Unwrapped] to the target type [Wrapped].
+     * @param unwrap A function to transform from the target type [Wrapped] to the source type [Unwrapped].
+     * @return A new column of type [Wrapped]`?` with the applied transformations.
      */
-    @JvmName("transformNullable")
-    private fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped?>.transform(
-        toColumnType: ColumnWithTransform<Unwrapped, Wrapped>
+    @JvmName("nullTransform")
+    fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped>.nullTransform(
+        wrap: (Unwrapped) -> Wrapped?,
+        unwrap: (Wrapped?) -> Unwrapped
+    ): Column<Wrapped?> = nullTransform(columnTransformer(unwrap, wrap))
+
+    /**
+     * Applies a special transformation that allows a non-nullable database column
+     * to accept and/or return values as `null` on the client side.
+     *
+     * This transformation does not alter the column's definition in the database,
+     * which will still be `NON NULL`. It enables reflecting non-null values
+     * from the database as `null` in Kotlin (e.g., converting an empty string from a
+     * non-nullable text column, empty lists, negative IDs, etc., to `null`).
+     *
+     * @param Wrapped The type into which the value of the underlying column will be transformed.
+     * @param Unwrapped The type of the original column.
+     * @param transformer An instance of [ColumnTransformer] to handle the transformations.
+     * @return A new column of type [Wrapped]`?` with the applied transformations.
+     */
+    @JvmName("nullTransform")
+    fun <Unwrapped : Any, Wrapped : Any> Column<Unwrapped>.nullTransform(
+        transformer: ColumnTransformer<Unwrapped, Wrapped?>
     ): Column<Wrapped?> {
-        val newColumn = Column<Wrapped?>(table, name, toColumnType)
-        newColumn.foreignKey = foreignKey
-        newColumn.defaultValueFun = defaultValueFun?.let { { it()?.let { value -> toColumnType.wrap(value) } } }
-        @Suppress("UNCHECKED_CAST")
-        newColumn.dbDefaultValue = dbDefaultValue as Expression<Wrapped?>?
-        newColumn.isDatabaseGenerated = isDatabaseGenerated
-        newColumn.extraDefinitions = extraDefinitions
+        val newColumn = copyWithAnotherColumnType<Wrapped?>(NullableColumnWithTransform(this.columnType, transformer)) {
+            defaultValueFun = this@nullTransform.defaultValueFun?.let { { it().let { value -> transformer.wrap(value) } } }
+        }
         return replaceColumn(this, newColumn)
     }
 
