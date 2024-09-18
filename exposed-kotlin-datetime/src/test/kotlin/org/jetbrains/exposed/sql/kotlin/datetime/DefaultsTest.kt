@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql.kotlin.datetime
 
 import kotlinx.datetime.*
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.flushCache
@@ -37,6 +39,9 @@ import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+
+private val dbTimestampNow: CustomFunction<OffsetDateTime>
+    get() = object : CustomFunction<OffsetDateTime>("now", KotlinOffsetDateTimeColumnType()) {}
 
 class DefaultsTest : DatabaseTestsBase() {
 
@@ -588,6 +593,40 @@ class DefaultsTest : DatabaseTestsBase() {
 
             val updatedResult = tester.selectAll().where { tester.created greater generatedTS }.single()
             assertTrue { updatedResult[tester.created] > generatedTS }
+        }
+    }
+
+    object DefaultTimestampTable : IntIdTable("test_table") {
+        val timestamp: Column<OffsetDateTime> =
+            timestampWithTimeZone("timestamp").defaultExpression(dbTimestampNow)
+    }
+
+    class DefaultTimestampEntity(id: EntityID<Int>) : Entity<Int>(id) {
+        companion object : EntityClass<Int, DefaultTimestampEntity>(DefaultTimestampTable)
+
+        var timestamp: OffsetDateTime by DefaultTimestampTable.timestamp
+    }
+
+    @Test
+    fun testCustomDefaultTimestampFunctionWithEntity() {
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2, DefaultTimestampTable) {
+            val entity = DefaultTimestampEntity.new {}
+
+            val timestamp = DefaultTimestampTable.selectAll().first()[DefaultTimestampTable.timestamp]
+
+            assertEquals(timestamp, entity.timestamp)
+        }
+    }
+
+    @Test
+    fun testCustomDefaultTimestampFunctionWithInsertStatement() {
+        // Only Postgres allows to get timestamp values directly from the insert statement due to implicit 'returning *'
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, DefaultTimestampTable) {
+            val entity = DefaultTimestampTable.insert { }
+
+            val timestamp = DefaultTimestampTable.selectAll().first()[DefaultTimestampTable.timestamp]
+
+            assertEquals(timestamp, entity[DefaultTimestampTable.timestamp])
         }
     }
 }
