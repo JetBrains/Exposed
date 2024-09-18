@@ -433,6 +433,25 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun testIdParamWithCompositeValue() {
+        withTables(Towns) {
+            val townAValue = CompositeID {
+                it[Towns.zipCode] = "1A2 3B4"
+                it[Towns.name] = "Town A"
+            }
+            val townAId = Towns.insertAndGetId {
+                it[id] = townAValue
+                it[population] = 4
+            }
+
+            val query = Towns.selectAll().where { Towns.id eq idParam(townAId, Towns.id) }
+            val whereClause = query.prepareSQL(this, prepared = true).substringAfter("WHERE ")
+            assertEquals("(${fullIdentity(Towns.zipCode)} = ?) AND (${fullIdentity(Towns.name)} = ?)", whereClause)
+            assertEquals(4, query.single()[Towns.population])
+        }
+    }
+
+    @Test
     fun testFlushingUpdatedEntity() {
         withTables(Towns) {
             val id = CompositeID {

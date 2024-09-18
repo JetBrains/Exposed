@@ -325,8 +325,9 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is equal to some [other] expression. */
-    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): Op<Boolean> = when (other as Expression<*>) {
-        is Op.NULL -> isNull()
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.eq(other: Expression<in S2>): Op<Boolean> = when {
+        (other as Expression<*>) is Op.NULL -> isNull()
+        (other as? QueryParameter)?.compositeValue != null -> (this as Column<*>).table.mapIdComparison(other.value, ::EqOp)
         else -> EqOp(this, other)
     }
 
@@ -368,8 +369,9 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is not equal to some [other] expression. */
-    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.neq(other: Expression<in S2>): Op<Boolean> = when (other as Expression<*>) {
-        is Op.NULL -> isNotNull()
+    infix fun <T, S1 : T?, S2 : T?> Expression<in S1>.neq(other: Expression<in S2>): Op<Boolean> = when {
+        (other as Expression<*>) is Op.NULL -> isNotNull()
+        (other as? QueryParameter)?.compositeValue != null -> (this as Column<*>).table.mapIdComparison(other.value, ::NeqOp)
         else -> NeqOp(this, other)
     }
 
@@ -505,24 +507,26 @@ interface ISqlExpressionBuilder {
         Between(this, wrap(EntityID(from, this.idTable())), wrap(EntityID(to, this.idTable())))
 
     /** Returns `true` if this expression is null, `false` otherwise. */
-    fun <T> Expression<T>.isNull() = if (this is Column<*> && isEntityIdentifier()) {
-        table.mapIdOperator(::IsNullOp)
-    } else {
-        IsNullOp(this)
+    fun <T> Expression<T>.isNull() = when {
+        this is Column<*> && isEntityIdentifier() -> table.mapIdOperator(::IsNullOp)
+        this is QueryParameter && compositeValue != null -> {
+            val table = compositeValue.values.keys.first().table
+            table.mapIdOperator(::IsNullOp)
+        }
+        else -> IsNullOp(this)
     }
 
     /** Returns `true` if this string expression is null or empty, `false` otherwise. */
-    fun <T : String?> Expression<T>.isNullOrEmpty() = if (this is Column<*> && isEntityIdentifier()) {
-        table.mapIdOperator(::IsNullOp)
-    } else {
-        IsNullOp(this)
-    }.or { this@isNullOrEmpty.charLength() eq 0 }
+    fun <T : String?> Expression<T>.isNullOrEmpty() = IsNullOp(this).or { this@isNullOrEmpty.charLength() eq 0 }
 
     /** Returns `true` if this expression is not null, `false` otherwise. */
-    fun <T> Expression<T>.isNotNull() = if (this is Column<*> && isEntityIdentifier()) {
-        table.mapIdOperator(::IsNotNullOp)
-    } else {
-        IsNotNullOp(this)
+    fun <T> Expression<T>.isNotNull() = when {
+        this is Column<*> && isEntityIdentifier() -> table.mapIdOperator(::IsNotNullOp)
+        this is QueryParameter && compositeValue != null -> {
+            val table = compositeValue.values.keys.first().table
+            table.mapIdOperator(::IsNotNullOp)
+        }
+        else -> IsNotNullOp(this)
     }
 
     /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
