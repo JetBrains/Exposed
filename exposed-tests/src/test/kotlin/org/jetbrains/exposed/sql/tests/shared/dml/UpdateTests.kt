@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
+import kotlin.test.assertTrue
 
 class UpdateTests : DatabaseTestsBase() {
     private val notSupportLimit by lazy {
@@ -92,6 +93,27 @@ class UpdateTests : DatabaseTestsBase() {
                 assertEquals(it[users.name], it[userData.comment])
                 assertEquals(0, it[userData.value])
             }
+        }
+    }
+
+    @Test
+    fun testUpdateWithJoinAndLimit() {
+        val supportsUpdateWithJoinAndLimit = TestDB.ALL_MARIADB + TestDB.ORACLE + TestDB.SQLSERVER
+        withCitiesAndUsers(exclude = TestDB.ALL - supportsUpdateWithJoinAndLimit) { _, users, userData ->
+            val join = users.innerJoin(userData)
+
+            val maxToUpdate = 2
+            assertTrue { join.selectAll().count() > maxToUpdate }
+
+            val updatedValue = 123
+            val valueQuery = join.selectAll().where { userData.value eq updatedValue }
+            assertEquals(0, valueQuery.count())
+
+            join.update(limit = 2) {
+                it[userData.value] = 123
+            }
+
+            assertEquals(2, valueQuery.count())
         }
     }
 
