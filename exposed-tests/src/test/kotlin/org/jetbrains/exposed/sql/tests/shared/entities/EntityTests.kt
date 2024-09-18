@@ -1609,10 +1609,8 @@ class EntityTests : DatabaseTestsBase() {
                 number = "0000111122223333"
                 spendingLimit = 10000u
             }
-            assertEquals(
-                1,
-                CreditCards.select(idParam(creditCard.id, CreditCards.id)).count()
-            )
+            val aliasId = idParam(creditCard.id, CreditCards.id).alias("id1")
+            assertEquals(1, CreditCards.select(aliasId).single()[aliasId])
             assertEquals(
                 10000u,
                 CreditCards.select(CreditCards.spendingLimit)
