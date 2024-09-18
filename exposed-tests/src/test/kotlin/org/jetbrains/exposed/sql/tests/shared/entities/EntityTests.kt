@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -1605,16 +1606,18 @@ class EntityTests : DatabaseTestsBase() {
     @Test
     fun testEntityIdParam() {
         withTables(CreditCards) {
-            val creditCard = CreditCard.new {
+            val newCard = CreditCard.new {
                 number = "0000111122223333"
-                spendingLimit = 10000u
+                spendingLimit = 10000uL
             }
-            val aliasId = idParam(creditCard.id, CreditCards.id).alias("id1")
-            assertEquals(1, CreditCards.select(aliasId).single()[aliasId])
+            val conditionalId = Case()
+                .When(CreditCards.spendingLimit less 500uL, CreditCards.id)
+                .Else(idParam(newCard.id, CreditCards.id))
+            assertEquals(newCard.id, CreditCards.select(conditionalId).single()[conditionalId])
             assertEquals(
-                10000u,
+                10000uL,
                 CreditCards.select(CreditCards.spendingLimit)
-                    .where { CreditCards.id eq idParam(creditCard.id, CreditCards.id) }
+                    .where { CreditCards.id eq idParam(newCard.id, CreditCards.id) }
                     .single()[CreditCards.spendingLimit]
             )
         }
