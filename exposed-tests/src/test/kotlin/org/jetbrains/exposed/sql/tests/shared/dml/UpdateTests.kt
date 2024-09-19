@@ -14,13 +14,9 @@ import org.junit.Test
 import kotlin.test.assertTrue
 
 class UpdateTests : DatabaseTestsBase() {
-    private val notSupportLimit by lazy {
-        val exclude = TestDB.ALL_POSTGRES_LIKE
-        if (!SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT) {
-            exclude + TestDB.SQLITE
-        } else {
-            exclude
-        }
+    private val limitNotSupported by lazy {
+        val extra = setOf(TestDB.SQLITE).takeUnless { SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT }.orEmpty()
+        TestDB.ALL_POSTGRES_LIKE + extra
     }
 
     @Test
@@ -41,30 +37,26 @@ class UpdateTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testUpdateWithLimit01() {
-        withCitiesAndUsers(exclude = notSupportLimit) { _, users, _ ->
-            val aNames = users.select(users.name).where { users.id like "a%" }.map { it[users.name] }
-            assertEquals(2, aNames.size)
+    fun testUpdateWithLimit() {
+        withCitiesAndUsers { _, users, _ ->
+            if (currentTestDB in limitNotSupported) {
+                expectException<UnsupportedByDialectException> {
+                    users.update({ users.id like "a%" }, limit = 1) {
+                        it[users.id] = "NewName"
+                    }
+                }
+            } else {
+                val aNames = users.select(users.name).where { users.id like "a%" }.map { it[users.name] }
+                assertEquals(2, aNames.size)
 
-            users.update({ users.id like "a%" }, 1) {
-                it[users.id] = "NewName"
-            }
-
-            val unchanged = users.select(users.name).where { users.id like "a%" }.count()
-            val changed = users.select(users.name).where { users.id eq "NewName" }.count()
-            assertEquals(1, unchanged)
-            assertEquals(1, changed)
-        }
-    }
-
-    @Test
-    fun testUpdateWithLimit02() {
-        val dialects = TestDB.entries - notSupportLimit
-        withCitiesAndUsers(dialects) { _, users, _ ->
-            expectException<UnsupportedByDialectException> {
-                users.update({ users.id like "a%" }, 1) {
+                users.update({ users.id like "a%" }, limit = 1) {
                     it[users.id] = "NewName"
                 }
+
+                val unchanged = users.select(users.name).where { users.id like "a%" }.count()
+                val changed = users.select(users.name).where { users.id eq "NewName" }.count()
+                assertEquals(1, unchanged)
+                assertEquals(1, changed)
             }
         }
     }
@@ -109,11 +101,11 @@ class UpdateTests : DatabaseTestsBase() {
             val valueQuery = join.selectAll().where { userData.value eq updatedValue }
             assertEquals(0, valueQuery.count())
 
-            join.update(limit = 2) {
-                it[userData.value] = 123
+            join.update(limit = maxToUpdate) {
+                it[userData.value] = updatedValue
             }
 
-            assertEquals(2, valueQuery.count())
+            assertEquals(maxToUpdate, valueQuery.count().toInt())
         }
     }
 
