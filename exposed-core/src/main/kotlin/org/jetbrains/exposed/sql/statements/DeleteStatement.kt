@@ -15,7 +15,6 @@ import org.jetbrains.exposed.sql.vendors.h2Mode
  * @param isIgnore Whether to ignore errors or not.
  * **Note** [isIgnore] is not supported by all vendors. Please check the documentation.
  * @param limit Maximum number of rows to delete.
- * @param offset The number of rows to skip.
  * @param targetTables List of specific tables from [targetsSet] to delete rows from.
  */
 open class DeleteStatement(
@@ -23,21 +22,21 @@ open class DeleteStatement(
     val where: Op<Boolean>? = null,
     val isIgnore: Boolean = false,
     val limit: Int? = null,
-    val offset: Long? = null,
     val targetTables: List<Table> = emptyList(),
 ) : Statement<Int>(StatementType.DELETE, targetsSet.targetTables()) {
     @Deprecated(
         "This constructor will be removed in future releases.",
-        ReplaceWith("DeleteStatement(targetsSet = table, where, isIgnore, limit, offset, emptyList())"),
+        ReplaceWith("DeleteStatement(targetsSet = table, where, isIgnore, limit, emptyList())"),
         DeprecationLevel.WARNING
     )
+    @Suppress("UnusedPrivateProperty")
     constructor(
         table: Table,
         where: Op<Boolean>?,
         isIgnore: Boolean,
         limit: Int?,
         offset: Long?
-    ) : this(table, where, isIgnore, limit, offset, emptyList())
+    ) : this(table, where, isIgnore, limit, emptyList())
 
     @Deprecated(
         "This property will be removed in future releases and replaced with a property that stores a `ColumnSet`," +
@@ -46,6 +45,14 @@ open class DeleteStatement(
         DeprecationLevel.WARNING
     )
     val table: Table = targets.first()
+
+    @Deprecated(
+        "This property is not being used and will be removed in future releases. Please leave a comment on " +
+            "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
+            "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
+        level = DeprecationLevel.WARNING
+    )
+    val offset: Long? = null
 
     override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
         return executeUpdate()
@@ -80,13 +87,24 @@ open class DeleteStatement(
     }
 
     companion object {
+        @Deprecated(
+            "This function that accepts an 'offset' argument will be removed in future releases. Please leave a comment on " +
+                "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
+                "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
+            ReplaceWith("where(transaction, table, op, isIgnore, limit)"),
+            DeprecationLevel.WARNING
+        )
+        @Suppress("UnusedParameter")
+        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null, offset: Long? = null): Int =
+            where(transaction, table, op, isIgnore, limit)
+
         /**
          * Creates a [DeleteStatement] that deletes only rows in [table] that match the provided [op].
          *
          * @return Count of deleted rows.
          */
-        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null, offset: Long? = null): Int =
-            DeleteStatement(targetsSet = table, op, isIgnore, limit, offset).execute(transaction) ?: 0
+        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null): Int =
+            DeleteStatement(table, op, isIgnore, limit, emptyList()).execute(transaction) ?: 0
 
         /**
          * Creates a [DeleteStatement] that deletes all rows in [table].

@@ -99,17 +99,38 @@ fun Query.selectAllBatched(
     return fetchBatchedResults(batchSize)
 }
 
+@Deprecated(
+    "This `offset` parameter is not being used and will be removed in future releases. Please leave a comment on " +
+        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
+        "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
+    ReplaceWith("deleteWhere(limit) { op.invoke() }"),
+    DeprecationLevel.WARNING
+)
+@Suppress("UnusedParameter")
+fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
+    deleteWhere(limit, op)
+
 /**
  * Represents the SQL statement that deletes only rows in a table that match the provided [op].
  *
  * @param limit Maximum number of rows to delete.
- * @param offset The number of rows to skip.
  * @param op Condition that determines which rows to delete.
  * @return Count of deleted rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
  */
-fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
-    DeleteStatement.where(TransactionManager.current(), this@deleteWhere, op(SqlExpressionBuilder), false, limit, offset)
+fun <T : Table> T.deleteWhere(limit: Int? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
+    DeleteStatement.where(TransactionManager.current(), this@deleteWhere, op(SqlExpressionBuilder), false, limit)
+
+@Deprecated(
+    "This `offset` parameter is not being used and will be removed in future releases. Please leave a comment on " +
+        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
+        "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
+    ReplaceWith("deleteIgnoreWhere(limit) { op.invoke() }"),
+    DeprecationLevel.WARNING
+)
+@Suppress("UnusedParameter")
+fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
+    deleteIgnoreWhere(limit, op)
 
 /**
  * Represents the SQL statement that deletes only rows in a table that match the provided [op], while ignoring any
@@ -118,12 +139,11 @@ fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(I
  * **Note:** `DELETE IGNORE` is not supported by all vendors. Please check the documentation.
  *
  * @param limit Maximum number of rows to delete.
- * @param offset The number of rows to skip.
  * @param op Condition that determines which rows to delete.
  * @return Count of deleted rows.
  */
-fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
-    DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, op(SqlExpressionBuilder), true, limit, offset)
+fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
+    DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, op(SqlExpressionBuilder), true, limit)
 
 /**
  * Represents the SQL statement that deletes all rows in a table.
@@ -147,7 +167,7 @@ fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
 ): ReturningStatement {
-    val delete = DeleteStatement(targetsSet = this, where?.let { SqlExpressionBuilder.it() }, false, null, null)
+    val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, false, null)
     return ReturningStatement(this, returning, delete)
 }
 
@@ -173,7 +193,7 @@ fun Join.delete(
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
 ): Int {
     val targets = listOf(targetTable) + targetTables
-    val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, ignore, limit, null, targets)
+    val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, ignore, limit, targets)
     return delete.execute(TransactionManager.current()) ?: 0
 }
 

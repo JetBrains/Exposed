@@ -5,6 +5,8 @@
   This enables the use of the new `Join.delete()` function, which performs a delete operation on a specific table from the join relation.
   The original statement class constructor has also been deprecated in favor of the constructor that accepts `targetsSet`, as well as another
   additional parameter `targetTables` (for specifying which table from the join relation, if applicable, to delete from).
+* The `DeleteStatement` property `offset` was not being used and is now deprecated, as are the extension functions that have an `offset` parameter.
+  `deleteWhere()` and `deleteIgnoreWhere()`, as well as the original statement class constructor, no longer accept an argument for `offset`.
 * `SizedIterable.limit(n, offset)` is now deprecated in favor of 2 independent methods, `limit()` and `offset()`.
   In supporting databases, this allows the generation of an OFFSET clause in the SELECT statement without any LIMIT clause.
   Any custom implementations of the `SizedIterable` interface with a `limit()` override will now show a warning that the declaration overrides
