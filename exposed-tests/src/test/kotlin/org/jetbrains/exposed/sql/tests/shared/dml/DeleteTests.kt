@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.currentTestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.H2Dialect
@@ -19,18 +20,9 @@ import kotlin.test.assertTrue
 import kotlin.test.expect
 
 class DeleteTests : DatabaseTestsBase() {
-    private val notSupportLimit by lazy {
-        val exclude = arrayListOf(
-            TestDB.POSTGRESQL,
-            TestDB.POSTGRESQLNG,
-            TestDB.ORACLE,
-            TestDB.H2_V2_PSQL,
-            TestDB.H2_V2_ORACLE
-        )
-        if (!SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT) {
-            exclude.add(TestDB.SQLITE)
-        }
-        exclude
+    private val limitNotSupported by lazy {
+        val extra = setOf(TestDB.SQLITE).takeUnless { SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT }.orEmpty()
+        TestDB.ALL_POSTGRES_LIKE + TestDB.ALL_ORACLE_LIKE + extra
     }
 
     @Test
@@ -82,24 +74,18 @@ class DeleteTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testDeleteWithLimitAndOffset01() {
-        withCitiesAndUsers(exclude = notSupportLimit) { _, _, userData ->
-            userData.deleteWhere(limit = 1) { userData.value eq 20 }
-            userData.select(userData.user_id, userData.value).where { userData.value eq 20 }.let {
-                assertEquals(1L, it.count())
-                val expected = if (currentDialectTest is H2Dialect) "smth" else "eugene"
-                assertEquals(expected, it.single()[userData.user_id])
-            }
-        }
-    }
-
-    @Test
-    fun testDeleteWithLimit02() {
-        val dialects = TestDB.entries - notSupportLimit
-        withCitiesAndUsers(dialects) { _, _, userData ->
-            expectException<UnsupportedByDialectException> {
-                userData.deleteWhere(limit = 1) {
-                    userData.value eq 20
+    fun testDeleteWithLimit() {
+        withCitiesAndUsers { _, _, userData ->
+            if (currentTestDB in limitNotSupported) {
+                expectException<UnsupportedByDialectException> {
+                    userData.deleteWhere(limit = 1) { userData.value eq 20 }
+                }
+            } else {
+                userData.deleteWhere(limit = 1) { userData.value eq 20 }
+                userData.select(userData.user_id, userData.value).where { userData.value eq 20 }.let {
+                    assertEquals(1L, it.count())
+                    val expected = if (currentDialectTest is H2Dialect) "smth" else "eugene"
+                    assertEquals(expected, it.single()[userData.user_id])
                 }
             }
         }

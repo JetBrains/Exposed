@@ -219,21 +219,26 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         limit: Int?,
         where: Op<Boolean>?,
         transaction: Transaction
-    ): String = with(QueryBuilder(true)) {
-        +"UPDATE "
-        targets.describe(transaction, this)
-        +" SET "
-        columnsAndValues.appendTo(this) { (col, value) ->
-            append("${transaction.fullIdentity(col)}=")
-            registerArgument(col, value)
+    ): String {
+        if (limit != null) {
+            transaction.throwUnsupportedException("MySQL doesn't support LIMIT in UPDATE with join clause.")
         }
 
-        where?.let {
-            +" WHERE "
-            +it
+        return with(QueryBuilder(true)) {
+            +"UPDATE "
+            targets.describe(transaction, this)
+            +" SET "
+            columnsAndValues.appendTo(this) { (col, value) ->
+                append("${transaction.fullIdentity(col)}=")
+                registerArgument(col, value)
+            }
+
+            where?.let {
+                +" WHERE "
+                +it
+            }
+            toString()
         }
-        limit?.let { +" LIMIT $it" }
-        toString()
     }
 
     override fun upsert(

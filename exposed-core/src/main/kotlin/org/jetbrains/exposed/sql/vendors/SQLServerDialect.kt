@@ -212,7 +212,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
 
         targets.checkJoinTypes(StatementType.UPDATE)
         if (limit != null) {
-            +"UPDATE TOP($limit)"
+            +"UPDATE TOP($limit) "
         } else {
             +"UPDATE "
         }
@@ -229,7 +229,6 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
             +" AND "
             +it
         }
-        limit?.let { +" LIMIT $it" }
         toString()
     }
 

@@ -24,6 +24,17 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
         append("LOCATE(\'", substring, "\',", expr, ")")
     }
 
+    override fun update(
+        targets: Join,
+        columnsAndValues: List<Pair<Column<*>, Any?>>,
+        limit: Int?,
+        where: Op<Boolean>?,
+        transaction: Transaction
+    ): String {
+        val sql = super.update(targets, columnsAndValues, null, where, transaction)
+        return if (limit != null) "$sql LIMIT $limit" else sql
+    }
+
     override fun explain(
         analyze: Boolean,
         options: String?,
