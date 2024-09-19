@@ -876,6 +876,27 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         true
     )
 
+    /**
+     * Defines a transformation to be applied to a column's value before it is assigned to the entity field.
+     *
+     * This function enables modifying or transforming the column's value when setting the field in the entity,
+     * ensuring that the transformation happens on every field assignment. It is useful for cases like sanitizing input,
+     * applying business rules, or formatting the data before it is stored in the entity.
+     *
+     * @param T The type of the column.
+     * @param body The transformation function to apply before the value is assigned to the entity field. It takes new value of the column and returns the modified value.
+     * @return A wrapped column that applies the transformation before the value is set in the entity.
+     *
+     * Usage example:
+     *
+     * ```
+     * var name by nameColumn.prePersist { value ->
+     *     value.trim().toUpperCase()  // Trims and capitalizes the string before assigning it to the entity field
+     * }
+     * ```
+     */
+    fun <T> Column<T>.prePersist(body: (T) -> T) = EntityFieldWithPrePersist(this, body)
+
     private fun Query.setForUpdateStatus(): Query = if (this@EntityClass is ImmutableEntityClass<*, *>) this.notForUpdate() else this
 
     /**
