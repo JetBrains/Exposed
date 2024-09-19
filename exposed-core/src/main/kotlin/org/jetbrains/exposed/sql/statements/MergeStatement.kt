@@ -153,6 +153,14 @@ open class MergeSelectStatement(
     private val selectQuery: QueryAlias,
     val on: Op<Boolean>
 ) : MergeStatement(dest) {
+    override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> {
+        val queryArguments = selectQuery.query.arguments().firstOrNull() ?: emptyList()
+        val mergeStatementArguments = super.arguments().firstOrNull() ?: emptyList()
+        return listOf(
+            queryArguments + mergeStatementArguments
+        )
+    }
+
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         return transaction.db.dialect.functionProvider.mergeSelect(table, selectQuery, transaction, clauses, on, prepared)
     }

@@ -226,4 +226,24 @@ class MergeSelectTest : MergeBaseTest() {
             assertNull(dest.selectAll().where { dest.key inList listOf("only-in-source-2", "only-in-source-3") }.firstOrNull())
         }
     }
+
+    @Test
+    fun testMergeFromWithConstCondition() {
+        val filteredSourceQuery = Source.selectAll().where { Source.key eq "only-in-source-1" }.alias("sub")
+
+        withMergeTestTablesAndDefaultData { dest, source ->
+            dest.mergeFrom(
+                filteredSourceQuery,
+                on = { Dest.key eq filteredSourceQuery[Source.key] },
+            ) {
+                whenNotMatchedInsert {
+                    it[dest.key] = filteredSourceQuery[source.key]
+                    it[dest.value] = filteredSourceQuery[source.value]
+                }
+            }
+
+            assertEquals(1, dest.getByKey("only-in-source-1")[dest.value])
+            assertNull(dest.selectAll().where { Dest.key eq "only-in-source-2" }.firstOrNull())
+        }
+    }
 }
