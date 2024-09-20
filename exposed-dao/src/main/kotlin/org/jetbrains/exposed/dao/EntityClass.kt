@@ -163,6 +163,13 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
                 with(entity) { col.lookup() }?.let { referrers.remove(it as EntityID<*>) }
             }
         }
+        cache.innerTableLinks.forEach { (_, links) ->
+            links.remove(entity.id)
+
+            links.forEach { (_, targetEntities) ->
+                targetEntities.removeAll { it.wrapped == entity }
+            }
+        }
     }
 
     /** Returns a [SizedIterable] containing all entities with [EntityID] values from the provided [ids] list. */
@@ -205,6 +212,33 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      */
     fun wrapRows(rows: SizedIterable<ResultRow>, alias: QueryAlias) = rows mapLazy {
         wrapRow(it, alias)
+    }
+
+    internal fun <SID : Comparable<SID>> wrapLinkRows(
+        rows: SizedIterable<ResultRow>,
+        targetColumn: Column<EntityID<ID>>,
+        sourceColumn: Column<EntityID<SID>>
+    ): SizedIterable<T> = rows mapLazy { wrapLinkRow(it, targetColumn, sourceColumn) }
+
+    private fun <SID : Comparable<SID>> wrapLinkRow(
+        row: ResultRow,
+        targetColumn: Column<EntityID<ID>>,
+        sourceColumn: Column<EntityID<SID>>
+    ): T {
+        val targetId = row[table.id]
+        val sourceId = row[sourceColumn]
+        val transaction = TransactionManager.current()
+        val entity = transaction.entityCache.findInnerTableLink(targetColumn, targetId, sourceId)
+            ?: createInstance(targetId, row).also { new ->
+                new.klass = this
+                new.db = transaction.db
+                warmCache().storeInnerTableLink(targetColumn, sourceId, new as InnerTableLinkEntity<ID>)
+            }
+        if (entity._readValues == null) {
+            entity._readValues = row
+        }
+
+        return entity
     }
 
     /** Wraps the specified [ResultRow] data into an [Entity] instance. */

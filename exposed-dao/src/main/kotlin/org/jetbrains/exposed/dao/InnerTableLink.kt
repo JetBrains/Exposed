@@ -90,12 +90,13 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         val (columns, entityTables) = columnsAndTables
 
         val query = {
-            target.wrapRows(
-                @Suppress("SpreadOperator")
-                entityTables.select(columns)
-                    .where { sourceColumn eq o.id }
-                    .orderBy(*orderByExpressions.toTypedArray())
-            )
+            @Suppress("SpreadOperator")
+            val row = entityTables.select(columns)
+                .where { sourceColumn eq o.id }
+                .orderBy(*orderByExpressions.toTypedArray())
+            (target as? InnerTableLinkEntityClass<ID, *>)
+                ?.wrapLinkRows(row, targetColumn, sourceColumn) as? SizedIterable<Target>
+                ?: target.wrapRows(row)
         }
         return transaction.entityCache.getOrPutReferrers(o.id, sourceColumn, query).also {
             o.storeReferenceInCache(sourceColumn, it)
@@ -120,14 +121,19 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         val oldValue = getValue(o, unused)
         val existingValues = oldValue.mapIdToAdditionalValues()
         val existingIds = existingValues.keys
-        val additionalColumnsExist = additionalColumns.isNotEmpty()
-        if (additionalColumnsExist) {
-            entityCache.innerTableLinks[target.table]?.remove(o.id.value)
-        }
         entityCache.referrers[sourceColumn]?.remove(o.id)
 
         val targetValues = value.mapIdToAdditionalValues()
         val targetIds = targetValues.keys
+        val additionalColumnsExist = additionalColumns.isNotEmpty()
+        if (additionalColumnsExist) {
+            entityCache.innerTableLinks[targetColumn]?.get(o.id)?.removeAll { cached ->
+                targetValues[cached.id]?.any { (column, targetValue) ->
+                    cached.getInnerTableLinkValue(column) != targetValue
+                } != false
+            }
+        }
+
         executeAsPartOfEntityLifecycle {
             val deleteCondition = if (additionalColumnsExist) {
                 val targetAdditionalValues = targetValues.map { it.value.values.toList() + it.key }
@@ -183,52 +189,4 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
 
     /** Modifies this reference to sort entities by a column specified in [expression] using ascending order. **/
     infix fun orderBy(expression: Expression<*>) = orderBy(listOf(expression to SortOrder.ASC))
-}
-
-/**
- * Base class for an [Entity] instance identified by a [wrapped] entity comprised of any ID value.
- *
- * Instances of this base class should be used when needing to represent referenced entities in a many-to-many relation
- * from fields defined using `via`, which require additional columns in the intermediate table. These additional
- * columns should be added as constructor properties and the property-column mapping should be defined by
- * [getInnerTableLinkValue].
- *
- * @param WID ID type of the [wrapped] entity instance.
- * @property wrapped The referenced (parent) entity whose unique ID value identifies this [InnerTableLinkEntity] instance.
- * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
- */
-abstract class InnerTableLinkEntity<WID : Comparable<WID>>(val wrapped: Entity<WID>) : Entity<WID>(wrapped.id) {
-    /**
-     * Returns the initial column-property mapping for an [InnerTableLinkEntity] instance
-     * before being flushed and inserted into the database.
-     *
-     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
-     */
-    abstract fun getInnerTableLinkValue(column: Column<*>): Any?
-}
-
-/**
- * Base class representing the [EntityClass] that manages [InnerTableLinkEntity] instances and
- * maintains their relation to the provided [table] of the wrapped entity.
- *
- * This should be used, as a companion object to [InnerTableLinkEntity], when needing to represent referenced entities
- * in a many-to-many relation from fields defined using `via`, which require additional columns in the intermediate table.
- * These additional columns will be retrieved as part of a queries [ResultRow] and the column-property mapping to create
- * new instances should be defined by [createInstance].
- *
- * @param WID ID type of the wrapped entity instance.
- * @param E The [InnerTableLinkEntity] type that is managed by this class.
- * @param [table] The [IdTable] object that stores rows mapped to the wrapped entity of this class.
- * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
- */
-abstract class InnerTableLinkEntityClass<WID : Comparable<WID>, out E : InnerTableLinkEntity<WID>>(
-    table: IdTable<WID>
-) : EntityClass<WID, E>(table, null, null) {
-    /**
-     * Creates a new [InnerTableLinkEntity] instance by using the provided [row] to both create the wrapped entity
-     * and any additional columns.
-     *
-     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
-     */
-    abstract override fun createInstance(entityId: EntityID<WID>, row: ResultRow?): E
 }

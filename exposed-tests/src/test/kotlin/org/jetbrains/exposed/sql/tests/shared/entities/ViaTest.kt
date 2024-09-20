@@ -18,8 +18,6 @@ import org.junit.Test
 import java.sql.Connection
 import java.util.*
 import kotlin.reflect.jvm.isAccessible
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 object ViaTestData {
     object NumbersTable : UUIDTable() {
@@ -288,14 +286,17 @@ class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    object Projects : IntIdTable("projects") {
+    // IdTable without auto-increment is used so manual ids can be inserted without excluding SQL Server
+    object Projects : IdTable<Int>("projects") {
+        override val id = integer("id").entityId()
         val name = varchar("name", 50)
+        override val primaryKey = PrimaryKey(id)
     }
     class Project(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Project>(Projects)
 
         var name by Projects.name
-        var tasks by TaskWithApproval via ProjectTasks
+        var tasks by TaskWithData via ProjectTasks
     }
 
     object ProjectTasks : Table("project_tasks") {
@@ -307,26 +308,29 @@ class ViaTests : DatabaseTestsBase() {
         override val primaryKey = PrimaryKey(project, task)
     }
 
-    object Tasks : IntIdTable("tasks") {
+    // IdTable without auto-increment is used so manual ids can be inserted without excluding SQL Server
+    object Tasks : IdTable<Int>("tasks") {
+        override val id = integer("id").entityId()
         val title = varchar("title", 64)
+        override val primaryKey = PrimaryKey(id)
     }
     class Task(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Task>(Tasks)
 
         var title by Tasks.title
-        var projects by ProjectWithApproval via ProjectTasks
+        var projects by ProjectWithData via ProjectTasks
     }
 
-    class ProjectWithApproval(
+    class ProjectWithData(
         val project: Project,
         val approved: Boolean,
         val sprint: Int
     ) : InnerTableLinkEntity<Int>(project) {
-        companion object : InnerTableLinkEntityClass<Int, ProjectWithApproval>(Projects) {
-            override fun createInstance(entityId: EntityID<Int>, row: ResultRow?): ProjectWithApproval {
+        companion object : InnerTableLinkEntityClass<Int, ProjectWithData>(Projects) {
+            override fun createInstance(entityId: EntityID<Int>, row: ResultRow?): ProjectWithData {
                 return row?.let {
-                    ProjectWithApproval(Project.wrapRow(it), it[ProjectTasks.approved], it[ProjectTasks.sprint])
-                } ?: ProjectWithApproval(Project(entityId), false, 0)
+                    ProjectWithData(Project.wrapRow(it), it[ProjectTasks.approved], it[ProjectTasks.sprint])
+                } ?: ProjectWithData(Project(entityId), false, 0)
             }
         }
 
@@ -337,16 +341,16 @@ class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    class TaskWithApproval(
+    class TaskWithData(
         val task: Task,
         val approved: Boolean,
         val sprint: Int
     ) : InnerTableLinkEntity<Int>(task) {
-        companion object : InnerTableLinkEntityClass<Int, TaskWithApproval>(Tasks) {
-            override fun createInstance(entityId: EntityID<Int>, row: ResultRow?): TaskWithApproval {
+        companion object : InnerTableLinkEntityClass<Int, TaskWithData>(Tasks) {
+            override fun createInstance(entityId: EntityID<Int>, row: ResultRow?): TaskWithData {
                 return row?.let {
-                    TaskWithApproval(Task.wrapRow(it), it[ProjectTasks.approved], it[ProjectTasks.sprint])
-                } ?: TaskWithApproval(Task(entityId), false, 0)
+                    TaskWithData(Task.wrapRow(it), it[ProjectTasks.approved], it[ProjectTasks.sprint])
+                } ?: TaskWithData(Task(entityId), false, 0)
             }
         }
 
@@ -358,51 +362,83 @@ class ViaTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testAdditionalLinkDataUsingInnerTableLinkEntities() {
+    fun testAdditionalLinkDataInsertAndUpdate() {
         withTables(Projects, Tasks, ProjectTasks) {
-            val p1 = Project.new { name = "Project 1" }
-            val p2 = Project.new { name = "Project 2" }
-            val t1 = Task.new { title = "Task 1" }
-            val t2 = Task.new { title = "Task 2" }
-            val t3 = Task.new { title = "Task 3" }
+            val p1 = Project.new(123) { name = "Project 1" }
+            val p2 = Project.new(456) { name = "Project 2" }
+            val t1 = Task.new(11) { title = "Task 1" }
+            val t2 = Task.new(22) { title = "Task 2" }
+            val t3 = Task.new(33) { title = "Task 3" }
 
-            p1.tasks = SizedCollection(TaskWithApproval(t1, false, 1))
-            p2.tasks = SizedCollection(TaskWithApproval(t2, true, 2), TaskWithApproval(t3, false, 3))
+            p1.tasks = SizedCollection(TaskWithData(t1, false, 1))
+            p2.tasks = SizedCollection(TaskWithData(t2, true, 2), TaskWithData(t1, false, 3))
 
             assertFalse(p1.tasks.single().approved)
-            p1.tasks = SizedCollection(TaskWithApproval(t1, true, 1))
+            p1.tasks = SizedCollection(TaskWithData(t1, true, 1))
             assertTrue(p1.tasks.single().approved)
+
+            assertEqualCollections(p2.tasks.map { it.task.id }, listOf(t2.id, t1.id))
+            p2.tasks = SizedCollection(TaskWithData(t2, true, 2), TaskWithData(t3, false, 3))
+            assertEqualCollections(p2.tasks.map { it.task.id }, listOf(t2.id, t3.id))
+        }
+    }
+
+    @Test
+    fun testAdditionalLinkDataLoadedOnParent() {
+        withTables(Projects, Tasks, ProjectTasks) {
+            val p1 = Project.new(123) { name = "Project 1" }
+            val p2 = Project.new(456) { name = "Project 2" }
+            val t1 = Task.new(11) { title = "Task 1" }
+            val t2 = Task.new(22) { title = "Task 2" }
+            val t3 = Task.new(33) { title = "Task 3" }
+
+            p1.tasks = SizedCollection(TaskWithData(t1, false, 1))
+            p2.tasks = SizedCollection(TaskWithData(t2, true, 2), TaskWithData(t3, false, 3))
 
             commit()
 
-            // test that all child entities set on the parent can be loaded by parent
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 Project.all().with(Project::tasks)
                 val cache = TransactionManager.current().entityCache
 
-                val p1Task = cache.getReferrers<TaskWithApproval>(p1.id, ProjectTasks.project)?.single()
+                val p1Task = cache.getReferrers<TaskWithData>(p1.id, ProjectTasks.project)?.single()
                 assertEquals(t1.id, p1Task?.id)
                 assertEquals(t1.id, p1Task?.task?.id)
-                assertEquals(true, p1Task?.approved)
+                assertEquals(false, p1Task?.approved)
                 assertEquals(1, p1Task?.sprint)
 
-                val p2Tasks = cache.getReferrers<TaskWithApproval>(p2.id, ProjectTasks.project)?.toList().orEmpty()
+                val p2Tasks = cache.getReferrers<TaskWithData>(p2.id, ProjectTasks.project)?.toList().orEmpty()
                 assertEqualLists(p2Tasks.map { it.id }, listOf(t2.id, t3.id))
                 assertEqualLists(p2Tasks.map { it.approved }, listOf(true, false))
                 assertEqualLists(p2Tasks.map { it.sprint }, listOf(2, 3))
             }
+        }
+    }
 
-            // test that all parent entities can then be found by the child entity without setting again
+    @Test
+    fun testAdditionalLinkDataLoadedOnChild() {
+        withTables(Projects, Tasks, ProjectTasks) {
+            val p1 = Project.new(123) { name = "Project 1" }
+            val p2 = Project.new(456) { name = "Project 2" }
+            val t1 = Task.new(11) { title = "Task 1" }
+            val t2 = Task.new(22) { title = "Task 2" }
+            val t3 = Task.new(33) { title = "Task 3" }
+
+            p1.tasks = SizedCollection(TaskWithData(t1, false, 1))
+            p2.tasks = SizedCollection(TaskWithData(t2, true, 2), TaskWithData(t3, false, 3))
+
+            commit()
+
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 Task.all().with(Task::projects)
                 val cache = TransactionManager.current().entityCache
 
-                val t1Project = cache.getReferrers<ProjectWithApproval>(t1.id, ProjectTasks.task)?.single()
+                val t1Project = cache.getReferrers<ProjectWithData>(t1.id, ProjectTasks.task)?.single()
                 assertEquals(p1.id, t1Project?.id)
                 assertEquals(p1.id, t1Project?.project?.id)
-                assertEquals(true, t1Project?.approved)
+                assertEquals(false, t1Project?.approved)
                 assertEquals(1, t1Project?.sprint)
             }
         }

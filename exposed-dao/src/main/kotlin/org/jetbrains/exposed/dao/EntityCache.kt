@@ -23,7 +23,9 @@ class EntityCache(private val transaction: Transaction) {
     internal val inserts = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     private val updates = LinkedHashMap<IdTable<*>, MutableSet<Entity<*>>>()
     internal val referrers = HashMap<Column<*>, MutableMap<EntityID<*>, SizedIterable<*>>>()
-    internal val innerTableLinks by lazy { LinkedHashMap<IdTable<*>, MutableMap<Any, Entity<*>>>() }
+    internal val innerTableLinks by lazy {
+        HashMap<Column<*>, MutableMap<EntityID<*>, MutableSet<InnerTableLinkEntity<*>>>>()
+    }
 
     /**
      * The amount of entities to store in this [EntityCache] per [Entity] class.
@@ -56,11 +58,7 @@ class EntityCache(private val transaction: Transaction) {
             }
         }
 
-    private fun getMap(f: EntityClass<*, *>): MutableMap<Any, Entity<*>> = if (f is InnerTableLinkEntityClass<*, *>) {
-        innerTableLinks.getOrPut(f.table) { LimitedHashMap() }
-    } else {
-        getMap(f.table)
-    }
+    private fun getMap(f: EntityClass<*, *>): MutableMap<Any, Entity<*>> = getMap(f.table)
 
     private fun getMap(table: IdTable<*>): MutableMap<Any, Entity<*>> = data.getOrPut(table) {
         LimitedHashMap()
@@ -104,6 +102,14 @@ class EntityCache(private val transaction: Transaction) {
      */
     fun <ID : Comparable<ID>, T : Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
 
+    internal fun <SID : Comparable<SID>, ID : Comparable<ID>, T : InnerTableLinkEntity<ID>> findInnerTableLink(
+        targetColumn: Column<EntityID<ID>>,
+        targetId: EntityID<ID>,
+        sourceId: EntityID<SID>
+    ): T? {
+        return innerTableLinks[targetColumn]?.get(sourceId)?.firstOrNull { it.id == targetId } as? T
+    }
+
     /** Stores the specified [Entity] in this [EntityCache] using its associated [EntityClass] as the key. */
     fun <ID : Comparable<ID>, T : Entity<ID>> store(f: EntityClass<ID, T>, o: T) {
         getMap(f)[o.id.value] = o
@@ -116,6 +122,14 @@ class EntityCache(private val transaction: Transaction) {
      */
     fun store(o: Entity<*>) {
         getMap(o.klass.table)[o.id.value] = o
+    }
+
+    internal fun <SID : Comparable<SID>, ID : Comparable<ID>, T : InnerTableLinkEntity<ID>> storeInnerTableLink(
+        targetColumn: Column<EntityID<ID>>,
+        sourceId: EntityID<SID>,
+        targetEntity: T
+    ) {
+        innerTableLinks.getOrPut(targetColumn) { HashMap() }.getOrPut(sourceId) { mutableSetOf() }.add(targetEntity)
     }
 
     /** Removes the specified [Entity] from this [EntityCache] using its associated [table] as the key. */

@@ -420,7 +420,7 @@ StarWarsFilm.all().first.actors.map { it.roleName }
 ```
 <note>
 If only some additional columns in the intermediate table should be used during batch insert, these can be specified by using
-<code>via()</code> with an argument provided to <code>additionalColumns</code>.
+<code>via()</code> with an argument provided to <code>additionalColumns</code>:
 <code-block>
 class StarWarsFilm(id: EntityID&lt;Int&gt;) : IntEntity(id) {
     companion object : IntEntityClass&lt;StarWarsFilm&gt;(StarWarsFilms)

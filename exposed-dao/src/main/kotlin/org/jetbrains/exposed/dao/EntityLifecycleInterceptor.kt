@@ -96,6 +96,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
     override fun beforeRollback(transaction: Transaction) {
         val entityCache = transaction.entityCache
         entityCache.clearReferrersCache()
+        entityCache.innerTableLinks.clear()
         entityCache.data.clear()
         entityCache.inserts.clear()
     }
