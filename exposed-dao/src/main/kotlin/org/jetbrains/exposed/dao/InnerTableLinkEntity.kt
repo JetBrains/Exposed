@@ -15,14 +15,14 @@ import org.jetbrains.exposed.sql.ResultRow
  *
  * @param WID ID type of the [wrapped] entity instance.
  * @property wrapped The referenced (parent) entity whose unique ID value identifies this [InnerTableLinkEntity] instance.
- * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
+ * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithData
  */
 abstract class InnerTableLinkEntity<WID : Comparable<WID>>(val wrapped: Entity<WID>) : Entity<WID>(wrapped.id) {
     /**
      * Returns the initial column-property mapping for an [InnerTableLinkEntity] instance
      * before being flushed and inserted into the database.
      *
-     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithData
      */
     abstract fun getInnerTableLinkValue(column: Column<*>): Any?
 }
@@ -39,7 +39,7 @@ abstract class InnerTableLinkEntity<WID : Comparable<WID>>(val wrapped: Entity<W
  * @param WID ID type of the wrapped entity instance.
  * @param E The [InnerTableLinkEntity] type that is managed by this class.
  * @param [table] The [IdTable] object that stores rows mapped to the wrapped entity of this class.
- * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
+ * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithData
  */
 abstract class InnerTableLinkEntityClass<WID : Comparable<WID>, out E : InnerTableLinkEntity<WID>>(
     table: IdTable<WID>
@@ -48,7 +48,7 @@ abstract class InnerTableLinkEntityClass<WID : Comparable<WID>, out E : InnerTab
      * Creates a new [InnerTableLinkEntity] instance by using the provided [row] to both create the wrapped entity
      * and any additional columns.
      *
-     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithApproval
+     * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.ProjectWithData
      */
     abstract override fun createInstance(entityId: EntityID<WID>, row: ResultRow?): E
 }
