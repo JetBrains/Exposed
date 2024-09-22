@@ -33,8 +33,16 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
     @Suppress("ComplexMethod")
     override fun beforeExecution(transaction: Transaction, context: StatementContext) {
-        when (val statement = context.statement) {
+        beforeExecution(transaction = transaction, context = context, childStatement = null)
+    }
+
+    private fun beforeExecution(transaction: Transaction, context: StatementContext, childStatement: Statement<*>?) {
+        when (val statement = childStatement ?: context.statement) {
             is Query -> transaction.flushEntities(statement)
+
+            is ReturningStatement -> {
+                beforeExecution(transaction = transaction, context = context, childStatement = statement.mainStatement)
+            }
 
             is DeleteStatement -> {
                 transaction.flushCache()
