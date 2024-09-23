@@ -199,6 +199,7 @@ open class InsertStatement<Key : Any>(
         return inserted.apply {
             insertedCount = this
             resultedValues = processResults(rs, this)
+            rs?.close()
         }
     }
 
