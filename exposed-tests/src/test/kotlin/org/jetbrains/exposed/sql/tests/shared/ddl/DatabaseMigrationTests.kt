@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
@@ -129,6 +130,45 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             expectException<IllegalArgumentException> {
                 MigrationUtils.generateMigrationScript(scriptDirectory = "src/test/resources", scriptName = "V2__Test", withLogs = false)
             }
+        }
+    }
+
+    @Test
+    fun testDropUnmappedColumnsStatementsIdentical() {
+        val t1 = object : Table("foo") {
+            val col1 = integer("col1")
+            val col2 = integer("CoL2")
+            val col3 = integer("\"CoL3\"")
+        }
+
+        val t2 = object : Table("foo") {
+            val col1 = integer("col1")
+            val col2 = integer("CoL2")
+            val col3 = integer("\"CoL3\"")
+        }
+
+        withTables(t1) {
+            val statements = MigrationUtils.dropUnmappedColumnsStatements(t2, withLogs = false)
+            assertEqualCollections(statements, emptyList())
+        }
+    }
+
+    @Test
+    fun testDropUnmappedColumns() {
+        val t1 = object : Table("foo") {
+            val id = integer("id")
+            val name = text("name")
+        }
+
+        val t2 = object : Table("foo") {
+            val id = integer("id")
+        }
+
+        withTables(excludeSettings = listOf(TestDB.SQLITE, TestDB.ORACLE), t1) {
+            assertEqualCollections(MigrationUtils.statementsRequiredForDatabaseMigration(t1, withLogs = false), emptyList())
+
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(t2, withLogs = false)
+            assertEquals(1, statements.size)
         }
     }
 

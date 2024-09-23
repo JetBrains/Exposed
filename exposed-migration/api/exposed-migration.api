@@ -1,5 +1,7 @@
 public final class MigrationUtils {
 	public static final field INSTANCE LMigrationUtils;
+	public final fun dropUnmappedColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
+	public static synthetic fun dropUnmappedColumnsStatements$default (LMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
 	public final fun generateMigrationScript ([Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;Z)Ljava/io/File;
 	public static synthetic fun generateMigrationScript$default (LMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
 	public final fun statementsRequiredForDatabaseMigration ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;

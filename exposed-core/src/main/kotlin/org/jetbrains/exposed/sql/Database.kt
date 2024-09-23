@@ -69,6 +69,11 @@ class Database private constructor(
         LazyThreadSafetyMode.NONE
     ) { metadata { supportsAlterTableWithAddColumn } }
 
+    /** Whether the database supports ALTER TABLE with a drop column clause. */
+    val supportsAlterTableWithDropColumn by lazy(
+        LazyThreadSafetyMode.NONE
+    ) { metadata { supportsAlterTableWithDropColumn } }
+
     /** Whether the database supports getting multiple result sets from a single execute. */
     val supportsMultipleResultSets by lazy(LazyThreadSafetyMode.NONE) { metadata { supportsMultipleResultSets } }
 

@@ -76,7 +76,8 @@ object MigrationUtils {
             checkMissingSequences(tables = tables, withLogs).flatMap { it.createStatement() }
         }
         val alterStatements = logTimeSpent("Preparing alter table statements", withLogs) {
-            addMissingColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs)
+            addMissingColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs) +
+                dropUnmappedColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs)
         }
 
         val modifyTablesStatements = logTimeSpent("Checking mapping consistence", withLogs) {
@@ -88,6 +89,48 @@ object MigrationUtils {
 
         val allStatements = createStatements + createSequencesStatements + alterStatements + modifyTablesStatements
         return allStatements
+    }
+
+    /**
+     * Returns the SQL statements that drop any columns that exist in the database but are not defined in [tables].
+     *
+     * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
+     * This can be disabled by setting [withLogs] to `false`.
+     *
+     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE DROP COLUMN` syntax completely.
+     * Please check the documentation.
+     */
+    fun dropUnmappedColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
+        if (tables.isEmpty()) return emptyList()
+
+        val statements = mutableListOf<String>()
+
+        val dbSupportsAlterTableWithDropColumn = TransactionManager.current().db.supportsAlterTableWithDropColumn
+
+        if (dbSupportsAlterTableWithDropColumn) {
+            val existingTablesColumns = logTimeSpent("Extracting table columns", withLogs) {
+                currentDialect.tableColumns(*tables)
+            }
+
+            val tr = TransactionManager.current()
+
+            tables.forEach { table ->
+                val existingColumns = existingTablesColumns[table].orEmpty().toSet()
+                val tableColumns = table.columns.toSet()
+                val mappedColumns = existingColumns.mapNotNull { columnMetadata ->
+                    val mappedCol = tableColumns.find { column -> columnMetadata.name.equals(column.nameUnquoted(), ignoreCase = true) }
+                    if (mappedCol != null) columnMetadata else null
+                }.toSet()
+                val unmappedColumns = existingColumns.subtract(mappedColumns)
+                unmappedColumns.forEach {
+                    statements.add(
+                        "ALTER TABLE ${tr.identity(table)} DROP COLUMN ${tr.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name)}"
+                    )
+                }
+            }
+        }
+
+        return statements
     }
 
     /**

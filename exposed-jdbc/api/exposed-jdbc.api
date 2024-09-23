@@ -45,6 +45,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 	public final fun getMetadata ()Ljava/sql/DatabaseMetaData;
 	public fun getSchemaNames ()Ljava/util/List;
 	public fun getSupportsAlterTableWithAddColumn ()Z
+	public fun getSupportsAlterTableWithDropColumn ()Z
 	public fun getSupportsMultipleResultSets ()Z
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getTableNames ()Ljava/util/Map;
