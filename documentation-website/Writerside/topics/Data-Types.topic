@@ -325,6 +325,40 @@
             </code-block>
         </chapter>
     </chapter>
+    <chapter title="How to use Multi-Dimensional Array types" id="how-to-use-multi-dimensional-array-types">
+        <p>PostgreSQL database supports the explicit ARRAY data type, which includes support for multi-dimensional arrays.</p>
+        <p>Exposed supports columns defined as multi-dimensional arrays, with the stored contents being any
+            out-of-the-box or custom data type.
+            If the contents are of a type with a supported <code>ColumnType</code> in the <code>exposed-core</code>
+            module, the column can be simply defined with that type:</p>
+
+        <code-block lang="kotlin">
+            object Teams : Table("teams") {
+            val memberIds = multi2Array<UUID>("member_ids")
+            val memberNames = multi3Array<String>("member_names")
+            val budgets = multi2Array<Double>("budgets")
+            }
+        </code-block>
+        <p>If more control is needed over the base content type, or if the latter is user-defined or from a non-core
+            module, the explicit type should be provided to the function:</p>
+
+        <code-block lang="kotlin">
+            object Teams : Table("teams") {
+            val memberIds = multi2Array<UUID>("member_ids")
+            val memberNames = multi3Array<String>("member_names", VarCharColumnType(colLength = 32))
+            }
+        </code-block>
+
+        <p>A multi-dimensional array column accepts inserts and retrieves stored array contents as a Kotlin nested <code>List</code>:</p>
+
+        <code-block lang="kotlin">
+            Teams.insert {
+                it[memberIds] = List(5) { List(5) { UUID.randomUUID() } }
+                it[memberNames] = List(3) { List(3) { List(3) { i -> "Member ${'A' + i}" } } }
+                it[budgets] = listOf(listOf(9999.0, 8888.0))
+            }
+        </code-block>
+    </chapter>
     <chapter title="Custom Data Types" id="custom-data-types">
         <p>If a database-specific data type is not immediately supported by Exposed, any existing and open column type
             class can be extended or

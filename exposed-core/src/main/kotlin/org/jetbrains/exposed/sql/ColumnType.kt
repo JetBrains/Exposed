@@ -1286,6 +1286,93 @@ class ArrayColumnType<E>(
     }
 }
 
+/**
+ * Multi-dimensional array column type for storing a collection of nested elements.
+ *
+ * @property delegate The base column type associated with this array column's individual elements.
+ * @property dimensions The number of dimensions of the multi-dimensional array.
+ * @property maximumCardinality The maximum cardinality (number of allowed elements) for each dimension of the array.
+ *
+ * **Note:** The maximum cardinality is considered for each dimension, but it is ignored by the PostgreSQL database.
+ * Validation is performed on the client side.
+ */
+class MultiArrayColumnType<T, R : List<Any>>(
+    val delegate: ColumnType<T & Any>,
+    val dimensions: Int,
+    val maximumCardinality: List<Int>? = null
+) : ColumnType<R>() {
+    val delegateType: String
+        get() = delegate.sqlType().substringBefore('(')
+
+    override fun sqlType(): String {
+        if (maximumCardinality != null) {
+            require(maximumCardinality.size == dimensions) {
+                "The size of cardinality list must be equal to the amount of array dimensions. " +
+                    "Dimensions: $dimensions, cardinality size: ${maximumCardinality.size}"
+            }
+        }
+        return delegate.sqlType() +
+            (maximumCardinality?.let { cardinality -> cardinality.joinToString("") { "[$it]" } } ?: "[]".repeat(dimensions))
+    }
+
+    override fun notNullValueToDB(value: R): Any {
+        validateValue(value)
+        return recursiveNotNullValueToDB(value, dimensions)
+    }
+
+    private fun recursiveNotNullValueToDB(value: Any, level: Int): Array<Any> = when {
+        level > 1 -> (value as List<Any>).map { recursiveNotNullValueToDB(it, level - 1) }.toTypedArray()
+        else -> (value as List<T & Any>).map { delegate.notNullValueToDB(it) }.toTypedArray()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun valueFromDB(value: Any): R? {
+        return when {
+            value is Array<*> -> recursiveValueFromDB(value, dimensions) as R?
+            else -> value as R?
+        }
+    }
+
+    private fun recursiveValueFromDB(value: Any?, level: Int): List<Any?> = when {
+        level > 1 -> (value as Array<Any?>).map { recursiveValueFromDB(it, level - 1) }
+        else -> (value as Array<Any>).map { delegate.valueFromDB(it) }
+    }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        return rs.getArray(index)?.array
+    }
+
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+        when {
+            value is Array<*> -> stmt.setArray(index, delegateType, value)
+            else -> super.setParameter(stmt, index, value)
+        }
+    }
+
+    override fun nonNullValueToString(value: R): String {
+        return "ARRAY" + recursiveNonNullValueToString(value, dimensions)
+    }
+
+    private fun recursiveNonNullValueToString(value: Any?, level: Int): String = when {
+        level > 1 -> (value as List<Any?>).joinToString(",", "[", "]") { recursiveNonNullValueToString(it, level - 1) }
+        else -> (value as List<T & Any>).joinToString(",", "[", "]") { delegate.nonNullValueAsDefaultString(it) }
+    }
+
+    private fun validateValue(value: R) {
+        validateValueRecursive(value, dimensions)
+    }
+
+    private fun validateValueRecursive(value: R, level: Int) {
+        if (maximumCardinality == null) return
+        require(value.size <= maximumCardinality[dimensions - level]) {
+            "Value must have no more than ${maximumCardinality[dimensions - level]} elements, but it has ${value.size}"
+        }
+        if (level > 1) {
+            (value as List<R>).forEach { validateValueRecursive(it, level - 1) }
+        }
+    }
+}
+
 private fun isArrayOfByteArrays(value: Array<*>) =
     value.all { it is ByteArray }
 

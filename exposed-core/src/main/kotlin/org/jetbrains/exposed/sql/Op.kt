@@ -692,6 +692,50 @@ inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnTy
     return LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class)), value)
 }
 
+/**
+ * Returns the specified 3-dimensional [value] as an array literal, with elements parsed by the [delegateType] if provided.
+ *
+ * @param value The 3-dimensional list of elements to be represented as an array literal.
+ * @param delegateType An optional parameter which provides an explicit column type to parse the elements. If not provided,
+ * the column type will be resolved based on the element type [T].
+ * @return A `LiteralOp` representing the 3-dimensional array literal for the specified [value].
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
+ */
+inline fun <reified T : Any> multi3ArrayLiteral(value: List<List<List<T>>>, delegateType: ColumnType<T>? = null): LiteralOp<List<List<List<T>>>> =
+    multiArrayLiteral(value, dimensions = 3, delegateType)
+
+/**
+ * Returns the specified 2-dimensional [value] as an array literal, with elements parsed by the [delegateType] if provided.
+ *
+ * @param value The 2-dimensional list of elements to be represented as an array literal.
+ * @param delegateType An optional parameter which provides an explicit column type to parse the elements. If not provided,
+ * the column type will be resolved based on the element type [T].
+ * @return A `LiteralOp` representing the 2-dimensional array literal for the specified [value].
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
+ */
+inline fun <reified T : Any> multi2ArrayLiteral(value: List<List<T>>, delegateType: ColumnType<T>? = null): LiteralOp<List<List<T>>> =
+    multiArrayLiteral(value, dimensions = 2, delegateType)
+
+/**
+ * Returns the specified multi-dimensional [value] as an array literal, with elements parsed by the [delegateType] if provided.
+ * The number of dimensions is specified by the [dimensions] parameter.
+ *
+ * **Note:** If [delegateType] is left `null`, the associated column type will be resolved according to the
+ * internal mapping of the element's type in [resolveColumnType].
+ *
+ * @param value The multi-dimensional list of elements to be represented as an array literal.
+ * @param dimensions The number of dimensions of the array. This value should be greater than 1.
+ * @param delegateType An optional parameter which provides an explicit column type to parse the elements. If not provided,
+ * the column type will be resolved based on the element type [T].
+ * @return A `LiteralOp` representing the multi-dimensional array literal for the specified [value].
+ * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
+ */
+inline fun <reified T : Any, R : List<Any>> multiArrayLiteral(value: R, dimensions: Int, delegateType: ColumnType<T>? = null): LiteralOp<R> {
+    @OptIn(InternalApi::class)
+    return LiteralOp(MultiArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions), value)
+}
+
 // Query Parameters
 
 /**

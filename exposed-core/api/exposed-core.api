@@ -1632,6 +1632,24 @@ public final class org/jetbrains/exposed/sql/ModOp : org/jetbrains/exposed/sql/E
 public final class org/jetbrains/exposed/sql/ModOp$Companion {
 }
 
+public final class org/jetbrains/exposed/sql/MultiArrayColumnType : org/jetbrains/exposed/sql/ColumnType {
+	public fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;ILjava/util/List;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;ILjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/ColumnType;
+	public final fun getDelegateType ()Ljava/lang/String;
+	public final fun getDimensions ()I
+	public final fun getMaximumCardinality ()Ljava/util/List;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Ljava/util/List;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Ljava/util/List;)Ljava/lang/Object;
+	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
+	public fun sqlType ()Ljava/lang/String;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Ljava/util/List;
+}
+
 public final class org/jetbrains/exposed/sql/NeqOp : org/jetbrains/exposed/sql/ComparisonOp {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)V
 }
