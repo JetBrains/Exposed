@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.sql.vendors
 
+// this may not be required? as no references seem to point to r2dbc support
+// and tests only work if url path remains 'r2dbc:postgresql' instead of expected 'r2dbc:pgsql'
+
 @Suppress("MagicNumber")
 internal object PostgreSQLNGPropertyProvider : PostgreSQLPropertyProvider() {
     override val maxColumnNameLength: Int

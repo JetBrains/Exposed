@@ -51,15 +51,6 @@ class R2dbcDatabase private constructor(
     override val identifierManager by lazy { metadata { identifierManager } }
 
     companion object {
-        private val r2dbcDriverMapping = mutableMapOf(
-            "r2dbc:h2" to "org.h2.Driver",
-            "r2dbc:postgresql" to "org.postgresql.Driver",
-            "r2dbc:mysql" to "com.mysql.cj.jdbc.Driver",
-            "r2dbc:mariadb" to "org.mariadb.jdbc.Driver",
-            "r2dbc:oracle" to "oracle.jdbc.OracleDriver",
-            "r2dbc:mssql" to "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-        )
-
         private val r2dbcDialectMapping = mutableMapOf(
             "r2dbc:h2" to H2Dialect.dialectName,
             "r2dbc:postgresql" to PostgreSQLDialect.dialectName,
@@ -69,9 +60,8 @@ class R2dbcDatabase private constructor(
             "r2dbc:mssql" to SQLServerDialect.dialectName
         )
 
-        /** Registers a new R2DBC driver, using the specified [driverClassName], with the identifier [prefix]. */
-        fun registerR2dbcDriver(prefix: String, driverClassName: String, dialect: String) {
-            r2dbcDriverMapping[prefix] = driverClassName
+        /** Registers a new R2DBC driver, using the specified [dialect], with the identifier [prefix]. */
+        fun registerR2dbcDriver(prefix: String, dialect: String) {
             r2dbcDialectMapping[prefix] = dialect
         }
 
