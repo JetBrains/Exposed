@@ -24,8 +24,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "MariaDB Connector/J" -> MariaDBDialect.dialectName
             "SQLite JDBC" -> SQLiteDialect.dialectName
             "H2 JDBC Driver" -> H2Dialect.dialectName
-            "pgjdbc-ng" -> PostgreSQLNGDialect.dialectName
-            "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
+            "pgjdbc-ng", "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
             "Oracle JDBC driver" -> OracleDialect.dialectName
             else -> {

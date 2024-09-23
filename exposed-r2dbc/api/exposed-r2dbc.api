@@ -21,7 +21,7 @@ public final class org/jetbrains/exposed/r2dbc/R2dbcDatabase$Companion {
 	public static synthetic fun connect$default (Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase$Companion;Ljava/lang/String;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;
 	public final fun getDefaultIsolationLevel (Lorg/jetbrains/exposed/r2dbc/R2dbcDatabase;)I
 	public final fun getR2dbcDialectName (Ljava/lang/String;)Ljava/lang/String;
-	public final fun registerR2dbcDriver (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun registerR2dbcDriver (Ljava/lang/String;Ljava/lang/String;)V
 }
 
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcConnectionImpl : org/jetbrains/exposed/sql/statements/api/ExposedConnection {

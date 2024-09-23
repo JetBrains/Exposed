@@ -25,15 +25,19 @@ class R2dbcDatabaseMetadataImpl(
 
     override val url: String by lazyMetadata { getUrl() }
 
-    override val version: BigDecimal by lazy { BigDecimal(connectionData.databaseVersion) }
+    override val version: BigDecimal by lazy {
+        connectionData.databaseVersion
+            .split('.', ' ')
+            .let { BigDecimal("${it[0]}.${it[1]}") }
+    }
 
     override val databaseDialectName: String by lazy {
         when (connectionData.databaseProductName) {
-            "MySQL" -> MysqlDialect.dialectName
+            "MySQL Community Server - GPL", "MySQL Community Server (GPL)" -> MysqlDialect.dialectName
             "MariaDB" -> MariaDBDialect.dialectName
             "H2" -> H2Dialect.dialectName
             "PostgreSQL" -> PostgreSQLDialect.dialectName
-            "Oracle JDBC driver" -> OracleDialect.dialectName
+            "Oracle" -> OracleDialect.dialectName
             else -> {
                 if (connectionData.databaseProductName.startsWith("Microsoft SQL Server ")) {
                     SQLServerDialect.dialectName
