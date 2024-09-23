@@ -45,7 +45,9 @@ open class ReturningStatement(
             set(value) {
                 field = value
                 if (!field) {
-                    rs.statement?.close()
+                    val statement = rs.statement
+                    rs.close()
+                    statement?.close()
                     transaction.openResultSetsCount--
                 }
             }
