@@ -929,6 +929,65 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         return array(name, resolveColumnType(E::class), maximumCardinality)
     }
 
+    /**
+     * Creates a 3-dimensional array column, with the specified [name], for storing elements of a nested `List`.
+     *
+     * **Note:** This column type is only supported by PostgreSQL dialect.
+     *
+     * @param name Name of the column.
+     * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
+     *
+     * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
+     * The whole validation is performed on the client side.
+     *
+     * @return A column instance that represents a 3-dimensional list of elements of type [T].
+     * @throws IllegalStateException If no column type mapping is found.
+     */
+    inline fun <reified T : Any> Table.multi3Array(name: String, maximumCardinality: List<Int>? = null): Column<List<List<List<T>>>> =
+        multiArray<T, List<List<List<T>>>>(name, dimensions = 3, maximumCardinality)
+
+    /**
+     * Creates a 2-dimensional array column, with the specified [name], for storing elements of a nested `List`.
+     *
+     * **Note:** This column type is only supported by PostgreSQL dialect.
+     *
+     * @param name Name of the column.
+     * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
+     *
+     * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
+     * The whole validation is performed on the client side.
+     *
+     * @return A column instance that represents a 2-dimensional list of elements of type [T].
+     * @throws IllegalStateException If no column type mapping is found.
+     */
+    inline fun <reified T : Any> Table.multi2Array(name: String, maximumCardinality: List<Int>? = null): Column<List<List<T>>> =
+        multiArray<T, List<List<T>>>(name, dimensions = 2, maximumCardinality)
+
+    /**
+     * Creates a multi-dimensional array column, with the specified [name], for storing elements of a nested `List`.
+     * The number of dimensions is specified by the [dimensions] parameter.
+     *
+     * **Note:** This column type is only supported by PostgreSQL dialect.
+     *
+     * @param name Name of the column.
+     * @param dimensions The number of dimensions of the array. This value should be greater than 1.
+     * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
+     *
+     * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
+     * The whole validation is performed on the client side.
+     *
+     * @return A column instance that represents a multi-dimensional list of elements of type [T].
+     * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
+     * @throws IllegalStateException If no column type mapping is found.
+     */
+    inline fun <reified T : Any, R : List<Any>> Table.multiArray(name: String, dimensions: Int, maximumCardinality: List<Int>? = null): Column<R> {
+        if (dimensions <= 1) {
+            error("Dimension $dimensions should be greater than 1")
+        }
+        @OptIn(InternalApi::class)
+        return registerColumn(name, MultiArrayColumnType(resolveColumnType(T::class), dimensions, maximumCardinality))
+    }
+
     // Auto-generated values
 
     /**
@@ -1674,6 +1733,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                                 H2Dialect.H2CompatibilityMode.PostgreSQL -> checkConstraints.filterNot { (name, _) ->
                                     name.startsWith("${generatedSignedCheckPrefix}short")
                                 }
+
                                 else -> checkConstraints.filterNot { (name, _) ->
                                     name.startsWith(generatedSignedCheckPrefix)
                                 }
