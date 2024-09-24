@@ -50,6 +50,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override val defaultIsolationLevel: Int by lazyMetadata { defaultTransactionIsolation }
 
     override val supportsAlterTableWithAddColumn by lazyMetadata { supportsAlterTableWithAddColumn() }
+    override val supportsAlterTableWithDropColumn by lazyMetadata { supportsAlterTableWithDropColumn() }
     override val supportsMultipleResultSets by lazyMetadata { supportsMultipleResultSets() }
     override val supportsSelectForUpdate: Boolean by lazyMetadata { supportsSelectForUpdate() }
 

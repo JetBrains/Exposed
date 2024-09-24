@@ -30,6 +30,9 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** Whether the database supports `ALTER TABLE` with an add column clause. */
     abstract val supportsAlterTableWithAddColumn: Boolean
 
+    /** Whether the database supports `ALTER TABLE` with a drop column clause. */
+    abstract val supportsAlterTableWithDropColumn: Boolean
+
     /** Whether the database supports getting multiple result sets from a single execute. */
     abstract val supportsMultipleResultSets: Boolean
 

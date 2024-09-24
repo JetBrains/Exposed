@@ -664,6 +664,7 @@ public final class org/jetbrains/exposed/sql/Database {
 	public final fun getDialect ()Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;
 	public final fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
 	public final fun getSupportsAlterTableWithAddColumn ()Z
+	public final fun getSupportsAlterTableWithDropColumn ()Z
 	public final fun getSupportsMultipleResultSets ()Z
 	public final fun getUrl ()Ljava/lang/String;
 	public final fun getUseNestedTransactions ()Z
@@ -3508,6 +3509,7 @@ public abstract class org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMe
 	public abstract fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
 	public abstract fun getSchemaNames ()Ljava/util/List;
 	public abstract fun getSupportsAlterTableWithAddColumn ()Z
+	public abstract fun getSupportsAlterTableWithDropColumn ()Z
 	public abstract fun getSupportsMultipleResultSets ()Z
 	public abstract fun getSupportsSelectForUpdate ()Z
 	public abstract fun getTableNames ()Ljava/util/Map;
