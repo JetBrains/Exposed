@@ -260,7 +260,7 @@ fun <T> transaction(
                     transaction.commit()
                 }
             }
-        } catch (cause: Throwable) {
+        } catch (cause: SQLException) {
             val currentStatement = transaction.currentStatement
             transaction.rollbackLoggingException {
                 exposedLogger.warn(
