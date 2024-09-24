@@ -269,6 +269,17 @@ fun <T> transaction(
                 )
             }
             throw cause
+        } catch (cause: Throwable) {
+            if (outer.db.useNestedTransactions) {
+                val currentStatement = transaction.currentStatement
+                transaction.rollbackLoggingException {
+                    exposedLogger.warn(
+                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                        it
+                    )
+                }
+            }
+            throw cause
         } finally {
             TransactionManager.resetCurrent(outerManager)
         }

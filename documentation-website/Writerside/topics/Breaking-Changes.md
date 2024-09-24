@@ -65,10 +65,13 @@ TestTable.upsert(
 }
 ```
 * The function `statementsRequiredForDatabaseMigration` has been moved from `SchemaUtils` to `MigrationUtils` in the `exposed-migration` module.
-* An inner transaction (with `useNestedTransactions = false`) that throws any exception will rollback any commits since the last savepoint.
+* A nested transaction (with `useNestedTransactions = true`) that throws any exception will now rollback any commits since the last savepoint.
+  This ensures that the nested transaction is properly configured to act in the exact same way as a top-level transaction or `inTopLevelTransaction()`.
+
+  An inner transaction (with `useNestedTransactions = false`) that throws any exception will also rollback any commits since the last savepoint.
   This ensures that any exception propagated from the inner transaction to the outer transaction will not be swallowed if caught by some
   exception handler wrapping the inner transaction, and any inner commits will not be saved. In version 0.55.0, this change will be reduced
-  so that only inner transactions that throw an `SQLException` from the database will trigger a rollback.
+  so that only inner transactions that throw an `SQLException` from the database will trigger such a rollback.
 
 ## 0.51.0
 

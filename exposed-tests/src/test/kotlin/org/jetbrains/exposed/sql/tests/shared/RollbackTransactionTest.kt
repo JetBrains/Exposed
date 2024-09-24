@@ -94,7 +94,8 @@ class RollbackTransactionTest : DatabaseTestsBase() {
             assertEquals(0, RollbackTable.selectAll().count())
         }
 
-        // non-db exception propagates from inner to outer without rollback and is handled when caught
+        // non-db exception propagates from inner to outer without rollback and is handled, if caught.
+        // if not caught & exception propagates all the way to outer tx, full rollback occurs (as always).
         transaction {
             val outerTxId = this.id
 

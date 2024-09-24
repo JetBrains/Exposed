@@ -14,7 +14,7 @@ Breaking changes:
 * feat!: EXPOSED-476 Update Kotlin to 2.0.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2188
 * refactor!: Move `statementsRequiredForDatabaseMigration` function from `SchemaUtils` to `MigrationUtils` by @joc-a in https://github.com/JetBrains/Exposed/pull/2195
 * feat!: EXPOSED-436 Allow using insert values on update with upsert() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2172
-* fix: EXPOSED-439 Outer transaction commits rows from failed inner transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2186
+* fix!: EXPOSED-439 Outer transaction commits rows from failed inner transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2186
 
 Deprecations:
 * deprecate: Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2208
