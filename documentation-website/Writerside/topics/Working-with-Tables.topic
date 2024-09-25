@@ -32,22 +32,22 @@
         </p>
         <p>The following example defines a table with an auto-incrementing integer <code>id</code> column and a string
             <code>name</code> column:</p>
-        <tabs group="api">
-            <tab title="DSL" id="dsl-table-def" group-key="dsl">
+        <tabs group="type">
+            <tab title="Table" id="dsl-table-def" group-key="Table">
                 <include from="DSL-Table-Types.topic" element-id="dsl-table-example"/>
             </tab>
-            <tab title="DAO" id="dao-table-def" group-key="dao">
+            <tab title="IntIdTable" id="dao-table-def" group-key="IntIdTable">
                 <include from="DAO-Table-Types.topic" element-id="dao-table-example"/>
             </tab>
         </tabs>
         <p>
             Creating the table with the above definition will result in the following SQL equivalent:
         </p>
-        <tabs group="api">
-            <tab title="DSL" id="dsl-create-table-sql" group-key="dsl">
+        <tabs group="type">
+            <tab title="Table" id="dsl-create-table-sql" group-key="Table">
                 <include from="DSL-Table-Types.topic" element-id="dsl-table-example-sql"/>
             </tab>
-            <tab title="DAO" id="dao-create-table-sql" group-key="dao">
+            <tab title="IntIdTable" id="dao-create-table-sql" group-key="IntIdTable">
                 <include from="DAO-Table-Types.topic" element-id="dao-table-example-sql"/>
             </tab>
         </tabs>

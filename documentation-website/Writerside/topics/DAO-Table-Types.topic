@@ -7,8 +7,10 @@
 
     <include from="DSL-Table-Types.topic" element-id="dsl-core-table-class"/>
     <snippet id="dao-table-types">
-        Apart from the <a href="DSL-Table-Types.topic">core <code>Table</code> class</a>, Exposed provides the base
-        <code>IdTable</code> class and its subclasses through the DAO API.
+        <p>
+            Apart from the core <code>Table</code> class, Exposed provides the base
+            <code>IdTable</code> class and its subclasses through the DAO API.
+        </p>
         <p>
             The <code>IdTable</code> class extends <code>Table</code> and is
             designed to simplify the definition of tables that use a standard <code>id</code> column as the primary key.

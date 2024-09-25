@@ -34,7 +34,7 @@
             <a href="DSL-CRUD-operations.topic" summary="Learn how to write database queries using Exposed query DSL">
                 Querying a Database
             </a>
-            <a href="Deep-Dive-into-DAO.md"
+            <a href="DAO-CRUD-Operations.topic"
                summary="Learn how to perform basic CRUD (Create, Read, Update, Delete) operations using entities mapping">
                 Introduction to ORM Entities
             </a>
