@@ -3,6 +3,10 @@
 ## 0.56.0
 * If the `distinct` parameter of `groupConcat()` is set to `true`, when using Oracle or SQL Server, this will now fail early with an
   `UnsupportedByDialectException`. Previously, the setting would be ignored and SQL function generation would not include a `DISTINCT` clause.
+* `ArrayColumnType` supports multidimensional arrays now and has one more generic parameter.
+  If the was used directly for one dimensional arrays with parameter `T` like `ArrayColumnType<T>`, now it should 
+  be defined as `ArrayColumnType<T, List<T>>`, for example `ArrayColumnType<Int>` -> `ArrayColumnType<Int, List<Int>>`
+  
 
 ## 0.55.0
 * The `DeleteStatement` property `table` is now deprecated in favor of `targetsSet`, which holds a `ColumnSet` that may be a `Table` or `Join`.

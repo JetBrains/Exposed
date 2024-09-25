@@ -907,7 +907,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
      */
     fun <E> array(name: String, columnType: ColumnType<E & Any>, maximumCardinality: Int? = null): Column<List<E>> =
-        registerColumn(name, ArrayColumnType(columnType.apply { nullable = true }, maximumCardinality))
+        arrayN<E, List<E>>(name, columnType, dimensions = 1, maximumCardinality = maximumCardinality?.let { listOf(it) })
 
     /**
      * Creates an array column, with the specified [name], for storing elements of a `List`.
@@ -924,10 +924,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
      * @throws IllegalStateException If no column type mapping is found.
      */
-    inline fun <reified E : Any> array(name: String, maximumCardinality: Int? = null): Column<List<E>> {
-        @OptIn(InternalApi::class)
-        return array(name, resolveColumnType(E::class), maximumCardinality)
-    }
+    inline fun <reified E : Any> array(name: String, maximumCardinality: Int? = null): Column<List<E>> =
+        arrayN<E, List<E>>(name, dimensions = 1, maximumCardinality?.let { listOf(it) })
 
     /**
      * Creates a 3-dimensional array column, with the specified [name], for storing elements of a nested `List`.
@@ -943,8 +941,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @return A column instance that represents a 3-dimensional list of elements of type [T].
      * @throws IllegalStateException If no column type mapping is found.
      */
-    inline fun <reified T : Any> Table.multi3Array(name: String, maximumCardinality: List<Int>? = null): Column<List<List<List<T>>>> =
-        multiArray<T, List<List<List<T>>>>(name, dimensions = 3, maximumCardinality)
+    inline fun <reified T : Any> Table.array3(name: String, maximumCardinality: List<Int>? = null): Column<List<List<List<T>>>> =
+        arrayN<T, List<List<List<T>>>>(name, dimensions = 3, maximumCardinality)
 
     /**
      * Creates a 2-dimensional array column, with the specified [name], for storing elements of a nested `List`.
@@ -960,8 +958,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @return A column instance that represents a 2-dimensional list of elements of type [T].
      * @throws IllegalStateException If no column type mapping is found.
      */
-    inline fun <reified T : Any> Table.multi2Array(name: String, maximumCardinality: List<Int>? = null): Column<List<List<T>>> =
-        multiArray<T, List<List<T>>>(name, dimensions = 2, maximumCardinality)
+    inline fun <reified T : Any> Table.array2(name: String, maximumCardinality: List<Int>? = null): Column<List<List<T>>> =
+        arrayN<T, List<List<T>>>(name, dimensions = 2, maximumCardinality)
 
     /**
      * Creates a multi-dimensional array column, with the specified [name], for storing elements of a nested `List`.
@@ -970,7 +968,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * **Note:** This column type is only supported by PostgreSQL dialect.
      *
      * @param name Name of the column.
-     * @param dimensions The number of dimensions of the array. This value should be greater than 1.
+     * @param dimensions The number of dimensions of the array.
      * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
      *
      * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
@@ -980,13 +978,30 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
      * @throws IllegalStateException If no column type mapping is found.
      */
-    inline fun <reified T : Any, R : List<Any>> Table.multiArray(name: String, dimensions: Int, maximumCardinality: List<Int>? = null): Column<R> {
-        if (dimensions <= 1) {
-            error("Dimension $dimensions should be greater than 1")
-        }
+    inline fun <reified T : Any, R : List<Any>> Table.arrayN(name: String, dimensions: Int, maximumCardinality: List<Int>? = null): Column<R> {
         @OptIn(InternalApi::class)
-        return registerColumn(name, MultiArrayColumnType(resolveColumnType(T::class), dimensions, maximumCardinality))
+        return arrayN(name, resolveColumnType(T::class), dimensions, maximumCardinality)
     }
+
+    /**
+     * Creates a multi-dimensional array column, with the specified [name], for storing elements of a nested `List`.
+     * The number of dimensions is specified by the [dimensions] parameter.
+     *
+     * **Note:** This column type is only supported by PostgreSQL dialect.
+     *
+     * @param name Name of the column.
+     * @param dimensions The number of dimensions of the array.
+     * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
+     *
+     * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
+     * The whole validation is performed on the client side.
+     *
+     * @return A column instance that represents a multi-dimensional list of elements of type [E].
+     * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
+     * @throws IllegalStateException If no column type mapping is found.
+     */
+    fun <E, R : List<Any?>> Table.arrayN(name: String, columnType: ColumnType<E & Any>, dimensions: Int, maximumCardinality: List<Int>? = null): Column<R> =
+        registerColumn(name, ArrayColumnType(columnType, dimensions, maximumCardinality))
 
     // Auto-generated values
 

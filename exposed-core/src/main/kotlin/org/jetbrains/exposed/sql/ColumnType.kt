@@ -1233,60 +1233,6 @@ class CustomEnumerationColumnType<T : Enum<T>>(
 // Array columns
 
 /**
- * Array column for storing a collection of elements.
- */
-class ArrayColumnType<E>(
-    /** Returns the base column type of this array column's individual elements. */
-    val delegate: ColumnType<E & Any>,
-    /** Returns the maximum amount of allowed elements in this array column. */
-    val maximumCardinality: Int? = null
-) : ColumnType<List<E>>() {
-    override fun sqlType(): String = buildString {
-        append(delegate.sqlType())
-        when {
-            currentDialect is H2Dialect -> append(" ARRAY", maximumCardinality?.let { "[$it]" } ?: "")
-            else -> append("[", maximumCardinality?.toString() ?: "", "]")
-        }
-    }
-
-    /** The base SQL type of this array column's individual elements without extra column identifiers. */
-    val delegateType: String
-        get() = delegate.sqlType().substringBefore('(')
-
-    @Suppress("UNCHECKED_CAST")
-    override fun valueFromDB(value: Any): List<E> = when {
-        value is java.sql.Array -> (value.array as Array<*>).map { e -> e?.let { delegate.valueFromDB(it) } as E }
-        else -> value as? List<E> ?: error("Unexpected value $value of type ${value::class.qualifiedName}")
-    }
-
-    override fun notNullValueToDB(value: List<E>): Any = value.map { e -> e?.let { delegate.notNullValueToDB(it) } }.toTypedArray()
-
-    override fun valueToString(value: List<E>?): String = if (value != null) nonNullValueToString(value) else super.valueToString(null)
-
-    override fun nonNullValueToString(value: List<E>): String {
-        val prefix = if (currentDialect is H2Dialect) "ARRAY [" else "ARRAY["
-        return value.joinToString(",", prefix, "]") { delegate.valueToString(it) }
-    }
-
-    override fun nonNullValueAsDefaultString(value: List<E>): String {
-        val prefix = if (currentDialect is H2Dialect) "ARRAY [" else "ARRAY["
-        return value.joinToString(",", prefix, "]") { delegate.valueAsDefaultString(it) }
-    }
-
-    override fun readObject(rs: ResultSet, index: Int): Any? = rs.getArray(index)
-
-    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-        when {
-            value is Array<*> && isArrayOfByteArrays(value) ->
-                stmt.setArray(index, delegateType, Array(value.size) { value[it] as ByteArray })
-
-            value is Array<*> -> stmt.setArray(index, delegateType, value)
-            else -> super.setParameter(stmt, index, value)
-        }
-    }
-}
-
-/**
  * Multi-dimensional array column type for storing a collection of nested elements.
  *
  * @property delegate The base column type associated with this array column's individual elements.
@@ -1296,7 +1242,7 @@ class ArrayColumnType<E>(
  * **Note:** The maximum cardinality is considered for each dimension, but it is ignored by the PostgreSQL database.
  * Validation is performed on the client side.
  */
-class MultiArrayColumnType<T, R : List<Any>>(
+class ArrayColumnType<T, R : List<Any?>>(
     val delegate: ColumnType<T & Any>,
     val dimensions: Int,
     val maximumCardinality: List<Int>? = null
@@ -1304,25 +1250,34 @@ class MultiArrayColumnType<T, R : List<Any>>(
     val delegateType: String
         get() = delegate.sqlType().substringBefore('(')
 
-    override fun sqlType(): String {
+    override fun sqlType(): String = buildString {
         if (maximumCardinality != null) {
             require(maximumCardinality.size == dimensions) {
                 "The size of cardinality list must be equal to the amount of array dimensions. " +
                     "Dimensions: $dimensions, cardinality size: ${maximumCardinality.size}"
             }
         }
-        return delegate.sqlType() +
-            (maximumCardinality?.let { cardinality -> cardinality.joinToString("") { "[$it]" } } ?: "[]".repeat(dimensions))
+        append(delegate.sqlType())
+        when {
+            currentDialect is H2Dialect -> {
+                require(dimensions == 1) {
+                    "H2 does not support multidimensional arrays. " +
+                        "`dimensions` parameter for H2 database must be 1"
+                }
+                append(" ARRAY", maximumCardinality?.let { "[${it.first()}]" } ?: "")
+            }
+
+            else -> append(maximumCardinality?.let { cardinality -> cardinality.joinToString("") { "[$it]" } } ?: "[]".repeat(dimensions))
+        }
     }
 
     override fun notNullValueToDB(value: R): Any {
-        validateValue(value)
         return recursiveNotNullValueToDB(value, dimensions)
     }
 
-    private fun recursiveNotNullValueToDB(value: Any, level: Int): Array<Any> = when {
+    private fun recursiveNotNullValueToDB(value: Any, level: Int): Array<Any?> = when {
         level > 1 -> (value as List<Any>).map { recursiveNotNullValueToDB(it, level - 1) }.toTypedArray()
-        else -> (value as List<T & Any>).map { delegate.notNullValueToDB(it) }.toTypedArray()
+        else -> (value as List<T>).map { it?.let { delegate.notNullValueToDB(it) } }.toTypedArray()
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -1335,7 +1290,7 @@ class MultiArrayColumnType<T, R : List<Any>>(
 
     private fun recursiveValueFromDB(value: Any?, level: Int): List<Any?> = when {
         level > 1 -> (value as Array<Any?>).map { recursiveValueFromDB(it, level - 1) }
-        else -> (value as Array<Any>).map { delegate.valueFromDB(it) }
+        else -> (value as Array<Any?>).map { it?.let { delegate.valueFromDB(it) } }
     }
 
     override fun readObject(rs: ResultSet, index: Int): Any? {
@@ -1344,32 +1299,24 @@ class MultiArrayColumnType<T, R : List<Any>>(
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when {
+            value is Array<*> && isArrayOfByteArrays(value) ->
+                stmt.setArray(index, delegateType, Array(value.size) { value[it] as ByteArray })
+
             value is Array<*> -> stmt.setArray(index, delegateType, value)
             else -> super.setParameter(stmt, index, value)
         }
     }
 
     override fun nonNullValueToString(value: R): String {
-        return "ARRAY" + recursiveNonNullValueToString(value, dimensions)
+        return when {
+            currentDialect is H2Dialect -> "ARRAY " + recursiveNonNullValueToString(value, dimensions)
+            else -> "ARRAY" + recursiveNonNullValueToString(value, dimensions)
+        }
     }
 
     private fun recursiveNonNullValueToString(value: Any?, level: Int): String = when {
         level > 1 -> (value as List<Any?>).joinToString(",", "[", "]") { recursiveNonNullValueToString(it, level - 1) }
         else -> (value as List<T & Any>).joinToString(",", "[", "]") { delegate.nonNullValueAsDefaultString(it) }
-    }
-
-    private fun validateValue(value: R) {
-        validateValueRecursive(value, dimensions)
-    }
-
-    private fun validateValueRecursive(value: R, level: Int) {
-        if (maximumCardinality == null) return
-        require(value.size <= maximumCardinality[dimensions - level]) {
-            "Value must have no more than ${maximumCardinality[dimensions - level]} elements, but it has ${value.size}"
-        }
-        if (level > 1) {
-            (value as List<R>).forEach { validateValueRecursive(it, level - 1) }
-        }
     }
 }
 

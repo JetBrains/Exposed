@@ -4,17 +4,11 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.multi2ArrayLiteral
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.upsert
 import org.junit.Test
 import kotlin.test.assertNull
 
@@ -25,7 +19,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun test2xMultiArray() {
         val tester = object : IntIdTable("test_table") {
-            val multiArray = multi2Array<Int>("multi_array")
+            val multiArray = array2<Int>("multi_array")
         }
 
         withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
@@ -43,7 +37,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun test3xMultiArray() {
         val tester = object : IntIdTable("test_table") {
-            val multiArray = multi3Array<Int>("multi_array")
+            val multiArray = array3<Int>("multi_array")
         }
 
         withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
@@ -63,7 +57,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun test5xMultiArray() {
         val tester = object : IntIdTable("test_table") {
-            val multiArray = multiArray<String, List<List<List<List<List<String>>>>>>("multi_array", 5)
+            val multiArray = arrayN<String, List<List<List<List<List<String>>>>>>("multi_array", 5)
         }
 
         withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
@@ -85,12 +79,12 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
         val default = listOf(listOf(1, 2), listOf(3, 4))
 
         val tester = object : IntIdTable("test_table") {
-            val multiArray = multi2Array<Int>("multi_array")
+            val multiArray = array2<Int>("multi_array")
                 .default(default)
         }
 
         val testerDatabaseGenerated = object : IntIdTable("test_table") {
-            val multiArray = multi2Array<Int>("multi_array")
+            val multiArray = array2<Int>("multi_array")
                 .databaseGenerated()
         }
 
@@ -108,22 +102,22 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
         val list = listOf(listOf(1, 2, 3), listOf(4, 5, 6))
 
         val tester = object : IntIdTable("test_table") {
-            val multiArray = multi2Array<Int>("multi_array", maximumCardinality = listOf(2, 2))
+            val multiArray = array2<Int>("multi_array", maximumCardinality = listOf(2, 2))
         }
 
         withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
-            expectException<IllegalArgumentException> {
-                tester.insert {
-                    it[tester.multiArray] = list
-                }
+            tester.insert {
+                it[tester.multiArray] = list
             }
+
+            assertEqualLists(list.flatten(), tester.selectAll().first()[tester.multiArray].flatten())
         }
     }
 
     @Test
     fun testMultiArrayWithNullable() {
         val tester = object : IntIdTable("test_table") {
-            val multiArray = multi2Array<Int>("multi_array")
+            val multiArray = array2<Int>("multi_array")
                 .nullable()
         }
 
@@ -139,14 +133,32 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun testMultiArrayLiteral() {
         val tester = object : IntIdTable("test_table") {
-            val multiArray = multi2Array<Int>("multi_array")
+            val multiArray = array2<Int>("multi_array")
         }
 
         withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
             val list = listOf(listOf(1, 2), listOf(3, 4))
 
             tester.insert {
-                it[multiArray] = multi2ArrayLiteral(list)
+                it[multiArray] = arrayNLiteral<Int, List<List<Int>>>(list, dimensions = 2)
+            }
+
+            val value = tester.selectAll().first()[tester.multiArray]
+            assertEqualLists(list.flatten(), value.flatten())
+        }
+    }
+
+    @Test
+    fun testMultiArrayParam() {
+        val tester = object : IntIdTable("test_table") {
+            val multiArray = array2<Int>("multi_array")
+        }
+
+        withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
+            val list = listOf(listOf(1, 2), listOf(3, 4))
+
+            tester.insert {
+                it[multiArray] = arrayNParam<Int, List<List<Int>>>(list, dimensions = 2)
             }
 
             val value = tester.selectAll().first()[tester.multiArray]
@@ -157,7 +169,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun testMultiArrayUpdate() {
         val tester = object : IntIdTable("test_table") {
-            val multiArray = multi2Array<Int>("multi_array")
+            val multiArray = array2<Int>("multi_array")
         }
 
         withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
@@ -185,7 +197,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun testMultiArrayUpsert() {
         val tester = object : IntIdTable("test_table") {
-            val multiArray = multi2Array<Int>("multi_array")
+            val multiArray = array2<Int>("multi_array")
         }
 
         withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
@@ -217,7 +229,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
     }
 
     object MultiArrayTable : IntIdTable() {
-        val multiArray = multi2Array<Int>("multi_array")
+        val multiArray = array2<Int>("multi_array")
     }
 
     class MultiArrayEntity(id: EntityID<Int>) : IntEntity(id) {

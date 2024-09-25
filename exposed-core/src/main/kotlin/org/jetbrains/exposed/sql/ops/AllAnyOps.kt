@@ -41,6 +41,8 @@ class AllAnyFromSubQueryOp<T>(
  * against an array of values.
  *
  * **Note** This operation is only supported by PostgreSQL and H2 dialects.
+ *
+ * **Note** This operation is supported only for 1 dimensional arrays
  */
 class AllAnyFromArrayOp<T : Any>(
     isAny: Boolean,
@@ -48,7 +50,7 @@ class AllAnyFromArrayOp<T : Any>(
     private val delegateType: ColumnType<T>
 ) : AllAnyFromBaseOp<T, List<T>>(isAny, array) {
     override fun QueryBuilder.registerSubSearchArgument(subSearch: List<T>) {
-        registerArgument(ArrayColumnType(delegateType), subSearch)
+        registerArgument(ArrayColumnType<T, List<T>>(delegateType, dimensions = 1), subSearch)
     }
 }
 
