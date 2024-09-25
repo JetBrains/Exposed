@@ -4,9 +4,12 @@
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="CRUD Operations" id="DAO-CRUD-Operations">
+    <show-structure for="chapter,procedure" depth="2"/>
 
-    <p>The DAO (Data Access Object) API of Exposed, is similar to ORM frameworks like Hibernate with a Kotlin-specific API.</p>
-
+    <p>
+        CRUD (Create, Read, Update, Delete) are the four basic operations supported by any database. This section
+        demonstrates how to perform SQL CRUD operations using Exposed's DAO (Data Access Object) API.
+    </p>
     <chapter title="Create" id="create">
         <p>
             To create a new table row, use the <code>new</code> query.
@@ -44,19 +47,7 @@
         </code-block>
     </chapter>
     <chapter title="Read" id="read">
-        <p>To get entities use one of the following methods:</p>
-
-        <code-block lang="kotlin">
-            val movies = StarWarsFilm.all()
-            val movies = StarWarsFilm.find { StarWarsFilms.sequelId eq 8 }
-            val movie = StarWarsFilm.findById(5)
-        </code-block>
-        <tip>
-            For a list of available predicates, see
-            <a href="DSL-Querying-data.topic" anchor="where-expression">DSL Where expression</a>.
-        </tip>
-        <p>Read a value from a property similar to any property in a Kotlin class:</p>
-
+        <p>To read a value from a property, simply access it as you would with any property in a Kotlin class:</p>
         <code-block lang="kotlin">
             val name = movie.name
         </code-block>
@@ -68,6 +59,36 @@
                 val id: Int = movie.id.value
             </code-block>
         </note>
+        <p>To retrieve entities, use one of the following methods:</p>
+            <chapter title="all" id="read-all">
+                To get all the entity instances associated with this entity class, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/all.html"><code>all()</code></a>
+                function:
+                <code-block lang="kotlin">
+                    val movies = StarWarsFilm.all()
+                </code-block>
+            </chapter>
+            <chapter title="find" id="find-all">
+                To get all the entity instances that conform to the conditional expression, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/find.html"><code>find()</code></a>
+                function:
+                <code-block lang="kotlin">
+                    val movies = StarWarsFilm.find { StarWarsFilms.sequelId eq 8 }
+                </code-block>
+            </chapter>
+            <chapter title="findById" id="find-by-id">
+                To get an entity by its id value, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/find-by-id.html"><code>findById()</code></a>
+                function:
+                <code-block lang="kotlin">
+                    val movie = StarWarsFilm.findById(5)
+                </code-block>
+            </chapter>
+        <tip>
+            For a list of available predicates, see
+            <a href="DSL-Querying-data.topic" anchor="where-expression">DSL Where expression</a>.
+        </tip>
+
         <p>
             If the entity is a <code>CompositeEntity</code>, its <code>id</code> property can be used to refer to
             all composite columns and to get entities,
@@ -85,19 +106,9 @@
             val directors = Director.find { Directors.id eq directorId }
         </code-block>
     </chapter>
-    <chapter title="Sort (Order-by)" id="sort-order-by">
-        <p>Ascending order:</p>
-        <code-block lang="kotlin">
-            val movies = StarWarsFilm.all().sortedBy { it.sequelId }
-        </code-block>
-        <p>Descending order:</p>
-        <code-block lang="kotlin">
-            val movies = StarWarsFilm.all().sortedByDescending { it.sequelId }
-        </code-block>
-    </chapter>
     <chapter title="Update" id="update">
         <p>
-            Update the value of a property similar to any property in a Kotlin class:
+            You can update the value of a property just as you would with any property in a Kotlin class:
         </p>
         <code-block lang="kotlin">
             movie.name = &quot;Episode VIII – The Last Jedi&quot;
@@ -106,22 +117,28 @@
             Exposed doesn't make an immediate update when you set a new value for <code>Entity</code>, it just stores it on the inner map.
             "Flushing" values to the database occurs at the end of the transaction, or before the next <code>SELECT *</code> from the database.
         </note>
-        <p>
-            Search for an entity by its id and apply an update:
-        </p>
-        <code-block lang="kotlin">
-            val updatedMovie = StarWarsFilm.findByIdAndUpdate(5) {
-                it.name = &quot;Episode VIII – The Last Jedi&quot;
-            }
-        </code-block>
-        <p>
-            Search for a single entity by a query and apply an update:
-        </p>
-        <code-block lang="kotlin">
-            val updatedMovie2 = StarWarsFilm.findSingleByAndUpdate(StarWarsFilms.name eq &quot;The Last Jedi&quot;) {
-                it.name = &quot;Episode VIII – The Last Jedi&quot;
-            }
-        </code-block>
+        <chapter title="findByIdAndUpdate" id="findByIdAndUpdate">
+            <p>
+                To search for an entity by its id and apply an update, use the <code>findByIdAndUpdate()</code> function:
+            </p>
+            <code-block lang="kotlin">
+                val updatedMovie = StarWarsFilm.findByIdAndUpdate(5) {
+                    it.name = &quot;Episode VIII – The Last Jedi&quot;
+                }
+            </code-block>
+        </chapter>
+        <chapter title="findSingleByAndUpdate" id="findSingleByAndUpdate">
+            <p>
+                To search for a single entity by a query and apply an update, use the <code>findSingleByAndUpdate()</code>
+                function:
+            </p>
+            <code-block lang="kotlin">
+                val updatedMovie2 = StarWarsFilm.findSingleByAndUpdate(StarWarsFilms.name eq &quot;The Last Jedi&quot;) {
+                    it.name = &quot;Episode VIII – The Last Jedi&quot;
+                }
+            </code-block>
+        </chapter>
+
     </chapter>
     <chapter title="Delete" id="delete">
         <p>
@@ -131,9 +148,23 @@
             movie.delete()
         </code-block>
     </chapter>
+    <chapter title="Sort by" id="sort-by">
+        <chapter title="sortedBy" id="sortedBy">
+            <p>To sort results in ascending order, use <code>sortedBy</code>:</p>
+            <code-block lang="kotlin">
+                val movies = StarWarsFilm.all().sortedBy { it.sequelId }
+            </code-block>
+        </chapter>
+        <chapter title="sortedByDescending" id="sortedByDescending">
+            <p>To sort results in descending order, use <code>sortedByDescending</code>:</p>
+            <code-block lang="kotlin">
+                val movies = StarWarsFilm.all().sortedByDescending { it.sequelId }
+            </code-block>
+        </chapter>
+    </chapter>
     <chapter title="Read entity with a join to another table" id="read-entity-with-a-join-to-another-table">
-        <p>Let's imagine that you want to find all users who rated second SW film with more than 5.
-            First of all, we should write that query using Exposed DSL.</p>
+        <p>Suppose that you want to find all users who rated the second Star Wars film with a score greater than 5.
+            First, you would write that query using Exposed DSL.</p>
 
         <code-block lang="kotlin">
             val query = Users.innerJoin(UserRatings).innerJoin(StarWarsFilm)
@@ -142,17 +173,19 @@
                     StarWarsFilms.sequelId eq 2 and (UserRatings.value gt 5)
                 }.withDistinct()
         </code-block>
-        <p>After that all we have to do is to wrap a result with <code>User</code> entity:</p>
+        <p>
+            Once the query is defined, you can wrap the result in the <code>User</code> entity using the
+            <code>wrapRows()</code> function to generate entities from the retrieved data:</p>
         <code-block lang="kotlin">
             val users = User.wrapRows(query).toList()
         </code-block>
     </chapter>
 
     <chapter title="Use queries as expressions" id="use-queries-as-expressions">
-        <p>Imagine that you want to sort cities by how many users each city has. In order to do so, you can write a
-            sub-query which counts users in each city and
-            order by that number. Though in order to do so you'll have to convert <code>Query</code> to
-            <code>Expression</code>. This can be done using <code>wrapAsExpression</code>
+        <p>Suppose that you want to sort cities by the number of users in each city. To achieve this, you can write a
+            subquery which counts the users in each city and
+            then order the result by that count.To do so, however, you need to convert the <code>Query</code> to an
+            <code>Expression</code>. This can be done using the <code>wrapAsExpression()</code>
             function:</p>
         <code-block lang="kotlin">
             val expression = wrapAsExpression&lt;Int&gt;(Users
@@ -168,9 +201,10 @@
     </chapter>
 
     <chapter title="Add computed fields to entity class" id="add-computed-fields-to-entity-class">
-        <p>Imagine that you want to use a window function to rank films with each entity fetch. The companion object of the entity class can override any open
-            function in <code>EntityClass</code>, but to achieve this functionality only <code>searchQuery()</code> needs to
-            be overriden. The results of the function can then be accessed using a property of the entity class:</p>
+        <p>Suppose that you want to use a window function to rank films with each entity fetch. The companion object of
+            the entity class can override any open
+            function in <code>EntityClass</code>. However, to achieve this functionality, you only need to override
+            <code>searchQuery()</code>. The results of the function can then be accessed through a property of the entity class:</p>
 
         <code-block lang="kotlin"><![CDATA[
             object StarWarsFilms : IntIdTable() {
