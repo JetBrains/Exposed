@@ -5,12 +5,21 @@
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="Field transformations" id="DAO-Field-Transformations">
 
-    <p>As databases could store only basic types like integers and strings it's not always conveniently to keep the same simplicity on DAO level.
-        Sometimes you may want to make some transformations like parsing json from a varchar column or get some value from a cache based on value from a database.
-        In that case the preferred way is to use column transformations. Assume that we want to define unsigned integer field on Entity, but Exposed doesn't have such
-        column type yet.</p>
-
-    <code-block lang="kotlin"><![CDATA[
+    <p>
+        As databases typically store only basic types, such as integers and strings, it's not always convenient to keep
+        the same simplicity on Data Access Object (DAO) level.
+    </p>
+    <p>
+        For example, you might need to parse JSON from a <code>VARCHAR</code> column, or retrieve values from a cache
+        based on data from the database.
+        In such cases, the preferred approach is to use column transformations.
+    </p>
+    <chapter title="Example: Defining an Unsigned Integer field" id="defining-unsigned-int-field">
+        <p>
+            Suppose that you want to define an unsigned integer field on an entity, but Exposed doesn't have such
+            column type yet. You can achieve this by using the following implementation:
+        </p>
+        <code-block lang="kotlin"><![CDATA[
         object TableWithUnsignedInteger : IntIdTable() {
             val uint = integer("uint")
         }
@@ -20,9 +29,18 @@
             companion object : IntEntityClass<EntityWithUInt>()
         }
     ]]></code-block>
-    <p><code>transform</code> function accept two lambdas to convert values to and from an original column type.
-        After that in your code you'll be able to put only <code>UInt</code> instances into <code>uint</code> field.
-        It still possible to insert/update values with negative integers via DAO, but your business code becomes much cleaner.
-        Please keep in mind what such transformations will aqure on every access to a field what means that you should avoid heavy transformations here.</p>
+        <p>
+            The <code>transform</code> function accept two lambdas that convert values to and from the original column type.
+            In this case, you make sure to store only <code>UInt</code> instances in the <code>uint</code> field.
+        </p>
+        <p>
+            Although it is still possible to insert or update values with negative integers via DAO, this approach assures
+            a cleaner business logic.
+        </p>
+        <note>
+            Note that these transformations will occur with every access to a field. Therefore, to maintain performance
+            efficiency, it is advisable to avoid heavy transformations in this context.
+        </note>
+    </chapter>
 
 </topic>
