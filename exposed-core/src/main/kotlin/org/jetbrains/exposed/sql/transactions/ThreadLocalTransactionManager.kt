@@ -260,13 +260,24 @@ fun <T> transaction(
                     transaction.commit()
                 }
             }
-        } catch (cause: Throwable) {
+        } catch (cause: SQLException) {
             val currentStatement = transaction.currentStatement
             transaction.rollbackLoggingException {
                 exposedLogger.warn(
                     "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
                     it
                 )
+            }
+            throw cause
+        } catch (cause: Throwable) {
+            if (outer.db.useNestedTransactions) {
+                val currentStatement = transaction.currentStatement
+                transaction.rollbackLoggingException {
+                    exposedLogger.warn(
+                        "Transaction rollback failed: ${it.message}. Statement: $currentStatement",
+                        it
+                    )
+                }
             }
             throw cause
         } finally {

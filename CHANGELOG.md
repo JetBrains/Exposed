@@ -14,6 +14,7 @@ Breaking changes:
 * feat!: EXPOSED-476 Update Kotlin to 2.0.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2188
 * refactor!: Move `statementsRequiredForDatabaseMigration` function from `SchemaUtils` to `MigrationUtils` by @joc-a in https://github.com/JetBrains/Exposed/pull/2195
 * feat!: EXPOSED-436 Allow using insert values on update with upsert() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2172
+* fix!: EXPOSED-439 Outer transaction commits rows from failed inner transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2186
 
 Deprecations:
 * deprecate: Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2208
@@ -25,7 +26,6 @@ Features:
 * feat: EXPOSED-486 Support REPLACE INTO ... SELECT clause by @bog-walk in https://github.com/JetBrains/Exposed/pull/2199
 
 Bug fixes:
-* fix: EXPOSED-439 Outer transaction commits rows from failed inner transaction by @bog-walk in https://github.com/JetBrains/Exposed/pull/2186
 * fix: EXPOSED-464 `CurrentTimestampWithTimeZone` expression does not work as a default by @joc-a in https://github.com/JetBrains/Exposed/pull/2180
 * fix: EXPOSED-474 Unexpected value of type when using a ColumnTransfor… by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2191
 * fix: EXPOSED-472 Alias IdTable fails with isNull and eq ops by @bog-walk in https://github.com/JetBrains/Exposed/pull/2189

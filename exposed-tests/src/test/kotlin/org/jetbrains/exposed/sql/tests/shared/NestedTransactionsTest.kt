@@ -22,6 +22,15 @@ import kotlin.test.assertNotNull
 import kotlin.test.fail
 
 class NestedTransactionsTest : DatabaseTestsBase() {
+    private val db by lazy {
+        Database.connect(
+            "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "",
+            databaseConfig = DatabaseConfig {
+                useNestedTransactions = true
+                defaultMaxAttempts = 1
+            }
+        )
+    }
 
     @Test
     fun testNestedTransactions() {
@@ -78,21 +87,9 @@ class NestedTransactionsTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun testNestedTransactionNotCommittedAfterFailure() {
+    fun testNestedTransactionNotCommittedAfterDatabaseFailure() {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-        val db = Database.connect(
-            "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "",
-            databaseConfig = DatabaseConfig {
-                useNestedTransactions = true
-                defaultMaxAttempts = 1
-            }
-        )
 
-        fun assertSingleRecordInNewTransactionAndReset() = transaction(db) {
-            val result = DMLTestsData.Cities.selectAll().single()[DMLTestsData.Cities.name]
-            assertEquals("City A", result)
-            DMLTestsData.Cities.deleteAll()
-        }
         val fakeSQLString = "BROKEN_SQL_THAT_CAUSES_EXCEPTION"
 
         transaction(db) {
@@ -146,5 +143,68 @@ class NestedTransactionsTest : DatabaseTestsBase() {
         transaction(db) {
             SchemaUtils.drop(DMLTestsData.Cities)
         }
+    }
+
+    @Test
+    fun testNestedTransactionNotCommittedAfterException() {
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+
+        val exceptionMessage = "Failure!"
+
+        transaction(db) {
+            SchemaUtils.create(DMLTestsData.Cities)
+        }
+
+        transaction(db) {
+            val outerTxId = this.id
+
+            DMLTestsData.Cities.insert { it[name] = "City A" }
+            assertEquals(1, DMLTestsData.Cities.selectAll().count())
+
+            try {
+                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, db = db) {
+                    val innerTxId = this.id
+                    assertNotEquals(outerTxId, innerTxId)
+
+                    DMLTestsData.Cities.insert { it[name] = "City B" }
+                    error(exceptionMessage)
+                }
+            } catch (cause: IllegalStateException) {
+                assertContains(cause.toString(), exceptionMessage)
+            }
+        }
+
+        assertSingleRecordInNewTransactionAndReset()
+
+        transaction(db) {
+            val outerTxId = this.id
+
+            DMLTestsData.Cities.insert { it[name] = "City A" }
+            assertEquals(1, DMLTestsData.Cities.selectAll().count())
+
+            try {
+                transaction(db) {
+                    val innerTxId = this.id
+                    assertNotEquals(outerTxId, innerTxId)
+
+                    DMLTestsData.Cities.insert { it[name] = "City B" }
+                    error(exceptionMessage)
+                }
+            } catch (cause: IllegalStateException) {
+                assertContains(cause.toString(), exceptionMessage)
+            }
+        }
+
+        assertSingleRecordInNewTransactionAndReset()
+
+        transaction(db) {
+            SchemaUtils.drop(DMLTestsData.Cities)
+        }
+    }
+
+    private fun assertSingleRecordInNewTransactionAndReset() = transaction(db) {
+        val result = DMLTestsData.Cities.selectAll().single()[DMLTestsData.Cities.name]
+        assertEquals("City A", result)
+        DMLTestsData.Cities.deleteAll()
     }
 }
