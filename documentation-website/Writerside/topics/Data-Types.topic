@@ -334,9 +334,9 @@
 
         <code-block lang="kotlin">
             object Teams : Table("teams") {
-            val memberIds = multi2Array<UUID>("member_ids")
-            val memberNames = multi3Array<String>("member_names")
-            val budgets = multi2Array<Double>("budgets")
+            val memberIds = array2<UUID>("member_ids")
+            val memberNames = array3<String>("member_names")
+            val budgets = array2<Double>("budgets")
             }
         </code-block>
         <p>If more control is needed over the base content type, or if the latter is user-defined or from a non-core
@@ -344,8 +344,8 @@
 
         <code-block lang="kotlin">
             object Teams : Table("teams") {
-            val memberIds = multi2Array<UUID>("member_ids")
-            val memberNames = multi3Array<String>("member_names", VarCharColumnType(colLength = 32))
+            val memberIds = array2<UUID>("member_ids")
+            val memberNames = array3<String>("member_names", VarCharColumnType(colLength = 32))
             }
         </code-block>
 

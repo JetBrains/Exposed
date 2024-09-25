@@ -687,53 +687,24 @@ fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(Decimal
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnType<T>? = null): LiteralOp<List<T>> {
-    @OptIn(InternalApi::class)
-    return LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class)), value)
-}
+inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnType<T>? = null): LiteralOp<List<T>> =
+    arrayNLiteral(value, delegateType, dimensions = 1)
 
 /**
- * Returns the specified 3-dimensional [value] as an array literal, with elements parsed by the [delegateType] if provided.
+ * Returns the specified [value] as an array literal, with elements parsed by the [delegateType] if provided.
  *
- * @param value The 3-dimensional list of elements to be represented as an array literal.
- * @param delegateType An optional parameter which provides an explicit column type to parse the elements. If not provided,
- * the column type will be resolved based on the element type [T].
- * @return A `LiteralOp` representing the 3-dimensional array literal for the specified [value].
- * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
- */
-inline fun <reified T : Any> multi3ArrayLiteral(value: List<List<List<T>>>, delegateType: ColumnType<T>? = null): LiteralOp<List<List<List<T>>>> =
-    multiArrayLiteral(value, dimensions = 3, delegateType)
-
-/**
- * Returns the specified 2-dimensional [value] as an array literal, with elements parsed by the [delegateType] if provided.
- *
- * @param value The 2-dimensional list of elements to be represented as an array literal.
- * @param delegateType An optional parameter which provides an explicit column type to parse the elements. If not provided,
- * the column type will be resolved based on the element type [T].
- * @return A `LiteralOp` representing the 2-dimensional array literal for the specified [value].
- * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
- */
-inline fun <reified T : Any> multi2ArrayLiteral(value: List<List<T>>, delegateType: ColumnType<T>? = null): LiteralOp<List<List<T>>> =
-    multiArrayLiteral(value, dimensions = 2, delegateType)
-
-/**
- * Returns the specified multi-dimensional [value] as an array literal, with elements parsed by the [delegateType] if provided.
- * The number of dimensions is specified by the [dimensions] parameter.
- *
- * **Note:** If [delegateType] is left `null`, the associated column type will be resolved according to the
+ * **Note** If [delegateType] is left `null`, the associated column type will be resolved according to the
  * internal mapping of the element's type in [resolveColumnType].
  *
- * @param value The multi-dimensional list of elements to be represented as an array literal.
- * @param dimensions The number of dimensions of the array. This value should be greater than 1.
- * @param delegateType An optional parameter which provides an explicit column type to parse the elements. If not provided,
- * the column type will be resolved based on the element type [T].
- * @return A `LiteralOp` representing the multi-dimensional array literal for the specified [value].
- * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
+ * **Note:** Because arrays can have varying dimensions, you must specify the type of elements
+ * and the number of dimensions when using array literals.
+ * For example, use `arrayNLiteral<Int, List<List<Int>>>(list, dimensions = 2)`.
+ *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any, R : List<Any>> multiArrayLiteral(value: R, dimensions: Int, delegateType: ColumnType<T>? = null): LiteralOp<R> {
+inline fun <reified T : Any, R : List<Any>> arrayNLiteral(value: R, delegateType: ColumnType<T>? = null, dimensions: Int): LiteralOp<R> {
     @OptIn(InternalApi::class)
-    return LiteralOp(MultiArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions), value)
+    return LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions), value)
 }
 
 // Query Parameters
@@ -820,9 +791,24 @@ fun blobParam(value: ExposedBlob, useObjectIdentifier: Boolean = false): Express
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType<T>? = null): Expression<List<T>> {
+inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType<T>? = null): Expression<List<T>> =
+    arrayNParam(value, delegateType, dimensions = 1)
+
+/**
+ * Returns the specified [value] as an array query parameter, with elements parsed by the [delegateType] if provided.
+ *
+ * **Note** If [delegateType] is left `null`, the associated column type will be resolved according to the
+ * internal mapping of the element's type in [resolveColumnType].
+ *
+ * **Note:** Because arrays can have varying dimensions, you must specify the type of elements
+ * and the number of dimensions when using array literals.
+ * For example, use `arrayNParam<Int, List<List<Int>>>(list, dimensions = 2)`.
+ *
+ * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
+ */
+inline fun <reified T : Any, R : List<Any>> arrayNParam(value: R, delegateType: ColumnType<T>? = null, dimensions: Int): Expression<R> {
     @OptIn(InternalApi::class)
-    return QueryParameter(value, ArrayColumnType(delegateType ?: resolveColumnType(T::class)))
+    return QueryParameter(value, ArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions))
 }
 
 // Misc.

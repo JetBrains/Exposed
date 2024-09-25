@@ -221,7 +221,7 @@ object SchemaUtils {
                                 }
                             }
 
-                            column.columnType is ArrayColumnType<*> && dialect is PostgreSQLDialect -> {
+                            column.columnType is ArrayColumnType<*, *> && dialect is PostgreSQLDialect -> {
                                 (value as List<*>)
                                     .takeIf { it.isNotEmpty() }
                                     ?.run {

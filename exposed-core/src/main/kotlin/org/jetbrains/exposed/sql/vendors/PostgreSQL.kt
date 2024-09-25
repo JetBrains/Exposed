@@ -32,7 +32,7 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
         e is LiteralOp<*> && e.columnType is BlobColumnType && e.columnType.useObjectIdentifier && (currentDialect as? H2Dialect) == null -> {
             "lo_from_bytea(0, ${super.processForDefaultValue(e)} :: bytea)"
         }
-        e is LiteralOp<*> && e.columnType is ArrayColumnType<*> -> {
+        e is LiteralOp<*> && e.columnType is ArrayColumnType<*, *> -> {
             val processed = super.processForDefaultValue(e)
             processed
                 .takeUnless { it == "ARRAY[]" }
