@@ -16,7 +16,7 @@
         <toc-element topic="Transactions.md"/>
     </toc-element>
     <toc-element toc-title="Schemas">
-        <toc-element topic="Table-Definition.topic"/>
+        <toc-element topic="Working-with-Tables.topic"/>
         <toc-element topic="Data-Types.topic"/>
         <toc-element topic="SQL-Functions.md"/>
         <toc-element topic="Working-with-Schema.topic"/>
@@ -27,7 +27,12 @@
         <toc-element topic="Working-with-Sequence.topic"/>
         <toc-element topic="DSL-Querying-data.topic"/>
     </toc-element>
-    <toc-element topic="Deep-Dive-into-DAO.md"/>
+    <toc-element toc-title="Deep Dive into DAO">
+        <toc-element topic="DAO-Table-Types.topic"/>
+        <toc-element topic="DAO-CRUD-Operations.topic"/>
+        <toc-element topic="DAO-Relationships.topic"/>
+        <toc-element topic="DAO-Field-Transformations.topic"/>
+    </toc-element>
     <toc-element toc-title="Releases">
         <toc-element topic="Breaking-Changes.md"/>
         <toc-element topic="Migration-Guide.md"/>

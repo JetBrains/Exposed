@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Field transformations" id="DAO-Field-Transformations">
+
+    <p>As databases could store only basic types like integers and strings it's not always conveniently to keep the same simplicity on DAO level.
+        Sometimes you may want to make some transformations like parsing json from a varchar column or get some value from a cache based on value from a database.
+        In that case the preferred way is to use column transformations. Assume that we want to define unsigned integer field on Entity, but Exposed doesn't have such
+        column type yet.</p>
+
+    <code-block lang="kotlin"><![CDATA[
+        object TableWithUnsignedInteger : IntIdTable() {
+            val uint = integer("uint")
+        }
+        class EntityWithUInt : IntEntity() {
+            var uint: UInt by TableWithUnsignedInteger.uint.transform({ it.toInt() }, { it.toUInt() })
+
+            companion object : IntEntityClass<EntityWithUInt>()
+        }
+    ]]></code-block>
+    <p><code>transform</code> function accept two lambdas to convert values to and from an original column type.
+        After that in your code you'll be able to put only <code>UInt</code> instances into <code>uint</code> field.
+        It still possible to insert/update values with negative integers via DAO, but your business code becomes much cleaner.
+        Please keep in mind what such transformations will aqure on every access to a field what means that you should avoid heavy transformations here.</p>
+
+</topic>
