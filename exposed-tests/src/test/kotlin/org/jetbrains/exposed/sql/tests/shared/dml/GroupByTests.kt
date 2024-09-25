@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.*
@@ -158,7 +157,7 @@ class GroupByTests : DatabaseTestsBase() {
 
     @Test
     fun testGroupConcat() {
-        withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { cities, users, _ ->
+        withCitiesAndUsers { cities, users, _ ->
             fun <T : String?> GroupConcat<T>.checkExcept(vararg dialects: VendorDialect.DialectNameProvider, assert: (Map<String, String?>) -> Unit) {
                 try {
                     val result = cities.leftJoin(users)
@@ -179,15 +178,17 @@ class GroupByTests : DatabaseTestsBase() {
                 }
             }
 
-            users.name.groupConcat().checkExcept(PostgreSQLDialect, PostgreSQLNGDialect, SQLServerDialect, OracleDialect) {
+            // separator must be specified by PostgreSQL and SQL Server
+            users.name.groupConcat().checkExcept(PostgreSQLDialect, PostgreSQLNGDialect, SQLServerDialect) {
                 assertEquals(3, it.size)
             }
 
-            users.name.groupConcat(separator = ", ").checkExcept(OracleDialect) {
+            users.name.groupConcat(separator = ", ").checkExcept {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
                 when (currentDialectTest) {
-                    is MariaDBDialect -> assertEquals(true, it["Munich"] in listOf("Sergey, Eugene", "Eugene, Sergey"))
+                    // return order is arbitrary if no ORDER BY is specified
+                    is MariaDBDialect, is SQLiteDialect -> assertTrue(it["Munich"] in listOf("Sergey, Eugene", "Eugene, Sergey"))
                     is MysqlDialect, is SQLServerDialect -> assertEquals("Eugene, Sergey", it["Munich"])
                     else -> assertEquals("Sergey, Eugene", it["Munich"])
                 }
@@ -195,13 +196,12 @@ class GroupByTests : DatabaseTestsBase() {
                 assertNull(it["Prague"])
             }
 
-            users.name.groupConcat(separator = " | ", distinct = true).checkExcept(OracleDialect) {
+            users.name.groupConcat(separator = " | ", distinct = true).checkExcept(OracleDialect, SQLiteDialect, SQLServerDialect) {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
                 when (currentDialectTest) {
                     is MariaDBDialect -> assertEquals(true, it["Munich"] in listOf("Sergey | Eugene", "Eugene | Sergey"))
-                    is MysqlDialect, is SQLServerDialect, is PostgreSQLDialect ->
-                        assertEquals("Eugene | Sergey", it["Munich"])
+                    is MysqlDialect, is PostgreSQLDialect -> assertEquals("Eugene | Sergey", it["Munich"])
                     is H2Dialect -> {
                         if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
                             assertEquals("Sergey | Eugene", it["Munich"])

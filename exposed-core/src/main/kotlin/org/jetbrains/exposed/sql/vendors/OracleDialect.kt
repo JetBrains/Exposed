@@ -120,17 +120,20 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expr: GroupConcat<T>,
         queryBuilder: QueryBuilder
     ): Unit = queryBuilder {
-        if (expr.orderBy.size != 1) {
-            TransactionManager.current().throwUnsupportedException("SQLServer supports only single column in ORDER BY clause in LISTAGG")
+        val tr = TransactionManager.current()
+        if (expr.distinct) tr.throwUnsupportedException("Oracle doesn't support DISTINCT in STRING_AGG")
+        if (expr.orderBy.size > 1) {
+            tr.throwUnsupportedException("Oracle supports only single column in ORDER BY clause in LISTAGG")
         }
         append("LISTAGG(")
         append(expr.expr)
         expr.separator?.let {
             append(", '$it'")
         }
-        append(") WITHIN GROUP (ORDER BY ")
-        val (col, order) = expr.orderBy.single()
-        append(col, " ", order.name, ")")
+        +")"
+        expr.orderBy.singleOrNull()?.let { (col, order) ->
+            append(" WITHIN GROUP (ORDER BY ", col, " ", order.name, ")")
+        }
     }
 
     override fun <T : String?> locate(

@@ -113,7 +113,8 @@ class Concat(
 }
 
 /**
- * Represents an SQL function that concatenates the text representation of all non-null input values of each group from [expr], separated by [separator]
+ * Represents an SQL function that concatenates the text representation of all non-null input values of each group
+ * from [expr], separated by [separator].
  */
 class GroupConcat<T : String?>(
     /** Returns grouped expression being concatenated. */
