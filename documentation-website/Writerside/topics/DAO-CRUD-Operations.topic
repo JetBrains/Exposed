@@ -88,7 +88,6 @@
             For a list of available predicates, see
             <a href="DSL-Querying-data.topic" anchor="where-expression">DSL Where expression</a>.
         </tip>
-
         <p>
             If the entity is a <code>CompositeEntity</code>, its <code>id</code> property can be used to refer to
             all composite columns and to get entities,
@@ -105,6 +104,25 @@
             val director = Director.findById(directorId)
             val directors = Director.find { Directors.id eq directorId }
         </code-block>
+        <chapter title="Read an entity with a join to another table" id="read-entity-with-a-join-to-another-table">
+            <p>Suppose that you want to find all users who rated the second Star Wars film with a score greater than 5.
+                First, you would write that query using Exposed DSL.</p>
+
+            <code-block lang="kotlin">
+                val query = Users.innerJoin(UserRatings).innerJoin(StarWarsFilm)
+                    .select(Users.columns)
+                    .where {
+                        StarWarsFilms.sequelId eq 2 and (UserRatings.value gt 5)
+                    }.withDistinct()
+            </code-block>
+            <p>
+                Once the query is defined, you can wrap the result in the <code>User</code> entity using the
+                <code>wrapRows()</code> function to generate entities from the retrieved data:</p>
+            <code-block lang="kotlin">
+                val users = User.wrapRows(query).toList()
+            </code-block>
+        </chapter>
+
     </chapter>
     <chapter title="Update" id="update">
         <p>
@@ -161,24 +179,6 @@
                 val movies = StarWarsFilm.all().sortedByDescending { it.sequelId }
             </code-block>
         </chapter>
-    </chapter>
-    <chapter title="Read entity with a join to another table" id="read-entity-with-a-join-to-another-table">
-        <p>Suppose that you want to find all users who rated the second Star Wars film with a score greater than 5.
-            First, you would write that query using Exposed DSL.</p>
-
-        <code-block lang="kotlin">
-            val query = Users.innerJoin(UserRatings).innerJoin(StarWarsFilm)
-                .select(Users.columns)
-                .where {
-                    StarWarsFilms.sequelId eq 2 and (UserRatings.value gt 5)
-                }.withDistinct()
-        </code-block>
-        <p>
-            Once the query is defined, you can wrap the result in the <code>User</code> entity using the
-            <code>wrapRows()</code> function to generate entities from the retrieved data:</p>
-        <code-block lang="kotlin">
-            val users = User.wrapRows(query).toList()
-        </code-block>
     </chapter>
 
     <chapter title="Use queries as expressions" id="use-queries-as-expressions">
