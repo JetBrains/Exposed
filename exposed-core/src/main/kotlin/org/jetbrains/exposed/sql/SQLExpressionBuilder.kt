@@ -339,7 +339,7 @@ interface ISqlExpressionBuilder {
         val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
         val entityID = EntityID(t, table)
         return if ((this as? Column<*>)?.isEntityIdentifier() == true) {
-            table.mapIdComparison(entityID, ::EqOp)
+            (this as Column<*>).table.mapIdComparison(entityID, ::EqOp)
         } else {
             EqOp(this, wrap(entityID))
         }
@@ -382,7 +382,7 @@ interface ISqlExpressionBuilder {
         val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
         val entityID = EntityID(t, table)
         return if ((this as? Column<*>)?.isEntityIdentifier() == true) {
-            table.mapIdComparison(entityID, ::NeqOp)
+            (this as Column<*>).table.mapIdComparison(entityID, ::NeqOp)
         } else {
             NeqOp(this, wrap(entityID))
         }
