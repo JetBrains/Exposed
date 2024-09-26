@@ -12,6 +12,15 @@ import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
 /**
+ * Class responsible for enabling [Entity] field pre persist transformations,
+ * which may be useful when the value should be modified before it is set to the entity field
+ */
+class EntityFieldWithPrePersist<T>(
+    val column: Column<T>,
+    val prePersistFn: (T) -> T
+)
+
+/**
  * Class responsible for enabling [Entity] field transformations, which may be useful when advanced database
  * type conversions are necessary for entity mappings.
  */
@@ -311,6 +320,12 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
 
     operator fun <Unwrapped, Wrapped> EntityFieldWithTransform<Unwrapped, Wrapped>.setValue(o: Entity<ID>, desc: KProperty<*>, value: Wrapped) {
         column.setValue(o, desc, unwrap(value))
+    }
+
+    operator fun <T> EntityFieldWithPrePersist<T>.getValue(o: Entity<ID>, desc: KProperty<*>): T = column.getValue(o, desc)
+
+    operator fun <T> EntityFieldWithPrePersist<T>.setValue(o: Entity<ID>, desc: KProperty<*>, value: T) {
+        column.setValue(o, desc, prePersistFn(value))
     }
 
     /**

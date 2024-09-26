@@ -578,3 +578,39 @@ class EntityWithUInt : IntEntity() {
 After that in your code you'll be able to put only `UInt` instances into `uint` field.
 It still possible to insert/update values with negative integers via DAO, but your business code becomes much cleaner.
 Please keep in mind what such transformations will aqure on every access to a field what means that you should avoid heavy transformations here.
+
+Here’s the rewritten documentation for the `prePersist` function:
+
+### Field value mutation before assignment
+
+Databases store basic types like integers and strings, but on the DAO layer, 
+you often want more control over how these values are handled before they are set in your entity fields. 
+In many cases, you may want to perform transformations, such as sanitizing input, formatting values, or applying business rules.
+
+To address this, you can use field transformations with `prePersist()` entity field method that modifies values before they are assigned to the entity. 
+This allows you to standardize or format data while ensuring that the transformation happens consistently across your codebase.
+
+For example, assume you want to automatically trim and capitalize strings before they are assigned to an entity field:
+
+```kotlin
+object TableWithNames : IntIdTable() {
+    val name = varchar("name", 255)
+}
+
+class EntityWithName(id: EntityID<Int>) : IntEntity(id) {
+    var name: String by TableWithNames.name
+        .prePersist { it.trim().toUpperCase() }
+
+    companion object : IntEntityClass<EntityWithName>()
+}
+```
+
+The `prePersist` function takes a lambda that defines how the value should be transformed before it is assigned to the entity field. In this example, every time the `name` field is set, the value is automatically trimmed and converted to uppercase.
+
+This ensures that all `name` values in the entity are formatted uniformly, reducing the risk of inconsistent data handling in your business logic.
+
+Keep in mind that these transformations occur **every time** a field is assigned, so it’s recommended to avoid heavy or performance-intensive operations in these transformations.
+
+---
+
+This version explains how `prePersist` ensures transformations happen before a value is assigned to the field, contrasting it with two-way transformations, and encourages the use of efficient operations in the transformation logic.
