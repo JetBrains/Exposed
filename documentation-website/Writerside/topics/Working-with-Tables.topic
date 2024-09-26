@@ -37,7 +37,13 @@
                 <include from="DSL-Table-Types.topic" element-id="dsl-table-example"/>
             </tab>
             <tab title="IntIdTable" id="dao-table-def" group-key="IntIdTable">
-                <include from="DAO-Table-Types.topic" element-id="dao-table-example"/>
+                <code-block lang="kotlin" id="dao-table-example">
+                    import org.jetbrains.exposed.dao.id.IntIdTable
+
+                    object Cities : IntIdTable("cities") {
+                        val name = varchar("name", 50)
+                    }
+                </code-block>
             </tab>
         </tabs>
         <p>
@@ -48,7 +54,9 @@
                 <include from="DSL-Table-Types.topic" element-id="dsl-table-example-sql"/>
             </tab>
             <tab title="IntIdTable" id="dao-create-table-sql" group-key="IntIdTable">
-                <include from="DAO-Table-Types.topic" element-id="dao-table-example-sql"/>
+                <code-block lang="sql" id="dao-table-example-sql">
+                    CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
+                </code-block>
             </tab>
         </tabs>
         <chapter title="Configuring a custom table name" id="name-from-object">

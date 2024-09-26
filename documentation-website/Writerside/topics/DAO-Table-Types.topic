@@ -50,23 +50,21 @@
             Multiple columns make up the table id
         </def>
     </deflist>
-
-    <p>The following example defines a table with an auto-incrementing integer <code>id</code> column and a string
-        <code>name</code> column:
-    </p>
-    <code-block lang="kotlin" id="dao-table-example">
-        import org.jetbrains.exposed.dao.id.IntIdTable
-
-        object Cities : IntIdTable("cities") {
-            val name = varchar("name", 50)
-        }
-    </code-block>
-    <code-block lang="sql" id="dao-table-example-sql">
-        CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
-    </code-block>
-    <p>
-        For more information on defining and configuring tables in Exposed, see <a href="Working-with-Tables.topic"/>.
-    </p>
+    <chapter title="Defining tables" id="defining-tables">
+        <p>The following example represents a table with custom columns <code>sequel_id</code>, <code>name</code>,
+            and <code>director</code>:
+        </p>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/StarWarsFilmsTable.kt" include-lines="3-4,12-16"/>
+        <p>
+            The <code>IntIdTable</code> class automatically generates an auto-incrementing <code>id</code> column,
+            which serves as the primary key for the table. When the table is created, it corresponds to the following
+            SQL query:
+        </p>
+        <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/StarWarsFilmsTable.kt" include-lines="6-10" />
+        <p>
+            For more information on defining and configuring tables in Exposed, see <a href="Working-with-Tables.topic"/>.
+        </p>
+    </chapter>
     <chapter title="Defining entity instances" id="define-entity-instance">
         <p>
             An entity instance or a row in the table is defined as a class instance:
