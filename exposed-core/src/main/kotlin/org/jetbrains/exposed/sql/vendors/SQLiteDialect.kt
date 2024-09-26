@@ -56,8 +56,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
                 +", '$it'"
             }
             if (expr.orderBy.isNotEmpty()) {
-                +" ORDER BY "
-                expr.orderBy.appendTo { (expression, sortOrder) ->
+                expr.orderBy.appendTo(prefix = " ORDER BY ") { (expression, sortOrder) ->
                     currentDialect.dataTypeProvider.precessOrderByClause(this, expression, sortOrder)
                 }
             }

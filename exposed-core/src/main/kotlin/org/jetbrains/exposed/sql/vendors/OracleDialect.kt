@@ -121,7 +121,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ): Unit = queryBuilder {
         val tr = TransactionManager.current()
-        if (expr.distinct) tr.throwUnsupportedException("Oracle doesn't support DISTINCT in STRING_AGG")
+        if (expr.distinct) tr.throwUnsupportedException("Oracle doesn't support DISTINCT in LISTAGG")
         if (expr.orderBy.size > 1) {
             tr.throwUnsupportedException("Oracle supports only single column in ORDER BY clause in LISTAGG")
         }
