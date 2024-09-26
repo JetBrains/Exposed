@@ -14,7 +14,7 @@
         with familiar SQL concepts while benefiting from the type safety that Kotlin offers.
     </p>
     <p>
-        <a href="Deep-Dive-into-DAO.md">The Data Access Object (DAO) API</a> of Exposed provides an object-oriented approach for interacting with a database,
+        <a href="DAO-CRUD-Operations.topic">The Data Access Object (DAO) API</a> of Exposed provides an object-oriented approach for interacting with a database,
         similar to traditional Object-Relational Mapping (ORM) frameworks like Hibernate.
         This API is less verbose and provides a more intuitive and Kotlin-centric way to interact with your database.
     </p>

@@ -68,7 +68,7 @@ transaction(db1) {
 }
 ```
 
-Entities (see [DAO API](Deep-Dive-into-DAO.md) page) `stick` to a transaction that was used to load that entity. That means that all
+Entities `stick` to a transaction that was used to load that entity. That means that all
 changes persist to the same database and what cross-database references are prohibited and will throw exceptions.
 
 ## Setting default database
