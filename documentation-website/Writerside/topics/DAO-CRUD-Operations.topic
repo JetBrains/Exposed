@@ -12,7 +12,7 @@
     </p>
     <chapter title="Create" id="create">
         <p>
-            To create a new table row, use the <code>new</code> query.
+            To create a new table row, use the <code>new</code> function on the entity class:
         </p>
         <code-block lang="kotlin">
             val movie = StarWarsFilm.new {
@@ -21,6 +21,10 @@
                 director = "Rian Johnson"
             }
         </code-block>
+        <p>
+            In the above example <code>StarWarsFilm</code> would be the entity instance linked to the <code>StarWarsFilms</code> table.
+            For more information, see <a href="DAO-Table-Types.topic" anchor="define-entity-instance" />.
+        </p>
         <p>
             To provide a manual <code>id</code> value to a new entity, pass the value as an argument to the <code>id</code> parameter:
         </p>
@@ -122,7 +126,23 @@
                 val users = User.wrapRows(query).toList()
             </code-block>
         </chapter>
+        <chapter title="Sort results" id="sort-by">
+            <p>
 
+            </p>
+            <chapter title="sortedBy" id="sortedBy">
+                <p>To sort results in ascending order, use <code>sortedBy</code>:</p>
+                <code-block lang="kotlin">
+                    val movies = StarWarsFilm.all().sortedBy { it.sequelId }
+                </code-block>
+            </chapter>
+            <chapter title="sortedByDescending" id="sortedByDescending">
+                <p>To sort results in descending order, use <code>sortedByDescending</code>:</p>
+                <code-block lang="kotlin">
+                    val movies = StarWarsFilm.all().sortedByDescending { it.sequelId }
+                </code-block>
+            </chapter>
+        </chapter>
     </chapter>
     <chapter title="Update" id="update">
         <p>
@@ -165,20 +185,6 @@
         <code-block lang="kotlin">
             movie.delete()
         </code-block>
-    </chapter>
-    <chapter title="Sort by" id="sort-by">
-        <chapter title="sortedBy" id="sortedBy">
-            <p>To sort results in ascending order, use <code>sortedBy</code>:</p>
-            <code-block lang="kotlin">
-                val movies = StarWarsFilm.all().sortedBy { it.sequelId }
-            </code-block>
-        </chapter>
-        <chapter title="sortedByDescending" id="sortedByDescending">
-            <p>To sort results in descending order, use <code>sortedByDescending</code>:</p>
-            <code-block lang="kotlin">
-                val movies = StarWarsFilm.all().sortedByDescending { it.sequelId }
-            </code-block>
-        </chapter>
     </chapter>
 
     <chapter title="Use queries as expressions" id="use-queries-as-expressions">
