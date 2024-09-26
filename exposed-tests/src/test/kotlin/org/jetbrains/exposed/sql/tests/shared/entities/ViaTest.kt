@@ -1,8 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.entities
 
 import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.dao.id.CompositeID
-import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -12,14 +10,14 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertFalse
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
 import kotlin.reflect.jvm.isAccessible
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 object ViaTestData {
     object NumbersTable : UUIDTable() {
@@ -288,74 +286,114 @@ class ViaTests : DatabaseTestsBase() {
         }
     }
 
-    object Projects : IntIdTable("projects") {
+    // IdTable without auto-increment is used so manual ids can be inserted without excluding SQL Server
+    object Projects : IdTable<Int>("projects") {
+        override val id = integer("id").entityId()
         val name = varchar("name", 50)
+        override val primaryKey = PrimaryKey(id)
     }
-
     class Project(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Project>(Projects)
 
         var name by Projects.name
-        val tasks by Task via ProjectTasks
+        var tasks by TaskWithData via ProjectTasks
     }
 
-    object ProjectTasks : CompositeIdTable("project_tasks") {
+    object ProjectTasks : Table("project_tasks") {
         val project = reference("project", Projects, onDelete = ReferenceOption.CASCADE)
         val task = reference("task", Tasks, onDelete = ReferenceOption.CASCADE)
         val approved = bool("approved")
+        val sprint = integer("sprint")
 
         override val primaryKey = PrimaryKey(project, task)
-
-        init {
-            addIdColumn(project)
-            addIdColumn(task)
-        }
     }
 
-    class ProjectTask(id: EntityID<CompositeID>) : CompositeEntity(id) {
-        companion object : CompositeEntityClass<ProjectTask>(ProjectTasks)
-
-        var approved by ProjectTasks.approved
-    }
-
-    object Tasks : IntIdTable("tasks") {
+    // IdTable without auto-increment is used so manual ids can be inserted without excluding SQL Server
+    object Tasks : IdTable<Int>("tasks") {
+        override val id = integer("id").entityId()
         val title = varchar("title", 64)
+        override val primaryKey = PrimaryKey(id)
     }
-
     class Task(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<Task>(Tasks)
 
         var title by Tasks.title
-        val approved by ProjectTasks.approved
+        var projects by ProjectWithData via ProjectTasks
+    }
+
+    class ProjectWithData(
+        val project: Project,
+        val approved: Boolean,
+        val sprint: Int
+    ) : InnerTableLinkEntity<Int>(project) {
+        companion object : InnerTableLinkEntityClass<Int, ProjectWithData>(Projects) {
+            override fun createInstance(entityId: EntityID<Int>, row: ResultRow?): ProjectWithData {
+                return row?.let {
+                    ProjectWithData(Project.wrapRow(it), it[ProjectTasks.approved], it[ProjectTasks.sprint])
+                } ?: ProjectWithData(Project(entityId), false, 0)
+            }
+        }
+
+        override fun getInnerTableLinkValue(column: Column<*>): Any = when (column) {
+            ProjectTasks.approved -> approved
+            ProjectTasks.sprint -> sprint
+            else -> error("Column does not exist in intermediate table")
+        }
+    }
+
+    class TaskWithData(
+        val task: Task,
+        val approved: Boolean,
+        val sprint: Int
+    ) : InnerTableLinkEntity<Int>(task) {
+        companion object : InnerTableLinkEntityClass<Int, TaskWithData>(Tasks) {
+            override fun createInstance(entityId: EntityID<Int>, row: ResultRow?): TaskWithData {
+                return row?.let {
+                    TaskWithData(Task.wrapRow(it), it[ProjectTasks.approved], it[ProjectTasks.sprint])
+                } ?: TaskWithData(Task(entityId), false, 0)
+            }
+        }
+
+        override fun getInnerTableLinkValue(column: Column<*>): Any = when (column) {
+            ProjectTasks.approved -> approved
+            ProjectTasks.sprint -> sprint
+            else -> error("Column does not exist in intermediate table")
+        }
     }
 
     @Test
-    fun testAdditionalLinkDataUsingCompositeIdInnerTable() {
+    fun testAdditionalLinkDataInsertAndUpdate() {
         withTables(Projects, Tasks, ProjectTasks) {
-            val p1 = Project.new { name = "Project 1" }
-            val p2 = Project.new { name = "Project 2" }
-            val t1 = Task.new { title = "Task 1" }
-            val t2 = Task.new { title = "Task 2" }
-            val t3 = Task.new { title = "Task 3" }
+            val p1 = Project.new(123) { name = "Project 1" }
+            val p2 = Project.new(456) { name = "Project 2" }
+            val t1 = Task.new(11) { title = "Task 1" }
+            val t2 = Task.new(22) { title = "Task 2" }
+            val t3 = Task.new(33) { title = "Task 3" }
 
-            ProjectTask.new(
-                CompositeID {
-                    it[ProjectTasks.task] = t1.id
-                    it[ProjectTasks.project] = p1.id
-                }
-            ) { approved = true }
-            ProjectTask.new(
-                CompositeID {
-                    it[ProjectTasks.task] = t2.id
-                    it[ProjectTasks.project] = p2.id
-                }
-            ) { approved = false }
-            ProjectTask.new(
-                CompositeID {
-                    it[ProjectTasks.task] = t3.id
-                    it[ProjectTasks.project] = p2.id
-                }
-            ) { approved = false }
+            p1.tasks = SizedCollection(TaskWithData(t1, false, 1))
+            p2.tasks = SizedCollection(TaskWithData(t2, true, 2), TaskWithData(t1, false, 3))
+
+            assertFalse(p1.tasks.single().approved)
+            p1.tasks = SizedCollection(TaskWithData(t1, true, 1))
+            assertTrue(p1.tasks.single().approved)
+
+            assertEqualCollections(p2.tasks.map { it.task.id }, listOf(t2.id, t1.id))
+            p2.tasks = SizedCollection(TaskWithData(t2, true, 2), TaskWithData(t3, false, 3))
+            assertEqualCollections(p2.tasks.map { it.task.id }, listOf(t2.id, t3.id))
+        }
+    }
+
+    @Test
+    fun testAdditionalLinkDataLoadedOnParent() {
+        withTables(Projects, Tasks, ProjectTasks) {
+            val p1 = Project.new(123) { name = "Project 1" }
+            val p2 = Project.new(456) { name = "Project 2" }
+            val t1 = Task.new(11) { title = "Task 1" }
+            val t2 = Task.new(22) { title = "Task 2" }
+            val t3 = Task.new(33) { title = "Task 3" }
+
+            p1.tasks = SizedCollection(TaskWithData(t1, false, 1))
+            p2.tasks = SizedCollection(TaskWithData(t2, true, 2), TaskWithData(t3, false, 3))
 
             commit()
 
@@ -364,13 +402,44 @@ class ViaTests : DatabaseTestsBase() {
                 Project.all().with(Project::tasks)
                 val cache = TransactionManager.current().entityCache
 
-                val p1Tasks = cache.getReferrers<Task>(p1.id, ProjectTasks.project)?.toList().orEmpty()
-                assertEqualLists(p1Tasks.map { it.id }, listOf(t1.id))
-                assertTrue { p1Tasks.all { task -> task.approved } }
+                val p1Task = cache.getReferrers<TaskWithData>(p1.id, ProjectTasks.project)?.single()
+                assertEquals(t1.id, p1Task?.id)
+                assertEquals(t1.id, p1Task?.task?.id)
+                assertEquals(false, p1Task?.approved)
+                assertEquals(1, p1Task?.sprint)
 
-                val p2Tasks = cache.getReferrers<Task>(p2.id, ProjectTasks.project)?.toList().orEmpty()
+                val p2Tasks = cache.getReferrers<TaskWithData>(p2.id, ProjectTasks.project)?.toList().orEmpty()
                 assertEqualLists(p2Tasks.map { it.id }, listOf(t2.id, t3.id))
-                assertFalse { p1Tasks.all { task -> !task.approved } }
+                assertEqualLists(p2Tasks.map { it.approved }, listOf(true, false))
+                assertEqualLists(p2Tasks.map { it.sprint }, listOf(2, 3))
+            }
+        }
+    }
+
+    @Test
+    fun testAdditionalLinkDataLoadedOnChild() {
+        withTables(Projects, Tasks, ProjectTasks) {
+            val p1 = Project.new(123) { name = "Project 1" }
+            val p2 = Project.new(456) { name = "Project 2" }
+            val t1 = Task.new(11) { title = "Task 1" }
+            val t2 = Task.new(22) { title = "Task 2" }
+            val t3 = Task.new(33) { title = "Task 3" }
+
+            p1.tasks = SizedCollection(TaskWithData(t1, false, 1))
+            p2.tasks = SizedCollection(TaskWithData(t2, true, 2), TaskWithData(t3, false, 3))
+
+            commit()
+
+            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                maxAttempts = 1
+                Task.all().with(Task::projects)
+                val cache = TransactionManager.current().entityCache
+
+                val t1Project = cache.getReferrers<ProjectWithData>(t1.id, ProjectTasks.task)?.single()
+                assertEquals(p1.id, t1Project?.id)
+                assertEquals(p1.id, t1Project?.project?.id)
+                assertEquals(false, t1Project?.approved)
+                assertEquals(1, t1Project?.sprint)
             }
         }
     }

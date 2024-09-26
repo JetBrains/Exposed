@@ -20,6 +20,8 @@ import kotlin.reflect.KProperty
  * this will be inferred from the provided intermediate [table] columns.
  * @param _targetColumn The intermediate table's reference column for the parent entity class. If left `null`,
  * this will be inferred from the provided intermediate [table] columns.
+ * @param additionalColumns Any additional columns from the intermediate table that should be included when inserting.
+ * If left `null`, these will be inferred from the provided intermediate [table] columns.
  */
 @Suppress("UNCHECKED_CAST")
 class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparable<ID>, Target : Entity<ID>>(
@@ -28,6 +30,7 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
     val target: EntityClass<ID, Target>,
     _sourceColumn: Column<EntityID<SID>>? = null,
     _targetColumn: Column<EntityID<ID>>? = null,
+    additionalColumns: List<Column<*>>? = null,
 ) : ReadWriteProperty<Source, SizedIterable<Target>> {
     /** The list of columns and their [SortOrder] for ordering referred entities in many-to-many relationship. */
     private val orderByExpressions: MutableList<Pair<Expression<*>, SortOrder>> = mutableListOf()
@@ -46,6 +49,11 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
             requireNotNull(_targetColumn) { "Both source and target columns should be specified" }
             require(_sourceColumn.referee?.table == sourceTable) {
                 "Column $_sourceColumn point to wrong table, expected ${sourceTable.tableName}"
+            }
+        }
+        additionalColumns?.let {
+            require(it.all { column -> column.table == table }) {
+                "All additional columns should be from the same intermediate table ${table.tableName}"
             }
         }
     }
@@ -70,6 +78,10 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         columns to entityTables
     }
 
+    private val additionalColumns = (additionalColumns ?: (table.columns - sourceColumn - targetColumn).filter { !it.columnType.isAutoInc })
+        .takeIf { it.isEmpty() || target is InnerTableLinkEntityClass<ID, *> }
+        ?: error("Target entity must extend InnerTableLinkEntity to properly store and cache additional column data")
+
     override operator fun getValue(o: Source, unused: KProperty<*>): SizedIterable<Target> {
         if (o.id._value == null && !o.isNewEntity()) return emptySized()
         val transaction = TransactionManager.currentOrNull()
@@ -78,12 +90,13 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         val (columns, entityTables) = columnsAndTables
 
         val query = {
-            target.wrapRows(
-                @Suppress("SpreadOperator")
-                entityTables.select(columns)
-                    .where { sourceColumn eq o.id }
-                    .orderBy(*orderByExpressions.toTypedArray())
-            )
+            @Suppress("SpreadOperator")
+            val row = entityTables.select(columns)
+                .where { sourceColumn eq o.id }
+                .orderBy(*orderByExpressions.toTypedArray())
+            (target as? InnerTableLinkEntityClass<ID, *>)
+                ?.wrapLinkRows(row, targetColumn, sourceColumn) as? SizedIterable<Target>
+                ?: target.wrapRows(row)
         }
         return transaction.entityCache.getOrPutReferrers(o.id, sourceColumn, query).also {
             o.storeReferenceInCache(sourceColumn, it)
@@ -106,15 +119,43 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         val entityCache = tx.entityCache
         entityCache.flush()
         val oldValue = getValue(o, unused)
-        val existingIds = oldValue.map { it.id }.toSet()
+        val existingValues = oldValue.mapIdToAdditionalValues()
+        val existingIds = existingValues.keys
         entityCache.referrers[sourceColumn]?.remove(o.id)
 
-        val targetIds = value.map { it.id }
+        val targetValues = value.mapIdToAdditionalValues()
+        val targetIds = targetValues.keys
+        val additionalColumnsExist = additionalColumns.isNotEmpty()
+        if (additionalColumnsExist) {
+            entityCache.innerTableLinks[targetColumn]?.get(o.id)?.removeAll { cached ->
+                targetValues[cached.id]?.any { (column, targetValue) ->
+                    cached.getInnerTableLinkValue(column) != targetValue
+                } != false
+            }
+        }
+
         executeAsPartOfEntityLifecycle {
-            table.deleteWhere { (sourceColumn eq o.id) and (targetColumn notInList targetIds) }
-            table.batchInsert(targetIds.filter { !existingIds.contains(it) }, shouldReturnGeneratedValues = false) { targetId ->
+            val deleteCondition = if (additionalColumnsExist) {
+                val targetAdditionalValues = targetValues.map { it.value.values.toList() + it.key }
+                (sourceColumn eq o.id) and (additionalColumns + targetColumn notInList targetAdditionalValues)
+            } else {
+                (sourceColumn eq o.id) and (targetColumn notInList targetIds)
+            }
+            val newTargets = targetValues.filter { (targetId, additionalValues) ->
+                if (additionalColumnsExist) {
+                    targetId !in existingIds ||
+                        existingValues[targetId]?.entries?.containsAll(additionalValues.entries) == false
+                } else {
+                    targetId !in existingIds
+                }
+            }
+            table.deleteWhere { deleteCondition }
+            table.batchInsert(newTargets.entries, shouldReturnGeneratedValues = false) { (targetId, additionalValues) ->
                 this[sourceColumn] = o.id
                 this[targetColumn] = targetId
+                additionalValues.forEach { (column, value) ->
+                    this[column as Column<Any?>] = value
+                }
             }
         }
 
@@ -122,11 +163,19 @@ class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparabl
         tx.registerChange(o.klass, o.id, EntityChangeType.Updated)
 
         // linked entities updated
-        val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.klass
+        val targetClass = (value.firstOrNull() ?: oldValue.firstOrNull())?.let {
+            (it as? InnerTableLinkEntity<ID>)?.wrapped?.klass ?: it.klass
+        }
         if (targetClass != null) {
             existingIds.plus(targetIds).forEach {
                 tx.registerChange(targetClass, it, EntityChangeType.Updated)
             }
+        }
+    }
+
+    private fun SizedIterable<Target>.mapIdToAdditionalValues(): Map<EntityID<ID>, Map<Column<*>, Any?>> {
+        return associate { target ->
+            target.id to additionalColumns.associateWith { (target as InnerTableLinkEntity<ID>).getInnerTableLinkValue(it) }
         }
     }
 
