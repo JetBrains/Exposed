@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.Category
 import org.jetbrains.exposed.sql.tests.shared.Item
@@ -15,7 +14,6 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertFails
@@ -204,8 +202,8 @@ class CreateTableTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun addCompositePrimaryKeyToTableH2Test() {
-        withDb(TestDB.H2_V2) {
+    fun addCompositePrimaryKeyToTableTest() {
+        withDb { testDb ->
             val tableName = Person.tableName
             val tableProperName = tableName.inProperCase()
             val id1ProperName = Person.id1.name.inProperCase()
@@ -217,49 +215,45 @@ class CreateTableTests : DatabaseTestsBase() {
             assertEquals(1, ddlId1.size)
             assertEquals("ALTER TABLE $tableProperName ADD ${Person.id1.descriptionDdl(false)}", ddlId1.first())
 
-            assertEquals(2, ddlId2.size)
-            assertEquals("ALTER TABLE $tableProperName ADD $id2ProperName ${Person.id2.columnType.sqlType()}", ddlId2.first())
-            assertEquals("ALTER TABLE $tableProperName ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)", Person.id2.ddl.last())
+            when (testDb) {
+                in TestDB.ALL_H2, TestDB.ORACLE -> {
+                    assertEquals(2, ddlId2.size)
+                    assertEquals("ALTER TABLE $tableProperName ADD $id2ProperName ${Person.id2.columnType.sqlType()}", ddlId2.first())
+                    assertEquals("ALTER TABLE $tableProperName ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)", Person.id2.ddl.last())
+                }
+                else -> {
+                    assertEquals(1, ddlId2.size)
+                    assertEquals(
+                        "ALTER TABLE $tableProperName ADD ${Person.id2.descriptionDdl(false)}, " +
+                            "ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)",
+                        ddlId2.first()
+                    )
+                }
+            }
         }
     }
 
     @Test
-    fun addCompositePrimaryKeyToTableNotH2Test() {
-        withTables(excludeSettings = TestDB.ALL_H2, tables = arrayOf(Person)) {
-            val tableName = Person.tableName
-            val tableProperName = tableName.inProperCase()
-            val id1ProperName = Person.id1.name.inProperCase()
-            val ddlId1 = Person.id1.ddl
-            val id2ProperName = Person.id2.name.inProperCase()
-            val ddlId2 = Person.id2.ddl
-            val pkConstraintName = Person.primaryKey.name
-
-            assertEquals(1, ddlId1.size)
-            assertEquals("ALTER TABLE $tableProperName ADD ${Person.id1.descriptionDdl(false)}", ddlId1.first())
-
-            assertEquals(1, ddlId2.size)
-            assertEquals(
-                "ALTER TABLE $tableProperName ADD ${Person.id2.descriptionDdl(false)}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)",
-                ddlId2.first()
-            )
-        }
-    }
-
-    @Test
-    fun addOneColumnPrimaryKeyToTableNotH2Test() {
-        withTables(excludeSettings = TestDB.ALL_H2, tables = arrayOf(Book)) {
+    fun addOneColumnPrimaryKeyToTableTest() {
+        withTables(Book) { testDb ->
             val tableProperName = Book.tableName.inProperCase()
             val pkConstraintName = Book.primaryKey.name
             val id1ProperName = Book.id.name.inProperCase()
             val ddlId1 = Book.id.ddl
 
-            if (currentDialectTest !is SQLiteDialect) {
-                assertEquals(
+            when (testDb) {
+                TestDB.SQLITE -> assertEquals("ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}", ddlId1.first())
+                in TestDB.ALL_H2, TestDB.ORACLE -> assertEqualCollections(
+                    listOf(
+                        "ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}",
+                        "ALTER TABLE $tableProperName ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName)"
+                    ),
+                    ddlId1
+                )
+                else -> assertEquals(
                     "ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}, ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName)",
                     ddlId1.first()
                 )
-            } else {
-                assertEquals("ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}", ddlId1.first())
             }
         }
     }
