@@ -47,6 +47,10 @@
             </tab>
         </tabs>
         <p>
+            <include from="DAO-Table-Types.topic" element-id="IntIdTable-id-generation-note"/>
+            Therefore, there is no need to explicitly define the <code>id</code> column in the <code>Cities</code> object.
+        </p>
+        <p>
             Creating the table with the above definition will result in the following SQL equivalent:
         </p>
         <tabs group="type">

@@ -6,58 +6,57 @@
        title="Table types" id="DAO-Table-Types" help-id="DAO-Table-types">
 
     <include from="DSL-Table-Types.topic" element-id="dsl-core-table-class"/>
-    <snippet id="dao-table-types">
-        <p>
-            Apart from the core <code>Table</code> class, Exposed provides the base
-            <code>IdTable</code> class and its subclasses through the DAO API.
-        </p>
-        <p>
-            The <code>IdTable</code> class extends <code>Table</code> and is
-            designed to simplify the definition of tables that use a standard <code>id</code> column as the primary key.
-            These tables can be declared without explicitly including the <code>id</code> column, as IDs of the
-            appropriate type are automatically generated when creating new table rows.
-        </p>
-        <p>
-            <code>IdTable</code> and its subclasses are located in the
-            <control>org.jetbrains.exposed.dao.id</control>
-            package of the
-            <control>exposed-core</control>
-            module.
-        </p>
-    </snippet>
-    <deflist type="medium">
-        <def id="IntIdTable">
-            <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-int-id-table/index.html"><code>IntIdTable</code></a></title>
-            <code>Int</code> id column</def>
-        <def id="LongIdTable">
-            <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-long-id-table/index.html"><code>LongIdTable</code></a></title>
-            <code>Long</code> id column
-        </def>
-        <def id="UIntIdTable">
-            <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-int-id-table/index.html"><code>UIntIdTable</code></a></title>
-            <code>UInt</code> id column
-        </def>
-        <def id="ULongIdTable">
-            <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-long-id-table/index.html"><code>ULongIdTable</code></a></title>
-            <code>ULong</code> id column
-        </def>
-        <def id="UUIDTable">
-            <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-u-i-d-table/index.html"><code>UUIDTable</code></a></title>
-            <code>UUID</code> id column
-        </def>
-        <def id="CompositeIdTable">
-            <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-composite-id-table/index.html"><code>CompositeIdTable</code></a></title>
-            Multiple columns make up the table id
-        </def>
-    </deflist>
-    <chapter title="Defining tables" id="defining-tables">
+    <chapter title="Auto-incrementing ID column tables" id="defining-tables">
+        <snippet id="dao-table-types">
+            <p>
+                Apart from the core <code>Table</code> class, Exposed provides the base
+                <code>IdTable</code> class and its subclasses through the DAO API.
+            </p>
+            <p>
+                The <code>IdTable</code> class extends <code>Table</code> and is
+                designed to simplify the definition of tables that use a standard <code>id</code> column as the primary key.
+                These tables can be declared without explicitly including the <code>id</code> column, as IDs of the
+                appropriate type are automatically generated when creating new table rows.
+            </p>
+            <p>
+                <code>IdTable</code> and its subclasses are located in the
+                <control>org.jetbrains.exposed.dao.id</control>
+                package of the
+                <control>exposed-core</control>
+                module.
+            </p>
+        </snippet>
+        <deflist type="medium">
+            <def id="IntIdTable">
+                <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-int-id-table/index.html"><code>IntIdTable</code></a></title>
+                <code>Int</code> id column</def>
+            <def id="LongIdTable">
+                <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-long-id-table/index.html"><code>LongIdTable</code></a></title>
+                <code>Long</code> id column
+            </def>
+            <def id="UIntIdTable">
+                <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-int-id-table/index.html"><code>UIntIdTable</code></a></title>
+                <code>UInt</code> id column
+            </def>
+            <def id="ULongIdTable">
+                <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-long-id-table/index.html"><code>ULongIdTable</code></a></title>
+                <code>ULong</code> id column
+            </def>
+            <def id="UUIDTable">
+                <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-u-i-d-table/index.html"><code>UUIDTable</code></a></title>
+                <code>UUID</code> id column
+            </def>
+        </deflist>
         <p>The following example represents a table with custom columns <code>sequel_id</code>, <code>name</code>,
             and <code>director</code>:
         </p>
         <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/StarWarsFilmsTable.kt" include-lines="3-4,12-16"/>
         <p>
-            The <code>IntIdTable</code> class automatically generates an auto-incrementing <code>id</code> column,
-            which serves as the primary key for the table. When the table is created, it corresponds to the following
+            <snippet id="IntIdTable-id-generation-note">
+                The <code>IntIdTable</code> class automatically generates an auto-incrementing integer <code>id</code>
+                column, which serves as the primary key for the table.
+            </snippet>
+            When the table is created, it corresponds to the following
             SQL query:
         </p>
         <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/StarWarsFilmsTable.kt" include-lines="6-10" />
