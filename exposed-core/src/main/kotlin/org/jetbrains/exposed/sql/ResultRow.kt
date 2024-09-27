@@ -165,14 +165,24 @@ class ResultRow(
         fun createAndFillDefaults(columns: List<Column<*>>): ResultRow =
             ResultRow(columns.withIndex().associate { it.value to it.index }).apply {
                 columns.forEach {
-                    val value = when {
-                        it.defaultValueFun != null -> it.defaultValueFun!!()
-                        it.columnType.nullable -> null
-                        else -> NotInitializedValue
-                    }
-                    setInternal(it, value)
+                    setInternal(it, it.defaultValueOrNotInitialized())
                 }
             }
+    }
+
+    private fun <T> Column<T>.defaultValueOrNotInitialized(): Any? {
+        return when {
+            defaultValueFun != null -> when {
+                columnType is ColumnWithTransform<*, *> -> {
+                    (columnType as ColumnWithTransform<Any, Any>).unwrapRecursive(defaultValueFun!!())
+                }
+
+                else -> defaultValueFun!!()
+            }
+
+            columnType.nullable -> null
+            else -> NotInitializedValue
+        }
     }
 
     /**

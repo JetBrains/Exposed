@@ -316,13 +316,19 @@ open class ColumnWithTransform<Unwrapped, Wrapped>(
     val transformer: ColumnTransformer<Unwrapped, Wrapped>
 ) : ColumnType<Wrapped & Any>() {
 
-    fun unwrapRecursive(value: Wrapped?): Any? {
+    open fun unwrapRecursive(value: Wrapped?): Any? {
         return if (delegate is ColumnWithTransform<*, *>) {
             (delegate as ColumnWithTransform<Any, Unwrapped>).unwrapRecursive(transformer.unwrap(value as Wrapped))
         } else {
-            transformer.unwrap(value!!)
+            value?.let { transformer.unwrap(value) }
         }
     }
+
+    val originalColumnType: IColumnType<Any>
+        get() = when {
+            delegate is ColumnWithTransform<*, *> -> delegate.originalColumnType
+            else -> delegate as IColumnType<Any>
+        }
 
     override fun sqlType(): String = delegate.sqlType()
 
@@ -365,6 +371,14 @@ open class NullableColumnWithTransform<Unwrapped, Wrapped>(
     delegate: IColumnType<Unwrapped & Any>,
     transformer: ColumnTransformer<Unwrapped, Wrapped>
 ) : ColumnWithTransform<Unwrapped, Wrapped>(delegate, transformer) {
+    override fun unwrapRecursive(value: Wrapped?): Any? {
+        return if (delegate is ColumnWithTransform<*, *>) {
+            (delegate as ColumnWithTransform<Any, Unwrapped>).unwrapRecursive(transformer.unwrap(value as Wrapped))
+        } else {
+            transformer.unwrap(value as Wrapped)
+        }
+    }
+
     override fun valueFromDB(value: Any): Wrapped? {
         return transformer.wrap(delegate.valueFromDB(value) as Unwrapped)
     }
