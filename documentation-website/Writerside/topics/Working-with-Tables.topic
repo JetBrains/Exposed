@@ -2,44 +2,71 @@
 <!DOCTYPE topic SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
-       id="Table-Definition" title="Defining and creating tables">
+       id="Working-with-Tables" title="Working with tables" help-id="Table-Definition">
 
     <show-structure for="chapter,procedure" depth="2"/>
-    <p>This page shows what table types Exposed supports and how to define and create these tables. It also contains
-        tips on configuring
-        constraints, such as <code>PRIMARY KEY</code>, <code>DEFAULT</code>, and <code>INDEX</code>. All examples use
+
+    <p>In this topic, we will explain how to define, configure, and create tables. All examples use
         the H2 database to generate SQL.</p>
     <chapter title="Table Types" id="table-types">
-        <chapter id="table">
-            <title>Core <code>Table</code> class</title>
-            <p>In Exposed, the <code>Table</code> class is the core abstraction for defining database tables.
-                This class provides methods to define various <a href="Data-Types.topic">column types</a>,
-                <a href="Table-Definition.topic" anchor="constraints">constraints</a>, and other table-specific properties.
-            </p>
-            <p>It is located in the
-                <control>org.jetbrains.exposed.sql</control>
-                package of the
-                <control>exposed-core</control>
-                module.</p>
+        <chapter title="Table" id="table-class">
+            <include from="DSL-Table-Types.topic" element-id="dsl-table-type"/>
+        </chapter>
+        <chapter title="IdTable" id="id-table-type">
+            <include from="DAO-Table-Types.topic" element-id="dao-table-types"/>
+            For more information on <code>IdTable</code> types, see <a href="DAO-Table-Types.topic">DAO
+            Table Types</a>.
+        </chapter>
+    </chapter>
+    <chapter title="Defining tables" id="defining-tables">
+        <p>
+            A database table is represented by an object inherited from a table class.
+        </p>
+        <code-block lang="kotlin">
+            object Cities : Table() {}
+        </code-block>
+        <p>
+            Exposed supports a variety of <a href="Data-Types.topic">column types</a>, including <code>integer</code>,
+            <code>varchar</code>,<code>bool</code>, and more. Each column is defined by calling the appropriate
+            method on the <code>Table</code> object.
+        </p>
+        <p>The following example defines a table with an auto-incrementing integer <code>id</code> column and a string
+            <code>name</code> column:</p>
+        <tabs group="type">
+            <tab title="Table" id="dsl-table-def" group-key="Table">
+                <include from="DSL-Table-Types.topic" element-id="dsl-table-example"/>
+            </tab>
+            <tab title="IntIdTable" id="dao-table-def" group-key="IntIdTable">
+                <code-block lang="kotlin" id="dao-table-example">
+                    import org.jetbrains.exposed.dao.id.IntIdTable
+
+                    object Cities : IntIdTable("cities") {
+                        val name = varchar("name", 50)
+                    }
+                </code-block>
+            </tab>
+        </tabs>
+        <p>
+            <include from="DAO-Table-Types.topic" element-id="IntIdTable-id-generation-note"/>
+            Therefore, there is no need to explicitly define the <code>id</code> column in the <code>Cities</code> object.
+        </p>
+        <p>
+            Creating the table with the above definition will result in the following SQL equivalent:
+        </p>
+        <tabs group="type">
+            <tab title="Table" id="dsl-create-table-sql" group-key="Table">
+                <include from="DSL-Table-Types.topic" element-id="dsl-table-example-sql"/>
+            </tab>
+            <tab title="IntIdTable" id="dao-create-table-sql" group-key="IntIdTable">
+                <code-block lang="sql" id="dao-table-example-sql">
+                    CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
+                </code-block>
+            </tab>
+        </tabs>
+        <chapter title="Configuring a custom table name" id="name-from-object">
             <p>
-                Exposed supports a variety of <a href="Data-Types.topic">column types</a>, including <code>integer</code>,
-                <code>varchar</code>,<code>bool</code>, and more. Each column is defined by calling the appropriate
-                method on the <code>Table</code> object.
+                By default, Exposed generates the table name from the full class name.
             </p>
-            <p>The following example defines a simple table with an integer <code>id</code> column and a string
-                <code>name</code> column:</p>
-            <code-block lang="kotlin">
-                object Cities : Table() {
-                    val id = integer("id")
-                    val name = varchar("name", 50)
-                }
-            </code-block>
-            <p>
-                By default, Exposed will generate the table name from the full class name:
-            </p>
-            <code-block lang="sql">
-                CREATE TABLE IF NOT EXISTS CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
-            </code-block>
             <p>
                 If the object name contains a 'Table' suffix, Exposed will omit the suffix from the generated
                 table name:
@@ -53,64 +80,34 @@
             <code-block lang="sql">
                 CREATE TABLE IF NOT EXISTS CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
             </code-block>
-            <chapter id="name-from-object">
-                <title>Configure a custom table name</title>
+            <p>
                 To configure a custom name for a table, which will be used in actual SQL queries, pass it to the <code>name</code>
                 parameter of the <code>Table()</code> constructor.
-                <code-block lang="kotlin">
-                    object Cities : Table(&quot;all_cities&quot;) {
-                        val id = integer(&quot;id&quot;)
-                        val name = varchar(&quot;name&quot;, 50)
-                    }
-                </code-block>
-                <code-block lang="sql">
-                    CREATE TABLE IF NOT EXISTS ALL_CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
-                </code-block>
-                <p>Some databases, like H2, fold unquoted identifiers to upper case. To keep table name case-sensitivity,
-                    manually quote the provided argument:</p>
-                <code-block lang="kotlin">
-                    object Cities : Table("\"all_cities\"") {
-                        val id = integer(&quot;id&quot;)
-                        val name = varchar(&quot;name&quot;, 50)
-                    }
-                </code-block>
-                <code-block lang="sql">
-                    CREATE TABLE IF NOT EXISTS "all_cities" (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
-                </code-block>
-                <p>Depending on what DBMS you use, the types of columns could be different in actual SQL queries.</p>
-            </chapter>
-        </chapter>
-        <chapter id="idtable">
-            <title><code>IdTable</code></title>
-            <p>Exposed also provides the base <code>IdTable</code> class, which is inherited by <code>IntIdTable</code>,
-                <code>LongIdTable</code> (and their unsigned variants), <code>UUIDTable</code>, and <code>CompositeIdTable</code>
-                classes from the
-                <control>org.jetbrains.exposed.dao.id</control>
-                package of the
-                <control>exposed-core</control>
-                module.
             </p>
-            <p>These tables could be declared without the <code>id</code> column, and IDs of the appropriate type would
-                be generated automatically when creating new table rows.
-                To configure a custom name for the <code>id</code> column, pass it to the <code>columnName</code>
-                parameter of the appropriate table constructor.</p>
-            <p>For example, the <code>Cities</code> table could instead be defined as an <code>IntIdTable</code>, which
-                would make the <code>id</code> column both auto-incrementing and the table's primary key:</p>
-
             <code-block lang="kotlin">
-                object Cities : IntIdTable() {
+                object Cities : Table(&quot;all_cities&quot;) {
+                    val id = integer(&quot;id&quot;)
                     val name = varchar(&quot;name&quot;, 50)
                 }
             </code-block>
-
             <code-block lang="sql">
-                CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
+                CREATE TABLE IF NOT EXISTS ALL_CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
             </code-block>
-            <tip>For more information on <code>IdTable</code> types, see <a href="Deep-Dive-into-DAO.md#table-types">DAO
-                Table Types</a>.
-            </tip>
+            <p>Some databases, like H2, fold unquoted identifiers to upper case. To keep table name case-sensitivity,
+                manually quote the provided argument:</p>
+            <code-block lang="kotlin">
+                object Cities : Table("\"all_cities\"") {
+                    val id = integer(&quot;id&quot;)
+                    val name = varchar(&quot;name&quot;, 50)
+                }
+            </code-block>
+            <code-block lang="sql">
+                CREATE TABLE IF NOT EXISTS "all_cities" (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
+            </code-block>
+            <p>Depending on what DBMS you use, the types of columns could be different in actual SQL queries.</p>
         </chapter>
     </chapter>
+
     <chapter title="Constraints" id="constraints">
         <chapter title="Nullable" id="nullable">
             <p>The <code>NOT NULL</code> SQL constraint restricts the column to accept the <code>null</code> value. By
@@ -327,7 +324,7 @@
                 }
             </code-block>
             <tip>For more information on <code>CompositeIdTable</code> types, see <a
-                    href="Deep-Dive-into-DAO.md#table-types">DAO Table Types</a>.
+                    href="DAO-Table-Types.topic">DAO Table Types</a>.
             </tip>
         </chapter>
         <chapter title="Foreign Key" id="foreign-key">

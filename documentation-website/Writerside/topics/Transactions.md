@@ -40,7 +40,7 @@ val idsAndContent = transaction {
 
 // with eagerLoading for text fields
 object Documents : Table() {
-  ...
+  //...
   val content = text("content", eagerLoading = true)
 }
 
@@ -59,7 +59,7 @@ to `transaction` function as the first parameter. The `transaction` block withou
 val db1 = connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")
 val db2 = connect("jdbc:h2:mem:db2;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")
 transaction(db1) {
-   ...
+   //...
    val result = transaction(db2) {
       Table1.selectAll().where { }.map { it[Table1.name] }
    }
@@ -68,7 +68,7 @@ transaction(db1) {
 }
 ```
 
-Entities (see [DAO API](Deep-Dive-into-DAO.md) page) `stick` to a transaction that was used to load that entity. That means that all
+Entities `stick` to a transaction that was used to load that entity. That means that all
 changes persist to the same database and what cross-database references are prohibited and will throw exceptions.
 
 ## Setting default database

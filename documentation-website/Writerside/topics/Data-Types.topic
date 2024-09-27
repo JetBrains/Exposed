@@ -534,7 +534,7 @@
                     }
                 }
 
-                fun Table.dateRange(name: String): Column & lt;DateRange&gt; = registerColumn(name, DateRangeColumnType())
+                fun Table.dateRange(name: String): Column<DateRange> = registerColumn(name, DateRangeColumnType())
             ]]></code-block>
             <p>These new column types can be used in a table definition:</p>
 
@@ -767,7 +767,7 @@
                 }
             </code-block>
             <note>
-                <p style="note">To use the <code>citext</code> data type, the extension must first be enabled in the
+                <p>To use the <code>citext</code> data type, the extension must first be enabled in the
                     database by running <code>exec(&quot;CREATE EXTENSION citext;&quot;)</code>.</p>
             </note>
             <p>String values can then be inserted and queried from the <code>firstName</code> column in a

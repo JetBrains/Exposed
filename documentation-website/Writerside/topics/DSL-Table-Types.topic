@@ -3,48 +3,70 @@
         SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
-       title="Defining tables" id="DSL-Table-Types">
+       title="Table types" id="DSL-Table-Types">
     <show-structure for="chapter,procedure" depth="2"/>
-    <include from="Table-Definition.topic" element-id="table" id="table"/>
-    <chapter id="IdTable">
-        <title>Convenience <code>IdTable</code> class</title>
+    <snippet id="dsl-table-type">
+        <snippet id="dsl-core-table-class">
+            In Exposed, the <code>Table</code> class is the core abstraction for defining database tables.
+            This class provides methods to define various <a href="Data-Types.topic">column types</a>,
+            <a href="Working-with-Tables.topic" anchor="constraints">constraints</a>, and other table-specific properties.
+        </snippet>
         <p>
-            While <code>Table</code> is the foundational class for defining tables, Exposed also provides the base
-            <code>IdTable</code> convenience class. This class extends <code>Table</code> and is designed to simplify
-            the definition of tables that use a standard <code>id</code> column as the primary key.
+            <code>Table</code> is located in the
+            <control>org.jetbrains.exposed.sql</control>
+            package of the
+            <control>exposed-core</control>
+            module.
         </p>
+    </snippet>
+    <p>
+        The following example defines a table with an auto-incrementing integer <code>id</code> column and a string
+        <code>name</code> column:
+    </p>
+    <code-block lang="kotlin" id="dsl-table-example">
+        import org.jetbrains.exposed.sql.Table
+
+        object Cities : Table("cities") {
+            val id = integer("id").autoIncrement()
+            val name = varchar("name", 50)
+        }
+    </code-block>
+    <code-block lang="sql" id="dsl-table-example-sql">
+        CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT NOT NULL, "name" VARCHAR(50) NOT NULL)
+    </code-block>
+    <p>
+        For more information on defining and configuring tables in Exposed, see <a href="Working-with-Tables.topic"/>.
+    </p>
+    <tip>
+        While <code>Table</code> is the foundational class for defining tables in DSL, you can also use the
+        <code>IdTable</code> subclasses from the DAO API for convenience.
+        For example, to provide an auto-incrementing <code>id</code> column of type <code>Int</code>, you can use
+        the <code>IntIdTable</code> subtype:
+    <code-block lang="kotlin">
+        object StarWarsFilms : IntIdTable() {
+            val sequelId = integer(&quot;sequel_id&quot;).uniqueIndex()
+            val name = varchar(&quot;name&quot;, 50)
+            val director = varchar(&quot;director&quot;, 50)
+        }
+    </code-block>
         <p>
-           For example, to provide an auto-incrementing <code>id</code> column of type <code>Int</code>, you can use
-            the <code>IntIdTable</code> subtype:
-        </p>
-        <code-block lang="kotlin">
-            object StarWarsFilms : IntIdTable() {
-                val sequelId = integer(&quot;sequel_id&quot;).uniqueIndex()
-                val name = varchar(&quot;name&quot;, 50)
-                val director = varchar(&quot;director&quot;, 50)
-            }
-        </code-block>
-        <note>
             It is important to note that the <code>id</code> column in this case is of type
-            <code>Column&lt;EntityID&lt;Int>></code>. This means that to access the <code>id</code> column value, you
-            need to use the <code>.value</code> property:
-            <code-block lang="kotlin">
-                val idValue = StarWarsFilms.id.value
-            </code-block>
-        </note>
-        <tip>
-            <code>EntityID</code> is a wrapper class commonly associated with Exposed's DAO API, but it is also used in
-            <code>IdTable</code> classes within the DSL. This wrapper ensures that the <code>id</code> values are
+            <code>Column&lt;EntityID&lt;Int>></code>.
+            The <code>EntityID</code> wrapper ensures that the <code>id</code> values are
             handled consistently across the DSL and DAO APIs.
-            <p>
-                For more information on <code>EntityID</code> and how it
-                integrates with the DAO API, see <a href="Deep-Dive-into-DAO.md">the DAO documentation</a>.
-            </p>
-        </tip>
-    </chapter>
+        </p>
+        To access the <code>id</code> column value, you
+        need to use the <code>.value</code> property:
+        <code-block lang="kotlin">
+            val idValue = StarWarsFilms.id.value
+        </code-block>
+        <p>
+            For more information on <code>IdTable</code>, see <a href="DAO-Table-Types.topic">the DAO documentation</a>.
+        </p>
+    </tip>
     <seealso style="cards">
         <category ref="related">
-            <a href="Table-Definition.topic"/>
+            <a href="Working-with-Tables.topic"/>
             <a href="Data-Types.topic"/>
         </category>
     </seealso>
