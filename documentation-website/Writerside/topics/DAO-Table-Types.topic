@@ -50,7 +50,7 @@
         <p>The following example represents a table with custom columns <code>sequel_id</code>, <code>name</code>,
             and <code>director</code>:
         </p>
-        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/StarWarsFilmsTable.kt" include-lines="3-4,12-16"/>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/StarWarsFilms.kt" include-lines="3-6,14-18"/>
         <p>
             <snippet id="IntIdTable-id-generation-note">
                 The <code>IntIdTable</code> class automatically generates an auto-incrementing integer <code>id</code>
@@ -59,7 +59,7 @@
             When the table is created, it corresponds to the following
             SQL query:
         </p>
-        <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/StarWarsFilmsTable.kt" include-lines="6-10" />
+        <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/StarWarsFilms.kt" include-lines="8-12" />
         <p>
             For more information on defining and configuring tables in Exposed, see <a href="Working-with-Tables.topic"/>.
         </p>

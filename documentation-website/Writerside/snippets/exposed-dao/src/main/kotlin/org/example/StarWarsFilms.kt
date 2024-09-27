@@ -2,6 +2,8 @@ package org.example
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 
+const val MAX_VARCHAR_LENGTH = 50
+
 /*
 CREATE TABLE IF NOT EXISTS STARWARSFILMS
 (ID INT AUTO_INCREMENT PRIMARY KEY,
@@ -11,6 +13,6 @@ DIRECTOR VARCHAR(50) NOT NULL);
 */
 object StarWarsFilms : IntIdTable() {
     val sequelId = integer("sequel_id").uniqueIndex()
-    val name = varchar("name", 50)
-    val director = varchar("director", 50)
+    val name = varchar("name", MAX_VARCHAR_LENGTH)
+    val director = varchar("director", MAX_VARCHAR_LENGTH)
 }
