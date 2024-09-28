@@ -46,11 +46,21 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
-        val tr = TransactionManager.current()
-        return when {
-            expr.orderBy.isNotEmpty() -> tr.throwUnsupportedException("SQLite doesn't support ORDER BY in GROUP_CONCAT function.")
-            expr.distinct -> tr.throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function.")
-            else -> super.groupConcat(expr, queryBuilder) // .replace(" SEPARATOR ", ", ")
+        if (expr.distinct) {
+            TransactionManager.current().throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function")
+        }
+        queryBuilder {
+            +"GROUP_CONCAT("
+            +expr.expr
+            expr.separator?.let {
+                +", '$it'"
+            }
+            if (expr.orderBy.isNotEmpty()) {
+                expr.orderBy.appendTo(prefix = " ORDER BY ") { (expression, sortOrder) ->
+                    currentDialect.dataTypeProvider.precessOrderByClause(this, expression, sortOrder)
+                }
+            }
+            +")"
         }
     }
 

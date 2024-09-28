@@ -29,9 +29,9 @@ fun <T : String?> Expression<T>.upperCase(): UpperCase<T> = UpperCase(this)
 /**
  * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
  *
- * When [distinct] is set to `true`, duplicate values will be eliminated.
- * [orderBy] can be used to sort values in the concatenated string.
- *
+ * @param separator The separator to use between concatenated values. If left `null`, the database default will be used.
+ * @param distinct If set to `true`, duplicate values will be eliminated.
+ * @param orderBy If specified, values will be sorted in the concatenated string.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupConcat
  */
 fun <T : String?> Expression<T>.groupConcat(
@@ -43,9 +43,9 @@ fun <T : String?> Expression<T>.groupConcat(
 /**
  * Concatenates all non-null input values of each group from [this] string expression, separated by [separator].
  *
- * When [distinct] is set to `true`, duplicate values will be eliminated.
- * [orderBy] can be used to sort values in the concatenated string by one or more expressions.
- *
+ * @param separator The separator to use between concatenated values. If left `null`, the database default will be used.
+ * @param distinct If set to `true`, duplicate values will be eliminated.
+ * @param orderBy If specified, values will be sorted in the concatenated string.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.GroupByTests.testGroupConcat
  */
 fun <T : String?> Expression<T>.groupConcat(

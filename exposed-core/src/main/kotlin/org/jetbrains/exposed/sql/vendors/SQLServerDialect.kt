@@ -95,8 +95,9 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         val tr = TransactionManager.current()
         return when {
-            expr.separator == null -> tr.throwUnsupportedException("SQLServer requires explicit separator in STRING_AGG.")
-            expr.orderBy.size > 1 -> tr.throwUnsupportedException("SQLServer supports only single column in ORDER BY clause in STRING_AGG.")
+            expr.separator == null -> tr.throwUnsupportedException("SQL Server requires explicit separator in STRING_AGG")
+            expr.distinct -> tr.throwUnsupportedException("SQL Server doesn't support DISTINCT in STRING_AGG")
+            expr.orderBy.size > 1 -> tr.throwUnsupportedException("SQL Server supports only single column in ORDER BY clause in STRING_AGG")
             else -> queryBuilder {
                 append("STRING_AGG(")
                 append(expr.expr)
