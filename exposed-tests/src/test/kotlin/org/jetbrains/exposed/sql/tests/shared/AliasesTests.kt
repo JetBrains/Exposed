@@ -255,6 +255,11 @@ class AliasesTests : DatabaseTestsBase() {
                 counter[tester.id].isNotNull() and (counter[tester.id] eq t1)
             }.single()
             assertEquals(99, result2[counter[tester.amount]])
+
+            val result3 = counter.selectAll().where {
+                (counter[tester.id] eq t1.value) or (counter[tester.id] neq 123)
+            }.single()
+            assertEquals(99, result3[counter[tester.amount]])
         }
     }
 }

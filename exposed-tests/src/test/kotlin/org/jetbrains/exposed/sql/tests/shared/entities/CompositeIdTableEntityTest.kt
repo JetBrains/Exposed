@@ -425,10 +425,15 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
             val smallCity = Towns.alias("small_city")
 
-            val result = smallCity.selectAll().where {
+            val result1 = smallCity.selectAll().where {
                 smallCity[Towns.id].isNotNull() and (smallCity[Towns.id] eq townAId)
             }.single()
-            assertNull(result[smallCity[Towns.population]])
+            assertNull(result1[smallCity[Towns.population]])
+
+            val result2 = smallCity.select(smallCity[Towns.name]).where {
+                smallCity[Towns.id] eq townAId.value
+            }.single()
+            assertEquals(townAValue[Towns.name], result2[smallCity[Towns.name]])
         }
     }
 
