@@ -10,6 +10,9 @@ internal object OraclePropertyProvider : PropertyProvider() {
     override val extraNameCharacters: String
         get() = "$#"
 
+    override val supportsAlterTableWithDropColumn: Boolean
+        get() = false
+
     override val supportsMultipleResultSets: Boolean
         get() = false
 

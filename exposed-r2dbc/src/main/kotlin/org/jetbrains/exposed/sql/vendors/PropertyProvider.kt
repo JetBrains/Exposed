@@ -40,6 +40,10 @@ abstract class PropertyProvider {
     open val supportsAlterTableWithAddColumn: Boolean
         get() = true
 
+    /** Returns whether the syntax ALTER TABLE with DROP COLUMN is supported. */
+    open val supportsAlterTableWithDropColumn: Boolean
+        get() = true
+
     /** Returns whether getting multiple ResultSet objects is supported from a single execution. */
     open val supportsMultipleResultSets: Boolean
         get() = true

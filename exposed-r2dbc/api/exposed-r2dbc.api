@@ -212,7 +212,7 @@ public final class org/jetbrains/exposed/sql/vendors/OracleMetadata : org/jetbra
 	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
 }
 
-public class org/jetbrains/exposed/sql/vendors/PostgreSQLMetadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
+public final class org/jetbrains/exposed/sql/vendors/PostgreSQLMetadata : org/jetbrains/exposed/sql/vendors/MetadataProvider {
 	public fun <init> ()V
 	public fun getCatalog ()Ljava/lang/String;
 	public fun getCatalogs ()Ljava/lang/String;
@@ -232,15 +232,6 @@ public class org/jetbrains/exposed/sql/vendors/PostgreSQLMetadata : org/jetbrain
 	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
 }
 
-public final class org/jetbrains/exposed/sql/vendors/PostgreSQLNGMetadata : org/jetbrains/exposed/sql/vendors/PostgreSQLMetadata {
-	public fun <init> ()V
-	public fun getCatalog ()Ljava/lang/String;
-	public fun getCatalogs ()Ljava/lang/String;
-	public fun getPropertyProvider ()Lorg/jetbrains/exposed/sql/vendors/PropertyProvider;
-	public fun getTypeProvider ()Lorg/jetbrains/exposed/sql/vendors/SqlTypeProvider;
-	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-}
-
 public abstract class org/jetbrains/exposed/sql/vendors/PropertyProvider {
 	public fun <init> ()V
 	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
@@ -252,6 +243,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/PropertyProvider {
 	public fun getStoresUpperCaseIdentifiers ()Z
 	public fun getStoresUpperCaseQuotedIdentifiers ()Z
 	public fun getSupportsAlterTableWithAddColumn ()Z
+	public fun getSupportsAlterTableWithDropColumn ()Z
 	public fun getSupportsMixedCaseIdentifiers ()Z
 	public fun getSupportsMixedCaseQuotedIdentifiers ()Z
 	public fun getSupportsMultipleResultSets ()Z

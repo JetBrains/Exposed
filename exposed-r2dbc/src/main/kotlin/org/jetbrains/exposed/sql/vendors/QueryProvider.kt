@@ -16,7 +16,6 @@ interface QueryProvider {
     fun getUsername(): String
 
     // ??? - how can these be retrieved? with a query or saving details on connect()?
-
     fun getReadOnlyMode(): String
 
     // ??? - how can these be retrieved? with a query or saving details on connect()?

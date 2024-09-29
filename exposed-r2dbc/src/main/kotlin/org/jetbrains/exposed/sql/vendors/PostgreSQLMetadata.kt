@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.sql.ReferenceOption
 
 @Suppress("MagicNumber")
-internal open class PostgreSQLPropertyProvider : PropertyProvider() {
+internal object PostgreSQLPropertyProvider : PropertyProvider() {
     override val storesLowerCaseIdentifiers: Boolean
         get() = true
 
@@ -28,7 +28,7 @@ internal open class PostgreSQLPropertyProvider : PropertyProvider() {
 }
 
 @Suppress("MagicNumber")
-internal open class PostgreSQLTypeProvider : SqlTypeProvider() {
+internal object PostgreSQLTypeProvider : SqlTypeProvider() {
     override val referenceOptions: Map<ReferenceOption, Int> by lazy {
         mapOf(
             ReferenceOption.CASCADE to 0,
@@ -104,7 +104,7 @@ internal open class PostgreSQLTypeProvider : SqlTypeProvider() {
 }
 
 @Suppress("MagicNumber")
-open class PostgreSQLMetadata : MetadataProvider(PostgreSQLPropertyProvider(), PostgreSQLTypeProvider()) {
+class PostgreSQLMetadata : MetadataProvider(PostgreSQLPropertyProvider, PostgreSQLTypeProvider) {
     override fun getUrl(): String {
         TODO("Not yet implemented")
     }
