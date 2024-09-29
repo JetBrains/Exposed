@@ -61,6 +61,7 @@ class MetadataTests : DatabaseTestsBase() {
     fun testAdditionalMetadata() {
         withJdbcMetadata { _, metadata, provider ->
             assertEquals(metadata.supportsAlterTableWithAddColumn(), provider.propertyProvider.supportsAlterTableWithAddColumn)
+            assertEquals(metadata.supportsAlterTableWithDropColumn(), provider.propertyProvider.supportsAlterTableWithDropColumn)
             assertEquals(metadata.supportsMultipleResultSets(), provider.propertyProvider.supportsMultipleResultSets)
             assertEquals(metadata.supportsSelectForUpdate(), provider.propertyProvider.supportsSelectForUpdate)
             assertEquals(metadata.defaultTransactionIsolation, provider.propertyProvider.defaultTransactionIsolation.asInt())
@@ -301,13 +302,13 @@ private fun DatabaseTestsBase.withJdbcMetadata(
     exclude: Collection<TestDB> = emptyList(),
     body: Transaction.(testDb: TestDB, metadata: DatabaseMetaData, provider: MetadataProvider) -> Unit
 ) {
-    withDb(excludeSettings = exclude + TestDB.ALL_H2_V1 + TestDB.SQLITE) { testDb ->
+    val r2bdcUnsupported = TestDB.ALL_H2_V1 + TestDB.SQLITE + TestDB.POSTGRESQLNG
+    withDb(excludeSettings = exclude + r2bdcUnsupported) { testDb ->
         try {
             val jdbcMetadata = (connection.connection as java.sql.Connection).metaData
             val provider = when (testDb) {
                 TestDB.SQLSERVER -> SQLServerMetadata()
                 TestDB.ORACLE -> OracleMetadata()
-                TestDB.POSTGRESQLNG -> PostgreSQLNGMetadata()
                 TestDB.POSTGRESQL -> PostgreSQLMetadata()
                 in TestDB.ALL_MARIADB -> MariaDBMetadata()
                 in TestDB.ALL_MYSQL -> MySQLMetadata()

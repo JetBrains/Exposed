@@ -61,7 +61,7 @@ class R2dbcDatabaseMetadataImpl(
 
     override val supportsAlterTableWithAddColumn: Boolean by lazyMetadata { propertyProvider.supportsAlterTableWithAddColumn }
 
-    override val supportsAlterTableWithDropColumn: Boolean by lazyMetadata { true }
+    override val supportsAlterTableWithDropColumn: Boolean by lazyMetadata { propertyProvider.supportsAlterTableWithDropColumn }
 
     override val supportsMultipleResultSets: Boolean by lazyMetadata { propertyProvider.supportsMultipleResultSets }
 

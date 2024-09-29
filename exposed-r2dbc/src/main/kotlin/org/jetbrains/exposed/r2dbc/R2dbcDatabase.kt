@@ -44,7 +44,7 @@ class R2dbcDatabase private constructor(
 
     override val supportsAlterTableWithAddColumn by lazy { metadata { supportsAlterTableWithAddColumn } }
 
-    override val supportsAlterTableWithDropColumn by lazy { metadata { true } }
+    override val supportsAlterTableWithDropColumn by lazy { metadata { supportsAlterTableWithDropColumn } }
 
     override val supportsMultipleResultSets by lazy { metadata { supportsMultipleResultSets } }
 
