@@ -104,6 +104,14 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcPreparedState
 	public fun setTimeout (Ljava/lang/Integer;)V
 }
 
+public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcResult : org/jetbrains/exposed/sql/statements/api/ResultApi {
+	public fun <init> (Lio/r2dbc/spi/Row;)V
+	public fun getObject (I)Ljava/lang/Object;
+	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
+	public fun getResult ()Lio/r2dbc/spi/Row;
+	public synthetic fun getResult ()Ljava/lang/Object;
+}
+
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcSavepoint : org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {
 	public fun <init> (Ljava/lang/String;)V
 }
