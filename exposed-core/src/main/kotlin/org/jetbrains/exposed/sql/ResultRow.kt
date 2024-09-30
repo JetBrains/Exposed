@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.statements.api.DatabaseApi
+import org.jetbrains.exposed.sql.statements.api.JdbcResult
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.withDialect
 import java.sql.ResultSet
@@ -141,7 +142,7 @@ class ResultRow(
                 fieldsIndex.forEach { (field, index) ->
                     val columnType = (field as? ExpressionWithColumnType)?.columnType
                     val value = if (columnType != null) {
-                        columnType.readObject(rs, index + 1)
+                        columnType.readObject(JdbcResult(rs), index + 1)
                     } else {
                         rs.getObject(index + 1)
                     }

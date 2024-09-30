@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.JdbcResult
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
@@ -71,7 +72,7 @@ open class InsertStatement<Key : Any>(
                 while (rs?.next() == true) {
                     try {
                         val returnedValues = returnedColumns.associateTo(mutableMapOf()) {
-                            it.first to it.first.columnType.readObject(rs, it.second)
+                            it.first to it.first.columnType.readObject(JdbcResult(rs), it.second)
                         }
                         if (returnedValues.isEmpty() && firstAutoIncColumn != null) {
                             returnedValues[firstAutoIncColumn] = rs.getObject(1)

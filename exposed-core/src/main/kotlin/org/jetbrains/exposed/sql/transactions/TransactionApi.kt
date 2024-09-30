@@ -129,7 +129,7 @@ interface TransactionManager {
         /**
          * The database to use by default in all transactions.
          *
-         * **Note** If this value is not set, the last [Database] instance created will be used.
+         * **Note** If this value is not set, the last database instance created will be used.
          */
         @Suppress("SpacingBetweenDeclarationsWithAnnotations")
         var defaultDatabase: DatabaseApi?
@@ -252,7 +252,7 @@ internal inline fun TransactionInterface.closeLoggingException(log: (Exception) 
 }
 
 /**
- * The [TransactionManager] instance that is associated with this [Database].
+ * The [TransactionManager] instance that is associated with this database.
  *
  * @throws [RuntimeException] If a manager has not been registered for the database.
  */

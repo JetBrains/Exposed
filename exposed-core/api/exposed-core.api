@@ -214,7 +214,7 @@ public final class org/jetbrains/exposed/sql/ArrayColumnType : org/jetbrains/exp
 	public fun nonNullValueToString (Ljava/util/List;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Ljava/util/List;)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;I)Ljava/lang/Object;
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -237,7 +237,7 @@ public final class org/jetbrains/exposed/sql/AutoIncColumnType : org/jetbrains/e
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;I)Ljava/lang/Object;
 	public fun setNullable (Z)V
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
@@ -259,7 +259,6 @@ public class org/jetbrains/exposed/sql/BasicBinaryColumnType : org/jetbrains/exp
 	public fun <init> ()V
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString ([B)Ljava/lang/String;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)[B
@@ -302,8 +301,7 @@ public final class org/jetbrains/exposed/sql/BlobColumnType : org/jetbrains/expo
 	public final fun getUseObjectIdentifier ()Z
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString (Lorg/jetbrains/exposed/sql/statements/api/ExposedBlob;)Ljava/lang/String;
-	public synthetic fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Lorg/jetbrains/exposed/sql/statements/api/ExposedBlob;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;I)Ljava/lang/Object;
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
@@ -514,7 +512,7 @@ public abstract class org/jetbrains/exposed/sql/ColumnType : org/jetbrains/expos
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;I)Ljava/lang/Object;
 	public fun setNullable (Z)V
 	public fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun toString ()Ljava/lang/String;
@@ -779,7 +777,6 @@ public final class org/jetbrains/exposed/sql/DecimalColumnType : org/jetbrains/e
 	public final fun getPrecision ()I
 	public final fun getScale ()I
 	public fun hashCode ()I
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/math/BigDecimal;
@@ -838,7 +835,7 @@ public final class org/jetbrains/exposed/sql/EntityIDColumnType : org/jetbrains/
 	public fun nonNullValueToString (Lorg/jetbrains/exposed/dao/id/EntityID;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Lorg/jetbrains/exposed/dao/id/EntityID;)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lorg/jetbrains/exposed/dao/id/EntityID;
@@ -1047,7 +1044,7 @@ public abstract interface class org/jetbrains/exposed/sql/IColumnType {
 	public abstract fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public abstract fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
-	public abstract fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public abstract fun readObject (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;I)Ljava/lang/Object;
 	public abstract fun setNullable (Z)V
 	public abstract fun setParameter (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public abstract fun sqlType ()Ljava/lang/String;
@@ -1063,7 +1060,7 @@ public final class org/jetbrains/exposed/sql/IColumnType$DefaultImpls {
 	public static fun nonNullValueToString (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/String;
 	public static fun notNullValueToDB (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun parameterMarker (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/String;
-	public static fun readObject (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public static fun readObject (Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/statements/api/ResultApi;I)Ljava/lang/Object;
 	public static fun setParameter (Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public static fun validateValueBeforeUpdate (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)V
 	public static fun valueAsDefaultString (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/lang/Object;)Ljava/lang/String;
@@ -2614,7 +2611,7 @@ public class org/jetbrains/exposed/sql/TextColumnType : org/jetbrains/exposed/sq
 	public synthetic fun <init> (Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getEagerLoading ()Z
 	public fun preciseType ()Ljava/lang/String;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 }
 
@@ -2730,7 +2727,6 @@ public final class org/jetbrains/exposed/sql/UUIDColumnType : org/jetbrains/expo
 	public fun nonNullValueToString (Ljava/util/UUID;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Ljava/util/UUID;)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/util/UUID;
@@ -3610,6 +3606,14 @@ protected final class org/jetbrains/exposed/sql/statements/api/IdentifierManager
 	public static fun values ()[Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi$OracleVersion;
 }
 
+public final class org/jetbrains/exposed/sql/statements/api/JdbcResult : org/jetbrains/exposed/sql/statements/api/ResultApi {
+	public fun <init> (Ljava/sql/ResultSet;)V
+	public fun getObject (I)Ljava/lang/Object;
+	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
+	public synthetic fun getResult ()Ljava/lang/Object;
+	public fun getResult ()Ljava/sql/ResultSet;
+}
+
 public abstract interface class org/jetbrains/exposed/sql/statements/api/PreparedStatementApi {
 	public abstract fun addBatch ()V
 	public abstract fun cancel ()V
@@ -3632,6 +3636,12 @@ public abstract interface class org/jetbrains/exposed/sql/statements/api/Prepare
 
 public final class org/jetbrains/exposed/sql/statements/api/PreparedStatementApi$DefaultImpls {
 	public static fun fillParameters (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Ljava/lang/Iterable;)I
+}
+
+public abstract interface class org/jetbrains/exposed/sql/statements/api/ResultApi {
+	public abstract fun getObject (I)Ljava/lang/Object;
+	public abstract fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
+	public abstract fun getResult ()Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/sql/transactions/ThreadLocalTransactionManager : org/jetbrains/exposed/sql/transactions/TransactionManager {
