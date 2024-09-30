@@ -10,6 +10,10 @@
         CRUD (Create, Read, Update, Delete) are the four basic operations supported by any database. This section
         demonstrates how to perform SQL CRUD operations using Exposed's DAO (Data Access Object) API.
     </p>
+    <p>
+        These operations can be performed directly through the methods and properties of the <code>Entity</code> class
+        associated with the table. For more information, see <a href="DAO-Table-Types.topic" anchor="define-entity-instance"/>.
+    </p>
     <chapter title="Create" id="create">
         <p>
             To create a new table row, use the <code>new</code> function on the entity class:
@@ -22,8 +26,8 @@
             }
         </code-block>
         <p>
-            In the above example <code>StarWarsFilm</code> would be the entity instance linked to the <code>StarWarsFilms</code> table.
-            For more information, see <a href="DAO-Table-Types.topic" anchor="define-entity-instance" />.
+            In the above example <code>StarWarsFilm</code> would be the <a href="DAO-Table-Types.topic" anchor="define-entity-instance">entity instance</a> linked to
+            the <code>StarWarsFilms</code> table.
         </p>
         <p>
             To provide a manual <code>id</code> value to a new entity, pass the value as an argument to the <code>id</code> parameter:
