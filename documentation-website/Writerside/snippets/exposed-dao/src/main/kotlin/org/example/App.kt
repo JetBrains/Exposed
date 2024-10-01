@@ -1,5 +1,7 @@
 package org.example
 
+import org.example.entities.*
+import org.example.tables.*
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
