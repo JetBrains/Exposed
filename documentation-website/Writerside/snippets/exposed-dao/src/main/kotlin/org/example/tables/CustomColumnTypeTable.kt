@@ -1,4 +1,4 @@
-package org.example
+package org.example.tables
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable

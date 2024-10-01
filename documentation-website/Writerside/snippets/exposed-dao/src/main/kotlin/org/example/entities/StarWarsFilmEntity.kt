@@ -1,5 +1,6 @@
-package org.example
+package org.example.entities
 
+import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

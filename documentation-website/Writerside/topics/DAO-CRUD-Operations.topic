@@ -18,13 +18,7 @@
         <p>
             To create a new table row, use the <code>new</code> function on the entity class:
         </p>
-        <code-block lang="kotlin">
-            val movie = StarWarsFilm.new {
-                name = "The Last Jedi"
-                sequelId = 8
-                director = "Rian Johnson"
-            }
-        </code-block>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="24-28"/>
         <p>
             In the above example <code>StarWarsFilm</code> would be the <a href="DAO-Table-Types.topic" anchor="define-entity-instance">entity instance</a> linked to
             the <code>StarWarsFilms</code> table.
@@ -32,103 +26,64 @@
         <p>
             To provide a manual <code>id</code> value to a new entity, pass the value as an argument to the <code>id</code> parameter:
         </p>
-        <code-block lang="kotlin">
-            StarWarsFilm.new(id = 2) {
-                name = "The Rise of Skywalker"
-                sequelId = 9
-                director = "J.J. Abrams"
-            }
-        </code-block>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="31-35"/>
         <p>
             If the entity is a <code>CompositeEntity</code>, the id value can be constructed by creating a component column-to-value association using
             <code>CompositeID</code>:
         </p>
-        <code-block lang="kotlin">
-            val newId = CompositeID {
-                it[Directors.name] = "J.J. Abrams"
-                it[Directors.guildId] = UUID.randomUUID()
-            }
-
-            Director.new(newId) {
-                genre = Genre.SCI_FI
-            }
-        </code-block>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="87-94"/>
     </chapter>
     <chapter title="Read" id="read">
         <p>To read a value from a property, simply access it as you would with any property in a Kotlin class:</p>
-        <code-block lang="kotlin">
-            val name = movie.name
-        </code-block>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="38"/>
         <note>
             An entity's <code>id</code> property is wrapped as an instance of the <code>EntityID</code> class.
             To access the actual wrapped value, for example the stored <code>Int</code> from a <code>StarWarsFilm</code>
             entity, use <code>EntityID.value</code>:
-            <code-block lang="kotlin">
-                val id: Int = movie.id.value
-            </code-block>
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="42"/>
         </note>
         <p>To retrieve entities, use one of the following methods:</p>
             <chapter title="all" id="read-all">
                 To get all the entity instances associated with this entity class, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/all.html"><code>all()</code></a>
                 function:
-                <code-block lang="kotlin">
-                    val movies = StarWarsFilm.all()
-                </code-block>
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="46"/>
             </chapter>
             <chapter title="find" id="find-all">
                 To get all the entity instances that conform to the conditional expression, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/find.html"><code>find()</code></a>
                 function:
-                <code-block lang="kotlin">
-                    val movies = StarWarsFilm.find { StarWarsFilms.sequelId eq 8 }
-                </code-block>
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="58"/>
             </chapter>
             <chapter title="findById" id="find-by-id">
                 To get an entity by its id value, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/find-by-id.html"><code>findById()</code></a>
                 function:
-                <code-block lang="kotlin">
-                    val movie = StarWarsFilm.findById(5)
-                </code-block>
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="62"/>
             </chapter>
-        <tip>
-            For a list of available predicates, see
-            <a href="DSL-Querying-data.topic" anchor="where-expression">DSL Where expression</a>.
-        </tip>
         <p>
             If the entity is a <code>CompositeEntity</code>, its <code>id</code> property can be used to refer to
             all composite columns and to get entities,
             much like the <code>id</code> column of its associated <code>CompositeIdTable</code>:
         </p>
-
-        <code-block lang="kotlin">
-            val directorId = CompositeID {
-                it[Directors.name] = "George Lucas"
-                it[Directors.guildId] = "..."
-            }
-
-            // these will both deconstruct in SQL to the 2 component columns
-            val director = Director.findById(directorId)
-            val directors = Director.find { Directors.id eq directorId }
-        </code-block>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="88-92,104"/>
+        <p>
+            The SQL query would result in something like the following:
+        </p>
+        <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="99-102" />
+        <tip>
+            For a list of available predicates, see
+            <a href="DSL-Querying-data.topic" anchor="where-expression">DSL Where expression</a>.
+        </tip>
         <chapter title="Read an entity with a join to another table" id="read-entity-with-a-join-to-another-table">
             <p>Suppose that you want to find all users who rated the second Star Wars film with a score greater than 5.
                 First, you would write that query using Exposed DSL.</p>
 
-            <code-block lang="kotlin">
-                val query = Users.innerJoin(UserRatings).innerJoin(StarWarsFilm)
-                    .select(Users.columns)
-                    .where {
-                        StarWarsFilms.sequelId eq 2 and (UserRatings.value gt 5)
-                    }.withDistinct()
-            </code-block>
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="113-118"/>
             <p>
                 Once the query is defined, you can wrap the result in the <code>User</code> entity using the
                 <code>wrapRows()</code> function to generate entities from the retrieved data:</p>
-            <code-block lang="kotlin">
-                val users = User.wrapRows(query).toList()
-            </code-block>
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="119"/>
         </chapter>
         <chapter title="Sort results" id="sort-by">
             <p>
@@ -136,15 +91,11 @@
             </p>
             <chapter title="sortedBy" id="sortedBy">
                 <p>To sort results in ascending order, use <code>sortedBy</code>:</p>
-                <code-block lang="kotlin">
-                    val movies = StarWarsFilm.all().sortedBy { it.sequelId }
-                </code-block>
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="50"/>
             </chapter>
             <chapter title="sortedByDescending" id="sortedByDescending">
                 <p>To sort results in descending order, use <code>sortedByDescending</code>:</p>
-                <code-block lang="kotlin">
-                    val movies = StarWarsFilm.all().sortedByDescending { it.sequelId }
-                </code-block>
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="54"/>
             </chapter>
         </chapter>
     </chapter>
@@ -152,9 +103,7 @@
         <p>
             You can update the value of a property just as you would with any property in a Kotlin class:
         </p>
-        <code-block lang="kotlin">
-            movie.name = &quot;Episode VIII – The Last Jedi&quot;
-        </code-block>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="66"/>
         <note>
             Exposed doesn't make an immediate update when you set a new value for <code>Entity</code>, it just stores it on the inner map.
             "Flushing" values to the database occurs at the end of the transaction, or before the next <code>SELECT *</code> from the database.
@@ -163,22 +112,14 @@
             <p>
                 To search for an entity by its id and apply an update, use the <code>findByIdAndUpdate()</code> function:
             </p>
-            <code-block lang="kotlin">
-                val updatedMovie = StarWarsFilm.findByIdAndUpdate(5) {
-                    it.name = &quot;Episode VIII – The Last Jedi&quot;
-                }
-            </code-block>
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="69-71"/>
         </chapter>
         <chapter title="findSingleByAndUpdate" id="findSingleByAndUpdate">
             <p>
                 To search for a single entity by a query and apply an update, use the <code>findSingleByAndUpdate()</code>
                 function:
             </p>
-            <code-block lang="kotlin">
-                val updatedMovie2 = StarWarsFilm.findSingleByAndUpdate(StarWarsFilms.name eq &quot;The Last Jedi&quot;) {
-                    it.name = &quot;Episode VIII – The Last Jedi&quot;
-                }
-            </code-block>
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="75-77"/>
         </chapter>
 
     </chapter>
@@ -186,9 +127,7 @@
         <p>
             To delete a record, use the <code>delete()</code> function:
         </p>
-        <code-block lang="kotlin">
-            movie.delete()
-        </code-block>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="81"/>
     </chapter>
 
     <chapter title="Use queries as expressions" id="use-queries-as-expressions">
@@ -197,17 +136,7 @@
             then order the result by that count.To do so, however, you need to convert the <code>Query</code> to an
             <code>Expression</code>. This can be done using the <code>wrapAsExpression()</code>
             function:</p>
-        <code-block lang="kotlin">
-            val expression = wrapAsExpression&lt;Int&gt;(Users
-                .select(Users.id.count())
-                .where {
-                    Cities.id eq Users.cityId
-                })
-            val cities = Cities
-                .selectAll()
-                .orderBy(expression, SortOrder.DESC)
-                .toList()
-        </code-block>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="127-133"/>
     </chapter>
 
     <chapter title="Add computed fields to entity class" id="add-computed-fields-to-entity-class">

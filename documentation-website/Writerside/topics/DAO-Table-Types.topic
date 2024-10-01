@@ -124,7 +124,7 @@
             For example, given the <a anchor="define-table-example">above table definition of <code>StarWarsFilmsTable</code></a>,
             the corresponding entity class can be defined as follows:
         </p>
-        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt" include-lines="3-13"/>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt" include-lines="3-14"/>
         <list>
             <li>
                 Since <code>StarWarsFilmsTable</code> is an <code>IntIdTable</code>, the <code>StarWarsFilmsEntity</code> class extends from <code>IntEntity</code>,

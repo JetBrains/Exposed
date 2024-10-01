@@ -1,5 +1,6 @@
-package org.example
+package org.example.entities
 
+import org.example.tables.DirectorsTable
 import org.jetbrains.exposed.dao.CompositeEntity
 import org.jetbrains.exposed.dao.CompositeEntityClass
 import org.jetbrains.exposed.dao.id.CompositeID
