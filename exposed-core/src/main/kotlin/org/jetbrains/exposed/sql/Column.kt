@@ -2,13 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.inProperCase
-import java.util.*
+import org.jetbrains.exposed.sql.vendors.*
 
 private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }, { it.name })
 
@@ -76,15 +70,20 @@ class Column<T>(
     override fun createStatement(): List<String> {
         val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
         val isH2withCustomPKConstraint = currentDialect is H2Dialect && isLastColumnInPK
+        val isOracle = currentDialect is OracleDialect
         val columnDefinition = when {
-            isPrimaryConstraintWillBeDefined && isLastColumnInPK && !isH2withCustomPKConstraint ->
+            isPrimaryConstraintWillBeDefined && isLastColumnInPK && !isH2withCustomPKConstraint && !isOracle ->
                 descriptionDdl(false) + ", ADD ${table.primaryKeyConstraint()}"
 
             isH2withCustomPKConstraint -> descriptionDdl(true)
             else -> descriptionDdl(false)
         }
 
-        val addConstr = if (isH2withCustomPKConstraint) "$alterTablePrefix ${table.primaryKeyConstraint()}" else null
+        val addConstr = if (isH2withCustomPKConstraint || (isOracle && isPrimaryConstraintWillBeDefined)) {
+            "$alterTablePrefix ${table.primaryKeyConstraint()}"
+        } else {
+            null
+        }
         return listOfNotNull("$alterTablePrefix $columnDefinition", addConstr)
     }
 
