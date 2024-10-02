@@ -176,10 +176,8 @@ class ResultRow(
                 columnType is ColumnWithTransform<*, *> -> {
                     (columnType as ColumnWithTransform<Any, Any>).unwrapRecursive(defaultValueFun!!())
                 }
-
                 else -> defaultValueFun!!()
             }
-
             columnType.nullable -> null
             else -> NotInitializedValue
         }
