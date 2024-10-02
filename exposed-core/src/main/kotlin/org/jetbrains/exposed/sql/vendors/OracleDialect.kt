@@ -18,7 +18,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     } else {
         "NUMBER(3)"
     }
-    override fun ubyteType(): String = "NUMBER(4)"
+    override fun ubyteType(): String = "NUMBER(3)"
     override fun shortType(): String = if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
         "SMALLINT"
     } else {
