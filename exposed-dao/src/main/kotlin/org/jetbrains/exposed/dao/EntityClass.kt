@@ -741,7 +741,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             "DAOs transform() is deprecated and will be removed in future releases. " +
             "Please use the transform function from the DSL layer. " +
             "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform().",
+            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
+            "With version 0.53.0 Entity transformation got several breaking changes. " +
+            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
         ReplaceWith(
             "object : Table() { val c = column().transform(transformer) }"
         )
@@ -764,7 +766,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             "DAOs transform() is deprecated and will be removed in future releases. " +
             "Please use the transform function from the DSL layer. " +
             "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform().",
+            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
+            "With version 0.53.0 Entity transformation got several breaking changes. " +
+            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
         ReplaceWith(
             "object : Table() { val c = column().transform(wrap, unwrap) }"
         )
@@ -787,7 +791,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             "DAOs transform() is deprecated and will be removed in future releases. " +
             "Please use the transform function from the DSL layer. " +
             "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform().",
+            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
+            "With version 0.53.0 Entity transformation got several breaking changes. " +
+            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
         ReplaceWith(
             "object : Table() { val c = column().transform(wrap, unwrap) }"
         )
@@ -812,7 +818,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             "Please use the transform function from the DSL layer. " +
             "Memoization will not be a part of column transformation API anymore. " +
             "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform().",
+            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
+            "With version 0.53.0 Entity transformation got several breaking changes. " +
+            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
         ReplaceWith(
             "object : Table() { val c = column().transform(transformer) }"
         )
@@ -837,7 +845,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             "Please use the transform function from the DSL layer. " +
             "Memoization will not be a part of column transformation API anymore. " +
             "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform().",
+            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
+            "With version 0.53.0 Entity transformation got several breaking changes. " +
+            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
         ReplaceWith(
             "object : Table() { val c = column().transform(wrap, unwrap) }"
         )
@@ -862,7 +872,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
             "Please use the transform function from the DSL layer. " +
             "Memoization will not be a part of column transformation API anymore. " +
             "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform().",
+            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
+            "With version 0.53.0 Entity transformation got several breaking changes. " +
+            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
         ReplaceWith(
             "object : Table() { val c = column().transform(wrap, unwrap) }"
         )
