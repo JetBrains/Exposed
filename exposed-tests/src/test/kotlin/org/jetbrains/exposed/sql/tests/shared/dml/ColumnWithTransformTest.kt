@@ -11,6 +11,9 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import java.util.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class ColumnWithTransformTest : DatabaseTestsBase() {
 
@@ -29,6 +32,43 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
     class DataHolderNullTransformer : ColumnTransformer<Int, TransformDataHolder?> {
         override fun unwrap(value: TransformDataHolder?): Int = value?.value ?: 0
         override fun wrap(value: Int): TransformDataHolder? = if (value == 0) null else TransformDataHolder(value)
+    }
+
+    @Test
+    fun testRecursiveUnwrap() {
+        val tester1 = object : IntIdTable() {
+            val value = integer("value")
+                .transform(DataHolderTransformer())
+                .nullable()
+        }
+
+        val columnType1 = tester1.value.columnType as? ColumnWithTransform<Int, TransformDataHolder>
+        assertNotNull(columnType1)
+        assertEquals(1, columnType1.unwrapRecursive(TransformDataHolder(1)))
+        assertNull(columnType1.unwrapRecursive(null))
+
+        // Transform null into non-nullable value
+        val tester2 = object : IntIdTable() {
+            val value = integer("value")
+                .nullTransform(DataHolderNullTransformer())
+        }
+
+        val columnType2 = tester2.value.columnType as? ColumnWithTransform<Int, TransformDataHolder?>
+        assertNotNull(columnType2)
+        assertEquals(1, columnType2.unwrapRecursive(TransformDataHolder(1)))
+        assertEquals(0, columnType2.unwrapRecursive(null))
+
+        val tester3 = object : IntIdTable() {
+            val value = integer("value")
+                .transform(DataHolderTransformer())
+                .nullable()
+                .transform(wrap = { it?.value ?: 0 }, unwrap = { TransformDataHolder(it ?: 0) })
+        }
+
+        val columnType3 = tester3.value.columnType as? ColumnWithTransform<TransformDataHolder?, Int?>
+        assertNotNull(columnType3)
+        assertEquals(1, columnType3.unwrapRecursive(1))
+        assertEquals(0, columnType3.unwrapRecursive(null))
     }
 
     @Test
@@ -135,11 +175,14 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
     }
 
-    object TransformTable : IntIdTable("transform-table") {
-        val simple = integer("simple").transform(DataHolderTransformer())
-        val chained = text("chained")
+    object TransformTable : IntIdTable("transform_table") {
+        val simple = integer("simple")
+            .default(1)
+            .transform(DataHolderTransformer())
+        val chained = varchar("chained", length = 128)
             .transform(wrap = { it.toInt() }, unwrap = { it.toString() })
             .transform(DataHolderTransformer())
+            .default(TransformDataHolder(2))
     }
 
     class TransformEntity(id: EntityID<Int>) : IntEntity(id) {
@@ -163,6 +206,21 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
 
             assertEquals(TransformDataHolder(120), entity.simple)
             assertEquals(TransformDataHolder(240), entity.chained)
+        }
+    }
+
+    @Test
+    fun testEntityWithDefaultValue() {
+        withTables(TransformTable) {
+            val entity = TransformEntity.new {}
+
+            assertEquals(TransformDataHolder(1), entity.simple)
+            assertEquals(TransformDataHolder(2), entity.chained)
+
+            val entry = TransformTable.selectAll().first()
+
+            assertEquals(1, entry[TransformTable.simple].value)
+            assertEquals(2, entry[TransformTable.chained].value)
         }
     }
 

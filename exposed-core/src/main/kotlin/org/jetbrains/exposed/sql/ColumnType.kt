@@ -316,13 +316,38 @@ open class ColumnWithTransform<Unwrapped, Wrapped>(
     val transformer: ColumnTransformer<Unwrapped, Wrapped>
 ) : ColumnType<Wrapped & Any>() {
 
-    fun unwrapRecursive(value: Wrapped?): Any? {
+    /**
+     * Recursively unwraps the given value by applying the delegate's transformation.
+     *
+     * This method will recursively call unwrap on the inner delegate if the delegate
+     * is also an instance of [ColumnWithTransform]. This is useful for handling nested
+     * transformations.
+     *
+     * @param value The value to unwrap. Could be null.
+     * @return The unwrapped value. Returns the value transformed by the transformer if it's not null.
+     */
+    open fun unwrapRecursive(value: Wrapped?): Any? {
         return if (delegate is ColumnWithTransform<*, *>) {
             (delegate as ColumnWithTransform<Any, Unwrapped>).unwrapRecursive(transformer.unwrap(value as Wrapped))
         } else {
-            transformer.unwrap(value!!)
+            value?.let { transformer.unwrap(value) }
         }
     }
+
+    /**
+     * Gets the original column type that this column with transformation wraps around.
+     *
+     * This property will recursively unwrap the delegate column type if the delegate
+     * is also an instance of [ColumnWithTransform]. This ensures that you get the
+     * original column type, regardless of the number of nested transformations.
+     *
+     * @return The original column's [IColumnType].
+     */
+    val originalColumnType: IColumnType<Any>
+        get() = when {
+            delegate is ColumnWithTransform<*, *> -> delegate.originalColumnType
+            else -> delegate as IColumnType<Any>
+        }
 
     override fun sqlType(): String = delegate.sqlType()
 
@@ -365,6 +390,26 @@ open class NullableColumnWithTransform<Unwrapped, Wrapped>(
     delegate: IColumnType<Unwrapped & Any>,
     transformer: ColumnTransformer<Unwrapped, Wrapped>
 ) : ColumnWithTransform<Unwrapped, Wrapped>(delegate, transformer) {
+    /**
+     * Recursively unwraps the given value by applying the delegate's transformation.
+     *
+     * This method will recursively call unwrap on the inner delegate if the delegate
+     * is also an instance of [ColumnWithTransform]. This is useful for handling nested
+     * transformations. Unlike [ColumnWithTransform.unwrapRecursive], this method allows
+     * transformation involving `null` values.
+     *
+     * @param value The value to unwrap. Could be `null`.
+     * @return The unwrapped value. Returns the value transformed by the transformer, which
+     * could be `null` if the transformer design allows it.
+     */
+    override fun unwrapRecursive(value: Wrapped?): Any? {
+        return if (delegate is ColumnWithTransform<*, *>) {
+            (delegate as ColumnWithTransform<Any, Unwrapped>).unwrapRecursive(transformer.unwrap(value as Wrapped))
+        } else {
+            transformer.unwrap(value as Wrapped)
+        }
+    }
+
     override fun valueFromDB(value: Any): Wrapped? {
         return transformer.wrap(delegate.valueFromDB(value) as Unwrapped)
     }

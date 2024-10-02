@@ -40,6 +40,7 @@ ij_kotlin_spaces_around_logical_operators = true
 ij_kotlin_spaces_around_equality_operators = true
 ij_any_align_group_field_declarations = false
 ij_java_align_group_field_declarations = false
+ij_kotlin_line_break_after_multiline_when_entry = false
 
 [{.github/**/*.yml, .idea/*.xml}]
 indent_size = 2
