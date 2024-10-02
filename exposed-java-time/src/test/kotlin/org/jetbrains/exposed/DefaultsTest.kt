@@ -272,6 +272,11 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t8".inProperCase()} $longType${testTable.t8.constraintNamePart()} ${durLiteral.itOrNull()}, " +
                 "${"t9".inProperCase()} $timeType${testTable.t9.constraintNamePart()} ${tLiteral.itOrNull()}, " +
                 "${"t10".inProperCase()} $timeType${testTable.t10.constraintNamePart()} ${tLiteral.itOrNull()}" +
+                when (testDb) {
+                    TestDB.SQLITE, TestDB.ORACLE ->
+                        ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                    else -> ""
+                } +
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
@@ -427,6 +432,11 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
                 "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
                 "${"t3".inProperCase()} $timestampWithTimeZoneType${testTable.t3.constraintNamePart()} ${CurrentTimestampWithTimeZone.itOrNull()}" +
+                when (testDb) {
+                    TestDB.SQLITE, TestDB.ORACLE ->
+                        ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                    else -> ""
+                } +
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect ||

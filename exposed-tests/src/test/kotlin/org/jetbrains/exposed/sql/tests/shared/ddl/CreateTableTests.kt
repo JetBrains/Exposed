@@ -117,7 +117,7 @@ class CreateTableTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(column1)
         }
 
-        withDb {
+        withDb { testDb ->
             val stringColumnDescription = stringPKTable.columns.single().descriptionDdl(false)
             val intColumnDescription = intPKTable.columns.single().descriptionDdl(false)
 
@@ -132,6 +132,11 @@ class CreateTableTests : DatabaseTestsBase() {
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + intPKTable.tableName.inProperCase() + " (" +
                     intColumnDescription +
+                    when (testDb) {
+                        TestDB.SQLITE, TestDB.ORACLE ->
+                            ", CONSTRAINT chk_int_pk_table_signed_integer_column_1 CHECK (${"column_1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                        else -> ""
+                    } +
                     ")",
                 intPKTable.ddl
             )
@@ -146,7 +151,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
             override val primaryKey = PrimaryKey(id1, id2)
         }
-        withDb {
+        withDb { testDb ->
             val id1ProperName = account.id1.name.inProperCase()
             val id2ProperName = account.id2.name.inProperCase()
             val tableName = account.tableName
@@ -155,6 +160,12 @@ class CreateTableTests : DatabaseTestsBase() {
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
                     "${account.columns.joinToString { it.descriptionDdl(false) }}, " +
                     "CONSTRAINT pk_$tableName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
+                    when (testDb) {
+                        TestDB.SQLITE, TestDB.ORACLE ->
+                            ", CONSTRAINT chk_Account_signed_integer_id1 CHECK (${"id1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT chk_Account_signed_integer_id2 CHECK (${"id2".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                        else -> ""
+                    } +
                     ")",
                 account.ddl
             )
@@ -166,7 +177,7 @@ class CreateTableTests : DatabaseTestsBase() {
         val pkConstraintName = "PKConstraintName"
 
         // Table with composite primary key
-        withDb {
+        withDb { testDb ->
             val id1ProperName = Person.id1.name.inProperCase()
             val id2ProperName = Person.id2.name.inProperCase()
             val tableName = Person.tableName
@@ -175,6 +186,12 @@ class CreateTableTests : DatabaseTestsBase() {
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
                     "${Person.columns.joinToString { it.descriptionDdl(false) }}, " +
                     "CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)" +
+                    when (testDb) {
+                        TestDB.SQLITE, TestDB.ORACLE ->
+                            ", CONSTRAINT chk_Person_signed_integer_id1 CHECK (${"id1".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT chk_Person_signed_integer_id2 CHECK (${"id2".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                        else -> ""
+                    } +
                     ")",
                 Person.ddl
             )
@@ -479,7 +496,14 @@ class CreateTableTests : DatabaseTestsBase() {
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.idA)}, ${t.identity(child.idB)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.idA)}, ${t.identity(parent.idB)})" +
-                    " ON DELETE CASCADE$updateCascadePart)"
+                    " ON DELETE CASCADE$updateCascadePart" +
+                    when (testDb) {
+                        TestDB.SQLITE, TestDB.ORACLE ->
+                            ", CONSTRAINT chk_child1_signed_integer_id_a CHECK (${"id_a".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT chk_child1_signed_integer_id_b CHECK (${"id_b".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                        else -> ""
+                    } +
+                    ")"
             )
             assertEqualCollections(child.ddl, expected)
         }
@@ -509,7 +533,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 )
             }
         }
-        withDb {
+        withDb { testDb ->
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
@@ -518,6 +542,12 @@ class CreateTableTests : DatabaseTestsBase() {
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.idA)}, ${t.identity(child.idB)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.idA)}, ${t.identity(parent.idB)})" +
+                    when (testDb) {
+                        TestDB.SQLITE, TestDB.ORACLE ->
+                            ", CONSTRAINT chk_child2_signed_integer_id_a CHECK (${"id_a".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT chk_child2_signed_integer_id_b CHECK (${"id_b".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                        else -> ""
+                    } +
                     ")"
             )
             assertEqualCollections(child.ddl, expected)
@@ -526,7 +556,7 @@ class CreateTableTests : DatabaseTestsBase() {
 
     @Test
     fun createTableWithOnDeleteSetDefault() {
-        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + listOf(TestDB.ORACLE)) {
+        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + listOf(TestDB.ORACLE)) { testDb ->
             val expected = listOf(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(Item)} (" +
                     "${Item.columns.joinToString { it.descriptionDdl(false) }}," +
@@ -534,6 +564,12 @@ class CreateTableTests : DatabaseTestsBase() {
                     " FOREIGN KEY (${this.identity(Item.categoryId)})" +
                     " REFERENCES ${this.identity(Category)}(${this.identity(Category.id)})" +
                     " ON DELETE SET DEFAULT" +
+                    when (testDb) {
+                        TestDB.SQLITE ->
+                            ", CONSTRAINT chk_Item_signed_integer_id CHECK (id BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                                ", CONSTRAINT chk_Item_signed_integer_categoryId CHECK (categoryId BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                        else -> ""
+                    } +
                     ")"
             )
 

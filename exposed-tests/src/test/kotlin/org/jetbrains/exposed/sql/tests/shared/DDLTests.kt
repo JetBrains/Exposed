@@ -118,7 +118,7 @@ class DDLTests : DatabaseTestsBase() {
             val constraint = varchar(keywords[3], 32)
         }
 
-        withDb {
+        withDb { testDb ->
             assertTrue(db.config.preserveKeywordCasing)
 
             SchemaUtils.create(keywordTable)
@@ -134,7 +134,13 @@ class DDLTests : DatabaseTestsBase() {
             val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
                 "$publicName ${keywordTable.public.columnType.sqlType()} NOT NULL, " +
                 "$dataName ${keywordTable.data.columnType.sqlType()} NOT NULL, " +
-                "$constraintName ${keywordTable.constraint.columnType.sqlType()} NOT NULL)"
+                "$constraintName ${keywordTable.constraint.columnType.sqlType()} NOT NULL" +
+                when (testDb) {
+                    TestDB.SQLITE, TestDB.ORACLE ->
+                        """, CONSTRAINT chk_data_signed_integer_key CHECK ("key" BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"""
+                    else -> ""
+                } +
+                ")"
             assertEquals(expectedCreate, keywordTable.ddl.single())
 
             // check that insert and select statement identifiers also match in DB without throwing SQLException
@@ -167,7 +173,7 @@ class DDLTests : DatabaseTestsBase() {
 
     @Test
     fun unnamedTableWithQuotesSQL() {
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = arrayOf(unnamedTable)) {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tables = arrayOf(unnamedTable)) { testDb ->
             val q = db.identifierManager.quoteString
             val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) {
                 "$q${"unnamedTable$1".inProperCase()}$q"
@@ -178,7 +184,12 @@ class DDLTests : DatabaseTestsBase() {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName " +
-                    "(${"id".inProperCase()} $integerType PRIMARY KEY, $q${"name".inProperCase()}$q $varCharType NOT NULL)",
+                    "(${"id".inProperCase()} $integerType PRIMARY KEY, $q${"name".inProperCase()}$q $varCharType NOT NULL" +
+                    when (testDb) {
+                        TestDB.ORACLE -> ", CONSTRAINT chk_unnamedTable$1_signed_integer_id CHECK (ID BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                        else -> ""
+                    } +
+                    ")",
                 unnamedTable.ddl
             )
         }
@@ -197,7 +208,8 @@ class DDLTests : DatabaseTestsBase() {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName " +
-                    "(${"id".inProperCase()} $integerType NOT NULL PRIMARY KEY, $q${"name".inProperCase()}$q $varCharType NOT NULL)",
+                    "(${"id".inProperCase()} $integerType NOT NULL PRIMARY KEY, $q${"name".inProperCase()}$q $varCharType NOT NULL," +
+                    """ CONSTRAINT "chk_unnamedTable$1_signed_integer_id" CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE}))""",
                 unnamedTable.ddl
             )
         }
@@ -244,16 +256,22 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id, name)
         }
 
-        withTables(excludeSettings = listOf(TestDB.MYSQL_V5, TestDB.SQLITE), tables = arrayOf(testTable)) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5, TestDB.SQLITE), tables = arrayOf(testTable)) { testDb ->
             val q = db.identifierManager.quoteString
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
             val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
             val idDescription = "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()}"
             val nameDescription = "$q${"name".inProperCase()}$q $varCharType"
             val ageDescription = "${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL"
-            val constraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q)"
+            val primaryKeyConstraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q)"
+            val checkConstraint = when (testDb) {
+                TestDB.ORACLE ->
+                    ", CONSTRAINT chk_with_different_column_types_signed_integer_id CHECK (ID BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                        ", CONSTRAINT chk_with_different_column_types_signed_integer_age CHECK (AGE BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                else -> ""
+            }
 
-            assertEquals("$tableDescription ($idDescription, $nameDescription, $ageDescription, $constraint)", testTable.ddl)
+            assertEquals("$tableDescription ($idDescription, $nameDescription, $ageDescription, $primaryKeyConstraint$checkConstraint)", testTable.ddl)
         }
     }
 
@@ -276,7 +294,12 @@ class DDLTests : DatabaseTestsBase() {
             val ageDescription = "${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL"
             val constraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q)"
 
-            assertEquals("$tableDescription ($idDescription, $nameDescription, $ageDescription, $constraint)", testTable.ddl)
+            assertEquals(
+                "$tableDescription ($idDescription, $nameDescription, $ageDescription, $constraint," +
+                    " CONSTRAINT chk_with_different_column_types_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})," +
+                    " CONSTRAINT chk_with_different_column_types_signed_integer_age CHECK (${"age".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE}))",
+                testTable.ddl
+            )
         }
     }
 
