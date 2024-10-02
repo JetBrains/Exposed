@@ -24,7 +24,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     } else {
         "NUMBER(5)"
     }
-    override fun ushortType(): String = "NUMBER(6)"
+    override fun ushortType(): String = "NUMBER(5)"
     override fun integerType(): String = "NUMBER(12)"
     override fun integerAutoincType(): String = "NUMBER(12)"
     override fun uintegerType(): String = "NUMBER(13)"
