@@ -29,6 +29,7 @@
     </toc-element>
     <toc-element toc-title="Deep Dive into DAO">
         <toc-element topic="DAO-Table-Types.topic"/>
+        <toc-element topic="DAO-Entity-definition.topic"/>
         <toc-element topic="DAO-CRUD-Operations.topic"/>
         <toc-element topic="DAO-Relationships.topic"/>
         <toc-element topic="DAO-Field-Transformations.topic"/>

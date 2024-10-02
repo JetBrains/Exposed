@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
 
-object DirectorsCustomTable : IdTable<String>("directors") {
+object DirectorsCustomTable : IdTable<String>() {
     override val id: Column<EntityID<String>> = varchar("id", 32).entityId()
     val name = varchar("name", 50)
 

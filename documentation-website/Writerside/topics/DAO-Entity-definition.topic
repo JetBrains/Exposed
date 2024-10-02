@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Entity definition" id="DAO-Entity-definition">
+    <show-structure for="chapter,procedure" depth="2"/>
+     <p>
+        Representing database tables as Kotlin objects ensures type safety and allows you to work with database
+        records just like regular Kotlin objects, taking full advantage of Kotlin's language features.
+    </p>
+    <p>
+        When using the DAO approach, <code>IdTable</code> needs to be associated with an <code>Entity</code>, because every database record
+        in this table needs to be mapped to an <code>Entity</code> instance, identified by its primary key.
+    </p>
+    <p>
+        An entity instance is defined as a class.
+        In the following example, <code>StarWarsFilmEntity</code> is the entity class linked to the table <code>StarWarsFilmsTable</code>:
+    </p>
+    <tabs>
+        <tab id="windows-install" title="StarWarsFilmEntity">
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt" include-lines="3-14"/>
+        </tab>
+        <tab id="macos-install" title="StarWarsFilmsTable">
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt" include-lines="3-6,14-18"/>
+        </tab>
+    </tabs>
+    <list>
+        <li>
+            Since <code>StarWarsFilmsTable</code> is an <code>IntIdTable</code>, the <code>StarWarsFilmsEntity</code> class extends from <code>IntEntity</code>,
+            which indicates that the <code>id</code> and primary key of <code>StarWarsFilmsTable</code> is of type <code>Int</code>.
+        </li>
+        <li>
+            The <code>companion object</code> block defines an <code>EntityClass</code> which is responsible for maintaining
+            the relation between the <code>StarWarsFilmsEntity</code> class and the actual table object, <code>StarWarsFilmsTable</code>.
+        </li>
+        <li>
+            Each column in the table is represented as a property in the class, where the <code>by</code> keyword
+            ensures the data is fetched or updated from the corresponding column when accessed.
+        </li>
+    </list>
+    <p>
+        Once the entity class is defined, instances of this class allow you to manipulate individual records
+        from the corresponding table. This could involve
+        <a href="DAO-CRUD-Operations.topic" anchor="create">creating a new record</a>,
+        <a href="DAO-CRUD-Operations.topic" anchor="read">retrieving a row based on its primary key</a>,
+        <a href="DAO-CRUD-Operations.topic" anchor="update">updating values</a>, or
+        <a href="DAO-CRUD-Operations.topic" anchor="delete">deleting records</a>.
+    </p>
+</topic>
