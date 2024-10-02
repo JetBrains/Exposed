@@ -4,6 +4,7 @@
 * If the `distinct` parameter of `groupConcat()` is set to `true`, when using Oracle or SQL Server, this will now fail early with an
   `UnsupportedByDialectException`. Previously, the setting would be ignored and SQL function generation would not include a `DISTINCT` clause.
 * In Oracle and H2 Oracle, the `ubyte()` column now maps to data type `NUMBER(3)` instead of `NUMBER(4)`.
+* In Oracle and H2 Oracle, the `ushort()` column now maps to data type `NUMBER(5)` instead of `NUMBER(6)`.
 
 ## 0.55.0
 * The `DeleteStatement` property `table` is now deprecated in favor of `targetsSet`, which holds a `ColumnSet` that may be a `Table` or `Join`.
