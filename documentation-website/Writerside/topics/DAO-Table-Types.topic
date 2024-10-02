@@ -102,10 +102,10 @@
         </p>
         <tabs>
             <tab id="DirectorsCustomTable-definition" title="DirectorsCustomTable">
-                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/CustomColumnTypeTable.kt"/>
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/DirectorsCustomTable.kt"/>
             </tab>
             <tab id="DirectorCustomEntity-definition" title="DirectorCustomEntity">
-                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/CustomColumnTypeEntity.kt"/>
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/DirectorCustomEntity.kt"/>
             </tab>
         </tabs>
         <p>

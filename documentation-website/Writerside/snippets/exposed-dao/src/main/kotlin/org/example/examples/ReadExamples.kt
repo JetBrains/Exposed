@@ -18,6 +18,10 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.wrapAsExpression
 import java.util.*
 
+const val MOVIE_SEQUELID = 8
+const val MIN_MOVIE_RATING = 5
+const val MOVIE_RATING = 4.2
+
 class ReadExamples {
     fun readAll() {
         // Read all movies
@@ -37,7 +41,7 @@ class ReadExamples {
         // Get an entity by its id value
         val movie = StarWarsFilmEntity.findById(2)
 
-        if(movie != null) {
+        if (movie != null) {
             // Read a property value
             val movieName = movie.name
             println("Created a new film named $movieName")
@@ -48,7 +52,7 @@ class ReadExamples {
         }
 
         // Read all with a condition
-        val specificMovie = StarWarsFilmEntity.find { StarWarsFilmsTable.sequelId eq 8 }
+        val specificMovie = StarWarsFilmEntity.find { StarWarsFilmsTable.sequelId eq MOVIE_SEQUELID }
         specificMovie.forEach({ println("Found a movie with sequelId 8 and name " + it.name) })
     }
 
@@ -57,7 +61,7 @@ class ReadExamples {
         val query = UsersTable.innerJoin(UserRatingsTable).innerJoin(StarWarsFilmsTable)
             .select(UsersTable.columns)
             .where {
-                StarWarsFilmsTable.sequelId eq 2 and (UserRatingsTable.value greater 5)
+                StarWarsFilmsTable.sequelId eq MOVIE_SEQUELID and (UserRatingsTable.value greater MIN_MOVIE_RATING)
             }.withDistinct()
 
         val users = UserEntity.wrapRows(query).toList()
@@ -94,12 +98,11 @@ class ReadExamples {
 
     fun readComputedField() {
         StarWarsWFilmWithRankEntity.new {
-            sequelId = 8
+            sequelId = MOVIE_SEQUELID
             name = "The Last Jedi"
-            rating = 4.2
+            rating = MOVIE_RATING
         }
 
         StarWarsWFilmWithRankEntity.find { StarWarsFilmsTable.name like "The%" }.map { it.name to it.rank }
     }
-
 }

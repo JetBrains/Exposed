@@ -105,9 +105,7 @@
         <p>
             You can update the value of a property just as you would with any property in a Kotlin class:
         </p>
-        <code-block lang="kotlin">
-            movie.name = "Episode VIII – The Last Jedi"
-        </code-block>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/examples/UpdateExamples.kt" include-lines="11"/>
         <note>
             Exposed doesn't make an immediate update when you set a new value for <code>Entity</code>, it just stores it on the inner map.
             "Flushing" values to the database occurs at the end of the transaction, or before the next <code>SELECT *</code> from the database.
@@ -150,10 +148,10 @@
             <code>searchQuery()</code>. The results of the function can then be accessed through a property of the entity class:</p>
         <tabs>
             <tab id="entity-class" title="StarWarsWFilmWithRankEntity">
-                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/ComputedFieldEntity.kt"/>
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsWFilmWithRankEntity.kt"/>
             </tab>
-            <tab id="table-definition" title="StarWarsWFilmWithRankTable">
-                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/ComputedFieldTable.kt"/>
+            <tab id="table-definition" title="StarWarsWFilmsWithRankTable">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsWFilmsWithRankTable.kt"/>
             </tab>
         </tabs>
         <p>
