@@ -907,7 +907,7 @@ public class org/jetbrains/exposed/sql/ExplainQuery : org/jetbrains/exposed/sql/
 	public fun <init> (ZLjava/lang/String;Lorg/jetbrains/exposed/sql/statements/Statement;)V
 	public fun arguments ()Ljava/lang/Iterable;
 	public synthetic fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Object;
-	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/sql/ResultSet;
+	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
 	public final fun getAnalyze ()Z
 	public final fun getOptions ()Ljava/lang/String;
 	public fun iterator ()Ljava/util/Iterator;
@@ -927,7 +927,7 @@ public final class org/jetbrains/exposed/sql/ExplainResultRow {
 }
 
 public final class org/jetbrains/exposed/sql/ExplainResultRow$Companion {
-	public final fun create (Ljava/sql/ResultSet;Ljava/util/Map;)Lorg/jetbrains/exposed/sql/ExplainResultRow;
+	public final fun create (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;Ljava/util/Map;)Lorg/jetbrains/exposed/sql/ExplainResultRow;
 }
 
 public abstract class org/jetbrains/exposed/sql/Expression {
@@ -1888,7 +1888,7 @@ public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/Abstrac
 	public fun count ()J
 	public fun empty ()Z
 	public synthetic fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Object;
-	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/sql/ResultSet;
+	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
 	public final fun fetchBatchedResults (ILorg/jetbrains/exposed/sql/SortOrder;)Ljava/lang/Iterable;
 	public static synthetic fun fetchBatchedResults$default (Lorg/jetbrains/exposed/sql/Query;ILorg/jetbrains/exposed/sql/SortOrder;ILjava/lang/Object;)Ljava/lang/Iterable;
 	public fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/Query;
@@ -2022,7 +2022,7 @@ public final class org/jetbrains/exposed/sql/ResultRow {
 }
 
 public final class org/jetbrains/exposed/sql/ResultRow$Companion {
-	public final fun create (Ljava/sql/ResultSet;Ljava/util/Map;)Lorg/jetbrains/exposed/sql/ResultRow;
+	public final fun create (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;Ljava/util/Map;)Lorg/jetbrains/exposed/sql/ResultRow;
 	public final fun createAndFillDefaults (Ljava/util/List;)Lorg/jetbrains/exposed/sql/ResultRow;
 	public final fun createAndFillValues (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/ResultRow;
 }
@@ -2171,7 +2171,7 @@ public abstract class org/jetbrains/exposed/sql/SetOperation : org/jetbrains/exp
 	public fun count ()J
 	public fun empty ()Z
 	public synthetic fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Object;
-	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/sql/ResultSet;
+	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
 	public final fun getFirstStatement ()Lorg/jetbrains/exposed/sql/AbstractQuery;
 	public fun getOperationName ()Ljava/lang/String;
 	protected fun getQueryToExecute ()Lorg/jetbrains/exposed/sql/statements/Statement;
@@ -3271,7 +3271,7 @@ public class org/jetbrains/exposed/sql/statements/ReturningStatement : org/jetbr
 	public fun <init> (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lorg/jetbrains/exposed/sql/statements/Statement;)V
 	public fun arguments ()Ljava/lang/Iterable;
 	public synthetic fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/Object;
-	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/sql/ResultSet;
+	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;Lorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
 	public final fun getMainStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
 	public final fun getReturningExpressions ()Ljava/util/List;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
@@ -3359,12 +3359,12 @@ public final class org/jetbrains/exposed/sql/statements/StatementResult$Count : 
 }
 
 public final class org/jetbrains/exposed/sql/statements/StatementResult$Object : org/jetbrains/exposed/sql/statements/StatementResult {
-	public fun <init> (Ljava/sql/ResultSet;)V
-	public final fun component1 ()Ljava/sql/ResultSet;
-	public final fun copy (Ljava/sql/ResultSet;)Lorg/jetbrains/exposed/sql/statements/StatementResult$Object;
-	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/statements/StatementResult$Object;Ljava/sql/ResultSet;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/StatementResult$Object;
+	public fun <init> (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;)V
+	public final fun component1 ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
+	public final fun copy (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;)Lorg/jetbrains/exposed/sql/statements/StatementResult$Object;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/statements/StatementResult$Object;Lorg/jetbrains/exposed/sql/statements/api/ResultApi;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/StatementResult$Object;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getResultSet ()Ljava/sql/ResultSet;
+	public final fun getResultSet ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -3606,25 +3606,17 @@ protected final class org/jetbrains/exposed/sql/statements/api/IdentifierManager
 	public static fun values ()[Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi$OracleVersion;
 }
 
-public final class org/jetbrains/exposed/sql/statements/api/JdbcResult : org/jetbrains/exposed/sql/statements/api/ResultApi {
-	public fun <init> (Ljava/sql/ResultSet;)V
-	public fun getObject (I)Ljava/lang/Object;
-	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
-	public synthetic fun getResult ()Ljava/lang/Object;
-	public fun getResult ()Ljava/sql/ResultSet;
-}
-
 public abstract interface class org/jetbrains/exposed/sql/statements/api/PreparedStatementApi {
 	public abstract fun addBatch ()V
 	public abstract fun cancel ()V
 	public abstract fun closeIfPossible ()V
 	public abstract fun executeBatch ()Ljava/util/List;
 	public abstract fun executeMultiple ()Ljava/util/List;
-	public abstract fun executeQuery ()Ljava/sql/ResultSet;
+	public abstract fun executeQuery ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
 	public abstract fun executeUpdate ()I
 	public abstract fun fillParameters (Ljava/lang/Iterable;)I
 	public abstract fun getFetchSize ()Ljava/lang/Integer;
-	public abstract fun getResultSet ()Ljava/sql/ResultSet;
+	public abstract fun getResultSet ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
 	public abstract fun getTimeout ()Ljava/lang/Integer;
 	public abstract fun set (ILjava/lang/Object;)V
 	public abstract fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
@@ -3639,9 +3631,15 @@ public final class org/jetbrains/exposed/sql/statements/api/PreparedStatementApi
 }
 
 public abstract interface class org/jetbrains/exposed/sql/statements/api/ResultApi {
+	public abstract fun close ()V
 	public abstract fun getObject (I)Ljava/lang/Object;
 	public abstract fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
 	public abstract fun getResult ()Ljava/lang/Object;
+	public abstract fun metadataColumnCount ()I
+	public abstract fun metadataColumnIndex (Ljava/lang/String;)I
+	public abstract fun metadataColumnName (I)Ljava/lang/String;
+	public abstract fun next ()Z
+	public abstract fun releaseResult ()V
 }
 
 public final class org/jetbrains/exposed/sql/transactions/ThreadLocalTransactionManager : org/jetbrains/exposed/sql/transactions/TransactionManager {

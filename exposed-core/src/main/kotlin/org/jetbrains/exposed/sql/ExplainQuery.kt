@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.Statement
+import org.jetbrains.exposed.sql.statements.StatementIterator
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.sql.ResultSet
 
 /**
  * Represents the SQL query that obtains information about a statement execution plan.
@@ -16,11 +17,11 @@ open class ExplainQuery(
     val analyze: Boolean,
     val options: String?,
     private val internalStatement: Statement<*>
-) : Iterable<ExplainResultRow>, Statement<ResultSet>(StatementType.SHOW, emptyList()) {
+) : Iterable<ExplainResultRow>, Statement<ResultApi>(StatementType.SHOW, emptyList()) {
     private val transaction
         get() = TransactionManager.current()
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet = executeQuery()
+    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultApi = executeQuery()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = internalStatement.arguments()
 
@@ -34,34 +35,18 @@ open class ExplainQuery(
         return Iterable { resultIterator }.iterator()
     }
 
-    private inner class ResultIterator(private val rs: ResultSet) : Iterator<ExplainResultRow> {
-        private val fieldIndex: Map<String, Int> = List(rs.metaData.columnCount) { i ->
-            rs.metaData.getColumnName(i + 1) to i
+    private inner class ResultIterator(
+        rs: ResultApi
+    ) : StatementIterator<ResultApi, String, ExplainResultRow>(rs) {
+        override val fieldIndex = List(result.metadataColumnCount()) { i ->
+            result.metadataColumnName(i + 1) to i
         }.toMap()
 
-        private var hasNext = false
-            set(value) {
-                field = value
-                if (!field) {
-                    val statement = rs.statement
-                    rs.close()
-                    statement?.close()
-                    transaction.openResultSetsCount--
-                }
-            }
-
         init {
-            hasNext = rs.next()
+            hasNext = result.next()
         }
 
-        override fun hasNext(): Boolean = hasNext
-
-        override operator fun next(): ExplainResultRow {
-            if (!hasNext) throw NoSuchElementException()
-            val result = ExplainResultRow.create(rs, fieldIndex)
-            hasNext = rs.next()
-            return result
-        }
+        override fun createResultRow(): ExplainResultRow = ExplainResultRow.create(result, fieldIndex)
     }
 }
 
@@ -77,8 +62,8 @@ class ExplainResultRow(
     override fun toString(): String = fieldIndex.entries.joinToString { "${it.key}=${data[it.value]}" }
 
     companion object {
-        /** Creates an [ExplainResultRow] storing all fields in [fieldIndex] with their values retrieved from a [ResultSet]. */
-        fun create(rs: ResultSet, fieldIndex: Map<String, Int>): ExplainResultRow {
+        /** Creates an [ExplainResultRow] storing all fields in [fieldIndex] with their values retrieved from a [ResultApi] object. */
+        fun create(rs: ResultApi, fieldIndex: Map<String, Int>): ExplainResultRow {
             val fieldValues = arrayOfNulls<Any?>(fieldIndex.size)
             fieldIndex.values.forEach { index ->
                 fieldValues[index] = rs.getObject(index + 1)

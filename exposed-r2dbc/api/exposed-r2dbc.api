@@ -87,12 +87,14 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcPreparedState
 	public fun closeIfPossible ()V
 	public fun executeBatch ()Ljava/util/List;
 	public fun executeMultiple ()Ljava/util/List;
-	public fun executeQuery ()Ljava/sql/ResultSet;
+	public synthetic fun executeQuery ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
+	public fun executeQuery ()Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcResult;
 	public fun executeUpdate ()I
 	public fun fillParameters (Ljava/lang/Iterable;)I
 	public final fun getConnection ()Lio/r2dbc/spi/Connection;
 	public fun getFetchSize ()Ljava/lang/Integer;
-	public fun getResultSet ()Ljava/sql/ResultSet;
+	public synthetic fun getResultSet ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
+	public fun getResultSet ()Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcResult;
 	public final fun getStatement ()Lio/r2dbc/spi/Statement;
 	public fun getTimeout ()Ljava/lang/Integer;
 	public final fun getWasGeneratedKeysRequested ()Z
@@ -106,10 +108,16 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcPreparedState
 
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcResult : org/jetbrains/exposed/sql/statements/api/ResultApi {
 	public fun <init> (Lio/r2dbc/spi/Row;)V
+	public fun close ()V
 	public fun getObject (I)Ljava/lang/Object;
 	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
 	public fun getResult ()Lio/r2dbc/spi/Row;
 	public synthetic fun getResult ()Ljava/lang/Object;
+	public fun metadataColumnCount ()I
+	public fun metadataColumnIndex (Ljava/lang/String;)I
+	public fun metadataColumnName (I)Ljava/lang/String;
+	public fun next ()Z
+	public fun releaseResult ()V
 }
 
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcSavepoint : org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {

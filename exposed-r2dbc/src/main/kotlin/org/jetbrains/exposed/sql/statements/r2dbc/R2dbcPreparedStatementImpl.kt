@@ -12,7 +12,6 @@ import org.jetbrains.exposed.sql.statements.StatementResult
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.io.InputStream
 import java.math.BigDecimal
-import java.sql.ResultSet
 import java.time.Duration
 import java.util.*
 
@@ -26,13 +25,17 @@ class R2dbcPreparedStatementImpl(
 ) : PreparedStatementApi {
     // this either needs to be simulated or base api needs to return type parameter
     // latter causes conflict with PreparedStatementApi.executeInternal()
-    override val resultSet: ResultSet?
+    override val resultSet: R2dbcResult?
         get() = TODO("Not yet implemented")
-//            if (wasGeneratedKeysRequested) {
+    // needs suspend & returns Result (should this be wrapped by ResultApi instead of Row?)
+//        get() {
+//            val rs = if (wasGeneratedKeysRequested) {
 //                statement.returnGeneratedValues().execute().awaitFirstOrNull()
 //            } else {
 //                statement.execute().awaitFirstOrNull()
 //            }
+//            return R2dbcResult(rs)
+//        }
 
     override var fetchSize: Int?
         get() = TODO("Not yet implemented")
@@ -50,7 +53,7 @@ class R2dbcPreparedStatementImpl(
 
     // this either needs to be simulated or base api needs to return type parameter
     // latter causes conflict with PreparedStatementApi.executeInternal()
-    override fun executeQuery(): ResultSet = TODO("Not yet implemented")
+    override fun executeQuery(): R2dbcResult = TODO("Not yet implemented")
     // statement.execute().awaitFirst()
 
     override fun executeUpdate(): Int = runBlocking {

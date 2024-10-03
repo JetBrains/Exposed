@@ -67,11 +67,13 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStateme
 	public fun closeIfPossible ()V
 	public fun executeBatch ()Ljava/util/List;
 	public fun executeMultiple ()Ljava/util/List;
-	public fun executeQuery ()Ljava/sql/ResultSet;
+	public synthetic fun executeQuery ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
+	public fun executeQuery ()Lorg/jetbrains/exposed/sql/statements/jdbc/JdbcResult;
 	public fun executeUpdate ()I
 	public fun fillParameters (Ljava/lang/Iterable;)I
 	public fun getFetchSize ()Ljava/lang/Integer;
-	public fun getResultSet ()Ljava/sql/ResultSet;
+	public synthetic fun getResultSet ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
+	public fun getResultSet ()Lorg/jetbrains/exposed/sql/statements/jdbc/JdbcResult;
 	public final fun getStatement ()Ljava/sql/PreparedStatement;
 	public fun getTimeout ()Ljava/lang/Integer;
 	public final fun getWasGeneratedKeysRequested ()Z
@@ -81,6 +83,20 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStateme
 	public fun setInputStream (ILjava/io/InputStream;Z)V
 	public fun setNull (ILorg/jetbrains/exposed/sql/IColumnType;)V
 	public fun setTimeout (Ljava/lang/Integer;)V
+}
+
+public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcResult : org/jetbrains/exposed/sql/statements/api/ResultApi {
+	public fun <init> (Ljava/sql/ResultSet;)V
+	public fun close ()V
+	public fun getObject (I)Ljava/lang/Object;
+	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
+	public synthetic fun getResult ()Ljava/lang/Object;
+	public fun getResult ()Ljava/sql/ResultSet;
+	public fun metadataColumnCount ()I
+	public fun metadataColumnIndex (Ljava/lang/String;)I
+	public fun metadataColumnName (I)Ljava/lang/String;
+	public fun next ()Z
+	public fun releaseResult ()V
 }
 
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcSavepoint : org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {

@@ -1,8 +1,11 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.autoIncColumnType
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import java.sql.ResultSet
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 
 /** An exception thrown when the provided data cannot be validated or processed to prepare a batch statement. */
 class BatchDataInconsistentException(message: String) : Exception(message)
@@ -62,7 +65,7 @@ open class SQLServerBatchInsertStatement(
 
     override fun arguments() = listOfNotNull(super.arguments().flatten().takeIf { data.isNotEmpty() })
 
-    override fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
+    override fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultApi?> {
         val rs = if (columnToReturnValue != null) {
             executeQuery()
         } else {

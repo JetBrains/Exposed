@@ -6,8 +6,8 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.sql.ResultSet
 
 /**
  * Represents the underlying SQL [mainStatement] that also returns a result set with data from any modified rows.
@@ -20,11 +20,11 @@ open class ReturningStatement(
     val table: Table,
     val returningExpressions: List<Expression<*>>,
     val mainStatement: Statement<*>
-) : Iterable<ResultRow>, Statement<ResultSet>(mainStatement.type, listOf(table)) {
+) : Iterable<ResultRow>, Statement<ResultApi>(mainStatement.type, listOf(table)) {
     protected val transaction
         get() = TransactionManager.current()
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet = executeQuery()
+    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultApi = executeQuery()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = mainStatement.arguments()
 
@@ -38,31 +38,15 @@ open class ReturningStatement(
         return Iterable { resultIterator }.iterator()
     }
 
-    private inner class ResultIterator(val rs: ResultSet) : Iterator<ResultRow> {
-        val fieldIndex = returningExpressions.withIndex().associateBy({ it.value }, { it.index })
-
-        private var hasNext = false
-            set(value) {
-                field = value
-                if (!field) {
-                    val statement = rs.statement
-                    rs.close()
-                    statement?.close()
-                    transaction.openResultSetsCount--
-                }
-            }
+    private inner class ResultIterator(
+        rs: ResultApi
+    ) : StatementIterator<ResultApi, Expression<*>, ResultRow>(rs) {
+        override val fieldIndex = returningExpressions.withIndex().associateBy({ it.value }, { it.index })
 
         init {
-            hasNext = rs.next()
+            hasNext = result.next()
         }
 
-        override fun hasNext(): Boolean = hasNext
-
-        override operator fun next(): ResultRow {
-            if (!hasNext) throw NoSuchElementException()
-            val result = ResultRow.create(rs, fieldIndex)
-            hasNext = rs.next()
-            return result
-        }
+        override fun createResultRow(): ResultRow = ResultRow.create(result, fieldIndex)
     }
 }

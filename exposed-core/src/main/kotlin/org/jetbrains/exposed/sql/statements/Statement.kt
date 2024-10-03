@@ -5,9 +5,9 @@ import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import java.sql.ResultSet
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import java.sql.SQLException
-import java.util.Stack
+import java.util.*
 
 internal object DefaultValueMarker {
     override fun toString(): String = "DEFAULT"
@@ -223,6 +223,6 @@ sealed class StatementResult {
     /** Stores the affected row [count] (or update count) retrieved on statement execution. */
     data class Count(val count: Int) : StatementResult()
 
-    /** Stores the [resultSet] retrieved on statement execution. */
-    data class Object(val resultSet: ResultSet) : StatementResult()
+    /** Stores the [ResultApi] object retrieved on statement execution. */
+    data class Object(val resultSet: ResultApi) : StatementResult()
 }

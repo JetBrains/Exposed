@@ -130,7 +130,7 @@ open class Transaction(
     internal var blockStatementExecution: Boolean = false
 
     internal val executedStatements: MutableList<PreparedStatementApi> = arrayListOf()
-    internal var openResultSetsCount: Int = 0
+    internal var openResultsCount: Int = 0
 
     internal val interceptors = arrayListOf<StatementInterceptor>()
 
@@ -245,7 +245,7 @@ open class Transaction(
                         resultSet
                     }
                 }
-                return result?.use { transform(it) }
+                return (result?.result as? ResultSet)?.use { transform(it) }
             }
 
             override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = stmt
@@ -340,7 +340,7 @@ open class Transaction(
         executedStatements.forEach {
             it.closeIfPossible()
         }
-        openResultSetsCount = 0
+        openResultsCount = 0
         executedStatements.clear()
     }
 
