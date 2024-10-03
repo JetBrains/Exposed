@@ -8,12 +8,18 @@ class UpdateExamples {
     fun updateFilmProperty() {
         val movie = StarWarsFilmEntity.findById(2)
         if (movie != null) {
+            /*
+                Important: The `movie.name` statement is referenced by line number in `DAO-CRUD-operations.topic`.
+                If you add, remove, or modify any lines prior to this one, ensure you update the corresponding
+                line numbers in the `code-block` element of the referenced file.
+             */
             movie.name = "Episode VIII – The Last Jedi"
+            println("The movie has been renamed to ${movie.name}")
         }
     }
     fun updateFilms() {
         // Find by id and update
-        val updatedMovie = StarWarsFilmEntity.findByIdAndUpdate(MOVIE_ID) {
+        val updatedMovie = StarWarsFilmEntity.findByIdAndUpdate(2) {
             it.name = "Episode VIII – The Last Jedi"
         }
         println(updatedMovie?.name)

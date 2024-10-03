@@ -19,10 +19,10 @@
     </p>
     <tabs>
         <tab id="windows-install" title="StarWarsFilmEntity">
-            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt" include-lines="3-14"/>
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"/>
         </tab>
         <tab id="macos-install" title="StarWarsFilmsTable">
-            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt" include-lines="3-6,14-18"/>
+            <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-code-block"/>
         </tab>
     </tabs>
     <list>

@@ -7,27 +7,28 @@ import org.example.tables.Genre
 import org.jetbrains.exposed.dao.id.CompositeID
 import java.util.*
 
-const val MOVIE_SEQUELID = 8
-const val MOVIE2_SEQUELID = 9
+const val MOVIE_SEQUEL_ID = 8
+const val MOVIE2_SEQUEL_ID = 9
 
 class CreateExamples {
     fun createFilms() {
         val movie = StarWarsFilmEntity.new {
             name = "The Last Jedi"
-            sequelId = MOVIE_SEQUELID
+            sequelId = MOVIE_SEQUEL_ID
             director = "Rian Johnson"
         }
-        println(movie)
+        println("Created a new record with name " + movie.name)
 
         // Create a new record with id
         val movie2 = StarWarsFilmEntity.new(id = 2) {
             name = "The Rise of Skywalker"
-            sequelId = MOVIE2_SEQUELID
+            sequelId = MOVIE2_SEQUEL_ID
             director = "J.J. Abrams"
         }
-        println(movie2)
+        println("Created a new record with id " + movie2.id)
     }
 
+    // Create a new record with a composite id
     fun createNewWithCompositeId() {
         val directorId = CompositeID {
             it[DirectorsTable.name] = "J.J. Abrams"

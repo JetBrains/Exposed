@@ -66,16 +66,11 @@
             all composite columns and to get entities,
             much like the <code>id</code> column of its associated <code>CompositeIdTable</code>:
         </p>
-        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt" include-symbol="directorId, directors"/>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt" include-symbol="directorId, director, directors"/>
         <p>
             The SQL query would result in something like the following:
         </p>
-        <code-block lang="sql"><![CDATA[
-            SELECT DIRECTORS."name", DIRECTORS.GUILD_ID, DIRECTORS.GENRE
-            FROM DIRECTORS
-            WHERE (DIRECTORS."name" = 'J.J. Abrams')
-            AND (DIRECTORS.GUILD_ID = '2cc64f4f-1a2c-41ce-bda1-ee492f787f4b')
-        ]]></code-block>
+        <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt" include-lines="72-75"/>
         <tip>
             For a list of available predicates, see
             <a href="DSL-Querying-data.topic" anchor="where-expression">DSL Where expression</a>.
@@ -105,7 +100,7 @@
         <p>
             You can update the value of a property just as you would with any property in a Kotlin class:
         </p>
-        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/examples/UpdateExamples.kt" include-lines="11"/>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/examples/UpdateExamples.kt" include-lines="16"/>
         <note>
             Exposed doesn't make an immediate update when you set a new value for <code>Entity</code>, it just stores it on the inner map.
             "Flushing" values to the database occurs at the end of the transaction, or before the next <code>SELECT *</code> from the database.

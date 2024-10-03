@@ -1,14 +1,7 @@
 package org.example.examples
 
-import org.example.entities.DirectorEntity
-import org.example.entities.StarWarsFilmEntity
-import org.example.entities.StarWarsWFilmWithRankEntity
-import org.example.entities.UserEntity
-import org.example.tables.CitiesTable
-import org.example.tables.DirectorsTable
-import org.example.tables.StarWarsFilmsTable
-import org.example.tables.UserRatingsTable
-import org.example.tables.UsersTable
+import org.example.entities.*
+import org.example.tables.*
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
@@ -23,6 +16,7 @@ const val MIN_MOVIE_RATING = 5
 const val MOVIE_RATING = 4.2
 
 class ReadExamples {
+
     fun readAll() {
         // Read all movies
         val allMovies = StarWarsFilmEntity.all()
@@ -44,7 +38,7 @@ class ReadExamples {
         if (movie != null) {
             // Read a property value
             val movieName = movie.name
-            println("Created a new film named $movieName")
+            println("Created a new movie with name $movieName")
 
             // Read the id value
             val movieId: Int = movie.id.value
@@ -53,7 +47,7 @@ class ReadExamples {
 
         // Read all with a condition
         val specificMovie = StarWarsFilmEntity.find { StarWarsFilmsTable.sequelId eq MOVIE_SEQUELID }
-        specificMovie.forEach({ println("Found a movie with sequelId 8 and name " + it.name) })
+        specificMovie.forEach({ println("Found a movie with sequelId " + MOVIE_SEQUELID + " and name " + it.name) })
     }
 
     // Read an entity with a join to another table
@@ -68,13 +62,30 @@ class ReadExamples {
         users.map { println(it.name) }
     }
 
+    /*
+        Find records by composite id.
+
+        Important: The SQL query is referenced by line number in `DAO-CRUD-operations.topic`.
+        If you add, remove, or modify any lines before the SELECT statement, ensure you update the corresponding
+        line numbers in the `code-block` element of the referenced file.
+
+        SELECT DIRECTORS."name", DIRECTORS.GUILD_ID, DIRECTORS.GENRE
+        FROM DIRECTORS
+        WHERE (DIRECTORS."name" = 'J.J. Abrams')
+        AND (DIRECTORS.GUILD_ID = '2cc64f4f-1a2c-41ce-bda1-ee492f787f4b')
+     */
     fun findByCompositeId() {
-        // Find records by composite id
         val directorId = CompositeID {
             it[DirectorsTable.name] = "J.J. Abrams"
             it[DirectorsTable.guildId] = UUID.randomUUID()
         }
 
+        DirectorEntity.new(directorId) {
+            genre = Genre.SCI_FI
+        }
+
+        val director = DirectorEntity.findById(directorId)
+        println("Found director $director")
         val directors = DirectorEntity.find { DirectorsTable.id eq directorId }
         directors.forEach({ println(it.genre) })
     }
@@ -103,6 +114,6 @@ class ReadExamples {
             rating = MOVIE_RATING
         }
 
-        StarWarsWFilmWithRankEntity.find { StarWarsFilmsTable.name like "The%" }.map { it.name to it.rank }
+        StarWarsWFilmWithRankEntity.find { StarWarsWFilmsWithRankTable.name like "The%" }.map { it.name to it.rank }
     }
 }

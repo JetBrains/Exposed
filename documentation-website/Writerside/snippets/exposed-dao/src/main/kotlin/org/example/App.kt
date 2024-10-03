@@ -1,11 +1,7 @@
 package org.example
 
 import org.example.examples.*
-import org.example.tables.CitiesTable
-import org.example.tables.DirectorsTable
-import org.example.tables.StarWarsFilmsTable
-import org.example.tables.UserRatingsTable
-import org.example.tables.UsersTable
+import org.example.tables.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
@@ -17,18 +13,47 @@ fun main() {
 
     transaction {
         addLogger(StdOutSqlLogger)
-        SchemaUtils.create(StarWarsFilmsTable)
-        SchemaUtils.create(DirectorsTable)
-        SchemaUtils.create(UsersTable)
-        SchemaUtils.create(UserRatingsTable)
-        SchemaUtils.create(CitiesTable)
-
-        // Create examples
-        val createExamples = CreateExamples()
-        createExamples.createFilms()
-
-        // Read examples
-        val readExamples = ReadExamples()
-        readExamples.readExamples()
+        createTables()
+        runCreateExamples()
+        runReadExamples()
+        runUpdateExamples()
+        runDeleteExamples()
     }
+}
+
+fun createTables() {
+    SchemaUtils.create(StarWarsFilmsTable)
+    SchemaUtils.create(DirectorsTable)
+    SchemaUtils.create(UsersTable)
+    SchemaUtils.create(UserRatingsTable)
+    SchemaUtils.create(GuildsTable)
+    SchemaUtils.create(CitiesTable)
+    SchemaUtils.create(StarWarsWFilmsWithRankTable)
+}
+
+fun runCreateExamples() {
+    val createExamples = CreateExamples()
+    createExamples.createFilms()
+    createExamples.createNewWithCompositeId()
+}
+
+fun runReadExamples() {
+    val readExamples = ReadExamples()
+    readExamples.readAll()
+    readExamples.readWithJoin()
+    readExamples.find()
+    readExamples.findByCompositeId()
+    readExamples.queriesAsExpressions()
+//    readExamples.readComputedField()
+}
+
+fun runUpdateExamples() {
+    val updateExamples = UpdateExamples()
+    updateExamples.updateFilms()
+    updateExamples.updateFilmProperty()
+}
+
+fun runDeleteExamples() {
+    val deleteExamples = DeleteExamples()
+    deleteExamples.deleteFilm()
 }
