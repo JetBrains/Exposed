@@ -11,4 +11,24 @@ class R2dbcResult(
     override fun getObject(index: Int): Any? = result.get(index)
 
     override fun <T> getObject(index: Int, type: Class<T>): T? = result.get(index, type)
+
+    override fun metadataColumnCount(): Int = result.metadata.columnMetadatas.size
+
+    override fun metadataColumnName(index: Int): String = result.metadata.getColumnMetadata(index).name
+
+    override fun metadataColumnIndex(label: String): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun next(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun close() {
+        TODO("Not yet implemented")
+    }
+
+    override fun releaseResult() {
+        TODO("Not yet implemented")
+    }
 }
