@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
-import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.transactions.ThreadLocalTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
@@ -22,20 +21,6 @@ class Database private constructor(
 ) : DatabaseApi(config, connector) {
     override fun toString(): String =
         "ExposedDatabase[${hashCode()}]($resolvedVendor${config.explicitDialect?.let { ", dialect=$it" } ?: ""})"
-
-    override fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T {
-        val transaction = TransactionManager.currentOrNull()
-        return if (transaction == null) {
-            val connection = connector()
-            try {
-                connection.metadata(body)
-            } finally {
-                connection.close()
-            }
-        } else {
-            transaction.connection.metadata(body)
-        }
-    }
 
     override val url: String by lazy { metadata { url } }
 

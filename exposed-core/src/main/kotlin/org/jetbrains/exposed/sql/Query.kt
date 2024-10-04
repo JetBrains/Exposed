@@ -397,7 +397,6 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                 set = originalSet
             }
         } else {
-            println("In correct block...")
             try {
                 count = true
                 transaction.exec(this) { rs ->

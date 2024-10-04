@@ -86,7 +86,7 @@ class R2dbcConnectionImpl(
         }
 
     private val metadata: R2dbcDatabaseMetadataImpl by lazy {
-        withConnection { R2dbcDatabaseMetadataImpl(catalog, metadataProvider, it) }
+        withConnection { R2dbcDatabaseMetadataImpl(catalog, metadataProvider, it, scope) }
     }
 
     override fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T = metadata.body()
@@ -108,6 +108,8 @@ class R2dbcConnectionImpl(
     }
 
     private fun r2dbcPreparedSql(sql: String): String {
+        if (currentDialect is MysqlDialect) return sql
+
         val paramCount = sql.count { it == '?' }
         if (paramCount == 0) return sql
 

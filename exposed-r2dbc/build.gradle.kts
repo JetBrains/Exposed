@@ -19,5 +19,9 @@ dependencies {
 
     testImplementation(project(":exposed-tests"))
     testImplementation(libs.junit)
+//    testImplementation(libs.r2dbc.h2)
+//    testImplementation(libs.r2dbc.mariadb)
+//    testImplementation(libs.r2dbc.mysql)
+//    testImplementation(libs.r2dbc.postgresql)
     testImplementation(kotlin("test-junit"))
 }

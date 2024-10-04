@@ -67,10 +67,6 @@ internal object SQLServerTypeProvider : SqlTypeProvider() {
 }
 
 class SQLServerMetadata : MetadataProvider(SQLServerPropertyProvider, SQLServerTypeProvider) {
-    override fun getUrl(): String {
-        TODO("Not yet implemented")
-    }
-
     override fun getUsername(): String {
         TODO("Not yet implemented")
     }

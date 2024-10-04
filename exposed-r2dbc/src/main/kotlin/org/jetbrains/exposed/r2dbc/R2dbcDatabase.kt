@@ -9,7 +9,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
-import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcConnectionImpl
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcScope
 import org.jetbrains.exposed.sql.statements.r2dbc.asInt
@@ -23,18 +22,13 @@ import org.reactivestreams.Publisher
  * and on which transaction tasks are performed.
  */
 class R2dbcDatabase private constructor(
+    override val url: String,
     private val resolvedVendor: String? = null,
     config: DatabaseConfig,
     connector: () -> ExposedConnection<*>
 ) : DatabaseApi(config, connector) {
     override fun toString(): String =
         "ExposedR2dbcDatabase[${hashCode()}]($resolvedVendor${config.explicitDialect?.let { ", dialect=$it" } ?: ""})"
-
-    override fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T {
-        TODO("Not yet implemented")
-    }
-
-    override val url: String by lazy { metadata { url } }
 
     override val vendor: String by lazy {
         resolvedVendor ?: metadata { databaseDialectName }
@@ -60,19 +54,34 @@ class R2dbcDatabase private constructor(
             "r2dbc:mssql" to SQLServerDialect.dialectName
         )
 
+        init {
+            registerR2dbcDialect(H2Dialect.dialectName) { H2Dialect() }
+            registerR2dbcDialect(MysqlDialect.dialectName) { MysqlDialect() }
+            registerR2dbcDialect(PostgreSQLDialect.dialectName) { PostgreSQLDialect() }
+            registerR2dbcDialect(OracleDialect.dialectName) { OracleDialect() }
+            registerR2dbcDialect(SQLServerDialect.dialectName) { SQLServerDialect() }
+            registerR2dbcDialect(MariaDBDialect.dialectName) { MariaDBDialect() }
+        }
+
+        /** Registers a new [DatabaseDialect] with the identifier [prefix]. */
+        fun registerR2dbcDialect(prefix: String, dialect: () -> DatabaseDialect) {
+            dialects[prefix.lowercase()] = dialect
+        }
+
         /** Registers a new R2DBC driver, using the specified [dialect], with the identifier [prefix]. */
         fun registerR2dbcDriver(prefix: String, dialect: String) {
             r2dbcDialectMapping[prefix] = dialect
         }
 
         private fun doConnect(
+            url: String,
             explicitVendor: String,
             config: DatabaseConfig?,
             getNewConnection: () -> Publisher<out Connection>,
             dispatcher: CoroutineDispatcher?,
             manager: (R2dbcDatabase) -> TransactionManager = { R2dbcTransactionManager(it) }
         ): R2dbcDatabase {
-            return R2dbcDatabase(explicitVendor, config ?: DatabaseConfig.invoke()) {
+            return R2dbcDatabase(url, explicitVendor, config ?: DatabaseConfig.invoke()) {
                 R2dbcConnectionImpl(explicitVendor, getNewConnection(), R2dbcScope(dispatcher))
             }.apply {
                 TransactionManager.registerManager(this, manager(this))
@@ -102,6 +111,7 @@ class R2dbcDatabase private constructor(
             val url = "r2dbc:${connectionOptions.getValue(ConnectionFactoryOptions.DRIVER)}"
             val dialectName = getR2dbcDialectName(url) ?: error("Can't resolve dialect for connection: $url")
             return doConnect(
+                url = url,
                 explicitVendor = dialectName,
                 config = databaseConfig,
                 getNewConnection = { ConnectionFactories.get(connectionOptions).create() },
@@ -132,6 +142,7 @@ class R2dbcDatabase private constructor(
             manager: (R2dbcDatabase) -> TransactionManager = { R2dbcTransactionManager(it) }
         ): R2dbcDatabase {
             return doConnect(
+                url = "",
                 explicitVendor = databaseDialect.name,
                 config = databaseConfig,
                 getNewConnection = { connectionFactory.create() },
@@ -160,6 +171,7 @@ class R2dbcDatabase private constructor(
         ): R2dbcDatabase {
             val dialectName = getR2dbcDialectName(url) ?: error("Can't resolve dialect for connection: $url")
             return doConnect(
+                url = url,
                 explicitVendor = dialectName,
                 config = databaseConfig,
                 getNewConnection = { ConnectionFactories.get(url).create() },

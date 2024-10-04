@@ -64,10 +64,6 @@ internal object OracleTypeProvider : SqlTypeProvider() {
 }
 
 class OracleMetadata : MetadataProvider(OraclePropertyProvider, OracleTypeProvider) {
-    override fun getUrl(): String {
-        TODO("Not yet implemented")
-    }
-
     override fun getUsername(): String {
         TODO("Not yet implemented")
     }

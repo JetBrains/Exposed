@@ -91,10 +91,6 @@ internal open class MySQLTypeProvider : SqlTypeProvider() {
 }
 
 open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), MySQLTypeProvider()) {
-    override fun getUrl(): String {
-        TODO("Not yet implemented")
-    }
-
     override fun getUsername(): String {
         TODO("Not yet implemented")
     }

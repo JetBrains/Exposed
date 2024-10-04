@@ -4,8 +4,9 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.Parameters
 import io.r2dbc.spi.R2dbcType
 import io.r2dbc.spi.Statement
-import kotlinx.coroutines.reactive.awaitFirst
-import kotlinx.coroutines.reactive.awaitFirstOrElse
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementResult
@@ -23,8 +24,6 @@ class R2dbcPreparedStatementImpl(
     val connection: Connection,
     val wasGeneratedKeysRequested: Boolean
 ) : PreparedStatementApi {
-    // this either needs to be simulated or base api needs to return type parameter
-    // latter causes conflict with PreparedStatementApi.executeInternal()
     override val resultSet: R2dbcResult?
         get() = TODO("Not yet implemented")
     // needs suspend & returns Result (should this be wrapped by ResultApi instead of Row?)
@@ -48,21 +47,22 @@ class R2dbcPreparedStatementImpl(
         }
 
     override fun addBatch() {
-        statement.add()
+        statement.add() // is this technically correct?
     }
 
-    // this either needs to be simulated or base api needs to return type parameter
-    // latter causes conflict with PreparedStatementApi.executeInternal()
     override fun executeQuery(): R2dbcResult = TODO("Not yet implemented")
     // statement.execute().awaitFirst()
 
     override fun executeUpdate(): Int = runBlocking {
-        statement
-            .execute()
-            .awaitFirst()
-            .rowsUpdated
-            .awaitFirstOrElse { 0 }
-            .toInt()
+        flow {
+            statement
+                .execute()
+                .collect { result ->
+                    result.rowsUpdated.collect { count ->
+                        emit(count.toInt())
+                    }
+                }
+        }.single()
     }
 
     override fun executeMultiple(): List<StatementResult> = TODO("Not yet implemented")
@@ -115,7 +115,7 @@ class R2dbcPreparedStatementImpl(
     }
 
     override fun closeIfPossible() {
-        TODO("Not yet implemented")
+        // do nothing
     }
 
     override fun executeBatch(): List<Int> = TODO("Not yet implemented")
