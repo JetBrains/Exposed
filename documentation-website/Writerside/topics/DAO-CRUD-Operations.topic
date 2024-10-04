@@ -70,7 +70,7 @@
         <p>
             The SQL query would result in something like the following:
         </p>
-        <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt" include-lines="72-75"/>
+        <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt" include-lines="73-76"/>
         <tip>
             For a list of available predicates, see
             <a href="DSL-Querying-data.topic" anchor="where-expression">DSL Where expression</a>.
@@ -124,7 +124,7 @@
         <p>
             To delete a record, use the <code>delete()</code> function:
         </p>
-        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/examples/DeleteExamples.kt" include-symbol="deletedMovie"/>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/examples/DeleteExamples.kt" include-lines="16"/>
     </chapter>
 
     <chapter title="Use queries as expressions" id="use-queries-as-expressions">

@@ -3,13 +3,18 @@ package org.example
 import org.example.examples.*
 import org.example.tables.*
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 
 fun main() {
-    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
+    Database.connect(
+        "jdbc:h2:mem:test",
+        "org.h2.Driver",
+        databaseConfig = DatabaseConfig { useNestedTransactions = true }
+    )
 
     transaction {
         addLogger(StdOutSqlLogger)
@@ -44,7 +49,7 @@ fun runReadExamples() {
     readExamples.find()
     readExamples.findByCompositeId()
     readExamples.queriesAsExpressions()
-//    readExamples.readComputedField()
+    readExamples.readComputedField()
 }
 
 fun runUpdateExamples() {

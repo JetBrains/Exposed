@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.wrapAsExpression
 import java.util.*
 
@@ -108,12 +109,18 @@ class ReadExamples {
     }
 
     fun readComputedField() {
-        StarWarsWFilmWithRankEntity.new {
-            sequelId = MOVIE_SEQUELID
-            name = "The Last Jedi"
-            rating = MOVIE_RATING
+        transaction {
+            StarWarsWFilmWithRankEntity.new {
+                sequelId = MOVIE_SEQUELID
+                name = "The Last Jedi"
+                rating = MOVIE_RATING
+            }
         }
 
-        StarWarsWFilmWithRankEntity.find { StarWarsWFilmsWithRankTable.name like "The%" }.map { it.name to it.rank }
+        transaction {
+            StarWarsWFilmWithRankEntity
+                .find { StarWarsWFilmsWithRankTable.name like "The%" }
+                .map { it.name to it.rank }
+        }
     }
 }
