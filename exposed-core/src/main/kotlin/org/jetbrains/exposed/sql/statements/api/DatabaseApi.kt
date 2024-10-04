@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.statements.api
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.name
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
@@ -36,7 +37,19 @@ abstract class DatabaseApi(
     /** The database-specific class responsible for parsing and processing identifier tokens in SQL syntax. */
     abstract val identifierManager: IdentifierManagerApi
 
-    abstract fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T
+    fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T {
+        val transaction = TransactionManager.currentOrNull()
+        return if (transaction == null) {
+            val connection = connector()
+            try {
+                connection.metadata(body)
+            } finally {
+                connection.close()
+            }
+        } else {
+            transaction.connection.metadata(body)
+        }
+    }
 
     /** The name of the database as a [DatabaseDialect]. */
     val dialect: DatabaseDialect by lazy {
@@ -66,6 +79,6 @@ abstract class DatabaseApi(
     fun isVersionCovers(version: BigDecimal) = this.version >= version
 
     companion object {
-        internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
+        val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
     }
 }

@@ -62,10 +62,6 @@ internal object H2TypeProvider : SqlTypeProvider() {
 }
 
 class H2Metadata : MetadataProvider(H2PropertyProvider, H2TypeProvider) {
-    override fun getUrl(): String {
-        TODO("Not yet implemented")
-    }
-
     override fun getUsername(): String {
         TODO("Not yet implemented")
     }

@@ -105,10 +105,6 @@ internal object PostgreSQLTypeProvider : SqlTypeProvider() {
 
 @Suppress("MagicNumber")
 class PostgreSQLMetadata : MetadataProvider(PostgreSQLPropertyProvider, PostgreSQLTypeProvider) {
-    override fun getUrl(): String {
-        TODO("Not yet implemented")
-    }
-
     override fun getUsername(): String {
         TODO("Not yet implemented")
     }
