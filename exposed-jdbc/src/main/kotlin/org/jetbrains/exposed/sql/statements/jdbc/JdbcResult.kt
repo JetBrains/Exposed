@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flowOf
 import org.jetbrains.exposed.sql.statements.api.ResultApi
 import java.sql.ResultSet
 
@@ -8,6 +11,8 @@ class JdbcResult(
     /** The actual [ResultSet] returned by the database after statement execution. */
     override val result: ResultSet
 ) : ResultApi {
+    override fun toString(): String = "JdbcResult(resultSet = $result)"
+
     override fun getObject(index: Int): Any? = result.getObject(index)
 
     override fun <T> getObject(index: Int, type: Class<T>): T? = result.getObject(index, type)
@@ -19,6 +24,20 @@ class JdbcResult(
     override fun metadataColumnIndex(label: String): Int = result.findColumn(label)
 
     override fun next(): Boolean = result.next()
+
+    override fun <T> collectAll(transform: (ResultApi) -> T): Flow<T> {
+        val transformed = sequence {
+            while (next()) {
+                yield(transform(this@JdbcResult))
+            }
+        }
+        return transformed.asFlow()
+    }
+
+    override fun <T> collectSingle(transform: (ResultApi) -> T): Flow<T> {
+        result.next()
+        return flowOf(transform(this))
+    }
 
     override fun close() {
         result.close()

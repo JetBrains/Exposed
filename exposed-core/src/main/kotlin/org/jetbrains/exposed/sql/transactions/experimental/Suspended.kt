@@ -18,6 +18,7 @@ import java.util.concurrent.ThreadLocalRandom
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
+// deprecate all and transfer to r2dbc module
 internal class TransactionContext(val manager: TransactionManager?, val transaction: Transaction?)
 
 internal class TransactionScope(

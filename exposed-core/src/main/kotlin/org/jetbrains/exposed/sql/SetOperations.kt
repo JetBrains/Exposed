@@ -57,6 +57,7 @@ sealed class SetOperation(
     open val operationName = operationName
 
     /** Returns the number of results retrieved after query execution. */
+    // this will likely need to SUSPEND
     override fun count(): Long {
         try {
             count = true
@@ -72,6 +73,7 @@ sealed class SetOperation(
     }
 
     /** Returns whether any results were retrieved by query execution. */
+    // this will likely need to SUSPEND
     override fun empty(): Boolean {
         val oldLimit = limit
         try {
@@ -83,7 +85,7 @@ sealed class SetOperation(
         }
     }
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultApi = executeQuery()
+    override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultApi = executeQuery()
 
     override fun prepareSQL(builder: QueryBuilder): String {
         builder {

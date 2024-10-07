@@ -346,11 +346,7 @@ private fun <T : Table, E> T.batchInsert(
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    if (currentDialect is SQLServerDialect && this.autoIncColumn != null) {
-        SQLServerBatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
-    } else {
-        BatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
-    }
+    StatementBuilder { batchInsert(this@batchInsert, ignoreErrors, shouldReturnGeneratedValues) }
 }
 
 /**
@@ -392,9 +388,10 @@ private fun <T : Table, E> T.batchReplace(
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchReplaceStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    BatchReplaceStatement(this, shouldReturnGeneratedValues)
+    StatementBuilder { batchReplace(this@batchReplace, shouldReturnGeneratedValues) }
 }
 
+// this may also need to suspend
 private fun <E, S : BaseBatchInsertStatement> executeBatch(
     data: Iterator<E>,
     body: S.(E) -> Unit,
@@ -508,7 +505,9 @@ inline fun <T : Table> T.replace(
 fun <T : Table> T.replace(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>> = this.columns.filter { it.isValidIfAutoIncrement() }
-): Int? = ReplaceSelectStatement(columns, selectQuery).execute(TransactionManager.current())
+): Int? = StatementBuilder {
+    replace(selectQuery, columns)
+}.execute(TransactionManager.current())
 
 /**
  * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table.
@@ -522,7 +521,9 @@ fun <T : Table> T.replace(
 fun <T : Table> T.insert(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>> = this.columns.filter { it.isValidIfAutoIncrement() }
-): Int? = InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
+): Int? = StatementBuilder {
+    insert(selectQuery, columns)
+}.execute(TransactionManager.current())
 
 /**
  * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table,
@@ -538,7 +539,9 @@ fun <T : Table> T.insert(
 fun <T : Table> T.insertIgnore(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>> = this.columns.filter { it.isValidIfAutoIncrement() }
-): Int? = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
+): Int? = StatementBuilder {
+    insertIgnore(selectQuery, columns)
+}.execute(TransactionManager.current())
 
 private fun Column<*>.isValidIfAutoIncrement(): Boolean =
     !columnType.isAutoInc || autoIncColumnType?.nextValExpression != null
@@ -733,10 +736,10 @@ fun <T : Table> T.upsert(
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
-) = UpsertStatement<Long>(this, keys = keys, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() }).apply {
-    onUpdate?.let { storeUpdateValues(it) }
-    body(this)
-    execute(TransactionManager.current())
+): UpsertStatement<Long> {
+    return StatementBuilder {
+        upsert(this@upsert, keys = keys, onUpdate, onUpdateExclude, where, body)
+    }.apply { execute(TransactionManager.current()) }
 }
 
 @Deprecated(
@@ -784,10 +787,7 @@ fun <T : Table> T.upsertReturning(
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): ReturningStatement {
-    val upsert = UpsertStatement<Long>(this, keys = keys, onUpdateExclude, where?.let { SqlExpressionBuilder.it() })
-    onUpdate?.let { upsert.storeUpdateValues(it) }
-    body(upsert)
-    return ReturningStatement(this, returning, upsert)
+    return StatementBuilder { upsertReturning(this@upsertReturning, keys = keys, returning, onUpdate, onUpdateExclude, where, body) }
 }
 
 @Deprecated(
@@ -912,15 +912,8 @@ private fun <T : Table, E> T.batchUpsert(
     vararg keys: Column<*>,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    BatchUpsertStatement(
-        this,
-        keys = keys,
-        onUpdateExclude = onUpdateExclude,
-        where = where?.let { SqlExpressionBuilder.it() },
-        shouldReturnGeneratedValues = shouldReturnGeneratedValues
-    ).apply {
-        onUpdate?.let { storeUpdateValues(it) }
-            ?: onUpdateList?.let { updateValues.putAll(it) }
+    StatementBuilder {
+        batchUpsert(this@batchUpsert, data, onUpdateList, onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body)
     }
 }
 

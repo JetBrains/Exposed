@@ -6,6 +6,7 @@ import io.r2dbc.spi.RowMetadata
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.sql.ForeignKeyConstraint
 import org.jetbrains.exposed.sql.Index
@@ -17,6 +18,7 @@ import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect.H2MajorVersion
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.component1
@@ -57,6 +59,24 @@ class R2dbcDatabaseMetadataImpl(
                         ?: error("Unsupported driver ${connectionData.databaseProductName} detected")
                 }
             }
+        }
+    }
+
+    override val databaseDialectMode: String? by lazy {
+        when (val dialect = currentDialect) {
+            is H2Dialect -> {
+                val (settingNameField, settingValueField) = when (dialect.majorVersion) {
+                    H2MajorVersion.One -> "NAME" to "VALUE"
+                    H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
+                }
+
+                @Language("H2")
+                val modeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
+                fetchMetadata(modeQuery) { row, _ ->
+                    row.getString(settingValueField)
+                }.first()
+            }
+            else -> null
         }
     }
 

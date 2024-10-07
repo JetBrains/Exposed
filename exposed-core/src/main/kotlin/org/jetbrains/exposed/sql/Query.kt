@@ -197,7 +197,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      */
     fun isForUpdate() = (forUpdate?.let { it != ForUpdateOption.NoForUpdateOption } ?: false) && currentDialect.supportsSelectForUpdate()
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultApi? {
+    override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultApi? {
         val fetchSize = this@Query.fetchSize ?: transaction.db.defaultFetchSize
         if (fetchSize != null) {
             this.fetchSize = fetchSize
@@ -352,6 +352,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
+    // this will most likely need to be SUSPEND
     fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Iterable<Iterable<ResultRow>> {
         require(batchSize > 0) { "Batch size should be greater than 0." }
         require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
@@ -428,6 +429,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertSelectTests.testInsertSelect02
      */
+    // this will most likely need to be SUSPEND
     override fun count(): Long {
         return if (distinct || groupedByColumns.isNotEmpty() || limit != null || offset > 0) {
             fun Column<*>.makeAlias() =
@@ -468,6 +470,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testSizedIterable
      */
+    // this will most likely need to be SUSPEND
     override fun empty(): Boolean {
         val oldLimit = limit
         try {

@@ -21,6 +21,7 @@ import org.reactivestreams.Publisher
  * Class representing a wrapped R2DBC database [connection].
  */
 @Suppress("UnusedPrivateMember", "SpreadOperator")
+// should all ExposedConnection interface methods suspend?
 class R2dbcConnectionImpl(
     vendorDialect: String,
     override val connection: Publisher<out Connection>,
@@ -120,6 +121,7 @@ class R2dbcConnectionImpl(
         return preparedSQL
     }
 
+    // this should probably also SUSPEND
     override fun executeInBatch(sqls: List<String>) {
         val types = sqls.map { stmt ->
             StatementType.entries.find {

@@ -437,6 +437,7 @@ object SchemaUtils {
         return statements
     }
 
+    // this will most likely need to be SUSPEND - so will everything in SchemaUtils???
     private fun Transaction.execStatements(inBatch: Boolean, statements: List<String>) {
         if (inBatch) {
             execInBatch(statements)

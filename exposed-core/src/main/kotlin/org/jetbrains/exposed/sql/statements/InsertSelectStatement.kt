@@ -27,7 +27,7 @@ open class InsertSelectStatement(
         if (columns.size != selectQuery.set.fields.size) error("Columns count doesn't equal to query columns count")
     }
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int? = executeUpdate()
+    override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction): Int? = executeUpdate()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = selectQuery.arguments()
 

@@ -38,6 +38,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 	public fun columns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public fun getDatabaseDialectMode ()Ljava/lang/String;
 	public fun getDatabaseDialectName ()Ljava/lang/String;
 	public fun getDatabaseProductVersion ()Ljava/lang/String;
 	public fun getDefaultIsolationLevel ()I
@@ -65,11 +66,10 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStateme
 	public fun addBatch ()V
 	public fun cancel ()V
 	public fun closeIfPossible ()V
-	public fun executeBatch ()Ljava/util/List;
-	public fun executeMultiple ()Ljava/util/List;
-	public synthetic fun executeQuery ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
-	public fun executeQuery ()Lorg/jetbrains/exposed/sql/statements/jdbc/JdbcResult;
-	public fun executeUpdate ()I
+	public fun executeBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeMultiple (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeQuery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeUpdate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun fillParameters (Ljava/lang/Iterable;)I
 	public fun getFetchSize ()Ljava/lang/Integer;
 	public synthetic fun getResultSet ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
@@ -88,6 +88,8 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStateme
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcResult : org/jetbrains/exposed/sql/statements/api/ResultApi {
 	public fun <init> (Ljava/sql/ResultSet;)V
 	public fun close ()V
+	public fun collectAll (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+	public fun collectSingle (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
 	public fun getObject (I)Ljava/lang/Object;
 	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
 	public synthetic fun getResult ()Ljava/lang/Object;
@@ -97,6 +99,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcResult : org/je
 	public fun metadataColumnName (I)Ljava/lang/String;
 	public fun next ()Z
 	public fun releaseResult ()V
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcSavepoint : org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {

@@ -21,7 +21,7 @@ open class ExplainQuery(
     private val transaction
         get() = TransactionManager.current()
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultApi = executeQuery()
+    override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultApi = executeQuery()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = internalStatement.arguments()
 

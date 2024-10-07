@@ -58,6 +58,7 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcDatabaseMetad
 	public fun columns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public fun getDatabaseDialectMode ()Ljava/lang/String;
 	public fun getDatabaseDialectName ()Ljava/lang/String;
 	public fun getDatabaseProductVersion ()Ljava/lang/String;
 	public fun getDefaultIsolationLevel ()I
@@ -85,11 +86,10 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcPreparedState
 	public fun addBatch ()V
 	public fun cancel ()V
 	public fun closeIfPossible ()V
-	public fun executeBatch ()Ljava/util/List;
-	public fun executeMultiple ()Ljava/util/List;
-	public synthetic fun executeQuery ()Lorg/jetbrains/exposed/sql/statements/api/ResultApi;
-	public fun executeQuery ()Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcResult;
-	public fun executeUpdate ()I
+	public fun executeBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeMultiple (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeQuery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeUpdate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun fillParameters (Ljava/lang/Iterable;)I
 	public final fun getConnection ()Lio/r2dbc/spi/Connection;
 	public fun getFetchSize ()Ljava/lang/Integer;
@@ -107,17 +107,20 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcPreparedState
 }
 
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcResult : org/jetbrains/exposed/sql/statements/api/ResultApi {
-	public fun <init> (Lio/r2dbc/spi/Row;)V
+	public fun <init> (Lio/r2dbc/spi/Result;)V
 	public fun close ()V
+	public fun collectAll (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+	public fun collectSingle (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
 	public fun getObject (I)Ljava/lang/Object;
 	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
-	public fun getResult ()Lio/r2dbc/spi/Row;
+	public fun getResult ()Lio/r2dbc/spi/Result;
 	public synthetic fun getResult ()Ljava/lang/Object;
 	public fun metadataColumnCount ()I
 	public fun metadataColumnIndex (Ljava/lang/String;)I
 	public fun metadataColumnName (I)Ljava/lang/String;
 	public fun next ()Z
 	public fun releaseResult ()V
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcSavepoint : org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {

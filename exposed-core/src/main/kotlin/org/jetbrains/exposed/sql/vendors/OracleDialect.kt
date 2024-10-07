@@ -480,18 +480,5 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         else -> currentDialect.defaultReferenceOption
     }
 
-    override fun sequences(): List<String> {
-        val sequences = mutableListOf<String>()
-        TransactionManager.current().exec("SELECT SEQUENCE_NAME FROM USER_SEQUENCES") { rs ->
-            while (rs.next()) {
-                val result = rs.getString("SEQUENCE_NAME")
-                val q = if (result.contains('.') && !result.isAlreadyQuoted()) "\"" else ""
-                val sequenceName = "$q$result$q"
-                sequences.add(sequenceName)
-            }
-        }
-        return sequences
-    }
-
     companion object : DialectNameProvider("Oracle")
 }

@@ -1819,7 +1819,7 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     else -> error("No target provided for update")
 }
 
-internal fun String.isAlreadyQuoted(): Boolean =
+private fun String.isAlreadyQuoted(): Boolean =
     listOf("\"", "'", "`").any { quoteString ->
         startsWith(quoteString) && endsWith(quoteString)
     }

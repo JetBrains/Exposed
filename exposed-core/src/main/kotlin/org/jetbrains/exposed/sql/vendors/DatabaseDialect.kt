@@ -78,6 +78,9 @@ interface DatabaseDialect {
     /** Returns the name of the current database. */
     fun getDatabase(): String
 
+    /** Returns the name of the mode of the database, or `null` if not applicable. */
+    fun databaseDialectMode(): String? = null
+
     /** Returns a list with the names of all the defined tables. */
     fun allTablesNames(): List<String>
 
