@@ -16,7 +16,7 @@ internal abstract class StatementIterator<RA : ResultApi, T, RR>(
             field = value
             if (!field) {
                 result.releaseResult()
-                TransactionManager.current().openResultsCount--
+                TransactionManager.current().openResultSetsCount--
             }
         }
 
