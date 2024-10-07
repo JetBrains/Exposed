@@ -135,7 +135,7 @@ open class Transaction(
     internal var blockStatementExecution: Boolean = false
 
     internal val executedStatements: MutableList<PreparedStatementApi> = arrayListOf()
-    internal var openResultsCount: Int = 0
+    internal var openResultSetsCount: Int = 0
 
     internal val interceptors = arrayListOf<StatementInterceptor>()
 
@@ -361,7 +361,7 @@ open class Transaction(
         executedStatements.forEach {
             it.closeIfPossible()
         }
-        openResultsCount = 0
+        openResultSetsCount = 0
         executedStatements.clear()
     }
 

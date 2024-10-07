@@ -117,13 +117,13 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     companion object {
         private fun trackResultSet(transaction: Transaction) {
             val threshold = transaction.db.config.logTooMuchResultSetsThreshold
-            if (threshold > 0 && threshold < transaction.openResultsCount) {
+            if (threshold > 0 && threshold < transaction.openResultSetsCount) {
                 val message =
-                    "Current opened result sets size ${transaction.openResultsCount} exceeds $threshold threshold for transaction ${transaction.id} "
+                    "Current opened result sets size ${transaction.openResultSetsCount} exceeds $threshold threshold for transaction ${transaction.id} "
                 val stackTrace = Exception(message).stackTraceToString()
                 exposedLogger.error(stackTrace)
             }
-            transaction.openResultsCount++
+            transaction.openResultSetsCount++
         }
     }
 }

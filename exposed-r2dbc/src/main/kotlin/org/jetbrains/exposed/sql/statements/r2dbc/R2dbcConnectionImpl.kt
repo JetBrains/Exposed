@@ -20,8 +20,8 @@ import org.reactivestreams.Publisher
 /**
  * Class representing a wrapped R2DBC database [connection].
  */
-@Suppress("UnusedPrivateMember", "SpreadOperator")
 // should all ExposedConnection interface methods suspend?
+@Suppress("UnusedPrivateMember", "SpreadOperator")
 class R2dbcConnectionImpl(
     vendorDialect: String,
     override val connection: Publisher<out Connection>,
@@ -44,6 +44,7 @@ class R2dbcConnectionImpl(
         get() = try { metadataProvider.getSchema() } catch (_: Exception) { "" }
         set(value) { try { metadataProvider.setSchema(value) } catch (_: Exception) {} }
 
+    // should all these methods SUSPEND instead of relying on withConnection()?
     override fun commit() {
         withConnection { it.commitTransaction().awaitFirstOrNull() }
     }
