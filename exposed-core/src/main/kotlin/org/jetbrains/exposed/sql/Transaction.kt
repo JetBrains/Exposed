@@ -4,6 +4,7 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.LongQueryException
 import org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
 import org.jetbrains.exposed.sql.statements.Statement
+import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.StatementResult
 import org.jetbrains.exposed.sql.statements.StatementType
@@ -16,6 +17,10 @@ import java.sql.ResultSet
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.startCoroutine
 
 /** Represents a key for a value of type [T]. */
 class Key<T>
@@ -198,6 +203,7 @@ open class Transaction(
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.ParameterizationTests.testInsertWithQuotesAndGetItBack
      */
+    // there needs to be a suspend version for r2dbc - see execQuery()
     fun exec(
         @Language("sql") stmt: String,
         args: Iterable<Pair<IColumnType<*>, Any?>> = emptyList(),
@@ -220,6 +226,7 @@ open class Transaction(
      * @sample org.jetbrains.exposed.sql.tests.shared.ParameterizationTests.testInsertWithQuotesAndGetItBack
      * @sample org.jetbrains.exposed.sql.tests.shared.TransactionExecTests.testExecWithSingleStatementQuery
      */
+    // there needs to be a suspend version for r2dbc - see execQuery()
     fun <T : Any> exec(
         @Language("sql") stmt: String,
         args: Iterable<Pair<IColumnType<*>, Any?>> = emptyList(),
@@ -233,7 +240,7 @@ open class Transaction(
             ?: StatementType.OTHER
 
         return exec(object : Statement<T>(type, emptyList()) {
-            override fun PreparedStatementApi.executeInternal(transaction: Transaction): T? {
+            override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction): T? {
                 val result = when (type) {
                     StatementType.SELECT, StatementType.EXEC, StatementType.SHOW, StatementType.PRAGMA -> executeQuery()
                     StatementType.MULTI -> {
@@ -266,12 +273,14 @@ open class Transaction(
      * `DatabaseConfig.warnLongQueriesDuration`. If [Transaction.debug] is set to `true`, these tracked values
      * are stored for each call in [Transaction.statementStats].
      */
+    // there needs to be a SUSPEND version for r2dbc
     fun <T> exec(stmt: Statement<T>): T? = exec(stmt) { it }
 
     /**
      * Provided statements will be executed in a batch.
      * Select statements are not supported as it's impossible to return multiple results.
      */
+    // this should also probably be SUSPEND
     fun execInBatch(stmts: List<String>) {
         connection.executeInBatch(stmts)
     }
@@ -285,11 +294,23 @@ open class Transaction(
      * `DatabaseConfig.warnLongQueriesDuration`. If [Transaction.debug] is set to `true`, these tracked values
      * are stored for each call in [Transaction.statementStats].
      */
+    // there needs to be a SUSPEND version for r2dbc
     fun <T, R> exec(stmt: Statement<T>, body: Statement<T>.(T) -> R): R? {
         statementCount++
 
         val start = System.nanoTime()
-        val answer = stmt.executeIn(this)
+        var answer: Pair<T?, List<StatementContext>> = null to emptyList()
+        stmt::executeIn.startCoroutine(
+            this,
+            object : Continuation<Pair<T?, List<StatementContext>>> {
+                override val context: CoroutineContext
+                    get() = EmptyCoroutineContext
+
+                override fun resumeWith(result: Result<Pair<T?, List<StatementContext>>>) {
+                    answer = result.getOrThrow()
+                }
+            }
+        )
         val delta = (System.nanoTime() - start).let { TimeUnit.NANOSECONDS.toMillis(it) }
 
         val lazySQL = lazy(LazyThreadSafetyMode.NONE) {

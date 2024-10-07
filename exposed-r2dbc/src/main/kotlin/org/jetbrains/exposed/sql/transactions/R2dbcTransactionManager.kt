@@ -55,6 +55,7 @@ class R2dbcTransactionManager(
         return "R2dbcTransactionManager[${hashCode()}](db=$db)"
     }
 
+    // should a new R2dbcTransaction be implemented?
     override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
         val transaction = outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
             R2dbcThreadLocalTransaction(

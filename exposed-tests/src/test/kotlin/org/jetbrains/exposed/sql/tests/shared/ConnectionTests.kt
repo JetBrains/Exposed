@@ -54,7 +54,8 @@ class ConnectionTests : DatabaseTestsBase() {
         val child = object : LongIdTable("child") {
             val scale = reference("scale", parent.scale)
         }
-        withTables(listOf(TestDB.MYSQL_V5), child, parent) {
+        // fails post transfer to jdbc module
+        withTables(TestDB.ALL_MYSQL_MARIADB, child, parent) {
             val constraints = connection.metadata {
                 tableConstraints(listOf(child))
             }

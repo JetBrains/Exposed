@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.statements
 import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
+// this most likely needs SUSPEND variants for query result iteration
 internal abstract class StatementIterator<RA : ResultApi, T, RR>(
     protected val result: RA
 ) : Iterator<RR> {

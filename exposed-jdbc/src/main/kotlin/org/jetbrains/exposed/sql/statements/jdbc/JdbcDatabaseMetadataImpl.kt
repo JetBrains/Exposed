@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
+import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
+import org.jetbrains.exposed.sql.vendors.H2Dialect.H2MajorVersion
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
@@ -34,6 +36,25 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     Database.getDialectName(url) ?: error("Unsupported driver $driverName detected")
                 }
             }
+        }
+    }
+
+    override val databaseDialectMode: String? by lazy {
+        when (val dialect = currentDialect) {
+            is H2Dialect -> {
+                val (settingNameField, settingValueField) = when (dialect.majorVersion) {
+                    H2MajorVersion.One -> "NAME" to "VALUE"
+                    H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
+                }
+
+                @Language("H2")
+                val modeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
+                TransactionManager.current().exec(modeQuery) { rs ->
+                    rs.next()
+                    rs.getString(settingValueField)
+                }
+            }
+            else -> null
         }
     }
 
@@ -246,48 +267,137 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     @Suppress("MagicNumber")
     override fun sequences(): List<String> {
-        val sequences = mutableListOf<String>()
-        val rs = metadata.getTables(null, null, null, arrayOf("SEQUENCE"))
-        while (rs.next()) {
-            sequences.add(rs.getString(3))
-        }
-        return sequences
+        val dialect = currentDialect
+        val transaction = TransactionManager.current()
+
+        return when (dialect) {
+            is OracleDialect -> transaction.exec("SELECT SEQUENCE_NAME FROM USER_SEQUENCES") { rs ->
+                rs.iterate {
+                    quoteSequenceNameIfNecessary(getString("SEQUENCE_NAME"))
+                }
+            }
+            is SQLServerDialect -> transaction.exec("SELECT name FROM sys.sequences") { rs ->
+                rs.iterate {
+                    getString("name")
+                }
+            }
+            is H2Dialect -> transaction.exec("SELECT SEQUENCE_NAME FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
+                rs.iterate {
+                    val result = getString("SEQUENCE_NAME")
+                    quoteSequenceNameIfNecessary(result)
+                }
+            }
+            else -> metadata.getTables(null, null, null, arrayOf("SEQUENCE")).iterate {
+                getString(3)
+            }
+        } ?: emptyList()
+    }
+
+    private fun quoteSequenceNameIfNecessary(name: String): String {
+        return if (identifierManager.isDotPrefixedAndUnquoted(name)) "\"$name\"" else name
     }
 
     @Synchronized
     override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
         val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCaseUnquoted() }
-        return allTables.keys.associateWith { table ->
-            val (catalog, tableSchema) = tableCatalogAndSchema(allTables[table]!!)
-            metadata.getImportedKeys(catalog, identifierManager.inProperCase(tableSchema), table).iterate {
-                val fromTableName = getString("FKTABLE_NAME")!!
-                val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
-                    getString("FKCOLUMN_NAME")!!
-                )
-                val fromColumn = allTables[fromTableName]?.columns?.firstOrNull {
-                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name) == fromColumnName
-                } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
-                val constraintName = getString("FK_NAME")!!
-                val targetTableName = getString("PKTABLE_NAME")!!
-                val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
-                    identifierManager.inProperCase(getString("PKCOLUMN_NAME")!!)
-                )
-                val targetColumn = allTables[targetTableName]?.columns?.firstOrNull {
-                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
-                } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
-                val constraintUpdateRule = getObject("UPDATE_RULE")?.toString()?.toIntOrNull()?.let {
-                    currentDialect.resolveRefOptionFromJdbc(it)
-                }
-                val constraintDeleteRule = currentDialect.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
-                ForeignKeyConstraint(
-                    target = targetColumn,
-                    from = fromColumn,
-                    onUpdate = constraintUpdateRule,
-                    onDelete = constraintDeleteRule,
-                    name = constraintName
-                )
-            }.filterNotNull().groupBy { it.fkName }.values.map { it.reduce(ForeignKeyConstraint::plus) }
+        val allTableNames = allTables.keys
+        return if (currentDialect is MysqlDialect) {
+            loadMySqlConstraints(tables, allTables, allTableNames)
+        } else {
+            allTableNames.associateWith { table ->
+                val (catalog, tableSchema) = tableCatalogAndSchema(allTables[table]!!)
+                metadata.getImportedKeys(catalog, identifierManager.inProperCase(tableSchema), table).iterate {
+                    val fromTableName = getString("FKTABLE_NAME")!!
+                    val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                        getString("FKCOLUMN_NAME")!!
+                    )
+                    val fromColumn = allTables[fromTableName]?.columns?.firstOrNull {
+                        identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name) == fromColumnName
+                    } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
+                    val constraintName = getString("FK_NAME")!!
+                    val targetTableName = getString("PKTABLE_NAME")!!
+                    val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                        identifierManager.inProperCase(getString("PKCOLUMN_NAME")!!)
+                    )
+                    val targetColumn = allTables[targetTableName]?.columns?.firstOrNull {
+                        identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
+                    } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
+                    val constraintUpdateRule = getObject("UPDATE_RULE")?.toString()?.toIntOrNull()?.let {
+                        currentDialect.resolveRefOptionFromJdbc(it)
+                    }
+                    val constraintDeleteRule = currentDialect.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
+                    ForeignKeyConstraint(
+                        target = targetColumn,
+                        from = fromColumn,
+                        onUpdate = constraintUpdateRule,
+                        onDelete = constraintDeleteRule,
+                        name = constraintName
+                    )
+                }.filterNotNull().groupBy { it.fkName }.values.map { it.reduce(ForeignKeyConstraint::plus) }
+            }
         }
+    }
+
+    // transfer FAILS
+    // this should be consolidated with the above &/or with tableCatalogAndScheme() below
+    private fun loadMySqlConstraints(tables: List<Table>, allTables: Map<String, Table>, allTableNames: Set<String>): Map<String, List<ForeignKeyConstraint>> {
+        val inTableList = allTableNames.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
+        val tr = TransactionManager.current()
+        val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: tr.connection.catalog}'"
+        val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()
+        tr.exec(
+            """SELECT
+                  rc.CONSTRAINT_NAME,
+                  ku.TABLE_NAME,
+                  ku.COLUMN_NAME,
+                  ku.REFERENCED_TABLE_NAME,
+                  ku.REFERENCED_COLUMN_NAME,
+                  rc.UPDATE_RULE,
+                  rc.DELETE_RULE
+                FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+                  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku
+                    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
+                WHERE ku.TABLE_SCHEMA = $tableSchema
+                  AND ku.CONSTRAINT_SCHEMA = $tableSchema
+                  AND rc.CONSTRAINT_SCHEMA = $tableSchema
+                  AND $inTableList
+                ORDER BY ku.ORDINAL_POSITION
+            """.trimIndent()
+        ) { rs ->
+            while (rs.next()) {
+                val fromTableName = rs.getString("TABLE_NAME")!!
+                if (fromTableName !in allTableNames) continue
+                val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                    rs.getString("COLUMN_NAME")!!
+                )
+                allTables.getValue(fromTableName).columns.firstOrNull {
+                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == fromColumnName
+                }?.let { fromColumn ->
+                    val constraintName = rs.getString("CONSTRAINT_NAME")!!
+                    val targetTableName = rs.getString("REFERENCED_TABLE_NAME")!!
+                    val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                        rs.getString("REFERENCED_COLUMN_NAME")!!
+                    )
+                    val targetColumn = allTables.getValue(targetTableName).columns.first {
+                        identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
+                    }
+                    val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
+                    val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
+                    constraintsToLoad.getOrPut(fromTableName) { mutableMapOf() }.merge(
+                        constraintName,
+                        ForeignKeyConstraint(
+                            target = targetColumn,
+                            from = fromColumn,
+                            onUpdate = constraintUpdateRule,
+                            onDelete = constraintDeleteRule,
+                            name = constraintName
+                        ),
+                        ForeignKeyConstraint::plus
+                    )
+                }
+            }
+        }
+        return constraintsToLoad.mapValues { (_, v) -> v.values.toList() }
     }
 
     /**

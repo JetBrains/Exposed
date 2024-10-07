@@ -467,16 +467,6 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     // https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql?redirectedfrom=MSDN&view=sql-server-ver15#arguments
     override val likePatternSpecialChars = sqlServerLikePatternSpecialChars
 
-    override fun sequences(): List<String> {
-        val sequences = mutableListOf<String>()
-        TransactionManager.current().exec("SELECT name FROM sys.sequences") { rs ->
-            while (rs.next()) {
-                sequences.add(rs.getString("name"))
-            }
-        }
-        return sequences
-    }
-
     companion object : DialectNameProvider("SQLServer") {
         private val sqlServerLikePatternSpecialChars = mapOf('%' to null, '_' to null, '[' to ']')
     }

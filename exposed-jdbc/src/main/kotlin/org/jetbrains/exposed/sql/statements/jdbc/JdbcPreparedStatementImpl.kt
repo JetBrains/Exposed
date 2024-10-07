@@ -50,11 +50,11 @@ class JdbcPreparedStatementImpl(
         statement.addBatch()
     }
 
-    override fun executeQuery(): JdbcResult = JdbcResult(statement.executeQuery())
+    override suspend fun executeQuery(): JdbcResult = JdbcResult(statement.executeQuery())
 
-    override fun executeUpdate(): Int = statement.executeUpdate()
+    override suspend fun executeUpdate(): Int = statement.executeUpdate()
 
-    override fun executeMultiple(): List<StatementResult> {
+    override suspend fun executeMultiple(): List<StatementResult> {
         // execute() returns true only if first result is a ResultSet
         return if (statement.execute()) {
             listOf(StatementResult.Object(JdbcResult(statement.resultSet)))
@@ -95,7 +95,7 @@ class JdbcPreparedStatementImpl(
         if (!statement.isClosed) statement.close()
     }
 
-    override fun executeBatch(): List<Int> {
+    override suspend fun executeBatch(): List<Int> {
         return statement.executeBatch().map {
             when (it) {
                 Statement.SUCCESS_NO_INFO -> 1

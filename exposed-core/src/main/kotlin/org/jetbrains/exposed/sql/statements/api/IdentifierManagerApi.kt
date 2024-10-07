@@ -126,12 +126,15 @@ abstract class IdentifierManagerApi {
 
     /** Returns an SQL token wrapped in quotations, if validated as necessary. */
     fun quoteIfNecessary(identity: String): String {
-        return if (identity.contains('.') && !identity.isAlreadyQuoted()) {
+        return if (isDotPrefixedAndUnquoted(identity)) {
             identity.split('.').joinToString(".") { quoteTokenIfNecessary(it) }
         } else {
             quoteTokenIfNecessary(identity)
         }
     }
+
+    /** Returns whether an [identity] is both unquoted and contains dot characters. */
+    fun isDotPrefixedAndUnquoted(identity: String): Boolean = identity.contains('.') && !identity.isAlreadyQuoted()
 
     /** Returns an [identity] wrapped in quotations, if validated as necessary. */
     fun quoteIdentifierWhenWrongCaseOrNecessary(identity: String): String {

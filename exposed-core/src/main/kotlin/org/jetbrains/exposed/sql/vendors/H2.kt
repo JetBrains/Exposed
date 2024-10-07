@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.vendors
 
-import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementType
@@ -261,17 +260,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     /** The H2 database compatibility mode retrieved from metadata. */
     val h2Mode: H2CompatibilityMode? by lazy {
-        val (settingNameField, settingValueField) = when (majorVersion) {
-            H2MajorVersion.One -> "NAME" to "VALUE"
-            H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
-        }
-
-        @Language("H2")
-        val fetchModeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
-        val modeValue = TransactionManager.current().exec(fetchModeQuery) { rs ->
-            rs.next()
-            rs.getString(settingValueField)
-        }
+        val modeValue = databaseDialectMode()
         when {
             modeValue == null -> null
             modeValue.equals("MySQL", ignoreCase = true) -> H2CompatibilityMode.MySQL
@@ -282,6 +271,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             else -> null
         }
     }
+
+    override fun databaseDialectMode(): String? = TransactionManager.current().db.metadata { databaseDialectMode }
 
     override val name: String by lazy {
         when (h2Mode) {
@@ -354,23 +345,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
             refOption == DatabaseMetaData.importedKeyRestrict -> ReferenceOption.RESTRICT
             else -> super.resolveRefOptionFromJdbc(refOption)
         }
-    }
-
-    override fun sequences(): List<String> {
-        val sequences = mutableListOf<String>()
-        TransactionManager.current().exec("SELECT SEQUENCE_NAME FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
-            while (rs.next()) {
-                val result = rs.getString("SEQUENCE_NAME")
-                val sequenceName = if (h2Mode == H2CompatibilityMode.Oracle) {
-                    val q = if (result.contains('.') && !result.isAlreadyQuoted()) "\"" else ""
-                    "$q$result$q"
-                } else {
-                    result
-                }
-                sequences.add(sequenceName)
-            }
-        }
-        return sequences
     }
 
     companion object : DialectNameProvider("H2")

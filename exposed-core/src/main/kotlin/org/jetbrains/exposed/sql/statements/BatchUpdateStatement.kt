@@ -56,7 +56,7 @@ open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, 
         return "$updateSql WHERE $idEqCondition"
     }
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
+    override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = data.map { (id, row) ->
         val idArgs = (id.value as? CompositeID)?.values?.map {

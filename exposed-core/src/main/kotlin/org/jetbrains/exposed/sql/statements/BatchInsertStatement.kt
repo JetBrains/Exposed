@@ -65,7 +65,7 @@ open class SQLServerBatchInsertStatement(
 
     override fun arguments() = listOfNotNull(super.arguments().flatten().takeIf { data.isNotEmpty() })
 
-    override fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultApi?> {
+    override suspend fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultApi?> {
         val rs = if (columnToReturnValue != null) {
             executeQuery()
         } else {

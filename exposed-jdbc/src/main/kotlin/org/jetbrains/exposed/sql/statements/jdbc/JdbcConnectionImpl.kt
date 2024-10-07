@@ -84,6 +84,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         return JdbcPreparedStatementImpl(connection.prepareStatement(sql, columns), true)
     }
 
+    // this should probably also SUSPEND
     override fun executeInBatch(sqls: List<String>) {
         val types = sqls.map { stmt ->
             StatementType.entries.find {
@@ -111,14 +112,14 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
                         originalStatement.closeIfPossible()
                     }
 
-                    override fun executeUpdate(): Int {
+                    override suspend fun executeUpdate(): Int {
                         batchStatement.executeBatch()
                         return 0
                     }
                 }
             }
 
-            override fun PreparedStatementApi.executeInternal(transaction: Transaction) {
+            override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction) {
                 executeUpdate()
             }
 
