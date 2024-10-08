@@ -77,6 +77,32 @@ TestTable.upsert(
   exception handler wrapping the inner transaction, and any inner commits will not be saved. In version 0.55.0, this change will be reduced
   so that only inner transactions that throw an `SQLException` from the database will trigger such a rollback.
 
+## 0.53.0
+
+* DAO Entity Transformation Changes
+  * **Parameter Renaming**: `transform()` and `memoizedTransform()` now use `wrap` and `unwrap` instead of `toColumn` and `toReal`.
+    ```kotlin
+    // Old:
+    var name by EmployeeTable.name.transform(toColumn = { it.uppercase() }, toReal = { it.lowercase() })
+    // New:
+    var name by EmployeeTable.name.transform(wrap = { it.uppercase() }, unwrap = { it.lowercase() })
+    ```
+  * **Class Renaming**: `ColumnWithTransform` is now `EntityFieldWithTransform`, consolidating properties into a single `transformer`.
+    ```kotlin
+    EntityFieldWithTransform(column, object : ColumnTransformer<String, Int> {
+            override fun unwrap(value: Int): String = value.toString()
+            override fun wrap(value: String): Int = value.toInt()
+        })
+    ``` 
+  * Entity transformation via DAO is deprecated and should be replaced with DSL transformation.
+    ```kotlin
+    val tester = object : Table() {
+            val value = integer("value")
+                .transform(wrap = { ... }, unwrap = { ... })
+        }
+    ```
+    
+
 ## 0.51.0
 
 * The `exposed-spring-boot-starter` module no longer provides the entire [spring-boot-starter-data-jdbc](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jdbc) module.

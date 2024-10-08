@@ -93,13 +93,15 @@ Infrastructure:
 * Spring Boot 3.3.2
 * junit-bom 5.10.3
 
+Breaking changes:
+* feat!: EXPOSED-388 Support for column type converters by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2143
+
 Features:
 * feat: Add time extension function for temporal expressions in Kotlin and Java by @joc-a in https://github.com/JetBrains/Exposed/pull/2121
 * feat: EXPOSED-435 Allow insertReturning() to set isIgnore = true by @bog-walk in https://github.com/JetBrains/Exposed/pull/2148
 * feat: EXPOSED-77 Support entity class for table with composite primary key by @bog-walk in https://github.com/JetBrains/Exposed/pull/1987
 * feat: EXPOSED-446 Support N-column inList equality comparisons by @bog-walk in https://github.com/JetBrains/Exposed/pull/2157
 * feat: EXPOSED-450 Merge command: PostgreSQL improvements by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2161
-* feat: EXPOSED-388 Support for column type converters by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2143
 * Adding comment text for a query SQL by @xJoeWoo in https://github.com/JetBrains/Exposed/pull/2088
 * feat: EXPOSED-459 Open AbstractQuery.copyTo() to allow custom Query class extension by @bog-walk in https://github.com/JetBrains/Exposed/pull/2173
 * feat: EXPOSED-461 Add time column in Joda-Time module by @joc-a in https://github.com/JetBrains/Exposed/pull/2175
