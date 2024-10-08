@@ -54,7 +54,7 @@ open class DeleteStatement(
     )
     val offset: Long? = null
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
+    override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
         return executeUpdate()
     }
 

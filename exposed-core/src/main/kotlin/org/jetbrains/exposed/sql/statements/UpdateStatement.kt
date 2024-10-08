@@ -24,7 +24,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
     /** The initial list of columns to update with their updated values. */
     open val firstDataSet: List<Pair<Column<*>, Any?>> get() = values.toList()
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
+    override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
         if (values.isEmpty()) return 0
         return executeUpdate()
     }

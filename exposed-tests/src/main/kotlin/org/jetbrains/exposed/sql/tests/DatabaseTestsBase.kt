@@ -58,7 +58,12 @@ abstract class DatabaseTestsBase {
     @Parameterized.Parameter(2)
     lateinit var testName: String
 
-    fun withDb(dbSettings: TestDB, configure: (DatabaseConfig.Builder.() -> Unit)? = null, statement: Transaction.(TestDB) -> Unit) {
+    fun withDb(
+        dbSettings: TestDB,
+        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+        useR2dbc: Boolean = false,
+        statement: Transaction.(TestDB) -> Unit
+    ) {
         Assume.assumeTrue(dialect == dbSettings)
 
         val unregistered = dbSettings !in registeredOnShutdown
@@ -73,7 +78,11 @@ abstract class DatabaseTestsBase {
                 }
             )
             registeredOnShutdown += dbSettings
-            dbSettings.db = dbSettings.connect(configure ?: {})
+            dbSettings.db = if (useR2dbc) {
+                dbSettings.connectR2dbc(configure ?: {})
+            } else {
+                dbSettings.connect(configure ?: {})
+            }
         }
 
         val registeredDb = dbSettings.db!!
@@ -98,6 +107,7 @@ abstract class DatabaseTestsBase {
         db: Collection<TestDB>? = null,
         excludeSettings: Collection<TestDB> = emptyList(),
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+        useR2dbc: Boolean = false,
         statement: Transaction.(TestDB) -> Unit
     ) {
         if (db != null && dialect !in db) {
@@ -115,7 +125,7 @@ abstract class DatabaseTestsBase {
             return
         }
 
-        withDb(dialect, configure, statement)
+        withDb(dialect, configure, useR2dbc, statement)
     }
 
     fun withTables(

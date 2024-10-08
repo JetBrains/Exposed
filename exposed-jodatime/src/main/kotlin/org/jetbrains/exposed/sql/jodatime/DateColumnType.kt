@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
@@ -12,7 +13,6 @@ import org.joda.time.LocalTime
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.ISODateTimeFormat
-import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
@@ -133,7 +133,7 @@ class DateColumnType(val time: Boolean) : ColumnType<DateTime>(), IDateColumnTyp
         }
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
+    override fun readObject(rs: ResultApi, index: Int): Any? {
         // Since MySQL ConnectorJ 8.0.23, driver returns LocalDateTime instead of String for DateTime columns.
         val dialect = currentDialect
         return when {
@@ -286,7 +286,7 @@ class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
+    override fun readObject(rs: ResultApi, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
         is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java)
         else -> rs.getObject(index, OffsetDateTime::class.java)

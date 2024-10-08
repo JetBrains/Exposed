@@ -1,14 +1,15 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.statements.Statement
+import org.jetbrains.exposed.sql.statements.StatementIterator
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.sql.ResultSet
 
-/** Base class representing an SQL query that returns a [ResultSet] when executed. */
+/** Base class representing an SQL query that returns a result when executed. */
 abstract class AbstractQuery<T : AbstractQuery<T>>(
     targets: List<Table>
-) : SizedIterable<ResultRow>, Statement<ResultSet>(StatementType.SELECT, targets) {
+) : SizedIterable<ResultRow>, Statement<ResultApi>(StatementType.SELECT, targets) {
     protected val transaction
         get() = TransactionManager.current()
 
@@ -87,7 +88,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
 
     protected var count: Boolean = false
 
-    protected abstract val queryToExecute: Statement<ResultSet>
+    protected abstract val queryToExecute: Statement<ResultApi>
 
     override fun iterator(): Iterator<ResultRow> {
         val resultIterator = ResultIterator(transaction.exec(queryToExecute)!!)
@@ -98,33 +99,19 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
         }
     }
 
-    private inner class ResultIterator(val rs: ResultSet) : Iterator<ResultRow> {
-        private var hasNext = false
-            set(value) {
-                field = value
-                if (!field) {
-                    val statement = rs.statement
-                    rs.close()
-                    statement?.close()
-                    transaction.openResultSetsCount--
-                }
-            }
-
-        private val fieldsIndex = set.realFields.toSet().mapIndexed { index, expression -> expression to index }.toMap()
+    private inner class ResultIterator(
+        rs: ResultApi
+    ) : StatementIterator<ResultApi, Expression<*>, ResultRow>(rs) {
+        override val fieldIndex = set.realFields.toSet().mapIndexed { index, expression ->
+            expression to index
+        }.toMap()
 
         init {
-            hasNext = rs.next()
+            hasNext = result.next()
             if (hasNext) trackResultSet(transaction)
         }
 
-        override operator fun next(): ResultRow {
-            if (!hasNext) throw NoSuchElementException()
-            val result = ResultRow.create(rs, fieldsIndex)
-            hasNext = rs.next()
-            return result
-        }
-
-        override fun hasNext(): Boolean = hasNext
+        override fun createResultRow(): ResultRow = ResultRow.create(result, fieldIndex)
     }
 
     companion object {

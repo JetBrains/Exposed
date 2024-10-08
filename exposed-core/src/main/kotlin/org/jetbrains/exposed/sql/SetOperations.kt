@@ -3,13 +3,13 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
-import java.sql.ResultSet
 
 /**
  * Represents an SQL operation that combines the results of multiple queries into a single result.
@@ -51,18 +51,19 @@ sealed class SetOperation(
 
     override val set: FieldSet = firstStatement.set
 
-    override val queryToExecute: Statement<ResultSet> get() = this
+    override val queryToExecute: Statement<ResultApi> get() = this
 
     /** The SQL keyword representing the set operation. */
     open val operationName = operationName
 
     /** Returns the number of results retrieved after query execution. */
+    // this will likely need to SUSPEND
     override fun count(): Long {
         try {
             count = true
             return transaction.exec(this) { rs ->
                 rs.next()
-                rs.getLong(1).also {
+                (rs.getObject(1) as? Number)?.toLong().also {
                     rs.close()
                 }
             }!!
@@ -72,6 +73,7 @@ sealed class SetOperation(
     }
 
     /** Returns whether any results were retrieved by query execution. */
+    // this will likely need to SUSPEND
     override fun empty(): Boolean {
         val oldLimit = limit
         try {
@@ -83,7 +85,7 @@ sealed class SetOperation(
         }
     }
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet = executeQuery()
+    override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultApi = executeQuery()
 
     override fun prepareSQL(builder: QueryBuilder): String {
         builder {

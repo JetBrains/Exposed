@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.RepeatableTest
@@ -191,7 +192,7 @@ class CoroutineTests : DatabaseTestsBase() {
     @Test
     @RepeatableTest(10)
     fun nestedSuspendTxTest() {
-        suspend fun insertTesting(db: Database) = newSuspendedTransaction(db = db) {
+        suspend fun insertTesting(db: DatabaseApi) = newSuspendedTransaction(db = db) {
             Testing.insert {}
         }
         withTables(listOf(TestDB.SQLITE), Testing) {

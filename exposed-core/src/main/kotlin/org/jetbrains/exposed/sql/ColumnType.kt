@@ -5,6 +5,7 @@ import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.vendors.*
 import java.io.InputStream
 import java.math.BigDecimal
@@ -14,7 +15,6 @@ import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.sql.Blob
 import java.sql.Clob
-import java.sql.ResultSet
 import java.sql.SQLException
 import java.util.*
 import kotlin.reflect.KClass
@@ -82,7 +82,7 @@ interface IColumnType<T> {
     fun nonNullValueAsDefaultString(value: T & Any): String = nonNullValueToString(value)
 
     /** Returns the object at the specified [index] in the [rs]. */
-    fun readObject(rs: ResultSet, index: Int): Any? = rs.getObject(index)
+    fun readObject(rs: ResultApi, index: Int): Any? = rs.getObject(index)
 
     /** Sets the [value] at the specified [index] into the [stmt]. */
     fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
@@ -259,7 +259,7 @@ class EntityIDColumnType<T : Comparable<T>>(
         idColumn.table as IdTable<T>
     )
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = idColumn.columnType.readObject(rs, index)
+    override fun readObject(rs: ResultApi, index: Int): Any? = idColumn.columnType.readObject(rs, index)
 
     override fun equals(other: Any?): Boolean {
         if (other !is EntityIDColumnType<*>) return false
@@ -684,10 +684,6 @@ class DecimalColumnType(
 ) : ColumnType<BigDecimal>() {
     override fun sqlType(): String = "DECIMAL($precision, $scale)"
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getObject(index)
-    }
-
     override fun valueFromDB(value: Any): BigDecimal = when (value) {
         is BigDecimal -> value
         is Double -> {
@@ -914,7 +910,7 @@ open class TextColumnType(
         }
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
+    override fun readObject(rs: ResultApi, index: Int): Any? {
         val value = super.readObject(rs, index)
         return if (eagerLoading && value != null) {
             valueFromDB(value)
@@ -946,12 +942,11 @@ open class LargeTextColumnType(
 open class BasicBinaryColumnType : ColumnType<ByteArray>() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType()
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = rs.getBytes(index)
-
     override fun valueFromDB(value: Any): ByteArray = when (value) {
         is Blob -> value.binaryStream.use { it.readBytes() }
         is InputStream -> value.use { it.readBytes() }
         is ByteArray -> value
+        is String -> value.toByteArray()
         else -> error("Unexpected value $value of type ${value::class.qualifiedName}")
     }
 
@@ -1016,10 +1011,11 @@ class BlobColumnType(
 
     override fun nonNullValueToString(value: ExposedBlob): String = currentDialect.dataTypeProvider.hexToDb(value.hexString())
 
-    override fun readObject(rs: ResultSet, index: Int) = when {
-        currentDialect is SQLServerDialect -> rs.getBytes(index)?.let(::ExposedBlob)
-        currentDialect is PostgreSQLDialect && useObjectIdentifier -> rs.getBlob(index)?.binaryStream?.let(::ExposedBlob)
-        else -> rs.getBinaryStream(index)?.let(::ExposedBlob)
+    override fun readObject(rs: ResultApi, index: Int) = when {
+        currentDialect is PostgreSQLDialect && useObjectIdentifier -> {
+            rs.getObject(index, java.sql.Blob::class.java)?.binaryStream?.let(::ExposedBlob)
+        }
+        else -> rs.getObject(index)
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
@@ -1048,11 +1044,6 @@ class UUIDColumnType : ColumnType<UUID>() {
     override fun notNullValueToDB(value: UUID): Any = currentDialect.dataTypeProvider.uuidToDB(value)
 
     override fun nonNullValueToString(value: UUID): String = "'$value'"
-
-    override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
-        is MariaDBDialect -> rs.getBytes(index)
-        else -> super.readObject(rs, index)
-    }
 
     companion object {
         private val uuidRegexp =
@@ -1273,7 +1264,7 @@ class ArrayColumnType<E>(
         return value.joinToString(",", prefix, "]") { delegate.valueAsDefaultString(it) }
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = rs.getArray(index)
+    override fun readObject(rs: ResultApi, index: Int): Any? = rs.getObject(index, java.sql.Array::class.java)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when {

@@ -6,6 +6,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -43,7 +44,7 @@ class MultiDatabaseTest {
             }
         )
     }
-    private var currentDB: Database? = null
+    private var currentDB: DatabaseApi? = null
 
     @Before
     fun before() {

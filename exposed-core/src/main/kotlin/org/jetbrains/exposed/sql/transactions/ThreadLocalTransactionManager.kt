@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
@@ -223,7 +224,7 @@ class ThreadLocalTransactionManager(
  * @return The final result of the [statement] block.
  * @sample org.jetbrains.exposed.sql.tests.h2.MultiDatabaseTest.testTransactionWithDatabase
  */
-fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
+fun <T> transaction(db: DatabaseApi? = null, statement: Transaction.() -> T): T =
     transaction(
         db.transactionManager.defaultIsolationLevel,
         db.transactionManager.defaultReadOnly,
@@ -244,7 +245,7 @@ fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
 fun <T> transaction(
     transactionIsolation: Int,
     readOnly: Boolean = false,
-    db: Database? = null,
+    db: DatabaseApi? = null,
     statement: Transaction.() -> T
 ): T = keepAndRestoreTransactionRefAfterRun(db) {
     val outer = TransactionManager.currentOrNull()
@@ -323,7 +324,7 @@ fun <T> transaction(
 fun <T> inTopLevelTransaction(
     transactionIsolation: Int,
     readOnly: Boolean = false,
-    db: Database? = null,
+    db: DatabaseApi? = null,
     outerTransaction: Transaction? = null,
     statement: Transaction.() -> T
 ): T {
@@ -393,7 +394,7 @@ fun <T> inTopLevelTransaction(
     }
 }
 
-private fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block: () -> T): T {
+private fun <T> keepAndRestoreTransactionRefAfterRun(db: DatabaseApi? = null, block: () -> T): T {
     val manager = db.transactionManager
     val currentTransaction = manager.currentOrNull()
     return try {

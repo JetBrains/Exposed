@@ -1,11 +1,12 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
+import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
-import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
+import org.jetbrains.exposed.sql.vendors.H2Dialect.H2MajorVersion
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
@@ -25,8 +26,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             "MariaDB Connector/J" -> MariaDBDialect.dialectName
             "SQLite JDBC" -> SQLiteDialect.dialectName
             "H2 JDBC Driver" -> H2Dialect.dialectName
-            "pgjdbc-ng" -> PostgreSQLNGDialect.dialectName
-            "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
+            "pgjdbc-ng", "PostgreSQL JDBC - NG" -> PostgreSQLNGDialect.dialectName
             "PostgreSQL JDBC Driver" -> PostgreSQLDialect.dialectName
             "Oracle JDBC driver" -> OracleDialect.dialectName
             else -> {
@@ -36,6 +36,25 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     Database.getDialectName(url) ?: error("Unsupported driver $driverName detected")
                 }
             }
+        }
+    }
+
+    override val databaseDialectMode: String? by lazy {
+        when (val dialect = currentDialect) {
+            is H2Dialect -> {
+                val (settingNameField, settingValueField) = when (dialect.majorVersion) {
+                    H2MajorVersion.One -> "NAME" to "VALUE"
+                    H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
+                }
+
+                @Language("H2")
+                val modeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
+                TransactionManager.current().exec(modeQuery) { rs ->
+                    rs.next()
+                    rs.getString(settingValueField)
+                }
+            }
+            else -> null
         }
     }
 
@@ -78,15 +97,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     override fun resetCurrentScheme() {
         currentSchema = null
-    }
-
-    private inner class CachableMapWithDefault<K, V>(
-        private val map: MutableMap<K, V> = mutableMapOf(),
-        val default: (K) -> V
-    ) : Map<K, V> by map {
-        override fun get(key: K): V? = map.getOrPut(key) { default(key) }
-        override fun containsKey(key: K): Boolean = true
-        override fun isEmpty(): Boolean = false
     }
 
     override val tableNames: Map<String, List<String>>
@@ -168,66 +178,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val scale = getInt("DECIMAL_DIGITS").takeIf { it != 0 }
 
         return ColumnMetadata(name, type, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
-    }
-
-    /**
-     * Here is the table of default values which are returned from the column `"COLUMN_DEF"` depending on how it was configured:
-     *
-     * - Not set: `varchar("any", 128).nullable()`
-     * - Set null: `varchar("any", 128).nullable().default(null)`
-     * - Set "NULL": `varchar("any", 128).nullable().default("NULL")`
-     * ```
-     * DB                  Not set    Set null                    Set "NULL"
-     * SqlServer           null       "(NULL)"                    "('NULL')"
-     * SQLite              null       "NULL"                      "'NULL'"
-     * Postgres            null       "NULL::character varying"   "'NULL'::character varying"
-     * PostgresNG          null       "NULL::character varying"   "'NULL'::character varying"
-     * Oracle              null       "NULL "                     "'NULL' "
-     * MySql5              null       null                        "NULL"
-     * MySql8              null       null                        "NULL"
-     * MariaDB3            "NULL"     "NULL"                      "'NULL'"
-     * MariaDB2            "NULL"     "NULL"                      "'NULL'"
-     * H2V1                null       "NULL"                      "'NULL'"
-     * H2V1 (MySql)        null       "NULL"                      "'NULL'"
-     * H2V2                null       "NULL"                      "'NULL'"
-     * H2V2 (MySql)        null       "NULL"                      "'NULL'"
-     * H2V2 (MariaDB)      null       "NULL"                      "'NULL'"
-     * H2V2 (PSQL)         null       "NULL"                      "'NULL'"
-     * H2V2 (Oracle)       null       "NULL"                      "'NULL'"
-     * H2V2 (SqlServer)    null       "NULL"                      "'NULL'"
-     * ```
-     * According to this table there is no simple rule of what is the default value. It should be checked
-     * for each DB (or groups of DBs) specifically.
-     * In the case of MySql and MariaDB it's also not possible to say whether was default value skipped or
-     * explicitly set to `null`.
-     *
-     * @return `null` - if the value was set to `null` or not configured. `defaultValue` in other case.
-     */
-    private fun sanitizedDefault(defaultValue: String): String? {
-        val dialect = currentDialect
-        val h2Mode = dialect.h2Mode
-        return when {
-            // Check for MariaDB must be before MySql because MariaDBDialect as a class inherits MysqlDialect
-            dialect is MariaDBDialect || h2Mode == H2CompatibilityMode.MariaDB -> when {
-                defaultValue.startsWith("b'") -> defaultValue.substringAfter("b'").trim('\'')
-                else -> defaultValue.extractNullAndStringFromDefaultValue()
-            }
-            // It's the special case, because MySql returns default string "NULL" as string "NULL", but other DBs return it as "'NULL'"
-            dialect is MysqlDialect && defaultValue == "NULL" -> defaultValue
-            dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL -> when {
-                defaultValue.startsWith("b'") -> defaultValue.substringAfter("b'").trim('\'')
-                else -> defaultValue.extractNullAndStringFromDefaultValue()
-            }
-            dialect is SQLServerDialect -> defaultValue.trim('(', ')').extractNullAndStringFromDefaultValue()
-            dialect is OracleDialect -> defaultValue.trim().extractNullAndStringFromDefaultValue()
-            else -> defaultValue.extractNullAndStringFromDefaultValue()
-        }
-    }
-
-    private fun String.extractNullAndStringFromDefaultValue() = when {
-        this.startsWith("NULL") -> null
-        this.startsWith('\'') && this.endsWith('\'') -> this.trim('\'')
-        else -> this
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()
@@ -317,48 +267,137 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     @Suppress("MagicNumber")
     override fun sequences(): List<String> {
-        val sequences = mutableListOf<String>()
-        val rs = metadata.getTables(null, null, null, arrayOf("SEQUENCE"))
-        while (rs.next()) {
-            sequences.add(rs.getString(3))
-        }
-        return sequences
+        val dialect = currentDialect
+        val transaction = TransactionManager.current()
+
+        return when (dialect) {
+            is OracleDialect -> transaction.exec("SELECT SEQUENCE_NAME FROM USER_SEQUENCES") { rs ->
+                rs.iterate {
+                    quoteSequenceNameIfNecessary(getString("SEQUENCE_NAME"))
+                }
+            }
+            is SQLServerDialect -> transaction.exec("SELECT name FROM sys.sequences") { rs ->
+                rs.iterate {
+                    getString("name")
+                }
+            }
+            is H2Dialect -> transaction.exec("SELECT SEQUENCE_NAME FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
+                rs.iterate {
+                    val result = getString("SEQUENCE_NAME")
+                    quoteSequenceNameIfNecessary(result)
+                }
+            }
+            else -> metadata.getTables(null, null, null, arrayOf("SEQUENCE")).iterate {
+                getString(3)
+            }
+        } ?: emptyList()
+    }
+
+    private fun quoteSequenceNameIfNecessary(name: String): String {
+        return if (identifierManager.isDotPrefixedAndUnquoted(name)) "\"$name\"" else name
     }
 
     @Synchronized
     override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
         val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCaseUnquoted() }
-        return allTables.keys.associateWith { table ->
-            val (catalog, tableSchema) = tableCatalogAndSchema(allTables[table]!!)
-            metadata.getImportedKeys(catalog, identifierManager.inProperCase(tableSchema), table).iterate {
-                val fromTableName = getString("FKTABLE_NAME")!!
-                val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
-                    getString("FKCOLUMN_NAME")!!
-                )
-                val fromColumn = allTables[fromTableName]?.columns?.firstOrNull {
-                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name) == fromColumnName
-                } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
-                val constraintName = getString("FK_NAME")!!
-                val targetTableName = getString("PKTABLE_NAME")!!
-                val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
-                    identifierManager.inProperCase(getString("PKCOLUMN_NAME")!!)
-                )
-                val targetColumn = allTables[targetTableName]?.columns?.firstOrNull {
-                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
-                } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
-                val constraintUpdateRule = getObject("UPDATE_RULE")?.toString()?.toIntOrNull()?.let {
-                    currentDialect.resolveRefOptionFromJdbc(it)
-                }
-                val constraintDeleteRule = currentDialect.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
-                ForeignKeyConstraint(
-                    target = targetColumn,
-                    from = fromColumn,
-                    onUpdate = constraintUpdateRule,
-                    onDelete = constraintDeleteRule,
-                    name = constraintName
-                )
-            }.filterNotNull().groupBy { it.fkName }.values.map { it.reduce(ForeignKeyConstraint::plus) }
+        val allTableNames = allTables.keys
+        return if (currentDialect is MysqlDialect) {
+            loadMySqlConstraints(tables, allTables, allTableNames)
+        } else {
+            allTableNames.associateWith { table ->
+                val (catalog, tableSchema) = tableCatalogAndSchema(allTables[table]!!)
+                metadata.getImportedKeys(catalog, identifierManager.inProperCase(tableSchema), table).iterate {
+                    val fromTableName = getString("FKTABLE_NAME")!!
+                    val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                        getString("FKCOLUMN_NAME")!!
+                    )
+                    val fromColumn = allTables[fromTableName]?.columns?.firstOrNull {
+                        identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name) == fromColumnName
+                    } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
+                    val constraintName = getString("FK_NAME")!!
+                    val targetTableName = getString("PKTABLE_NAME")!!
+                    val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                        identifierManager.inProperCase(getString("PKCOLUMN_NAME")!!)
+                    )
+                    val targetColumn = allTables[targetTableName]?.columns?.firstOrNull {
+                        identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
+                    } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
+                    val constraintUpdateRule = getObject("UPDATE_RULE")?.toString()?.toIntOrNull()?.let {
+                        currentDialect.resolveRefOptionFromJdbc(it)
+                    }
+                    val constraintDeleteRule = currentDialect.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
+                    ForeignKeyConstraint(
+                        target = targetColumn,
+                        from = fromColumn,
+                        onUpdate = constraintUpdateRule,
+                        onDelete = constraintDeleteRule,
+                        name = constraintName
+                    )
+                }.filterNotNull().groupBy { it.fkName }.values.map { it.reduce(ForeignKeyConstraint::plus) }
+            }
         }
+    }
+
+    // transfer FAILS
+    // this should be consolidated with the above &/or with tableCatalogAndScheme() below
+    private fun loadMySqlConstraints(tables: List<Table>, allTables: Map<String, Table>, allTableNames: Set<String>): Map<String, List<ForeignKeyConstraint>> {
+        val inTableList = allTableNames.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
+        val tr = TransactionManager.current()
+        val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: tr.connection.catalog}'"
+        val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()
+        tr.exec(
+            """SELECT
+                  rc.CONSTRAINT_NAME,
+                  ku.TABLE_NAME,
+                  ku.COLUMN_NAME,
+                  ku.REFERENCED_TABLE_NAME,
+                  ku.REFERENCED_COLUMN_NAME,
+                  rc.UPDATE_RULE,
+                  rc.DELETE_RULE
+                FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+                  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku
+                    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
+                WHERE ku.TABLE_SCHEMA = $tableSchema
+                  AND ku.CONSTRAINT_SCHEMA = $tableSchema
+                  AND rc.CONSTRAINT_SCHEMA = $tableSchema
+                  AND $inTableList
+                ORDER BY ku.ORDINAL_POSITION
+            """.trimIndent()
+        ) { rs ->
+            while (rs.next()) {
+                val fromTableName = rs.getString("TABLE_NAME")!!
+                if (fromTableName !in allTableNames) continue
+                val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                    rs.getString("COLUMN_NAME")!!
+                )
+                allTables.getValue(fromTableName).columns.firstOrNull {
+                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == fromColumnName
+                }?.let { fromColumn ->
+                    val constraintName = rs.getString("CONSTRAINT_NAME")!!
+                    val targetTableName = rs.getString("REFERENCED_TABLE_NAME")!!
+                    val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+                        rs.getString("REFERENCED_COLUMN_NAME")!!
+                    )
+                    val targetColumn = allTables.getValue(targetTableName).columns.first {
+                        identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
+                    }
+                    val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
+                    val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
+                    constraintsToLoad.getOrPut(fromTableName) { mutableMapOf() }.merge(
+                        constraintName,
+                        ForeignKeyConstraint(
+                            target = targetColumn,
+                            from = fromColumn,
+                            onUpdate = constraintUpdateRule,
+                            onDelete = constraintDeleteRule,
+                            name = constraintName
+                        ),
+                        ForeignKeyConstraint::plus
+                    )
+                }
+            }
+        }
+        return constraintsToLoad.mapValues { (_, v) -> v.values.toList() }
     }
 
     /**
