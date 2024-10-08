@@ -922,7 +922,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
      */
     fun <E> array(name: String, columnType: ColumnType<E & Any>, maximumCardinality: Int? = null): Column<List<E>> =
-        arrayN<E, List<E>>(name, columnType, dimensions = 1, maximumCardinality = maximumCardinality?.let { listOf(it) })
+        array<E, List<E>>(name, columnType, dimensions = 1, maximumCardinality = maximumCardinality?.let { listOf(it) })
 
     /**
      * Creates an array column, with the specified [name], for storing elements of a `List`.
@@ -940,41 +940,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @throws IllegalStateException If no column type mapping is found.
      */
     inline fun <reified E : Any> array(name: String, maximumCardinality: Int? = null): Column<List<E>> =
-        arrayN<E, List<E>>(name, dimensions = 1, maximumCardinality?.let { listOf(it) })
-
-    /**
-     * Creates a 3-dimensional array column, with the specified [name], for storing elements of a nested `List`.
-     *
-     * **Note:** This column type is only supported by PostgreSQL dialect.
-     *
-     * @param name Name of the column.
-     * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
-     *
-     * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
-     * The whole validation is performed on the client side.
-     *
-     * @return A column instance that represents a 3-dimensional list of elements of type [T].
-     * @throws IllegalStateException If no column type mapping is found.
-     */
-    inline fun <reified T : Any> Table.array3(name: String, maximumCardinality: List<Int>? = null): Column<List<List<List<T>>>> =
-        arrayN<T, List<List<List<T>>>>(name, dimensions = 3, maximumCardinality)
-
-    /**
-     * Creates a 2-dimensional array column, with the specified [name], for storing elements of a nested `List`.
-     *
-     * **Note:** This column type is only supported by PostgreSQL dialect.
-     *
-     * @param name Name of the column.
-     * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
-     *
-     * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
-     * The whole validation is performed on the client side.
-     *
-     * @return A column instance that represents a 2-dimensional list of elements of type [T].
-     * @throws IllegalStateException If no column type mapping is found.
-     */
-    inline fun <reified T : Any> Table.array2(name: String, maximumCardinality: List<Int>? = null): Column<List<List<T>>> =
-        arrayN<T, List<List<T>>>(name, dimensions = 2, maximumCardinality)
+        array<E, List<E>>(name, maximumCardinality?.let { listOf(it) }, dimensions = 1)
 
     /**
      * Creates a multi-dimensional array column, with the specified [name], for storing elements of a nested `List`.
@@ -983,19 +949,18 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * **Note:** This column type is only supported by PostgreSQL dialect.
      *
      * @param name Name of the column.
-     * @param dimensions The number of dimensions of the array.
      * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
+     * @param dimensions The number of dimensions of the array.
      *
      * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
-     * The whole validation is performed on the client side.
      *
      * @return A column instance that represents a multi-dimensional list of elements of type [T].
      * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
      * @throws IllegalStateException If no column type mapping is found.
      */
-    inline fun <reified T : Any, R : List<Any>> Table.arrayN(name: String, dimensions: Int, maximumCardinality: List<Int>? = null): Column<R> {
+    inline fun <reified T : Any, R : List<Any>> Table.array(name: String, maximumCardinality: List<Int>? = null, dimensions: Int): Column<R> {
         @OptIn(InternalApi::class)
-        return arrayN(name, resolveColumnType(T::class), dimensions, maximumCardinality)
+        return array(name, resolveColumnType(T::class), maximumCardinality, dimensions)
     }
 
     /**
@@ -1005,18 +970,17 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * **Note:** This column type is only supported by PostgreSQL dialect.
      *
      * @param name Name of the column.
-     * @param dimensions The number of dimensions of the array.
      * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
+     * @param dimensions The number of dimensions of the array.
      *
      * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
-     * The whole validation is performed on the client side.
      *
      * @return A column instance that represents a multi-dimensional list of elements of type [E].
      * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
      * @throws IllegalStateException If no column type mapping is found.
      */
-    fun <E, R : List<Any?>> Table.arrayN(name: String, columnType: ColumnType<E & Any>, dimensions: Int, maximumCardinality: List<Int>? = null): Column<R> =
-        registerColumn(name, ArrayColumnType(columnType, dimensions, maximumCardinality))
+    fun <E, R : List<Any?>> Table.array(name: String, columnType: ColumnType<E & Any>, maximumCardinality: List<Int>? = null, dimensions: Int): Column<R> =
+        registerColumn(name, ArrayColumnType(columnType, maximumCardinality, dimensions))
 
     // Auto-generated values
 

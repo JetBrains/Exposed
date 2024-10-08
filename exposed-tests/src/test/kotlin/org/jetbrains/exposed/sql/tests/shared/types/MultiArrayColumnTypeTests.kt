@@ -12,6 +12,12 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import kotlin.test.assertNull
 
+private inline fun <reified T : Any> Table.array3(name: String, maximumCardinality: List<Int>? = null): Column<List<List<List<T>>>> =
+    array<T, List<List<List<T>>>>(name, maximumCardinality, dimensions = 3)
+
+private inline fun <reified T : Any> Table.array2(name: String, maximumCardinality: List<Int>? = null): Column<List<List<T>>> =
+    array<T, List<List<T>>>(name, maximumCardinality, dimensions = 2)
+
 class MultiArrayColumnTypeTests : DatabaseTestsBase() {
 
     private val multiArrayTypeUnsupportedDb = TestDB.ALL - TestDB.ALL_POSTGRES.toSet()
@@ -57,7 +63,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun test5xMultiArray() {
         val tester = object : IntIdTable("test_table") {
-            val multiArray = arrayN<String, List<List<List<List<List<String>>>>>>("multi_array", 5)
+            val multiArray = array<String, List<List<List<List<List<String>>>>>>("multi_array", dimensions = 5)
         }
 
         withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
@@ -140,7 +146,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
             val list = listOf(listOf(1, 2), listOf(3, 4))
 
             tester.insert {
-                it[multiArray] = arrayNLiteral<Int, List<List<Int>>>(list, dimensions = 2)
+                it[multiArray] = arrayLiteral<Int, List<List<Int>>>(list, dimensions = 2)
             }
 
             val value = tester.selectAll().first()[tester.multiArray]
@@ -158,7 +164,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
             val list = listOf(listOf(1, 2), listOf(3, 4))
 
             tester.insert {
-                it[multiArray] = arrayNParam<Int, List<List<Int>>>(list, dimensions = 2)
+                it[multiArray] = arrayParam<Int, List<List<Int>>>(list, dimensions = 2)
             }
 
             val value = tester.selectAll().first()[tester.multiArray]
@@ -225,6 +231,57 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
             }
 
             assertEquals(2, tester.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testMultiArrayGetFunction() {
+        val tester = object : IntIdTable("test_table") {
+            val multiArray = array2<Int>("multi_array")
+        }
+
+        withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
+            tester.batchInsert(
+                listOf(
+                    listOf(listOf(1, 1), listOf(1, 4)),
+                    listOf(listOf(1, 1), listOf(2, 4)),
+                    listOf(listOf(1, 1), listOf(1, 6)),
+                )
+            ) {
+                this[tester.multiArray] = it
+            }
+
+            val values = tester.selectAll().where { tester.multiArray[2][2] eq 4 }.map { it[tester.multiArray] }
+            assertEquals(2, values.size)
+            assertEqualLists(
+                listOf(
+                    listOf(listOf(1, 1), listOf(1, 4)),
+                    listOf(listOf(1, 1), listOf(2, 4)),
+                ),
+                values
+            )
+
+            assertEquals(0, tester.selectAll().where { tester.multiArray[2][2] greater 10 }.map { it[tester.multiArray] }.size)
+        }
+    }
+
+    @Test
+    fun testMultiArraySliceFunction() {
+        val tester = object : IntIdTable("test_table") {
+            val multiArray = array2<Int>("multi_array")
+        }
+
+        withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
+            tester.insert {
+                it[multiArray] = listOf(
+                    listOf(1, 2, 3, 4), listOf(5, 6, 7, 8), listOf(9, 10, 11, 12), listOf(13, 14, 15, 16)
+                )
+            }
+
+            val alias = tester.multiArray.slice(1, 2).slice(2, 3)
+
+            val query = tester.select(alias).first()
+            assertEqualLists(listOf(2, 3, 6, 7), query[alias].flatten())
         }
     }
 

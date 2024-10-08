@@ -688,7 +688,7 @@ fun decimalLiteral(value: BigDecimal): LiteralOp<BigDecimal> = LiteralOp(Decimal
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
 inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnType<T>? = null): LiteralOp<List<T>> =
-    arrayNLiteral(value, delegateType, dimensions = 1)
+    arrayLiteral(value, 1, delegateType)
 
 /**
  * Returns the specified [value] as an array literal, with elements parsed by the [delegateType] if provided.
@@ -698,13 +698,13 @@ inline fun <reified T : Any> arrayLiteral(value: List<T>, delegateType: ColumnTy
  *
  * **Note:** Because arrays can have varying dimensions, you must specify the type of elements
  * and the number of dimensions when using array literals.
- * For example, use `arrayNLiteral<Int, List<List<Int>>>(list, dimensions = 2)`.
+ * For example, use `arrayLiteral<Int, List<List<Int>>>(list, dimensions = 2)`.
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any, R : List<Any>> arrayNLiteral(value: R, delegateType: ColumnType<T>? = null, dimensions: Int): LiteralOp<R> {
+inline fun <reified T : Any, R : List<Any>> arrayLiteral(value: R, dimensions: Int, delegateType: ColumnType<T>? = null): LiteralOp<R> {
     @OptIn(InternalApi::class)
-    return LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions), value)
+    return LiteralOp(ArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions = dimensions), value)
 }
 
 // Query Parameters
@@ -792,7 +792,7 @@ fun blobParam(value: ExposedBlob, useObjectIdentifier: Boolean = false): Express
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
 inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType<T>? = null): Expression<List<T>> =
-    arrayNParam(value, delegateType, dimensions = 1)
+    arrayParam(value, 1, delegateType)
 
 /**
  * Returns the specified [value] as an array query parameter, with elements parsed by the [delegateType] if provided.
@@ -802,13 +802,13 @@ inline fun <reified T : Any> arrayParam(value: List<T>, delegateType: ColumnType
  *
  * **Note:** Because arrays can have varying dimensions, you must specify the type of elements
  * and the number of dimensions when using array literals.
- * For example, use `arrayNParam<Int, List<List<Int>>>(list, dimensions = 2)`.
+ * For example, use `arrayParam<Int, List<List<Int>>>(list, dimensions = 2)`.
  *
  * @throws IllegalStateException If no column type mapping is found and a [delegateType] is not provided.
  */
-inline fun <reified T : Any, R : List<Any>> arrayNParam(value: R, delegateType: ColumnType<T>? = null, dimensions: Int): Expression<R> {
+inline fun <reified T : Any, R : List<Any>> arrayParam(value: R, dimensions: Int, delegateType: ColumnType<T>? = null): Expression<R> {
     @OptIn(InternalApi::class)
-    return QueryParameter(value, ArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions))
+    return QueryParameter(value, ArrayColumnType(delegateType ?: resolveColumnType(T::class), dimensions = dimensions))
 }
 
 // Misc.

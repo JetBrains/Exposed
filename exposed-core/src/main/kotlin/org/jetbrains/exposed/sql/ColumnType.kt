@@ -1240,13 +1240,23 @@ class CustomEnumerationColumnType<T : Enum<T>>(
  * @property maximumCardinality The maximum cardinality (number of allowed elements) for each dimension of the array.
  *
  * **Note:** The maximum cardinality is considered for each dimension, but it is ignored by the PostgreSQL database.
- * Validation is performed on the client side.
  */
 class ArrayColumnType<T, R : List<Any?>>(
     val delegate: ColumnType<T & Any>,
-    val dimensions: Int,
-    val maximumCardinality: List<Int>? = null
+    val maximumCardinality: List<Int>? = null,
+    val dimensions: Int = 1
 ) : ColumnType<R>() {
+    /**
+     * Constructor with maximum cardinality for a single dimension.
+     *
+     * @param delegate The base column type associated with this array column's individual elements.
+     * @param maximumCardinality The maximum cardinality (number of allowed elements) for the array.
+     */
+    constructor(delegate: ColumnType<T & Any>, maximumCardinality: Int? = null) : this(delegate, maximumCardinality?.let { listOf(it) })
+
+    /**
+     * The SQL type definition of the delegate column type without any potential array dimensions.
+     */
     val delegateType: String
         get() = delegate.sqlType().substringBefore('(')
 
@@ -1308,15 +1318,28 @@ class ArrayColumnType<T, R : List<Any?>>(
     }
 
     override fun nonNullValueToString(value: R): String {
-        return when {
-            currentDialect is H2Dialect -> "ARRAY " + recursiveNonNullValueToString(value, dimensions)
-            else -> "ARRAY" + recursiveNonNullValueToString(value, dimensions)
-        }
+        return arrayLiteralPrefix() + recursiveNonNullValueToString(value, dimensions)
     }
 
     private fun recursiveNonNullValueToString(value: Any?, level: Int): String = when {
         level > 1 -> (value as List<Any?>).joinToString(",", "[", "]") { recursiveNonNullValueToString(it, level - 1) }
+        else -> (value as List<T & Any>).joinToString(",", "[", "]") { delegate.nonNullValueToString(it) }
+    }
+
+    override fun nonNullValueAsDefaultString(value: R): String {
+        return arrayLiteralPrefix() + recursiveNonNullValueAsDefaultString(value, dimensions)
+    }
+
+    private fun recursiveNonNullValueAsDefaultString(value: Any?, level: Int): String = when {
+        level > 1 -> (value as List<Any?>).joinToString(",", "[", "]") { recursiveNonNullValueAsDefaultString(it, level - 1) }
         else -> (value as List<T & Any>).joinToString(",", "[", "]") { delegate.nonNullValueAsDefaultString(it) }
+    }
+
+    private fun arrayLiteralPrefix(): String {
+        return when {
+            currentDialect is H2Dialect -> "ARRAY "
+            else -> "ARRAY"
+        }
     }
 }
 
