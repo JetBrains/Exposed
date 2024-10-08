@@ -12,6 +12,12 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import kotlin.test.assertNull
 
+private inline fun <reified T : Any> Table.array3(name: String, maximumCardinality: List<Int>? = null): Column<List<List<List<T>>>> =
+    array<T, List<List<List<T>>>>(name, maximumCardinality, dimensions = 3)
+
+private inline fun <reified T : Any> Table.array2(name: String, maximumCardinality: List<Int>? = null): Column<List<List<T>>> =
+    array<T, List<List<T>>>(name, maximumCardinality, dimensions = 2)
+
 class MultiArrayColumnTypeTests : DatabaseTestsBase() {
 
     private val multiArrayTypeUnsupportedDb = TestDB.ALL - TestDB.ALL_POSTGRES.toSet()
@@ -57,7 +63,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
     @Test
     fun test5xMultiArray() {
         val tester = object : IntIdTable("test_table") {
-            val multiArray = arrayN<String, List<List<List<List<List<String>>>>>>("multi_array", 5)
+            val multiArray = array<String, List<List<List<List<List<String>>>>>>("multi_array", dimensions = 5)
         }
 
         withTables(excludeSettings = multiArrayTypeUnsupportedDb, tester) {
@@ -140,7 +146,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
             val list = listOf(listOf(1, 2), listOf(3, 4))
 
             tester.insert {
-                it[multiArray] = arrayNLiteral<Int, List<List<Int>>>(list, dimensions = 2)
+                it[multiArray] = arrayLiteral<Int, List<List<Int>>>(list, dimensions = 2)
             }
 
             val value = tester.selectAll().first()[tester.multiArray]
@@ -158,7 +164,7 @@ class MultiArrayColumnTypeTests : DatabaseTestsBase() {
             val list = listOf(listOf(1, 2), listOf(3, 4))
 
             tester.insert {
-                it[multiArray] = arrayNParam<Int, List<List<Int>>>(list, dimensions = 2)
+                it[multiArray] = arrayParam<Int, List<List<Int>>>(list, dimensions = 2)
             }
 
             val value = tester.selectAll().first()[tester.multiArray]

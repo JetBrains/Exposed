@@ -334,9 +334,12 @@
 
         <code-block lang="kotlin">
             object Teams : Table("teams") {
-            val memberIds = array2<UUID>("member_ids")
-            val memberNames = array3<String>("member_names")
-            val budgets = array2<Double>("budgets")
+                val memberIds = array&lt;UUID, List&lt;List&lt;UUID&gt;&gt;&gt;(
+                    "member_ids", dimensions = 2
+                )
+                val memberNames = array&lt;String, List&lt;List&lt;List&lt;String&gt;&gt;&gt;&gt;(
+                    "member_names", dimensions = 3
+                )
             }
         </code-block>
         <p>If more control is needed over the base content type, or if the latter is user-defined or from a non-core
@@ -344,8 +347,14 @@
 
         <code-block lang="kotlin">
             object Teams : Table("teams") {
-            val memberIds = array2<UUID>("member_ids")
-            val memberNames = array3<String>("member_names", VarCharColumnType(colLength = 32))
+                val memberIds = array&lt;UUID, List&lt;List&lt;UUID&gt;&gt;&gt;(
+                    "member_ids", dimensions = 2
+                )
+                val memberNames = array&lt;String, List&lt;List&lt;List&lt;String&gt;&gt;&gt;&gt;(
+                    "member_names",
+                    VarCharColumnType(colLength = 32),
+                    dimensions = 3
+                )
             }
         </code-block>
 
@@ -354,8 +363,9 @@
         <code-block lang="kotlin">
             Teams.insert {
                 it[memberIds] = List(5) { List(5) { UUID.randomUUID() } }
-                it[memberNames] = List(3) { List(3) { List(3) { i -> "Member ${'A' + i}" } } }
-                it[budgets] = listOf(listOf(9999.0, 8888.0))
+                it[memberNames] = List(3) { List(3) { List(3) {
+                    i -> "Member ${'A' + i}"
+                } } }
             }
         </code-block>
     </chapter>

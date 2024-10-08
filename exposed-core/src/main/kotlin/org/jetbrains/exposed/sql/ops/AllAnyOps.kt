@@ -50,7 +50,7 @@ class AllAnyFromArrayOp<T : Any>(
     private val delegateType: ColumnType<T>
 ) : AllAnyFromBaseOp<T, List<T>>(isAny, array) {
     override fun QueryBuilder.registerSubSearchArgument(subSearch: List<T>) {
-        registerArgument(ArrayColumnType<T, List<T>>(delegateType, dimensions = 1), subSearch)
+        registerArgument(ArrayColumnType<T, List<T>>(delegateType), subSearch)
     }
 }
 

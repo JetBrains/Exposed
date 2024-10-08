@@ -1240,13 +1240,14 @@ class CustomEnumerationColumnType<T : Enum<T>>(
  * @property maximumCardinality The maximum cardinality (number of allowed elements) for each dimension of the array.
  *
  * **Note:** The maximum cardinality is considered for each dimension, but it is ignored by the PostgreSQL database.
- * Validation is performed on the client side.
  */
 class ArrayColumnType<T, R : List<Any?>>(
     val delegate: ColumnType<T & Any>,
-    val dimensions: Int,
-    val maximumCardinality: List<Int>? = null
+    val maximumCardinality: List<Int>? = null,
+    val dimensions: Int = 1
 ) : ColumnType<R>() {
+    constructor(delegate: ColumnType<T & Any>, maximumCardinality: Int? = null) : this(delegate, maximumCardinality?.let { listOf(it) })
+
     val delegateType: String
         get() = delegate.sqlType().substringBefore('(')
 
