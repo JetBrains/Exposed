@@ -110,7 +110,7 @@ class ReadExamples {
 
     fun readComputedField() {
         transaction {
-            StarWarsWFilmWithRankEntity.new {
+            StarWarsFilmWithRankEntity.new {
                 sequelId = MOVIE_SEQUELID
                 name = "The Last Jedi"
                 rating = MOVIE_RATING
@@ -118,8 +118,8 @@ class ReadExamples {
         }
 
         transaction {
-            StarWarsWFilmWithRankEntity
-                .find { StarWarsWFilmsWithRankTable.name like "The%" }
+            StarWarsFilmWithRankEntity
+                .find { StarWarsFilmsWithRankTable.name like "The%" }
                 .map { it.name to it.rank }
         }
     }

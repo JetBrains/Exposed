@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.SortOrder
 
 const val MAX_NAME_LENGTH = 32
 
-object StarWarsWFilmsWithRankTable : IntIdTable() {
+object StarWarsFilmsWithRankTable : IntIdTable() {
     val sequelId = integer("sequel_id").uniqueIndex()
     val name = varchar("name", MAX_NAME_LENGTH)
     val rating = double("rating")

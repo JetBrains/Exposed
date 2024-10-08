@@ -33,7 +33,7 @@ fun createTables() {
     SchemaUtils.create(UserRatingsTable)
     SchemaUtils.create(GuildsTable)
     SchemaUtils.create(CitiesTable)
-    SchemaUtils.create(StarWarsWFilmsWithRankTable)
+    SchemaUtils.create(StarWarsFilmsWithRankTable)
 }
 
 fun runCreateExamples() {

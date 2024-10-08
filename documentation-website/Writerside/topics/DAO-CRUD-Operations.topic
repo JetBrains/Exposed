@@ -142,11 +142,11 @@
             function in <code>EntityClass</code>. However, to achieve this functionality, you only need to override
             <code>searchQuery()</code>. The results of the function can then be accessed through a property of the entity class:</p>
         <tabs>
-            <tab id="entity-class" title="StarWarsWFilmWithRankEntity">
-                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsWFilmWithRankEntity.kt"/>
+            <tab id="entity-class" title="StarWarsFilmWithRankEntity">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmWithRankEntity.kt"/>
             </tab>
-            <tab id="table-definition" title="StarWarsWFilmsWithRankTable">
-                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsWFilmsWithRankTable.kt"/>
+            <tab id="table-definition" title="StarWarsFilmsWithRankTable">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsFilmsWithRankTable.kt"/>
             </tab>
         </tabs>
         <p>
