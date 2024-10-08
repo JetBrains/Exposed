@@ -907,7 +907,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
      */
     fun <E> array(name: String, columnType: ColumnType<E & Any>, maximumCardinality: Int? = null): Column<List<E>> =
-        registerColumn(name, ArrayColumnType(columnType.apply { nullable = true }, maximumCardinality))
+        array<E, List<E>>(name, columnType, dimensions = 1, maximumCardinality = maximumCardinality?.let { listOf(it) })
 
     /**
      * Creates an array column, with the specified [name], for storing elements of a `List`.
@@ -924,10 +924,48 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
      * @throws IllegalStateException If no column type mapping is found.
      */
-    inline fun <reified E : Any> array(name: String, maximumCardinality: Int? = null): Column<List<E>> {
+    inline fun <reified E : Any> array(name: String, maximumCardinality: Int? = null): Column<List<E>> =
+        array<E, List<E>>(name, maximumCardinality?.let { listOf(it) }, dimensions = 1)
+
+    /**
+     * Creates a multi-dimensional array column, with the specified [name], for storing elements of a nested `List`.
+     * The number of dimensions is specified by the [dimensions] parameter.
+     *
+     * **Note:** This column type is only supported by PostgreSQL dialect.
+     *
+     * @param name Name of the column.
+     * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
+     * @param dimensions The number of dimensions of the array.
+     *
+     * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
+     *
+     * @return A column instance that represents a multi-dimensional list of elements of type [T].
+     * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
+     * @throws IllegalStateException If no column type mapping is found.
+     */
+    inline fun <reified T : Any, R : List<Any>> Table.array(name: String, maximumCardinality: List<Int>? = null, dimensions: Int): Column<R> {
         @OptIn(InternalApi::class)
-        return array(name, resolveColumnType(E::class), maximumCardinality)
+        return array(name, resolveColumnType(T::class), maximumCardinality, dimensions)
     }
+
+    /**
+     * Creates a multi-dimensional array column, with the specified [name], for storing elements of a nested `List`.
+     * The number of dimensions is specified by the [dimensions] parameter.
+     *
+     * **Note:** This column type is only supported by PostgreSQL dialect.
+     *
+     * @param name Name of the column.
+     * @param maximumCardinality The maximum cardinality (number of allowed elements) for each dimension in the array.
+     * @param dimensions The number of dimensions of the array.
+     *
+     * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
+     *
+     * @return A column instance that represents a multi-dimensional list of elements of type [E].
+     * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
+     * @throws IllegalStateException If no column type mapping is found.
+     */
+    fun <E, R : List<Any?>> Table.array(name: String, columnType: ColumnType<E & Any>, maximumCardinality: List<Int>? = null, dimensions: Int): Column<R> =
+        registerColumn(name, ArrayColumnType(columnType, maximumCardinality, dimensions))
 
     // Auto-generated values
 
@@ -1674,6 +1712,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                                 H2Dialect.H2CompatibilityMode.PostgreSQL -> checkConstraints.filterNot { (name, _) ->
                                     name.startsWith("${generatedSignedCheckPrefix}short")
                                 }
+
                                 else -> checkConstraints.filterNot { (name, _) ->
                                     name.startsWith(generatedSignedCheckPrefix)
                                 }

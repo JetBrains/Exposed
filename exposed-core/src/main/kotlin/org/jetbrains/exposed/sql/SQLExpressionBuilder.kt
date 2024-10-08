@@ -199,7 +199,7 @@ fun <E, T : List<E>?> allFrom(expression: Expression<T>): Op<E> = AllAnyFromExpr
  * @sample org.jetbrains.exposed.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArrayGet
  */
 infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int): ArrayGet<E, T> =
-    ArrayGet(this, index, (this.columnType as ArrayColumnType<E>).delegate)
+    ArrayGet(this, index, (this.columnType as ArrayColumnType<E, List<E>>).delegate)
 
 /**
  * Returns a subarray of elements stored from between [lower] and [upper] bounds (inclusive),
