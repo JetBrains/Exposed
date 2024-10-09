@@ -2,7 +2,7 @@ services:
     oracle:
         container_name: oracleDB
         restart: always
-        image: gvenzl/oracle-xe:18-slim-faststart
+        image: gvenzl/oracle-xe:21-slim-faststart
         ports:
             - "3003:1521"
         environment:

@@ -110,7 +110,7 @@ subprojects {
         colima = true
         dialects("ORACLE")
         dependencies {
-            dependency(rootProject.libs.oracle12)
+            dependency(rootProject.libs.oracle19)
         }
     }
 
