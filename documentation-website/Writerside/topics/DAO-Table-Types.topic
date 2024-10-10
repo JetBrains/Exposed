@@ -6,7 +6,8 @@
        title="Table types" id="DAO-Table-Types" help-id="DAO-Table-types">
 
     <include from="DSL-Table-Types.topic" element-id="dsl-core-table-class"/>
-    <chapter title="Auto-incrementing ID column tables" id="defining-tables">
+    <chapter id="defining-tables">
+        <title>Auto-incrementing <code>id</code> column tables</title>
         <snippet id="dao-table-types">
             <p>
                 Apart from the core <code>Table</code> class, Exposed provides the base
@@ -50,7 +51,8 @@
         <p>The following example represents a table with custom columns <code>sequel_id</code>, <code>name</code>,
             and <code>director</code>:
         </p>
-        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/StarWarsFilms.kt" include-lines="3-6,14-18"/>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt"
+                    include-lines="3-6,19-23" id="StarWarsFilmsTable-code-block"/>
         <p>
             <snippet id="IntIdTable-id-generation-note">
                 The <code>IntIdTable</code> class automatically generates an auto-incrementing integer <code>id</code>
@@ -59,83 +61,64 @@
             When the table is created, it corresponds to the following
             SQL query:
         </p>
-        <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/StarWarsFilms.kt" include-lines="8-12" />
+        <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt" include-lines="12-16" />
         <p>
             For more information on defining and configuring tables in Exposed, see <a href="Working-with-Tables.topic"/>.
         </p>
     </chapter>
-    <chapter title="Defining entity instances" id="define-entity-instance">
-        <p>
-            An entity instance or a row in the table is defined as a class instance:
-        </p>
-        <code-block lang="kotlin"><![CDATA[
-        class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
-            companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
-
-            var sequelId by StarWarsFilms.sequelId
-            var name by StarWarsFilms.name
-            var director by StarWarsFilms.director
-        }
-    ]]></code-block>
-    </chapter>
 
     <chapter title="Composite id table" id="composite-id-table">
-        <p>To define multiple columns as part of the primary key and id, use <code>CompositeIdTable</code> and mark each composite column using
-            <code>entityId()</code>.
-            Each component column will be available for CRUD operations either individually (as for any standard column) or all together as part of the
-            <code>id</code> column:</p>
+        <p>
+            To define multiple columns as part of the primary key and id, use
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-composite-id-table/index.html"><code>CompositeIdTable</code></a>
+            and mark each composite column using <code>entityId()</code>.
+            Each component column will be available for CRUD operations either individually (as for any standard column)
+            or all together as part of the <code>id</code> column:
+        </p>
+        <tabs>
+            <tab id="DirectorsTable-definition" title="DirectorsTable">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/DirectorsTable.kt"/>
+            </tab>
+            <tab id="DirectorEntity-definition" title="DirectorEntity">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/DirectorEntity.kt"/>
+            </tab>
+        </tabs>
 
-        <code-block lang="kotlin"><![CDATA[
-            object Directors : CompositeIdTable("directors") {
-                val name = varchar("name", 50).entityId()
-                val guildId = uuid("guild_id").autoGenerate().entityId()
-                val genre = enumeration<Genre>("genre")
-
-                override val primaryKey = PrimaryKey(name, guildId)
-            }
-
-            class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
-                companion object : CompositeEntityClass<Director>(Directors)
-
-                var genre by Directors.genre
-            }
-        ]]></code-block>
         <include from="Working-with-Tables.topic" element-id="add-id-column-tip"/>
 
-        <code-block lang="kotlin"><![CDATA[
-            object Guilds : UUIDTable("guilds")
-
-            object Directors : CompositeIdTable("directors") {
-                val name = varchar("name", 50).entityId()
-                val guildId = reference("guild_id", Guilds)
-                val genre = enumeration<Genre>("genre")
-
-                init {
-                    addIdColumn(guildId)
-                }
-
-                override val primaryKey = PrimaryKey(name, guildId)
-            }
-        ]]></code-block>
+        <tabs>
+            <tab id="DirectorsWithGuildRefTable-definition" title="DirectorsWithGuildRefTable">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/DirectorsWithGuildRefTable.kt"/>
+            </tab>
+            <tab id="GuildsTable-definition" title="GuildsTable">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/GuildsTable.kt"/>
+            </tab>
+        </tabs>
     </chapter>
 
     <chapter title="Custom column type table" id="custom-column-type">
-        <p>To define a custom column type as the primary key and id, use a typed <code>IdTable</code> directly and override the <code>id</code> column:</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            object Directors : IdTable<String>("directors") {
-                override val id: Column<EntityID<String>> = varchar("id", 32).entityId()
-                val name = varchar("name", 50)
-
-                override val primaryKey = PrimaryKey(id)
-            }
-
-            class Director(id: EntityID<String>) : Entity<String>(id) {
-                companion object : EntityClass<String, Director>(Directors)
-
-                var name by Directors.name
-            }
-        ]]></code-block>
+        <p>
+            To define a custom column type as the primary key and id, use a typed <code>IdTable</code> directly and
+            override the <code>id</code> column, as shown in the following example:
+        </p>
+        <tabs>
+            <tab id="DirectorsCustomTable-definition" title="DirectorsCustomTable">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/DirectorsCustomTable.kt"/>
+            </tab>
+            <tab id="DirectorCustomEntity-definition" title="DirectorCustomEntity">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/DirectorCustomEntity.kt"/>
+            </tab>
+        </tabs>
+        <p>
+            In the definition of <code>DirectorsCustomTable</code>, the <code>id</code> field is of type <code>Column&lt;EntityID&lt;String&gt;&gt;</code>,
+            which will hold <code>String</code> values with a length of up to 32 characters. Using the
+            <code>override</code> keyword indicates that this <code>id</code> column is overriding the default
+            <code>id</code> column provided by <code>IdTable</code>.
+        </p>
+        <p>
+            Once all columns are defined, the <code>id</code> column is explicitly set as the primary key for the table,
+            using the <code>override</code> keyword once again.
+        </p>
     </chapter>
     <seealso style="cards">
         <category ref="related">
