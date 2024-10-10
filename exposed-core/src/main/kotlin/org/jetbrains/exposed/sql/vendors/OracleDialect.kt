@@ -25,8 +25,12 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
         "NUMBER(5)"
     }
     override fun ushortType(): String = "NUMBER(5)"
-    override fun integerType(): String = "NUMBER(12)"
-    override fun integerAutoincType(): String = "NUMBER(12)"
+    override fun integerType(): String = if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+        "INTEGER"
+    } else {
+        "NUMBER(10)"
+    }
+    override fun integerAutoincType(): String = integerType()
     override fun uintegerType(): String = "NUMBER(10)"
     override fun uintegerAutoincType(): String = "NUMBER(10)"
     override fun longType(): String = "NUMBER(19)"

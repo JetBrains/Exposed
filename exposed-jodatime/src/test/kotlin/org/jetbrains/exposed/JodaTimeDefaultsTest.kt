@@ -208,6 +208,11 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
                 "${"t4".inProperCase()} $dType${testTable.t4.constraintNamePart()} ${dLiteral.itOrNull()}, " +
                 "${"t5".inProperCase()} $timeType${testTable.t5.constraintNamePart()} ${tLiteral.itOrNull()}, " +
                 "${"t6".inProperCase()} $timeType${testTable.t6.constraintNamePart()} ${tLiteral.itOrNull()}" +
+                when (testDb) {
+                    TestDB.SQLITE, TestDB.ORACLE ->
+                        ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                    else -> ""
+                } +
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
@@ -413,6 +418,11 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
                 "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
                 "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
                 "${"t3".inProperCase()} $timestampWithTimeZoneType${testTable.t3.constraintNamePart()} ${CurrentDateTime.itOrNull()}" +
+                when (testDb) {
+                    TestDB.SQLITE, TestDB.ORACLE ->
+                        ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                    else -> ""
+                } +
                 ")"
 
             val expected = if (currentDialectTest is OracleDialect ||
