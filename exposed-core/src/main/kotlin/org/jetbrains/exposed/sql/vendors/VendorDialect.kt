@@ -115,7 +115,7 @@ abstract class VendorDialect(
     }
 
     override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
-        TransactionManager.current().db.metadata { existingIndices(*tables) }
+        TransactionManager.current().db.metadata { existingIndices(tables = tables.filter { it.exists() }.toTypedArray()) }
 
     override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> =
         TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
