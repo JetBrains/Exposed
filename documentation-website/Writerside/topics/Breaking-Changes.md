@@ -51,6 +51,8 @@
   that is also type restricted to `Comparable` (for example, `avg()`) will also require defining a new function. In this event, please
   also leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-577) with a use case so the original function signature
   can be potentially reassessed.
+* In H2 Oracle, the `long()` column now maps to data type `BIGINT` instead of `NUMBER(19)`.
+  In Oracle and SQLite, using the long column in a table now also creates a CHECK constraint to ensure that no out-of-range values are inserted.
 
 ## 0.55.0
 * The `DeleteStatement` property `table` is now deprecated in favor of `targetsSet`, which holds a `ColumnSet` that may be a `Table` or `Join`.
