@@ -68,9 +68,10 @@ suspend fun <T> newSuspendedTransaction(
     context: CoroutineContext? = null,
     db: Database? = null,
     transactionIsolation: Int? = null,
+    readOnly: Boolean? = null,
     statement: suspend Transaction.() -> T
 ): T =
-    withTransactionScope(context, null, db, transactionIsolation) {
+    withTransactionScope(context, null, db, transactionIsolation, readOnly) {
         suspendedTransactionAsyncInternal(true, statement).await()
     }
 
@@ -102,10 +103,11 @@ suspend fun <T> suspendedTransactionAsync(
     context: CoroutineContext? = null,
     db: Database? = null,
     transactionIsolation: Int? = null,
+    readOnly: Boolean? = null,
     statement: suspend Transaction.() -> T
 ): Deferred<T> {
     val currentTransaction = TransactionManager.currentOrNull()
-    return withTransactionScope(context, null, db, transactionIsolation) {
+    return withTransactionScope(context, null, db, transactionIsolation, readOnly) {
         suspendedTransactionAsyncInternal(!holdsSameTransaction(currentTransaction), statement)
     }
 }
@@ -129,6 +131,7 @@ private suspend fun <T> withTransactionScope(
     currentTransaction: Transaction?,
     db: Database? = null,
     transactionIsolation: Int?,
+    readOnly: Boolean? = null,
     body: suspend TransactionScope.() -> T
 ): T {
     val currentScope = coroutineContext[TransactionScope]
@@ -137,7 +140,10 @@ private suspend fun <T> withTransactionScope(
         val manager = currentDatabase?.transactionManager ?: TransactionManager.manager
 
         val tx = lazy(LazyThreadSafetyMode.NONE) {
-            currentTransaction ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel)
+            currentTransaction ?: manager.newTransaction(
+                isolation = transactionIsolation ?: manager.defaultIsolationLevel,
+                readOnly = readOnly ?: manager.defaultReadOnly
+            )
         }
 
         val element = TransactionCoroutineElement(tx, manager)
