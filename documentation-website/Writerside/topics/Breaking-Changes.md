@@ -8,6 +8,8 @@
 * In Oracle and H2 Oracle, the `uinteger()` column now maps to data type `NUMBER(10)` instead of `NUMBER(13)`.
 * In Oracle and H2 Oracle, the `integer()` column now maps to data type `NUMBER(10)` and `INTEGER` respectively, instead of `NUMBER(12)`.
   In Oracle and SQLite, using the integer column in a table now also creates a CHECK constraint to ensure that no out-of-range values are inserted.
+* In H2 Oracle, the `long()` column now maps to data type `BIGINT` instead of `NUMBER(19)`.
+  In Oracle and SQLite, using the long column in a table now also creates a CHECK constraint to ensure that no out-of-range values are inserted.
 
 ## 0.55.0
 * The `DeleteStatement` property `table` is now deprecated in favor of `targetsSet`, which holds a `ColumnSet` that may be a `Table` or `Join`.

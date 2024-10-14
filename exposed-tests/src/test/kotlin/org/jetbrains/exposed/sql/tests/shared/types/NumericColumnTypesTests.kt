@@ -104,4 +104,35 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testLongAcceptsOnlyAllowedRange() {
+        val testTable = object : Table("test_table") {
+            val long = long("long_column")
+        }
+
+        withTables(testTable) { testDb ->
+            val columnName = testTable.long.nameInDatabaseCase()
+            val ddlEnding = when (testDb) {
+                TestDB.SQLITE -> "CHECK (typeof($columnName) = 'integer'))"
+                TestDB.ORACLE -> "CHECK ($columnName BETWEEN ${Long.MIN_VALUE} and ${Long.MAX_VALUE}))"
+                else -> "($columnName ${testTable.long.columnType} NOT NULL)"
+            }
+            assertTrue(testTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+
+            testTable.insert { it[long] = Long.MIN_VALUE }
+            testTable.insert { it[long] = Long.MAX_VALUE }
+            assertEquals(2, testTable.select(testTable.long).count())
+
+            val tableName = testTable.nameInDatabaseCase()
+            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
+                val outOfRangeValue = Long.MIN_VALUE.toBigDecimal() - 1.toBigDecimal()
+                exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
+            }
+            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
+                val outOfRangeValue = Long.MAX_VALUE.toBigDecimal() + 1.toBigDecimal()
+                exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
+            }
+        }
+    }
 }

@@ -1658,6 +1658,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 append("IF NOT EXISTS ")
             }
             append(TransactionManager.current().identity(this@Table))
+
+            // Add CHECK constraint to Long columns in Oracle and SQLite.
+            // It is done here because special handling is necessary based on the dialect.
+            addLongColumnCheckConstraintIfNeeded()
+
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { column ->
                     column.descriptionDdl(false)
@@ -1698,7 +1703,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                     }.let {
                         if (currentDialect !is SQLiteDialect && currentDialect !is OracleDialect) {
                             it.filterNot { (name, _) ->
-                                name.startsWith("${generatedSignedCheckPrefix}integer")
+                                name.startsWith("${generatedSignedCheckPrefix}integer") ||
+                                    name.startsWith("${generatedSignedCheckPrefix}long")
                             }
                         } else {
                             it
@@ -1721,6 +1727,34 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         }
 
         return createAutoIncColumnSequence() + createTable + createConstraint
+    }
+
+    private fun addLongColumnCheckConstraintIfNeeded() {
+        if (currentDialect is OracleDialect || currentDialect is SQLiteDialect) {
+            columns.filter { it.columnType is LongColumnType }.forEach { column ->
+                val name = column.name
+                val checkName = "${generatedSignedCheckPrefix}long_$name"
+                if (checkConstraints.none { it.first == checkName }) {
+                    column.check(checkName) {
+                        if (currentDialect is SQLiteDialect) {
+                            fun typeOf(value: String) = object : ExpressionWithColumnType<String>() {
+                                override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("typeof($value)") }
+                                override val columnType: IColumnType<String> = TextColumnType()
+                            }
+
+                            val typeCondition = Expression.build { typeOf(name) eq stringLiteral("integer") }
+                            if (column.columnType.nullable) {
+                                column.isNull() or typeCondition
+                            } else {
+                                typeCondition
+                            }
+                        } else {
+                            it.between(Long.MIN_VALUE, Long.MAX_VALUE)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun createAutoIncColumnSequence(): List<String> {

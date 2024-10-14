@@ -273,8 +273,12 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t9".inProperCase()} $timeType${testTable.t9.constraintNamePart()} ${tLiteral.itOrNull()}, " +
                 "${"t10".inProperCase()} $timeType${testTable.t10.constraintNamePart()} ${tLiteral.itOrNull()}" +
                 when (testDb) {
-                    TestDB.SQLITE, TestDB.ORACLE ->
-                        ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+                    TestDB.SQLITE ->
+                        ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                            ", CONSTRAINT chk_t_signed_long_l CHECK (typeof(l) = 'integer')"
+                    TestDB.ORACLE ->
+                        ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
+                            ", CONSTRAINT chk_t_signed_long_l CHECK (L BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
                     else -> ""
                 } +
                 ")"
