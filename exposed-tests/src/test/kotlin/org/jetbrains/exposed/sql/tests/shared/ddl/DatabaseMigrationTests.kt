@@ -134,6 +134,23 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testCreateStatementsGeneratedForTablesThatDoNotExist() {
+        val tester = object : Table("tester") {
+            val bar = char("bar")
+        }
+
+        withDb {
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tester, withLogs = false)
+            assertEquals(1, statements.size)
+            assertEquals(
+                "CREATE TABLE ${addIfNotExistsIfSupported()}${tester.nameInDatabaseCase()} " +
+                    "(${"bar".inProperCase()} CHAR NOT NULL)",
+                statements.first()
+            )
+        }
+    }
+
+    @Test
     fun testDropUnmappedColumnsStatementsIdentical() {
         val t1 = object : Table("foo") {
             val col1 = integer("col1")

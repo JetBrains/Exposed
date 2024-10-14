@@ -82,7 +82,7 @@ object MigrationUtils {
 
         val modifyTablesStatements = logTimeSpent("Checking mapping consistence", withLogs) {
             mappingConsistenceRequiredStatements(
-                tables = tables,
+                tables = tablesToAlter.toTypedArray(),
                 withLogs
             ).filter { it !in (createStatements + alterStatements) }
         }
