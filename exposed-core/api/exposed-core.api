@@ -1905,6 +1905,7 @@ public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/Abstrac
 	public synthetic fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public final fun getComments ()Ljava/util/Map;
 	public final fun getDistinct ()Z
+	public final fun getDistinctOn ()Ljava/util/List;
 	public final fun getGroupedByColumns ()Ljava/util/List;
 	public final fun getHaving ()Lorg/jetbrains/exposed/sql/Op;
 	protected fun getQueryToExecute ()Lorg/jetbrains/exposed/sql/statements/Statement;
@@ -1918,11 +1919,14 @@ public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/Abstrac
 	public synthetic fun notForUpdate ()Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/QueryBuilder;)Ljava/lang/String;
 	protected final fun setDistinct (Z)V
+	protected final fun setDistinctOn (Ljava/util/List;)V
 	public fun setSet (Lorg/jetbrains/exposed/sql/FieldSet;)V
 	public final fun where (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun where (Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/sql/AbstractQuery;
 	public fun withDistinct (Z)Lorg/jetbrains/exposed/sql/Query;
+	public final fun withDistinctOn ([Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/Query;
+	public final fun withDistinctOn ([Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Query;
 }
 
 public final class org/jetbrains/exposed/sql/Query$CommentPosition : java/lang/Enum {
