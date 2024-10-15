@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.sqlite
 
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -10,6 +11,7 @@ import org.jetbrains.exposed.sql.tests.shared.Category
 import org.jetbrains.exposed.sql.tests.shared.DEFAULT_CATEGORY_ID
 import org.jetbrains.exposed.sql.tests.shared.Item
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assume
@@ -237,6 +239,46 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
                         assertEquals(ReferenceOption.CASCADE, it.deleteRule)
                     }
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testTableWithDotInName() {
+        withDb {
+            val q = db.identifierManager.quoteString
+            val parentTableName = "${q}SOMENAMESPACE.SOMEPARENTTABLE$q"
+            val childTableName = "${q}SOMENAMESPACE.SOMECHILDTABLE$q"
+
+            val parentTester = object : IntIdTable(parentTableName) {
+                val text_col = text("parent_text_col")
+            }
+            val childTester = object : IntIdTable(childTableName) {
+                val text_col = text("child_text_col")
+                val int_col = reference("child_int_col", parentTester.id)
+            }
+
+            try {
+                SchemaUtils.create(parentTester)
+                assertTrue(parentTester.exists())
+                SchemaUtils.create(childTester)
+                assertTrue(childTester.exists())
+
+                val parentId = parentTester.insertAndGetId {
+                    it[text_col] = "Parent text"
+                }
+                val childId = childTester.insertAndGetId {
+                    it[text_col] = "Child text"
+                    it[childTester.int_col] = parentId
+                }
+
+                parentTester.update({ parentTester.id eq parentId }) { it[text_col] = "Updated parent text" }
+
+                childTester.update({ childTester.id eq childId }) { it[text_col] = "Updated child text" }
+                childTester.deleteWhere { childTester.id eq childId }
+            } finally {
+                SchemaUtils.drop(childTester)
+                SchemaUtils.drop(parentTester)
             }
         }
     }
