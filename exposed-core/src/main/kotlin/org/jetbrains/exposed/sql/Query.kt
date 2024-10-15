@@ -213,7 +213,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                     append("DISTINCT ")
                 }
                 distinctOn?.let { columns ->
-                    columns.appendTo(prefix = "DISTINCT ON (", postfix = ")") { +"${it.table.tableName}.${it.name}" }
+                    columns.appendTo(prefix = "DISTINCT ON (", postfix = ") ") { +"${it.table.tableName}.${it.name}" }
                 }
                 set.realFields.appendTo { +it }
             }
