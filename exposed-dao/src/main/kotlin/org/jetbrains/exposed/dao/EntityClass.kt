@@ -27,7 +27,7 @@ import kotlin.sequences.Sequence
  * be used to determine the primary constructor of the associated entity class on first access (which can be slower).
  */
 @Suppress("UNCHECKED_CAST", "UnnecessaryAbstractClass", "TooManyFunctions")
-abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
+abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     val table: IdTable<ID>,
     entityType: Class<T>? = null,
     entityCtor: ((EntityID<ID>) -> T)? = null,
@@ -420,7 +420,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Children
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Child
      */
-    infix fun <REF : Comparable<REF>> referencedOn(column: Column<REF>) = registerRefRule(column) { Reference(column, this) }
+    infix fun <REF : Any> referencedOn(column: Column<REF>) = registerRefRule(column) { Reference(column, this) }
 
     /**
      * Registers a reference as a field of the child entity class, which returns a parent object of this `EntityClass`.
@@ -432,9 +432,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Authors
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Author
      */
-    infix fun referencedOn(table: IdTable<*>): Reference<Comparable<Any>, ID, T> {
+    infix fun referencedOn(table: IdTable<*>): Reference<Any, ID, T> {
         val tableFK = getCompositeForeignKey(table)
-        val delegate = tableFK.from.first() as Column<Comparable<Any>>
+        val delegate = tableFK.from.first() as Column<Any>
         return registerRefRule(delegate) { Reference(delegate, this, tableFK.references) }
     }
 
@@ -449,7 +449,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Posts
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Post
      */
-    infix fun <REF : Comparable<REF>> optionalReferencedOn(column: Column<REF?>) = registerRefRule(column) { OptionalReference(column, this) }
+    infix fun <REF : Any> optionalReferencedOn(column: Column<REF?>) = registerRefRule(column) { OptionalReference(column, this) }
 
     /**
      * Registers an optional reference as a field of the child entity class, which returns a parent object of
@@ -462,9 +462,9 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Offices
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Office
      */
-    infix fun optionalReferencedOn(table: IdTable<*>): OptionalReference<Comparable<Any>, ID, T> {
+    infix fun optionalReferencedOn(table: IdTable<*>): OptionalReference<Any, ID, T> {
         val tableFK = getCompositeForeignKey(table)
-        val delegate = tableFK.from.first() as Column<Comparable<Any>?>
+        val delegate = tableFK.from.first() as Column<Any?>
         return registerRefRule(delegate) { OptionalReference(delegate, this, tableFK.references) }
     }
 
@@ -478,7 +478,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.XTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.BEntity
      */
-    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(
+    infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.backReferencedOn(
         column: Column<REF>
     ): ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
@@ -493,7 +493,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.BEntity
      */
     @JvmName("backReferencedOnOpt")
-    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.backReferencedOn(
+    infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.backReferencedOn(
         column: Column<REF?>
     ): ReadOnlyProperty<Entity<ID>, Target> = registerRefRule(column) { BackReference(column, this) }
 
@@ -508,11 +508,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Reviews
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Review
      */
-    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(
+    infix fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(
         table: IdTable<*>
     ): ReadOnlyProperty<Entity<ID>, Target> {
         val tableFK = this@EntityClass.getCompositeForeignKey(table)
-        val delegate = tableFK.from.first() as Column<Comparable<Any>?>
+        val delegate = tableFK.from.first() as Column<Any?>
         return registerRefRule(delegate) { BackReference(delegate, this, tableFK.references) }
     }
 
@@ -527,7 +527,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.StudentBios
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.StudentBio
      */
-    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(
+    infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.optionalBackReferencedOn(
         column: Column<REF>
     ) =
         registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column as Column<REF?>, this) }
@@ -544,7 +544,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.StudentBio
      */
     @JvmName("optionalBackReferencedOnOpt")
-    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalBackReferencedOn(
+    infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.optionalBackReferencedOn(
         column: Column<REF?>
     ) =
         registerRefRule(column) { OptionalBackReference<TargetID, Target, ID, Entity<ID>, REF>(column, this) }
@@ -560,11 +560,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Offices
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Office
      */
-    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalBackReferencedOn(
+    infix fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalBackReferencedOn(
         table: IdTable<*>
-    ): OptionalBackReference<TargetID, Target, ID, Entity<ID>, Comparable<Any>> {
+    ): OptionalBackReference<TargetID, Target, ID, Entity<ID>, Any> {
         val tableFK = this@EntityClass.getCompositeForeignKey(table)
-        val delegate = tableFK.from.first() as Column<Comparable<Any>?>
+        val delegate = tableFK.from.first() as Column<Any?>
         return registerRefRule(delegate) { OptionalBackReference(delegate, this, tableFK.references) }
     }
 
@@ -580,7 +580,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.Cities
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.City
      */
-    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>) =
+    infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>) =
         registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
 
     /**
@@ -594,11 +594,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Authors
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Author
      */
-    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.referrersOn(
+    infix fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.referrersOn(
         table: IdTable<*>
-    ): Referrers<ID, Entity<ID>, TargetID, Target, Comparable<Any>> {
+    ): Referrers<ID, Entity<ID>, TargetID, Target, Any> {
         val tableFK = this@EntityClass.getCompositeForeignKey(table)
-        val delegate = tableFK.from.first() as Column<Comparable<Any>>
+        val delegate = tableFK.from.first() as Column<Any>
         return registerRefRule(delegate) { Referrers(delegate, this, true, tableFK.references) }
     }
 
@@ -614,7 +614,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Students
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Student
      */
-    fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.referrersOn(
+    fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.referrersOn(
         column: Column<REF>,
         cache: Boolean
     ) =
@@ -629,12 +629,12 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      *
      * Set [cache] to `true` to also store the loaded entities to a cache.
      */
-    fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.referrersOn(
+    fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.referrersOn(
         table: IdTable<*>,
         cache: Boolean
-    ): Referrers<ID, Entity<ID>, TargetID, Target, Comparable<Any>> {
+    ): Referrers<ID, Entity<ID>, TargetID, Target, Any> {
         val tableFK = this@EntityClass.getCompositeForeignKey(table)
-        val delegate = tableFK.from.first() as Column<Comparable<Any>>
+        val delegate = tableFK.from.first() as Column<Any>
         return registerRefRule(delegate) { Referrers(delegate, this, cache, tableFK.references) }
     }
 
@@ -651,7 +651,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Posts
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Post
      */
-    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(
+    infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.optionalReferrersOn(
         column: Column<REF?>
     ) =
         registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
@@ -669,11 +669,11 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Authors
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.CompositeIdTableEntityTest.Author
      */
-    infix fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalReferrersOn(
+    infix fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalReferrersOn(
         table: IdTable<*>
-    ): OptionalReferrers<ID, Entity<ID>, TargetID, Target, Comparable<Any>> {
+    ): OptionalReferrers<ID, Entity<ID>, TargetID, Target, Any> {
         val tableFK = this@EntityClass.getCompositeForeignKey(table)
-        val delegate = tableFK.from.first() as Column<Comparable<Any>?>
+        val delegate = tableFK.from.first() as Column<Any?>
         return registerRefRule(delegate) { OptionalReferrers(delegate, this, true, tableFK.references) }
     }
 
@@ -690,7 +690,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Detentions
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Detention
      */
-    fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>, REF : Comparable<REF>> EntityClass<TargetID, Target>.optionalReferrersOn(
+    fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.optionalReferrersOn(
         column: Column<REF?>,
         cache: Boolean = false
     ) =
@@ -705,12 +705,12 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      *
      * Set [cache] to `true` to also store the loaded entities to a cache.
      */
-    fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalReferrersOn(
+    fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalReferrersOn(
         table: IdTable<*>,
         cache: Boolean = false
-    ): OptionalReferrers<ID, Entity<ID>, TargetID, Target, Comparable<Any>> {
+    ): OptionalReferrers<ID, Entity<ID>, TargetID, Target, Any> {
         val tableFK = this@EntityClass.getCompositeForeignKey(table)
-        val delegate = tableFK.from.first() as Column<Comparable<Any>?>
+        val delegate = tableFK.from.first() as Column<Any?>
         return registerRefRule(delegate) { OptionalReferrers(delegate, this, cache, tableFK.references) }
     }
 
@@ -721,7 +721,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * @throws IllegalStateException If [table] does not have a defined composite foreign key that matches the
      * primary key defined on the table associated with this `EntityClass`.
      */
-    private fun <TargetID : Comparable<TargetID>, Target : Entity<TargetID>> EntityClass<TargetID, Target>.getCompositeForeignKey(
+    private fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.getCompositeForeignKey(
         table: IdTable<*>
     ): ForeignKeyConstraint = table.foreignKeys.firstOrNull {
         it.target == this.table.idColumns
@@ -922,7 +922,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
         if (refColumn.columnType is EntityIDColumnType<*>) {
             refColumn as Column<EntityID<*>>
             distinctRefIds as List<EntityID<ID>>
-            val toLoad = distinctRefIds.filter {
+            val toLoad: List<EntityID<ID>> = distinctRefIds.filter {
                 cache.referrers[refColumn]?.containsKey(it)?.not() ?: true
             }
             if (toLoad.isNotEmpty()) {
@@ -1038,7 +1038,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     }
 
     @Suppress("ComplexMethod")
-    internal fun <SID : Comparable<SID>> warmUpLinkedReferences(
+    internal fun <SID : Any> warmUpLinkedReferences(
         references: List<EntityID<SID>>,
         sourceRefColumn: Column<EntityID<SID>>,
         targetRefColumn: Column<EntityID<ID>>,
@@ -1107,7 +1107,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
      * loading multiple times (per each reference row) and will require less memory/bandwidth for "heavy" entities
      * (with a lot of columns and/or columns that store large data sizes).
      */
-    fun <SID : Comparable<SID>> warmUpLinkedReferences(
+    fun <SID : Any> warmUpLinkedReferences(
         references: List<EntityID<SID>>,
         linkTable: Table,
         forUpdate: Boolean? = null,
@@ -1126,7 +1126,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
     /**
      * Returns whether the [entityClass] type is equivalent to or a superclass of this [EntityClass] instance's [klass].
      */
-    fun <ID : Comparable<ID>, T : Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
+    fun <ID : Any, T : Entity<ID>> isAssignableTo(entityClass: EntityClass<ID, T>) = entityClass.klass.isAssignableFrom(klass)
 }
 
 /**
@@ -1142,7 +1142,7 @@ abstract class EntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
  * @sample org.jetbrains.exposed.sql.tests.shared.entities.ImmutableEntityTest.Schema.Organization
  * @sample org.jetbrains.exposed.sql.tests.shared.entities.ImmutableEntityTest.EOrganization
  */
-abstract class ImmutableEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
+abstract class ImmutableEntityClass<ID : Any, out T : Entity<ID>>(
     table: IdTable<ID>,
     entityType: Class<T>? = null,
     ctor: ((EntityID<ID>) -> T)? = null
@@ -1183,7 +1183,7 @@ abstract class ImmutableEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
  * @sample org.jetbrains.exposed.sql.tests.shared.entities.ImmutableEntityTest.Schema.Organization
  * @sample org.jetbrains.exposed.sql.tests.shared.entities.ImmutableEntityTest.ECachedOrganization
  */
-abstract class ImmutableCachedEntityClass<ID : Comparable<ID>, out T : Entity<ID>>(
+abstract class ImmutableCachedEntityClass<ID : Any, out T : Entity<ID>>(
     table: IdTable<ID>,
     entityType: Class<T>? = null,
     ctor: ((EntityID<ID>) -> T)? = null

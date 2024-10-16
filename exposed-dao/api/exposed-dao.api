@@ -8,12 +8,12 @@ public abstract class org/jetbrains/exposed/dao/CompositeEntityClass : org/jetbr
 }
 
 public final class org/jetbrains/exposed/dao/DaoEntityID : org/jetbrains/exposed/dao/id/EntityID {
-	public fun <init> (Ljava/lang/Comparable;Lorg/jetbrains/exposed/dao/id/IdTable;)V
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/dao/id/IdTable;)V
 }
 
 public final class org/jetbrains/exposed/dao/DaoEntityIDFactory : org/jetbrains/exposed/dao/id/EntityIDFactory {
 	public fun <init> ()V
-	public fun createEntityID (Ljava/lang/Comparable;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/id/EntityID;
+	public fun createEntityID (Ljava/lang/Object;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/id/EntityID;
 }
 
 public class org/jetbrains/exposed/dao/Entity {
@@ -123,14 +123,14 @@ public abstract class org/jetbrains/exposed/dao/EntityClass {
 	protected fun createInstance (Lorg/jetbrains/exposed/dao/id/EntityID;Lorg/jetbrains/exposed/sql/ResultRow;)Lorg/jetbrains/exposed/dao/Entity;
 	public final fun find (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public final fun find (Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/SizedIterable;
-	public final fun findById (Ljava/lang/Comparable;)Lorg/jetbrains/exposed/dao/Entity;
+	public final fun findById (Ljava/lang/Object;)Lorg/jetbrains/exposed/dao/Entity;
 	public fun findById (Lorg/jetbrains/exposed/dao/id/EntityID;)Lorg/jetbrains/exposed/dao/Entity;
-	public final fun findByIdAndUpdate (Ljava/lang/Comparable;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
+	public final fun findByIdAndUpdate (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
 	public final fun findSingleByAndUpdate (Lorg/jetbrains/exposed/sql/Op;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
 	public final fun findWithCacheCondition (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lkotlin/sequences/Sequence;
 	public fun forEntityIds (Ljava/util/List;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public final fun forIds (Ljava/util/List;)Lorg/jetbrains/exposed/sql/SizedIterable;
-	public final fun get (Ljava/lang/Comparable;)Lorg/jetbrains/exposed/dao/Entity;
+	public final fun get (Ljava/lang/Object;)Lorg/jetbrains/exposed/dao/Entity;
 	public final fun get (Lorg/jetbrains/exposed/dao/id/EntityID;)Lorg/jetbrains/exposed/dao/Entity;
 	public fun getDependsOnColumns ()Ljava/util/List;
 	public fun getDependsOnTables ()Lorg/jetbrains/exposed/sql/ColumnSet;
@@ -139,7 +139,7 @@ public abstract class org/jetbrains/exposed/dao/EntityClass {
 	public final fun memoizedTransform (Lorg/jetbrains/exposed/dao/EntityFieldWithTransform;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/EntityFieldWithTransform;
 	public final fun memoizedTransform (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/EntityFieldWithTransform;
 	public final fun memoizedTransform (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnTransformer;)Lorg/jetbrains/exposed/dao/EntityFieldWithTransform;
-	public fun new (Ljava/lang/Comparable;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
+	public fun new (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
 	public fun new (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/dao/Entity;
 	public final fun optionalBackReferencedOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/OptionalBackReference;
 	public final fun optionalBackReferencedOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/dao/OptionalBackReference;

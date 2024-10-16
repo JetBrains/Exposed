@@ -224,9 +224,7 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         }
     }
 
-    data class CustomId(val id: UUID) : Comparable<CustomId> {
-        override fun compareTo(other: CustomId): Int = id.compareTo(other.id)
-    }
+    private data class CustomId(val id: UUID)
 
     @Test
     fun testTransformIdColumn() {

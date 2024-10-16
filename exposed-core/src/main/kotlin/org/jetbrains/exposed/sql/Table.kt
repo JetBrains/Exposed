@@ -645,7 +645,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** Converts the @receiver column to an [EntityID] column. */
     @Suppress("UNCHECKED_CAST")
-    fun <T : Comparable<T>> Column<T>.entityId(): Column<EntityID<T>> {
+    fun <T : Any> Column<T>.entityId(): Column<EntityID<T>> {
         val newColumn = Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also {
             it.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
             it.dbDefaultValue = dbDefaultValue?.let { default -> default as Expression<EntityID<T>> }
@@ -656,7 +656,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /** Creates an [EntityID] column, with the specified [name], for storing the same objects as the specified [originalColumn]. */
-    fun <ID : Comparable<ID>> entityId(name: String, originalColumn: Column<ID>): Column<EntityID<ID>> {
+    fun <ID : Any> entityId(name: String, originalColumn: Column<ID>): Column<EntityID<ID>> {
         val columnTypeCopy = originalColumn.columnType.cloneAsBaseType()
         val answer = Column<EntityID<ID>>(
             this,
@@ -669,7 +669,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** Creates an [EntityID] column, with the specified [name], for storing the identifier of the specified [table]. */
     @Suppress("UNCHECKED_CAST")
-    fun <ID : Comparable<ID>> entityId(name: String, table: IdTable<ID>): Column<EntityID<ID>> {
+    fun <ID : Any> entityId(name: String, table: IdTable<ID>): Column<EntityID<ID>> {
         val originalColumn = (table.id.columnType as EntityIDColumnType<*>).idColumn as Column<ID>
         return entityId(name, originalColumn)
     }
@@ -1014,7 +1014,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * @param idSeqName an optional parameter to provide a sequence name
      */
-    fun <N : Comparable<N>> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> =
+    fun <N : Any> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> =
         cloneWithAutoInc(idSeqName).also { replaceColumn(this, it) }
 
     /** Sets the default value for this column in the database side. */
@@ -1118,7 +1118,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @sample org.jetbrains.exposed.sql.tests.shared.ddl.CreateMissingTablesAndColumnsTests.ExplicitTable
      */
     @JvmName("referencesById")
-    fun <T : Comparable<T>, S : T, C : Column<S>> C.references(
+    fun <T : Any, S : T, C : Column<S>> C.references(
         ref: Column<EntityID<T>>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
@@ -1179,7 +1179,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      */
     @Suppress("UNCHECKED_CAST")
     @JvmName("referenceByIdColumn")
-    fun <T : Comparable<T>, E : EntityID<T>> reference(
+    fun <T : Any, E : EntityID<T>> reference(
         name: String,
         refColumn: Column<E>,
         onDelete: ReferenceOption? = null,
@@ -1204,7 +1204,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param fkName Optional foreign key constraint name.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Schools
      */
-    fun <T : Comparable<T>> reference(
+    fun <T : Any> reference(
         name: String,
         foreign: IdTable<T>,
         onDelete: ReferenceOption? = null,
@@ -1251,7 +1251,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Posts
      */
     @JvmName("optReferenceByIdColumn")
-    fun <T : Comparable<T>, E : EntityID<T>> optReference(
+    fun <T : Any, E : EntityID<T>> optReference(
         name: String,
         refColumn: Column<E>,
         onDelete: ReferenceOption? = null,
@@ -1272,7 +1272,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param fkName Optional foreign key constraint name.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Schools
      */
-    fun <T : Comparable<T>> optReference(
+    fun <T : Any> optReference(
         name: String,
         foreign: IdTable<T>,
         onDelete: ReferenceOption? = null,

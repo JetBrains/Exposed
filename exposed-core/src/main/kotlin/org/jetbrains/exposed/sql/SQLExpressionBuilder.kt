@@ -336,7 +336,8 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this [EntityID] expression is equal to some [t] value. */
-    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> {
+    @JvmName("eqEntityIDValue")
+    infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(t: V): Op<Boolean> {
         if (t == null) return isNull()
 
         @Suppress("UNCHECKED_CAST")
@@ -350,7 +351,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this [EntityID] expression is equal to some [other] expression. */
-    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(
+    infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.eq(
         other: Expression<V>
     ): Op<Boolean> = when (other as Expression<*>) {
         is Op.NULL -> isNull()
@@ -358,7 +359,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.eq(
+    infix fun <T : Any, V : T?, E : EntityID<T>?> Expression<V>.eq(
         other: ExpressionWithColumnType<E>
     ): Op<Boolean> = other eq this
 
@@ -380,7 +381,8 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this [EntityID] expression is not equal to some [t] value. */
-    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> {
+    @JvmName("neqEntityIDValue")
+    infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(t: V): Op<Boolean> {
         if (t == null) return isNotNull()
         @Suppress("UNCHECKED_CAST")
         val table = (columnType as EntityIDColumnType<*>).idColumn.table as IdTable<T>
@@ -393,7 +395,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this [EntityID] expression is not equal to some [other] expression. */
-    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(
+    infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.neq(
         other: Expression<V>
     ): Op<Boolean> = when (other as Expression<*>) {
         is Op.NULL -> isNotNull()
@@ -401,7 +403,7 @@ interface ISqlExpressionBuilder {
     }
 
     /** Checks if this expression is not equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.neq(
+    infix fun <T : Any, V : T?, E : EntityID<T>?> Expression<V>.neq(
         other: ExpressionWithColumnType<E>
     ): Op<Boolean> = other neq this
 
@@ -507,7 +509,7 @@ interface ISqlExpressionBuilder {
     fun <T, S : T?> ExpressionWithColumnType<in S>.between(from: T, to: T): Between = Between(this, wrap(from), wrap(to))
 
     /** Returns `true` if this [EntityID] expression is between the values [from] and [to], `false` otherwise. */
-    fun <T : Comparable<T>, E : EntityID<T>?> Column<E>.between(from: T, to: T): Between =
+    fun <T : Any, E : EntityID<T>?> Column<E>.between(from: T, to: T): Between =
         Between(this, wrap(EntityID(from, this.idTable())), wrap(EntityID(to, this.idTable())))
 
     /** Returns `true` if this expression is null, `false` otherwise. */
@@ -542,16 +544,16 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this expression is equal to some [t] value, with `null` treated as a comparable value */
     @JvmName("isNotDistinctFromEntityID")
-    infix fun <T : Comparable<T>> Column<EntityID<T>>.isNotDistinctFrom(t: T): IsNotDistinctFromOp =
+    infix fun <T : Any> Column<EntityID<T>>.isNotDistinctFrom(t: T): IsNotDistinctFromOp =
         IsNotDistinctFromOp(this, wrap(EntityID(t, this.idTable())))
 
     /** Checks if this [EntityID] expression is equal to some [other] expression */
-    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.isNotDistinctFrom(
+    infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.isNotDistinctFrom(
         other: Expression<in V>
     ): IsNotDistinctFromOp = IsNotDistinctFromOp(this, other)
 
     /** Checks if this expression is equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.isNotDistinctFrom(
+    infix fun <T : Any, V : T?, E : EntityID<T>?> Expression<V>.isNotDistinctFrom(
         other: ExpressionWithColumnType<E>
     ): IsNotDistinctFromOp = IsNotDistinctFromOp(this, other)
 
@@ -564,16 +566,16 @@ interface ISqlExpressionBuilder {
 
     /** Checks if this expression is not equal to some [t] value, with `null` treated as a comparable value */
     @JvmName("isDistinctFromEntityID")
-    infix fun <T : Comparable<T>> Column<EntityID<T>>.isDistinctFrom(t: T): IsDistinctFromOp =
+    infix fun <T : Any> Column<EntityID<T>>.isDistinctFrom(t: T): IsDistinctFromOp =
         IsDistinctFromOp(this, wrap(EntityID(t, this.idTable())))
 
     /** Checks if this [EntityID] expression is not equal to some [other] expression */
-    infix fun <T : Comparable<T>, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.isDistinctFrom(
+    infix fun <T : Any, E : EntityID<T>?, V : T?> ExpressionWithColumnType<E>.isDistinctFrom(
         other: Expression<in V>
     ): IsDistinctFromOp = IsDistinctFromOp(this, other)
 
     /** Checks if this expression is not equal to some [other] [EntityID] expression. */
-    infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<in V>.isDistinctFrom(
+    infix fun <T : Any, V : T?, E : EntityID<T>?> Expression<in V>.isDistinctFrom(
         other: ExpressionWithColumnType<E>
     ): IsDistinctFromOp = IsDistinctFromOp(this, other)
 
@@ -927,7 +929,7 @@ interface ISqlExpressionBuilder {
     infix fun List<Column<*>>.inList(list: Iterable<CompositeID>): InListOrNotInListBaseOp<List<*>> {
         val componentList = list.map { id ->
             List(this.size) { i ->
-                val component = id[this[i] as Column<Comparable<Any>>]
+                val component = id[this[i] as Column<Any>]
                 component.takeIf { this[i].columnType is EntityIDColumnType<*> } ?: (component as EntityID<*>).value
             }
         }
@@ -941,7 +943,7 @@ interface ISqlExpressionBuilder {
      */
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
-    infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
+    infix fun <T : Any, ID : EntityID<T>?> Column<ID>.inList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = true)
     }
@@ -1007,7 +1009,7 @@ interface ISqlExpressionBuilder {
     infix fun List<Column<*>>.notInList(list: Iterable<CompositeID>): InListOrNotInListBaseOp<List<*>> {
         val componentList = list.map { id ->
             List(this.size) { i ->
-                val component = id[this[i] as Column<Comparable<Any>>]
+                val component = id[this[i] as Column<Any>]
                 component.takeIf { this[i].columnType is EntityIDColumnType<*> } ?: (component as EntityID<*>).value
             }
         }
@@ -1021,7 +1023,7 @@ interface ISqlExpressionBuilder {
      */
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
-    infix fun <T : Comparable<T>, ID : EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
+    infix fun <T : Any, ID : EntityID<T>?> Column<ID>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<EntityID<T>?> {
         val idTable = (columnType as EntityIDColumnType<T>).idColumn.table as IdTable<T>
         return SingleValueInListOp(this, list.map { EntityIDFunctionProvider.createEntityID(it, idTable) }, isInList = false)
     }
@@ -1073,7 +1075,7 @@ interface ISqlExpressionBuilder {
     fun ExpressionWithColumnType<Int>.intToDecimal(): NoOpConversion<Int, BigDecimal> =
         NoOpConversion(this, DecimalColumnType(precision = 15, scale = 0))
 
-    private fun <T : Comparable<T>, E : EntityID<T>> Column<out E?>.idTable(): IdTable<T> =
+    private fun <T : Any, E : EntityID<T>> Column<out E?>.idTable(): IdTable<T> =
         when (val table = this.foreignKey?.targetTable ?: this.table) {
             is Alias<*> -> table.delegate
             else -> table

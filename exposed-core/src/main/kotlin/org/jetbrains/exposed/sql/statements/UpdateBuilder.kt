@@ -40,7 +40,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
 
     @Suppress("UNCHECKED_CAST")
     @JvmName("setWithEntityIdValue")
-    operator fun <S : Comparable<S>> set(column: Column<EntityID<S>>, value: S) {
+    operator fun <S : Any> set(column: Column<EntityID<S>>, value: S) {
         if (value is CompositeID) {
             value.setComponentValues()
         } else {
@@ -52,7 +52,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
 
     @Suppress("UNCHECKED_CAST")
     @JvmName("setWithNullableEntityIdValue")
-    operator fun <S : Comparable<S>> set(column: Column<EntityID<S>?>, value: S?) {
+    operator fun <S : Any> set(column: Column<EntityID<S>?>, value: S?) {
         require(column.columnType.nullable || value != null) {
             "Trying to set null to not nullable column $column"
         }

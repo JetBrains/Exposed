@@ -32,7 +32,7 @@ class ResultRow(
             column?.isEntityIdentifier() == true && column.table is CompositeIdTable -> {
                 val resultID = CompositeID {
                     column.table.idColumns.forEach { column ->
-                        it[column as Column<EntityID<Comparable<Any>>>] = getInternal(column, checkNullability = true).value
+                        it[column as Column<EntityID<Any>>] = getInternal(column, checkNullability = true).value
                     }
                 }
                 EntityID(resultID, column.table) as T

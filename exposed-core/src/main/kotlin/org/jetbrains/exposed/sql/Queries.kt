@@ -213,7 +213,7 @@ fun <T : Table> T.insert(body: T.(InsertStatement<Number>) -> Unit): InsertState
  * @return The generated ID for the new row.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testGeneratedKey04
  */
-fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>) -> Unit): EntityID<Key> =
+fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>) -> Unit): EntityID<Key> =
     InsertStatement<EntityID<Key>>(this, false).run {
         body(this)
         execute(TransactionManager.current())
@@ -381,7 +381,7 @@ fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatem
  * @return The generated ID for the new row, or `null` if none was retrieved after statement execution.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetId01
  */
-fun <Key : Comparable<Key>, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit): EntityID<Key>? =
+fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit): EntityID<Key>? =
     InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
         body(this)
         when (execute(TransactionManager.current())) {

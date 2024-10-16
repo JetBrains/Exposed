@@ -4,11 +4,11 @@ public final class org/jetbrains/exposed/dao/id/CompositeID : java/lang/Comparab
 	public fun compareTo (Lorg/jetbrains/exposed/dao/id/CompositeID;)I
 	public final fun contains (Lorg/jetbrains/exposed/sql/Column;)Z
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun get (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Comparable;
+	public final fun get (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Object;
 	public fun hashCode ()I
 	public final fun setWithEntityID (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/dao/id/EntityID;)V
-	public final fun setWithEntityIdValue (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)V
-	public final fun setWithNullableEntityIdValue (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)V
+	public final fun setWithEntityIdValue (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)V
+	public final fun setWithNullableEntityIdValue (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)V
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -24,13 +24,13 @@ public class org/jetbrains/exposed/dao/id/CompositeIdTable : org/jetbrains/expos
 }
 
 public class org/jetbrains/exposed/dao/id/EntityID : java/lang/Comparable {
-	public fun <init> (Ljava/lang/Comparable;Lorg/jetbrains/exposed/dao/id/IdTable;)V
-	protected fun <init> (Lorg/jetbrains/exposed/dao/id/IdTable;Ljava/lang/Comparable;)V
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/dao/id/IdTable;)V
+	protected fun <init> (Lorg/jetbrains/exposed/dao/id/IdTable;Ljava/lang/Object;)V
 	public synthetic fun compareTo (Ljava/lang/Object;)I
 	public fun compareTo (Lorg/jetbrains/exposed/dao/id/EntityID;)I
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getTable ()Lorg/jetbrains/exposed/dao/id/IdTable;
-	public final fun getValue ()Ljava/lang/Comparable;
+	public final fun getValue ()Ljava/lang/Object;
 	public final fun get_value ()Ljava/lang/Object;
 	public fun hashCode ()I
 	protected fun invokeOnNoValue ()V
@@ -39,12 +39,12 @@ public class org/jetbrains/exposed/dao/id/EntityID : java/lang/Comparable {
 }
 
 public abstract interface class org/jetbrains/exposed/dao/id/EntityIDFactory {
-	public abstract fun createEntityID (Ljava/lang/Comparable;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/id/EntityID;
+	public abstract fun createEntityID (Ljava/lang/Object;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/id/EntityID;
 }
 
 public final class org/jetbrains/exposed/dao/id/EntityIDFunctionProvider {
 	public static final field INSTANCE Lorg/jetbrains/exposed/dao/id/EntityIDFunctionProvider;
-	public final fun createEntityID (Ljava/lang/Comparable;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/id/EntityID;
+	public final fun createEntityID (Ljava/lang/Object;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/id/EntityID;
 }
 
 public abstract class org/jetbrains/exposed/dao/id/IdTable : org/jetbrains/exposed/sql/Table {
@@ -1085,7 +1085,7 @@ public abstract interface class org/jetbrains/exposed/sql/IDateColumnType {
 
 public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder {
 	public abstract fun asLiteral (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
-	public abstract fun between (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Between;
+	public abstract fun between (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Between;
 	public abstract fun between (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Between;
 	public abstract fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/AndBitOp;
 	public abstract fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/AndBitOp;
@@ -1104,9 +1104,9 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun eq (Lorg/jetbrains/exposed/sql/CompositeColumn;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun eq (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun eq (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Op;
-	public abstract fun eq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun eq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun eq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
+	public abstract fun eqEntityIDValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun eqSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/EqSubQueryOp;
 	public abstract fun firstValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/FirstValue;
 	public abstract fun greater (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterOp;
@@ -1135,12 +1135,12 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun isDistinctFrom (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
 	public abstract fun isDistinctFrom (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
 	public abstract fun isDistinctFrom (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
-	public abstract fun isDistinctFromEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
+	public abstract fun isDistinctFromEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
 	public abstract fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public abstract fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public abstract fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public abstract fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
-	public abstract fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
+	public abstract fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public abstract fun isNotNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun isNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun isNullOrEmpty (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
@@ -1174,9 +1174,9 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun modWithEntityId3 (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
 	public abstract fun neq (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun neq (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Op;
-	public abstract fun neq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun neq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun neq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
+	public abstract fun neqEntityIDValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public abstract fun notEqSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/NotEqSubQueryOp;
 	public abstract fun notInList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public abstract fun notInList (Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -1217,7 +1217,7 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 
 public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls {
 	public static fun asLiteral (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
-	public static fun between (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Between;
+	public static fun between (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Between;
 	public static fun between (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Between;
 	public static fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/AndBitOp;
 	public static fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/AndBitOp;
@@ -1238,9 +1238,9 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun eq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/CompositeColumn;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun eq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun eq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Op;
-	public static fun eq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun eq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun eq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
+	public static fun eqEntityIDValue (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun eqSubQuery (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/EqSubQueryOp;
 	public static fun firstValue (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/FirstValue;
 	public static fun greater (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterOp;
@@ -1269,12 +1269,12 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun isDistinctFrom (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
 	public static fun isDistinctFrom (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
 	public static fun isDistinctFrom (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
-	public static fun isDistinctFromEntityID (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
+	public static fun isDistinctFromEntityID (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
 	public static fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public static fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public static fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public static fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
-	public static fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
+	public static fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public static fun isNotNull (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun isNull (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun isNullOrEmpty (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
@@ -1310,9 +1310,9 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun modWithEntityId3 (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
 	public static fun neq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun neq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Op;
-	public static fun neq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun neq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun neq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
+	public static fun neqEntityIDValue (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public static fun notEqSubQuery (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/NotEqSubQueryOp;
 	public static fun notInList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public static fun notInList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -2270,7 +2270,7 @@ public final class org/jetbrains/exposed/sql/SortOrder : java/lang/Enum {
 public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrains/exposed/sql/ISqlExpressionBuilder {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/SqlExpressionBuilder;
 	public fun asLiteral (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
-	public fun between (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Between;
+	public fun between (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Between;
 	public fun between (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Between;
 	public fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/AndBitOp;
 	public fun bitwiseAnd (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/AndBitOp;
@@ -2289,9 +2289,9 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun eq (Lorg/jetbrains/exposed/sql/CompositeColumn;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public fun eq (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public fun eq (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Op;
-	public fun eq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Op;
 	public fun eq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public fun eq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
+	public fun eqEntityIDValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public fun eqSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/EqSubQueryOp;
 	public fun firstValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/FirstValue;
 	public fun greater (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterOp;
@@ -2320,12 +2320,12 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun isDistinctFrom (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
 	public fun isDistinctFrom (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
 	public fun isDistinctFrom (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
-	public fun isDistinctFromEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
+	public fun isDistinctFromEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/IsDistinctFromOp;
 	public fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public fun isNotDistinctFrom (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
-	public fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
+	public fun isNotDistinctFromEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/IsNotDistinctFromOp;
 	public fun isNotNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public fun isNull (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public fun isNullOrEmpty (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
@@ -2359,9 +2359,9 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun modWithEntityId3 (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
 	public fun neq (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
 	public fun neq (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Op;
-	public fun neq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/Op;
 	public fun neq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public fun neq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Op;
+	public fun neqEntityIDValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
 	public fun notEqSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/NotEqSubQueryOp;
 	public fun notInList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
 	public fun notInList (Lkotlin/Pair;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -3416,8 +3416,8 @@ public abstract class org/jetbrains/exposed/sql/statements/UpdateBuilder : org/j
 	public fun set (Lorg/jetbrains/exposed/sql/CompositeColumn;Ljava/lang/Object;)V
 	protected final fun setHasBatchedValues (Z)V
 	public final fun setWithEntityIdExpression (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Expression;)V
-	public final fun setWithEntityIdValue (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)V
-	public final fun setWithNullableEntityIdValue (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)V
+	public final fun setWithEntityIdValue (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)V
+	public final fun setWithNullableEntityIdValue (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)V
 	public fun update (Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function1;)V
 	public fun update (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Expression;)V
 }
