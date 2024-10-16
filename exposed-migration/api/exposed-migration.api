@@ -1,4 +1,4 @@
-public final class MigrationUtils {
+public final class MigrationUtils : org/jetbrains/exposed/sql/BaseSchemaUtils {
 	public static final field INSTANCE LMigrationUtils;
 	public final fun dropUnmappedColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public static synthetic fun dropUnmappedColumnsStatements$default (LMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
