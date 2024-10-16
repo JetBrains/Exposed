@@ -31,7 +31,7 @@ private fun checkReference(reference: Column<*>, factoryTable: IdTable<*>): Map<
  * @param reference The reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the parent entity referenced by the child entity.
  */
-class Reference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<ID>>(
+class Reference<REF : Any, ID : Any, out Target : Entity<ID>>(
     val reference: Column<REF>,
     val factory: EntityClass<ID, Target>,
     references: Map<Column<*>, Column<*>>? = null
@@ -46,7 +46,7 @@ class Reference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<
  * @param reference The nullable reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the parent entity optionally referenced by the child entity.
  */
-class OptionalReference<REF : Comparable<REF>, ID : Comparable<ID>, out Target : Entity<ID>>(
+class OptionalReference<REF : Any, ID : Any, out Target : Entity<ID>>(
     val reference: Column<REF?>,
     val factory: EntityClass<ID, Target>,
     references: Map<Column<*>, Column<*>>? = null
@@ -61,7 +61,7 @@ class OptionalReference<REF : Comparable<REF>, ID : Comparable<ID>, out Target :
  * @param reference The reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that references the parent entity.
  */
-internal class BackReference<ParentID : Comparable<ParentID>, out Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, in Child : Entity<ChildID>, REF>(
+internal class BackReference<ParentID : Any, out Parent : Entity<ParentID>, ChildID : Any, in Child : Entity<ChildID>, REF>(
     reference: Column<REF>,
     factory: EntityClass<ParentID, Parent>,
     references: Map<Column<*>, Column<*>>? = null
@@ -79,7 +79,7 @@ internal class BackReference<ParentID : Comparable<ParentID>, out Parent : Entit
  * @param reference The nullable reference column defined on the child entity's associated table.
  * @param factory The [EntityClass] associated with the child entity that optionally references the parent entity.
  */
-class OptionalBackReference<ParentID : Comparable<ParentID>, out Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, in Child : Entity<ChildID>, REF>(
+class OptionalBackReference<ParentID : Any, out Parent : Entity<ParentID>, ChildID : Any, in Child : Entity<ChildID>, REF>(
     reference: Column<REF?>,
     factory: EntityClass<ParentID, Parent>,
     references: Map<Column<*>, Column<*>>? = null
@@ -98,7 +98,7 @@ class OptionalBackReference<ParentID : Comparable<ParentID>, out Parent : Entity
  * @param factory The [EntityClass] associated with the child entity that references the parent entity.
  * @param cache Whether loaded reference entities should be stored in the [EntityCache].
  */
-open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
+open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any, out Child : Entity<ChildID>, REF>(
     val reference: Column<REF>,
     val factory: EntityClass<ChildID, Child>,
     val cache: Boolean,
@@ -142,7 +142,7 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
         } else {
             value as CompositeID
             allReferences.map { (child, parent) ->
-                val parentValue = value[parent as Column<EntityID<Comparable<Any?>>>].value
+                val parentValue = value[parent as Column<EntityID<Any>>].value
                 EqOp(child, child.wrap((parentValue as? DaoEntityID<*>)?.value ?: parentValue))
             }.compoundAnd()
         }
@@ -192,7 +192,7 @@ open class Referrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentI
     replaceWith = ReplaceWith("Referrers"),
     level = DeprecationLevel.WARNING
 )
-class OptionalReferrers<ParentID : Comparable<ParentID>, in Parent : Entity<ParentID>, ChildID : Comparable<ChildID>, out Child : Entity<ChildID>, REF>(
+class OptionalReferrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any, out Child : Entity<ChildID>, REF>(
     reference: Column<REF?>,
     factory: EntityClass<ChildID, Child>,
     cache: Boolean,
@@ -213,7 +213,7 @@ private fun <SRC : Entity<*>> filterRelationsForEntity(
 }
 
 @Suppress("UNCHECKED_CAST", "NestedBlockDepth", "ComplexMethod", "LongMethod")
-private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
+private fun <ID : Any> List<Entity<ID>>.preloadRelations(
     vararg relations: KProperty1<out Entity<*>, Any?>,
     nodesVisited: MutableSet<EntityClass<*, *>> = mutableSetOf()
 ) {
@@ -268,14 +268,14 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
     directRelations.forEach { prop ->
         when (val refObject = getReferenceObjectFromDelegatedProperty(entity, prop)) {
             is Reference<*, *, *> -> {
-                (refObject as Reference<Comparable<Comparable<*>>, *, Entity<*>>).allReferences.let { refColumns ->
+                (refObject as Reference<*, *, Entity<*>>).allReferences.let { refColumns ->
                     val isSingleIdReference = hasSingleReferenceWithReferee(refColumns)
                     val delegateRefColumn = refObject.reference
                     this.map { entity ->
                         entity.getReferenceId(delegateRefColumn, refColumns, isSingleIdReference) as ID
                     }.takeIf { it.isNotEmpty() }?.let { refIds ->
                         val condition = if (isSingleIdReference) {
-                            val castReferee = (delegateRefColumn as Column<ID>).referee()!!
+                            val castReferee = (delegateRefColumn as Column<ID>).referee<ID>()!!
                             val baseReferee = castReferee.takeUnless {
                                 it.columnType is EntityIDColumnType<*> && refIds.first() !is EntityID<*>
                             } ?: (castReferee.columnType as EntityIDColumnType<ID>).idColumn
@@ -289,14 +289,14 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                 }
             }
             is OptionalReference<*, *, *> -> {
-                (refObject as OptionalReference<Comparable<Comparable<*>>, *, Entity<*>>).allReferences.let { refColumns ->
+                (refObject as OptionalReference<*, *, Entity<*>>).allReferences.let { refColumns ->
                     val isSingleIdReference = hasSingleReferenceWithReferee(refColumns)
                     val delegateRefColumn = refObject.reference
                     this.mapNotNull { entity ->
                         entity.getReferenceId(delegateRefColumn, refColumns, isSingleIdReference) as? ID
                     }.takeIf { it.isNotEmpty() }?.let { refIds ->
                         val condition = if (isSingleIdReference) {
-                            (delegateRefColumn as Column<ID>).referee()!! inList refIds.distinct()
+                            (delegateRefColumn as Column<ID>).referee<ID>()!! inList refIds.distinct()
                         } else {
                             refColumns.values.toList() inList (refIds.distinct() as List<CompositeID>)
                         }
@@ -320,7 +320,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
                 }
             }
             is InnerTableLink<*, *, *, *> -> {
-                (refObject as InnerTableLink<ID, Entity<ID>, Comparable<Comparable<*>>, Entity<Comparable<Comparable<*>>>>).let { innerTableLink ->
+                (refObject as InnerTableLink<ID, Entity<ID>, Any, Entity<Any>>).let { innerTableLink ->
                     innerTableLink.target.warmUpLinkedReferences(
                         references = this.map { it.id },
                         sourceRefColumn = innerTableLink.sourceColumn,
@@ -391,7 +391,7 @@ private fun <ID : Comparable<ID>> List<Entity<ID>>.preloadRelations(
  * @param relations The reference fields of the entities, as [KProperty]s, which should be loaded.
  * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.preloadRelationAtDepth
  */
-fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.with(vararg relations: KProperty1<out REF, Any?>): L {
+fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.with(vararg relations: KProperty1<out REF, Any?>): L {
     toList().apply {
         (this@with as? LazySizedIterable<SRC>)?.loadedResult = this
         if (any { it.isNewEntity() }) {
@@ -410,7 +410,7 @@ fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterab
  * @param relations The reference fields of this entity, as [KProperty]s, which should be loaded.
  * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
  */
-fun <SRCID : Comparable<SRCID>, SRC : Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>): SRC = apply {
+fun <SRCID : Any, SRC : Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>): SRC = apply {
     listOf(this).with(*relations)
 }
 
@@ -426,6 +426,6 @@ internal fun allReferencesMatch(allReferences: Map<Column<*>, Column<*>>, parent
 @Suppress("UNCHECKED_CAST")
 internal fun getCompositeID(entries: () -> List<Pair<Column<*>, *>>): CompositeID = CompositeID {
     entries().forEach { (key, value) ->
-        it[key as Column<EntityID<Comparable<Any>>>] = value as Comparable<Any>
+        it[key as Column<EntityID<Any>>] = value as Any
     }
 }

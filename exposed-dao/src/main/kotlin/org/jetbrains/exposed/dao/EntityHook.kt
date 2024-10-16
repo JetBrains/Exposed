@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionScope
-import java.util.Deque
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -36,7 +36,7 @@ data class EntityChange(
  * Returns the actual [Entity] instance associated with [this][EntityChange] event,
  * or `null` if the entity is not found.
  */
-fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(): T? =
+fun <ID : Any, T : Entity<ID>> EntityChange.toEntity(): T? =
     (entityClass as EntityClass<ID, T>).findById(entityId as EntityID<ID>)
 
 /**
@@ -44,7 +44,7 @@ fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(): T? =
  * or `null` if either its [EntityClass] type is neither equivalent to nor a subclass of [klass],
  * or if the entity is not found.
  */
-fun <ID : Comparable<ID>, T : Entity<ID>> EntityChange.toEntity(klass: EntityClass<ID, T>): T? {
+fun <ID : Any, T : Entity<ID>> EntityChange.toEntity(klass: EntityClass<ID, T>): T? {
     if (!entityClass.isAssignableTo(klass)) return null
     return toEntity<ID, T>()
 }

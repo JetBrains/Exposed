@@ -7,7 +7,7 @@ import java.util.*
 /** Base class representing a producer of [EntityID] instances.  */
 interface EntityIDFactory {
     /** Returns a new [EntityID] that holds a [value] of type [T], for the specified [table]. */
-    fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T>
+    fun <T : Any> createEntityID(value: T, table: IdTable<T>): EntityID<T>
 }
 
 /** Class responsible for locating and providing the appropriate functions to produce [EntityID] instances. */
@@ -16,14 +16,14 @@ object EntityIDFunctionProvider {
     init {
         factory = ServiceLoader.load(EntityIDFactory::class.java, EntityIDFactory::class.java.classLoader).firstOrNull()
             ?: object : EntityIDFactory {
-                override fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
+                override fun <T : Any> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
                     return EntityID(value, table)
                 }
             }
     }
 
     /** Returns a new [EntityID] that holds a [value] of type [T], for the specified [table]. */
-    fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>) = factory.createEntityID(value, table)
+    fun <T : Any> createEntityID(value: T, table: IdTable<T>) = factory.createEntityID(value, table)
 }
 
 /**
@@ -31,14 +31,14 @@ object EntityIDFunctionProvider {
  *
  * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
  */
-abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
+abstract class IdTable<T : Any>(name: String = "") : Table(name) {
     /** The identity column of this [IdTable], for storing values of type [T] wrapped as [EntityID] instances. */
     abstract val id: Column<EntityID<T>>
 
-    private val _idColumns = HashSet<Column<out Comparable<*>>>()
+    private val _idColumns = HashSet<Column<out Any>>()
 
     /** All base columns that make up this [IdTable]'s identifier column. */
-    val idColumns: Set<Column<out Comparable<*>>>
+    val idColumns: Set<Column<out Any>>
         get() = _idColumns.ifEmpty {
             val message = "Table definition must include id columns. Please use Column.entityId() or IdTable.addIdColumn()."
             exposedLogger.error(message)
@@ -46,7 +46,7 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
         }
 
     /** Adds a column to [idColumns] so that it can be used as a component of the [id] property. */
-    protected fun <S : Comparable<S>> addIdColumn(newColumn: Column<EntityID<S>>) {
+    protected fun <S : Any> addIdColumn(newColumn: Column<EntityID<S>>) {
         if (_idColumns.isNotEmpty() && this !is CompositeIdTable) {
             val message = "CompositeIdTable should be used if multiple EntityID key columns are required"
             exposedLogger.error(message)
@@ -55,7 +55,7 @@ abstract class IdTable<T : Comparable<T>>(name: String = "") : Table(name) {
         _idColumns.add(newColumn)
     }
 
-    internal fun <S : Comparable<S>> addIdColumnInternal(newColumn: Column<EntityID<S>>) { addIdColumn(newColumn) }
+    internal fun <S : Any> addIdColumnInternal(newColumn: Column<EntityID<S>>) { addIdColumn(newColumn) }
 }
 
 /**
@@ -152,7 +152,7 @@ open class CompositeIdTable(name: String = "") : IdTable<CompositeID>(name) {
         (toCompare as? EntityID<CompositeID>) ?: error("toCompare must be an EntityID<CompositeID> value")
         return idColumns.map { column ->
             val otherValue = if (column in toCompare.value.values) {
-                toCompare.value[column as Column<EntityID<Comparable<Any>>>]
+                toCompare.value[column as Column<EntityID<Any>>]
             } else {
                 error("Comparison CompositeID is missing a key mapping for ${column.name}")
             }
