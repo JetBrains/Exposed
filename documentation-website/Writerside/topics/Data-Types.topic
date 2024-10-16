@@ -252,31 +252,52 @@
         </chapter>
     </chapter>
     <chapter title="How to use Array types" id="how-to-use-array-types">
-        <p>PostgreSQL and H2 databases support the explicit ARRAY data type.</p>
-        <p>Exposed currently only supports columns defined as one-dimensional arrays, with the stored contents being any
-            out-of-the-box or custom data type.
-            If the contents are of a type with a supported <code>ColumnType</code> in the <code>exposed-core</code>
-            module, the column can be simply defined with that type:</p>
+        <p>PostgreSQL and H2 databases support the explicit ARRAY data type,
+            with multi-dimensional arrays being supported by PostgreSQL.</p>
+
+        <p>Exposed allows defining columns as arrays, with the stored contents being any out-of-the-box or custom data type.
+            If the contents are of a type with a supported <code>ColumnType</code> in the <code>exposed-core</code> module,
+            the column can be simply defined with that type:</p>
 
         <code-block lang="kotlin">
             object Teams : Table(&quot;teams&quot;) {
+                // Single-dimensional arrays
                 val memberIds = array&lt;UUID&gt;(&quot;member_ids&quot;)
                 val memberNames = array&lt;String&gt;(&quot;member_names&quot;)
                 val budgets = array&lt;Double&gt;(&quot;budgets&quot;)
+
+                // Multi-dimensional arrays
+                val nestedMemberIds = array&lt;UUID, List&lt;List&lt;UUID&gt;&gt;&gt;(
+                    &quot;nested_member_ids&quot;, dimensions = 2
+                )
+                val hierarchicalMemberNames = array&lt;String, List&lt;List&lt;List&lt;String&gt;&gt;&gt;&gt;(
+                    &quot;hierarchical_member_names&quot;, dimensions = 3
+                )
             }
         </code-block>
+
         <p>If more control is needed over the base content type, or if the latter is user-defined or from a non-core
             module, the explicit type should be provided to the function:</p>
 
         <code-block lang="kotlin">
             object Teams : Table(&quot;teams&quot;) {
-                val memberIds = array&lt;UUID&gt;(&quot;member_ids&quot;)
+                // Single-dimensional arrays
                 val memberNames = array&lt;String&gt;(&quot;member_names&quot;, VarCharColumnType(colLength = 32))
                 val deadlines = array&lt;LocalDate&gt;(&quot;deadlines&quot;, KotlinLocalDateColumnType()).nullable()
-                val budgets = array&lt;Double&gt;(&quot;budgets&quot;)
                 val expenses = array&lt;Double?&gt;(&quot;expenses&quot;, DoubleColumnType()).default(emptyList())
+
+                // Multi-dimensional arrays
+                val nestedMemberIds = array&lt;UUID, List&lt;List&lt;UUID&gt;&gt;&gt;(
+                    &quot;nested_member_ids&quot;, dimensions = 2
+                )
+                val hierarchicalMemberNames = array&lt;String, List&lt;List&lt;List&lt;String&gt;&gt;&gt;&gt;(
+                    &quot;hierarchical_member_names&quot;,
+                    VarCharColumnType(colLength = 32),
+                    dimensions = 3
+                )
             }
         </code-block>
+
         <p>This will prevent an exception being thrown if Exposed cannot find an associated column mapping for the
             defined type.
             Null array contents are allowed, and the explicit column type should be provided for these columns as
@@ -285,55 +306,18 @@
 
         <code-block lang="kotlin">
             Teams.insert {
+                // Single-dimensional arrays
                 it[memberIds] = List(5) { UUID.randomUUID() }
                 it[memberNames] = List(5) { i -&gt; &quot;Member ${'A' + i}&quot; }
                 it[budgets] = listOf(9999.0)
+
+                // Multi-dimensional arrays
+                it[nestedMemberIds] = List(5) { List(5) { UUID.randomUUID() } }
+                it[hierarchicalMemberNames] = List(3) { List(3) { List(3) {
+                        i -> "Member ${'A' + i}"
+                } } }
             }
         </code-block>
-        <chapter title="Multi-dimensional arrays" id="how-to-use-multi-dimensional-array-types">
-            <p>PostgreSQL database supports the explicit ARRAY data type, which includes support for multi-dimensional arrays.</p>
-            <p>Exposed supports columns defined as multi-dimensional arrays, with the stored contents being any
-                out-of-the-box or custom data type.
-                If the contents are of a type with a supported <code>ColumnType</code> in the <code>exposed-core</code>
-                module, the column can be simply defined with that type:</p>
-
-            <code-block lang="kotlin">
-                object Teams : Table("teams") {
-                    val nestedMemberIds = array&lt;UUID, List&lt;List&lt;UUID&gt;&gt;&gt;(
-                        "nested_member_ids", dimensions = 2
-                    )
-                    val hierarchicalMemberNames = array&lt;String, List&lt;List&lt;List&lt;String&gt;&gt;&gt;&gt;(
-                        "member_names", dimensions = 3
-                    )
-                }
-            </code-block>
-            <p>If more control is needed over the base content type, or if the latter is user-defined or from a non-core
-                module, the explicit type should be provided to the function:</p>
-
-            <code-block lang="kotlin">
-                object Teams : Table("teams") {
-                    val nestedMemberIds = array&lt;UUID, List&lt;List&lt;UUID&gt;&gt;&gt;(
-                        "nested_member_ids", dimensions = 2
-                    )
-                    val hierarchicalMemberNames = array&lt;String, List&lt;List&lt;List&lt;String&gt;&gt;&gt;&gt;(
-                        "hierarchical_member_names",
-                        VarCharColumnType(colLength = 32),
-                        dimensions = 3
-                    )
-                }
-            </code-block>
-
-            <p>A multi-dimensional array column accepts inserts and retrieves stored array contents as a Kotlin nested <code>List</code>:</p>
-
-            <code-block lang="kotlin">
-                Teams.insert {
-                    it[nestedMemberIds] = List(5) { List(5) { UUID.randomUUID() } }
-                    it[hierarchicalMemberNames] = List(3) { List(3) { List(3) {
-                            i -> "Member ${'A' + i}"
-                    } } }
-                }
-            </code-block>
-        </chapter>
         <chapter title="Array Functions" id="array-functions">
             <p>A single element in a stored array can be accessed using the index reference <code>get()</code> operator:
             </p>

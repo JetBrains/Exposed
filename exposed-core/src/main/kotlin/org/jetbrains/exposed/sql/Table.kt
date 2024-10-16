@@ -955,7 +955,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
      *
      * @return A column instance that represents a multi-dimensional list of elements of type [T].
-     * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
      * @throws IllegalStateException If no column type mapping is found.
      */
     inline fun <reified T : Any, R : List<Any>> Table.array(name: String, maximumCardinality: List<Int>? = null, dimensions: Int): Column<R> {
@@ -976,7 +975,6 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * **Note:** Providing an array size limit when using the PostgreSQL dialect is allowed, but this value will be ignored by the database.
      *
      * @return A column instance that represents a multi-dimensional list of elements of type [E].
-     * @throws IllegalArgumentException If [dimensions] is less than or equal to 1.
      * @throws IllegalStateException If no column type mapping is found.
      */
     fun <E, R : List<Any?>> Table.array(name: String, columnType: ColumnType<E & Any>, maximumCardinality: List<Int>? = null, dimensions: Int): Column<R> =
