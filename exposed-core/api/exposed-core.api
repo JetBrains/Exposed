@@ -205,9 +205,12 @@ public final class org/jetbrains/exposed/sql/AndOp : org/jetbrains/exposed/sql/C
 public final class org/jetbrains/exposed/sql/ArrayColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Ljava/lang/Integer;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Ljava/util/List;I)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Ljava/util/List;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/ColumnType;
 	public final fun getDelegateType ()Ljava/lang/String;
-	public final fun getMaximumCardinality ()Ljava/lang/Integer;
+	public final fun getDimensions ()I
+	public final fun getMaximumCardinality ()Ljava/util/List;
 	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueAsDefaultString (Ljava/util/List;)Ljava/lang/String;
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
@@ -219,8 +222,6 @@ public final class org/jetbrains/exposed/sql/ArrayColumnType : org/jetbrains/exp
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/util/List;
-	public synthetic fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun valueToString (Ljava/util/List;)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/AutoIncColumnType : org/jetbrains/exposed/sql/IColumnType {
@@ -2467,7 +2468,9 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public fun <init> (Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun array (Ljava/lang/String;Lorg/jetbrains/exposed/sql/ColumnType;Ljava/lang/Integer;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun array (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Lorg/jetbrains/exposed/sql/ColumnType;Ljava/util/List;I)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun array$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Lorg/jetbrains/exposed/sql/ColumnType;Ljava/lang/Integer;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
+	public static synthetic fun array$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Lorg/jetbrains/exposed/sql/ColumnType;Ljava/util/List;IILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun autoGenerate (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun autoIncrement (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun autoIncrement (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Sequence;)Lorg/jetbrains/exposed/sql/Column;
