@@ -112,7 +112,7 @@ data class ForeignKeyConstraint(
     val fkName: String
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
             name ?: (
-                "fk_${fromTable.tableNameWithoutSchemeSanitized}_${from.joinToString("_") { it.name }}__" +
+                "fk_${fromTable.tableNameWithoutSchemeSanitized.replace('.', '_')}_${from.joinToString("_") { it.name }}__" +
                     target.joinToString("_") { it.name }
                 )
         ).inProperCase()
