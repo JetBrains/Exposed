@@ -1,7 +1,5 @@
-public final class org/jetbrains/exposed/dao/id/CompositeID : java/lang/Comparable {
+public final class org/jetbrains/exposed/dao/id/CompositeID {
 	public static final field Companion Lorg/jetbrains/exposed/dao/id/CompositeID$Companion;
-	public synthetic fun compareTo (Ljava/lang/Object;)I
-	public fun compareTo (Lorg/jetbrains/exposed/dao/id/CompositeID;)I
 	public final fun contains (Lorg/jetbrains/exposed/sql/Column;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun get (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Object;
@@ -23,11 +21,9 @@ public class org/jetbrains/exposed/dao/id/CompositeIdTable : org/jetbrains/expos
 	public final fun getId ()Lorg/jetbrains/exposed/sql/Column;
 }
 
-public class org/jetbrains/exposed/dao/id/EntityID : java/lang/Comparable {
+public class org/jetbrains/exposed/dao/id/EntityID {
 	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/dao/id/IdTable;)V
 	protected fun <init> (Lorg/jetbrains/exposed/dao/id/IdTable;Ljava/lang/Object;)V
-	public synthetic fun compareTo (Ljava/lang/Object;)I
-	public fun compareTo (Lorg/jetbrains/exposed/dao/id/EntityID;)I
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getTable ()Lorg/jetbrains/exposed/dao/id/IdTable;
 	public final fun getValue ()Ljava/lang/Object;

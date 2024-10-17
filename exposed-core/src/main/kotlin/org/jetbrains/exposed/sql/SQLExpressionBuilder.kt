@@ -66,10 +66,10 @@ fun <T : String?> Expression<T>.locate(substring: String): Locate<T> = Locate(th
 // General-Purpose Aggregate Functions
 
 /** Returns the minimum value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min<T, S>(this, this.columnType as IColumnType<T>)
+fun <T : Any, S : T?> ExpressionWithColumnType<in S>.min(): Min<T, S> = Min<T, S>(this, this.columnType as IColumnType<T>)
 
 /** Returns the maximum value of this expression across all non-null input values, or `null` if there are no non-null values. */
-fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max<T, S>(this, this.columnType as IColumnType<T>)
+fun <T : Any, S : T?> ExpressionWithColumnType<in S>.max(): Max<T, S> = Max<T, S>(this, this.columnType as IColumnType<T>)
 
 /** Returns the average (arithmetic mean) value of this expression across all non-null input values, or `null` if there are no non-null values. */
 fun <T : Comparable<T>, S : T?> ExpressionWithColumnType<S>.avg(scale: Int = 2): Avg<T, S> = Avg<T, S>(this, scale)

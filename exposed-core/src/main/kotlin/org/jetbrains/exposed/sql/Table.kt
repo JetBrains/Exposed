@@ -1005,15 +1005,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <N : Any> Column<N>.autoIncrement(sequence: Sequence): Column<N> =
         cloneWithAutoInc(sequence).also { replaceColumn(this, it) }
 
-    /**
-     * Make @receiver column an auto-increment column to generate its values in a database.
-     * **Note:** Only integer and long columns are supported (signed and unsigned types).
-     * Some databases, like PostgreSQL, support auto-increment via sequences.
-     * In this case a name should be provided using the [idSeqName] param and Exposed will create a sequence.
-     * If a sequence already exists in the database just use its name in [idSeqName].
-     *
-     * @param idSeqName an optional parameter to provide a sequence name
-     */
+    @Deprecated(
+        message = "This function will be removed in future releases.",
+        replaceWith = ReplaceWith("autoIncrement(idSeqName)"),
+        level = DeprecationLevel.WARNING
+    )
     fun <N : Any> Column<EntityID<N>>.autoinc(idSeqName: String? = null): Column<EntityID<N>> =
         cloneWithAutoInc(idSeqName).also { replaceColumn(this, it) }
 
@@ -1069,7 +1065,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param ref A column from another table which will be used as a "parent".
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.JoinTests.testJoin04
      */
-    infix fun <T : Comparable<T>, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(
+    infix fun <T : Any, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(
         ref,
         null,
         null,
@@ -1089,7 +1085,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param fkName Optional foreign key constraint name.
      * @sample org.jetbrains.exposed.sql.tests.sqlite.ForeignKeyConstraintTests.testUpdateAndDeleteRulesReadCorrectlyWhenSpecifiedInChildTable
      */
-    fun <T : Comparable<T>, S : T, C : Column<S>> C.references(
+    fun <T : Any, S : T, C : Column<S>> C.references(
         ref: Column<T>,
         onDelete: ReferenceOption? = null,
         onUpdate: ReferenceOption? = null,
@@ -1147,7 +1143,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param fkName Optional foreign key constraint name.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Orders
      */
-    fun <T : Comparable<T>> reference(
+    fun <T : Any> reference(
         name: String,
         refColumn: Column<T>,
         onDelete: ReferenceOption? = null,
@@ -1230,7 +1226,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param fkName Optional foreign key constraint name.
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Posts
      */
-    fun <T : Comparable<T>> optReference(
+    fun <T : Any> optReference(
         name: String,
         refColumn: Column<T>,
         onDelete: ReferenceOption? = null,
