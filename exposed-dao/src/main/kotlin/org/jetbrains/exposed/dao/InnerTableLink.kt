@@ -22,7 +22,7 @@ import kotlin.reflect.KProperty
  * this will be inferred from the provided intermediate [table] columns.
  */
 @Suppress("UNCHECKED_CAST")
-class InnerTableLink<SID : Comparable<SID>, Source : Entity<SID>, ID : Comparable<ID>, Target : Entity<ID>>(
+class InnerTableLink<SID : Any, Source : Entity<SID>, ID : Any, Target : Entity<ID>>(
     val table: Table,
     sourceTable: IdTable<SID>,
     val target: EntityClass<ID, Target>,

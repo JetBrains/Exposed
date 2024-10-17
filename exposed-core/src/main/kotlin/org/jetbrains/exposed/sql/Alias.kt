@@ -80,7 +80,7 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
             delegateIdColumns.map { column ->
                 val delegateColumn = originalColumn(column)
                 val otherValue = if (delegateColumn in toCompare.value.values) {
-                    toCompare.value[delegateColumn as Column<EntityID<Comparable<Any>>>]
+                    toCompare.value[delegateColumn as Column<EntityID<Any>>]
                 } else {
                     error("Comparison CompositeID is missing a key mapping for ${delegateColumn?.name}")
                 }

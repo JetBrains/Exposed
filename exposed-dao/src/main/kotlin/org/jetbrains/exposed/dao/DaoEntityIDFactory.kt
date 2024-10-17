@@ -9,7 +9,7 @@ import org.jetbrains.exposed.dao.id.IdTable
  * [EntityClass] instances using a data access object pattern.
  */
 class DaoEntityIDFactory : EntityIDFactory {
-    override fun <T : Comparable<T>> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
+    override fun <T : Any> createEntityID(value: T, table: IdTable<T>): EntityID<T> {
         return DaoEntityID(value, table)
     }
 }

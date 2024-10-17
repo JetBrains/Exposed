@@ -235,7 +235,7 @@ internal fun Column<*>.isEntityIdentifier(): Boolean {
 /**
  * Identity column type for storing unique [EntityID] values.
  */
-class EntityIDColumnType<T : Comparable<T>>(
+class EntityIDColumnType<T : Any>(
     /** The underlying wrapped column storing the identity values. */
     val idColumn: Column<T>
 ) : ColumnType<EntityID<T>>() {

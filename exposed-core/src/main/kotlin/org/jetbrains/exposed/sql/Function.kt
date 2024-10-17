@@ -167,7 +167,7 @@ class Locate<T : String?>(val expr: Expression<T>, val substring: String) : Func
 /**
  * Represents an SQL function that returns the minimum value of [expr] across all non-null input values, or `null` if there are no non-null values.
  */
-class Min<T : Comparable<T>, in S : T?>(
+class Min<T : Any, in S : T?>(
     /** Returns the expression from which the minimum value is obtained. */
     val expr: Expression<in S>,
     columnType: IColumnType<T>
@@ -182,7 +182,7 @@ class Min<T : Comparable<T>, in S : T?>(
 /**
  * Represents an SQL function that returns the maximum value of [expr] across all non-null input values, or `null` if there are no non-null values.
  */
-class Max<T : Comparable<T>, in S : T?>(
+class Max<T : Any, in S : T?>(
     /** Returns the expression from which the maximum value is obtained. */
     val expr: Expression<in S>,
     columnType: IColumnType<T>

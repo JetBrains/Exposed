@@ -52,7 +52,7 @@ open class EntityFieldWithTransform<Unwrapped, Wrapped>(
  *
  * @param id The unique stored identity value for the mapped record.
  */
-open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
+open class Entity<ID : Any>(val id: EntityID<ID>) {
     /** The associated [EntityClass] that manages this [Entity] instance. */
     var klass: EntityClass<ID, Entity<ID>> by Delegates.notNull()
         internal set
@@ -120,7 +120,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.getValue(
+    operator fun <REF : Any, RID : Any, T : Entity<RID>> Reference<REF, RID, T>.getValue(
         o: Entity<ID>,
         desc: KProperty<*>
     ): T {
@@ -154,7 +154,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                             reference.referee!!.getValue(this, desc) == refValue
                         } else {
                             allReferences.all {
-                                it.value.getValue(this, desc) == (refValue as CompositeID)[it.key as Column<EntityID<Comparable<Any>>>]
+                                it.value.getValue(this, desc) == (refValue as CompositeID)[it.key as Column<EntityID<Any>>]
                             }
                         }
                     }) {
@@ -167,7 +167,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
         }
     }
 
-    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> Reference<REF, RID, T>.setValue(
+    operator fun <REF : Any, RID : Any, T : Entity<RID>> Reference<REF, RID, T>.setValue(
         o: Entity<ID>,
         desc: KProperty<*>,
         value: T
@@ -182,7 +182,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.getValue(
+    operator fun <REF : Any, RID : Any, T : Entity<RID>> OptionalReference<REF, RID, T>.getValue(
         o: Entity<ID>,
         desc: KProperty<*>
     ): T? {
@@ -216,7 +216,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
                             reference.referee!!.getValue(this, desc) == refValue
                         } else {
                             allReferences.all {
-                                it.value.getValue(this, desc) == (refValue as CompositeID)[it.key as Column<EntityID<Comparable<Any>>>]
+                                it.value.getValue(this, desc) == (refValue as CompositeID)[it.key as Column<EntityID<Any>>]
                             }
                         }
                     }) {
@@ -230,7 +230,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <REF : Comparable<REF>, RID : Comparable<RID>, T : Entity<RID>> OptionalReference<REF, RID, T>.setValue(
+    operator fun <REF : Any, RID : Any, T : Entity<RID>> OptionalReference<REF, RID, T>.setValue(
         o: Entity<ID>,
         desc: KProperty<*>,
         value: T?
@@ -324,7 +324,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.City
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityHookTestData.UsersToCities
      */
-    infix fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(
+    infix fun <TID : Any, Target : Entity<TID>> EntityClass<TID, Target>.via(
         table: Table
     ): InnerTableLink<ID, Entity<ID>, TID, Target> =
         InnerTableLink(table, this@Entity.id.table, this@via)
@@ -341,7 +341,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.Node
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.ViaTests.NodeToNodes
      */
-    fun <TID : Comparable<TID>, Target : Entity<TID>> EntityClass<TID, Target>.via(
+    fun <TID : Any, Target : Entity<TID>> EntityClass<TID, Target>.via(
         sourceColumn: Column<EntityID<ID>>,
         targetColumn: Column<EntityID<TID>>
     ) = InnerTableLink(sourceColumn.table, this@Entity.id.table, this@via, sourceColumn, targetColumn)
@@ -433,7 +433,7 @@ open class Entity<ID : Comparable<ID>>(val id: EntityID<ID>) {
     internal fun writeIdColumnValue(table: IdTable<*>, value: EntityID<*>) {
         (value._value as? CompositeID)?.let { id ->
             table.idColumns.forEach { column ->
-                id[column as Column<EntityID<Comparable<Any>>>]?.let {
+                id[column as Column<EntityID<Any>>]?.let {
                     writeValues[column as Column<Any?>] = it
                 }
             }
