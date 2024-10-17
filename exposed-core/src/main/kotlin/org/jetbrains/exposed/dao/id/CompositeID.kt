@@ -3,7 +3,7 @@ package org.jetbrains.exposed.dao.id
 import org.jetbrains.exposed.sql.Column
 
 /** Class representing a mapping of each composite primary key column to its stored identity value. */
-class CompositeID private constructor() : Comparable<CompositeID> {
+class CompositeID private constructor() {
     internal val values: MutableMap<Column<*>, Any?> = HashMap()
 
     @Suppress("UNCHECKED_CAST")
@@ -48,22 +48,6 @@ class CompositeID private constructor() : Comparable<CompositeID> {
         if (other !is CompositeID) return false
 
         return values == other.values
-    }
-
-    override fun compareTo(other: CompositeID): Int {
-        val compareSize = compareValues(other.values.size, values.size)
-        if (compareSize != 0) return compareSize
-
-        values.entries.forEach { (column, idValue) ->
-            if (!other.values.containsKey(column)) return -1
-            require(idValue is Comparable<*>) { "This stored identity value must implement Comparable" }
-            val otherValue = other.values[column]
-            require(otherValue is Comparable<*>) { "This stored identity value must implement Comparable" }
-            compareValues(idValue, otherValue).let {
-                if (it != 0) return it
-            }
-        }
-        return 0
     }
 
     companion object {

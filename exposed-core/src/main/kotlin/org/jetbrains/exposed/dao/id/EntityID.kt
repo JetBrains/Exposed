@@ -11,7 +11,7 @@ package org.jetbrains.exposed.dao.id
  * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.YTable
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertWithPredefinedId
  */
-open class EntityID<T : Any> protected constructor(val table: IdTable<T>, id: T?) : Comparable<EntityID<T>> {
+open class EntityID<T : Any> protected constructor(val table: IdTable<T>, id: T?) {
     constructor(id: T, table: IdTable<T>) : this(table, id)
 
     @Suppress("VariableNaming")
@@ -40,11 +40,5 @@ open class EntityID<T : Any> protected constructor(val table: IdTable<T>, id: T?
         if (other !is EntityID<*>) return false
 
         return other._value == _value && other.table == table
-    }
-
-    override fun compareTo(other: EntityID<T>): Int {
-        require(value is Comparable<*>) { "This stored identity value must implement Comparable" }
-        require(other.value is Comparable<*>) { "The other stored identity value must implement Comparable" }
-        return (value as Comparable<T>).compareTo(other.value)
     }
 }

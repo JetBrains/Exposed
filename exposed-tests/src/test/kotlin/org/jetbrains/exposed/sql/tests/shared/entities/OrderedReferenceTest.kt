@@ -101,14 +101,14 @@ class OrderedReferenceTest : DatabaseTestsBase() {
             fun assertRatingsOrdered(current: UserRatingMultiColumn, prev: UserRatingMultiColumn) {
                 assertTrue(current.value <= prev.value)
                 if (current.value == prev.value) {
-                    assertTrue(current.id <= prev.id)
+                    assertTrue(current.id.value <= prev.id.value)
                 }
             }
 
             fun assertNullableRatingsOrdered(current: UserNullableRatingMultiColumn, prev: UserNullableRatingMultiColumn) {
                 assertTrue(current.value <= prev.value)
                 if (current.value == prev.value) {
-                    assertTrue(current.id <= prev.id)
+                    assertTrue(current.id.value <= prev.id.value)
                 }
             }
 
@@ -140,7 +140,7 @@ class OrderedReferenceTest : DatabaseTestsBase() {
             fun assertRatingsOrdered(current: UserRatingChainedColumn, prev: UserRatingChainedColumn) {
                 assertTrue(current.value <= prev.value)
                 if (current.value == prev.value) {
-                    assertTrue(current.id <= prev.id)
+                    assertTrue(current.id.value <= prev.id.value)
                 }
             }
 
