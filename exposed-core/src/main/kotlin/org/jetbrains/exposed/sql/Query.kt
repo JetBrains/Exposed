@@ -95,7 +95,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * property used as the receiver and the current [set] as an argument.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
      */
-    fun adjustSelect(body: ColumnSet.(FieldSet) -> Query): Query = apply { set = set.source.body(set).set }
+    inline fun adjustSelect(body: ColumnSet.(FieldSet) -> Query): Query = apply { set = set.source.body(set).set }
 
     /**
      * Assigns a new column set, either a [Table] or a [Join], by changing the `source` property of this query's [set],
@@ -104,7 +104,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @param body Builder for the new column set, with the previous column set value as the receiver.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
      */
-    fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
+    inline fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
         return adjustSelect { oldSlice -> body().select(oldSlice.fields) }
     }
 
