@@ -69,6 +69,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     override fun copyTo(other: Query) {
         super.copyTo(other)
         other.distinct = distinct
+        other.distinctOn = distinctOn
         other.groupedByColumns = groupedByColumns.toMutableList()
         other.having = having
         other.forUpdate = forUpdate
@@ -86,6 +87,9 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     }
 
     override fun withDistinct(value: Boolean): Query = apply {
+        if (value) {
+            require(distinctOn == null) { "DISTINCT cannot be used with the DISTINCT ON modifier. Only one of them should be applied." }
+        }
         distinct = value
     }
 
@@ -99,6 +103,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @return The current `Query` instance with the `DISTINCT ON` clause applied.
      */
     fun withDistinctOn(vararg columns: Column<*>): Query = apply {
+        require(!distinct) { "DISTINCT ON cannot be used with the DISTINCT modifier. Only one of them should be applied." }
         distinctOn = (distinctOn ?: emptyList()) + columns
     }
 
@@ -113,6 +118,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @return The current `Query` instance with the `DISTINCT ON` clause and reordering applied.
      */
     fun withDistinctOn(vararg columns: Pair<Column<*>, SortOrder>): Query = apply {
+        require(!distinct) { "DISTINCT ON cannot be used with the DISTINCT modifier. Only one of them should be applied." }
         @Suppress("SpreadOperator")
         withDistinctOn(*columns.map { it.first }.toTypedArray())
         return orderBy(*columns)

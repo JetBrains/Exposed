@@ -7,9 +7,13 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 
 class DistinctOnTests : DatabaseTestsBase() {
+
+    private val distinctOnSupportedDb = TestDB.ALL_POSTGRES + TestDB.ALL_H2
+
     @Test
     fun testDistinctOn() {
         val tester = object : IntIdTable("distinct_function_test") {
@@ -17,7 +21,7 @@ class DistinctOnTests : DatabaseTestsBase() {
             val value2 = integer("value2")
         }
 
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.ALL_H2, tester) {
+        withTables(excludeSettings = TestDB.ALL - distinctOnSupportedDb, tester) {
             tester.batchInsert(
                 listOf(
                     listOf(1, 1), listOf(1, 2), listOf(1, 2),
@@ -52,6 +56,27 @@ class DistinctOnTests : DatabaseTestsBase() {
                 .withDistinctOn(tester.value2 to SortOrder.ASC)
                 .map { it[tester.value1] to it[tester.value2] }
             assertEqualLists(distinctBoth, distinctSequential)
+        }
+    }
+
+    @Test
+    fun testExceptions() {
+        val tester = object : IntIdTable("distinct_function_test") {
+            val value = integer("value1")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - distinctOnSupportedDb, tester) {
+            val query1 = tester.selectAll()
+                .withDistinct()
+            expectException<IllegalArgumentException> {
+                query1.withDistinctOn(tester.value)
+            }
+
+            val query2 = tester.selectAll()
+                .withDistinctOn(tester.value)
+            expectException<IllegalArgumentException> {
+                query2.withDistinct()
+            }
         }
     }
 }
