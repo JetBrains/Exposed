@@ -123,15 +123,23 @@ class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expre
     /** Returns an [Expression] containing only the string representation of this [alias]. */
     fun aliasOnlyExpression(): Expression<T> {
         return if (delegate is ExpressionWithColumnType<T>) {
-            object : Function<T>(delegate.columnType) {
+            object : AliasOnlyExpression<T>, Function<T>(delegate.columnType) {
+                override val origin: ExpressionAlias<T> = this@ExpressionAlias
+
                 override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(alias) }
             }
         } else {
-            object : Expression<T>() {
+            object : AliasOnlyExpression<T>, Expression<T>() {
+                override val origin: ExpressionAlias<T> = this@ExpressionAlias
+
                 override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(alias) }
             }
         }
     }
+}
+
+internal interface AliasOnlyExpression<T> {
+    val origin: ExpressionAlias<T>
 }
 
 /** Represents a temporary SQL identifier, [alias], for a [query]. */
