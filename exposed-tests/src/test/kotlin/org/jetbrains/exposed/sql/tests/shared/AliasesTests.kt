@@ -3,9 +3,9 @@ package org.jetbrains.exposed.sql.tests.shared
 import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData
@@ -260,6 +260,36 @@ class AliasesTests : DatabaseTestsBase() {
                 (counter[tester.id] eq t1.value) or (counter[tester.id] neq 123)
             }.single()
             assertEquals(99, result3[counter[tester.amount]])
+        }
+    }
+
+    @Test
+    fun testAliasFromInternalQuery() {
+        val tester1 = object : LongIdTable("tester1") {
+            val foo = varchar("foo", 255)
+        }
+
+        val tester2 = object : LongIdTable("tester2") {
+            val ref = long("ref")
+        }
+
+        withTables(tester1, tester2) {
+            val id = tester1.insertAndGetId { it[foo] = "foo" }
+            tester2.insert { it[ref] = id.value }
+
+            val idAlias = tester1.id.alias("idAlias")
+            val fooAlias = tester1.foo.alias("fooAlias")
+
+            val internalQuery = tester1
+                .select(idAlias, fooAlias)
+                .where { tester1.foo eq "foo" }
+                .alias("internalQuery")
+
+            val query = tester2
+                .innerJoin(internalQuery, { ref }, { internalQuery[idAlias] })
+                .selectAll()
+
+            assertEquals("foo", query.first()[internalQuery[fooAlias]])
         }
     }
 }

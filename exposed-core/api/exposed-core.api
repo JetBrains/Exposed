@@ -1441,6 +1441,7 @@ public final class org/jetbrains/exposed/sql/Join : org/jetbrains/exposed/sql/Co
 	public fun describe (Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun fullJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public fun getColumns ()Ljava/util/List;
+	public fun getFields ()Ljava/util/List;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/ColumnSet;
 	public fun innerJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public fun join (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/JoinType;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;ZLkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
