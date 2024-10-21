@@ -87,7 +87,7 @@ class EntityCache(private val transaction: Transaction) {
      *
      * @return The entity that has this wrapped id value, or `null` if no entity was found.
      */
-    fun <ID : Comparable<ID>, T : Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? =
+    fun <ID : Any, T : Entity<ID>> find(f: EntityClass<ID, T>, id: EntityID<ID>): T? =
         getMap(f)[id.value] as T?
             ?: inserts[f.table]?.firstOrNull { it.id == id } as? T
             ?: initializingEntities.firstOrNull { it.klass == f && it.id == id } as? T
@@ -97,10 +97,10 @@ class EntityCache(private val transaction: Transaction) {
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityCacheTests.testPerTransactionEntityCacheLimit
      */
-    fun <ID : Comparable<ID>, T : Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
+    fun <ID : Any, T : Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
 
     /** Stores the specified [Entity] in this [EntityCache] using its associated [EntityClass] as the key. */
-    fun <ID : Comparable<ID>, T : Entity<ID>> store(f: EntityClass<ID, T>, o: T) {
+    fun <ID : Any, T : Entity<ID>> store(f: EntityClass<ID, T>, o: T) {
         getMap(f)[o.id.value] = o
     }
 
@@ -114,7 +114,7 @@ class EntityCache(private val transaction: Transaction) {
     }
 
     /** Removes the specified [Entity] from this [EntityCache] using its associated [table] as the key. */
-    fun <ID : Comparable<ID>, T : Entity<ID>> remove(table: IdTable<ID>, o: T) {
+    fun <ID : Any, T : Entity<ID>> remove(table: IdTable<ID>, o: T) {
         getMap(table).remove(o.id.value)
     }
 
@@ -132,12 +132,12 @@ class EntityCache(private val transaction: Transaction) {
     internal fun isEntityInInitializationState(entity: Entity<*>) = entity in initializingEntities
 
     /** Stores the specified [Entity] in this [EntityCache] as scheduled to be inserted into the database. */
-    fun <ID : Comparable<ID>, T : Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {
+    fun <ID : Any, T : Entity<ID>> scheduleInsert(f: EntityClass<ID, T>, o: T) {
         inserts.getOrPut(f.table) { LinkedIdentityHashSet() }.add(o as Entity<*>)
     }
 
     /** Stores the specified [Entity] in this [EntityCache] as scheduled to be updated in the database. */
-    fun <ID : Comparable<ID>, T : Entity<ID>> scheduleUpdate(f: EntityClass<ID, T>, o: T) {
+    fun <ID : Any, T : Entity<ID>> scheduleUpdate(f: EntityClass<ID, T>, o: T) {
         updates.getOrPut(f.table) { LinkedIdentityHashSet() }.add(o as Entity<*>)
     }
 

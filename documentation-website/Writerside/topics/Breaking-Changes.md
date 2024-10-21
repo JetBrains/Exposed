@@ -11,6 +11,14 @@
 * `ArrayColumnType` now supports multidimensional arrays and includes an additional generic parameter.
   If it was previously used for one-dimensional arrays with the parameter `T` like `ArrayColumnType<T>`,
   it should now be defined as `ArrayColumnType<T, List<T>>`. For instance, `ArrayColumnType<Int>` should now be `ArrayColumnType<Int, List<Int>>`.
+* `EntityID` and `CompositeID` no longer implement `Comparable` themselves, to allow their wrapped identity values to be of a type that is not
+  necessarily `Comparable`, like `kotlin.uuid.Uuid`.
+
+  Any use of an entity's `id` with Kotlin comparison operators or `compareTo()` will now require that the wrapped value be used directly:
+  `entity1.id < entity2.id` will need to become `entity1.id.value < entity2.id.value`. Any use of an entity's `id` with an Exposed function
+  that is also type restricted to `Comparable` (for example, `avg()`) will also require defining a new function. In this event, please
+  also leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-577) with a use case so the original function signature
+  can be potentially reassessed.
 
 ## 0.55.0
 * The `DeleteStatement` property `table` is now deprecated in favor of `targetsSet`, which holds a `ColumnSet` that may be a `Table` or `Join`.

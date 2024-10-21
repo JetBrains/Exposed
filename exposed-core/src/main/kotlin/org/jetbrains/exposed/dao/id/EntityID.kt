@@ -11,7 +11,7 @@ package org.jetbrains.exposed.dao.id
  * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData.YTable
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertWithPredefinedId
  */
-open class EntityID<T : Comparable<T>> protected constructor(val table: IdTable<T>, id: T?) : Comparable<EntityID<T>> {
+open class EntityID<T : Any> protected constructor(val table: IdTable<T>, id: T?) {
     constructor(id: T, table: IdTable<T>) : this(table, id)
 
     @Suppress("VariableNaming")
@@ -41,6 +41,4 @@ open class EntityID<T : Comparable<T>> protected constructor(val table: IdTable<
 
         return other._value == _value && other.table == table
     }
-
-    override fun compareTo(other: EntityID<T>): Int = value.compareTo(other.value)
 }

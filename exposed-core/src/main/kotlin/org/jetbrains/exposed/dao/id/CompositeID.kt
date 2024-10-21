@@ -3,12 +3,12 @@ package org.jetbrains.exposed.dao.id
 import org.jetbrains.exposed.sql.Column
 
 /** Class representing a mapping of each composite primary key column to its stored identity value. */
-class CompositeID private constructor() : Comparable<CompositeID> {
-    internal val values: MutableMap<Column<*>, Comparable<*>?> = HashMap()
+class CompositeID private constructor() {
+    internal val values: MutableMap<Column<*>, Any?> = HashMap()
 
     @Suppress("UNCHECKED_CAST")
     @JvmName("setWithEntityIdValue")
-    operator fun <T : Comparable<T>, ID : EntityID<T>> set(column: Column<ID>, value: T) {
+    operator fun <T : Any, ID : EntityID<T>> set(column: Column<ID>, value: T) {
         require(values.isEmpty() || values.keys.first().table == column.table) {
             "CompositeID key columns must all come from the same IdTable ${values.keys.first().table.tableName}"
         }
@@ -17,7 +17,7 @@ class CompositeID private constructor() : Comparable<CompositeID> {
 
     @Suppress("UNCHECKED_CAST")
     @JvmName("setWithNullableEntityIdValue")
-    operator fun <T : Comparable<T>, ID : EntityID<T>> set(column: Column<ID?>, value: T?) {
+    operator fun <T : Any, ID : EntityID<T>> set(column: Column<ID?>, value: T?) {
         require(column.columnType.nullable || value != null) {
             "Trying to set null to not nullable column $column"
         }
@@ -25,7 +25,7 @@ class CompositeID private constructor() : Comparable<CompositeID> {
     }
 
     @JvmName("setWithEntityID")
-    operator fun <T : Comparable<T>, ID : EntityID<T>> set(column: Column<ID>, value: ID) {
+    operator fun <T : Any, ID : EntityID<T>> set(column: Column<ID>, value: ID) {
         require(values.isEmpty() || values.keys.first().table == column.table) {
             "CompositeID key columns must all come from the same IdTable ${values.keys.first().table.tableName}"
         }
@@ -33,7 +33,7 @@ class CompositeID private constructor() : Comparable<CompositeID> {
     }
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T : Comparable<T>> get(column: Column<T>): T = values[column] as T
+    operator fun <T : Any> get(column: Column<T>): T = values[column] as T
 
     operator fun contains(column: Column<*>): Boolean = values.contains(column)
 
@@ -48,19 +48,6 @@ class CompositeID private constructor() : Comparable<CompositeID> {
         if (other !is CompositeID) return false
 
         return values == other.values
-    }
-
-    override fun compareTo(other: CompositeID): Int {
-        val compareSize = compareValues(other.values.size, values.size)
-        if (compareSize != 0) return compareSize
-
-        values.entries.forEach { (column, idValue) ->
-            if (!other.values.containsKey(column)) return -1
-            compareValues(idValue, other.values[column]).let {
-                if (it != 0) return it
-            }
-        }
-        return 0
     }
 
     companion object {
