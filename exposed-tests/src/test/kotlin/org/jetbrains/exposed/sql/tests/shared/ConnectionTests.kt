@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.vendors.ColumnMetadata
@@ -19,9 +18,7 @@ class ConnectionTests : DatabaseTestsBase() {
 
     @Test
     fun testGettingColumnMetadata() {
-        withDb(TestDB.H2_V2) {
-            SchemaUtils.create(People)
-
+        withTables(excludeSettings = TestDB.ALL - TestDB.H2_V2, People) {
             val columnMetadata = connection.metadata {
                 requireNotNull(columns(People)[People])
             }.toSet()
@@ -40,8 +37,6 @@ class ConnectionTests : DatabaseTestsBase() {
                 )
             }
             assertEquals(expected, columnMetadata)
-
-            SchemaUtils.drop(People)
         }
     }
 

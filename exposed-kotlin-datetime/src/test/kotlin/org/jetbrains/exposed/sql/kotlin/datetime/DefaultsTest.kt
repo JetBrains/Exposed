@@ -390,16 +390,10 @@ class DefaultsTest : DatabaseTestsBase() {
             val defaultTimeStamp = timestamp("default_time_stamp").defaultExpression(CurrentTimestamp)
         }
 
-        withDb {
-            try {
-                SchemaUtils.create(foo)
+        withTables(foo) {
+            val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
 
-                val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
-
-                assertTrue(actual.isEmpty())
-            } finally {
-                SchemaUtils.drop(foo)
-            }
+            assertTrue(actual.isEmpty())
         }
     }
 
@@ -568,15 +562,9 @@ class DefaultsTest : DatabaseTestsBase() {
         // SQLite does not support ALTER TABLE on a column that has a default value
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
         val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5
-        withDb(excludeSettings = unsupportedDatabases) {
-            try {
-                SchemaUtils.drop(tester)
-                SchemaUtils.create(tester)
-                val statements = SchemaUtils.addMissingColumnsStatements(tester)
-                assertEquals(0, statements.size)
-            } finally {
-                SchemaUtils.drop(tester)
-            }
+        withTables(excludeSettings = unsupportedDatabases, tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            assertEquals(0, statements.size)
         }
     }
 

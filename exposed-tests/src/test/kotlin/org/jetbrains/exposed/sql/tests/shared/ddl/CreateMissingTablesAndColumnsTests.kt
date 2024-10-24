@@ -827,37 +827,31 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             val province = char("province", 2)
         }
 
+        val taxValue = 123.456.toBigDecimal()
+        val addressValue = "A".repeat(16)
+        val zipValue = "BB".toByteArray()
+        val provinceValue = "CC"
+
         // SQLite doesn't support alter table with add column, so it doesn't generate alter statements
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            val taxValue = 123.456.toBigDecimal()
-            val addressValue = "A".repeat(16)
-            val zipValue = "BB".toByteArray()
-            val provinceValue = "CC"
-
-            try {
-                SchemaUtils.create(originalTable)
-
-                expectException<IllegalArgumentException> {
-                    originalTable.insert {
-                        it[tax] = taxValue
-                        it[address] = addressValue
-                        it[zip] = zipValue
-                        it[province] = provinceValue
-                    }
-                }
-
-                val alterStatements = SchemaUtils.statementsRequiredToActualizeScheme(newTable)
-                assertEquals(4, alterStatements.size)
-                alterStatements.forEach { exec(it) }
-
-                newTable.insert {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), originalTable) {
+            expectException<IllegalArgumentException> {
+                originalTable.insert {
                     it[tax] = taxValue
                     it[address] = addressValue
                     it[zip] = zipValue
                     it[province] = provinceValue
                 }
-            } finally {
-                SchemaUtils.drop(originalTable)
+            }
+
+            val alterStatements = SchemaUtils.statementsRequiredToActualizeScheme(newTable)
+            assertEquals(4, alterStatements.size)
+            alterStatements.forEach { exec(it) }
+
+            newTable.insert {
+                it[tax] = taxValue
+                it[address] = addressValue
+                it[zip] = zipValue
+                it[province] = provinceValue
             }
         }
     }

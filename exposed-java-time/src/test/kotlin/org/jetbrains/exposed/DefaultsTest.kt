@@ -387,16 +387,10 @@ class DefaultsTest : DatabaseTestsBase() {
             val defaultTimeStamp = timestamp("default_time_stamp").defaultExpression(CurrentTimestamp)
         }
 
-        withDb {
-            try {
-                SchemaUtils.create(foo)
+        withTables(foo) {
+            val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
 
-                val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
-
-                assertTrue(actual.isEmpty())
-            } finally {
-                SchemaUtils.drop(foo)
-            }
+            assertTrue(actual.isEmpty())
         }
     }
 

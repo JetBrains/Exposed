@@ -58,24 +58,18 @@ class BooleanColumnTypeTests : DatabaseTestsBase() {
                 .default(false)
         }
 
-        withDb {
-            try {
-                SchemaUtils.create(tester)
-
-                tester.insert {
-                    it[charBooleanColumn] = true
-                }
-
-                assertEquals(
-                    1,
-                    tester.select(tester.charBooleanColumn)
-                        .where { tester.charBooleanColumn eq true }
-                        .andWhere { tester.charBooleanColumnWithDefault eq false }
-                        .count()
-                )
-            } finally {
-                SchemaUtils.drop(tester)
+        withTables(tester) {
+            tester.insert {
+                it[charBooleanColumn] = true
             }
+
+            assertEquals(
+                1,
+                tester.select(tester.charBooleanColumn)
+                    .where { tester.charBooleanColumn eq true }
+                    .andWhere { tester.charBooleanColumnWithDefault eq false }
+                    .count()
+            )
         }
     }
 

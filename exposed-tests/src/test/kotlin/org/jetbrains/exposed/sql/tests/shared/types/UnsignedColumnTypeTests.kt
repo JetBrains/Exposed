@@ -297,9 +297,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
 
     @Test
     fun testMaxUnsignedTypesInMySql() {
-        withDb(excludeSettings = TestDB.ALL_POSTGRES_LIKE) {
-            SchemaUtils.create(UByteTable, UShortTable, UIntTable, ULongTable)
-
+        withTables(excludeSettings = TestDB.ALL_POSTGRES_LIKE, UByteTable, UShortTable, UIntTable, ULongTable) {
             UByteTable.insert { it[unsignedByte] = UByte.MAX_VALUE }
             assertEquals(UByte.MAX_VALUE, UByteTable.selectAll().single()[UByteTable.unsignedByte])
 
@@ -311,8 +309,6 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
 
             ULongTable.insert { it[unsignedLong] = ULong.MAX_VALUE }
             assertEquals(ULong.MAX_VALUE, ULongTable.selectAll().single()[ULongTable.unsignedLong])
-
-            SchemaUtils.drop(UByteTable, UShortTable, UIntTable, ULongTable)
         }
     }
 
@@ -330,23 +326,17 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
             val unsigned3 = uinteger(col3)
         }
 
-        withDb {
-            try {
-                SchemaUtils.create(tester1, tester2)
-
-                val (byte, short, integer) = Triple(191.toUByte(), 49151.toUShort(), 3_221_225_471u)
-                tester1.insert {
-                    it[unsigned1] = byte
-                    it[unsigned2] = short
-                    it[unsigned3] = integer
-                }
-                tester2.insert {
-                    it[unsigned1] = byte
-                    it[unsigned2] = short
-                    it[unsigned3] = integer
-                }
-            } finally {
-                SchemaUtils.drop(tester1, tester2)
+        withTables(tester1, tester2) {
+            val (byte, short, integer) = Triple(191.toUByte(), 49151.toUShort(), 3_221_225_471u)
+            tester1.insert {
+                it[unsigned1] = byte
+                it[unsigned2] = short
+                it[unsigned3] = integer
+            }
+            tester2.insert {
+                it[unsigned1] = byte
+                it[unsigned2] = short
+                it[unsigned3] = integer
             }
         }
     }

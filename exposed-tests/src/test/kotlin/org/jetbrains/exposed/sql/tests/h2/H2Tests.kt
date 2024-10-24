@@ -38,31 +38,25 @@ class H2Tests : DatabaseTestsBase() {
 
     @Test
     fun insertInH2() {
-        withDb(listOf(TestDB.H2_V2_MYSQL, TestDB.H2_V2)) {
-            SchemaUtils.create(Testing)
+        withTables(TestDB.ALL - listOf(TestDB.H2_V2_MYSQL, TestDB.H2_V2), Testing) {
             Testing.insert {
                 it[id] = 1
                 it[string] = "one"
             }
 
             assertEquals("one", Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.string])
-
-            SchemaUtils.drop(Testing)
         }
     }
 
     @Test
     fun replaceAsInsertInH2() {
-        withDb(listOf(TestDB.H2_V2_MYSQL, TestDB.H2_V2_MARIADB)) {
-            SchemaUtils.create(Testing)
+        withTables(TestDB.ALL - listOf(TestDB.H2_V2_MYSQL, TestDB.H2_V2_MARIADB), Testing) {
             Testing.replace {
                 it[id] = 1
                 it[string] = "one"
             }
 
             assertEquals("one", Testing.selectAll().where { Testing.id.eq(1) }.single()[Testing.string])
-
-            SchemaUtils.drop(Testing)
         }
     }
 
@@ -120,20 +114,14 @@ class H2Tests : DatabaseTestsBase() {
             val number = short("number")
         }
 
-        withDb(TestDB.ALL_H2) {
-            try {
-                SchemaUtils.create(testTable)
-
-                testTable.batchInsert(listOf<Short>(2, 4, 6, 8, 10)) { n ->
-                    this[testTable.number] = n
-                }
-
-                val average = testTable.number.avg()
-                val result = testTable.select(average).single()[average]
-                assertEquals("6.00".toBigDecimal(), result)
-            } finally {
-                SchemaUtils.drop(testTable)
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2, testTable) {
+            testTable.batchInsert(listOf<Short>(2, 4, 6, 8, 10)) { n ->
+                this[testTable.number] = n
             }
+
+            val average = testTable.number.avg()
+            val result = testTable.select(average).single()[average]
+            assertEquals("6.00".toBigDecimal(), result)
         }
     }
 

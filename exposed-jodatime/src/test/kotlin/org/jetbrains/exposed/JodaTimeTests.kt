@@ -364,8 +364,6 @@ class JodaTimeTests : DatabaseTestsBase() {
             DateTimeZone.setDefault(DateTimeZone.UTC)
             assertEquals("UTC", DateTimeZone.getDefault().id)
 
-            SchemaUtils.create(testTable)
-
             val now = DateTime.parse("2023-05-04T05:04:01.123123123+00:00")
             val nowId = testTable.insertAndGetId {
                 it[timestampWithTimeZone] = now

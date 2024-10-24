@@ -451,77 +451,71 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withDb(excludeSettings = timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1) { testDb ->
-            try {
-                // UTC time zone
-                java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
-                assertEquals("UTC", ZoneId.systemDefault().id)
+        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1, testTable) { testDb ->
+            // UTC time zone
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+            assertEquals("UTC", ZoneId.systemDefault().id)
 
-                SchemaUtils.create(testTable)
-
-                val now = OffsetDateTime.parse("2023-05-04T05:04:01.123123123+00:00")
-                val nowId = testTable.insertAndGetId {
-                    it[testTable.timestampWithTimeZone] = now
-                }
-
-                assertEquals(
-                    now.toLocalDate().toKotlinLocalDate(),
-                    testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
-                        .single()[testTable.timestampWithTimeZone.date()]
-                )
-
-                val expectedTime =
-                    when (testDb) {
-                        TestDB.SQLITE -> OffsetDateTime.parse("2023-05-04T05:04:01.123+00:00")
-                        TestDB.MYSQL_V8, TestDB.SQLSERVER,
-                        in TestDB.ALL_ORACLE_LIKE,
-                        in TestDB.ALL_POSTGRES_LIKE -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")
-                        else -> now
-                    }.toLocalTime().toKotlinLocalTime()
-                assertEquals(
-                    expectedTime,
-                    testTable.select(testTable.timestampWithTimeZone.time()).where { testTable.id eq nowId }
-                        .single()[testTable.timestampWithTimeZone.time()]
-                )
-
-                assertEquals(
-                    now.year,
-                    testTable.select(testTable.timestampWithTimeZone.year()).where { testTable.id eq nowId }
-                        .single()[testTable.timestampWithTimeZone.year()]
-                )
-
-                assertEquals(
-                    now.month.value,
-                    testTable.select(testTable.timestampWithTimeZone.month()).where { testTable.id eq nowId }
-                        .single()[testTable.timestampWithTimeZone.month()]
-                )
-
-                assertEquals(
-                    now.dayOfMonth,
-                    testTable.select(testTable.timestampWithTimeZone.day()).where { testTable.id eq nowId }
-                        .single()[testTable.timestampWithTimeZone.day()]
-                )
-
-                assertEquals(
-                    now.hour,
-                    testTable.select(testTable.timestampWithTimeZone.hour()).where { testTable.id eq nowId }
-                        .single()[testTable.timestampWithTimeZone.hour()]
-                )
-
-                assertEquals(
-                    now.minute,
-                    testTable.select(testTable.timestampWithTimeZone.minute()).where { testTable.id eq nowId }
-                        .single()[testTable.timestampWithTimeZone.minute()]
-                )
-
-                assertEquals(
-                    now.second,
-                    testTable.select(testTable.timestampWithTimeZone.second()).where { testTable.id eq nowId }
-                        .single()[testTable.timestampWithTimeZone.second()]
-                )
-            } finally {
-                SchemaUtils.drop(testTable)
+            val now = OffsetDateTime.parse("2023-05-04T05:04:01.123123123+00:00")
+            val nowId = testTable.insertAndGetId {
+                it[testTable.timestampWithTimeZone] = now
             }
+
+            assertEquals(
+                now.toLocalDate().toKotlinLocalDate(),
+                testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
+                    .single()[testTable.timestampWithTimeZone.date()]
+            )
+
+            val expectedTime =
+                when (testDb) {
+                    TestDB.SQLITE -> OffsetDateTime.parse("2023-05-04T05:04:01.123+00:00")
+                    TestDB.MYSQL_V8, TestDB.SQLSERVER,
+                    in TestDB.ALL_ORACLE_LIKE,
+                    in TestDB.ALL_POSTGRES_LIKE -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")
+                    else -> now
+                }.toLocalTime().toKotlinLocalTime()
+            assertEquals(
+                expectedTime,
+                testTable.select(testTable.timestampWithTimeZone.time()).where { testTable.id eq nowId }
+                    .single()[testTable.timestampWithTimeZone.time()]
+            )
+
+            assertEquals(
+                now.year,
+                testTable.select(testTable.timestampWithTimeZone.year()).where { testTable.id eq nowId }
+                    .single()[testTable.timestampWithTimeZone.year()]
+            )
+
+            assertEquals(
+                now.month.value,
+                testTable.select(testTable.timestampWithTimeZone.month()).where { testTable.id eq nowId }
+                    .single()[testTable.timestampWithTimeZone.month()]
+            )
+
+            assertEquals(
+                now.dayOfMonth,
+                testTable.select(testTable.timestampWithTimeZone.day()).where { testTable.id eq nowId }
+                    .single()[testTable.timestampWithTimeZone.day()]
+            )
+
+            assertEquals(
+                now.hour,
+                testTable.select(testTable.timestampWithTimeZone.hour()).where { testTable.id eq nowId }
+                    .single()[testTable.timestampWithTimeZone.hour()]
+            )
+
+            assertEquals(
+                now.minute,
+                testTable.select(testTable.timestampWithTimeZone.minute()).where { testTable.id eq nowId }
+                    .single()[testTable.timestampWithTimeZone.minute()]
+            )
+
+            assertEquals(
+                now.second,
+                testTable.select(testTable.timestampWithTimeZone.second()).where { testTable.id eq nowId }
+                    .single()[testTable.timestampWithTimeZone.second()]
+            )
         }
     }
 
