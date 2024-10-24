@@ -38,6 +38,7 @@ dependencies {
     compileOnly(libs.h2)
     testCompileOnly(libs.sqlite.jdbc)
     testImplementation(libs.logcaptor)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 tasks.withType<Test>().configureEach {
