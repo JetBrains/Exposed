@@ -809,7 +809,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         return EntityID(
             CompositeID {
                 referenceColumns.forEach { (child, parent) ->
-                    it[parent as Column<EntityID<Comparable<Any>>>] = this.readValues[child] as Comparable<Any>
+                    it[parent as Column<EntityID<Any>>] = this.readValues[child] as Any
                 }
             },
             table

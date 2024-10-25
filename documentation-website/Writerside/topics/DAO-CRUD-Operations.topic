@@ -159,8 +159,54 @@
         <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt" include-symbol="readComputedField"/>
     </chapter>
 
-    <chapter title="Auto-fill created and updated columns on entity change" id="auto-fill-created-and-updated-columns-on-entity-change">
-        <p>See example by @PaulMuriithi <a href="https://github.com/PaulMuriithi/ExposedDatesAutoFill/blob/master/src/main/kotlin/app/Models.kt">here</a>.</p>
+    <chapter title="Auto-fill columns on entity change" id="auto-fill-columns-on-entity-change">
+        <p>Suppose that you need all your table objects to have at minimum two columns for storing the date and time when
+            a record is created and modified. You could define a <code>BaseTable</code> to automatically handle registering
+            these columns to any table that extends this abstract class. An abstract <code>BaseEntity</code> could also be
+            defined to automatically associate fields to the relevant columns:</p>
+        <tabs>
+            <tab id="abstract-base-table" title="BaseTable">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/BaseTable.kt"/>
+            </tab>
+            <tab id="abstract-base-entity" title="BaseEntity">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/BaseEntity.kt"/>
+            </tab>
+        </tabs>
+        <p>Whenever a new entity is instantiated, the <code>created</code> column will be filled with the database default defined by
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.sql.kotlin.datetime/-current-date-time/index.html">
+                <code>CurrentDateTime</code>
+            </a>, while the <code>modified</code> column will be filled with a null value.</p>
+        <p>An entity lifecycle interceptor,
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-hook/index.html">
+                <code>EntityHook</code>
+            </a>, can then be subscribed to in order to automatically populate the <code>modified</code> field whenever an
+            existing entity is later updated:</p>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/BaseEntityClass.kt"/>
+        <p>The example above invokes <code>EntityHook.subscribe()</code> in an abstract <code>BaseEntityClass</code> that
+            can be used as a companion object for any <code>BaseEntity</code> implementation, but the interceptor could be
+            subscribed to (and unsubscribed from) on the transaction level as well.</p>
+        <p>The subscription only performs an action when a record is updated (detected by <code>EntityChangeType.Updated</code>).</p>
+        <tip>
+            Other actions could be detected for when an entity is created (<code>EntityChangeType.Created</code>) or
+            removed (<code>EntityChangeType.Removed</code>).
+        </tip>
+        <p>
+            When an update occurs, the <code>modified</code> column is populated with the current UTC time
+            using the <code>nowUTC()</code> method. However, the update only happens if the <code>modified</code> field
+            has not already been set. This is checked by using <code>Entity.writeValues</code>, which holds the column-value
+            mappings for an entity instance before being flushed to the database. Performing this check ensures that filling
+            the <code>modified</code> column does not trigger the interceptor itself.
+        </p>
+        <p>
+            Additionally, every change (creation, update, or deletion) is logged using the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/exposed-logger.html?query=val%20exposedLogger:%20Logger">
+                <code>exposedLogger</code>
+            </a>.
+        </p>
+        <tip>
+            For more details about using statement interceptors, see
+            <a href="Transactions.md" anchor="statement-interceptors">DSL Statement Interceptors</a>.
+        </tip>
     </chapter>
 
 </topic>

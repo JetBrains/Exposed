@@ -732,7 +732,7 @@ class QueryParameter<T>(
 }
 
 /** Returns the specified [value] as a query parameter with the same type as [column]. */
-fun <T : Comparable<T>> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> =
+fun <T : Any> idParam(value: EntityID<T>, column: Column<EntityID<T>>): Expression<EntityID<T>> =
     QueryParameter(value, column.columnType)
 
 /** Returns the specified [value] as a boolean query parameter. */
