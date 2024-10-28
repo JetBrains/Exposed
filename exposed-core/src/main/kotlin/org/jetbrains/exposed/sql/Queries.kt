@@ -118,7 +118,10 @@ fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(I
  * @return Count of deleted rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
  */
-fun <T : Table> T.deleteWhere(limit: Int? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
+inline fun <T : Table> T.deleteWhere(
+    limit: Int? = null,
+    op: T.(ISqlExpressionBuilder) -> Op<Boolean>
+): Int =
     DeleteStatement.where(TransactionManager.current(), this@deleteWhere, op(SqlExpressionBuilder), false, limit)
 
 @Deprecated(
@@ -142,7 +145,10 @@ fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op
  * @param op Condition that determines which rows to delete.
  * @return Count of deleted rows.
  */
-fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
+inline fun <T : Table> T.deleteIgnoreWhere(
+    limit: Int? = null,
+    op: T.(ISqlExpressionBuilder) -> Op<Boolean>
+): Int =
     DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, op(SqlExpressionBuilder), true, limit)
 
 /**
@@ -154,21 +160,71 @@ fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, op: T.(ISqlExpressionBui
 fun Table.deleteAll(): Int =
     DeleteStatement.all(TransactionManager.current(), this@deleteAll)
 
+@Deprecated(
+    "This `deleteReturning()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
+        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
+        "with a use-case if a nullable condition cannot be replaced with the new `deleteReturning()` overloads.",
+    ReplaceWith("deleteReturning(returning)"),
+    DeprecationLevel.WARNING
+)
+@JvmName("deleteReturningNullableParam")
+fun <T : Table> T.deleteReturning(
+    returning: List<Expression<*>> = columns,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+): ReturningStatement {
+    return where?.let { deleteReturning(returning, it) } ?: deleteReturning(returning)
+}
+
 /**
  * Represents the SQL statement that deletes rows in a table and returns specified data from the deleted rows.
  *
  * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
- * @param where Condition that determines which rows to delete. If left as `null`, all rows in the table will be deleted.
+ * @param where Condition that determines which rows to delete.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testDeleteReturning
+ */
+inline fun <T : Table> T.deleteReturning(
+    returning: List<Expression<*>> = columns,
+    where: SqlExpressionBuilder.() -> Op<Boolean>
+): ReturningStatement {
+    val delete = DeleteStatement(this, SqlExpressionBuilder.where(), false, null)
+    return ReturningStatement(this, returning, delete)
+}
+
+/**
+ * Represents the SQL statement that deletes all rows in a table and returns specified data from the deleted rows.
+ *
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
  * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testDeleteReturning
  */
 fun <T : Table> T.deleteReturning(
-    returning: List<Expression<*>> = columns,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+    returning: List<Expression<*>> = columns
 ): ReturningStatement {
-    val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, false, null)
+    val delete = DeleteStatement(this, null, false, null)
     return ReturningStatement(this, returning, delete)
+}
+
+@Deprecated(
+    "This `Join.delete()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
+        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
+        "with a use-case if a nullable condition cannot be replaced with the new `Join.delete()` overloads.",
+    ReplaceWith("delete(targetTable, targetTables = targetTables, ignore, limit)"),
+    DeprecationLevel.WARNING
+)
+@JvmName("deleteJoinNullableParam")
+fun Join.delete(
+    targetTable: Table,
+    vararg targetTables: Table,
+    ignore: Boolean = false,
+    limit: Int? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+): Int {
+    return where?.let {
+        delete(targetTable, targetTables = targetTables, ignore, limit, it)
+    } ?: delete(targetTable, targetTables = targetTables, ignore, limit)
 }
 
 /**
@@ -185,15 +241,39 @@ fun <T : Table> T.deleteReturning(
  * @return The number of deleted rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDeleteWithSingleJoin
  */
-fun Join.delete(
+inline fun Join.delete(
     targetTable: Table,
     vararg targetTables: Table,
     ignore: Boolean = false,
     limit: Int? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
+    where: SqlExpressionBuilder.() -> Op<Boolean>
 ): Int {
     val targets = listOf(targetTable) + targetTables
-    val delete = DeleteStatement(this, where?.let { SqlExpressionBuilder.it() }, ignore, limit, targets)
+    val delete = DeleteStatement(this, SqlExpressionBuilder.where(), ignore, limit, targets)
+    return delete.execute(TransactionManager.current()) ?: 0
+}
+
+/**
+ * Represents the SQL statement that deletes all rows from a table in a join relation.
+ *
+ * @param targetTable The specific table from this join relation to delete rows from.
+ * @param targetTables (Optional) Other tables from this join relation to delete rows from.
+ * **Note** Targeting multiple tables for deletion is not supported by all vendors. Please check the documentation.
+ * @param ignore Whether to ignore any possible errors that occur when deleting rows.
+ * **Note** [ignore] is not supported by all vendors. Please check the documentation.
+ * @param limit Maximum number of rows to delete.
+ * **Note** [limit] is not supported by all vendors. Please check the documentation.
+ * @return The number of deleted rows.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDeleteWithSingleJoin
+ */
+fun Join.delete(
+    targetTable: Table,
+    vararg targetTables: Table,
+    ignore: Boolean = false,
+    limit: Int? = null
+): Int {
+    val targets = listOf(targetTable) + targetTables
+    val delete = DeleteStatement(this, null, ignore, limit, targets)
     return delete.execute(TransactionManager.current()) ?: 0
 }
 
@@ -202,7 +282,9 @@ fun Join.delete(
  *
  * @sample org.jetbrains.exposed.sql.tests.h2.H2Tests.insertInH2
  */
-fun <T : Table> T.insert(body: T.(InsertStatement<Number>) -> Unit): InsertStatement<Number> = InsertStatement<Number>(this).apply {
+inline fun <T : Table> T.insert(
+    crossinline body: T.(InsertStatement<Number>) -> Unit
+): InsertStatement<Number> = InsertStatement<Number>(this).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -213,7 +295,9 @@ fun <T : Table> T.insert(body: T.(InsertStatement<Number>) -> Unit): InsertState
  * @return The generated ID for the new row.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testGeneratedKey04
  */
-fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(body: T.(InsertStatement<EntityID<Key>>) -> Unit): EntityID<Key> =
+inline fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
+    crossinline body: T.(InsertStatement<EntityID<Key>>) -> Unit
+): EntityID<Key> =
     InsertStatement<EntityID<Key>>(this, false).run {
         body(this)
         execute(TransactionManager.current())
@@ -366,7 +450,9 @@ private fun <E, S : BaseBatchInsertStatement> executeBatch(
  *
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetIdWithPredefinedId
  */
-fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
+inline fun <T : Table> T.insertIgnore(
+    crossinline body: T.(UpdateBuilder<*>) -> Unit
+): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -381,7 +467,9 @@ fun <T : Table> T.insertIgnore(body: T.(UpdateBuilder<*>) -> Unit): InsertStatem
  * @return The generated ID for the new row, or `null` if none was retrieved after statement execution.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetId01
  */
-fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<*>) -> Unit): EntityID<Key>? =
+inline fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
+    crossinline body: T.(UpdateBuilder<*>) -> Unit
+): EntityID<Key>? =
     InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
         body(this)
         when (execute(TransactionManager.current())) {
@@ -398,7 +486,9 @@ fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(body: T.(UpdateBuilder<
  *
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceWithExpression
  */
-fun <T : Table> T.replace(body: T.(UpdateBuilder<*>) -> Unit): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
+inline fun <T : Table> T.replace(
+    crossinline body: T.(UpdateBuilder<*>) -> Unit
+): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
     body(this)
     execute(TransactionManager.current())
 }
@@ -463,14 +553,26 @@ private fun Column<*>.isValidIfAutoIncrement(): Boolean =
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testInsertReturning
  */
-fun <T : Table> T.insertReturning(
+inline fun <T : Table> T.insertReturning(
     returning: List<Expression<*>> = columns,
     ignoreErrors: Boolean = false,
-    body: T.(InsertStatement<Number>) -> Unit
+    crossinline body: T.(InsertStatement<Number>) -> Unit
 ): ReturningStatement {
     val insert = InsertStatement<Number>(this, ignoreErrors)
     body(insert)
     return ReturningStatement(this, returning, insert)
+}
+
+@Deprecated(
+    "This `update()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
+        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
+        "with a use-case if a nullable condition cannot be replaced with the new `update()` overloads.",
+    ReplaceWith("update(limit = limit) { body.invoke() }"),
+    DeprecationLevel.WARNING
+)
+@JvmName("updateNullableParam")
+fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
+    return where?.let { update(it, limit, body) } ?: update(limit, body)
 }
 
 /**
@@ -481,10 +583,42 @@ fun <T : Table> T.insertReturning(
  * @return The number of updated rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdate01
  */
-fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: T.(UpdateStatement) -> Unit): Int {
-    val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
+inline fun <T : Table> T.update(
+    where: SqlExpressionBuilder.() -> Op<Boolean>,
+    limit: Int? = null,
+    crossinline body: T.(UpdateStatement) -> Unit
+): Int {
+    val query = UpdateStatement(this, limit, SqlExpressionBuilder.where())
     body(query)
     return query.execute(TransactionManager.current()) ?: 0
+}
+
+/**
+ * Represents the SQL statement that updates all rows of a table.
+ *
+ * @param limit Maximum number of rows to update.
+ * @return The number of updated rows.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdate01
+ */
+inline fun <T : Table> T.update(
+    limit: Int? = null,
+    crossinline body: T.(UpdateStatement) -> Unit
+): Int {
+    val query = UpdateStatement(this, limit, null)
+    body(query)
+    return query.execute(TransactionManager.current()) ?: 0
+}
+
+@Deprecated(
+    "This `Join.update()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
+        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
+        "with a use-case if a nullable condition cannot be replaced with the new `Join.update()` overloads.",
+    ReplaceWith("update(limit = limit) { body.invoke() }"),
+    DeprecationLevel.WARNING
+)
+@JvmName("updateJoinNullableParam")
+fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
+    return where?.let { update(it, limit, body) } ?: update(limit, body)
 }
 
 /**
@@ -495,26 +629,80 @@ fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
  * @return The number of updated rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
  */
-fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: Int? = null, body: (UpdateStatement) -> Unit): Int {
-    val query = UpdateStatement(this, limit, where?.let { SqlExpressionBuilder.it() })
+inline fun Join.update(
+    where: SqlExpressionBuilder.() -> Op<Boolean>,
+    limit: Int? = null,
+    crossinline body: (UpdateStatement) -> Unit
+): Int {
+    val query = UpdateStatement(this, limit, SqlExpressionBuilder.where())
     body(query)
     return query.execute(TransactionManager.current()) ?: 0
+}
+
+/**
+ * Represents the SQL statement that updates all rows of a join relation.
+ *
+ * @param limit Maximum number of rows to update.
+ * @return The number of updated rows.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
+ */
+inline fun Join.update(
+    limit: Int? = null,
+    crossinline body: (UpdateStatement) -> Unit
+): Int {
+    val query = UpdateStatement(this, limit, null)
+    body(query)
+    return query.execute(TransactionManager.current()) ?: 0
+}
+
+@Deprecated(
+    "This `updateReturning()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
+        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
+        "with a use-case if a nullable condition cannot be replaced with the new `updateReturning()` overloads.",
+    ReplaceWith("updateReturning(returning) { body.invoke() }"),
+    DeprecationLevel.WARNING
+)
+@JvmName("updateReturningNullableParam")
+fun <T : Table> T.updateReturning(
+    returning: List<Expression<*>> = columns,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: T.(UpdateStatement) -> Unit
+): ReturningStatement {
+    return where?.let { updateReturning(returning, it, body) } ?: updateReturning(returning, body)
 }
 
 /**
  * Represents the SQL statement that updates rows of a table and returns specified data from the updated rows.
  *
  * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @param where Condition that determines which rows to update.
  * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpdateReturning
  */
-fun <T : Table> T.updateReturning(
+inline fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-    body: T.(UpdateStatement) -> Unit
+    where: SqlExpressionBuilder.() -> Op<Boolean>,
+    crossinline body: T.(UpdateStatement) -> Unit
 ): ReturningStatement {
-    val update = UpdateStatement(this, null, where?.let { SqlExpressionBuilder.it() })
+    val update = UpdateStatement(this, null, SqlExpressionBuilder.where())
+    body(update)
+    return ReturningStatement(this, returning, update)
+}
+
+/**
+ * Represents the SQL statement that updates all rows of a table and returns specified data from the updated rows.
+ *
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpdateReturning
+ */
+inline fun <T : Table> T.updateReturning(
+    returning: List<Expression<*>> = columns,
+    crossinline body: T.(UpdateStatement) -> Unit
+): ReturningStatement {
+    val update = UpdateStatement(this, null, null)
     body(update)
     return ReturningStatement(this, returning, update)
 }
@@ -743,6 +931,22 @@ private fun <T : Table, E> T.batchUpsert(
  */
 fun Table.exists(): Boolean = currentDialect.tableExists(this)
 
+@Deprecated(
+    "This `mergeFrom()` with a nullable `on` parameter will be removed in future releases. Please leave a comment on " +
+        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-494/Inline-DSL-statement-and-query-functions) " +
+        "with a use-case if a nullable condition cannot be replaced with the new `mergeFrom()` overloads.",
+    ReplaceWith("mergeFrom(source) { body.invoke() }"),
+    DeprecationLevel.WARNING
+)
+@JvmName("mergeFromNullableParam")
+fun <D : Table, S : Table> D.mergeFrom(
+    source: S,
+    on: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: MergeTableStatement.() -> Unit
+): MergeTableStatement {
+    return on?.let { mergeFrom(source, it, body) } ?: mergeFrom(source, body)
+}
+
 /**
  * Performs an SQL MERGE operation to insert, update, or delete records in the target table based on
  * a comparison with a source table.
@@ -756,12 +960,33 @@ fun Table.exists(): Boolean = currentDialect.tableExists(this)
  *             when records are matched or not matched.
  * @return A [MergeTableStatement] which represents the MERGE operation with the configured actions.
  */
-fun <D : Table, S : Table> D.mergeFrom(
+inline fun <D : Table, S : Table> D.mergeFrom(
     source: S,
-    on: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-    body: MergeTableStatement.() -> Unit
+    on: SqlExpressionBuilder.() -> Op<Boolean>,
+    crossinline body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
-    return MergeTableStatement(this, source, on = on?.invoke(SqlExpressionBuilder)).apply {
+    return MergeTableStatement(this, source, on = SqlExpressionBuilder.on()).apply {
+        body(this)
+        execute(TransactionManager.current())
+    }
+}
+
+/**
+ * Performs an SQL MERGE operation to insert, update, or delete records in the target table based on
+ * a comparison with a source table.
+ *
+ * @param D The target table type extending from [Table].
+ * @param S The source table type extending from [Table].
+ * @param source An instance of the source table.
+ * @param body A lambda where [MergeTableStatement] can be configured with specific actions to perform
+ *             when records are matched or not matched.
+ * @return A [MergeTableStatement] which represents the MERGE operation with the configured actions.
+ */
+inline fun <D : Table, S : Table> D.mergeFrom(
+    source: S,
+    crossinline body: MergeTableStatement.() -> Unit
+): MergeTableStatement {
+    return MergeTableStatement(this, source, on = null).apply {
         body(this)
         execute(TransactionManager.current())
     }
@@ -779,10 +1004,10 @@ fun <D : Table, S : Table> D.mergeFrom(
  *             when records are matched or not matched.
  * @return A [MergeSelectStatement] which represents the MERGE operation with the configured actions.
  */
-fun <T : Table> T.mergeFrom(
+inline fun <T : Table> T.mergeFrom(
     selectQuery: QueryAlias,
     on: SqlExpressionBuilder.() -> Op<Boolean>,
-    body: MergeSelectStatement.() -> Unit
+    crossinline body: MergeSelectStatement.() -> Unit
 ): MergeSelectStatement {
     return MergeSelectStatement(this, selectQuery, SqlExpressionBuilder.on()).apply {
         body(this)
