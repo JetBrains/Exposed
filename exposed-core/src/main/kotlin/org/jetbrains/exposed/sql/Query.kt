@@ -103,6 +103,8 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @return The current `Query` instance with the `DISTINCT ON` clause applied.
      */
     fun withDistinctOn(vararg columns: Column<*>): Query = apply {
+        if (columns.isEmpty()) return@apply
+
         require(!distinct) { "DISTINCT ON cannot be used with the DISTINCT modifier. Only one of them should be applied." }
         distinctOn = (distinctOn ?: emptyList()) + columns
     }
@@ -118,10 +120,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @return The current `Query` instance with the `DISTINCT ON` clause and reordering applied.
      */
     fun withDistinctOn(vararg columns: Pair<Column<*>, SortOrder>): Query = apply {
+        if (columns.isEmpty()) return@apply
+
         require(!distinct) { "DISTINCT ON cannot be used with the DISTINCT modifier. Only one of them should be applied." }
-        @Suppress("SpreadOperator")
-        withDistinctOn(*columns.map { it.first }.toTypedArray())
-        return orderBy(*columns)
+        withDistinctOn(columns = columns.map { it.first }.toTypedArray())
+        return orderBy(order = columns)
     }
 
     @Deprecated(
@@ -218,9 +221,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                 if (distinct) {
                     append("DISTINCT ")
                 }
-                distinctOn?.let { columns ->
-                    columns.appendTo(prefix = "DISTINCT ON (", postfix = ") ") { +"${it.table.tableName}.${it.name}" }
-                }
+                distinctOn
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { columns ->
+                        columns.appendTo(prefix = "DISTINCT ON (", postfix = ") ") { append(it) }
+                    }
                 set.realFields.appendTo { +it }
             }
             if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {

@@ -1,14 +1,14 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
+import kotlin.test.assertNull
 
 class DistinctOnTests : DatabaseTestsBase() {
 
@@ -77,6 +77,29 @@ class DistinctOnTests : DatabaseTestsBase() {
             expectException<IllegalArgumentException> {
                 query2.withDistinct()
             }
+        }
+    }
+
+    @Test
+    fun testEmptyDistinctOn() {
+        val tester = object : IntIdTable("distinct_function_test") {
+            val value = integer("value1")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - distinctOnSupportedDb, tester) {
+            addLogger(StdOutSqlLogger)
+            // Empty list of columns should not cause exception
+            tester.insert {
+                it[value] = 1
+            }
+
+            val query = tester.selectAll()
+                .withDistinctOn(columns = emptyArray<Column<*>>())
+            assertNull(query.distinctOn)
+
+            val value = query
+                .first()[tester.value]
+            assertEquals(1, value)
         }
     }
 }
