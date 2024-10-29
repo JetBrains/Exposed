@@ -749,6 +749,24 @@ class UpsertTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testUpsertWhenColumnNameIncludesTableName() {
+        val tester = object : Table("my_table") {
+            val myTableId = integer("my_table_id")
+            val myTableValue = varchar("my_table_value", 100)
+            override val primaryKey = PrimaryKey(myTableId)
+        }
+
+        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+            tester.upsert {
+                it[myTableId] = 1
+                it[myTableValue] = "Hello"
+            }
+
+            assertEquals("Hello", tester.selectAll().single()[tester.myTableValue])
+        }
+    }
+
     private object AutoIncTable : Table("auto_inc_table") {
         val id = integer("id").autoIncrement()
         val name = varchar("name", 64)
