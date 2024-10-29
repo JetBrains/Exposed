@@ -724,7 +724,7 @@ abstract class FunctionProvider {
                 append("T.${transaction.identity(columnToUpdate)}=")
                 when (updateExpression) {
                     is QueryParameter<*>, !is Expression<*> -> registerArgument(columnToUpdate.columnType, updateExpression)
-                    else -> append(updateExpression.toString().replace(tableIdentifier, "T"))
+                    else -> append(updateExpression.toString().replace("$tableIdentifier.", "T."))
                 }
             }
 
