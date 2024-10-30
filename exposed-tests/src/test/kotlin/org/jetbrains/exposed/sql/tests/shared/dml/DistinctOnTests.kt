@@ -87,7 +87,6 @@ class DistinctOnTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = TestDB.ALL - distinctOnSupportedDb, tester) {
-            addLogger(StdOutSqlLogger)
             // Empty list of columns should not cause exception
             tester.insert {
                 it[value] = 1
