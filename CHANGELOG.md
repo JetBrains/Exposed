@@ -15,6 +15,7 @@ Breaking changes:
 * chore!: Change Oracle and H2 Oracle integerType and integerAutoincType from NUMBER(12) to NUMBER(10) and INTEGER respectively and add CHECK constraint in SQLite by @joc-a in https://github.com/JetBrains/Exposed/pull/2270
 * feat!: EXPOSED-359 Add support for multidimensional arrays by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2250
 * feat!: EXPOSED-577 Allow Entity and EntityID parameters to not be Comparable by @bog-walk in https://github.com/JetBrains/Exposed/pull/2277
+* More details at [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-56-0)
 
 Features:
 * feat: Support partially filled composite IDs by @sickfar in https://github.com/JetBrains/Exposed/pull/2282
