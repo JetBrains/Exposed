@@ -1,3 +1,39 @@
+# 0.56.0
+Infrastructure:
+* junit-bom 5.11.3
+* SQLite driver 3.47.0.0
+* log4j2 2.24.1
+* Oracle driver 19.24.0.0
+* Spring Framework 6.1.14
+* Spring Boot 3.3.5
+
+Breaking changes:
+* fix!: EXPOSED-569 groupConcat uses wrong SQLite syntax & ignores DISTINCT in Oracle & SQL Server by @bog-walk in https://github.com/JetBrains/Exposed/pull/2257
+* chore!: Change Oracle and H2 Oracle uintegerType and uintegerAutoincType from NUMBER(13) to NUMBER(10) by @joc-a in https://github.com/JetBrains/Exposed/pull/2268
+* chore!: Change Oracle and H2 Oracle ushortType from NUMBER(6) to NUMBER(5) by @joc-a in https://github.com/JetBrains/Exposed/pull/2268
+* chore!: Change Oracle and H2 Oracle ubyteType from NUMBER(4) to NUMBER(3) by @joc-a in https://github.com/JetBrains/Exposed/pull/2268
+* chore!: Change Oracle and H2 Oracle integerType and integerAutoincType from NUMBER(12) to NUMBER(10) and INTEGER respectively and add CHECK constraint in SQLite by @joc-a in https://github.com/JetBrains/Exposed/pull/2270
+* feat!: EXPOSED-359 Add support for multidimensional arrays by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2250
+* feat!: EXPOSED-577 Allow Entity and EntityID parameters to not be Comparable by @bog-walk in https://github.com/JetBrains/Exposed/pull/2277
+
+Features:
+* feat: Support partially filled composite IDs by @sickfar in https://github.com/JetBrains/Exposed/pull/2282
+* feat: EXPOSED-494 Inline DSL statement and query functions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2272
+* feat: EXPOSED-560 Support DISTINCT ON from Postgres by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2275
+
+Bug fixes:
+* fix: EXPOSED-565 Subquery alias with id fails to use correct alias with eq by @bog-walk in https://github.com/JetBrains/Exposed/pull/2258
+* fix: EXPOSED-278 Invalid Oracle statement when adding a new column that is used in a primary key by @joc-a in https://github.com/JetBrains/Exposed/pull/2259
+* fix: EXPOSED-576 DAO Entity.new() fails if there is column with default value and transformation by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2263
+* fix: EXPOSED-580 MigrationsUtils.statementsRequiredForDatabaseMigration throws an error when a table is passed that does not already exist in the database by @joc-a in https://github.com/JetBrains/Exposed/pull/2271
+* fix: EXPOSED-588 Foreign key error when table has dot in its name by @joc-a in https://github.com/JetBrains/Exposed/pull/2276
+* fix: EXPOSED-602 Column name that includes table name is aliased with upserts by @bog-walk in https://github.com/JetBrains/Exposed/pull/2287
+
+Docs:
+* docs: EXPOSED-532 Split the DAO topic into subtopics by @vnikolova in https://github.com/JetBrains/Exposed/pull/2254
+* docs: Extend entities definition docs and reference code from snippets by @vnikolova in https://github.com/JetBrains/Exposed/pull/2264
+* docs: EXPOSED-572 Add code sample for 'auto-fill columns on entity change' by @bog-walk in https://github.com/JetBrains/Exposed/pull/2278
+
 # 0.55.0
 
 Infrastructure:

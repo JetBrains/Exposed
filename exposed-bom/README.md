@@ -8,7 +8,7 @@ Bill of Materials for all Exposed modules
         <dependency>
             <groupId>org.jetbrains.exposed</groupId>
             <artifactId>exposed-bom</artifactId>
-            <version>0.55.0</version>
+            <version>0.56.0</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -39,7 +39,7 @@ repositories {
 }
 
 dependencies {
-    implementation(platform("org.jetbrains.exposed:exposed-bom:0.55.0"))
+    implementation(platform("org.jetbrains.exposed:exposed-bom:0.56.0"))
     implementation("org.jetbrains.exposed", "exposed-core")
     implementation("org.jetbrains.exposed", "exposed-dao")
     implementation("org.jetbrains.exposed", "exposed-jdbc")
