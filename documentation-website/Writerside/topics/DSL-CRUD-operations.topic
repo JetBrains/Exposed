@@ -171,9 +171,26 @@
 
             <code-block lang="kotlin">
                 val directors =
-                    StarWarsFilms.select(StarWarsFilms.director).where { StarWarsFilms.sequelId less 5 }.withDistinct()
+                    StarWarsFilms.select(StarWarsFilms.director)
+                        .where { StarWarsFilms.sequelId less 5 }.withDistinct()
                         .map {
                             it[StarWarsFilms.director]
+                        }
+            </code-block>
+
+            <p>Some SQL dialects, such as PostgreSQL and H2, also support the <code>DISTINCT ON</code> clause.
+                You can use this clause with the <code>withDistinctOn()</code> function:</p>
+
+            <code-block lang="kotlin">
+                val directors =
+                    StarWarsFilms.select(StarWarsFilms.director, StarWarsFilms.name)
+                        .withDistinctOn(StarWarsFilms.director)
+                        .orderBy(
+                            StarWarsFilms.director to SortOrder.ASC,
+                            StarWarsFilms.name to SortOrder.ASC
+                        )
+                        .map {
+                            it[StarWarsFilms.name]
                         }
             </code-block>
         </chapter>

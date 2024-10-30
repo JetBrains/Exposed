@@ -24,6 +24,15 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     var distinct: Boolean = false
         protected set
 
+    /**
+     * List of columns on which the query should be distinct.
+     *
+     * This parameter specifies columns for the `DISTINCT ON` clause, which allows selecting distinct rows based on
+     * the specified columns and is supported by some SQL dialects (e.g., PostgreSQL, H2).
+     */
+    var distinctOn: List<Column<*>>? = null
+        protected set
+
     /** The stored list of columns for a `GROUP BY` clause in this `SELECT` query. */
     var groupedByColumns: List<Expression<*>> = mutableListOf()
         private set
@@ -60,6 +69,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     override fun copyTo(other: Query) {
         super.copyTo(other)
         other.distinct = distinct
+        other.distinctOn = distinctOn
         other.groupedByColumns = groupedByColumns.toMutableList()
         other.having = having
         other.forUpdate = forUpdate
@@ -77,7 +87,44 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     }
 
     override fun withDistinct(value: Boolean): Query = apply {
+        if (value) {
+            require(distinctOn == null) { "DISTINCT cannot be used with the DISTINCT ON modifier. Only one of them should be applied." }
+        }
         distinct = value
+    }
+
+    /**
+     * Specifies that the `SELECT` query should retrieve distinct results based on the given list of columns.
+     *
+     * This method can be used to set a `DISTINCT ON` clause for the query, which is supported by some SQL dialects
+     * (e.g., PostgreSQL, H2). The resulting query will retrieve rows that are distinct based on the specified columns.
+     *
+     * @param columns The columns to apply the `DISTINCT ON` clause.
+     * @return The current `Query` instance with the `DISTINCT ON` clause applied.
+     */
+    fun withDistinctOn(vararg columns: Column<*>): Query = apply {
+        if (columns.isEmpty()) return@apply
+
+        require(!distinct) { "DISTINCT ON cannot be used with the DISTINCT modifier. Only one of them should be applied." }
+        distinctOn = (distinctOn ?: emptyList()) + columns
+    }
+
+    /**
+     * Specifies that the `SELECT` query should retrieve distinct results based on the given list of columns with sort orders.
+     * This method sets a `DISTINCT ON` clause and may reorder the results as indicated.
+     *
+     * This method can be used to set a `DISTINCT ON` clause for the query, which is supported by some SQL dialects
+     * (e.g., PostgreSQL, H2), along with an `ORDER BY` clause for the specified columns.
+     *
+     * @param columns The columns and their sort orders to apply the `DISTINCT ON` clause.
+     * @return The current `Query` instance with the `DISTINCT ON` clause and reordering applied.
+     */
+    fun withDistinctOn(vararg columns: Pair<Column<*>, SortOrder>): Query = apply {
+        if (columns.isEmpty()) return@apply
+
+        require(!distinct) { "DISTINCT ON cannot be used with the DISTINCT modifier. Only one of them should be applied." }
+        withDistinctOn(columns = columns.map { it.first }.toTypedArray())
+        return orderBy(order = columns)
     }
 
     @Deprecated(
@@ -174,6 +221,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                 if (distinct) {
                     append("DISTINCT ")
                 }
+                distinctOn
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { columns ->
+                        columns.appendTo(prefix = "DISTINCT ON (", postfix = ") ") { append(it) }
+                    }
                 set.realFields.appendTo { +it }
             }
             if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
