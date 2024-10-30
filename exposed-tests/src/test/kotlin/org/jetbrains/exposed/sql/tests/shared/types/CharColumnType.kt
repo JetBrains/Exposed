@@ -42,22 +42,16 @@ class CharColumnType : DatabaseTestsBase() {
         // H2 only allows collation for the entire database using SET COLLATION
         // Oracle only allows collation if MAX_STRING_SIZE=EXTENDED, which can only be set in upgrade mode
         // Oracle -> https://docs.oracle.com/en/database/oracle/oracle-database/12.2/refrn/MAX_STRING_SIZE.html#
-        withDb(excludeSettings = TestDB.ALL_H2 + TestDB.ORACLE) {
-            try {
-                SchemaUtils.create(tester)
-
-                val letters = listOf("a", "A", "b", "B")
-                tester.batchInsert(letters) { ch ->
-                    this[tester.letter] = ch
-                }
-
-                // one of the purposes of collation is to determine ordering rules of stored character data types
-                val expected = letters.sortedBy { it.single().code } // [A, B, a, b]
-                val actual = tester.selectAll().orderBy(tester.letter).map { it[tester.letter] }
-                assertEqualLists(expected, actual)
-            } finally {
-                SchemaUtils.drop(tester)
+        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.ORACLE, tester) {
+            val letters = listOf("a", "A", "b", "B")
+            tester.batchInsert(letters) { ch ->
+                this[tester.letter] = ch
             }
+
+            // one of the purposes of collation is to determine ordering rules of stored character data types
+            val expected = letters.sortedBy { it.single().code } // [A, B, a, b]
+            val actual = tester.selectAll().orderBy(tester.letter).map { it[tester.letter] }
+            assertEqualLists(expected, actual)
         }
     }
 }

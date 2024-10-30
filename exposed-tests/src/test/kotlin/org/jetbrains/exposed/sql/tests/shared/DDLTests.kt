@@ -315,16 +315,12 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb {
-            SchemaUtils.create(uIntTester, uLongTester)
-
+        withTables(uIntTester, uLongTester) {
             uIntTester.insert { }
             assertEquals(1u, uIntTester.selectAll().single()[uIntTester.id])
 
             uLongTester.insert { }
             assertEquals(1u, uLongTester.selectAll().single()[uLongTester.id])
-
-            SchemaUtils.drop(uIntTester, uLongTester)
         }
     }
 
@@ -633,12 +629,10 @@ class DDLTests : DatabaseTestsBase() {
 
         fun SizedIterable<ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE, TestDB.H2_V2_PSQL, TestDB.H2_V2)) {
-            val exposedBytes = "Exposed".toByteArray()
-            val kotlinBytes = "Kotlin".toByteArray()
+        val exposedBytes = "Exposed".toByteArray()
+        val kotlinBytes = "Kotlin".toByteArray()
 
-            SchemaUtils.create(tableWithBinary)
-
+        withTables(excludeSettings = TestDB.ALL - listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLITE, TestDB.H2_V2_PSQL, TestDB.H2_V2), tableWithBinary) {
             tableWithBinary.insert {
                 it[tableWithBinary.binaryColumn] = exposedBytes
             }
@@ -656,8 +650,6 @@ class DDLTests : DatabaseTestsBase() {
                 tableWithBinary.binaryColumn eq kotlinBytes
             }.readAsString()
             assertEqualCollections(insertedKotlin, "Kotlin")
-
-            SchemaUtils.drop(tableWithBinary)
         }
     }
 
@@ -846,8 +838,7 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey: PrimaryKey = PrimaryKey(id)
         }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.MYSQL_V5, TestDB.H2_V2_PSQL)) { testDb ->
-            SchemaUtils.create(testTable)
+        withTables(excludeSettings = TestDB.ALL - listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.MYSQL_V5, TestDB.H2_V2_PSQL), testTable) { testDb ->
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_text_column_types".inProperCase()} " +
                     "(${testTable.id.nameInDatabaseCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
@@ -882,8 +873,6 @@ class DDLTests : DatabaseTestsBase() {
             testTable.select(concat).forEach {
                 assertEquals(it[concat], "1txt 1TXTMED 1txtlong")
             }
-
-            SchemaUtils.drop(testTable)
         }
     }
 
@@ -1033,18 +1022,14 @@ class DDLTests : DatabaseTestsBase() {
     // https://github.com/JetBrains/Exposed/issues/112
     @Test
     fun testDropTableFlushesCache() {
-        withDb {
-            class Keyword(id: EntityID<Int>) : IntEntity(id) {
-                var bool by KeyWordTable.bool
-            }
+        class Keyword(id: EntityID<Int>) : IntEntity(id) {
+            var bool by KeyWordTable.bool
+        }
 
-            val keywordEntityClass = object : IntEntityClass<Keyword>(KeyWordTable, Keyword::class.java) {}
+        val keywordEntityClass = object : IntEntityClass<Keyword>(KeyWordTable, Keyword::class.java) {}
 
-            SchemaUtils.create(KeyWordTable)
-
+        withTables(KeyWordTable) {
             keywordEntityClass.new { bool = true }
-
-            SchemaUtils.drop(KeyWordTable)
         }
     }
 

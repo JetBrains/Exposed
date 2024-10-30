@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
+import MigrationUtils
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
@@ -58,25 +59,20 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         val scriptName = "V2__Add_primary_key"
         val scriptDirectory = "src/test/resources"
 
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            try {
-                SchemaUtils.create(noPKTable)
+        withTables(excludeSettings = listOf(TestDB.SQLITE), noPKTable) {
+            val script = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = scriptDirectory, scriptName = scriptName, withLogs = false)
+            assertTrue(script.exists())
+            assertEquals("src/test/resources/$scriptName.sql", script.path)
 
-                val script = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = scriptDirectory, scriptName = scriptName, withLogs = false)
-                assertTrue(script.exists())
-                assertEquals("src/test/resources/$scriptName.sql", script.path)
+            val expectedStatements: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable, withLogs = false)
+            assertEquals(1, expectedStatements.size)
 
-                val expectedStatements: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable, withLogs = false)
-                assertEquals(1, expectedStatements.size)
-
-                val fileStatements: List<String> = script.bufferedReader().readLines().map { it.trimEnd(';') }
-                expectedStatements.zip(fileStatements).forEach { (expected, actual) ->
-                    assertEquals(expected, actual)
-                }
-            } finally {
-                assertTrue(File("$scriptDirectory/$scriptName.sql").delete())
-                SchemaUtils.drop(noPKTable)
+            val fileStatements: List<String> = script.bufferedReader().readLines().map { it.trimEnd(';') }
+            expectedStatements.zip(fileStatements).forEach { (expected, actual) ->
+                assertEquals(expected, actual)
             }
+
+            assertTrue(File("$scriptDirectory/$scriptName.sql").delete())
         }
     }
 
@@ -95,32 +91,27 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         val directory = "src/test/resources"
         val name = "V2__Test"
 
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            try {
-                SchemaUtils.create(noPKTable)
-
-                // Create initial script
-                val initialScript = File("$directory/$name.sql")
-                initialScript.createNewFile()
-                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(noPKTable, withLogs = false)
-                statements.forEach {
-                    initialScript.appendText(it)
-                }
-
-                // Generate script with the same name of initial script
-                val newScript = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = directory, scriptName = name, withLogs = false)
-
-                val expectedStatements: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable, withLogs = false)
-                assertEquals(1, expectedStatements.size)
-
-                val fileStatements: List<String> = newScript.bufferedReader().readLines().map { it.trimEnd(';') }
-                expectedStatements.zip(fileStatements).forEach { (expected, actual) ->
-                    assertEquals(expected, actual)
-                }
-            } finally {
-                assertTrue(File("$directory/$name.sql").delete())
-                SchemaUtils.drop(noPKTable)
+        withTables(excludeSettings = listOf(TestDB.SQLITE), noPKTable) {
+            // Create initial script
+            val initialScript = File("$directory/$name.sql")
+            initialScript.createNewFile()
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(noPKTable, withLogs = false)
+            statements.forEach {
+                initialScript.appendText(it)
             }
+
+            // Generate script with the same name of initial script
+            val newScript = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = directory, scriptName = name, withLogs = false)
+
+            val expectedStatements: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable, withLogs = false)
+            assertEquals(1, expectedStatements.size)
+
+            val fileStatements: List<String> = newScript.bufferedReader().readLines().map { it.trimEnd(';') }
+            expectedStatements.zip(fileStatements).forEach { (expected, actual) ->
+                assertEquals(expected, actual)
+            }
+
+            assertTrue(File("$directory/$name.sql").delete())
         }
     }
 
@@ -202,18 +193,13 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(bar)
         }
 
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            try {
-                SchemaUtils.create(noPKTable)
-                val primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
-                assertNull(primaryKey)
+        withTables(excludeSettings = listOf(TestDB.SQLITE), noPKTable) {
+            val primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
+            assertNull(primaryKey)
 
-                val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
-                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable, withLogs = false)
-                assertEquals(expected, statements.single())
-            } finally {
-                SchemaUtils.drop(noPKTable)
-            }
+            val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable, withLogs = false)
+            assertEquals(expected, statements.single())
         }
     }
 
@@ -250,16 +236,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val column1 = varchar(identifiers[1], 32)
         }
 
-        withDb {
-            try {
-                SchemaUtils.create(quotedTable)
-                assertTrue(quotedTable.exists())
+        withTables(quotedTable) {
+            assertTrue(quotedTable.exists())
 
-                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(quotedTable, withLogs = false)
-                assertTrue(statements.isEmpty())
-            } finally {
-                SchemaUtils.drop(quotedTable)
-            }
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(quotedTable, withLogs = false)
+            assertTrue(statements.isEmpty())
         }
     }
 
@@ -283,16 +264,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         }
 
         // Oracle does not allow more than one index on a column
-        withTables(excludeSettings = listOf(TestDB.ORACLE), tables = arrayOf(testTableWithTwoIndices)) {
-            try {
-                SchemaUtils.create(testTableWithTwoIndices)
-                assertTrue(testTableWithTwoIndices.exists())
+        withTables(excludeSettings = listOf(TestDB.ORACLE), testTableWithTwoIndices) {
+            assertTrue(testTableWithTwoIndices.exists())
 
-                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTableWithOneIndex, withLogs = false)
-                assertEquals(1, statements.size)
-            } finally {
-                SchemaUtils.drop(testTableWithTwoIndices)
-            }
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTableWithOneIndex, withLogs = false)
+            assertEquals(1, statements.size)
         }
     }
 
@@ -313,16 +289,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(tables = arrayOf(testTableWithIndex)) {
-            try {
-                SchemaUtils.create(testTableWithIndex)
-                assertTrue(testTableWithIndex.exists())
+        withTables(testTableWithIndex) {
+            assertTrue(testTableWithIndex.exists())
 
-                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTableWithoutIndex, withLogs = false)
-                assertEquals(1, statements.size)
-            } finally {
-                SchemaUtils.drop(testTableWithIndex)
-            }
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTableWithoutIndex, withLogs = false)
+            assertEquals(1, statements.size)
         }
     }
 
@@ -376,19 +347,13 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testAddAutoIncrementWithCustomSequenceToExistingColumn() {
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tableWithoutAutoIncrement) {
             if (currentDialectTest.supportsCreateSequence) {
-                try {
-                    SchemaUtils.create(tableWithoutAutoIncrement)
+                assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement, withLogs = false).size)
 
-                    assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement, withLogs = false).size)
-
-                    val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementCustomSequence, withLogs = false)
-                    assertEquals(1, statements.size)
-                    assertEquals(expectedCreateSequenceStatement(sequence.name), statements[0])
-                } finally {
-                    SchemaUtils.drop(tableWithoutAutoIncrement)
-                }
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementCustomSequence, withLogs = false)
+                assertEquals(1, statements.size)
+                assertEquals(expectedCreateSequenceStatement(sequence.name), statements[0])
             }
         }
     }
@@ -443,31 +408,25 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
+        withTables(excludeSettings = listOf(TestDB.SQLITE), tableWithAutoIncrement) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
-                try {
-                    SchemaUtils.create(tableWithAutoIncrement)
+                assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrement, withLogs = false).size)
 
-                    assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrement, withLogs = false).size)
-
-                    val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementSequenceName, withLogs = false)
-                    assertEquals(expectedCreateSequenceStatement(sequenceName), statements[0])
-                    when (testDb) {
-                        TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
-                            assertEquals(3, statements.size)
-                            assertEquals("ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[1])
-                            assertEquals(expectedDropSequenceStatement("test_table_id_seq"), statements[2])
-                        }
-                        TestDB.ORACLE, TestDB.H2_V2_ORACLE -> {
-                            assertTrue(statements[1].equals(expectedDropSequenceStatement("test_table_id_seq"), ignoreCase = true))
-                        }
-                        else -> {
-                            val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
-                            assertTrue(statements[1].startsWith("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
-                        }
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementSequenceName, withLogs = false)
+                assertEquals(expectedCreateSequenceStatement(sequenceName), statements[0])
+                when (testDb) {
+                    TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
+                        assertEquals(3, statements.size)
+                        assertEquals("ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[1])
+                        assertEquals(expectedDropSequenceStatement("test_table_id_seq"), statements[2])
                     }
-                } finally {
-                    SchemaUtils.drop(tableWithAutoIncrement)
+                    TestDB.ORACLE, TestDB.H2_V2_ORACLE -> {
+                        assertTrue(statements[1].equals(expectedDropSequenceStatement("test_table_id_seq"), ignoreCase = true))
+                    }
+                    else -> {
+                        val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
+                        assertTrue(statements[1].startsWith("ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT", ignoreCase = true))
+                    }
                 }
             }
         }

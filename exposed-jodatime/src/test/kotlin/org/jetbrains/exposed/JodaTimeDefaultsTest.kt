@@ -405,9 +405,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
             else -> "NULL"
         }
 
-        withDb(excludeSettings = TestDB.ALL_MARIADB + TestDB.MYSQL_V5) { testDb ->
-            SchemaUtils.create(testTable)
-
+        withTables(excludeSettings = TestDB.ALL_MARIADB + TestDB.MYSQL_V5, testTable) { testDb ->
             val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
@@ -444,8 +442,6 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
             assertEquals(nowWithTimeZone, row1[testTable.t1])
             assertEquals(nowWithTimeZone, row1[testTable.t2])
             assertTrue { row1[testTable.t3].millis >= nowWithTimeZone.millis }
-
-            SchemaUtils.drop(testTable)
         }
     }
 
@@ -457,16 +453,10 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
             val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
         }
 
-        withDb {
-            try {
-                SchemaUtils.create(foo)
+        withTables(foo) {
+            val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
 
-                val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
-
-                assertTrue(actual.isEmpty())
-            } finally {
-                SchemaUtils.drop(foo)
-            }
+            assertTrue(actual.isEmpty())
         }
     }
 
@@ -512,15 +502,9 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         // SQLite does not support ALTER TABLE on a column that has a default value
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
         val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5
-        withDb(excludeSettings = unsupportedDatabases) {
-            try {
-                SchemaUtils.drop(tester)
-                SchemaUtils.create(tester)
-                val statements = SchemaUtils.addMissingColumnsStatements(tester)
-                assertEquals(0, statements.size)
-            } finally {
-                SchemaUtils.drop(tester)
-            }
+        withTables(excludeSettings = unsupportedDatabases, tester) {
+            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            assertEquals(0, statements.size)
         }
     }
 
