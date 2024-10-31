@@ -1,8 +1,11 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -11,8 +14,12 @@ import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.junit.Assume
 import org.junit.Test
+import java.util.*
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -309,6 +316,43 @@ class SequencesTests : DatabaseTestsBase() {
                 SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
             }
         }
+    }
+
+    @Test
+    fun testAutoIncrementColumnAccessWithEntity() {
+        Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
+
+        TestDB.POSTGRESQL.connect()
+
+        try {
+            transaction {
+                SchemaUtils.create(TesterTable)
+            }
+
+            val testerEntity = transaction {
+                TesterEntity.new {
+                    name = "test row"
+                }
+            }
+
+            assertEquals(1, testerEntity.index)
+        } finally {
+            transaction {
+                SchemaUtils.drop(TesterTable)
+            }
+        }
+    }
+
+    object TesterTable : UUIDTable("Tester") {
+        val index = integer("index").autoIncrement()
+        val name = text("name")
+    }
+
+    class TesterEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+        companion object : UUIDEntityClass<TesterEntity>(TesterTable)
+
+        var index by TesterTable.index
+        var name by TesterTable.name
     }
 
     private object Developer : Table() {
