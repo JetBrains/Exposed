@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.*
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
@@ -64,6 +66,28 @@ class CountTests : DatabaseTestsBase() {
             if (currentDialectTest is SQLServerDialect) {
                 SchemaUtils.drop(tester)
             }
+        }
+    }
+
+    @Test
+    fun testCountWithOffsetWithoutLimit() {
+        val tester = object : IntIdTable("users") {
+            val value = integer("value")
+        }
+
+        // SQLite, MariaDB, Mysql do not support OFFSET clause without LIMIT
+        withTables(excludeSettings = TestDB.ALL_MYSQL_MARIADB + TestDB.SQLITE, tester) {
+            tester.batchInsert(listOf(1, 2, 3, 4, 5)) {
+                this[tester.value] = it
+            }
+
+            assertEquals(5, tester.selectAll().count())
+
+            assertEquals(2, tester.selectAll().offset(1).limit(2).count())
+
+            assertEquals(2, tester.selectAll().limit(2).count())
+
+            assertEquals(3, tester.selectAll().offset(2).count())
         }
     }
 }
