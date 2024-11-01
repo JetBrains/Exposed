@@ -538,22 +538,23 @@
                 val mealTime: Column&lt;Meal&gt; = time(&quot;meal_time&quot;).transform(MealTimeTransformer())
             }
         </div><section class="chapter"><h3 id="null-transform" data-toc="null-transform">Null transform</h3><p id="-yo0vxf_313">Special case is <code class="code" id="-yo0vxf_314">nullTransform()</code> method. That method applies a special transformation that allows a non-nullable database column to accept and/or return values as `null` on the client side.</p><p id="-yo0vxf_315">This transformation does not alter the column's definition in the database, which will still be <code class="code" id="-yo0vxf_316">NON NULL</code>. It enables reflecting non-null values from the database as <code class="code" id="-yo0vxf_317">null</code> in Kotlin (e.g., converting an empty string from a non-nullable text column, empty lists, negative IDs, etc., to <code class="code" id="-yo0vxf_318">null</code>).</p><div class="code-block" data-lang="kotlin">
-            class MealTimeNullTransformer : ColumnTransformer&lt;LocalTime, Meal?&gt; {
-                override fun wrap(value: LocalTime): Meal? = when {
+            class MealTimeNullTransformer : ColumnTransformer&lt;LocalTime?, Meal?&gt; {
+                override fun wrap(value: LocalTime?): Meal? = when {
+                    value == null -&gt; null
                     value.hour &lt; 10 -&gt; Meal.BREAKFAST
                     value.hour &lt; 15 -&gt; Meal.LUNCH
                     else -&gt; Meal.DINNER
                 }
 
-                override fun unwrap(value: Meal?): LocalTime = when (value) {
+                override fun unwrap(value: Meal?): LocalTime? = when (value) {
                     Meal.BREAKFAST -&gt; LocalTime(8, 0)
                     Meal.LUNCH -&gt; LocalTime(12, 0)
                     Meal.DINNER -&gt; LocalTime(18, 0)
-                    else -&gt; LocalTime(0, 0)
+                    else -&gt; null
                 }
             }
 
             object Meals : Table() {
-                val mealTime: Column&lt;Meal?&gt; = time(&quot;meal_time&quot;).transform(MealTimeNullTransformer())
+                val mealTime: Column&lt;Meal?&gt; = time(&quot;meal_time&quot;).nullable().transform(MealTimeNullTransformer())
             }
         </div></section></section><div class="last-modified">Last modified: 30 October 2024</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="working-with-tables.html" class="navigation-links__prev">Working with tables</a><a href="sql-functions.html" class="navigation-links__next">SQL Functions</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.js"></script></body></html>
