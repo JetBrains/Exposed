@@ -194,6 +194,10 @@
             Every database access using Exposed is started by obtaining a connection and creating a transaction.
             To configure the database connection, use the <code>Database.connect()</code> function.
         </p>
+        <p>
+            By default, Exposed using `ServiceLoader` to get `DatabaseConnectionAutoRegistration`.
+            It can be modified when calling `Database.connect` method by providing `connectionAutoRegistration` in parameter list.
+        </p>
         <procedure id="config-db-connection-procedure">
             <step>
                 <p>

@@ -12,6 +12,9 @@ Every database access using Exposed is started by obtaining a connection and cre
 First of all, you have to tell Exposed how to connect to a database by using the `Database.connect` function.
 It won't create a real database connection but will only provide a descriptor for future usage.
 
+By default, Exposed using `ServiceLoader` to get `DatabaseConnectionAutoRegistration`.
+It can be modified when calling `Database.connect` method by providing `connectionAutoRegistration` in parameter list.
+
 A real connection will be instantiated later by calling the `transaction` lambda
 (see [Transactions](Transactions.md) for more details).
 

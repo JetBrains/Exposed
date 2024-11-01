@@ -112,9 +112,11 @@ class Database private constructor(
     companion object {
         internal val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
 
-        private val connectionInstanceImpl: DatabaseConnectionAutoRegistration =
-            ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader).firstOrNull()
+        private val connectionInstanceImpl: DatabaseConnectionAutoRegistration by lazy {
+            ServiceLoader.load(DatabaseConnectionAutoRegistration::class.java, Database::class.java.classLoader)
+                .firstOrNull()
                 ?: error("Can't load implementation for ${DatabaseConnectionAutoRegistration::class.simpleName}")
+        }
 
         private val driverMapping = mutableMapOf(
             "jdbc:h2" to "org.h2.Driver",
@@ -162,12 +164,13 @@ class Database private constructor(
         private fun doConnect(
             explicitVendor: String?,
             config: DatabaseConfig?,
+            connectionAutoRegistration: DatabaseConnectionAutoRegistration,
             getNewConnection: () -> Connection,
             setupConnection: (Connection) -> Unit = {},
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
             return Database(explicitVendor, config ?: DatabaseConfig.invoke()) {
-                connectionInstanceImpl(getNewConnection().apply { setupConnection(this) })
+                connectionAutoRegistration(getNewConnection().apply { setupConnection(this) })
             }.apply {
                 TransactionManager.registerManager(this, manager(this))
             }
@@ -180,6 +183,7 @@ class Database private constructor(
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param datasource The [DataSource] object to be used as a means of getting a connection.
+         * @param connectionAutoRegistration The connection provider for database. If not provided, will use ServiceLoaded [connectionInstanceImpl]
          * @param setupConnection Any setup that should be applied to each new connection.
          * @param databaseConfig Configuration parameters for this [Database] instance.
          * @param manager The [TransactionManager] responsible for new transactions that use this [Database] instance.
@@ -188,6 +192,7 @@ class Database private constructor(
             datasource: DataSource,
             setupConnection: (Connection) -> Unit = {},
             databaseConfig: DatabaseConfig? = null,
+            connectionAutoRegistration: DatabaseConnectionAutoRegistration = connectionInstanceImpl,
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
             return doConnect(
@@ -195,7 +200,8 @@ class Database private constructor(
                 config = databaseConfig,
                 getNewConnection = { datasource.connection!! },
                 setupConnection = setupConnection,
-                manager = manager
+                manager = manager,
+                connectionAutoRegistration = connectionAutoRegistration
             ).apply {
                 connectsViaDataSource = true
             }
@@ -225,6 +231,7 @@ class Database private constructor(
             datasource: ConnectionPoolDataSource,
             setupConnection: (Connection) -> Unit = {},
             databaseConfig: DatabaseConfig? = null,
+            connectionAutoRegistration: DatabaseConnectionAutoRegistration = connectionInstanceImpl,
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
             return doConnect(
@@ -232,7 +239,8 @@ class Database private constructor(
                 config = databaseConfig,
                 getNewConnection = { datasource.pooledConnection.connection!! },
                 setupConnection = setupConnection,
-                manager = manager
+                manager = manager,
+                connectionAutoRegistration = connectionAutoRegistration
             )
         }
 
@@ -243,19 +251,22 @@ class Database private constructor(
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param getNewConnection A function that returns a new connection.
+         * @param connectionAutoRegistration The connection provider for database. If not provided, will use ServiceLoaded [connectionInstanceImpl]
          * @param databaseConfig Configuration parameters for this [Database] instance.
          * @param manager The [TransactionManager] responsible for new transactions that use this [Database] instance.
          */
         fun connect(
             getNewConnection: () -> Connection,
             databaseConfig: DatabaseConfig? = null,
+            connectionAutoRegistration: DatabaseConnectionAutoRegistration = connectionInstanceImpl,
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
             return doConnect(
                 explicitVendor = null,
                 config = databaseConfig,
                 getNewConnection = getNewConnection,
-                manager = manager
+                manager = manager,
+                connectionAutoRegistration = connectionAutoRegistration
             )
         }
 
@@ -266,6 +277,7 @@ class Database private constructor(
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param url The URL that represents the database when getting a connection.
+         * @param connectionAutoRegistration The connection provider for database. If not provided, will use ServiceLoaded [connectionInstanceImpl]
          * @param driver The JDBC driver class. If not provided, the specified [url] will be used to find
          * a match from the existing driver mappings.
          * @param user The database user that owns the new connections.
@@ -274,6 +286,7 @@ class Database private constructor(
          * @param databaseConfig Configuration parameters for this [Database] instance.
          * @param manager The [TransactionManager] responsible for new transactions that use this [Database] instance.
          */
+        @Suppress("UnusedParameter", "LongParameterList")
         fun connect(
             url: String,
             driver: String = getDriver(url),
@@ -281,18 +294,18 @@ class Database private constructor(
             password: String = "",
             setupConnection: (Connection) -> Unit = {},
             databaseConfig: DatabaseConfig? = null,
+            connectionAutoRegistration: DatabaseConnectionAutoRegistration = connectionInstanceImpl,
             manager: (Database) -> TransactionManager = { ThreadLocalTransactionManager(it) }
         ): Database {
             Class.forName(driver).getDeclaredConstructor().newInstance()
             val dialectName = getDialectName(url) ?: error("Can't resolve dialect for connection: $url")
             return doConnect(
-                dialectName,
-                databaseConfig,
-                {
-                    DriverManager.getConnection(url, user, password)
-                },
-                setupConnection,
-                manager
+                explicitVendor = dialectName,
+                config = databaseConfig,
+                getNewConnection = { DriverManager.getConnection(url, user, password) },
+                setupConnection = setupConnection,
+                manager = manager,
+                connectionAutoRegistration = connectionAutoRegistration,
             )
         }
 
