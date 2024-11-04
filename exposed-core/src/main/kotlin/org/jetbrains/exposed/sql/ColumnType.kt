@@ -204,7 +204,7 @@ class AutoIncColumnType<T>(
         var result = delegate.hashCode()
         result = 31 * result + (_autoincSeq?.hashCode() ?: 0)
         result = 31 * result + fallbackSeqName.hashCode()
-        result = 31 * result + (sequence?.hashCode() ?: 0)
+        result = 31 * result + (_sequence?.hashCode() ?: 0)
         return result
     }
 }
