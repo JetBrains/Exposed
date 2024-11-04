@@ -1,5 +1,11 @@
 # Breaking Changes
 
+## 0.57.0
+* Insert, Upsert, and Replace statements will no longer implicitly send all default values (except for client-side default values) in every SQL request. 
+  This change will reduce the amount of data Exposed sends to the database and make Exposed rely more on the database's default values. 
+  However, this may uncover previously hidden issues related to actual database default values, which were masked by Exposed's insert/upsert statements.
+  Also from `InsertStatement` was removed protected method `isColumnValuePreferredFromResultSet()` and method `valuesAndDefaults()` was marked as deprecated.
+
 ## 0.56.0
 * If the `distinct` parameter of `groupConcat()` is set to `true`, when using Oracle or SQL Server, this will now fail early with an
   `UnsupportedByDialectException`. Previously, the setting would be ignored and SQL function generation would not include a `DISTINCT` clause.

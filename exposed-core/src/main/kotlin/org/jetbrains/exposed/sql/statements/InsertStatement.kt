@@ -57,7 +57,7 @@ open class InsertStatement<Key : Any>(
 
         @Suppress("UNCHECKED_CAST")
         return arguments!!
-            // Join ResultSet values with arguments
+            // Join the values from ResultSet with arguments
             .mapIndexed { index, columnValues ->
                 val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
                 val argumentValues = columnValues.toMap()
@@ -86,11 +86,9 @@ open class InsertStatement<Key : Any>(
 
     @Suppress("NestedBlockDepth", "TooGenericExceptionCaught")
     private fun ResultSet.returnedValues(inserted: Int): ArrayList<MutableMap<Column<*>, Any?>> {
-        val resultSetsValues = arrayListOf<MutableMap<Column<*>, Any?>>()
+        if (inserted == 0) return arrayListOf()
 
-        if (inserted == 0) {
-            return resultSetsValues
-        }
+        val resultSetsValues = arrayListOf<MutableMap<Column<*>, Any?>>()
 
         val columnIndexesInResultSet = returnedColumns()
 
