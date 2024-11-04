@@ -1949,6 +1949,7 @@ public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/Abstrac
 }
 
 public final class org/jetbrains/exposed/sql/Query$CommentPosition : java/lang/Enum {
+	public static final field AFTER_SELECT Lorg/jetbrains/exposed/sql/Query$CommentPosition;
 	public static final field BACK Lorg/jetbrains/exposed/sql/Query$CommentPosition;
 	public static final field FRONT Lorg/jetbrains/exposed/sql/Query$CommentPosition;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;

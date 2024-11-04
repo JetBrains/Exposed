@@ -3,16 +3,19 @@ package org.jetbrains.exposed.sql.tests.mysql
 import com.mysql.cj.conf.PropertyKey
 import com.mysql.cj.jdbc.ConnectionImpl
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.test.expect
 
 class MysqlTests : DatabaseTestsBase() {
     @Test
@@ -96,6 +99,40 @@ class MysqlTests : DatabaseTestsBase() {
             val hintQuery2Sql = hintQuery2.prepareSQL(this)
             assertTrue { listOf(hint2, " WHERE ", " GROUP BY ", " HAVING ", " ORDER BY ").all { it in hintQuery2Sql } }
             hintQuery2.toList()
+        }
+    }
+
+    @Test
+    fun testSelectWithOptimizerHintComment() {
+        val tester = object : Table("tester") {
+            val seconds = integer("seconds")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB, tester) { testDb ->
+            tester.insert { it[seconds] = 1 }
+
+            // SLEEP(N) pauses execution for N seconds & returns 0 if no interruption
+            val sleepNSeconds: CustomFunction<Int?> = tester.seconds.function("SLEEP")
+            val queryWithoutHint = tester.select(sleepNSeconds)
+            assertEquals(0, queryWithoutHint.single()[sleepNSeconds])
+
+            tester.update { it[seconds] = 2 }
+
+            // Hint places a limit of N milliseconds on how long a query should take before termination
+            val queryWithHint = tester
+                .select(sleepNSeconds)
+                .comment("+ MAX_EXECUTION_TIME(1000) ", Query.CommentPosition.AFTER_SELECT)
+            if (testDb in TestDB.ALL_MYSQL) {
+                // Query execution was interrupted, max statement execution time exceeded
+                expectException<ExposedSQLException> {
+                    queryWithHint.single()
+                }
+            } else {
+                // MariaDB has much fewer optimizer hint options and, like any other db, will just ignore the comment
+                expect(0) {
+                    queryWithHint.single()[sleepNSeconds]
+                }
+            }
         }
     }
 }
