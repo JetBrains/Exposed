@@ -123,28 +123,19 @@ class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expre
     /** Returns an [Expression] containing only the string representation of this [alias]. */
     fun aliasOnlyExpression(): Expression<T> {
         return if (delegate is ExpressionWithColumnType<T>) {
-            object : AliasOnlyExpression<T>, Function<T>(delegate.columnType) {
-                override val origin: ExpressionAlias<T> = this@ExpressionAlias
-
+            object : Function<T>(delegate.columnType) {
                 override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(alias) }
             }
         } else {
-            object : AliasOnlyExpression<T>, Expression<T>() {
-                override val origin: ExpressionAlias<T> = this@ExpressionAlias
-
+            object : Expression<T>() {
                 override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(alias) }
             }
         }
     }
 }
 
-internal interface AliasOnlyExpression<T> {
-    val origin: ExpressionAlias<T>
-}
-
 /** Represents a temporary SQL identifier, [alias], for a [query]. */
 class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
-
     override fun describe(s: Transaction, queryBuilder: QueryBuilder) = queryBuilder {
         append("(")
         query.prepareSQL(queryBuilder)
@@ -154,6 +145,15 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
     override val fields: List<Expression<*>> = query.set.fields.map { expression ->
         (expression as? Column<*>)?.clone() ?: (expression as? ExpressionAlias<*>)?.aliasOnlyExpression() ?: expression
     }
+
+    internal val aliasedFields: List<Expression<*>>
+        get() = query.set.fields.map { expression ->
+            when (expression) {
+                is Column<*> -> expression.clone()
+                is ExpressionAlias<*> -> expression.delegate.alias("$alias.${expression.alias}").aliasOnlyExpression()
+                else -> expression
+            }
+        }
 
     override val columns: List<Column<*>> = fields.filterIsInstance<Column<*>>()
 
