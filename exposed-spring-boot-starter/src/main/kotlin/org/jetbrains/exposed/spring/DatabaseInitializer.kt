@@ -39,6 +39,8 @@ open class DatabaseInitializer(private val applicationContext: ApplicationContex
         logger.info("Schema generation for tables '{}'", exposedTables.map { it.tableName })
 
         logger.info("ddl {}", exposedTables.map { it.ddl }.joinToString())
+        // what to do here, since module should not need to depend on either driver module...
+        // had to switch spring dependency from implementation to api...
         SchemaUtils.create(tables = exposedTables.toTypedArray())
     }
 }

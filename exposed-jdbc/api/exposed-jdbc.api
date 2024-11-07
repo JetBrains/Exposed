@@ -4,6 +4,46 @@ public final class org/jetbrains/exposed/jdbc/ExposedConnectionImpl : org/jetbra
 	public fun invoke (Ljava/sql/Connection;)Lorg/jetbrains/exposed/sql/statements/jdbc/JdbcConnectionImpl;
 }
 
+public final class org/jetbrains/exposed/sql/SchemaUtils : org/jetbrains/exposed/sql/statements/api/SchemaUtilityApi {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/SchemaUtils;
+	public final fun addMissingColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
+	public static synthetic fun addMissingColumnsStatements$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
+	public final fun checkCycle ([Lorg/jetbrains/exposed/sql/Table;)Z
+	public final fun checkExcessiveForeignKeyConstraints ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
+	public final fun checkExcessiveIndices ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
+	public final fun checkMappingConsistence ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
+	public static synthetic fun checkMappingConsistence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
+	public final fun create ([Lorg/jetbrains/exposed/sql/Table;Z)V
+	public static synthetic fun create$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)V
+	public final fun createDatabase ([Ljava/lang/String;Z)V
+	public static synthetic fun createDatabase$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Ljava/lang/String;ZILjava/lang/Object;)V
+	public final fun createFKey (Lorg/jetbrains/exposed/sql/ForeignKeyConstraint;)Ljava/util/List;
+	public final fun createIndex (Lorg/jetbrains/exposed/sql/Index;)Ljava/util/List;
+	public final fun createMissingTablesAndColumns ([Lorg/jetbrains/exposed/sql/Table;ZZ)V
+	public static synthetic fun createMissingTablesAndColumns$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZZILjava/lang/Object;)V
+	public final fun createSchema ([Lorg/jetbrains/exposed/sql/Schema;Z)V
+	public static synthetic fun createSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Schema;ZILjava/lang/Object;)V
+	public final fun createSequence ([Lorg/jetbrains/exposed/sql/Sequence;Z)V
+	public static synthetic fun createSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZILjava/lang/Object;)V
+	public final fun createStatements ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/List;
+	public final fun drop ([Lorg/jetbrains/exposed/sql/Table;Z)V
+	public static synthetic fun drop$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)V
+	public final fun dropDatabase ([Ljava/lang/String;Z)V
+	public static synthetic fun dropDatabase$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Ljava/lang/String;ZILjava/lang/Object;)V
+	public final fun dropSchema ([Lorg/jetbrains/exposed/sql/Schema;ZZ)V
+	public static synthetic fun dropSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Schema;ZZILjava/lang/Object;)V
+	public final fun dropSequence ([Lorg/jetbrains/exposed/sql/Sequence;Z)V
+	public static synthetic fun dropSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZILjava/lang/Object;)V
+	public final fun listDatabases ()Ljava/util/List;
+	public final fun listTables ()Ljava/util/List;
+	public final fun setSchema (Lorg/jetbrains/exposed/sql/Schema;Z)V
+	public static synthetic fun setSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;Lorg/jetbrains/exposed/sql/Schema;ZILjava/lang/Object;)V
+	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;
+	public final fun statementsRequiredToActualizeScheme ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
+	public static synthetic fun statementsRequiredToActualizeScheme$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
+	public final fun withDataBaseLock (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/jvm/functions/Function0;)V
+}
+
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcConnectionImpl : org/jetbrains/exposed/sql/statements/api/ExposedConnection {
 	public fun <init> (Ljava/sql/Connection;)V
 	public fun close ()V

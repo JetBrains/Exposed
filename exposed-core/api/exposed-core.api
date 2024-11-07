@@ -2130,46 +2130,6 @@ public final class org/jetbrains/exposed/sql/Schema {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/jetbrains/exposed/sql/SchemaUtils {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/SchemaUtils;
-	public final fun addMissingColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
-	public static synthetic fun addMissingColumnsStatements$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
-	public final fun checkCycle ([Lorg/jetbrains/exposed/sql/Table;)Z
-	public final fun checkExcessiveForeignKeyConstraints ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
-	public final fun checkExcessiveIndices ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
-	public final fun checkMappingConsistence ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
-	public static synthetic fun checkMappingConsistence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
-	public final fun create ([Lorg/jetbrains/exposed/sql/Table;Z)V
-	public static synthetic fun create$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)V
-	public final fun createDatabase ([Ljava/lang/String;Z)V
-	public static synthetic fun createDatabase$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Ljava/lang/String;ZILjava/lang/Object;)V
-	public final fun createFKey (Lorg/jetbrains/exposed/sql/ForeignKeyConstraint;)Ljava/util/List;
-	public final fun createIndex (Lorg/jetbrains/exposed/sql/Index;)Ljava/util/List;
-	public final fun createMissingTablesAndColumns ([Lorg/jetbrains/exposed/sql/Table;ZZ)V
-	public static synthetic fun createMissingTablesAndColumns$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZZILjava/lang/Object;)V
-	public final fun createSchema ([Lorg/jetbrains/exposed/sql/Schema;Z)V
-	public static synthetic fun createSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Schema;ZILjava/lang/Object;)V
-	public final fun createSequence ([Lorg/jetbrains/exposed/sql/Sequence;Z)V
-	public static synthetic fun createSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZILjava/lang/Object;)V
-	public final fun createStatements ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/List;
-	public final fun drop ([Lorg/jetbrains/exposed/sql/Table;Z)V
-	public static synthetic fun drop$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)V
-	public final fun dropDatabase ([Ljava/lang/String;Z)V
-	public static synthetic fun dropDatabase$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Ljava/lang/String;ZILjava/lang/Object;)V
-	public final fun dropSchema ([Lorg/jetbrains/exposed/sql/Schema;ZZ)V
-	public static synthetic fun dropSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Schema;ZZILjava/lang/Object;)V
-	public final fun dropSequence ([Lorg/jetbrains/exposed/sql/Sequence;Z)V
-	public static synthetic fun dropSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZILjava/lang/Object;)V
-	public final fun listDatabases ()Ljava/util/List;
-	public final fun listTables ()Ljava/util/List;
-	public final fun setSchema (Lorg/jetbrains/exposed/sql/Schema;Z)V
-	public static synthetic fun setSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;Lorg/jetbrains/exposed/sql/Schema;ZILjava/lang/Object;)V
-	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;
-	public final fun statementsRequiredToActualizeScheme ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
-	public static synthetic fun statementsRequiredToActualizeScheme$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
-	public final fun withDataBaseLock (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/jvm/functions/Function0;)V
-}
-
 public final class org/jetbrains/exposed/sql/Sequence {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Boolean;Ljava/lang/Long;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Boolean;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -3744,6 +3704,31 @@ public abstract interface class org/jetbrains/exposed/sql/statements/api/ResultA
 	public abstract fun metadataColumnName (I)Ljava/lang/String;
 	public abstract fun next ()Z
 	public abstract fun releaseResult ()V
+}
+
+public abstract class org/jetbrains/exposed/sql/statements/api/SchemaUtilityApi {
+	public fun <init> ()V
+	protected final fun createDdl (Lorg/jetbrains/exposed/sql/ForeignKeyConstraint;)Ljava/util/List;
+	protected final fun createDdl (Lorg/jetbrains/exposed/sql/Index;)Ljava/util/List;
+	protected final fun filterAndLogExcessConstraints (Ljava/util/Map;Z)Ljava/util/List;
+	protected final fun filterAndLogExcessIndices (Ljava/util/Map;Z)Ljava/util/List;
+	protected final fun filterAndLogMissingAndUnmappedIndices (Ljava/util/Map;Ljava/util/Set;ZZ[Lorg/jetbrains/exposed/sql/Table;)Lkotlin/Pair;
+	protected final fun getAlterTablesLogMessage ()Ljava/lang/String;
+	protected final fun getColumnsLogMessage ()Ljava/lang/String;
+	protected final fun getConstraintsLogMessage ()Ljava/lang/String;
+	protected final fun getCreateSequencesLogMessage ()Ljava/lang/String;
+	protected final fun getCreateTablesLogMessage ()Ljava/lang/String;
+	protected final fun getExecuteAlterTablesLogMessage ()Ljava/lang/String;
+	protected final fun getExecuteCreateTablesLogMessage ()Ljava/lang/String;
+	protected final fun getMappingConsistenceLogMessage ()Ljava/lang/String;
+	protected final fun getPrimaryKeysLogMessage ()Ljava/lang/String;
+	protected final fun hasCycle (Ljava/util/List;)Z
+	protected final fun log (Ljava/util/Collection;Ljava/lang/String;Z)V
+	protected final fun logTimeSpent (Ljava/lang/String;ZLkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+	protected final fun mapMissingColumnStatementsTo (Lorg/jetbrains/exposed/sql/Table;Ljava/util/Collection;Ljava/util/List;Lorg/jetbrains/exposed/sql/vendors/PrimaryKeyMetadata;Z)Ljava/util/Collection;
+	protected final fun mapMissingConstraintsTo (Ljava/util/Collection;Ljava/util/Map;[Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Collection;
+	protected final fun sortByReferences (Ljava/lang/Iterable;)Ljava/util/List;
+	protected final fun tableDdlWithoutExistingSequence (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Sequence;)Lkotlin/Pair;
 }
 
 public final class org/jetbrains/exposed/sql/transactions/ThreadLocalTransactionManager : org/jetbrains/exposed/sql/transactions/TransactionManager {

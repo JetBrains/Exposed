@@ -10,9 +10,9 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.File
 
 /**
- * Utility functions that assist with generating the necessary SQL statements to migrate database schema objects.
+ * Utility suspend functions that assist with generating the necessary SQL statements to migrate database schema objects.
  */
-object MigrationUtils : SchemaUtilityApi() {
+object R2dbcMigrationUtils : SchemaUtilityApi() {
     /**
      * This function simply generates the migration script without applying the migration. Its purpose is to show what
      * the migration script will look like before applying the migration. If a migration script with the same name
@@ -29,7 +29,12 @@ object MigrationUtils : SchemaUtilityApi() {
      * @throws IllegalArgumentException if no argument is passed for the [tables] parameter.
      */
     @ExperimentalDatabaseMigrationApi
-    fun generateMigrationScript(vararg tables: Table, scriptDirectory: String, scriptName: String, withLogs: Boolean = true): File {
+    suspend fun generateMigrationScript(
+        vararg tables: Table,
+        scriptDirectory: String,
+        scriptName: String,
+        withLogs: Boolean = true
+    ): File {
         require(tables.isNotEmpty()) { "Tables argument must not be empty" }
 
         val allStatements = statementsRequiredForDatabaseMigration(*tables, withLogs = withLogs)
@@ -48,7 +53,7 @@ object MigrationUtils : SchemaUtilityApi() {
      * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
      */
-    fun statementsRequiredForDatabaseMigration(vararg tables: Table, withLogs: Boolean = true): List<String> {
+    suspend fun statementsRequiredForDatabaseMigration(vararg tables: Table, withLogs: Boolean = true): List<String> {
         val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() } // db request
         val createStatements = logTimeSpent(createTablesLogMessage, withLogs) {
             createTableStatements(tables = tablesToCreate.toTypedArray())
@@ -71,7 +76,7 @@ object MigrationUtils : SchemaUtilityApi() {
         return allStatements
     }
 
-    private fun createTableStatements(vararg tables: Table): List<String> {
+    private suspend fun createTableStatements(vararg tables: Table): List<String> {
         if (tables.isEmpty()) return emptyList()
 
         val toCreate = tables.toList().sortByReferences().filterNot { it.exists() } // db request
@@ -86,7 +91,7 @@ object MigrationUtils : SchemaUtilityApi() {
         } + alters
     }
 
-    private fun addMissingAndDropUnmappedColumns(vararg tables: Table, withLogs: Boolean = true): List<String> {
+    private suspend fun addMissingAndDropUnmappedColumns(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
 
         val statements = ArrayList<String>()
@@ -134,7 +139,7 @@ object MigrationUtils : SchemaUtilityApi() {
      * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE DROP COLUMN` syntax completely.
      * Please check the documentation.
      */
-    fun dropUnmappedColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
+    suspend fun dropUnmappedColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
 
         val statements = mutableListOf<String>()
@@ -142,7 +147,7 @@ object MigrationUtils : SchemaUtilityApi() {
         val dbSupportsAlterTableWithDropColumn = TransactionManager.current().db.supportsAlterTableWithDropColumn
 
         if (dbSupportsAlterTableWithDropColumn) {
-            val existingTablesColumns = logTimeSpent(columnsLogMessage, withLogs) {
+            val existingTablesColumns = logTimeSpent("Extracting table columns", withLogs) {
                 currentDialect.tableColumns(*tables) // db request
             }
 
@@ -158,7 +163,7 @@ object MigrationUtils : SchemaUtilityApi() {
      * Log Exposed table mappings <-> real database mapping problems and returns DDL Statements to fix them, including
      * DROP/DELETE statements (unlike `SchemaUtils.checkMappingConsistence`).
      */
-    private fun mappingConsistenceRequiredStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
+    private suspend fun mappingConsistenceRequiredStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         val foreignKeyConstraints = currentDialect.columnConstraints(*tables) // db request
         val existingIndices = currentDialect.existingIndices(*tables) // db request
 
@@ -178,7 +183,7 @@ object MigrationUtils : SchemaUtilityApi() {
      *
      * @return List of sequences that are missing and can be created.
      */
-    private fun checkMissingSequences(vararg tables: Table, withLogs: Boolean): List<Sequence> {
+    private suspend fun checkMissingSequences(vararg tables: Table, withLogs: Boolean): List<Sequence> {
         if (!currentDialect.supportsCreateSequence) return emptyList()
 
         val existingSequencesNames: Set<String> = currentDialect.sequences().toSet() // db request
@@ -194,7 +199,7 @@ object MigrationUtils : SchemaUtilityApi() {
      *
      * @return List of sequences that are unmapped and can be dropped.
      */
-    private fun checkUnmappedSequences(vararg tables: Table, withLogs: Boolean): List<Sequence> {
+    private suspend fun checkUnmappedSequences(vararg tables: Table, withLogs: Boolean): List<Sequence> {
         if (!currentDialect.supportsCreateSequence || (currentDialect as? H2Dialect)?.majorVersion == H2Dialect.H2MajorVersion.One) {
             return emptyList()
         }

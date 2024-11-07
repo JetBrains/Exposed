@@ -9,6 +9,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
+import org.jetbrains.exposed.sql.statements.api.TableUtils
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
@@ -1688,7 +1689,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun createStatement(): List<String> {
-        val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
+        val addForeignKeysInAlterPart = TableUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 
         val foreignKeyConstraints = foreignKeys
 
@@ -1780,7 +1781,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             append(TransactionManager.current().identity(this@Table))
             if (currentDialectIfAvailable is OracleDialect) {
                 append(" CASCADE CONSTRAINTS")
-            } else if (currentDialectIfAvailable is PostgreSQLDialect && SchemaUtils.checkCycle(this@Table)) {
+            } else if (currentDialectIfAvailable is PostgreSQLDialect && TableUtils.checkCycle(this@Table)) {
                 append(" CASCADE")
             }
         }

@@ -96,7 +96,7 @@ class R2dbcPreparedStatementImpl(
             is UUIDColumnType -> UUID::class.java
             is CharacterColumnType -> Char::class.java
             is BooleanColumnType -> Boolean::class.java
-            is ArrayColumnType<*> -> List::class.java
+            is ArrayColumnType<*, *> -> List::class.java
             else -> String::class.java
         }
         statement.bindNull(index - 1, columnValueType)

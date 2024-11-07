@@ -1283,8 +1283,9 @@ class ArrayColumnType<T, R : List<Any?>>(
 
     @Suppress("UNCHECKED_CAST")
     override fun valueFromDB(value: Any): R? {
-        return when {
-            value is Array<*> -> recursiveValueFromDB(value, dimensions) as R?
+        return when (value) {
+            is Array<*> -> recursiveValueFromDB(value, dimensions) as R?
+            is java.sql.Array -> recursiveValueFromDB(value.array, dimensions) as R?
             else -> value as R?
         }
     }

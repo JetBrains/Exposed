@@ -24,6 +24,46 @@ public final class org/jetbrains/exposed/r2dbc/R2dbcDatabase$Companion {
 	public final fun registerR2dbcDriver (Ljava/lang/String;Ljava/lang/String;)V
 }
 
+public final class org/jetbrains/exposed/sql/SchemaUtils : org/jetbrains/exposed/sql/statements/api/SchemaUtilityApi {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/SchemaUtils;
+	public final fun addMissingColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun addMissingColumnsStatements$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun checkCycle ([Lorg/jetbrains/exposed/sql/Table;)Z
+	public final fun checkExcessiveForeignKeyConstraints ([Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun checkExcessiveIndices ([Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun checkMappingConsistence ([Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun checkMappingConsistence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun create ([Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun create$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createDatabase ([Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createDatabase$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createFKey (Lorg/jetbrains/exposed/sql/ForeignKeyConstraint;)Ljava/util/List;
+	public final fun createIndex (Lorg/jetbrains/exposed/sql/Index;)Ljava/util/List;
+	public final fun createMissingTablesAndColumns ([Lorg/jetbrains/exposed/sql/Table;ZZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createMissingTablesAndColumns$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createSchema ([Lorg/jetbrains/exposed/sql/Schema;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Schema;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createSequence ([Lorg/jetbrains/exposed/sql/Sequence;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createStatements ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun drop ([Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun drop$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun dropDatabase ([Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun dropDatabase$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun dropSchema ([Lorg/jetbrains/exposed/sql/Schema;ZZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun dropSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Schema;ZZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun dropSequence ([Lorg/jetbrains/exposed/sql/Sequence;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun dropSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun listDatabases (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun listTables (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setSchema (Lorg/jetbrains/exposed/sql/Schema;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun setSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;Lorg/jetbrains/exposed/sql/Schema;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;
+	public final fun statementsRequiredToActualizeScheme ([Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun statementsRequiredToActualizeScheme$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun withDataBaseLock (Lorg/jetbrains/exposed/sql/Transaction;Lkotlin/jvm/functions/Function0;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcConnectionImpl : org/jetbrains/exposed/sql/statements/api/ExposedConnection {
 	public fun <init> (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcScope;)V
 	public fun close ()V

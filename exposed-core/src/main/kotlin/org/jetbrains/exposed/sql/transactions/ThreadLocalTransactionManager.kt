@@ -3,13 +3,16 @@ package org.jetbrains.exposed.sql.transactions
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
+import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
 
@@ -342,7 +345,7 @@ fun <T> inTopLevelTransaction(
 
             @Suppress("TooGenericExceptionCaught")
             try {
-                transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
+                transaction.db.config.defaultSchema?.let { transaction.setTransactionSchema(it) }
                 val answer = transaction.statement()
                 transaction.commit()
                 return answer
@@ -392,6 +395,18 @@ fun <T> inTopLevelTransaction(
     return keepAndRestoreTransactionRefAfterRun(db) {
         run()
     }
+}
+
+internal fun Transaction.setTransactionSchema(schema: Schema) {
+    schema.setSchemaStatement().forEach { exec(it) }
+
+    when (currentDialect) {
+        is MysqlDialect -> connection.catalog = schema.identifier // db request
+
+        is H2Dialect -> connection.schema = schema.identifier // db request
+    }
+    currentDialect.resetCaches()
+    connection.metadata { resetCurrentScheme() } // db request
 }
 
 private fun <T> keepAndRestoreTransactionRefAfterRun(db: DatabaseApi? = null, block: () -> T): T {
