@@ -246,6 +246,14 @@ class Join(
             table.columns.toMutableList()
         ) { it.joinPart.columns }
 
+    override val fields: List<Expression<*>>
+        get() = joinParts.flatMapTo(table.fields.toMutableList()) {
+            when (it.joinPart) {
+                is QueryAlias -> it.joinPart.aliasedFields
+                else -> it.joinPart.fields
+            }
+        }
+
     internal val joinParts: MutableList<JoinPart> = mutableListOf()
 
     constructor(
