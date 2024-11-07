@@ -1242,7 +1242,7 @@ class CustomEnumerationColumnType<T : Enum<T>>(
  * **Note:** The maximum cardinality is considered for each dimension, but it is ignored by the PostgreSQL database.
  */
 class ArrayColumnType<T, R : List<Any?>>(
-    val delegate: ColumnType<T & Any>,
+    val delegate: IColumnType<T & Any>,
     val maximumCardinality: List<Int>? = null,
     val dimensions: Int = 1
 ) : ColumnType<R>() {
