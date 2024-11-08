@@ -201,9 +201,9 @@ public final class org/jetbrains/exposed/sql/AndOp : org/jetbrains/exposed/sql/C
 public final class org/jetbrains/exposed/sql/ArrayColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Ljava/lang/Integer;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Ljava/util/List;I)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/ColumnType;Ljava/util/List;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/ColumnType;
+	public fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/util/List;I)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;Ljava/util/List;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/IColumnType;
 	public final fun getDelegateType ()Ljava/lang/String;
 	public final fun getDimensions ()I
 	public final fun getMaximumCardinality ()Ljava/util/List;
