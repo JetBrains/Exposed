@@ -1,19 +1,28 @@
 package org.jetbrains.exposed.sql.transactions
 
-import org.jetbrains.exposed.r2dbc.R2dbcDatabase
+import org.jetbrains.annotations.TestOnly
+import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 
-// this might be quite unnecessary given the amount of redundancy! Can the behavior that needs to change be extracted?
-class R2dbcTransactionManager(
-    private val db: R2dbcDatabase,
+/**
+ * [TransactionManager] implementation registered to the provided database value [db].
+ *
+ * [setupTxConnection] can be provided to override the default configuration of transaction settings when a
+ * connection is retrieved from the database.
+ */
+class ThreadLocalTransactionManager(
+    private val db: Database,
     private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null
 ) : TransactionManager {
+    @Volatile
     override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
 
+    @Volatile
     override var defaultMinRetryDelay: Long = db.config.defaultMinRetryDelay
 
+    @Volatile
     override var defaultMaxRetryDelay: Long = db.config.defaultMaxRetryDelay
 
     @Deprecated(
@@ -43,57 +52,106 @@ class R2dbcTransactionManager(
         get() = defaultMaxRetryDelay
         set(value) { defaultMaxRetryDelay = value }
 
+    @Volatile
     override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
-        get() = if (field == -1) R2dbcDatabase.getDefaultIsolationLevel(db) else field
+        get() {
+            when {
+                field == -1 -> {
+                    if (db.connectsViaDataSource) loadDataSourceIsolationLevel = true
+                    field = Database.getDefaultIsolationLevel(db)
+                }
+                db.connectsViaDataSource && loadDataSourceIsolationLevel -> {
+                    if (db.dataSourceIsolationLevel != -1) {
+                        loadDataSourceIsolationLevel = false
+                        field = db.dataSourceIsolationLevel
+                    }
+                }
+            }
+            return field
+        }
 
+        @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel", level = DeprecationLevel.ERROR)
+        @TestOnly
+        set
+
+    /**
+     * Whether the transaction isolation level of the underlying DataSource should be retrieved from the database.
+     *
+     * This should only be set to `true` if [Database.connectsViaDataSource] has also been set to `true` and if
+     * an initial connection to the database has not already been made.
+     */
+    private var loadDataSourceIsolationLevel = false
+
+    @Volatile
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
-    // coroutine equivalent as context element?
-    val threadLocal = ThreadLocal<R2dbcTransaction>()
+    /** A thread local variable storing the current transaction. */
+    val threadLocal = ThreadLocal<JdbcTransaction>()
 
     override fun toString(): String {
-        return "R2dbcTransactionManager[${hashCode()}](db=$db)"
+        return "ThreadLocalTransactionManager[${hashCode()}](db=$db)"
     }
 
-    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): R2dbcTransaction {
+    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): JdbcTransaction {
         val transaction = outerTransaction
-            ?.takeIf { !db.useNestedTransactions } as? R2dbcTransaction
-            ?: R2dbcTransaction(
-                R2dbcThreadLocalTransaction(
+            ?.takeIf { !db.useNestedTransactions } as? JdbcTransaction
+            ?: JdbcTransaction(
+                ThreadLocalTransaction(
                     db = db,
                     readOnly = outerTransaction?.readOnly ?: readOnly,
                     transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
                     setupTxConnection = setupTxConnection,
                     threadLocal = threadLocal,
-                    outerTransaction = outerTransaction as? R2dbcTransaction
+                    outerTransaction = outerTransaction as? JdbcTransaction,
+                    loadDataSourceIsolationLevel = loadDataSourceIsolationLevel,
                 )
             )
 
         return transaction.apply { bindTransactionToThread(this) }
     }
 
-    override fun currentOrNull(): R2dbcTransaction? = threadLocal.get()
+    override fun currentOrNull(): Transaction? = threadLocal.get()
 
-    // ???
     override fun bindTransactionToThread(transaction: Transaction?) {
         if (transaction != null) {
-            threadLocal.set(transaction as R2dbcTransaction)
+            threadLocal.set(transaction as JdbcTransaction)
         } else {
             threadLocal.remove()
         }
     }
 
-    private class R2dbcThreadLocalTransaction(
-        override val db: R2dbcDatabase,
+    private class ThreadLocalTransaction(
+        override val db: Database,
         private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)?,
         override val transactionIsolation: Int,
         override val readOnly: Boolean,
-        val threadLocal: ThreadLocal<R2dbcTransaction>,
-        override val outerTransaction: R2dbcTransaction?
+        val threadLocal: ThreadLocal<JdbcTransaction>,
+        override val outerTransaction: JdbcTransaction?,
+        private val loadDataSourceIsolationLevel: Boolean
     ) : TransactionInterface {
+
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
-                setupTxConnection?.invoke(this, this@R2dbcThreadLocalTransaction)
+                setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
+                    // The order of setters here is important.
+                    // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
+                    // Some drivers start a transaction right after `setAutoCommit(false)`,
+                    // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
+                    if (db.connectsViaDataSource && loadDataSourceIsolationLevel && db.dataSourceIsolationLevel == -1) {
+                        // retrieves the setting of the datasource connection & caches it
+                        db.dataSourceIsolationLevel = transactionIsolation
+                        db.dataSourceReadOnly = readOnly
+                    } else if (
+                        !db.connectsViaDataSource ||
+                        db.dataSourceIsolationLevel != this@ThreadLocalTransaction.transactionIsolation ||
+                        db.dataSourceReadOnly != this@ThreadLocalTransaction.readOnly
+                    ) {
+                        // only set the level if there is no cached datasource value or if the value differs
+                        transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                        readOnly = this@ThreadLocalTransaction.readOnly
+                    }
+                    autoCommit = false
+                }
             }
         }
 
@@ -142,11 +200,10 @@ class R2dbcTransactionManager(
         private val savepointName: String
             get() {
                 var nestedLevel = 0
-                var currentTransaction = outerTransaction
-                while (currentTransaction?.outerTransaction != null) {
+                var currenTransaction = outerTransaction
+                while (currenTransaction?.outerTransaction != null) {
                     nestedLevel++
-                    // should the interface itself be altered?
-                    currentTransaction = currentTransaction.outerTransaction as R2dbcTransaction
+                    currenTransaction = currenTransaction.outerTransaction as JdbcTransaction
                 }
                 return "Exposed_savepoint_$nestedLevel"
             }

@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.tests.shared.Item
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assume
 import org.junit.Test
@@ -41,7 +42,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
         }
     }
 
-    private fun Transaction.testOnDeleteSetDefault() {
+    private fun JdbcTransaction.testOnDeleteSetDefault() {
         SchemaUtils.create(Category, Item)
 
         Category.insert {

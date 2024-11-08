@@ -2,12 +2,12 @@ package org.jetbrains.exposed.sql.r2dbc
 
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.r2dbc.asInt
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.vendors.*
 import org.junit.Test
 import java.sql.DatabaseMetaData
@@ -222,7 +222,7 @@ class MetadataTests : DatabaseTestsBase() {
         return result
     }
 
-    private fun <T> Transaction.executeMetadataQuery(
+    private fun <T> JdbcTransaction.executeMetadataQuery(
         query: String,
         transform: ResultSet.() -> T
     ): MutableList<T>? = exec(query) {
@@ -298,10 +298,11 @@ class MetadataTests : DatabaseTestsBase() {
     }
 }
 
+// if these metadata tests continue to use JDBC, they will need to switch modules (or be integrated entirely)
 private fun DatabaseTestsBase.withJdbcMetadata(
     vararg table: Table,
     exclude: Collection<TestDB> = emptyList(),
-    body: Transaction.(testDb: TestDB, metadata: DatabaseMetaData, provider: MetadataProvider) -> Unit
+    body: JdbcTransaction.(testDb: TestDB, metadata: DatabaseMetaData, provider: MetadataProvider) -> Unit
 ) {
     val r2bdcUnsupported = TestDB.ALL_H2_V1 + TestDB.SQLITE + TestDB.POSTGRESQLNG
     withDb(excludeSettings = exclude + r2bdcUnsupported) { testDb ->
@@ -316,11 +317,15 @@ private fun DatabaseTestsBase.withJdbcMetadata(
                 else -> H2Metadata()
             }
 
-            table.takeIf { it.isNotEmpty() }?.let { SchemaUtils.create(tables = it) }
+            table.takeIf { it.isNotEmpty() }?.let {
+                SchemaUtils.create(tables = it)
+            }
 
             body(testDb, jdbcMetadata, provider)
         } finally {
-            table.takeIf { it.isNotEmpty() }?.let { SchemaUtils.drop(tables = it) }
+            table.takeIf { it.isNotEmpty() }?.let {
+                SchemaUtils.drop(tables = it)
+            }
         }
     }
 }

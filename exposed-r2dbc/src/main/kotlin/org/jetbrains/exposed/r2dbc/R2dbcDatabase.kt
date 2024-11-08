@@ -17,6 +17,8 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import org.reactivestreams.Publisher
 
+// is the package location a good choice?
+
 /**
  * Class representing the underlying R2DBC database to which connections are made
  * and on which transaction tasks are performed.

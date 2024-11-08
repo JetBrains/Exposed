@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assert.assertEquals
@@ -313,7 +314,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         transactionManager.execute(timeout = 1) {
             try {
                 // H2 database doesn't support sql sleep function so use recursive query to simulate long running query
-                TransactionManager.current().exec(
+                (TransactionManager.current() as JdbcTransaction).exec(
                     """
                WITH RECURSIVE T(N) AS (
                SELECT 1

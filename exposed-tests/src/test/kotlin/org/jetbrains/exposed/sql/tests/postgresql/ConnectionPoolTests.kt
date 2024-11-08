@@ -6,12 +6,12 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.tests.LogDbInTestName
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assert
@@ -64,7 +64,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
         val testTable = object : IntIdTable("HIKARI_TESTER") { }
 
-        fun Transaction.getReadOnlyMode(): Boolean {
+        fun JdbcTransaction.getReadOnlyMode(): Boolean {
             val mode = exec("SHOW transaction_read_only;") {
                 it.next()
                 it.getBoolean(1)

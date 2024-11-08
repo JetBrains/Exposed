@@ -11,7 +11,7 @@ import org.jetbrains.exposed.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.sql.ForeignKeyConstraint
 import org.jetbrains.exposed.sql.Index
 import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.R2dbcSchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
@@ -278,7 +278,7 @@ class R2dbcDatabaseMetadataImpl(
     }
 
     override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
-        val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCaseUnquoted() }
+        val allTables = R2dbcSchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCaseUnquoted() }
         return allTables.keys.associateWith { table ->
             val (catalog, tableSchema) = tableCatalogAndSchema(allTables[table]!!)
             fetchMetadata(

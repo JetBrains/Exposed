@@ -4,6 +4,7 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import org.jetbrains.exposed.sql.vendors.H2Dialect.H2MajorVersion
@@ -49,7 +50,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
                 @Language("H2")
                 val modeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
-                TransactionManager.current().exec(modeQuery) { rs ->
+                (TransactionManager.current() as JdbcTransaction).exec(modeQuery) { rs ->
                     rs.next()
                     rs.getString(settingValueField)
                 }
@@ -268,7 +269,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     @Suppress("MagicNumber")
     override fun sequences(): List<String> {
         val dialect = currentDialect
-        val transaction = TransactionManager.current()
+        val transaction = TransactionManager.current() as JdbcTransaction
 
         return when (dialect) {
             is OracleDialect -> transaction.exec("SELECT SEQUENCE_NAME FROM USER_SEQUENCES") { rs ->
@@ -342,7 +343,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     // this should be consolidated with the above &/or with tableCatalogAndScheme() below
     private fun loadMySqlConstraints(tables: List<Table>, allTables: Map<String, Table>, allTableNames: Set<String>): Map<String, List<ForeignKeyConstraint>> {
         val inTableList = allTableNames.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
-        val tr = TransactionManager.current()
+        val tr = TransactionManager.current() as JdbcTransaction
         val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: tr.connection.catalog}'"
         val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()
         tr.exec(

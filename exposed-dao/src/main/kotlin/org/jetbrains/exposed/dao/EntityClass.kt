@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.statements.StatementBuilder
 import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap
@@ -1157,9 +1158,15 @@ abstract class ImmutableEntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.ImmutableEntityTest.immutableEntityReadAfterUpdate
      */
     open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
-        table.update({ table.id eq entity.id }) {
-            it[column] = value
-        }
+        val tx = TransactionManager.currentOrNull()
+        // a decision needs to be made about how to call when the underlying driver is uncertain
+        tx?.exec(
+            StatementBuilder {
+                update(table, { table.id eq entity.id }, null) {
+                    it[column] = value
+                }
+            }
+        )
 
         /* Evict the entity from the current transaction entity cache,
            so that the next read of this entity using DAO API would return

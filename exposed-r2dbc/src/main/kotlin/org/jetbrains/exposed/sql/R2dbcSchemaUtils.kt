@@ -3,14 +3,16 @@ package org.jetbrains.exposed.sql
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.statements.api.SchemaUtilityApi
+import org.jetbrains.exposed.sql.transactions.R2dbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.execQuery
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
+// rename this once jdbc tests are moved out of module
+
 /** Utility suspend functions that assist with creating, altering, and dropping database schema objects. */
-object SchemaUtils : SchemaUtilityApi() {
+object R2dbcSchemaUtils : SchemaUtilityApi() {
     /** Returns the SQL statements that create the provided [ForeignKeyConstraint]. */
     fun createFKey(foreignKey: ForeignKeyConstraint): List<String> = foreignKey.createDdl()
 
@@ -41,7 +43,8 @@ object SchemaUtils : SchemaUtilityApi() {
 
     /** Creates the provided sequences, using a batch execution if [inBatch] is set to `true`. */
     suspend fun createSequence(vararg seq: Sequence, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        // need to potentially adjust this as the TransactionManager interface level
+        with(TransactionManager.current() as R2dbcTransaction) {
             val createStatements = seq.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
         }
@@ -49,7 +52,7 @@ object SchemaUtils : SchemaUtilityApi() {
 
     /** Drops the provided sequences, using a batch execution if [inBatch] is set to `true`. */
     suspend fun dropSequence(vararg seq: Sequence, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(TransactionManager.current() as R2dbcTransaction) {
             val dropStatements = seq.flatMap { it.dropStatement() }
             execStatements(inBatch, dropStatements)
         }
@@ -98,7 +101,7 @@ object SchemaUtils : SchemaUtilityApi() {
 
     /** Creates all [tables] that do not already exist, using a batch execution if [inBatch] is set to `true`. */
     suspend fun <T : Table> create(vararg tables: T, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(TransactionManager.current() as R2dbcTransaction) {
             execStatements(inBatch, createStatements(*tables))
             commit()
             currentDialect.resetCaches()
@@ -116,7 +119,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * @see org.jetbrains.exposed.sql.tests.shared.ddl.CreateDatabaseTest
      */
     suspend fun createDatabase(vararg databases: String, inBatch: Boolean = false) {
-        val transaction = TransactionManager.current()
+        val transaction = TransactionManager.current() as R2dbcTransaction
         try {
             with(transaction) {
                 val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
@@ -140,9 +143,9 @@ object SchemaUtils : SchemaUtilityApi() {
      * @return A list of strings representing the names of all databases.
      */
     suspend fun listDatabases(): List<String> {
-        val transaction = TransactionManager.current()
+        val transaction = TransactionManager.current() as R2dbcTransaction
         return with(transaction) {
-            execQuery(currentDialect.listDatabases()) {
+            exec(currentDialect.listDatabases()) {
                 it.get(1).toString().lowercase()
             }?.toList()?.filterNotNull() ?: emptyList()
         }
@@ -159,7 +162,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * @see org.jetbrains.exposed.sql.tests.shared.ddl.CreateDatabaseTest
      */
     suspend fun dropDatabase(vararg databases: String, inBatch: Boolean = false) {
-        val transaction = TransactionManager.current()
+        val transaction = TransactionManager.current() as R2dbcTransaction
         try {
             with(transaction) {
                 val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
@@ -201,7 +204,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * @see SchemaUtils.withDataBaseLock
      */
     suspend fun createMissingTablesAndColumns(vararg tables: Table, inBatch: Boolean = false, withLogs: Boolean = true) {
-        with(TransactionManager.current()) {
+        with(TransactionManager.current() as R2dbcTransaction) {
             db.dialect.resetCaches()
             val createStatements = logTimeSpent(createTablesLogMessage, withLogs) {
                 createStatements(*tables)
@@ -316,7 +319,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * All code provided in _body_ closure will be executed only if there is no another code which running under "withDataBaseLock" at same time.
      * That means that concurrent execution of long-running tasks under "database lock" might lead to that only first of them will be really executed.
      */
-    suspend fun <T> Transaction.withDataBaseLock(body: () -> T) {
+    suspend fun <T> R2dbcTransaction.withDataBaseLock(body: () -> T) {
         val buzyTable = object : Table("busy") {
             val busy = bool("busy").uniqueIndex()
         }
@@ -343,7 +346,7 @@ object SchemaUtils : SchemaUtilityApi() {
     /** Drops all [tables], using a batch execution if [inBatch] is set to `true`. */
     suspend fun drop(vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
-        with(TransactionManager.current()) {
+        with(TransactionManager.current() as R2dbcTransaction) {
             var tablesForDeletion = sortTablesByReferences(tables.toList()).reversed().filter { it in tables }
             if (!currentDialect.supportsIfNotExists) {
                 tablesForDeletion = tablesForDeletion.filter { it.exists() } // db request
@@ -361,7 +364,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * @sample org.jetbrains.exposed.sql.tests.shared.SchemaTests
      */
     suspend fun setSchema(schema: Schema, inBatch: Boolean = false) {
-        with(TransactionManager.current()) {
+        with(TransactionManager.current() as R2dbcTransaction) {
             val createStatements = schema.setSchemaStatement()
 
             execStatements(inBatch, createStatements)
@@ -392,7 +395,7 @@ object SchemaUtils : SchemaUtilityApi() {
      */
     suspend fun createSchema(vararg schemas: Schema, inBatch: Boolean = false) {
         if (schemas.isEmpty()) return
-        with(TransactionManager.current()) {
+        with(TransactionManager.current() as R2dbcTransaction) {
             val toCreate = schemas.distinct().filterNot { it.exists() } // db request
             val createStatements = toCreate.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
@@ -417,7 +420,7 @@ object SchemaUtils : SchemaUtilityApi() {
      */
     suspend fun dropSchema(vararg schemas: Schema, cascade: Boolean = false, inBatch: Boolean = false) {
         if (schemas.isEmpty()) return
-        with(TransactionManager.current()) {
+        with(TransactionManager.current() as R2dbcTransaction) {
             val schemasForDeletion = if (currentDialect.supportsIfNotExists) {
                 schemas.distinct()
             } else {
@@ -431,12 +434,12 @@ object SchemaUtils : SchemaUtilityApi() {
         }
     }
 
-    private suspend fun Transaction.execStatements(inBatch: Boolean, statements: List<String>) {
+    private suspend fun R2dbcTransaction.execStatements(inBatch: Boolean, statements: List<String>) {
         if (inBatch) {
             execInBatch(statements)
         } else {
             for (statement in statements) {
-                execQuery(statement)
+                exec(statement)
             }
         }
     }

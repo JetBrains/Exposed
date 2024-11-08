@@ -267,7 +267,3 @@ class Database private constructor(
 
 /** Represents an [ExposedConnection] that is loaded whenever a connection is accessed by a [Database] instance. */
 interface DatabaseConnectionAutoRegistration : (Connection) -> ExposedConnection<*>
-
-/** Returns the name of the database obtained from its connection URL. */
-val DatabaseApi.name: String
-    get() = url.substringBefore('?').substringAfterLast('/')

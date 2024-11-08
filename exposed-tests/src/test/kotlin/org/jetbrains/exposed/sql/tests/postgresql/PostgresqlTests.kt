@@ -1,13 +1,19 @@
 package org.jetbrains.exposed.sql.tests.postgresql
 
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.RepeatableTestRule
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption.PostgreSQL
 import org.junit.Rule
@@ -82,7 +88,7 @@ class PostgresqlTests : DatabaseTestsBase() {
             val age = integer("age")
         }
 
-        fun <T : Any> Transaction.assertPrimaryKey(transform: (ResultSet) -> T): T? {
+        fun <T : Any> JdbcTransaction.assertPrimaryKey(transform: (ResultSet) -> T): T? {
             return exec(
                 """
                 SELECT ct.relname as TABLE_NAME, ci.relname AS PK_NAME

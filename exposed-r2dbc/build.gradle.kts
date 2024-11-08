@@ -18,6 +18,7 @@ dependencies {
     api(libs.kotlinx.coroutines.reactive)
 
     testImplementation(project(":exposed-tests"))
+    testImplementation(project(":exposed-jdbc"))
     testImplementation(libs.junit)
 //    testImplementation(libs.r2dbc.h2)
 //    testImplementation(libs.r2dbc.mariadb)

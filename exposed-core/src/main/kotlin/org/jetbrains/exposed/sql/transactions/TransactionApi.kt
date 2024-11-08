@@ -124,7 +124,8 @@ interface TransactionManager {
     fun bindTransactionToThread(transaction: Transaction?)
 
     companion object {
-        internal val currentDefaultDatabase = AtomicReference<DatabaseApi>()
+        // this should not be necessary
+        val currentDefaultDatabase = AtomicReference<DatabaseApi>()
 
         /**
          * The database to use by default in all transactions.
@@ -230,24 +231,6 @@ interface TransactionManager {
 
         /** Whether any [TransactionManager] instance has been initialized by a database. */
         fun isInitialized(): Boolean = defaultDatabase != null
-    }
-}
-
-@Suppress("TooGenericExceptionCaught")
-internal fun TransactionInterface.rollbackLoggingException(log: (Exception) -> Unit) {
-    try {
-        rollback()
-    } catch (e: Exception) {
-        log(e)
-    }
-}
-
-@Suppress("TooGenericExceptionCaught")
-internal inline fun TransactionInterface.closeLoggingException(log: (Exception) -> Unit) {
-    try {
-        close()
-    } catch (e: Exception) {
-        log(e)
     }
 }
 

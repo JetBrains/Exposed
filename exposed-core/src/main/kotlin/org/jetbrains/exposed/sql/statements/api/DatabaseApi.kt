@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.statements.api
 
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.name
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import java.math.BigDecimal
@@ -82,3 +81,8 @@ abstract class DatabaseApi(
         val dialects = ConcurrentHashMap<String, () -> DatabaseDialect>()
     }
 }
+
+// potential BREAKING CHANGE with imports - consider moving
+/** Returns the name of the database obtained from its connection URL. */
+val DatabaseApi.name: String
+    get() = url.substringBefore('?').substringAfterLast('/')

@@ -7,12 +7,14 @@ import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.DatabaseApi
+import org.jetbrains.exposed.sql.statements.api.name
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.experimental.withSuspendTransaction
@@ -182,7 +184,7 @@ class MultiDatabaseTest {
     @Test
     fun testCoroutinesWithMultiDb() = runBlocking {
         newSuspendedTransaction(Dispatchers.IO, db1) {
-            val tr1 = this
+            val tr1 = this as JdbcTransaction
             SchemaUtils.create(DMLTestsData.Cities)
             assertTrue(DMLTestsData.Cities.selectAll().empty())
             DMLTestsData.Cities.insert {
@@ -258,7 +260,7 @@ class MultiDatabaseTest {
         TransactionManager.defaultDatabase = db1
         newSuspendedTransaction(coroutineDispatcher1) {
             assertEquals(db1.name, TransactionManager.current().db.name) // when running all tests together, this one usually fails
-            TransactionManager.current().exec("SELECT 1") { rs ->
+            (TransactionManager.current() as JdbcTransaction).exec("SELECT 1") { rs ->
                 rs.next()
                 assertEquals(1, rs.getInt(1))
             }
@@ -266,7 +268,7 @@ class MultiDatabaseTest {
         TransactionManager.defaultDatabase = db2
         newSuspendedTransaction(coroutineDispatcher1) {
             assertEquals(db2.name, TransactionManager.current().db.name) // fails??
-            TransactionManager.current().exec("SELECT 1") { rs ->
+            (TransactionManager.current() as JdbcTransaction).exec("SELECT 1") { rs ->
                 rs.next()
                 assertEquals(1, rs.getInt(1))
             }
@@ -283,7 +285,7 @@ class MultiDatabaseTest {
         threadpool.submit {
             transaction {
                 assertEquals(db1.name, TransactionManager.current().db.name)
-                TransactionManager.current().exec("SELECT 1") { rs ->
+                (TransactionManager.current() as JdbcTransaction).exec("SELECT 1") { rs ->
                     rs.next()
                     assertEquals(1, rs.getInt(1))
                 }
@@ -294,7 +296,7 @@ class MultiDatabaseTest {
         threadpool.submit {
             transaction {
                 assertEquals(db2.name, TransactionManager.current().db.name)
-                TransactionManager.current().exec("SELECT 1") { rs ->
+                (TransactionManager.current() as JdbcTransaction).exec("SELECT 1") { rs ->
                     rs.next()
                     assertEquals(1, rs.getInt(1))
                 }

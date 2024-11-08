@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.r2dbc
 
 // including a dependency on r2dbc drivers in this module means jdbc tests in MetadataTests will attempt to
-// use those drivers. Is it not possible to have dependencies on both together?
+// use those drivers. Is it not possible to have dependencies on both simultaneously?
 
 // import kotlinx.coroutines.runBlocking
 // import org.jetbrains.exposed.sql.DatabaseConfig

@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.statements.StatementBuilder
 import org.jetbrains.exposed.sql.statements.api.DatabaseApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.Delegates
@@ -356,9 +357,11 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         val table = klass.table
         // Capture reference to the field
         val entityId = this.id
-        TransactionManager.current().registerChange(klass, entityId, EntityChangeType.Removed)
+        val tx = TransactionManager.current()
+        tx.registerChange(klass, entityId, EntityChangeType.Removed)
         executeAsPartOfEntityLifecycle {
-            table.deleteWhere { table.id eq entityId }
+            // a decision needs to be made about how to call when the underlying driver is uncertain
+            tx.exec(StatementBuilder { deleteWhere(table, null, op = { table.id eq entityId }) })
         }
         klass.removeFromCache(this)
     }
@@ -385,13 +388,18 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
                 val _writeValues = writeValues.toMap()
                 storeWrittenValues()
                 // In case of batch all changes will be registered after all entities flushed
-                TransactionManager.current().registerChange(klass, id, EntityChangeType.Updated)
+                val tx = TransactionManager.current()
+                tx.registerChange(klass, id, EntityChangeType.Updated)
                 executeAsPartOfEntityLifecycle {
-                    table.update({ table.id eq id }) {
-                        for ((c, v) in _writeValues) {
-                            it[c] = v
+                    tx.exec(
+                        StatementBuilder {
+                            update(table, where = { table.id eq id }, null) {
+                                for ((c, v) in _writeValues) {
+                                    it[c] = v
+                                }
+                            }
                         }
-                    }
+                    )
                 }
             } else {
                 batch.addBatch(this)

@@ -84,8 +84,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         return JdbcPreparedStatementImpl(connection.prepareStatement(sql, columns), true)
     }
 
-    // this should probably also SUSPEND
-    override fun executeInBatch(sqls: List<String>) {
+    override suspend fun executeInBatch(sqls: List<String>) {
         val types = sqls.map { stmt ->
             StatementType.entries.find {
                 stmt.startsWith(it.name, true)

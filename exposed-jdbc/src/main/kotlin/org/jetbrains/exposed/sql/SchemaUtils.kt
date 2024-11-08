@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.statements.api.SchemaUtilityApi
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
@@ -39,6 +40,7 @@ object SchemaUtils : SchemaUtilityApi() {
 
     /** Creates the provided sequences, using a batch execution if [inBatch] is set to `true`. */
     fun createSequence(vararg seq: Sequence, inBatch: Boolean = false) {
+        // need to potentially adjust this as the TransactionManager interface level
         with(TransactionManager.current()) {
             val createStatements = seq.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)
@@ -138,7 +140,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * @return A list of strings representing the names of all databases.
      */
     fun listDatabases(): List<String> {
-        val transaction = TransactionManager.current()
+        val transaction = TransactionManager.current() as JdbcTransaction
         return with(transaction) {
             exec(currentDialect.listDatabases()) {
                 val result = mutableListOf<String>()
@@ -345,7 +347,7 @@ object SchemaUtils : SchemaUtilityApi() {
     /** Drops all [tables], using a batch execution if [inBatch] is set to `true`. */
     fun drop(vararg tables: Table, inBatch: Boolean = false) {
         if (tables.isEmpty()) return
-        with(TransactionManager.current()) {
+        with(TransactionManager.current() as JdbcTransaction) {
             var tablesForDeletion = sortTablesByReferences(tables.toList()).reversed().filter { it in tables }
             if (!currentDialect.supportsIfNotExists) {
                 tablesForDeletion = tablesForDeletion.filter { it.exists() } // db request
@@ -435,10 +437,10 @@ object SchemaUtils : SchemaUtilityApi() {
 
     private fun Transaction.execStatements(inBatch: Boolean, statements: List<String>) {
         if (inBatch) {
-            execInBatch(statements)
+            (this as JdbcTransaction).execInBatch(statements)
         } else {
             for (statement in statements) {
-                exec(statement)
+                (this as JdbcTransaction).exec(statement)
             }
         }
     }
