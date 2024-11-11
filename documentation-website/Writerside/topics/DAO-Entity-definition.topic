@@ -6,45 +6,228 @@
        title="Entity definition" id="DAO-Entity-definition">
     <show-structure for="chapter,procedure" depth="2"/>
      <p>
-        Representing database tables as Kotlin objects ensures type safety and allows you to work with database
-        records just like regular Kotlin objects, taking full advantage of Kotlin's language features.
+        An <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-entity/index.html"><code>Entity</code></a>
+        in Exposed maps a database table to a Kotlin object. This ensures type safety and allows you to work with
+         database records just like regular Kotlin objects, taking full advantage of Kotlin's language features.
     </p>
     <p>
-        When using the DAO approach, <code>IdTable</code> needs to be associated with an <code>Entity</code>, because every database record
+        When using the DAO approach, <code>IdTable</code> needs to be associated with an <code>Entity</code>,
+        because every database record
         in this table needs to be mapped to an <code>Entity</code> instance, identified by its primary key.
     </p>
-    <p>
-        An entity instance is defined as a class.
-        In the following example, <code>StarWarsFilmEntity</code> is the entity class linked to the table <code>StarWarsFilmsTable</code>:
-    </p>
-    <tabs>
-        <tab id="windows-install" title="StarWarsFilmEntity">
-            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"/>
-        </tab>
-        <tab id="macos-install" title="StarWarsFilmsTable">
-            <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-code-block"/>
-        </tab>
-    </tabs>
-    <list>
-        <li>
-            Since <code>StarWarsFilmsTable</code> is an <code>IntIdTable</code>, the <code>StarWarsFilmsEntity</code> class extends from <code>IntEntity</code>,
-            which indicates that the <code>id</code> and primary key of <code>StarWarsFilmsTable</code> is of type <code>Int</code>.
-        </li>
-        <li>
-            The <code>companion object</code> block defines an <code>EntityClass</code> which is responsible for maintaining
-            the relation between the <code>StarWarsFilmsEntity</code> class and the actual table object, <code>StarWarsFilmsTable</code>.
-        </li>
-        <li>
-            Each column in the table is represented as a property in the class, where the <code>by</code> keyword
-            ensures the data is fetched or updated from the corresponding column when accessed.
-        </li>
-    </list>
-    <p>
-        Once the entity class is defined, instances of this class allow you to manipulate individual records
-        from the corresponding table. This could involve
-        <a href="DAO-CRUD-Operations.topic" anchor="create">creating a new record</a>,
-        <a href="DAO-CRUD-Operations.topic" anchor="read">retrieving a row based on its primary key</a>,
-        <a href="DAO-CRUD-Operations.topic" anchor="update">updating values</a>, or
-        <a href="DAO-CRUD-Operations.topic" anchor="delete">deleting records</a>.
-    </p>
+    <chapter id="defining-entity-class" title="Defining an Entity class">
+        <p>
+            You define an entity instance by creating a class.
+            In the following example, <code>StarWarsFilmEntity</code> is the entity class linked to the table
+            <code>StarWarsFilmsTable</code>:
+        </p>
+        <tabs>
+            <tab id="windows-install" title="StarWarsFilmEntity">
+                <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"/>
+            </tab>
+            <tab id="macos-install" title="StarWarsFilmsTable">
+                <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-code-block"/>
+            </tab>
+        </tabs>
+        <chapter id="entity-type" title="Entity type">
+            <p>
+                The entity type determines how the <code>Entity</code> class interacts with the table’s primary key.
+                Since <code>StarWarsFilmsTable</code> is an <code>IntIdTable</code>, the <code>StarWarsFilmsEntity</code>
+                class extends from <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-int-entity/index.html"><code>IntEntity</code></a>,
+                which indicates that the <code>id</code> and primary key of <code>StarWarsFilmsTable</code> is of type
+                <code>Int</code>.
+            </p>
+            <p>
+                The following entity types are supported:
+            </p>
+            <deflist type="medium">
+                <def id="IntEntity">
+                    <title>
+                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-int-entity/index.html">
+                            <code>IntEntity</code>
+                        </a>
+                    </title>
+                    <p>
+                        Base class for an entity instance identified by an id comprised of a wrapped <code>Int</code>
+                        value.
+                    </p>
+                </def>
+                <def id="LongEntity">
+                    <title>
+                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-long-entity/index.html">
+                            <code>LongEntity</code>
+                        </a>
+                    </title>
+                    <p>
+                        Base class for an entity instance identified by an id comprised of a wrapped <code>Long</code>
+                        value.
+                    </p>
+                </def>
+                <def id="UIntEntity">
+                    <title>
+                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-u-int-entity/index.html">
+                            <code>UIntEntity</code>
+                        </a>
+                    </title>
+                    <p>
+                        Base class for an entity instance identified by an id comprised of a wrapped <code>UInt</code>
+                        value.
+                    </p>
+                </def>
+                <def id="ULongEntity">
+                    <title>
+                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-u-long-entity/index.html">
+                            <code>ULongEntity</code>
+                        </a>
+                    </title>
+                    <p>
+                        Base class for an entity instance identified by an id comprised of a wrapped <code>ULong</code>
+                        value.
+                    </p>
+                </def>
+                <def id="UUIDEntity">
+                    <title>
+                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-u-u-i-d-entity/index.html">
+                            <code>UUIDEntity</code>
+                        </a>
+                    </title>
+                    <p>
+                        Base class for an entity instance identified by an id comprised of a wrapped <code>UUID</code>
+                        value.
+                    </p>
+                </def>
+                <def id="CompositeEntity">
+                    <title>
+                        <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-composite-entity/index.html">
+                            <code>CompositeEntity</code>
+                        </a>
+                    </title>
+                    <p>
+                        Base class for an entity instance identified by an id comprised of multiple wrapped values.
+                    </p>
+                </def>
+            </deflist>
+        </chapter>
+        <chapter id="EntityClass" title="EntityClass">
+            <p>
+                The <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-entity-class/index.html"><code>EntityClass</code></a>
+                in the <code>companion object</code> block is responsible for managing <code>Entity</code> instances,
+                such as creating, querying, and deleting records. It also maintains the relationship between the entity
+                class (<code>StarWarsFilmEntity</code> in this example) and the database table
+                (<code>StarWarsFilmsTable</code>).
+            </p>
+            <p>Each entity type is supported by a corresponding <code>EntityClass</code>, which accepts the following
+                parameters:</p>
+            <deflist type="medium">
+                <def title="table" id="table-param">
+                    The <code>IdTable</code> containing rows mapped to entities managed by this class.
+                </def>
+                <def title="entityType" id="entityType-param">
+                    (Optional) The expected type of the <code>Entity</code> class. This can be omitted if it is the
+                    class of the type argument provided to this <code>EntityClass</code> instance.
+                </def>
+                <def title="entityCtor" id="entityCtor-param">
+                    (Optional) The function that instantiates an <code>Entity</code> using the provided <code>EntityID</code>.
+                    If not provided, reflection is used to determine the primary constructor on the first access
+                    (which may affect performance).
+                </def>
+            </deflist>
+            <p>
+                In the example above, <code>IntEntityClass</code> is specified in the companion object:
+            </p>
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt" include-lines="9"/>
+            <p>
+                This setup enables you to use functions provided by <code>IntEntityClass</code> to manage instances
+                of <code>StarWarsFilmEntity</code> effectively.
+            </p>
+        </chapter>
+        <chapter id="properties" title="Properties">
+            <p>
+                Each column in the table is represented as a property in the entity class, where the <code>by</code>
+                keyword ensures the data is fetched or updated from the corresponding column when accessed.
+            </p>
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"
+                        include-lines="10-13"/>
+        </chapter>
+        <p>
+            Once the entity class is defined, instances of this class allow you to manipulate individual records
+            from the corresponding table. This could involve
+            <a href="DAO-CRUD-Operations.topic" anchor="create">creating a new record</a>,
+            <a href="DAO-CRUD-Operations.topic" anchor="read">retrieving a row based on its primary key</a>,
+            <a href="DAO-CRUD-Operations.topic" anchor="update">updating values</a>, or
+            <a href="DAO-CRUD-Operations.topic" anchor="delete">deleting records</a>.
+        </p>
+    </chapter>
+    <chapter title="Immutable entities" id="immutable-entities">
+        <p>
+            For defining entities that are immutable, Exposed provides the additional
+            <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-immutable-entity-class/index.html"><code>ImmutableEntityClass</code></a>
+            and
+            <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-immutable-cached-entity-class/index.html"><code>ImmutableCachedEntityClass</code></a>
+            .
+        </p>
+        <p>
+            The <code>ImmutableCachedEntityClass</code> uses an internal cache to store entity loading
+            states by the associated database. This ensures that entity updates are synchronized with this class as
+            the lock object.
+        </p>
+        <p>
+            These classes can be used as companion objects when defining entities that are
+            meant to be immutable.
+        </p>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/CityEntity.kt" />
+    </chapter>
+    <chapter id="class-method-overrides" title="Class method overrides">
+        <p>
+            You can use override methods in both the <code>Entity</code> class and the <code>EntityClass</code>
+            companion object to extend functionality or manage entity behavior.
+        </p>
+        <p>
+            For example, here’s how to override the <code>delete()</code> method in a <code>User</code> entity:
+        </p>
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/UserEntityOverride.kt" />
+        <p>
+            In this example, a custom message is printed before the <code>delete()</code> function of the superclass
+            (<code>IntEntity</code>) completes the deletion.
+        </p>
+    </chapter>
+    <chapter title="Field transformations" id="field-transformations">
+        <p>
+            As databases typically store only basic types, such as integers and strings, it's not always convenient to keep
+            the same simplicity on Data Access Object (DAO) level.
+        </p>
+        <p>
+            For example, you might need to parse JSON from a <code>VARCHAR</code> column, or retrieve values from a cache
+            based on data from the database.
+            In such cases, the preferred approach is to use column transformations.
+        </p>
+        <chapter title="Example: Defining an Unsigned Integer field" id="defining-unsigned-int-field">
+            <p>
+                Suppose that you want to define an unsigned integer field on an entity, but Exposed doesn't have such
+                column type yet. You can achieve this by using the following implementation:
+            </p>
+            <code-block lang="kotlin"><![CDATA[
+        object TableWithUnsignedInteger : IntIdTable() {
+            val uint = integer("uint")
+        }
+        class EntityWithUInt : IntEntity() {
+            var uint: UInt by TableWithUnsignedInteger.uint.transform({ it.toInt() }, { it.toUInt() })
+
+            companion object : IntEntityClass<EntityWithUInt>()
+        }
+    ]]></code-block>
+            <p>
+                The <code>transform</code> function accept two lambdas that convert values to and from the original column type.
+                In this case, you make sure to store only <code>UInt</code> instances in the <code>uint</code> field.
+            </p>
+            <p>
+                Although it is still possible to insert or update values with negative integers via DAO, this approach assures
+                a cleaner business logic.
+            </p>
+            <note>
+                Note that these transformations will occur with every access to a field. Therefore, to maintain performance
+                efficiency, it is advisable to avoid heavy transformations in this context.
+            </note>
+        </chapter>
+    </chapter>
 </topic>

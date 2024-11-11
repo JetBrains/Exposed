@@ -4,4 +4,5 @@
     <var name="product" value="Writerside"/>
     <var name="exposed_version" value="0.56.0"/>
     <var name="h2_db_version" value="2.2.224"/>
+    <var name="BASE_API_URL" value="https://jetbrains.github.io/Exposed/api"/>
 </vars>
