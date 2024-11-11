@@ -185,7 +185,7 @@
         <p>
             For example, here’s how to override the <code>delete()</code> method in a <code>User</code> entity:
         </p>
-        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/UserEntityOverride.kt" />
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/UserEntityWithOverride.kt" />
         <p>
             In this example, a custom message is printed before the <code>delete()</code> function of the superclass
             (<code>IntEntity</code>) completes the deletion.
