@@ -41,12 +41,15 @@ class BooleanColumnTypeTests : DatabaseTestsBase() {
             val idTrue = BooleanTable.insertAndGetId {
                 it[boolColumn] = true
             }
-            BooleanTable.insertAndGetId {
-                it[boolColumn] = false
+            val idFalse = BooleanTable.insertAndGetId {
+                it[boolColumn] = booleanParam(false)
             }
 
-            val resultTrue = BooleanTable.selectAll().where { BooleanTable.boolColumn eq true }.singleOrNull()
-            assertEquals(idTrue, resultTrue?.get(BooleanTable.id))
+            assertEquals(idTrue, BooleanTable.selectAll().where { BooleanTable.boolColumn eq true }.single()[BooleanTable.id])
+            assertEquals(idTrue, BooleanTable.selectAll().where { BooleanTable.boolColumn eq booleanParam(true) }.single()[BooleanTable.id])
+
+            assertEquals(idFalse, BooleanTable.selectAll().where { BooleanTable.boolColumn eq false }.single()[BooleanTable.id])
+            assertEquals(idFalse, BooleanTable.selectAll().where { BooleanTable.boolColumn eq booleanParam(false) }.single()[BooleanTable.id])
         }
     }
 
