@@ -7,7 +7,7 @@
     <show-structure for="chapter,procedure" depth="2"/>
      <p>
         An <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-entity/index.html"><code>Entity</code></a>
-        in Exposed maps a database table to a Kotlin object. This ensures type safety and allows you to work with
+        in Exposed maps a database table record to a Kotlin object. This ensures type safety and allows you to work with
          database records just like regular Kotlin objects, taking full advantage of Kotlin's language features.
     </p>
     <p>
@@ -172,10 +172,25 @@
             the lock object.
         </p>
         <p>
-            These classes can be used as companion objects when defining entities that are
-            meant to be immutable.
+            To create an immutable entity, use either <code>ImmutableEntityClass</code> or
+            <code>ImmutableCachedEntityClass</code> as a companion object in your entity class. For example, here’s how
+            to define a <code>CityEntity</code> class:
         </p>
         <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/CityEntity.kt" />
+        <list>
+            <li>
+                Properties are defined using <code>val</code> instead of <code>var</code>. This enforces immutability,
+                as <code>val</code> properties cannot be reassigned after initial assignment.
+            </li>
+            <li>
+                The primary function of the entity class in this context is to query data from the associated table,
+                not to modify it. Therefore, inserts can only be performed using the
+                DSL <a href="DSL-CRUD-operations.topic" anchor="insert"><code>insert()</code></a> method and updates
+                can be done either through the DSL <a href="DSL-CRUD-operations.topic" anchor="update"><code>update()</code></a>
+                or the <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-immutable-entity-class/force-update-entity.html">
+                <code>ImmutableEntityClass.forceUpdateEntity()</code></a> methods.
+            </li>
+        </list>
     </chapter>
     <chapter id="class-method-overrides" title="Class method overrides">
         <p>
@@ -206,16 +221,7 @@
                 Suppose that you want to define an unsigned integer field on an entity, but Exposed doesn't have such
                 column type yet. You can achieve this by using the following implementation:
             </p>
-            <code-block lang="kotlin"><![CDATA[
-        object TableWithUnsignedInteger : IntIdTable() {
-            val uint = integer("uint")
-        }
-        class EntityWithUInt : IntEntity() {
-            var uint: UInt by TableWithUnsignedInteger.uint.transform({ it.toInt() }, { it.toUInt() })
-
-            companion object : IntEntityClass<EntityWithUInt>()
-        }
-    ]]></code-block>
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/EntityWithUInt.kt" />
             <p>
                 The <code>transform</code> function accept two lambdas that convert values to and from the original column type.
                 In this case, you make sure to store only <code>UInt</code> instances in the <code>uint</code> field.

@@ -9,4 +9,5 @@ class UserEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<UserEntity>(UsersTable)
 
     var name by UsersTable.name
+    var city by CityEntity referencedOn UsersTable.cityId
 }

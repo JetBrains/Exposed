@@ -8,5 +8,5 @@ import org.jetbrains.exposed.dao.id.EntityID
 class CityEntity(id: EntityID<Int>) : IntEntity(id) {
     val name by CitiesTable.name
 
-    companion object : ImmutableEntityClass<City>(CitiesTable)
+    companion object : ImmutableEntityClass<Int, CityEntity>(CitiesTable)
 }
