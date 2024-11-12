@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import kotlin.test.assertFalse
@@ -19,7 +20,7 @@ class MysqlTests : DatabaseTestsBase() {
     fun testEmbeddedConnection() {
         withDb(TestDB.MYSQL_V5) {
             assertFalse(
-                TransactionManager.current().exec("SELECT VERSION();") {
+                (TransactionManager.current() as JdbcTransaction).exec("SELECT VERSION();") {
                     it.next()
                     it.getString(1)
                 }.isNullOrEmpty()

@@ -1,4 +1,4 @@
-public final class MigrationUtils {
+public final class MigrationUtils : org/jetbrains/exposed/sql/statements/api/SchemaUtilityApi {
 	public static final field INSTANCE LMigrationUtils;
 	public final fun dropUnmappedColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public static synthetic fun dropUnmappedColumnsStatements$default (LMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
@@ -6,5 +6,15 @@ public final class MigrationUtils {
 	public static synthetic fun generateMigrationScript$default (LMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
 	public final fun statementsRequiredForDatabaseMigration ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public static synthetic fun statementsRequiredForDatabaseMigration$default (LMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class R2dbcMigrationUtils : org/jetbrains/exposed/sql/statements/api/SchemaUtilityApi {
+	public static final field INSTANCE LR2dbcMigrationUtils;
+	public final fun dropUnmappedColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun dropUnmappedColumnsStatements$default (LR2dbcMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun generateMigrationScript ([Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun generateMigrationScript$default (LR2dbcMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun statementsRequiredForDatabaseMigration ([Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun statementsRequiredForDatabaseMigration$default (LR2dbcMigrationUtils;[Lorg/jetbrains/exposed/sql/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 

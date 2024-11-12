@@ -3,6 +3,7 @@ package org.jetbrains.exposed.dao
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.SchemaUtilityApi
 import org.jetbrains.exposed.sql.transactions.transactionScope
 import java.util.*
 
@@ -186,10 +187,10 @@ class EntityCache(private val transaction: Transaction) {
             flushingEntities = true
             val insertedTables = inserts.keys
 
-            val updateBeforeInsert = SchemaUtils.sortTablesByReferences(insertedTables).filterIsInstance<IdTable<*>>()
+            val updateBeforeInsert = TableUtils.sortTablesByReferences(insertedTables).filterIsInstance<IdTable<*>>()
             updateBeforeInsert.forEach(::updateEntities)
 
-            SchemaUtils.sortTablesByReferences(tables).filterIsInstance<IdTable<*>>().forEach(::flushInserts)
+            TableUtils.sortTablesByReferences(tables).filterIsInstance<IdTable<*>>().forEach(::flushInserts)
 
             val updateTheRestTables = tables - updateBeforeInsert
             for (t in updateTheRestTables) {
@@ -331,4 +332,14 @@ fun Transaction.flushCache(): List<Entity<*>> {
         flush()
         return newEntities
     }
+}
+
+/**
+ * Utility functions that assist with creating, altering, and dropping table objects.
+ *
+ * None of the functions rely directly on the underlying driver.
+ */
+internal object TableUtils : SchemaUtilityApi() {
+    /** Returns a list of [tables] sorted according to the targets of their foreign key constraints, if any exist. */
+    internal fun sortTablesByReferences(tables: Iterable<Table>): List<Table> = tables.sortByReferences()
 }

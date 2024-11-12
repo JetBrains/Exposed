@@ -5,6 +5,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerException
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Assert.fail
 import org.junit.Test
@@ -38,7 +39,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
         withDb(timeoutTestDBList) { testDB ->
             this.queryTimeout = 3
             try {
-                TransactionManager.current().exec(
+                (TransactionManager.current() as JdbcTransaction).exec(
                     generateTimeoutStatements(testDB, 5)
                 )
                 fail("Should have thrown a timeout or cancelled statement exception")
@@ -58,7 +59,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
     fun noTimeoutWithTimeoutStatement() {
         withDb(timeoutTestDBList) {
             this.queryTimeout = 3
-            TransactionManager.current().exec(
+            (TransactionManager.current() as JdbcTransaction).exec(
                 generateTimeoutStatements(it, 1)
             )
         }
@@ -68,7 +69,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
     fun timeoutZeroWithTimeoutStatement() {
         withDb(timeoutTestDBList) {
             this.queryTimeout = 0
-            TransactionManager.current().exec(
+            (TransactionManager.current() as JdbcTransaction).exec(
                 generateTimeoutStatements(it, 1)
             )
         }
@@ -79,7 +80,7 @@ class QueryTimeoutTest : DatabaseTestsBase() {
         withDb(timeoutTestDBList) { testDB ->
             this.queryTimeout = -1
             try {
-                TransactionManager.current().exec(
+                (TransactionManager.current() as JdbcTransaction).exec(
                     generateTimeoutStatements(testDB, 1)
                 )
                 fail("Should have thrown a timeout or cancelled statement exception")

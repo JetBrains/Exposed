@@ -19,6 +19,7 @@ dependencies {
     api(libs.spring.security.crypto)
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
+    testImplementation(project(":exposed-jdbc"))
     testImplementation(libs.junit)
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.logcaptor)

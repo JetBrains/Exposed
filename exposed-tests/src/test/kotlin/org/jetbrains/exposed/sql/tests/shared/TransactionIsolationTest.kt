@@ -4,9 +4,9 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -116,7 +116,7 @@ class TransactionIsolationTest : DatabaseTestsBase() {
         }
     }
 
-    private fun Transaction.assertTransactionIsolationLevel(testDb: TestDB, expected: Int) {
+    private fun JdbcTransaction.assertTransactionIsolationLevel(testDb: TestDB, expected: Int) {
         val (sql, repeatable, committed) = when (testDb) {
             TestDB.POSTGRESQL -> Triple("SHOW TRANSACTION ISOLATION LEVEL", "repeatable read", "read committed")
             in TestDB.ALL_MYSQL_MARIADB -> Triple("SELECT @@tx_isolation", "REPEATABLE-READ", "READ-COMMITTED")

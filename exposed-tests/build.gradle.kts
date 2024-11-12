@@ -1,4 +1,5 @@
-import org.gradle.api.tasks.testing.logging.*
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     kotlin("jvm") apply true
@@ -21,6 +22,7 @@ dependencies {
 
     implementation(project(":exposed-core"))
     implementation(project(":exposed-jdbc"))
+    implementation(project(":exposed-r2dbc"))
     implementation(project(":exposed-dao"))
     implementation(project(":exposed-kotlin-datetime"))
     implementation(project(":exposed-migration"))

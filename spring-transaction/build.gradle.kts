@@ -18,7 +18,7 @@ kotlin {
 
 dependencies {
     api(project(":exposed-core"))
-    implementation(project(":exposed-jdbc"))
+    api(project(":exposed-jdbc"))
     api(libs.spring.jdbc)
     api(libs.spring.context)
     implementation(libs.kotlinx.coroutines)

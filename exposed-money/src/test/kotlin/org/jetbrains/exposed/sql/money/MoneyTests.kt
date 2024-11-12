@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.junit.Test
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
@@ -151,7 +152,7 @@ open class MoneyBaseTest : DatabaseTestsBase() {
         }
     }
 
-    private fun Transaction.assertInsertOfCompositeValueReturnsEquivalentOnSelect(toInsert: Money?) {
+    private fun JdbcTransaction.assertInsertOfCompositeValueReturnsEquivalentOnSelect(toInsert: Money?) {
         val accountID = Account.insertAndGetId {
             it[composite_money] = toInsert
         }
@@ -162,7 +163,7 @@ open class MoneyBaseTest : DatabaseTestsBase() {
         assertEquals(toInsert, inserted)
     }
 
-    private fun Transaction.assertInsertOfComponentValuesReturnsEquivalentOnSelect(toInsert: Money?) {
+    private fun JdbcTransaction.assertInsertOfComponentValuesReturnsEquivalentOnSelect(toInsert: Money?) {
         val amount: BigDecimal? = toInsert?.numberStripped?.setScale(AMOUNT_SCALE)
         val currencyUnit: CurrencyUnit? = toInsert?.currency
         val accountID = Account.insertAndGetId {

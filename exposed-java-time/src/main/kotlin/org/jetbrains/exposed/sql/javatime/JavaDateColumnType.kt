@@ -4,8 +4,8 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.vendors.*
-import java.sql.ResultSet
 import java.time.*
 import java.time.ZoneOffset.UTC
 import java.time.format.DateTimeFormatter
@@ -226,7 +226,7 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
         }
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
+    override fun readObject(rs: ResultApi, index: Int): Any? {
         return if (currentDialect is OracleDialect) {
             rs.getObject(index, java.sql.Timestamp::class.java)
         } else {
@@ -339,8 +339,8 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
         else -> valueFromDB(value.toString())
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getTimestamp(index)
+    override fun readObject(rs: ResultApi, index: Int): Any? {
+        return rs.getObject(index, java.sql.Timestamp::class.java)
     }
 
     override fun notNullValueToDB(value: Instant): Any = when (currentDialect) {
@@ -400,7 +400,7 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
+    override fun readObject(rs: ResultApi, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
         is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java)
         else -> rs.getObject(index, OffsetDateTime::class.java)
@@ -441,14 +441,9 @@ class JavaDurationColumnType : ColumnType<Duration>() {
 
     override fun valueFromDB(value: Any): Duration = when (value) {
         is Long -> Duration.ofNanos(value)
-        is Number -> Duration.ofNanos(value.toLong())
+        is Number -> valueFromDB(value.toLong())
         is String -> Duration.parse(value)
         else -> valueFromDB(value.toString())
-    }
-
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        // ResultSet.getLong returns 0 instead of null
-        return rs.getLong(index).takeIf { rs.getObject(index) != null }
     }
 
     override fun notNullValueToDB(value: Duration): Any = value.toNanos()

@@ -5,6 +5,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
+import org.jetbrains.exposed.sql.statements.StatementBuilder
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -111,7 +112,12 @@ class InnerTableLink<SID : Any, Source : Entity<SID>, ID : Any, Target : Entity<
 
         val targetIds = value.map { it.id }
         executeAsPartOfEntityLifecycle {
-            table.deleteWhere { (sourceColumn eq o.id) and (targetColumn notInList targetIds) }
+            // a decision needs to be made about how to call when the underlying driver is uncertain
+            tx.exec(
+                StatementBuilder {
+                    deleteWhere(table, null) { (sourceColumn eq o.id) and (targetColumn notInList targetIds) }
+                }
+            )
             table.batchInsert(targetIds.filter { !existingIds.contains(it) }, shouldReturnGeneratedValues = false) { targetId ->
                 this[sourceColumn] = o.id
                 this[targetColumn] = targetId

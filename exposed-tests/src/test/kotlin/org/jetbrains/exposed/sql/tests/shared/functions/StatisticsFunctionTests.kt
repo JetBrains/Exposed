@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.junit.Test
 import java.math.*
 
@@ -48,7 +49,7 @@ class StatisticsFunctionTests : DatabaseTestsBase() {
     private val data: List<Int?> = listOf(4, null, 5, null, 6)
     private val scale = 4
 
-    private fun withSampleTable(excludeDB: List<TestDB> = emptyList(), body: Transaction.(TestDB) -> Unit) {
+    private fun withSampleTable(excludeDB: List<TestDB> = emptyList(), body: JdbcTransaction.(TestDB) -> Unit) {
         // SQLite does not have any built-in statistics-specific aggregate functions
         withTables(excludeSettings = excludeDB + TestDB.SQLITE, SampleTestTable) {
             SampleTestTable.batchInsert(data) { num ->
@@ -58,7 +59,7 @@ class StatisticsFunctionTests : DatabaseTestsBase() {
         }
     }
 
-    private fun Transaction.assertExpressionEqual(expected: BigDecimal, expression: Function<BigDecimal?>) {
+    private fun JdbcTransaction.assertExpressionEqual(expected: BigDecimal, expression: Function<BigDecimal?>) {
         val result = SampleTestTable.select(expression).first()[expression]
         assertEquals(expected, result?.setScale(expected.scale(), RoundingMode.HALF_EVEN))
     }

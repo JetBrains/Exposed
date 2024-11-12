@@ -20,6 +20,7 @@ dependencies {
     api(project(":exposed-core"))
     api(libs.kotlinx.jvm.datetime)
     testImplementation(project(":exposed-dao"))
+    testImplementation(project(":exposed-jdbc"))
     testImplementation(project(":exposed-tests"))
     testImplementation(project(":exposed-json"))
     testImplementation(project(":exposed-migration"))

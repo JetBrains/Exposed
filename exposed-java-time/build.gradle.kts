@@ -18,6 +18,7 @@ kotlin {
 dependencies {
     api(project(":exposed-core"))
     testImplementation(project(":exposed-dao"))
+    testImplementation(project(":exposed-jdbc"))
     testImplementation(project(":exposed-tests"))
     testImplementation(project(":exposed-json"))
     testImplementation(project(":exposed-migration"))

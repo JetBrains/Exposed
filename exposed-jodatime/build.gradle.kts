@@ -17,6 +17,7 @@ dependencies {
     api(project(":exposed-core"))
     api(libs.joda.time)
     testImplementation(project(":exposed-dao"))
+    testImplementation(project(":exposed-jdbc"))
     testImplementation(project(":exposed-tests"))
     testImplementation(project(":exposed-json"))
     testImplementation(libs.junit)

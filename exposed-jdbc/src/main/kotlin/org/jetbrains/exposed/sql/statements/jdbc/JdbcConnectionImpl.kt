@@ -13,7 +13,7 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 
 /**
- * Class representing a wrapped database [connection].
+ * Class representing a wrapped JDBC database [connection].
  */
 class JdbcConnectionImpl(override val connection: Connection) : ExposedConnection<Connection> {
 
@@ -84,7 +84,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         return JdbcPreparedStatementImpl(connection.prepareStatement(sql, columns), true)
     }
 
-    override fun executeInBatch(sqls: List<String>) {
+    override suspend fun executeInBatch(sqls: List<String>) {
         val types = sqls.map { stmt ->
             StatementType.entries.find {
                 stmt.startsWith(it.name, true)
@@ -111,14 +111,14 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
                         originalStatement.closeIfPossible()
                     }
 
-                    override fun executeUpdate(): Int {
+                    override suspend fun executeUpdate(): Int {
                         batchStatement.executeBatch()
                         return 0
                     }
                 }
             }
 
-            override fun PreparedStatementApi.executeInternal(transaction: Transaction) {
+            override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction) {
                 executeUpdate()
             }
 

@@ -13,7 +13,7 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
 ) {
     protected val clauses = mutableListOf<Clause>()
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int? {
+    override suspend fun PreparedStatementApi.executeInternal(transaction: Transaction): Int? {
         return executeUpdate()
     }
 

@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -362,7 +363,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
     private fun withTestTableAndExcludeSettings(
         vararg tables: Table = arrayOf(ArrayTestTable),
         excludeSettings: Collection<TestDB> = arrayTypeUnsupportedDb,
-        statement: Transaction.(TestDB) -> Unit
+        statement: JdbcTransaction.(TestDB) -> Unit
     ) {
         withTables(excludeSettings = excludeSettings, *tables) { db ->
             statement(db)

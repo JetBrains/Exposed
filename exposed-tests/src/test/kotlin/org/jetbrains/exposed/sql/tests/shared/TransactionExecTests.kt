@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.inProperCase
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assume
@@ -82,7 +83,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         TransactionManager.closeAndUnregister(db)
     }
 
-    private fun Transaction.testInsertAndSelectInSingleExec(testDb: TestDB) {
+    private fun JdbcTransaction.testInsertAndSelectInSingleExec(testDb: TestDB) {
         ExecTable.insert {
             it[amount] = 99
         }

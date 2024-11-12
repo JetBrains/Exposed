@@ -44,7 +44,8 @@ interface ExposedConnection<OriginalConnection : Any> {
     fun prepareStatement(sql: String, columns: Array<String>): PreparedStatementApi
 
     /** Sends a collection of SQL strings to the database for execution as a batch statement. */
-    fun executeInBatch(sqls: List<String>)
+    // potential BREAKING CHANGE
+    suspend fun executeInBatch(sqls: List<String>)
 
     /** The name of the connection's catalog. */
     var catalog: String

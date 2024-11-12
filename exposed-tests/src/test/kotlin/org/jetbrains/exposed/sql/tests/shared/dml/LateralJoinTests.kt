@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.transactions.JdbcTransaction
 import org.junit.Test
 
 class LateralJoinTests : DatabaseTestsBase() {
@@ -83,13 +84,13 @@ class LateralJoinTests : DatabaseTestsBase() {
         val value = integer("value")
     }
 
-    private fun withTestTables(statement: Transaction.(Parent, Child, TestDB) -> Unit) {
+    private fun withTestTables(statement: JdbcTransaction.(Parent, Child, TestDB) -> Unit) {
         withTables(excludeSettings = TestDB.entries - lateralJoinSupportedDb, Parent, Child) { testDb ->
             statement(Parent, Child, testDb)
         }
     }
 
-    private fun withTestTablesAndDefaultData(statement: Transaction.(Parent, Child, TestDB) -> Unit) {
+    private fun withTestTablesAndDefaultData(statement: JdbcTransaction.(Parent, Child, TestDB) -> Unit) {
         withTestTables { parent, child, testDb ->
             val id = parent.insertAndGetId { it[value] = 20 }
 
