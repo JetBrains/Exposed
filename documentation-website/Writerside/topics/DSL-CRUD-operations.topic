@@ -238,7 +238,14 @@
         <chapter id="deleteWhere">
             <title><code>deleteWhere</code></title>
             <p>To delete records and return the count of deleted rows, use the <code>deleteWhere</code> function.</p>
+            <p>
+                Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
+                parameter lambda block will require inclusion of an import statement like <code>import org.jetbrains.exposed.sql.SqlExpressionBuilder.*</code>.
+            </p>
             <code-block lang="kotlin">
+                import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+                import org.jetbrains.exposed.sql.deleteWhere
+
                 StarWarsFilms.deleteWhere { StarWarsFilms.sequelId eq 8 }
             </code-block>
         </chapter>
@@ -250,16 +257,25 @@
             <p>To delete records while ignoring any possible errors that occur during the process, use the
                 <code>deleteIgnoreWhere</code> function. The function will return the count of deleted rows.
             </p>
+            <p>
+                Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
+                parameter lambda block will require inclusion of an import statement like <code>import org.jetbrains.exposed.sql.SqlExpressionBuilder.*</code>.
+            </p>
             <code-block lang="kotlin">
+                import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+                import org.jetbrains.exposed.sql.deleteIgnoreWhere
+
                 StarWarsFilms.deleteIgnoreWhere { StarWarsFilms.sequelId eq 8 }
             </code-block>
         </chapter>
         <chapter id="deleteAll">
             <title><code>deleteAll</code></title>
-            <p>To deletes all rows in a table and return the count of deleted rows, use the <code>deleteAll</code>
+            <p>To delete all rows in a table and return the count of deleted rows, use the <code>deleteAll</code>
                 function.</p>
             <code-block lang="kotlin">
-                StarWarsFilms.deleteAll { StarWarsFilms.sequelId eq 8 }
+                import org.jetbrains.exposed.sql.deleteAll
+
+                StarWarsFilms.deleteAll()
             </code-block>
         </chapter>
         <chapter id="join-delete">
@@ -269,8 +285,10 @@
                 the argument to the parameter <code>targetTable</code>.
             </p>
             <code-block lang="kotlin">
+                import org.jetbrains.exposed.sql.delete
+
                 val join = StarWarsFilms innerJoin Actors
-                join.delete(Actors) { Actors.sequelId greater 2 }
+                join.delete(targetTable = Actors) { Actors.sequelId greater 2 }
             </code-block>
             <tip>For more information on creating and using a <code>Join</code>, see <a href="DSL-Querying-data.topic#join-tables">Joining Tables</a>.</tip>
         </chapter>
