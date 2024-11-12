@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
@@ -336,6 +337,25 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
             assertNotNull(result)
             assertEquals(testByteArraysList[0][0], result[0][0])
             assertEquals(testByteArraysList[1].toUByteString(), result[1].toUByteString())
+        }
+    }
+
+    @Test
+    fun testAliasedArray() {
+        val tester = object : IntIdTable("test_aliased_array") {
+            val value = array<Int>("value")
+        }
+
+        val value = listOf(1, 2, 3)
+
+        withTables(excludeSettings = arrayTypeUnsupportedDb, tester) {
+            tester.insert {
+                it[tester.value] = value
+            }
+
+            val alias = tester.value.alias("testTable_indexes")
+
+            assertEqualLists(value, tester.select(alias).first()[tester.value])
         }
     }
 
