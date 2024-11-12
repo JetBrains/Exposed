@@ -215,6 +215,10 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
 
             append("SELECT ")
 
+            comments[CommentPosition.AFTER_SELECT]?.let { comment ->
+                append("/*$comment*/ ")
+            }
+
             if (count) {
                 append("COUNT(*)")
             } else {
@@ -327,7 +331,8 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * Appends an SQL comment, with [content] wrapped by `/* */`, at the specified [CommentPosition] in this `SELECT` query.
      *
      * Adding some comments may be useful for tracking, embedding metadata, or for special instructions, like using
-     * `/*FORCE_MASTER*/` for some cloud databases to force the statement to run in the master database.
+     * `/*FORCE_MASTER*/` for some cloud databases to force the statement to run in the master database
+     * or using optimizer hints.
      *
      * @throws IllegalStateException If a comment has already been appended at the specified [position]. An existing
      * comment can be removed or altered by [adjustComments].
@@ -481,6 +486,9 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
     enum class CommentPosition {
         /** The start of the query, before the keyword `SELECT`. */
         FRONT,
+
+        /** Immediately following the keyword `SELECT`. */
+        AFTER_SELECT,
 
         /** The end of the query, after all clauses. */
         BACK
