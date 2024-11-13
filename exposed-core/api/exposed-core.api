@@ -3207,6 +3207,7 @@ public class org/jetbrains/exposed/sql/statements/InsertStatement : org/jetbrain
 	public final fun getOrNull (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Object;
 	public final fun getResultedValues ()Ljava/util/List;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
+	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Z
 	protected final fun isEntityIdClientSideGeneratedUUID (Lorg/jetbrains/exposed/sql/Column;)Z
 	public final fun isIgnore ()Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;

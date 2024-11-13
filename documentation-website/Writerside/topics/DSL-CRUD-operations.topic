@@ -340,8 +340,8 @@
         </code-block>
 
         <note>
-            If the `insertValue()` for a particular column is used within the `onUpdate` block,
-            that column must be defined in the `insert` section, unless it has a client side default value.
+            If the <code>insertValue()</code> for a particular column is used within the <code>onUpdate</code> block,
+            that column must be defined in the <code>insert</code> section, unless it has a client side default value.
         </note>
 
         <p>If the update operation should be identical to the insert operation except for a few columns,

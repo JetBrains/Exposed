@@ -184,6 +184,15 @@ open class InsertStatement<Key : Any>(
         return result
     }
 
+    @Deprecated(
+        "This function has been obsolete since version 0.57.0, " +
+            "following the removal of default values from insert statements. " +
+            "It's safe to remove any overrides of this function from your code."
+    )
+    protected open fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
+        return column.columnType.isAutoInc || value is NextVal<*>
+    }
+
     protected fun clientDefaultColumns() = targets
         // The current check for existing client side without db side default value
         .flatMap { it.columns.filter { column -> column.dbDefaultValue == null && column.defaultValueFun != null } }

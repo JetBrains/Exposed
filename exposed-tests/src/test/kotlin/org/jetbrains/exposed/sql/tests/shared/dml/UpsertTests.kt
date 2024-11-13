@@ -797,11 +797,8 @@ class UpsertTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.H2_V1), tester) {
-            val statement = testerWithFakeDefaults.batchUpsert(listOf(1, 2, 3)) {
+            testerWithFakeDefaults.batchUpsert(listOf(1, 2, 3)) {
                 this[testerWithFakeDefaults.number] = 10
-            }
-            statement.forEach {
-                println("id: ${it[testerWithFakeDefaults.id]}")
             }
 
             testerWithFakeDefaults.selectAll().forEach {

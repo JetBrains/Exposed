@@ -774,11 +774,8 @@ class InsertTests : DatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statement = testerWithFakeDefaults.batchInsert(listOf(1, 2, 3)) {
+            testerWithFakeDefaults.batchInsert(listOf(1, 2, 3)) {
                 this[testerWithFakeDefaults.number] = 10
-            }
-            statement.forEach {
-                println("id: ${it[testerWithFakeDefaults.id]}")
             }
 
             testerWithFakeDefaults.selectAll().forEach {
