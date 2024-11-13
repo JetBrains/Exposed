@@ -134,6 +134,30 @@ class ExpressionAlias<T>(val delegate: Expression<T>, val alias: String) : Expre
     }
 }
 
+/** Represents a temporary SQL identifier, [alias], for a [delegate] expression with column type. */
+class ExpressionWithColumnTypeAlias<T>(val delegate: ExpressionWithColumnType<T>, val alias: String) : ExpressionWithColumnType<T>() {
+    override val columnType: IColumnType<T & Any>
+        get() = delegate.columnType
+
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        if (delegate is ComparisonOp && (currentDialectIfAvailable is SQLServerDialect || currentDialectIfAvailable is OracleDialect)) {
+            +"(CASE WHEN "
+            append(delegate)
+            +" THEN 1 ELSE 0 END)"
+        } else {
+            append(delegate)
+        }
+        append(" $alias")
+    }
+
+    /** Returns an [ExpressionWithColumnType] containing only the string representation of this [alias]. */
+    fun aliasOnlyExpressionWithColumnType(): ExpressionWithColumnType<T> {
+        return object : Function<T>(delegate.columnType) {
+            override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append(alias) }
+        }
+    }
+}
+
 /** Represents a temporary SQL identifier, [alias], for a [query]. */
 class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
     override fun describe(s: Transaction, queryBuilder: QueryBuilder) = queryBuilder {
@@ -143,13 +167,17 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
     }
 
     override val fields: List<Expression<*>> = query.set.fields.map { expression ->
-        (expression as? Column<*>)?.clone() ?: (expression as? ExpressionAlias<*>)?.aliasOnlyExpression() ?: expression
+        (expression as? Column<*>)?.clone()
+            ?: (expression as? ExpressionWithColumnTypeAlias<*>)?.aliasOnlyExpressionWithColumnType()
+            ?: (expression as? ExpressionAlias<*>)?.aliasOnlyExpression()
+            ?: expression
     }
 
     internal val aliasedFields: List<Expression<*>>
         get() = query.set.fields.map { expression ->
             when (expression) {
                 is Column<*> -> expression.clone()
+                is ExpressionWithColumnTypeAlias<*> -> expression.delegate.alias("$alias.${expression.alias}").aliasOnlyExpressionWithColumnType()
                 is ExpressionAlias<*> -> expression.delegate.alias("$alias.${expression.alias}").aliasOnlyExpression()
                 else -> expression
             }
@@ -167,6 +195,14 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
         return aliases.find { it == original }?.let {
             it.delegate.alias("$alias.${it.alias}").aliasOnlyExpression()
         } ?: aliases.find { it.delegate == original }?.aliasOnlyExpression()
+            ?: error("Field not found in original table fields")
+    }
+
+    operator fun <T : Any?> get(original: ExpressionWithColumnType<T>): ExpressionWithColumnType<T> {
+        val aliases = query.set.fields.filterIsInstance<ExpressionWithColumnTypeAlias<T>>()
+        return aliases.find { it == original }?.let {
+            it.delegate.alias("$alias.${it.alias}").aliasOnlyExpressionWithColumnType()
+        } ?: aliases.find { it.delegate == original }?.aliasOnlyExpressionWithColumnType()
             ?: error("Field not found in original table fields")
     }
 
@@ -222,6 +258,16 @@ fun <T : AbstractQuery<*>> T.alias(alias: String) = QueryAlias(this, alias)
  * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
  */
 fun <T> Expression<T>.alias(alias: String) = ExpressionAlias(this, alias)
+
+/**
+ * Creates a temporary identifier, [alias], for [this] expression with column type.
+ *
+ * The alias will be used on the database-side if the alias object is used to generate an SQL statement,
+ * instead of [this] expression with column type object.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testExpressionWithColumnTypeAlias
+ */
+fun <T> ExpressionWithColumnType<T>.alias(alias: String) = ExpressionWithColumnTypeAlias(this, alias)
 
 /**
  * Creates a join relation with a query.

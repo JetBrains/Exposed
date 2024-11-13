@@ -258,7 +258,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         +"UPDATE ("
         val columnsToSelect = columnsAndValues.flatMap {
             listOfNotNull(it.first, it.second as? Expression<*>)
-        }.mapIndexed { index, expression -> expression to expression.alias("c$index") }.toMap()
+        }.mapIndexed { index, expression ->
+            expression to ((expression as? ExpressionWithColumnType<*>)?.alias("c$index") ?: expression.alias("c$index"))
+        }.toMap()
 
         val subQuery = targets.select(columnsToSelect.values.toList())
         where?.let {
@@ -268,11 +270,12 @@ internal object OracleFunctionProvider : FunctionProvider() {
         +") x"
 
         columnsAndValues.appendTo(this, prefix = " SET ") { (col, value) ->
-            val alias = columnsToSelect.getValue(col)
-            +alias.alias
+            val colAlias = columnsToSelect.getValue(col)
+            +((colAlias as? ExpressionWithColumnTypeAlias<*>?)?.alias ?: (colAlias as ExpressionAlias<*>).alias)
             +"="
             (value as? Expression<*>)?.let {
-                +columnsToSelect.getValue(it).alias
+                val valueAlias = columnsToSelect.getValue(it)
+                +((valueAlias as? ExpressionWithColumnTypeAlias<*>?)?.alias ?: (valueAlias as ExpressionAlias<*>).alias)
             } ?: registerArgument(col, value)
         }
 

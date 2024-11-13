@@ -7,9 +7,11 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.dml.withCitiesAndUsers
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTestsData
 import org.junit.Test
+import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -290,6 +292,53 @@ class AliasesTests : DatabaseTestsBase() {
                 .selectAll()
 
             assertEquals("foo", query.first()[internalQuery[fooAlias]])
+        }
+    }
+
+    @Test
+    fun testExpressionWithColumnTypeAlias() {
+        val subInvoices = object : Table("SubInvoices") {
+            val productId = long("product_id")
+            val mainAmount = decimal("main_amount", 4, 2)
+            val isDraft = bool("is_draft")
+        }
+
+        withTables(subInvoices) { testDb ->
+            subInvoices.insert {
+                it[productId] = 1
+                it[mainAmount] = 3.5.toBigDecimal()
+                it[isDraft] = false
+            }
+
+            val inputSum = SqlExpressionBuilder.coalesce(
+                subInvoices.mainAmount.sum(), decimalLiteral(BigDecimal.ZERO)
+            ).alias("input_sum")
+
+            val input = subInvoices.select(subInvoices.productId, inputSum)
+                .where {
+                    subInvoices.isDraft eq false
+                }.groupBy(subInvoices.productId).alias("input")
+
+            val sumTotal = Expression.build {
+                coalesce(input[inputSum], decimalLiteral(BigDecimal.ZERO))
+            }.alias("inventory")
+
+            val booleanValue = when (testDb) {
+                TestDB.SQLITE, in TestDB.ALL_ORACLE_LIKE, in TestDB.ALL_SQLSERVER_LIKE -> "0"
+                else -> "FALSE"
+            }
+
+            val expectedQuery = "SELECT COALESCE(input.input_sum, 0) inventory FROM " +
+                """(SELECT ${subInvoices.nameInDatabaseCase()}.${subInvoices.productId.nameInDatabaseCase()}, """ +
+                """COALESCE(SUM(${subInvoices.nameInDatabaseCase()}.${subInvoices.mainAmount.nameInDatabaseCase()}), 0) input_sum """ +
+                """FROM ${subInvoices.nameInDatabaseCase()} """ +
+                """WHERE ${subInvoices.nameInDatabaseCase()}.${subInvoices.isDraft.nameInDatabaseCase()} = $booleanValue """ +
+                """GROUP BY ${subInvoices.nameInDatabaseCase()}.${subInvoices.productId.nameInDatabaseCase()}) input"""
+
+            assertEquals(
+                expectedQuery,
+                input.select(sumTotal).prepareSQL(QueryBuilder(false))
+            )
         }
     }
 }

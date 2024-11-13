@@ -92,6 +92,7 @@ class ResultRow(
         return when {
             raw == null -> null
             raw == NotInitializedValue -> error("$expression is not initialized yet")
+            expression is ExpressionWithColumnTypeAlias<T> -> rawToColumnValue(raw, expression.delegate)
             expression is ExpressionAlias<T> -> rawToColumnValue(raw, expression.delegate)
             expression is ExpressionWithColumnType<T> -> expression.columnType.valueFromDB(raw)
             expression is Op.OpBoolean -> BooleanColumnType.INSTANCE.valueFromDB(raw)
@@ -121,6 +122,7 @@ class ResultRow(
             ?: fieldIndex.keys.firstOrNull { exp ->
                 when (exp) {
                     is Column<*> -> (exp.columnType as? EntityIDColumnType<*>)?.idColumn == expression
+                    is ExpressionWithColumnTypeAlias<*> -> exp.delegate == expression
                     is ExpressionAlias<*> -> exp.delegate == expression
                     else -> false
                 }

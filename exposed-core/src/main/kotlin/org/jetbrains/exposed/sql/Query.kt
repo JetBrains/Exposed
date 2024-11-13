@@ -246,7 +246,11 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                 if (groupedByColumns.isNotEmpty()) {
                     append(" GROUP BY ")
                     groupedByColumns.appendTo {
-                        +((it as? ExpressionAlias)?.aliasOnlyExpression() ?: it)
+                        +(
+                            (it as? ExpressionWithColumnTypeAlias)?.aliasOnlyExpressionWithColumnType()
+                                ?: (it as? ExpressionAlias)?.aliasOnlyExpression()
+                                ?: it
+                            )
                     }
                 }
 
@@ -444,7 +448,13 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
                 adjustSelect {
                     select(
                         originalSet.fields.map {
-                            it as? ExpressionAlias<*> ?: ((it as? Column<*>)?.makeAlias() ?: it.alias("exp${expInx++}"))
+                            it as? ExpressionWithColumnTypeAlias<*>
+                                ?: it as? ExpressionAlias<*>
+                                ?: (
+                                    (it as? Column<*>)?.makeAlias()
+                                        ?: (it as? ExpressionWithColumnType<*>)?.alias("exp${expInx++}")
+                                        ?: it.alias("exp${expInx++}")
+                                    )
                         }
                     )
                 }
