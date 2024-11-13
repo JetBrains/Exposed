@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.Category
 import org.jetbrains.exposed.sql.tests.shared.Item
@@ -14,6 +15,9 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertFails
@@ -590,10 +594,21 @@ class CreateTableTests : DatabaseTestsBase() {
                 SchemaUtils.create(OneTable)
                 assertEquals(true, OneTable.exists())
                 assertEquals(false, OneOneTable.exists())
+
+                val defaultSchemaName = when (currentDialectTest) {
+                    is SQLServerDialect -> "dbo"
+                    is OracleDialect -> testDb.user
+                    is MysqlDialect -> testDb.db!!.name
+                    else -> "public"
+                }
+                assertTrue(SchemaUtils.listTables().any { it.equals("$defaultSchemaName.${OneTable.tableName}", ignoreCase = true) })
+
                 SchemaUtils.createSchema(one)
                 SchemaUtils.create(OneOneTable)
                 assertEquals(true, OneTable.exists())
                 assertEquals(true, OneOneTable.exists())
+
+                assertTrue(SchemaUtils.listTables().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
             } finally {
                 SchemaUtils.drop(OneTable, OneOneTable)
                 val cascade = testDb != TestDB.SQLSERVER

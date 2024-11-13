@@ -51,13 +51,9 @@ abstract class VendorDialect(
 
     override fun getDatabase(): String = catalog(TransactionManager.current())
 
-    /**
-     * Returns a list with the names of all the defined tables with schema prefixes if database supports it.
-     * This method always re-read data from DB.
-     * Using `allTablesNames` field is the preferred way.
-     */
+    /** Returns a list with the names of all the defined tables with schema prefixes if the database supports it. */
     override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata {
-        tableNamesByCurrentSchema(null).tableNames
+        getAllTableNamesCache().flatMap { it.value }
     }
 
     override fun tableExists(table: Table): Boolean {
