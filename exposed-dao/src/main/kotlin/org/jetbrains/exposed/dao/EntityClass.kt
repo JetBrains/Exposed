@@ -736,18 +736,6 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    @Deprecated(
-        "This function was replaced with more general alternative on DSL layer. " +
-            "DAOs transform() is deprecated and will be removed in future releases. " +
-            "Please use the transform function from the DSL layer. " +
-            "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
-            "With version 0.53.0 Entity transformation got several breaking changes. " +
-            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
-        ReplaceWith(
-            "object : Table() { val c = column().transform(transformer) }"
-        )
-    )
     fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.transform(
         transformer: ColumnTransformer<Unwrapped, Wrapped>
     ): EntityFieldWithTransform<Unwrapped, Wrapped> = EntityFieldWithTransform(this, transformer, false)
@@ -761,18 +749,6 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    @Deprecated(
-        "This function was replaced with more general alternative on DSL layer. " +
-            "DAOs transform() is deprecated and will be removed in future releases. " +
-            "Please use the transform function from the DSL layer. " +
-            "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
-            "With version 0.53.0 Entity transformation got several breaking changes. " +
-            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
-        ReplaceWith(
-            "object : Table() { val c = column().transform(wrap, unwrap) }"
-        )
-    )
     fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.transform(
         unwrap: (Wrapped) -> Unwrapped,
         wrap: (Unwrapped) -> Wrapped
@@ -786,18 +762,6 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    @Deprecated(
-        "This function was replaced with more general alternative on DSL layer. " +
-            "DAOs transform() is deprecated and will be removed in future releases. " +
-            "Please use the transform function from the DSL layer. " +
-            "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
-            "With version 0.53.0 Entity transformation got several breaking changes. " +
-            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
-        ReplaceWith(
-            "object : Table() { val c = column().transform(wrap, unwrap) }"
-        )
-    )
     fun <TColumn : Any?, Unwrapped : Any?, Wrapped : Any?> EntityFieldWithTransform<TColumn, Unwrapped>.transform(
         unwrap: (Wrapped) -> Unwrapped,
         wrap: (Unwrapped) -> Wrapped
@@ -812,19 +776,6 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    @Deprecated(
-        "This function was replaced with more general alternative on DSL layer. " +
-            "DAOs transform() is deprecated and will be removed in future releases. " +
-            "Please use the transform function from the DSL layer. " +
-            "Memoization will not be a part of column transformation API anymore. " +
-            "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
-            "With version 0.53.0 Entity transformation got several breaking changes. " +
-            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
-        ReplaceWith(
-            "object : Table() { val c = column().transform(transformer) }"
-        )
-    )
     fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.memoizedTransform(
         transformer: ColumnTransformer<Unwrapped, Wrapped>
     ): EntityFieldWithTransform<Unwrapped, Wrapped> = EntityFieldWithTransform(this, transformer, true)
@@ -839,19 +790,6 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    @Deprecated(
-        "This function was replaced with more general alternative on DSL layer. " +
-            "DAOs transform() is deprecated and will be removed in future releases. " +
-            "Please use the transform function from the DSL layer. " +
-            "Memoization will not be a part of column transformation API anymore. " +
-            "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
-            "With version 0.53.0 Entity transformation got several breaking changes. " +
-            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
-        ReplaceWith(
-            "object : Table() { val c = column().transform(wrap, unwrap) }"
-        )
-    )
     fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.memoizedTransform(
         unwrap: (Wrapped) -> Unwrapped,
         wrap: (Unwrapped) -> Wrapped
@@ -866,19 +804,6 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationsTable
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.TransformationEntity
      */
-    @Deprecated(
-        "This function was replaced with more general alternative on DSL layer. " +
-            "DAOs transform() is deprecated and will be removed in future releases. " +
-            "Please use the transform function from the DSL layer. " +
-            "Memoization will not be a part of column transformation API anymore. " +
-            "Please log a request on YouTrack (https://youtrack.jetbrains.com/newIssue?project=EXPOSED) " +
-            "if a use-case cannot be sufficiently covered by the DSL transform(). " +
-            "With version 0.53.0 Entity transformation got several breaking changes. " +
-            "Check related PR (https://github.com/JetBrains/Exposed/pull/2143) for more details.",
-        ReplaceWith(
-            "object : Table() { val c = column().transform(wrap, unwrap) }"
-        )
-    )
     fun <TColumn : Any?, Unwrapped : Any?, Wrapped : Any?> EntityFieldWithTransform<TColumn, Unwrapped>.memoizedTransform(
         unwrap: (Wrapped) -> Unwrapped,
         wrap: (Unwrapped) -> Wrapped

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+    SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Field transformations" id="DAO-Field-Transformations">
+
+    <p>
+        As databases typically store only basic types, such as integers and strings, it's not always convenient to keep
+        the same simplicity on Data Access Object (DAO) level.
+    </p>
+    <p>
+        For example, you might need to parse JSON from a <code>VARCHAR</code> column, or retrieve values from a cache
+        based on data from the database.
+        In such cases, the preferred approach is to use column transformations.
+    </p>
+    <chapter title="Example: Defining an Unsigned Integer field" id="defining-unsigned-int-field">
+        <p>
+            Suppose that you want to define an unsigned integer field on an entity, but Exposed doesn't have such
+            column type yet. You can achieve this by using the following implementation:
+        </p>
+        <code-block lang="kotlin">
+        <![CDATA[
+            object TableWithUnsignedInteger : IntIdTable() {
+                val uint = integer("uint")
+            }
+            class EntityWithUInt(id: EntityID<Int>) : IntEntity(id) {
+                var uint: UInt by TableWithUnsignedInteger.uint
+                    .transform({ it.toInt() }, { it.toUInt() })
+
+                companion object :
+                    IntEntityClass<EntityWithUInt>(TableWithUnsignedInteger)
+            }
+        ]]>
+        </code-block>
+        <p>
+            The <code>transform</code> function accept two lambdas that convert values to and from the original column type.
+            In this case, you make sure to store only <code>UInt</code> instances in the <code>uint</code> field.
+        </p>
+        <p>
+            Although it is still possible to insert or update values with negative integers via DAO, this approach assures
+            a cleaner business logic.
+        </p>
+    </chapter>
+
+    <chapter title="Memoized transformations" id="memoized-transformations">
+        <p>
+            If you have a computationally expensive transformation function,
+            you can use <code>memoizedTransform</code> to cache the result of the transformation.
+        </p>
+
+        <code-block lang="kotlin">
+            <![CDATA[
+                object TableWithText : IntIdTable() {
+                    val text = varchar("text", length = 2048)
+                }
+
+                class EntityWithUInt(id: EntityID<Int>) : IntEntity(id) {
+                    var uint: String by TableWithText.text
+                        .memoizedTransform(
+                            wrap = { Base64.encode(it.toByteArray()) },
+                            unwrap = { Base64.decode(it).toString() }
+                        )
+
+                    companion object :
+                        IntEntityClass<EntityWithUInt>(TableWithText)
+                }
+            ]]>
+        </code-block>
+
+        <p>
+            With memoized transformation, the value will be unwrapped only once
+            and cached for subsequent reads.
+        </p>
+    </chapter>
+
+</topic>

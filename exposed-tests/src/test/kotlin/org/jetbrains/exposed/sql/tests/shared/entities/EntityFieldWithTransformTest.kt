@@ -13,35 +13,36 @@ import org.junit.Test
 import java.math.BigDecimal
 import kotlin.random.Random
 
-object TransformationsTable : IntIdTable() {
-    val value = varchar("value", 50)
-}
-
-object NullableTransformationsTable : IntIdTable() {
-    val value = varchar("nullable", 50).nullable()
-}
-
-class TransformationEntity(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<TransformationEntity>(TransformationsTable)
-
-    var value by TransformationsTable.value.transform(
-        unwrap = { "transformed-$it" },
-        wrap = { it.replace("transformed-", "") }
-    )
-}
-
-class NullableTransformationEntity(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<NullableTransformationEntity>(NullableTransformationsTable)
-    var value by NullableTransformationsTable.value.transform(
-        unwrap = { "transformed-$it" },
-        wrap = { it?.replace("transformed-", "") }
-    )
-}
-
 class EntityFieldWithTransformTest : DatabaseTestsBase() {
 
+    object TransformationsTable : IntIdTable() {
+        val value = varchar("value", 50)
+    }
+
+    object NullableTransformationsTable : IntIdTable() {
+        val value = varchar("nullable", 50).nullable()
+    }
+
+    class TransformationEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<TransformationEntity>(TransformationsTable)
+
+        var value by TransformationsTable.value.transform(
+            unwrap = { "transformed-$it" },
+            wrap = { it.replace("transformed-", "") }
+        )
+    }
+
+    class NullableTransformationEntity(id: EntityID<Int>) : IntEntity(id) {
+        companion object : IntEntityClass<NullableTransformationEntity>(NullableTransformationsTable)
+
+        var value by NullableTransformationsTable.value.transform(
+            unwrap = { "transformed-$it" },
+            wrap = { it?.replace("transformed-", "") }
+        )
+    }
+
     @Test
-    fun `set and get value`() {
+    fun testSetAndGetValue() {
         withTables(TransformationsTable) {
             val entity = TransformationEntity.new {
                 value = "stuff"
@@ -58,7 +59,7 @@ class EntityFieldWithTransformTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun `set and get nullable value - while present`() {
+    fun testSetAndGetNullableValueWhilePresent() {
         withTables(NullableTransformationsTable) {
             val entity = NullableTransformationEntity.new {
                 value = "stuff"
@@ -75,7 +76,7 @@ class EntityFieldWithTransformTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun `set and get nullable value - while absent`() {
+    fun testSetAndGetNullableValueWhileAbsent() {
         withTables(NullableTransformationsTable) {
             val entity = NullableTransformationEntity.new {}
 
@@ -96,6 +97,7 @@ class EntityFieldWithTransformTest : DatabaseTestsBase() {
 
     class TableWithTransform(id: EntityID<Int>) : IntEntity(id) {
         companion object : IntEntityClass<TableWithTransform>(TableWithTransforms)
+
         var value by TableWithTransforms.value.transform(wrap = { it.toInt() }, unwrap = { it.toBigDecimal() })
     }
 
