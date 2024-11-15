@@ -29,10 +29,9 @@
     </toc-element>
     <toc-element toc-title="Deep Dive into DAO">
         <toc-element topic="DAO-Table-Types.topic"/>
-        <toc-element topic="DAO-Entity-definition.topic"/>
+        <toc-element topic="DAO-Entity-definition.topic" accepts-web-file-names="dao-field-transformations.html"/>
         <toc-element topic="DAO-CRUD-Operations.topic"/>
         <toc-element topic="DAO-Relationships.topic"/>
-        <toc-element topic="DAO-Field-Transformations.topic"/>
     </toc-element>
     <toc-element toc-title="Releases">
         <toc-element topic="Breaking-Changes.md"/>

@@ -5,9 +5,14 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
-class UserEntity(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<UserEntity>(UsersTable)
+class UserEntityWithOverride(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<UserEntityWithOverride>(UsersTable)
 
     var name by UsersTable.name
     var city by CityEntity referencedOn UsersTable.cityId
+
+    override fun delete() {
+        println("Deleting user $name with ID: $id")
+        super.delete()
+    }
 }
