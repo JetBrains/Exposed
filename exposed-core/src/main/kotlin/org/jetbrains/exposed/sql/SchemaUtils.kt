@@ -199,6 +199,41 @@ object SchemaUtils {
                         else -> processForDefaultValue(exp)
                     }
 
+                    is Byte -> when {
+                        dialect is PostgreSQLDialect && value < 0 -> "'${processForDefaultValue(exp)}'::integer"
+                        else -> processForDefaultValue(exp)
+                    }
+
+                    is Short -> when {
+                        dialect is PostgreSQLDialect && value < 0 -> "'${processForDefaultValue(exp)}'::integer"
+                        else -> processForDefaultValue(exp)
+                    }
+
+                    is Int -> when {
+                        dialect is PostgreSQLDialect && value < 0 -> "'${processForDefaultValue(exp)}'::integer"
+                        else -> processForDefaultValue(exp)
+                    }
+
+                    is Long -> when {
+                        currentDialect is SQLServerDialect && (value < 0 || value > Int.MAX_VALUE.toLong()) ->
+                            "${processForDefaultValue(exp)}."
+                        currentDialect is PostgreSQLDialect && (value < 0 || value > Int.MAX_VALUE.toLong()) ->
+                            "'${processForDefaultValue(exp)}'::bigint"
+                        else -> processForDefaultValue(exp)
+                    }
+
+                    is UInt -> when {
+                        dialect is SQLServerDialect && value > Int.MAX_VALUE.toUInt() -> "${processForDefaultValue(exp)}."
+                        dialect is PostgreSQLDialect && value > Int.MAX_VALUE.toUInt() -> "'${processForDefaultValue(exp)}'::bigint"
+                        else -> processForDefaultValue(exp)
+                    }
+
+                    is ULong -> when {
+                        currentDialect is SQLServerDialect && value > Int.MAX_VALUE.toULong() -> "${processForDefaultValue(exp)}."
+                        currentDialect is PostgreSQLDialect && value > Int.MAX_VALUE.toULong() -> "'${processForDefaultValue(exp)}'::bigint"
+                        else -> processForDefaultValue(exp)
+                    }
+
                     else -> {
                         when {
                             column.columnType is JsonColumnMarker -> {

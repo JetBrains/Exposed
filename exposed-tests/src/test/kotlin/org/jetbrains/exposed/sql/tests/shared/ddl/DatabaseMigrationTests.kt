@@ -3,12 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 import MigrationUtils
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Sequence
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.exists
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -665,6 +660,27 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     SchemaUtils.drop(tableWithAutoIncrementCustomSequence)
                 }
             }
+        }
+    }
+
+    @Test
+    fun testNumericTypeLiteralsAsDefaultsDoNotTriggerMigrationStatements() {
+        val tester = object : Table("tester") {
+            val byte = byte("byte_column").defaultExpression(byteLiteral(Byte.MIN_VALUE))
+            val ubyte = ubyte("ubyte_column").defaultExpression(ubyteLiteral(UByte.MAX_VALUE))
+            val short = short("short_column").defaultExpression(shortLiteral(Short.MIN_VALUE))
+            val ushort = ushort("ushort_column").defaultExpression(ushortLiteral(UShort.MAX_VALUE))
+            val integer = integer("integer_column").defaultExpression(intLiteral(Int.MIN_VALUE))
+            val uinteger = uinteger("uinteger_column").defaultExpression(uintLiteral(UInt.MAX_VALUE))
+            val long = long("long_column").defaultExpression(longLiteral(Long.MIN_VALUE))
+            val ulong = ulong("ulong_column").defaultExpression(ulongLiteral(Long.MAX_VALUE.toULong()))
+            val float = float("float_column").defaultExpression(floatLiteral(3.14159F))
+            val double = double("double_column").defaultExpression(doubleLiteral(3.1415926535))
+            val decimal = decimal("decimal_column", 6, 3).defaultExpression(decimalLiteral(123.456.toBigDecimal()))
+        }
+
+        withTables(tester) {
+            assertEqualLists(emptyList(), MigrationUtils.statementsRequiredForDatabaseMigration(tester, withLogs = false))
         }
     }
 
