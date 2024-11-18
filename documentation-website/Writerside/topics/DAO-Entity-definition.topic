@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE topic
-        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+    SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="Entity definition" id="DAO-Entity-definition">
     <show-structure for="chapter,procedure" depth="2"/>
-     <p>
+    <p>
         An <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-entity/index.html"><code>Entity</code></a>
         in Exposed maps a database table record to a Kotlin object. This ensures type safety and allows you to work with
-         database records just like regular Kotlin objects, taking full advantage of Kotlin's language features.
+        database records just like regular Kotlin objects, taking full advantage of Kotlin's language features.
     </p>
     <p>
         When using the DAO approach, <code>IdTable</code> needs to be associated with an <code>Entity</code>,
@@ -176,7 +176,7 @@
             <code>ImmutableCachedEntityClass</code> as a companion object in your entity class. For example, here’s how
             to define a <code>CityEntity</code> class:
         </p>
-        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/CityEntity.kt" />
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/CityEntity.kt"/>
         <list>
             <li>
                 Properties are defined using <code>val</code> instead of <code>var</code>. This enforces immutability,
@@ -200,7 +200,7 @@
         <p>
             For example, here’s how to override the <code>delete()</code> method in a <code>User</code> entity:
         </p>
-        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/UserEntityWithOverride.kt" />
+        <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/UserEntityWithOverride.kt"/>
         <p>
             In this example, a custom message is printed before the <code>delete()</code> function of the superclass
             (<code>IntEntity</code>) completes the deletion.
@@ -221,7 +221,7 @@
                 Suppose that you want to define an unsigned integer field on an entity, but Exposed doesn't have such
                 column type yet. You can achieve this by using the following implementation:
             </p>
-            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/EntityWithUInt.kt" />
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/EntityWithUInt.kt"/>
             <p>
                 The <code>transform</code> function accept two lambdas that convert values to and from the original column type.
                 In this case, you make sure to store only <code>UInt</code> instances in the <code>uint</code> field.
@@ -230,10 +230,25 @@
                 Although it is still possible to insert or update values with negative integers via DAO, this approach assures
                 a cleaner business logic.
             </p>
-            <note>
-                Note that these transformations will occur with every access to a field. Therefore, to maintain performance
-                efficiency, it is advisable to avoid heavy transformations in this context.
-            </note>
+        </chapter>
+
+
+        <chapter title="Memoized transformations" id="memoized-transformations">
+            <p>
+                If you have a computationally expensive transformation function,
+                you can use <code>memoizedTransform</code> to cache the result of the transformation.
+            </p>
+
+            <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/EntityWithBase64.kt"/>
+
+            <p>
+                With memoized transformation, the value is unwrapped only once and then cached for future reads.
+                This cache remains valid for the life of the entity.
+                If the transaction's entity cache is cleared or the entity is reloaded
+                in a new transaction (creating a new cache without the existing value),
+                the value will be wrapped again. However, if the original entity is kept alive outside of
+                the transaction, the cached value persists to avoid re-wrapping.
+            </p>
         </chapter>
     </chapter>
 </topic>

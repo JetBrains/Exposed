@@ -898,8 +898,9 @@
         </code-block>
 
     <note>
-        Note that these transformations will occur with every access to a field. Therefore, to maintain performance
-        efficiency, it is advisable to avoid heavy transformations in this context.
+        Note that these transformations will occur with every access of the table column.
+        Therefore, to maintain performance efficiency, it is advisable to avoid heavy transformations
+        in this context.
     </note>
 
     <chapter title="Null transform" id="null-transform">
