@@ -434,7 +434,7 @@ open class Query(override var set: FieldSet, where: Op<Boolean>?) : AbstractQuer
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertSelectTests.testInsertSelect02
      */
     override fun count(): Long {
-        return if (distinct || groupedByColumns.isNotEmpty() || limit != null || offset > 0) {
+        return if (distinct || distinctOn != null || groupedByColumns.isNotEmpty() || limit != null || offset > 0) {
             fun Column<*>.makeAlias() =
                 alias(transaction.db.identifierManager.quoteIfNecessary("${table.tableNameWithoutSchemeSanitized}_$name"))
 

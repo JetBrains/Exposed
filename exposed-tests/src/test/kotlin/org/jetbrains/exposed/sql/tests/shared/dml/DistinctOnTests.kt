@@ -101,4 +101,22 @@ class DistinctOnTests : DatabaseTestsBase() {
             assertEquals(1, value)
         }
     }
+
+    @Test
+    fun testDistinctOnWithCount() {
+        val tester = object : IntIdTable() {
+            val name = varchar("name", 50)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - distinctOnSupportedDb, tester) {
+            tester.batchInsert(listOf("tester1", "tester1", "tester2", "tester3", "tester2")) {
+                this[tester.name] = it
+            }
+
+            val count = tester.selectAll()
+                .withDistinctOn(tester.name)
+                .count()
+            assertEquals(3, count)
+        }
+    }
 }
