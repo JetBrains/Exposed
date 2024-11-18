@@ -23,27 +23,23 @@
             A database table is represented by an object inherited from a table class.
         </p>
         <code-block lang="kotlin">
-            object Cities : Table() {}
+            object StarWarsFilms : Table() {}
         </code-block>
         <p>
             Exposed supports a variety of <a href="Data-Types.topic">column types</a>, including <code>integer</code>,
-            <code>varchar</code>,<code>bool</code>, and more. Each column is defined by calling the appropriate
+            <code>varchar</code>,
+            <code>bool</code>, and more. Each column is defined by calling the appropriate
             method on the <code>Table</code> object.
         </p>
-        <p>The following example defines a table with an auto-incrementing integer <code>id</code> column and a string
-            <code>name</code> column:</p>
+        <p>The following example defines a table with an auto-incrementing integer <code>id</code> column and custom
+            columns <code>sequel_id</code>, <code>name</code>, and <code>director</code>:
+        </p>
         <tabs group="type">
             <tab title="Table" id="dsl-table-def" group-key="Table">
-                <include from="DSL-Table-Types.topic" element-id="dsl-table-example"/>
+                <include from="DSL-Table-Types.topic" element-id="StarWarsFilmsTable-dsl-code-block"/>
             </tab>
             <tab title="IntIdTable" id="dao-table-def" group-key="IntIdTable">
-                <code-block lang="kotlin" id="dao-table-example">
-                    import org.jetbrains.exposed.dao.id.IntIdTable
-
-                    object Cities : IntIdTable("cities") {
-                        val name = varchar("name", 50)
-                    }
-                </code-block>
+                <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-dao-code-block"/>
             </tab>
         </tabs>
         <p>
@@ -55,12 +51,10 @@
         </p>
         <tabs group="type">
             <tab title="Table" id="dsl-create-table-sql" group-key="Table">
-                <include from="DSL-Table-Types.topic" element-id="dsl-table-example-sql"/>
+                <include from="DSL-Table-Types.topic" element-id="StarWarsFilmsTable-dsl-sql" />
             </tab>
             <tab title="IntIdTable" id="dao-create-table-sql" group-key="IntIdTable">
-                <code-block lang="sql" id="dao-table-example-sql">
-                    CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
-                </code-block>
+                <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-dao-sql" />
             </tab>
         </tabs>
         <chapter title="Configuring a custom table name" id="name-from-object">
@@ -71,39 +65,30 @@
                 If the object name contains a 'Table' suffix, Exposed will omit the suffix from the generated
                 table name:
             </p>
-            <code-block lang="kotlin">
-                object CitiesTable : Table() {
-                    val id = integer("id")
-                    val name = varchar("name", 50)
-                }
-            </code-block>
-            <code-block lang="sql">
-                CREATE TABLE IF NOT EXISTS CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
-            </code-block>
+            <code-block lang="kotlin"
+                        include-symbol="StarWarsFilmsTable"
+                        src="exposed-dsl/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt" />
+            <code-block lang="sql"
+                        src="exposed-dsl/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt"
+                        include-lines="10-14"/>
             <p>
                 To configure a custom name for a table, which will be used in actual SQL queries, pass it to the <code>name</code>
                 parameter of the <code>Table()</code> constructor.
             </p>
-            <code-block lang="kotlin">
-                object Cities : Table(&quot;all_cities&quot;) {
-                    val id = integer(&quot;id&quot;)
-                    val name = varchar(&quot;name&quot;, 50)
-                }
-            </code-block>
-            <code-block lang="sql">
-                CREATE TABLE IF NOT EXISTS ALL_CITIES (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/tables/TableWithCustomName.kt"
+                        include-symbol="CustomStarWarsFilmsTable" />
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/tables/TableWithCustomName.kt"
+                        include-lines="5-10" />
             <p>Some databases, like H2, fold unquoted identifiers to upper case. To keep table name case-sensitivity,
                 manually quote the provided argument:</p>
-            <code-block lang="kotlin">
-                object Cities : Table("\"all_cities\"") {
-                    val id = integer(&quot;id&quot;)
-                    val name = varchar(&quot;name&quot;, 50)
-                }
-            </code-block>
-            <code-block lang="sql">
-                CREATE TABLE IF NOT EXISTS "all_cities" (ID INT NOT NULL, "name" VARCHAR(50) NOT NULL)
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/tables/TableWithCustomName.kt"
+                        include-symbol="StarWarsFilms" />
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/tables/TableWithCustomName.kt"
+                        include-lines="21-25" />
             <p>Depending on what DBMS you use, the types of columns could be different in actual SQL queries.</p>
         </chapter>
     </chapter>
@@ -337,23 +322,23 @@
                 use <code>foreignKey()</code> directly within an <code>init</code> block.</p>
             <p><code>reference()</code> and <code>optReference()</code> methods have several parameters:</p>
             <deflist>
-                <def>
+                <def id="name">
                     <title><code>name: String</code></title>
                     <p>A name for the foreign key column, which will be used in actual SQL queries.</p>
                 </def>
-                <def>
+                <def id="ref">
                     <title><code>ref: Column&lt;T&gt;</code></title>
                     <p>A target column from another parent table.</p>
                 </def>
-                <def>
+                <def id="onDelete">
                     <title><code>onDelete: ReferenceOption? = null</code></title>
                     <p>An action for when a linked row from a parent table will be deleted.</p>
                 </def>
-                <def>
+                <def id="onUpdate">
                     <title><code>onUpdate: ReferenceOption? = null</code></title>
                     <p>An action for when a value in a referenced column will be changed.</p>
                 </def>
-                <def>
+                <def id="fkName">
                     <title><code>fkName: String? = null</code></title>
                     <p>A name for the foreign key constraint.</p>
                 </def>

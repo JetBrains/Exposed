@@ -52,7 +52,7 @@
             and <code>director</code>:
         </p>
         <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt"
-                    include-lines="3-6,19-23" id="StarWarsFilmsTable-code-block"/>
+                    include-lines="3-6,19-23" id="StarWarsFilmsTable-dao-code-block"/>
         <p>
             <snippet id="IntIdTable-id-generation-note">
                 The <code>IntIdTable</code> class automatically generates an auto-incrementing integer <code>id</code>
@@ -61,7 +61,10 @@
             When the table is created, it corresponds to the following
             SQL query:
         </p>
-        <code-block lang="sql" src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt" include-lines="12-16" />
+        <code-block lang="sql"
+                    src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt"
+                    include-lines="12-16"
+                    id="StarWarsFilmsTable-dao-sql"/>
         <p>
             For more information on defining and configuring tables in Exposed, see <a href="Working-with-Tables.topic"/>.
         </p>

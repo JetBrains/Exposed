@@ -12,3 +12,4 @@ plugins {
 
 rootProject.name = "snippets"
 include("exposed-dao")
+include("exposed-dsl")
