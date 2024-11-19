@@ -82,7 +82,7 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
             SortOrder.ASC_NULLS_FIRST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.ASC)
             SortOrder.DESC_NULLS_LAST -> super.precessOrderByClause(queryBuilder, expression, SortOrder.DESC)
             else -> {
-                val exp = (expression as? ExpressionWithColumnTypeAlias<*>)?.alias ?: (expression as? ExpressionAlias<*>)?.alias ?: expression
+                val exp = (expression as? IExpressionAlias<*>)?.alias ?: expression
                 val nullExp = if (sortOrder == SortOrder.ASC_NULLS_LAST) " IS NULL" else " IS NOT NULL"
                 val order = if (sortOrder == SortOrder.ASC_NULLS_LAST) SortOrder.ASC else SortOrder.DESC
                 queryBuilder.append(exp, nullExp, ", ", exp, " ", order.code)

@@ -122,8 +122,7 @@ class ResultRow(
             ?: fieldIndex.keys.firstOrNull { exp ->
                 when (exp) {
                     is Column<*> -> (exp.columnType as? EntityIDColumnType<*>)?.idColumn == expression
-                    is ExpressionWithColumnTypeAlias<*> -> exp.delegate == expression
-                    is ExpressionAlias<*> -> exp.delegate == expression
+                    is IExpressionAlias<*> -> exp.delegate == expression
                     else -> false
                 }
             }?.let { exp -> fieldIndex[exp] }

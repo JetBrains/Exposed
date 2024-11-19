@@ -270,12 +270,11 @@ internal object OracleFunctionProvider : FunctionProvider() {
         +") x"
 
         columnsAndValues.appendTo(this, prefix = " SET ") { (col, value) ->
-            val colAlias = columnsToSelect.getValue(col)
-            +((colAlias as? ExpressionWithColumnTypeAlias<*>?)?.alias ?: (colAlias as ExpressionAlias<*>).alias)
+            val alias = columnsToSelect.getValue(col)
+            +alias.alias
             +"="
             (value as? Expression<*>)?.let {
-                val valueAlias = columnsToSelect.getValue(it)
-                +((valueAlias as? ExpressionWithColumnTypeAlias<*>?)?.alias ?: (valueAlias as ExpressionAlias<*>).alias)
+                +columnsToSelect.getValue(it).alias
             } ?: registerArgument(col, value)
         }
 
