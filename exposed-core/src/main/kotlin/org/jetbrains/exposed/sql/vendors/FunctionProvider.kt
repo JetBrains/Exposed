@@ -719,12 +719,14 @@ abstract class FunctionProvider {
                 append("T.$columnName=S.$columnName")
             }
 
-            +" WHEN MATCHED THEN UPDATE SET "
-            onUpdate.appendTo { (columnToUpdate, updateExpression) ->
-                append("T.${transaction.identity(columnToUpdate)}=")
-                when (updateExpression) {
-                    is QueryParameter<*>, !is Expression<*> -> registerArgument(columnToUpdate.columnType, updateExpression)
-                    else -> append(updateExpression.toString().replace("$tableIdentifier.", "T."))
+            if (onUpdate.isNotEmpty()) {
+                +" WHEN MATCHED THEN UPDATE SET "
+                onUpdate.appendTo { (columnToUpdate, updateExpression) ->
+                    append("T.${transaction.identity(columnToUpdate)}=")
+                    when (updateExpression) {
+                        is QueryParameter<*>, !is Expression<*> -> registerArgument(columnToUpdate.columnType, updateExpression)
+                        else -> append(updateExpression.toString().replace("$tableIdentifier.", "T."))
+                    }
                 }
             }
 

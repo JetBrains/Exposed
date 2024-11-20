@@ -356,6 +356,12 @@
                 it[director] = &quot;Rian Johnson&quot;
             }
         </code-block>
+
+        <note>
+            If the <code>insertValue()</code> for a particular column is used within the <code>onUpdate</code> block,
+            that column must be defined in the <code>insert</code> section, unless it has a client side default value.
+        </note>
+
         <p>If the update operation should be identical to the insert operation except for a few columns,
             then <code>onUpdateExclude</code> should be provided an argument with the specific columns to exclude.
             This parameter could also be used for the reverse case when only a small subset of columns should be updated

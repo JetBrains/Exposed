@@ -366,7 +366,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                         actual.forEach { exec(it) }
                     } else {
                         SchemaUtils.drop(whiteSpaceTable)
-                        SchemaUtils.create(whiteSpaceTable)
+                        SchemaUtils.create(emptyTable)
                     }
 
                     val emptyId = emptyTable.insertAndGetId { }

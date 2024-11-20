@@ -320,7 +320,8 @@ class DefaultsTest : DatabaseTestsBase() {
             val defaultInt = integer("defaultInteger").defaultExpression(abs(-100))
         }
 
-        withTables(foo) {
+        // MySql 5 is excluded because it does not support `CURRENT_DATE()` as a default value
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V5), foo) {
             val id = foo.insertAndGetId {
                 it[foo.name] = "bar"
             }

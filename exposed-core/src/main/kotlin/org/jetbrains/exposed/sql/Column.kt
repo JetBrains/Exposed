@@ -126,7 +126,7 @@ class Column<T>(
             val expressionSQL = currentDialect.dataTypeProvider.processForDefaultValue(defaultValue)
             if (!currentDialect.isAllowedAsColumnDefault(defaultValue)) {
                 val clientDefault = when {
-                    defaultValueFun != null -> " Expression will be evaluated on the client."
+                    defaultValueFun != null && dbDefaultValue == null -> " Expression will be evaluated on the client."
                     !columnType.nullable -> " Column will be created with NULL marker."
                     else -> ""
                 }

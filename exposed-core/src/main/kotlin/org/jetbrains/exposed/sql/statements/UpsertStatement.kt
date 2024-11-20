@@ -50,8 +50,9 @@ open class UpsertStatement<Key : Any>(
         val keyColumns = if (functionProvider is MysqlFunctionProvider) keys.toList() else getKeyColumns(keys = keys)
         val insertValues = arguments!!.first()
         val insertValuesSql = insertValues.toSqlString(prepared)
+        val updateExcludeColumns = (onUpdateExclude ?: emptyList()) + if (dialect is OracleDialect) keyColumns else emptyList()
         val updateExpressions = updateValues.takeIf { it.isNotEmpty() }?.toList()
-            ?: getUpdateExpressions(insertValues.unzip().first, onUpdateExclude, keyColumns)
+            ?: getUpdateExpressions(insertValues.unzip().first, updateExcludeColumns, keyColumns)
         return functionProvider.upsert(table, insertValues, insertValuesSql, updateExpressions, keyColumns, where, transaction)
     }
 
@@ -60,11 +61,6 @@ open class UpsertStatement<Key : Any>(
         return super.arguments().map {
             it + additionalArgs
         }
-    }
-
-    override fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
-        return isEntityIdClientSideGeneratedUUID(column) ||
-            super.isColumnValuePreferredFromResultSet(column, value)
     }
 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {

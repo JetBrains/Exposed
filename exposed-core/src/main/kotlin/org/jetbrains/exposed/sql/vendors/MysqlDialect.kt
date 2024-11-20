@@ -362,13 +362,18 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     /** Returns `true` if a MySQL JDBC connector is being used and its version is greater than or equal to 8.0. */
     fun isTimeZoneOffsetSupported(): Boolean = (currentDialect !is MariaDBDialect) && isMysql8
 
+    private val notAcceptableDefaults = mutableListOf("CURRENT_DATE()", "CURRENT_DATE")
+
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true
         if ((currentDialect is MariaDBDialect && fullVersion >= "10.2.1") || (currentDialect !is MariaDBDialect && fullVersion >= "8.0.13")) {
             return true
         }
-        val acceptableDefaults = mutableListOf("CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "NOW()", "CURRENT_TIMESTAMP(6)", "NOW(6)")
-        return e.toString().trim() in acceptableDefaults && isFractionDateTimeSupported()
+
+        // This check is quite optimistic, it will not allow to create a varchar columns with "CURRENT_DATE" default value for example
+        // Comparing to the previous variant with white list of functions the new variant does not reject valid values,
+        // it could be checked on the test UpsertTests::testUpsertWithColumnExpressions()
+        return e.toString().trim() !in notAcceptableDefaults
     }
 
     override fun fillConstraintCacheForTables(tables: List<Table>) {

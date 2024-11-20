@@ -1,5 +1,30 @@
 # Breaking Changes
 
+## 0.57.0
+* Insert, Upsert, and Replace statements will no longer implicitly send all default values (except for client-side default values) in every SQL request. 
+  This change will reduce the amount of data Exposed sends to the database and make Exposed rely more on the database's default values. 
+  However, this may uncover previously hidden issues related to actual database default values, which were masked by Exposed's insert/upsert statements.
+  Also from `InsertStatement` was removed protected method `isColumnValuePreferredFromResultSet()` and method `valuesAndDefaults()` was marked as deprecated.
+
+  Let's say you have a table with columns that have default values, and you use an insert statement like this:
+  ```kotlin
+  object TestTable : IntIdTable("test") { 
+    val number = integer("number").default(100)
+    val expression = integer("exp")
+        .defaultExpression(intLiteral(100) + intLiteral(200))
+  }
+  
+  TestTable.insert { }
+  ```
+  This insert statement would generate the following SQL in the H2 database:
+  ```sql
+  -- For versions before 0.57.0
+  INSERT INTO TEST ("number", "exp") VALUES (100, (100 + 200))
+  
+  -- Starting from version 0.57.0
+  INSERT INTO TEST DEFAULT VALUES
+  ```
+
 ## 0.56.0
 * If the `distinct` parameter of `groupConcat()` is set to `true`, when using Oracle or SQL Server, this will now fail early with an
   `UnsupportedByDialectException`. Previously, the setting would be ignored and SQL function generation would not include a `DISTINCT` clause.

@@ -1,11 +1,6 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.EntityIDColumnType
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.isAutoInc
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
@@ -88,18 +83,26 @@ abstract class BaseBatchInsertStatement(
 
     override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
-            val nullableColumns by lazy {
-                allColumnsInDataSet().filter { it.columnType.nullable && !it.isDatabaseGenerated }
-            }
-            data.map { single ->
-                val valuesAndDefaults = super.valuesAndDefaults(single) as MutableMap
-                val nullableMap = (nullableColumns - valuesAndDefaults.keys).associateWith { null }
-                valuesAndDefaults.putAll(nullableMap)
-                valuesAndDefaults.toList().sortedBy { it.first }
-            }.apply { field = this }
-        }
+            val columnsToInsert = (allColumnsInDataSet() + clientDefaultColumns()).toSet()
 
-    override fun valuesAndDefaults(values: Map<Column<*>, Any?>) = arguments!!.first().toMap()
+            data
+                .map { valuesAndClientDefaults(it) as MutableMap }
+                .map { values ->
+                    columnsToInsert.map { column ->
+                        column to when {
+                            values.contains(column) -> values[column]
+                            column.dbDefaultValue != null || column.isDatabaseGenerated -> DefaultValueMarker
+                            else -> {
+                                require(column.columnType.nullable) {
+                                    "The value for the column ${column.name} was not provided. " +
+                                        "The value for non-nullable column without defaults must be specified."
+                                }
+                                null
+                            }
+                        }
+                    }
+                }.apply { field = this }
+        }
 
     override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
         return if (!shouldReturnGeneratedValues) {

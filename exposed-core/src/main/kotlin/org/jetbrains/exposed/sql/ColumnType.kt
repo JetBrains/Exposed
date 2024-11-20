@@ -374,6 +374,10 @@ open class ColumnWithTransform<Unwrapped, Wrapped>(
     }
 }
 
+internal fun unwrapColumnValues(values: Map<Column<*>, Any?>): Map<Column<*>, Any?> = values.mapValues { (col, value) ->
+    value?.let { (col.columnType as? ColumnWithTransform<Any, Any>)?.unwrapRecursive(it) } ?: value
+}
+
 /**
  * A class that handles the transformation between a source column type and a target type,
  * but also supports transformations involving `null` values.
@@ -1014,7 +1018,11 @@ class BlobColumnType(
         else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
     }
 
-    override fun nonNullValueToString(value: ExposedBlob): String = currentDialect.dataTypeProvider.hexToDb(value.hexString())
+    override fun nonNullValueToString(value: ExposedBlob): String {
+        // For H2 Blobs the original dataTypeProvider must be taken (even if H2 in other DB mode)
+        return ((currentDialect as? H2Dialect)?.originalDataTypeProvider ?: currentDialect.dataTypeProvider)
+            .hexToDb(value.hexString())
+    }
 
     override fun readObject(rs: ResultSet, index: Int) = when {
         currentDialect is SQLServerDialect -> rs.getBytes(index)?.let(::ExposedBlob)
