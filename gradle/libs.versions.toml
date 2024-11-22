@@ -23,7 +23,7 @@ sqlite3 = "3.47.0.0"
 sqlserver = "9.4.1.jre8"
 
 springFramework = "6.2.0"
-springBoot = "3.3.6"
+springBoot = "3.4.0"
 
 spring-security-crypto = "6.2.1"
 joda-time = "2.13.0"
