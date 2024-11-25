@@ -235,15 +235,15 @@
 
         <chapter title="Memoized transformations" id="memoized-transformations">
             <p>
-                If you have a computationally expensive transformation function,
+                If your transformation function involves complex operations that impact performance,
                 you can use <code>memoizedTransform</code> to cache the result of the transformation.
             </p>
 
             <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/EntityWithBase64.kt"/>
 
             <p>
-                With memoized transformation, the value is unwrapped only once and then cached for future reads.
-                This cache remains valid for the life of the entity.
+                With memorized transformation, the value is unwrapped only once and then cached for future reads.
+                This cache remains valid for the lifetime of the entity.
                 If the transaction's entity cache is cleared or the entity is reloaded
                 in a new transaction (creating a new cache without the existing value),
                 the value will be wrapped again. However, if the original entity is kept alive outside of
