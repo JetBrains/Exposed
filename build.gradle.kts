@@ -44,7 +44,7 @@ subprojects {
 
     apply(plugin = rootProject.libs.plugins.jvm.get().pluginId)
 
-    testDb("h2") {
+    testDb("h2_v2") {
         withContainer = false
         dialects("H2_V2", "H2_V2_MYSQL", "H2_V2_PSQL", "H2_V2_MARIADB", "H2_V2_ORACLE", "H2_V2_SQLSERVER")
 
@@ -71,16 +71,18 @@ subprojects {
         }
     }
 
-    testDb("mysql5") {
+    testDb("mysql_v5") {
         port = 3001
+        container = "mysql5"
         dialects("MYSQL_V5")
         dependencies {
             dependency(rootProject.libs.mysql51)
         }
     }
 
-    testDb("mysql8") {
+    testDb("mysql_v8") {
         port = 3002
+        container = "mysql8"
         dialects("MYSQL_V8")
         dependencies {
             dependency(rootProject.libs.mysql)
