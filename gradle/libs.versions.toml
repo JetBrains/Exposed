@@ -19,7 +19,7 @@ mysql80 = "8.0.33"
 oracle19 = "19.24.0.0"
 postgre = "42.7.4"
 postgreNG = "0.8.9"
-sqlite3 = "3.47.0.0"
+sqlite3 = "3.47.1.0"
 sqlserver = "9.4.1.jre8"
 
 springFramework = "6.2.0"
