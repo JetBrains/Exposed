@@ -87,7 +87,7 @@ suspend fun <T> Transaction.withSuspendTransaction(
     context: CoroutineContext? = null,
     statement: suspend Transaction.() -> T
 ): T =
-    withTransactionScope(context, this, db = null, transactionIsolation = null) {
+    withTransactionScope(context, this, db = null, transactionIsolation = null, readOnly = null) {
         suspendedTransactionAsyncInternal(false, statement).await()
     }
 
@@ -131,7 +131,7 @@ private suspend fun <T> withTransactionScope(
     currentTransaction: Transaction?,
     db: Database? = null,
     transactionIsolation: Int?,
-    readOnly: Boolean? = null,
+    readOnly: Boolean?,
     body: suspend TransactionScope.() -> T
 ): T {
     val currentScope = coroutineContext[TransactionScope]
