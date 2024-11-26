@@ -12,9 +12,6 @@ Every database access using Exposed is started by obtaining a connection and cre
 First of all, you have to tell Exposed how to connect to a database by using the `Database.connect` function.
 It won't create a real database connection but will only provide a descriptor for future usage.
 
-By default, Exposed using `ServiceLoader` to get `DatabaseConnectionAutoRegistration`.
-It can be modified when calling `Database.connect` method by providing `connectionAutoRegistration` in parameter list.
-
 A real connection will be instantiated later by calling the `transaction` lambda
 (see [Transactions](Transactions.md) for more details).
 
@@ -27,11 +24,18 @@ val db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 <note>Executing this code more than once per database will create leaks in your application, hence it is recommended to store it for later use:
 <code-block lang="kotlin">
 object DbSettings {
-   val db by lazy { 
-       Database.connect(/* setup connection */)
-   }
+    val db by lazy {
+        Database.connect(/* setup connection */)
+    }
 }
 </code-block>
+</note>
+
+<note>
+    By default, Exposed uses a <code>ServiceLoader</code> to get an implementation of the <code>DatabaseConnectionAutoRegistration</code>
+    interface that represents a connection accessed by the <code>Database</code> instance.
+    This can be modified when calling the <code>Database.connect</code> method by providing an argument to <code>connectionAutoRegistration</code>
+    in the parameter list.
 </note>
 
 ### H2

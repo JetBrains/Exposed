@@ -183,7 +183,8 @@ class Database private constructor(
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param datasource The [DataSource] object to be used as a means of getting a connection.
-         * @param connectionAutoRegistration The connection provider for database. If not provided, will use ServiceLoaded [connectionInstanceImpl]
+         * @param connectionAutoRegistration The connection provider for database. If not provided,
+         * a service loader will be used to locate and load a provider for [DatabaseConnectionAutoRegistration].
          * @param setupConnection Any setup that should be applied to each new connection.
          * @param databaseConfig Configuration parameters for this [Database] instance.
          * @param manager The [TransactionManager] responsible for new transactions that use this [Database] instance.
@@ -251,7 +252,8 @@ class Database private constructor(
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param getNewConnection A function that returns a new connection.
-         * @param connectionAutoRegistration The connection provider for database. If not provided, will use ServiceLoaded [connectionInstanceImpl]
+         * @param connectionAutoRegistration The connection provider for database. If not provided,
+         * a service loader will be used to locate and load a provider for [DatabaseConnectionAutoRegistration].
          * @param databaseConfig Configuration parameters for this [Database] instance.
          * @param manager The [TransactionManager] responsible for new transactions that use this [Database] instance.
          */
@@ -277,7 +279,8 @@ class Database private constructor(
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param url The URL that represents the database when getting a connection.
-         * @param connectionAutoRegistration The connection provider for database. If not provided, will use ServiceLoaded [connectionInstanceImpl]
+         * @param connectionAutoRegistration The connection provider for database. If not provided,
+         * a service loader will be used to locate and load a provider for [DatabaseConnectionAutoRegistration].
          * @param driver The JDBC driver class. If not provided, the specified [url] will be used to find
          * a match from the existing driver mappings.
          * @param user The database user that owns the new connections.
