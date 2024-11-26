@@ -250,6 +250,12 @@
                     but it does not immediately establish a connection with the database. The actual connection
                     to the database will be established later when a database operation is performed.
                 </note>
+                <note>
+                    By default, Exposed uses a <code>ServiceLoader</code> to get an implementation of the <code>DatabaseConnectionAutoRegistration</code>
+                    interface that represents a connection accessed by the <code>Database</code> instance.
+                    This can be modified when calling the <code>Database.connect</code> method by providing an argument to <code>connectionAutoRegistration</code>
+                    in the parameter list.
+                </note>
                 <p>
                     With this, you've added Exposed to your Kotlin project and configured a database connection.
                     You're now ready to define your data model and engage with the database using Exposed's DSL API.
