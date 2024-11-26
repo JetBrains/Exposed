@@ -5,6 +5,29 @@
   mapped to an Exposed table object. Now it only checks against database sequences that have a relational dependency on any of the specified tables
   (for example, any sequence automatically associated with a `SERIAL` column registered to `IdTable`). An unbound sequence created manually
   via the `CREATE SEQUENCE` command will no longer be checked and will not generate a `DROP` statement.
+* In H2 Oracle, the `long()` column now maps to data type `BIGINT` instead of `NUMBER(19)`.
+  In Oracle, using the long column in a table now also creates a CHECK constraint to ensure that no out-of-range values are inserted.
+  Exposed does not ensure this behaviour for SQLite. If you want to do that, please use the following CHECK constraint:
+
+```kotlin
+val long = long("long_column").check { column ->
+    fun typeOf(value: String) = object : ExpressionWithColumnType<String>() {
+        override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("typeof($value)") }
+        override val columnType: IColumnType<String> = TextColumnType()
+    }
+    Expression.build { typeOf(column.name) eq stringLiteral("integer") }
+}
+
+val long = long("long_column").nullable().check { column ->
+    fun typeOf(value: String) = object : ExpressionWithColumnType<String>() {
+        override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("typeof($value)") }
+        override val columnType: IColumnType<String> = TextColumnType()
+    }
+
+    val typeCondition = Expression.build { typeOf(column.name) eq stringLiteral("integer") }
+    column.isNull() or typeCondition
+}
+```
 
 ## 0.57.0
 * Insert, Upsert, and Replace statements will no longer implicitly send all default values (except for client-side default values) in every SQL request. 
@@ -51,8 +74,6 @@
   that is also type restricted to `Comparable` (for example, `avg()`) will also require defining a new function. In this event, please
   also leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-577) with a use case so the original function signature
   can be potentially reassessed.
-* In H2 Oracle, the `long()` column now maps to data type `BIGINT` instead of `NUMBER(19)`.
-  In Oracle and SQLite, using the long column in a table now also creates a CHECK constraint to ensure that no out-of-range values are inserted.
 
 ## 0.55.0
 * The `DeleteStatement` property `table` is now deprecated in favor of `targetsSet`, which holds a `ColumnSet` that may be a `Table` or `Join`.
