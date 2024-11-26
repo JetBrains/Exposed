@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
@@ -26,7 +27,9 @@ class H2Tests : DatabaseTestsBase() {
                     it.next()
                     it.getString(1)
                 }
-                if (systemTestName == "h2") {
+
+                assertTrue(systemTestName == "h2_v2" || systemTestName == "h2_v1")
+                if (systemTestName == "h2_v2") {
                     assertEquals("2", version?.first()?.toString())
                 }
                 if (systemTestName == "h2_v1") {

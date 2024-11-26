@@ -24,7 +24,7 @@ class TestDb(val name: String) {
 
     internal val dependencies = mutableListOf<String>()
 
-    internal val ignoresSpringTests = name != "h2"
+    internal val ignoresSpringTests = name != "h2_v2"
 
     inner class DependencyBlock {
         fun dependency(dependencyNotation: String) {
