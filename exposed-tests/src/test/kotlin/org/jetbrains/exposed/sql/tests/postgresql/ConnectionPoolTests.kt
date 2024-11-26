@@ -17,10 +17,10 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Assert
+import org.junit.Assert.assertNotNull
 import org.junit.Assume
 import org.junit.Test
 import java.sql.Connection
-import kotlin.test.assertNotNull
 
 class ConnectionPoolTests : LogDbInTestName() {
     private val hikariDataSourcePG by lazy {
@@ -64,24 +64,13 @@ class ConnectionPoolTests : LogDbInTestName() {
     fun testReadOnlyModeWithHikariAndPostgres() {
         Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 
-        val testTable = object : IntIdTable("HIKARI_TESTER") { }
-
-        fun Transaction.getReadOnlyMode(): Boolean {
-            val mode = exec("SHOW transaction_read_only;") {
-                it.next()
-                it.getBoolean(1)
-            }
-            assertNotNull(mode)
-            return mode
-        }
-
         // read only mode should be set directly by hikari config
         transaction(db = hikariPG) {
             assertTrue(getReadOnlyMode())
 
             // table cannot be created in read-only mode
             expectException<ExposedSQLException> {
-                SchemaUtils.create(testTable)
+                SchemaUtils.create(TestTable)
             }
         }
 
@@ -90,8 +79,8 @@ class ConnectionPoolTests : LogDbInTestName() {
             Assert.assertFalse(getReadOnlyMode())
 
             // table can now be created and dropped
-            SchemaUtils.create(testTable)
-            SchemaUtils.drop(testTable)
+            SchemaUtils.create(TestTable)
+            SchemaUtils.drop(TestTable)
         }
 
         TransactionManager.closeAndUnregister(hikariPG)
@@ -102,15 +91,6 @@ class ConnectionPoolTests : LogDbInTestName() {
         Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 
         val testTable = object : IntIdTable("HIKARI_TESTER") { }
-
-        fun Transaction.getReadOnlyMode(): Boolean {
-            val mode = exec("SHOW transaction_read_only;") {
-                it.next()
-                it.getBoolean(1)
-            }
-            assertNotNull(mode)
-            return mode
-        }
 
         // read only mode should be set directly by hikari config
         newSuspendedTransaction(db = hikariPG) {
@@ -133,4 +113,15 @@ class ConnectionPoolTests : LogDbInTestName() {
 
         TransactionManager.closeAndUnregister(hikariPG)
     }
+}
+
+private val TestTable = object : IntIdTable("HIKARI_TESTER") { }
+
+private fun Transaction.getReadOnlyMode(): Boolean {
+    val mode = exec("SHOW transaction_read_only;") {
+        it.next()
+        it.getBoolean(1)
+    }
+    assertNotNull(mode)
+    return mode == true
 }
