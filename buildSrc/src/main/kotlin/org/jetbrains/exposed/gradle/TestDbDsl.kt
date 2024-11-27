@@ -8,12 +8,10 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.api.tasks.testing.Test
-import org.gradle.configurationcache.extensions.capitalized
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import java.time.Duration
-import java.util.*
 
 const val HEALTH_TIMEOUT: Long = 60
 
@@ -26,7 +24,7 @@ class TestDb(val name: String) {
 
     internal val dependencies = mutableListOf<String>()
 
-    internal val ignoresSpringTests = name != "h2"
+    internal val ignoresSpringTests = name != "h2_v2"
 
     inner class DependencyBlock {
         fun dependency(dependencyNotation: String) {
@@ -54,12 +52,49 @@ fun Project.testDb(name: String, block: TestDb.() -> Unit) {
         configureCompose(db)
     }
 
-    val testTask = tasks.register<Test>("test${db.name.capitalized()}") {
-        description = "Runs tests using ${db.name} database"
+    val dbTask = createDbTestTask(db)
+    tasks.named<Test>("test") {
+        delegatedTo(dbTask)
+    }
+}
+
+private fun Project.createDbTestTask(db: TestDb): TaskProvider<Test> {
+    return if (db.dialects.size == 1) {
+        createDbTestTaskByDialect(db, "test_${db.name.lowercase()}", db.dialects.first())
+    } else {
+        val dialectTasks = db.dialects.map { dialect ->
+            createDbTestTaskByDialect(db, formatDatabaseWithDialectTaskName(db.name.lowercase(), dialect.lowercase()), dialect)
+        }
+
+        tasks.register<Test>("test_all_${db.name.lowercase()}") {
+            description = "Runs tests using ${db.name} database"
+            group = "verification"
+
+            delegatedTo(
+                tasks = dialectTasks.toTypedArray()
+            )
+        }
+    }
+}
+
+private fun formatDatabaseWithDialectTaskName(db: String, dialect: String): String {
+    return listOfNotNull(
+        "test",
+        db,
+        // It's the dialect name without prefixed db name
+        dialect.replaceFirst(db, "").trim('_').takeIf { it.isNotEmpty() }
+    )
+        .filter { it.isNotEmpty() }
+        .joinToString(separator = "_")
+}
+
+private fun Project.createDbTestTaskByDialect(db: TestDb, taskName: String, dialect: String): TaskProvider<Test> {
+    return tasks.register<Test>(taskName) {
+        description = "Runs tests using ${db.name} database with $dialect dialect"
         group = "verification"
         systemProperties["exposed.test.name"] = db.name
         systemProperties["exposed.test.container"] = if (db.withContainer) db.container else "none"
-        systemProperties["exposed.test.dialects"] = db.dialects.joinToString(",") { it.uppercase(Locale.getDefault()) }
+        systemProperties["exposed.test.dialects"] = dialect
         outputs.cacheIf { false }
 
         if (db.ignoresSpringTests) {
@@ -70,7 +105,7 @@ fun Project.testDb(name: String, block: TestDb.() -> Unit) {
             }
         }
 
-        val driverConfiguration = configurations.create("${db.name}DriverConfiguration")
+        val driverConfiguration = configurations.create("${db.name}DriverConfiguration_$dialect")
         dependencies {
             db.dependencies.forEach {
                 driverConfiguration(it)
@@ -82,10 +117,6 @@ fun Project.testDb(name: String, block: TestDb.() -> Unit) {
         if (db.withContainer) {
             dependsOn(rootProject.tasks.getByName("${db.container}ComposeUp"))
         }
-    }
-
-    tasks.named<Test>("test") {
-        delegatedTo(testTask)
     }
 }
 
