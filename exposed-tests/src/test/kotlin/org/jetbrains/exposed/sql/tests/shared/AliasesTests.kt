@@ -183,8 +183,8 @@ class AliasesTests : DatabaseTestsBase() {
 
         val aliasTester = tester.alias("alias_tester")
 
-        val default = tester.columns.find { it.name == "text" }?.defaultValueFun
-        val aliasDefault = aliasTester.columns.find { it.name == "text" }?.defaultValueFun
+        val default = tester.columns.find { it.name == "text" }?.default
+        val aliasDefault = aliasTester.columns.find { it.name == "text" }?.default
 
         assertEquals(default, aliasDefault)
     }
@@ -199,8 +199,8 @@ class AliasesTests : DatabaseTestsBase() {
 
         val testerAlias = tester.alias("alias_tester")
 
-        val default = tester.columns.find { it.name == "text" }?.defaultValueInDb()
-        val aliasDefault = testerAlias.columns.find { it.name == "text" }?.defaultValueInDb()
+        val default = tester.columns.find { it.name == "text" }?.databaseDefaultExpression()
+        val aliasDefault = testerAlias.columns.find { it.name == "text" }?.databaseDefaultExpression()
 
         assertEquals(default, aliasDefault)
     }
@@ -213,8 +213,8 @@ class AliasesTests : DatabaseTestsBase() {
 
         val testerAlias = tester.alias("alias_tester")
 
-        val default = tester.columns.find { it.name == "text" }?.isDatabaseGenerated()
-        val aliasDefault = testerAlias.columns.find { it.name == "text" }?.isDatabaseGenerated()
+        val default = tester.columns.find { it.name == "text" }?.hasDatabaseDefault()
+        val aliasDefault = testerAlias.columns.find { it.name == "text" }?.hasDatabaseDefault()
 
         assertEquals(default, aliasDefault)
     }

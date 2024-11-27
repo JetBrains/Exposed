@@ -31,7 +31,6 @@ import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
 import java.time.*
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 private val dbTimestampNow: CustomFunction<OffsetDateTime>
@@ -65,10 +64,9 @@ class DefaultsTest : DatabaseTestsBase() {
         val table = object : IntIdTable() {
             val clientDefault = integer("clientDefault").nullable().clientDefault { defaultValue }
         }
-        val returnedDefault = table.clientDefault.defaultValueFun?.invoke()
+        val returnedDefault = table.clientDefault.defaultValue()
 
         assertTrue(table.clientDefault.columnType.nullable, "Expected clientDefault columnType to be nullable")
-        assertNotNull(table.clientDefault.defaultValueFun, "Expected clientDefault column to have a default value fun, but was null")
         assertEquals(defaultValue, returnedDefault, "Expected clientDefault to return $defaultValue, but was $returnedDefault")
     }
 
@@ -78,10 +76,9 @@ class DefaultsTest : DatabaseTestsBase() {
         val table = object : IntIdTable() {
             val clientDefault = integer("clientDefault").clientDefault { defaultValue }.nullable()
         }
-        val returnedDefault = table.clientDefault.defaultValueFun?.invoke()
+        val returnedDefault = table.clientDefault.defaultValue()
 
         assertTrue(table.clientDefault.columnType.nullable, "Expected clientDefault columnType to be nullable")
-        assertNotNull(table.clientDefault.defaultValueFun, "Expected clientDefault column to have a default value fun, but was null")
         assertEquals(defaultValue, returnedDefault, "Expected clientDefault to return $defaultValue, but was $returnedDefault")
     }
 

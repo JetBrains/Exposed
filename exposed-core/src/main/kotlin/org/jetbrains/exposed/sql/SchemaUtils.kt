@@ -358,7 +358,7 @@ object SchemaUtils {
                 val dataTypeProvider = currentDialect.dataTypeProvider
                 val redoColumns = existingTableColumns.mapValues { (col, existingCol) ->
                     val columnType = col.columnType
-                    val colNullable = if (col.dbDefaultValue?.let { currentDialect.isAllowedAsColumnDefault(it) } == false) {
+                    val colNullable = if (col.databaseDefaultExpression()?.let { currentDialect.isAllowedAsColumnDefault(it) } == false) {
                         true // Treat a disallowed default value as null because that is what Exposed does with it
                     } else {
                         columnType.nullable
@@ -411,8 +411,10 @@ object SchemaUtils {
      */
     private fun isIncorrectDefault(dataTypeProvider: DataTypeProvider, columnMeta: ColumnMetadata, column: Column<*>): Boolean {
         val isExistingColumnDefaultNull = columnMeta.defaultDbValue == null
-        val isDefinedColumnDefaultNull = column.dbDefaultValue?.takeIf { currentDialect.isAllowedAsColumnDefault(it) } == null ||
-            (column.dbDefaultValue is LiteralOp<*> && (column.dbDefaultValue as? LiteralOp<*>)?.value == null)
+        val dbDefaultValue = column.databaseDefaultExpression()
+
+        val isDefinedColumnDefaultNull = dbDefaultValue?.takeIf { currentDialect.isAllowedAsColumnDefault(it) } == null ||
+            (dbDefaultValue is LiteralOp<*> && (dbDefaultValue as? LiteralOp<*>)?.value == null)
 
         return when {
             // Both values are null-like, no DDL update is needed
@@ -421,7 +423,7 @@ object SchemaUtils {
             isExistingColumnDefaultNull != isDefinedColumnDefaultNull -> true
 
             else -> {
-                val columnDefaultValue = column.dbDefaultValue?.let {
+                val columnDefaultValue = dbDefaultValue?.let {
                     dataTypeProvider.dbDefaultToString(column, it)
                 }
                 columnMeta.defaultDbValue != columnDefaultValue

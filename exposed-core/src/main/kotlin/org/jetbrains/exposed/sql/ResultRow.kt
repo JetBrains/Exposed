@@ -72,7 +72,7 @@ class ResultRow(
         val rawValue = getRaw(expression)
 
         if (checkNullability) {
-            if (rawValue == null && expression is Column<*> && expression.dbDefaultValue != null && !expression.columnType.nullable) {
+            if (rawValue == null && expression is Column<*> && expression.hasDatabaseDefault() && !expression.columnType.nullable) {
                 exposedLogger.warn(
                     "Column ${TransactionManager.current().fullIdentity(expression)} is marked as not null, " +
                         "has default db value, but returns null. Possible have to re-read it from DB."
@@ -172,11 +172,11 @@ class ResultRow(
 
     private fun <T> Column<T>.defaultValueOrNotInitialized(): Any? {
         return when {
-            defaultValueFun != null -> when {
+            hasClientDefault() -> when {
                 columnType is ColumnWithTransform<*, *> -> {
-                    (columnType as ColumnWithTransform<Any, Any>).unwrapRecursive(defaultValueFun!!())
+                    (columnType as ColumnWithTransform<Any, Any>).unwrapRecursive(clientDefaultValue())
                 }
-                else -> defaultValueFun!!()
+                else -> clientDefaultValue()
             }
             columnType.nullable -> null
             else -> NotInitializedValue

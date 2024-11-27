@@ -28,17 +28,10 @@ class Column<T>(
     @Suppress("UNCHECKED_CAST")
     fun <S : T> referee(): Column<S>? = referee as? Column<S>
 
-    /** Returns the function that calculates the default value for this column. */
-    var defaultValueFun: (() -> T)? = null
-    internal var dbDefaultValue: Expression<T>? = null
-
-    /** Returns the default value for this column on the database-side. */
-    fun defaultValueInDb() = dbDefaultValue
-
-    internal var isDatabaseGenerated: Boolean = false
-
-    /** Returns whether this column's value will be generated in the database. */
-    fun isDatabaseGenerated() = isDatabaseGenerated
+    /**
+     * The default value for this column.
+     */
+    var default: ColumnDefault<T>? = null
 
     internal var extraDefinitions = mutableListOf<Any>()
 
@@ -121,12 +114,13 @@ class Column<T>(
             else -> append(columnType.sqlType())
         }
 
-        val defaultValue = dbDefaultValue
-        if (defaultValue != null) {
-            val expressionSQL = currentDialect.dataTypeProvider.processForDefaultValue(defaultValue)
-            if (!currentDialect.isAllowedAsColumnDefault(defaultValue)) {
+        val defaultDatabaseValue = databaseDefaultExpression()
+
+        if (defaultDatabaseValue != null) {
+            val expressionSQL = currentDialect.dataTypeProvider.processForDefaultValue(defaultDatabaseValue)
+            if (!currentDialect.isAllowedAsColumnDefault(defaultDatabaseValue)) {
                 val clientDefault = when {
-                    defaultValueFun != null && dbDefaultValue == null -> " Expression will be evaluated on the client."
+                    hasClientDefault() -> " Expression will be evaluated on the client."
                     !columnType.nullable -> " Column will be created with NULL marker."
                     else -> ""
                 }
@@ -148,7 +142,7 @@ class Column<T>(
             append(extraDefinitions.joinToString(separator = " ", prefix = " ") { "$it" })
         }
 
-        if (columnType.nullable || (defaultValue != null && defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))) {
+        if (columnType.nullable || (defaultDatabaseValue != null && !currentDialect.isAllowedAsColumnDefault(defaultDatabaseValue))) {
             append(" NULL")
         } else if (!isPKColumn || (currentDialect is SQLiteDialect && !isSQLiteAutoIncColumn)) {
             append(" NOT NULL")
@@ -163,14 +157,10 @@ class Column<T>(
         val newColumn: Column<R> = Column(table, name, columnType)
         newColumn.foreignKey = foreignKey
         @Suppress("UNCHECKED_CAST")
-        newColumn.dbDefaultValue = dbDefaultValue as Expression<R>?
-        newColumn.isDatabaseGenerated = isDatabaseGenerated
+        newColumn.default = default as ColumnDefault<R>?
         newColumn.extraDefinitions = extraDefinitions
         body?.let { newColumn.it() }
 
-        if (defaultValueFun != null) {
-            require(newColumn.defaultValueFun != null) { "defaultValueFun was lost on cloning the column" }
-        }
         return newColumn
     }
 
@@ -183,9 +173,7 @@ class Column<T>(
         columnType = columnType
     ).also {
         it.foreignKey = this.foreignKey
-        it.defaultValueFun = this.defaultValueFun
-        it.dbDefaultValue = this.dbDefaultValue
-        it.isDatabaseGenerated = this.isDatabaseGenerated
+        it.default = this.default
         it.extraDefinitions = this.extraDefinitions
     }
 

@@ -140,7 +140,7 @@ open class CompositeIdTable(name: String = "") : IdTable<CompositeID>(name) {
             }
         )
         return Column(this, "composite_id", EntityIDColumnType(placeholder)).apply {
-            defaultValueFun = null
+            default = null
         }
     }
 

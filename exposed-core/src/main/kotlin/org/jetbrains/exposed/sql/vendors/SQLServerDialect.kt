@@ -376,11 +376,11 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
                 }
 
                 if (columnDiff.nullability) {
-                    val defaultValue = column.dbDefaultValue
+                    val defaultValue = column.databaseDefaultExpression()
                     val isPKColumn = column.table.primaryKey?.columns?.contains(column) == true
 
                     if (column.columnType.nullable ||
-                        (defaultValue != null && column.defaultValueFun == null && !currentDialect.isAllowedAsColumnDefault(defaultValue))
+                        (defaultValue != null && !currentDialect.isAllowedAsColumnDefault(defaultValue))
                     ) {
                         append(" NULL")
                     } else if (!isPKColumn) {
@@ -399,7 +399,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
 
             statements.add(
                 buildString {
-                    column.dbDefaultValue?.let {
+                    column.databaseDefaultExpression()?.let {
                         append(alterTablePart + dropConstraint)
                         append("; ")
                         append(

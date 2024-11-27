@@ -24,6 +24,20 @@
   -- Starting from version 0.57.0
   INSERT INTO TEST DEFAULT VALUES
   ```
+  
+* The fields `defaultValueFun`, `dbDefaultValue`, and `isDatabaseGenerated` have been consolidated into a single field, 
+  `default`, of type `ColumnDefault`. The previous setup with the three separate fields often led to inconsistencies 
+  and confusion regarding their various combinations.
+
+  Here’s how you can migrate the common combinations:
+  - `defaultValueFun != null && dbDefaultValue != null` (knows as `default()`) becomes `DatabaseColumnDefaultExpressionWithValue`
+  - `dbDefaultValue != null` (knows as `defaultExpression()`) becomes `DatabaseColumnDefaultExpression`
+  - `defaultValueFun != null` (knows as `clientDefault()`) becomes `ClientColumnDefaultValue`
+  - `isDatabaseGenerated == true` (knows as `databaseGenerated`) becomes `DatabaseGeneratedColumnDefault`
+
+  If it is anticipated that a column will be transformed using `transform()`, 
+  the default value for that column should implement `TransformableColumnDefault`. However, not all defaults need to 
+  implement this interface; it is primarily necessary for columns with in-memory Kotlin values.
 
 ## 0.56.0
 * If the `distinct` parameter of `groupConcat()` is set to `true`, when using Oracle or SQL Server, this will now fail early with an

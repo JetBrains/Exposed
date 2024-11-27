@@ -413,6 +413,15 @@ public final class org/jetbrains/exposed/sql/CheckConstraint : org/jetbrains/exp
 public final class org/jetbrains/exposed/sql/CheckConstraint$Companion {
 }
 
+public abstract interface class org/jetbrains/exposed/sql/ClientColumnDefault : org/jetbrains/exposed/sql/ColumnDefault {
+}
+
+public final class org/jetbrains/exposed/sql/ClientColumnDefaultValue : org/jetbrains/exposed/sql/ClientColumnDefault, org/jetbrains/exposed/sql/ColumnDefaultValue, org/jetbrains/exposed/sql/TransformableColumnDefault {
+	public fun <init> (Lkotlin/jvm/functions/Function0;)V
+	public fun getValue ()Lkotlin/jvm/functions/Function0;
+	public fun transform (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/ColumnDefault;
+}
+
 public final class org/jetbrains/exposed/sql/Coalesce : org/jetbrains/exposed/sql/Function {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
@@ -423,30 +432,51 @@ public final class org/jetbrains/exposed/sql/Column : org/jetbrains/exposed/sql/
 	public synthetic fun compareTo (Ljava/lang/Object;)I
 	public fun compareTo (Lorg/jetbrains/exposed/sql/Column;)I
 	public fun createStatement ()Ljava/util/List;
-	public final fun defaultValueInDb ()Lorg/jetbrains/exposed/sql/Expression;
 	public final fun descriptionDdl (Z)Ljava/lang/String;
 	public static synthetic fun descriptionDdl$default (Lorg/jetbrains/exposed/sql/Column;ZILjava/lang/Object;)Ljava/lang/String;
 	public fun dropStatement ()Ljava/util/List;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getColumnType ()Lorg/jetbrains/exposed/sql/IColumnType;
 	public fun getDdl ()Ljava/util/List;
-	public final fun getDefaultValueFun ()Lkotlin/jvm/functions/Function0;
+	public final fun getDefault ()Lorg/jetbrains/exposed/sql/ColumnDefault;
 	public final fun getForeignKey ()Lorg/jetbrains/exposed/sql/ForeignKeyConstraint;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getReferee ()Lorg/jetbrains/exposed/sql/Column;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
 	public fun hashCode ()I
-	public final fun isDatabaseGenerated ()Z
 	public fun modifyStatement ()Ljava/util/List;
 	public final fun modifyStatements (Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	public final fun nameInDatabaseCase ()Ljava/lang/String;
 	public final fun nameUnquoted ()Ljava/lang/String;
 	public final fun referee ()Lorg/jetbrains/exposed/sql/Column;
-	public final fun setDefaultValueFun (Lkotlin/jvm/functions/Function0;)V
+	public final fun setDefault (Lorg/jetbrains/exposed/sql/ColumnDefault;)V
 	public final fun setForeignKey (Lorg/jetbrains/exposed/sql/ForeignKeyConstraint;)V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun toString ()Ljava/lang/String;
 	public final fun withColumnType (Lorg/jetbrains/exposed/sql/IColumnType;)Lorg/jetbrains/exposed/sql/Column;
+}
+
+public abstract interface class org/jetbrains/exposed/sql/ColumnDefault {
+}
+
+public abstract interface class org/jetbrains/exposed/sql/ColumnDefaultExpression : org/jetbrains/exposed/sql/ColumnDefault {
+	public abstract fun getExpression ()Lorg/jetbrains/exposed/sql/Expression;
+}
+
+public final class org/jetbrains/exposed/sql/ColumnDefaultKt {
+	public static final fun clientDefaultValue (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Object;
+	public static final fun clientDefaultValueOrExpression (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Object;
+	public static final fun databaseDefaultExpression (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Expression;
+	public static final fun defaultValue (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Object;
+	public static final fun hasClientDefault (Lorg/jetbrains/exposed/sql/Column;)Z
+	public static final fun hasClientDefaultValue (Lorg/jetbrains/exposed/sql/Column;)Z
+	public static final fun hasDatabaseDefault (Lorg/jetbrains/exposed/sql/Column;)Z
+	public static final fun hasDefaultValue (Lorg/jetbrains/exposed/sql/Column;)Z
+	public static final fun transform (Lorg/jetbrains/exposed/sql/ColumnDefault;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/ColumnDefault;
+}
+
+public abstract interface class org/jetbrains/exposed/sql/ColumnDefaultValue : org/jetbrains/exposed/sql/ColumnDefault {
+	public abstract fun getValue ()Lkotlin/jvm/functions/Function0;
 }
 
 public final class org/jetbrains/exposed/sql/ColumnDiff {
@@ -688,6 +718,21 @@ public final class org/jetbrains/exposed/sql/Database$Companion {
 	public final fun registerJdbcDriver (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 }
 
+public abstract interface class org/jetbrains/exposed/sql/DatabaseColumnDefault : org/jetbrains/exposed/sql/ColumnDefault {
+}
+
+public final class org/jetbrains/exposed/sql/DatabaseColumnDefaultExpression : org/jetbrains/exposed/sql/ColumnDefaultExpression, org/jetbrains/exposed/sql/DatabaseColumnDefault {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;)V
+	public fun getExpression ()Lorg/jetbrains/exposed/sql/Expression;
+}
+
+public final class org/jetbrains/exposed/sql/DatabaseColumnDefaultExpressionWithValue : org/jetbrains/exposed/sql/ColumnDefaultExpression, org/jetbrains/exposed/sql/ColumnDefaultValue, org/jetbrains/exposed/sql/DatabaseColumnDefault, org/jetbrains/exposed/sql/TransformableColumnDefault {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lkotlin/jvm/functions/Function0;)V
+	public fun getExpression ()Lorg/jetbrains/exposed/sql/Expression;
+	public fun getValue ()Lkotlin/jvm/functions/Function0;
+	public fun transform (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/ColumnDefault;
+}
+
 public final class org/jetbrains/exposed/sql/DatabaseConfig {
 	public static final field Companion Lorg/jetbrains/exposed/sql/DatabaseConfig$Companion;
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/SqlLogger;ZLjava/lang/Integer;IIJJIJJZLjava/lang/Long;IZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;IZLkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -759,6 +804,10 @@ public final class org/jetbrains/exposed/sql/DatabaseConfig$Companion {
 }
 
 public abstract interface class org/jetbrains/exposed/sql/DatabaseConnectionAutoRegistration : kotlin/jvm/functions/Function1 {
+}
+
+public final class org/jetbrains/exposed/sql/DatabaseGeneratedColumnDefault : org/jetbrains/exposed/sql/DatabaseColumnDefault {
+	public fun <init> ()V
 }
 
 public final class org/jetbrains/exposed/sql/DatabaseKt {
@@ -2712,6 +2761,10 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 public final class org/jetbrains/exposed/sql/Transaction$Companion {
 }
 
+public abstract interface class org/jetbrains/exposed/sql/TransformableColumnDefault : org/jetbrains/exposed/sql/ColumnDefault {
+	public abstract fun transform (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/ColumnDefault;
+}
+
 public final class org/jetbrains/exposed/sql/Trim : org/jetbrains/exposed/sql/Function {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;)V
 	public final fun getExpr ()Lorg/jetbrains/exposed/sql/Expression;
@@ -3210,7 +3263,7 @@ public class org/jetbrains/exposed/sql/statements/InsertStatement : org/jetbrain
 	public final fun getResultedValues ()Ljava/util/List;
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/Table;
 	protected fun isColumnValuePreferredFromResultSet (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Object;)Z
-	protected final fun isEntityIdClientSideGeneratedUUID (Lorg/jetbrains/exposed/sql/Column;)Z
+	protected final fun isEntityIdClientSideGeneratedUUID (Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/Boolean;
 	public final fun isIgnore ()Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
 	public fun prepared (Lorg/jetbrains/exposed/sql/Transaction;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/statements/api/PreparedStatementApi;
