@@ -258,7 +258,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         +"UPDATE ("
         val columnsToSelect = columnsAndValues.flatMap {
             listOfNotNull(it.first, it.second as? Expression<*>)
-        }.mapIndexed { index, expression -> expression to expression.alias("c$index") }.toMap()
+        }.mapIndexed { index, expression ->
+            expression to ((expression as? ExpressionWithColumnType<*>)?.alias("c$index") ?: expression.alias("c$index"))
+        }.toMap()
 
         val subQuery = targets.select(columnsToSelect.values.toList())
         where?.let {

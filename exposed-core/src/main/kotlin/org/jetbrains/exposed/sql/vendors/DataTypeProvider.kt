@@ -150,7 +150,7 @@ abstract class DataTypeProvider {
 
     /** Returns the SQL representation of the specified [expression], to be used in an ORDER BY clause. */
     open fun precessOrderByClause(queryBuilder: QueryBuilder, expression: Expression<*>, sortOrder: SortOrder) {
-        queryBuilder.append((expression as? ExpressionAlias<*>)?.alias ?: expression, " ", sortOrder.code)
+        queryBuilder.append((expression as? IExpressionAlias<*>)?.alias ?: expression, " ", sortOrder.code)
     }
 
     /** Returns the hex-encoded value to be inserted into the database. */

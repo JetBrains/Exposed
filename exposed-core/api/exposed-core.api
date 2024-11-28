@@ -177,6 +177,7 @@ public final class org/jetbrains/exposed/sql/Alias : org/jetbrains/exposed/sql/T
 public final class org/jetbrains/exposed/sql/AliasKt {
 	public static final fun alias (Lorg/jetbrains/exposed/sql/AbstractQuery;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/QueryAlias;
 	public static final fun alias (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/ExpressionAlias;
+	public static final fun alias (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnTypeAlias;
 	public static final fun alias (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Alias;
 	public static final fun getLastQueryAlias (Lorg/jetbrains/exposed/sql/Join;)Lorg/jetbrains/exposed/sql/QueryAlias;
 	public static final fun joinQuery (Lorg/jetbrains/exposed/sql/Join;Lkotlin/jvm/functions/Function2;Lorg/jetbrains/exposed/sql/JoinType;ZLkotlin/jvm/functions/Function0;)Lorg/jetbrains/exposed/sql/Join;
@@ -950,11 +951,12 @@ public final class org/jetbrains/exposed/sql/Expression$Companion {
 	public final fun build (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Expression;
 }
 
-public final class org/jetbrains/exposed/sql/ExpressionAlias : org/jetbrains/exposed/sql/Expression {
+public final class org/jetbrains/exposed/sql/ExpressionAlias : org/jetbrains/exposed/sql/Expression, org/jetbrains/exposed/sql/IExpressionAlias {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)V
-	public final fun aliasOnlyExpression ()Lorg/jetbrains/exposed/sql/Expression;
-	public final fun getAlias ()Ljava/lang/String;
-	public final fun getDelegate ()Lorg/jetbrains/exposed/sql/Expression;
+	public fun aliasOnlyExpression ()Lorg/jetbrains/exposed/sql/Expression;
+	public fun getAlias ()Ljava/lang/String;
+	public fun getDelegate ()Lorg/jetbrains/exposed/sql/Expression;
+	public fun queryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
@@ -967,6 +969,17 @@ public final class org/jetbrains/exposed/sql/ExpressionKt {
 public abstract class org/jetbrains/exposed/sql/ExpressionWithColumnType : org/jetbrains/exposed/sql/Expression {
 	public fun <init> ()V
 	public abstract fun getColumnType ()Lorg/jetbrains/exposed/sql/IColumnType;
+}
+
+public final class org/jetbrains/exposed/sql/ExpressionWithColumnTypeAlias : org/jetbrains/exposed/sql/ExpressionWithColumnType, org/jetbrains/exposed/sql/IExpressionAlias {
+	public fun <init> (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/String;)V
+	public fun aliasOnlyExpression ()Lorg/jetbrains/exposed/sql/Expression;
+	public fun getAlias ()Ljava/lang/String;
+	public fun getColumnType ()Lorg/jetbrains/exposed/sql/IColumnType;
+	public synthetic fun getDelegate ()Lorg/jetbrains/exposed/sql/Expression;
+	public fun getDelegate ()Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
+	public fun queryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
 public abstract interface class org/jetbrains/exposed/sql/FieldSet {
@@ -1077,6 +1090,18 @@ public final class org/jetbrains/exposed/sql/IColumnType$DefaultImpls {
 
 public abstract interface class org/jetbrains/exposed/sql/IDateColumnType {
 	public abstract fun getHasTimePart ()Z
+}
+
+public abstract interface class org/jetbrains/exposed/sql/IExpressionAlias {
+	public abstract fun aliasOnlyExpression ()Lorg/jetbrains/exposed/sql/Expression;
+	public abstract fun getAlias ()Ljava/lang/String;
+	public abstract fun getDelegate ()Lorg/jetbrains/exposed/sql/Expression;
+	public abstract fun queryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/sql/IExpressionAlias$DefaultImpls {
+	public static fun aliasOnlyExpression (Lorg/jetbrains/exposed/sql/IExpressionAlias;)Lorg/jetbrains/exposed/sql/Expression;
+	public static fun queryBuilder (Lorg/jetbrains/exposed/sql/IExpressionAlias;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
 public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder {
@@ -1965,6 +1990,7 @@ public final class org/jetbrains/exposed/sql/QueryAlias : org/jetbrains/exposed/
 	public fun fullJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public final fun get (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun get (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Expression;
+	public final fun get (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
 	public final fun getAlias ()Ljava/lang/String;
 	public fun getColumns ()Ljava/util/List;
 	public fun getFields ()Ljava/util/List;

@@ -26,7 +26,8 @@ sealed class SetOperation(
         is Query -> {
             val newSlice = _firstStatement.set.fields.mapIndexed { index, expression ->
                 when (expression) {
-                    is Column<*>, is ExpressionAlias<*> -> expression
+                    is Column<*>, is IExpressionAlias<*> -> expression
+                    is ExpressionWithColumnType<*> -> expression.alias("exp$index")
                     else -> expression.alias("exp$index")
                 }
             }
@@ -36,6 +37,7 @@ sealed class SetOperation(
         else -> error("Unsupported statement type ${_firstStatement::class.simpleName} in $operationName")
     }
     private val rawStatements: List<AbstractQuery<*>> = listOf(firstStatement, secondStatement)
+
     init {
         require(rawStatements.isNotEmpty()) { "$operationName is empty" }
         require(rawStatements.none { it is Query && it.isForUpdate() }) { "FOR UPDATE is not allowed within $operationName" }
@@ -192,10 +194,11 @@ class Except(
     secondStatement: AbstractQuery<*>
 ) : SetOperation("EXCEPT", firstStatement, secondStatement) {
 
-    override val operationName: String get() = when {
-        currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> "MINUS"
-        else -> "EXCEPT"
-    }
+    override val operationName: String
+        get() = when {
+            currentDialect is OracleDialect || currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> "MINUS"
+            else -> "EXCEPT"
+        }
 
     override fun copy() = Intersect(firstStatement, secondStatement).also {
         copyTo(it)

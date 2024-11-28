@@ -130,7 +130,7 @@ class WindowFunctionDefinition<T>(
         if (partitionExpressions.isNotEmpty()) {
             +"PARTITION BY "
             partitionExpressions.appendTo {
-                +((it as? ExpressionAlias)?.aliasOnlyExpression() ?: it)
+                +((it as? IExpressionAlias<*>)?.aliasOnlyExpression() ?: it)
             }
         }
     }
