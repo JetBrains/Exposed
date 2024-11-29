@@ -136,25 +136,34 @@ class ThreadLocalTransactionManager(
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
-                setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
-                    // The order of setters here is important.
-                    // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
-                    // Some drivers start a transaction right after `setAutoCommit(false)`,
-                    // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
-                    if (db.connectsViaDataSource && loadDataSourceIsolationLevel && db.dataSourceIsolationLevel == -1) {
-                        // retrieves the setting of the datasource connection & caches it
-                        db.dataSourceIsolationLevel = transactionIsolation
-                        db.dataSourceReadOnly = readOnly
-                    } else if (
-                        !db.connectsViaDataSource ||
-                        db.dataSourceIsolationLevel != this@ThreadLocalTransaction.transactionIsolation ||
-                        db.dataSourceReadOnly != this@ThreadLocalTransaction.readOnly
-                    ) {
-                        // only set the level if there is no cached datasource value or if the value differs
-                        transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
-                        readOnly = this@ThreadLocalTransaction.readOnly
+                try {
+                    setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
+                        // The order of setters here is important.
+                        // Transaction isolation should go first as readOnly or autoCommit can start transaction with wrong isolation level
+                        // Some drivers start a transaction right after `setAutoCommit(false)`,
+                        // which makes `setReadOnly` throw an exception if it is called after `setAutoCommit`
+                        if (db.connectsViaDataSource && loadDataSourceIsolationLevel && db.dataSourceIsolationLevel == -1) {
+                            // retrieves the setting of the datasource connection & caches it
+                            db.dataSourceIsolationLevel = transactionIsolation
+                            db.dataSourceReadOnly = readOnly
+                        } else if (
+                            !db.connectsViaDataSource ||
+                            db.dataSourceIsolationLevel != this@ThreadLocalTransaction.transactionIsolation ||
+                            db.dataSourceReadOnly != this@ThreadLocalTransaction.readOnly
+                        ) {
+                            // only set the level if there is no cached datasource value or if the value differs
+                            transactionIsolation = this@ThreadLocalTransaction.transactionIsolation
+                            readOnly = this@ThreadLocalTransaction.readOnly
+                        }
+                        autoCommit = false
                     }
-                    autoCommit = false
+                } catch (e: Exception) {
+                    try {
+                        close()
+                    } catch (closeException: Exception) {
+                        e.addSuppressed(closeException)
+                    }
+                    throw e
                 }
             }
         }
