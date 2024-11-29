@@ -136,6 +136,7 @@ class ThreadLocalTransactionManager(
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
+                @Suppress("TooGenericExceptionCaught")
                 try {
                     setupTxConnection?.invoke(this, this@ThreadLocalTransaction) ?: run {
                         // The order of setters here is important.
