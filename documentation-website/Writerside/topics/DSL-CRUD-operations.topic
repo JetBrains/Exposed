@@ -44,7 +44,7 @@
                         include-symbol="id"/>
             <code-block lang="sql"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="18-19"/>
+                        include-lines="32-33"/>
         </chapter>
 
         <chapter id="insertIgnore">
@@ -62,7 +62,7 @@
 
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-symbol="insertedRows,insertIgnoredRows"/>
+                        include-symbol="insertRow,insertIgnoreRows"/>
             <p>
                 If <code>insert</code> was used instead of <code>insertIgnore</code>, this would throw a constraint violation exception
                 Instead, this new row is ignored and discarded.
@@ -87,7 +87,7 @@
                         include-symbol="rowId"/>
             <code-block lang="sql"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="51-52"/>
+                        include-lines="59-60"/>
         </chapter>
 
         <chapter id="batch-insert">

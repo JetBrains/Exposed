@@ -1,6 +1,8 @@
 package org.example.examples
 
 import org.example.tables.StarWarsFilmsTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.upsert
 

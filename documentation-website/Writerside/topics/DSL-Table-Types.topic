@@ -51,9 +51,9 @@
         </p>
         To access the <code>id</code> column value, you
         need to use the <code>.value</code> property:
-        <code-block lang="kotlin">
-            val idValue = StarWarsFilms.id.value
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt"
+                    include-symbol="movieId"/>
         <p>
             For more information on <code>IdTable</code>, see <a href="DAO-Table-Types.topic">the DAO documentation</a>.
         </p>
