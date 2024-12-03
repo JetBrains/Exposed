@@ -16,7 +16,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
  */
 class QueryingExamples {
 
-    fun printResults() {
+    fun useWhereConditions() {
         val allMoviesLike = StarWarsFilmsTable.selectAll()
             .where { StarWarsFilmsTable.name like "The %" }
         println(allMoviesLike.toList())
@@ -49,7 +49,9 @@ class QueryingExamples {
                 StarWarsFilmsTable.sequelId eq anyFrom(arrayOf(6, 4))
             }
         println(anyFromArray.toList())
+    }
 
+    fun aggregateAndSort() {
         val count = StarWarsFilmsTable.selectAll()
             .where {
                 StarWarsFilmsTable.sequelId eq 8
@@ -65,7 +67,9 @@ class QueryingExamples {
             .select(StarWarsFilmsTable.sequelId.count(), StarWarsFilmsTable.director)
             .groupBy(StarWarsFilmsTable.director)
         println("Grouped films: $groupedFilms")
+    }
 
+    fun limitResults() {
         // Take 2 films after the first one.
         val limitedFilms = StarWarsFilmsTable
             .selectAll()

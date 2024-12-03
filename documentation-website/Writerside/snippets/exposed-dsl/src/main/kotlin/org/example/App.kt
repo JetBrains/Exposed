@@ -31,7 +31,7 @@ fun main() {
         runAliasExamples()
         runCustomSelectExamples()
         //runDeleteExamples()
-        //runQueryingExamples()
+        runQueryingExamples()
     }
 }
 
@@ -79,7 +79,7 @@ fun runDeleteExamples() {
 
 fun runQueryingExamples() {
     val queryingExamples = QueryingExamples()
-    queryingExamples.printResults()
+    queryingExamples.aggregateAndSort()
 }
 
 fun runAliasExamples() {
