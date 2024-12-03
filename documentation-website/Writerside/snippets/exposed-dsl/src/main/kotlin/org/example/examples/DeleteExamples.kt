@@ -1,6 +1,8 @@
 package org.example.examples
 
-import org.example.tables.*
+import org.example.tables.ActorsTable
+import org.example.tables.StarWarsFilmsTable
+import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.delete
 import org.jetbrains.exposed.sql.deleteAll
@@ -28,7 +30,16 @@ class DeleteExamples {
     }
 
     fun joinDelete() {
-        val join = StarWarsFilmsTable innerJoin ActorsTable
+        /*
+            MERGE INTO ACTORS USING STAR_WARS_FILMS_TABLE
+            ON STAR_WARS_FILMS_TABLE.ID = ACTORS.SEQUEL_ID
+            WHEN MATCHED AND ACTORS.SEQUEL_ID > 2
+            THEN DELETE
+         */
+
+        val simpleJoin = StarWarsFilmsTable innerJoin ActorsTable
+        val join = StarWarsFilmsTable.join(ActorsTable, JoinType.INNER, StarWarsFilmsTable.id, ActorsTable.sequelId)
+
         val deletedActorsCount = join.delete(ActorsTable) { ActorsTable.sequelId greater 2 }
         println(deletedActorsCount)
     }

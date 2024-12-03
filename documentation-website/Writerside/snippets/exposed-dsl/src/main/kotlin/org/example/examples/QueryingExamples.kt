@@ -1,6 +1,5 @@
 package org.example.examples
 
-import StarWarsFilms
 import org.example.tables.*
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.andWhere
@@ -18,34 +17,48 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class QueryingExamples {
 
     fun printResults() {
-        val allMoviesLike = StarWarsFilmsTable.selectAll().where { StarWarsFilmsTable.name like "The %" }
+        val allMoviesLike = StarWarsFilmsTable.selectAll()
+            .where { StarWarsFilmsTable.name like "The %" }
         println(allMoviesLike.toList())
 
-        val allMoviesNotLike = StarWarsFilmsTable.selectAll().where { StarWarsFilmsTable.name notLike "The %" }
+        val allMoviesNotLike = StarWarsFilmsTable.selectAll()
+            .where { StarWarsFilmsTable.name notLike "The %" }
         println(allMoviesNotLike.toList())
 
-        val allMatchingRegex = StarWarsFilmsTable.selectAll().where { StarWarsFilmsTable.name regexp "^The(\\s\\w+){2}\$" }
+        val allMatchingRegex = StarWarsFilmsTable.selectAll()
+            .where { StarWarsFilmsTable.name regexp "^The(\\s\\w+){2}\$" }
         println(allMatchingRegex.toList())
 
-        val allBetween = StarWarsFilmsTable.selectAll().where { StarWarsFilmsTable.sequelId.between(4, 6) }
+        val allBetween = StarWarsFilmsTable.selectAll()
+            .where { StarWarsFilmsTable.sequelId.between(4, 6) }
         println(allBetween.toList())
 
-        val allInList = StarWarsFilmsTable.selectAll().where { StarWarsFilmsTable.sequelId inList listOf(6, 4) }
+        val allInList = StarWarsFilmsTable.selectAll()
+            .where { StarWarsFilmsTable.sequelId inList listOf(6, 4) }
         println(allInList.toList())
 
         val topRated = listOf(5 to "Empire Strikes Back", 4 to "A New Hope")
-        val multipleInList = StarWarsFilmsTable.selectAll().where {
-            StarWarsFilmsTable.sequelId to StarWarsFilmsTable.name inList topRated
-        }
+        val multipleInList = StarWarsFilmsTable.selectAll()
+            .where {
+                StarWarsFilmsTable.sequelId to StarWarsFilmsTable.name inList topRated
+            }
         println(multipleInList.toList())
 
-        val anyFromArray = StarWarsFilmsTable.selectAll().where { StarWarsFilmsTable.sequelId eq anyFrom(arrayOf(6, 4)) }
+        val anyFromArray = StarWarsFilmsTable.selectAll()
+            .where {
+                StarWarsFilmsTable.sequelId eq anyFrom(arrayOf(6, 4))
+            }
         println(anyFromArray.toList())
 
-        val count = StarWarsFilmsTable.selectAll().where { StarWarsFilmsTable.sequelId eq 8 }.count()
+        val count = StarWarsFilmsTable.selectAll()
+            .where {
+                StarWarsFilmsTable.sequelId eq 8
+            }
+            .count()
         println(count)
 
-        val sortedFilms = StarWarsFilmsTable.selectAll().orderBy(StarWarsFilmsTable.sequelId to SortOrder.ASC)
+        val sortedFilms = StarWarsFilmsTable.selectAll()
+            .orderBy(StarWarsFilmsTable.sequelId to SortOrder.ASC)
         println((sortedFilms).toList())
 
         val groupedFilms = StarWarsFilmsTable
@@ -85,7 +98,7 @@ class QueryingExamples {
                    innerJoin(ActorsTable, { StarWarsFilmsTable.sequelId }, { ActorsTable.sequelId })
                }
                    .adjustSelect {
-                       select(StarWarsFilmsTable.columns + ActorsTable.columns).set
+                       select(StarWarsFilmsTable.columns + ActorsTable.columns)
                    }
                    .andWhere { ActorsTable.name eq name }
            }
