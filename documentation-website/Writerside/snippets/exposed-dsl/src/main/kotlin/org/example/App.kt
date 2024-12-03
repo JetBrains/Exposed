@@ -1,6 +1,8 @@
 package org.example
 
 import CreateExamples
+import org.example.examples.AliasExamples
+import org.example.examples.CustomSelectExamples
 import org.example.examples.DeleteExamples
 import org.example.examples.QueryingExamples
 import org.example.examples.ReadExamples
@@ -26,7 +28,9 @@ fun main() {
         runCreateExamples()
         runReadExamples()
         runUpdateExamples()
-        runDeleteExamples()
+        runAliasExamples()
+        runCustomSelectExamples()
+        //runDeleteExamples()
         //runQueryingExamples()
     }
 }
@@ -76,4 +80,14 @@ fun runDeleteExamples() {
 fun runQueryingExamples() {
     val queryingExamples = QueryingExamples()
     queryingExamples.printResults()
+}
+
+fun runAliasExamples() {
+    val aliasExamples = AliasExamples()
+    aliasExamples.useAlias()
+}
+
+fun runCustomSelectExamples() {
+    val customSelectExamples = CustomSelectExamples()
+    customSelectExamples.useCustomQueryWithHint()
 }

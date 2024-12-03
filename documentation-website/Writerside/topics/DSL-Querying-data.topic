@@ -289,32 +289,17 @@
     <chapter title="Mapping fields with alias" id="alias">
         <p>Aliases allow preventing ambiguity between field names and table names.
             Use the aliased var instead of original one:</p>
-
-        <code-block lang="Kotlin">
-            val filmTable1 = StarWarsFilms.alias(&quot;ft1&quot;)
-            filmTable1.selectAll() // can be used in joins etc'
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/AliasExamples.kt"
+                    include-symbol="filmTable1, allFilms"/>
         <p>Also, aliases allow you to use the same table in a join multiple times:</p>
-
-        <code-block lang="Kotlin">
-            val sequelTable = StarWarsFilms.alias(&quot;sql&quot;)
-            val originalAndSequelNames = StarWarsFilms
-                .innerJoin(sequelTable, { StarWarsFilms.sequelId }, { sequelTable[StarWarsFilms.id] })
-                .select(StarWarsFilms.name, sequelTable[StarWarsFilms.name])
-                .map { it[StarWarsFilms.name] to it[sequelTable[StarWarsFilms.name]] }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/AliasExamples.kt"
+                    include-symbol="sequelTable, originalAndSequelNames"/>
         <p>And they can be used when selecting from sub-queries:</p>
-
-        <code-block lang="kotlin">
-            val starWarsFilms = StarWarsFilms
-                .select(StarWarsFilms.id, StarWarsFilms.name)
-                .alias(&quot;swf&quot;)
-            val id = starWarsFilms[StarWarsFilms.id]
-            val name = starWarsFilms[StarWarsFilms.name]
-            starWarsFilms
-                .select(id, name)
-                .map { it[id] to it[name] }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/AliasExamples.kt"
+                    include-symbol="starWarsFilms, id, name, allStarWarsFilms"/>
     </chapter>
     <chapter title="Custom Select Queries" id="custom-select-queries">
         <p>A <code>Query</code> instance, which can be instantiated by calling <code>selectAll()</code> or <code>select()</code>
@@ -326,42 +311,11 @@
             implemented to enable its use with other standard queries.</p>
         <p>For example, MySQL index hints, which follow the table name in SQL, can be implemented on a
             <code>SELECT</code> query by using the following custom function and class:</p>
-
-        <code-block lang="kotlin">
-            fun Query.indexHint(hint: String) = IndexHintQuery(this, hint)
-
-            class IndexHintQuery(
-                val source: Query,
-                val indexHint: String
-            ) : Query(source.set, source.where) {
-
-                init {
-                    // copies any stored properties from the original query
-                    source.copyTo(this)
-                }
-
-                override fun prepareSQL(builder: QueryBuilder): String {
-                    val originalSql = super.prepareSQL(builder)
-                    val fromTableSql = &quot; FROM ${transaction.identity(set.source as Table)} &quot;
-                    return originalSql.replace(fromTableSql, &quot;$fromTableSql$indexHint &quot;)
-                }
-
-                override fun copy(): IndexHintQuery = IndexHintQuery(source.copy(), indexHint).also { copy -&gt;
-                    copyTo(copy)
-                }
-            }
-
-            transaction {
-                val originalQuery = StarWarsFilms
-                    .selectAll()
-                    .withDistinct()
-                    .where { StarWarsFilms.sequelId less 5 }
-                    .groupBy(StarWarsFilms.director)
-
-                val queryWithHint = originalQuery
-                    .indexHint(&quot;FORCE INDEX (PRIMARY)&quot;)
-                    .orderBy(StarWarsFilms.sequelId)
-            }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/CustomSelectExamples.kt"
+                    include-lines="4-6,9,16-37"/>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/CustomSelectExamples.kt"
+                    include-lines="41-51"/>
     </chapter>
 </topic>
