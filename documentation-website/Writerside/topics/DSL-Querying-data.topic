@@ -7,16 +7,24 @@
     <show-structure for="chapter,procedure" depth="2"/>
     <chapter id="where-expression">
         <title>Working with <code>where</code> expressions</title>
-        <p>The query expression <code>where</code> expects a boolean operator (<code>Op&lt;Boolean&gt;</code>).
-            We've split the allowed conditions in different categories:</p>
+        <p>
+            The <code>where</code> expression is a core component of building queries in Exposed, allowing you to
+            filter data by specifying conditions. A <code>where</code> expression expects a boolean operator
+            (<code>Op&lt;Boolean&gt;</code>), which evaluates to either <code>true</code> or <code>false</code>.
+        </p>
+        <p>We’ve categorized the available conditions into the following groups:</p>
         <list>
             <li><a anchor="basic">Basic conditions</a>.</li>
             <li><a anchor="logical-conditions">Logical conditions</a>.</li>
-            <li><a anchor="check-for-a-match-in-a-pattern">Conditions that check for a match in a pattern</a>.</li>
-            <li><a anchor="check-for-a-match-in-a-range">Conditions that check for a match in a range</a>.</li>
-            <li><a anchor="check-for-a-match-in-a-collection">Conditions that check for a match in a collection</a>.</li>
+            <li><a anchor="pattern-matching-conditions">Pattern-matching conditions</a>.</li>
+            <li><a anchor="range-conditions">Range conditions</a>.</li>
+            <li><a anchor="collection-conditions">Collection conditions</a>.</li>
         </list>
         <chapter title="Basic conditions" id="basic">
+            <p>
+                Basic conditions are simple comparisons, such as equality (<code>eq</code>) and inequality
+                (<code>neq</code>).
+            </p>
             <deflist type="medium">
                 <def id="eq">
                     <title><code>eq</code></title>
@@ -70,11 +78,9 @@
 
         </chapter>
         <chapter id="logical-conditions" title="Logical conditions">
+            <p>Logical conditions are those that use logical operators, such as <code>AND</code>, <code>OR</code>,
+                and <code>NOT</code>.</p>
             <deflist>
-                <def id="not">
-                    <title><code>not</code></title>
-                    Returns the inverse of an expression.
-                </def>
                 <def id="and">
                     <title><code>and</code></title>
                     Returns the result of performing a logical <code>and</code> operation between two expressions.
@@ -82,6 +88,10 @@
                 <def id="or">
                     <title><code>or</code></title>
                     Returns the result of performing a logical <code>or</code> operation between two expressions.
+                </def>
+                <def id="not">
+                    <title><code>not</code></title>
+                    Returns the inverse of an expression.
                 </def>
                 <def id="andIfNotNull">
                     <title><code>andIfNotNull</code></title>
@@ -105,7 +115,10 @@
                 </def>
             </deflist>
         </chapter>
-        <chapter title="Check for a match in a pattern" id="check-for-a-match-in-a-pattern">
+        <chapter title="Pattern-matching conditions" id="pattern-matching-conditions">
+            <p>
+                Conditions that allow you to check for a match in a pattern using operators, such as <code>LIKE</code>.
+            </p>
             <deflist>
                 <def id="like">
                     <title><code>like</code></title>
@@ -137,49 +150,55 @@
                 </def>
             </deflist>
     </chapter>
-        <chapter title="Check for a match in a range" id="check-for-a-match-in-a-range">
-            <deflist>
-                <def id="between">
-                    <title><code>between(from: T, to: T)</code></title>
-                    Checks if an expression is between the values from and to. Returns <code>true</code> if the
-                    expression is between the lower and upper range values (inclusive). Date and time values are also
-                    supported as arguments.
-                    <code-block lang="kotlin"
-                                src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
-                                include-symbol="allBetween"/>
-                </def>
-            </deflist>
-        </chapter>
-        <chapter title="Check for a match in a collection" id="check-for-a-match-in-a-collection">
-            <deflist>
-                <def id="inList">
-                    <title><code>inList</code></title>
-                    <p>
-                        Checks if an expression is equal to any element from list.
-                    </p>
-                    <code-block lang="kotlin"
-                                src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
-                                include-symbol="allInList"/>
-                    <p><code>inList</code> also accepts multiple expressions to check for equality, either as a
-                        <code>Pair</code> or a <code>Triple</code>:</p>
-                    <code-block lang="kotlin"
-                                src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
-                                include-symbol="topRated, multipleInList"/>
-                </def>
-                <def id="notInList">
-                    <title><code>notInList</code></title>
-                    Checks if an expression is not equal to any element in the provided collection.
-                </def>
-            </deflist>
-
-            <p>In addition to the <code>IN</code> operator, the <code>ANY</code> and <code>ALL</code> operators are
-                available with any preceding comparison operator:</p>
-
+        <chapter title="Range conditions" id="range-conditions">
+            <p>
+                To check if a value lies within a specified range, use the <code>between()</code> function.
+            </p>
+            <p>
+                It checks if an expression is between the values from and to. Returns <code>true</code> if the
+                expression is between the lower and upper range values (inclusive). Date and time values are also
+                supported as arguments.
+            </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
-                        include-symbol="anyFromArray"/>
-            <p><code>anyFrom()</code> and <code>allFrom()</code> also accept subqueries, tables, and array expressions
-                as arguments.</p>
+                        include-symbol="allBetween"/>
+        </chapter>
+        <chapter title="Collection conditions" id="collection-conditions">
+            <p>
+                To check if an expression is equal or not to any element from a list, use the <code>inList</code> or
+                <code>notInList</code> operators.
+            </p>
+            <chapter id="collection-condition-lists">
+                <title>Using <code>inList</code> with lists</title>
+                <p>
+                    The <code>inList</code> operator checks if an expression matches any value in a list.
+                    In the following example, the query selects all films with <code>sequelId</code> values of 6 or 4.
+                </p>
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                            include-symbol="allInList"/>
+            </chapter>
+            <chapter id="collection-condition-pairs-or-triples">
+                <title>Using <code>inList</code> with Pairs or Triples</title>
+                <p>
+                    The <code>inList</code> operator can also handle multiple expressions, such as pairs or triples,
+                    to check for equality across multiple columns.
+                </p>
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                            include-symbol="topRated, multipleInList"/>
+            </chapter>
+            <chapter id="any-all">
+                <title>Using <code>ANY</code> and <code>ALL</code></title>
+                <p>In addition to the <code>IN</code> operator, the <code>ANY</code> and <code>ALL</code> operators are
+                    available with any preceding comparison operator:</p>
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                            include-symbol="anyFromArray"/>
+                <p><code>anyFrom()</code> and <code>allFrom()</code> also accept subqueries, tables, and array expressions
+                    as arguments.</p>
+            </chapter>
+
         </chapter>
     </chapter>
     <chapter id="conditional-where">
@@ -225,15 +244,26 @@
     </chapter>
     <chapter title="Aggregating and sorting data" id="aggregate-and-sort">
         <chapter title="Count" id="count">
-            <p><code>count()</code> is a method of <code>Query</code> that is used like in the example below:</p>
-
+            <p>
+                The <code>count()</code> method is used to determine the number of rows matching a query.
+                It is called on a <code>Query</code> object and returns the total count of rows.
+            </p>
+            <p>
+                The following example counts all rows where <code>sequelId</code> equals <code>8</code>:
+            </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
                         include-symbol="count"/>
         </chapter>
         <chapter title="Order by" id="order-by">
-            <p><code>orderBy()</code> accepts a list of columns mapped to boolean indicates if sorting should be ascending or descending.
-                Example:</p>
+            <p>
+                The <code>orderBy()</code> function allows you to sort query results by specifying a list of
+                columns and their sort order (ascending or descending).
+            </p>
+            <p>
+                In the following example, <code>StarWarsFilmsTable.sequelId </code> specifies the column to sort by and
+                <code>SortOrder.ASC</code> sets the sort order to be ascending:
+            </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
                         include-symbol="sortedFilms"/>
@@ -255,59 +285,6 @@
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
                     include-symbol="limitedFilms"/>
-    </chapter>
-    <chapter title="Joining tables" id="join-tables">
-        <chapter title="Join" id="join">
-            <p>For the join examples below, consider the following tables:</p>
-            <tabs>
-                <tab id="StarWarsFilmsIntIdTable" title="StarWarsFilmsIntIdTable">
-                    <code-block lang="kotlin"
-                                src="exposed-dsl/src/main/kotlin/org/example/tables/StarWarsFilmsIntIdTable.kt"/>
-                </tab>
-                <tab id="ActorsIntIdTable" title="ActorsIntIdTable">
-                    <code-block lang="kotlin"
-                                src="exposed-dsl/src/main/kotlin/org/example/tables/ActorsIntIdTable.kt"/>
-                </tab>
-                <tab id="RolesTable" title="RolesTable">
-                    <code-block lang="kotlin"
-                                src="exposed-dsl/src/main/kotlin/org/example/tables/RolesTable.kt"/>
-                </tab>
-            </tabs>
-            <p>In the following example,a <code>join</code> is used to count how many actors star in each movie:</p>
-            <code-block lang="kotlin"
-                        src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
-                        include-symbol="joinAndCount"/>
-            <p>Instead of specifying <code>onColumn</code> and <code>otherColumn</code>, <code>additionalConstraint</code>
-                can be used (and allows specifying
-                other types of join conditions).</p>
-
-            <code-block lang="kotlin"
-                        src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
-                        include-symbol="useAdditionalConstraint"/>
-            <p>When joining on a foreign key, the more concise <code>innerJoin</code> can be used:</p>
-
-            <code-block lang="kotlin"
-                        src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
-                        include-symbol="innerJoin"/>
-            <p>This is equivalent to the following:</p>
-
-            <code-block lang="kotlin"
-                        src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
-                        include-symbol="join"/>
-        </chapter>
-        <chapter title="Union" id="union">
-            <p>You can combine the results of multiple queries using <code>.union(...)</code>.
-                Per the SQL specification, the queries must have the same number of columns, and not be marked for update.
-                Subqueries may be combined when supported by the database.</p>
-
-            <code-block lang="kotlin"
-                        src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
-                        include-symbol="lucasDirectedQuery,abramsDirectedQuery,filmNames"/>
-            <p>Only unique rows are returned by default. Duplicates may be returned using <code>.unionAll()</code>.</p>
-            <code-block lang="kotlin"
-                        src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
-                        include-symbol="lucasDirectedQuery,originalTrilogyQuery,allFilmNames"/>
-        </chapter>
     </chapter>
     <chapter title="Mapping fields with alias" id="alias">
         <p>Aliases allow preventing ambiguity between field names and table names.
