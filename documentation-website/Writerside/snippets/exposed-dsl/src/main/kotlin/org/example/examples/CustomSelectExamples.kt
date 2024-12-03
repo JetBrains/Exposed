@@ -43,7 +43,7 @@ class CustomSelectExamples {
                 .selectAll()
                 .withDistinct()
                 .where { StarWarsFilmsTable.sequelId less 8 }
-                .groupBy(StarWarsFilmsTable.director)
+                .groupBy(StarWarsFilmsTable.id)
 
             val queryWithHint = originalQuery
                 .indexHint("FORCE INDEX (PRIMARY)")

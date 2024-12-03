@@ -1,6 +1,7 @@
 package org.example.examples
 
-import org.example.tables.*
+import org.example.tables.ActorsTable
+import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.anyFrom
