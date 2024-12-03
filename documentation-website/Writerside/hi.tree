@@ -23,6 +23,7 @@
     </toc-element>
     <toc-element toc-title="Deep Dive into DSL">
         <toc-element topic="DSL-Table-Types.topic"/>
+        <toc-element topic="DSL-Joining-tables.topic"/>
         <toc-element topic="DSL-CRUD-operations.topic"/>
         <toc-element topic="Working-with-Sequence.topic"/>
         <toc-element topic="DSL-Querying-data.topic"/>

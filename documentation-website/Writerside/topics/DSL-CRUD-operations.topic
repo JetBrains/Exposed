@@ -134,21 +134,28 @@
     <chapter title="Read" id="read">
         <chapter id="select">
             <title><code>select</code></title>
-            <p>The <code>select()</code> function allows you to select specific columns or/and expressions.</p>
-
+            <p>The
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/select.html">
+                    <code>select()</code>
+                </a>
+                function allows you to select specific columns or/and expressions.</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
                         include-symbol="filmAndDirector"/>
-
-            <p>If you want to select only distinct value then use <code>withDistinct()</code> function:</p>
-
+            <p>If you want to select only distinct value then use
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/with-distinct.html">
+                    <code>withDistinct()</code>
+                </a>
+                function:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
                         include-symbol="directors"/>
-
             <p>Some SQL dialects, such as PostgreSQL and H2, also support the <code>DISTINCT ON</code> clause.
-                You can use this clause with the <code>withDistinctOn()</code> function:</p>
-
+                You can use this clause with the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/with-distinct-on.html">
+                    <code>withDistinctOn()</code>
+                </a>
+                function:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
                         include-symbol="directorsDistinctOn"/>
@@ -177,8 +184,11 @@
     </chapter>
     <chapter title="Update" id="update">
 
-        <p>To update a record, use the <code>update()</code> function.
-            By default, it returns the number of updated rows.
+        <p>To update a record, use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/update.html">
+                <code>update()</code>
+            </a>
+            function. By default, it returns the number of updated rows.
         </p>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateExamples.kt"
@@ -194,7 +204,11 @@
     <chapter title="Delete" id="delete">
         <chapter id="deleteWhere">
             <title><code>deleteWhere</code></title>
-            <p>To delete records and return the count of deleted rows, use the <code>deleteWhere</code> function.</p>
+            <p>To delete records and return the count of deleted rows, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-where.html">
+                    <code>deleteWhere</code>
+                </a>
+                function.</p>
             <p>
                 Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
                 parameter lambda block will require inclusion of an import statement like <code>import org.jetbrains.exposed.sql.SqlExpressionBuilder.*</code>.
@@ -210,7 +224,10 @@
                 <p>Supported on: MySQL and MariaDB</p>
             </tldr>
             <p>To delete records while ignoring any possible errors that occur during the process, use the
-                <code>deleteIgnoreWhere</code> function. The function will return the count of deleted rows.
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-ignore-where.html">
+                    <code>deleteIgnoreWhere</code>
+                </a>
+                function. The function will return the count of deleted rows.
             </p>
             <p>
                 Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
@@ -223,7 +240,10 @@
         </chapter>
         <chapter id="deleteAll">
             <title><code>deleteAll</code></title>
-            <p>To delete all rows in a table and return the count of deleted rows, use the <code>deleteAll</code>
+            <p>To delete all rows in a table and return the count of deleted rows, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-all.html">
+                    <code>deleteAll</code>
+                </a>
                 function.</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
@@ -232,7 +252,11 @@
         </chapter>
         <chapter id="join-delete">
             <title>Join <code>delete</code></title>
-            <p>To delete records from a table in a join relation, use the <code>delete</code> function with a
+            <p>To delete records from a table in a join relation, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete.html">
+                    <code>delete</code>
+                </a>
+                function with a
                 <code>Join</code> as its receiver. Provide the specific table from which records should be deleted as
                 the argument to the parameter <code>targetTable</code>.
             </p>
@@ -240,15 +264,23 @@
                         src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
                         include-symbol="join,deletedActorsCount"
             />
-            <tip>For more information on creating and using a <code>Join</code>, see <a href="DSL-Querying-data.topic#join-tables">Joining Tables</a>.</tip>
+            <tip>
+                For more information on creating and using a <code>Join</code>, see
+                <a href="DSL-Joining-tables.topic">
+                    Joining Tables
+                </a>
+                .</tip>
         </chapter>
 
     </chapter>
     <chapter title="Insert Or Update" id="insert-or-update">
         <p>Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if
             a duplicate constraint already exists.
-            The supported functionality of <code>upsert()</code> is dependent on the specific
-            database being used.
+            The supported functionality of
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upsert.html">
+                <code>upsert()</code>
+            </a>
+            is dependent on the specific database being used.
             For example, MySQL's <code>INSERT ... ON DUPLICATE KEY UPDATE</code> statement automatically assesses the
             primary key and unique indices
             for a duplicate value, so using the function in Exposed would look like this:</p>
@@ -321,7 +353,10 @@
             <p>Supported on: SQLite, MySQL, and MariaDB </p>
         </tldr>
         <p>
-            The <code>replace()</code>
+            The
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/replace.html">
+                <code>replace()</code>
+            </a>
             method acts in a similar manner to an <code>upsert()</code>. The only difference is that
             if an insertion would violate a unique constraint, the existing row is deleted before the new row is inserted.
         </p>
@@ -374,10 +409,26 @@
             This can be accomplished by using one of the following functions:
         </p>
         <list>
-            <li><code>insertReturning()</code></li>
-            <li><code>upsertReturning()</code></li>
-            <li><code>updateReturning()</code></li>
-            <li><code>deleteReturning()</code></li>
+            <li>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-returning.html">
+                    <code>insertReturning()</code>
+                </a>
+            </li>
+            <li>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upsert-returning.html">
+                    <code>upsertReturning()</code>
+                </a>
+            </li>
+            <li>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/update-returning.html">
+                    <code>updateReturning()</code>
+                </a>
+            </li>
+            <li>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-returning.html">
+                    <code>deleteReturning()</code>
+                </a>
+            </li>
         </list>
         <p>
             Each of them take a list of the required table columns
