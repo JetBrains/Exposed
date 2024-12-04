@@ -15,6 +15,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
     If you add, remove, or modify any lines, ensure you update the corresponding
     line numbers and/or names in the `code-block` element of the referenced file.
  */
+
+private const val MOVIE_ORIGINAL_ID = 4
+private const val MOVIE_SEQUEL_ID = 5
+private const val MOVIE_SEQUEL_2_ID = 6
+private const val MOVIE_SEQUEL_3_ID = 8
+
 class QueryingExamples {
 
     fun useWhereConditions() {
@@ -31,14 +37,14 @@ class QueryingExamples {
         println(allMatchingRegex.toList())
 
         val allBetween = StarWarsFilmsTable.selectAll()
-            .where { StarWarsFilmsTable.sequelId.between(4, 6) }
+            .where { StarWarsFilmsTable.sequelId.between(MOVIE_ORIGINAL_ID, MOVIE_SEQUEL_2_ID) }
         println(allBetween.toList())
 
         val allInList = StarWarsFilmsTable.selectAll()
-            .where { StarWarsFilmsTable.sequelId inList listOf(6, 4) }
+            .where { StarWarsFilmsTable.sequelId inList listOf(MOVIE_SEQUEL_2_ID, MOVIE_ORIGINAL_ID) }
         println(allInList.toList())
 
-        val topRated = listOf(5 to "Empire Strikes Back", 4 to "A New Hope")
+        val topRated = listOf(MOVIE_SEQUEL_ID to "Empire Strikes Back", MOVIE_ORIGINAL_ID to "A New Hope")
         val multipleInList = StarWarsFilmsTable.selectAll()
             .where {
                 StarWarsFilmsTable.sequelId to StarWarsFilmsTable.name inList topRated
@@ -47,7 +53,7 @@ class QueryingExamples {
 
         val anyFromArray = StarWarsFilmsTable.selectAll()
             .where {
-                StarWarsFilmsTable.sequelId eq anyFrom(arrayOf(6, 4))
+                StarWarsFilmsTable.sequelId eq anyFrom(arrayOf(MOVIE_SEQUEL_2_ID, MOVIE_ORIGINAL_ID))
             }
         println(anyFromArray.toList())
     }
@@ -55,7 +61,7 @@ class QueryingExamples {
     fun aggregateAndSort() {
         val count = StarWarsFilmsTable.selectAll()
             .where {
-                StarWarsFilmsTable.sequelId eq 8
+                StarWarsFilmsTable.sequelId eq MOVIE_SEQUEL_3_ID
             }
             .count()
         println(count)
@@ -94,19 +100,19 @@ class QueryingExamples {
     }
 
     fun findWithConditionalJoin(actorName: String?) {
-       transaction {
-           val query = StarWarsFilmsTable.selectAll() // Base query
+        transaction {
+            val query = StarWarsFilmsTable.selectAll() // Base query
 
-           // Conditionally adjust the query
-           actorName?.let { name ->
-               query.adjustColumnSet {
-                   innerJoin(ActorsTable, { StarWarsFilmsTable.sequelId }, { ActorsTable.sequelId })
-               }
-                   .adjustSelect {
-                       select(StarWarsFilmsTable.columns + ActorsTable.columns)
-                   }
-                   .andWhere { ActorsTable.name eq name }
-           }
-       }
+            // Conditionally adjust the query
+            actorName?.let { name ->
+                query.adjustColumnSet {
+                    innerJoin(ActorsTable, { StarWarsFilmsTable.sequelId }, { ActorsTable.sequelId })
+                }
+                    .adjustSelect {
+                        select(StarWarsFilmsTable.columns + ActorsTable.columns)
+                    }
+                    .andWhere { ActorsTable.name eq name }
+            }
+        }
     }
 }

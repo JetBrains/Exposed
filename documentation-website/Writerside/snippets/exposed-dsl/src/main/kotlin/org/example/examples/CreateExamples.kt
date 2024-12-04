@@ -1,6 +1,6 @@
-import org.example.tables.StarWarsFilmsTable
 import org.example.tables.CitiesTable
 import org.example.tables.StarWarsFilmsIntIdTable
+import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.sql.*
 
 /*
@@ -9,22 +9,22 @@ import org.jetbrains.exposed.sql.*
     line numbers in the `code-block` element of the referenced file.
 */
 
-const val MOVIE_SEQUEL_ID = 7
-const val MOVIE_SEQUEL_2_ID = 8
+private const val MOVIE_ORIGINAL_ID = 4
+private const val MOVIE_SEQUEL_ID = 5
+private const val MOVIE_SEQUEL_2_ID = 6
 
 class CreateExamples {
     fun createFilmRecords() {
-        /*
-            INSERT INTO STARWARSFILMS (SEQUEL_ID, "name", DIRECTOR)
-            VALUES (7, 'The Force Awakens', 'J.J. Abrams')
-        */
+/*
+    INSERT INTO STARWARSFILMS (SEQUEL_ID, "name", DIRECTOR)
+    VALUES (7, 'The Force Awakens', 'J.J. Abrams')
+*/
 
-        val movie = StarWarsFilmsTable.insert {
+        StarWarsFilmsTable.insert {
             it[sequelId] = MOVIE_SEQUEL_ID
             it[name] = "The Force Awakens"
             it[director] = "J.J. Abrams"
         }
-        println(movie)
     }
 
     fun createIntIdFilmRecords() {
@@ -42,23 +42,22 @@ class CreateExamples {
     }
 
     fun insertIgnoreRecords() {
-        val insertRow = StarWarsFilmsTable.insert {
+        StarWarsFilmsTable.insert {
             it[sequelId] = MOVIE_SEQUEL_2_ID // column pre-defined with a unique index
             it[name] = "The Last Jedi"
             it[director] = "Rian Johnson"
         }
 
-        val insertIgnoreRows = StarWarsFilmsTable.insertIgnore {
+        StarWarsFilmsTable.insertIgnore {
             it[sequelId] = MOVIE_SEQUEL_2_ID
             it[name] = "The Last Jedi"
             it[director] = "Rian Johnson"
         }
-        println(insertIgnoreRows)
 
-        /*
-            INSERT IGNORE INTO STAR_WARS_FILMS_TABLE (SEQUEL_ID, "name", DIRECTOR)
-            VALUES (8, 'The Last Jedi', 'Rian Johnson')
-        */
+/*
+    INSERT IGNORE INTO STAR_WARS_FILMS_TABLE (SEQUEL_ID, "name", DIRECTOR)
+    VALUES (8, 'The Last Jedi', 'Rian Johnson')
+*/
 
         val rowId = StarWarsFilmsIntIdTable.insertIgnoreAndGetId {
             it[sequelId] = MOVIE_SEQUEL_ID
@@ -70,7 +69,8 @@ class CreateExamples {
 
     fun simpleBatchInsert() {
         val cityNames = listOf("Paris", "Moscow", "Helsinki")
-        val allCitiesID = CitiesTable.batchInsert(cityNames) { name ->
+
+        CitiesTable.batchInsert(cityNames) { name ->
             this[CitiesTable.name] = name
         }
     }
@@ -79,10 +79,10 @@ class CreateExamples {
         data class SWFilmData(val sequelId: Int, val name: String, val director: String)
 
         val films = listOf(
-                SWFilmData(5, "The Empire Strikes Back", "Irvin Kershner"),
-                SWFilmData(4, "A New Hope", "George Lucas"),
-                SWFilmData(6, "Return of the Jedi", "Richard Marquand")
-            )
+            SWFilmData(MOVIE_SEQUEL_ID, "The Empire Strikes Back", "Irvin Kershner"),
+            SWFilmData(MOVIE_ORIGINAL_ID, "A New Hope", "George Lucas"),
+            SWFilmData(MOVIE_SEQUEL_2_ID, "Return of the Jedi", "Richard Marquand")
+        )
 
         StarWarsFilmsTable.batchInsert(films) { (id, name, director) ->
             this[StarWarsFilmsTable.sequelId] = id

@@ -13,6 +13,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
     line numbers in the `code-block` element of the referenced file.
 */
 
+private const val MOVIE_SEQUEL_ID = 8
+
 fun Query.indexHint(hint: String) = IndexHintQuery(this, hint)
 
 class IndexHintQuery(
@@ -42,14 +44,11 @@ class CustomSelectExamples {
             val originalQuery = StarWarsFilmsTable
                 .selectAll()
                 .withDistinct()
-                .where { StarWarsFilmsTable.sequelId less 8 }
+                .where { StarWarsFilmsTable.sequelId less MOVIE_SEQUEL_ID }
                 .groupBy(StarWarsFilmsTable.id)
 
-            val queryWithHint = originalQuery
-                .indexHint("FORCE INDEX (PRIMARY)")
+            originalQuery.indexHint("FORCE INDEX (PRIMARY)")
                 .orderBy(StarWarsFilmsTable.sequelId)
         }
     }
 }
-
-

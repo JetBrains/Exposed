@@ -25,24 +25,24 @@
         <p>In the following example,a <code>join</code> is used to count how many actors star in each movie:</p>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
-                    include-symbol="joinAndCount"/>
+                    include-lines="18-25"/>
         <p>Instead of specifying <code>onColumn</code> and <code>otherColumn</code>, <code>additionalConstraint</code>
             can be used (and allows specifying
             other types of join conditions).</p>
 
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
-                    include-symbol="useAdditionalConstraint"/>
+                    include-lines="29-35"/>
         <p>When joining on a foreign key, the more concise <code>innerJoin</code> can be used:</p>
 
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
-                    include-symbol="innerJoin"/>
+                    include-lines="39-42"/>
         <p>This is equivalent to the following:</p>
 
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
-                    include-symbol="join"/>
+                    include-lines="46-49"/>
     </chapter>
     <chapter title="Union" id="union">
         <p>You can combine the results of multiple queries using <code>.union(...)</code>.

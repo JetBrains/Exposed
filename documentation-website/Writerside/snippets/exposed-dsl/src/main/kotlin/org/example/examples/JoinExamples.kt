@@ -7,13 +7,20 @@ import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.unionAll
 
+/*
+    Important: The contents of this file are referenced by line number in `DSL-Joining-Tables.topic`.
+    If you add, remove, or modify any lines, ensure you update the corresponding
+    line numbers in the `code-block` element of the referenced file.
+*/
+
 class JoinExamples {
     fun joinAndCount() {
         ActorsIntIdTable.join(
             StarWarsFilmsIntIdTable,
             JoinType.INNER,
             onColumn = ActorsIntIdTable.sequelId,
-            otherColumn = StarWarsFilmsIntIdTable.sequelId)
+            otherColumn = StarWarsFilmsIntIdTable.sequelId
+        )
             .select(ActorsIntIdTable.name.count(), StarWarsFilmsIntIdTable.name)
             .groupBy(StarWarsFilmsIntIdTable.name)
     }
@@ -22,7 +29,8 @@ class JoinExamples {
         ActorsIntIdTable.join(
             StarWarsFilmsIntIdTable,
             JoinType.INNER,
-            additionalConstraint = { StarWarsFilmsIntIdTable.sequelId eq ActorsIntIdTable.sequelId })
+            additionalConstraint = { StarWarsFilmsIntIdTable.sequelId eq ActorsIntIdTable.sequelId }
+        )
             .select(ActorsIntIdTable.name.count(), StarWarsFilmsIntIdTable.name)
             .groupBy(StarWarsFilmsIntIdTable.name)
     }
@@ -47,9 +55,11 @@ class JoinExamples {
         val abramsDirectedQuery =
             StarWarsFilmsIntIdTable.select(StarWarsFilmsIntIdTable.name).where { StarWarsFilmsIntIdTable.director eq "J.J. Abrams" }
         val filmNames = lucasDirectedQuery.union(abramsDirectedQuery).map { it[StarWarsFilmsIntIdTable.name] }
+        println(filmNames)
 
         val originalTrilogyQuery =
             StarWarsFilmsIntIdTable.select(StarWarsFilmsIntIdTable.name).where { StarWarsFilmsIntIdTable.sequelId inList (3..5) }
         val allFilmNames = lucasDirectedQuery.unionAll(originalTrilogyQuery).map { it[StarWarsFilmsIntIdTable.name] }
+        println(allFilmNames)
     }
 }

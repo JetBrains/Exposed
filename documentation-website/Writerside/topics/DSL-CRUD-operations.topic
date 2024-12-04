@@ -21,11 +21,11 @@
                 it throws an exception.</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-symbol="movie"/>
+                        include-lines="23-27"/>
             <p>The example corresponds to the following SQL statement:</p>
             <code-block lang="sql"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="18-19"/>
+                        include-lines="19-20"/>
         </chapter>
 
         <chapter id="insertAndGetId">
@@ -62,7 +62,7 @@
 
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-symbol="insertRow,insertIgnoreRows"/>
+                        include-lines="45-56"/>
             <p>
                 If <code>insert</code> was used instead of <code>insertIgnore</code>, this would throw a constraint violation exception
                 Instead, this new row is ignored and discarded.
@@ -87,7 +87,7 @@
                         include-symbol="rowId"/>
             <code-block lang="sql"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="59-60"/>
+                        include-lines="58-59"/>
         </chapter>
 
         <chapter id="batch-insert">
@@ -102,11 +102,11 @@
             <p>The following example uses a simple list:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-symbol="cityNames, allCitiesID"/>
+                        include-lines="71-75"/>
             <p>Here is an example that uses a list of data class instances:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-symbol="batchInsert"/>
+                        include-lines="79-91"/>
             <note>
                 The <code>batchInsert</code> function will still create multiple <code>INSERT</code> statements when
                 interacting with your database.
@@ -149,7 +149,7 @@
                 function:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-symbol="directors"/>
+                        include-lines="31-35"/>
             <p>Some SQL dialects, such as PostgreSQL and H2, also support the <code>DISTINCT ON</code> clause.
                 You can use this clause with the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/with-distinct-on.html">
@@ -158,7 +158,7 @@
                 function:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-symbol="directorsDistinctOn"/>
+                        include-lines="45-53"/>
         </chapter>
         <chapter id="selectAll">
             <title><code>selectAll</code></title>
@@ -171,14 +171,14 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-symbol="query"/>
+                        include-lines="99-100"/>
             <p><code>Query</code> inherits <code>Iterable</code> so it is possible to traverse it using <code>map()</code>
                 or <code>forEach()</code>:
                 </p>
 
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-symbol="queryTraverse"/>
+                        include-lines="102-104"/>
         </chapter>
 
     </chapter>
@@ -287,7 +287,7 @@
 
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
-                    include-symbol="updateOrInsert"
+                    include-lines="14-24"
         />
         <p>If none of the optional arguments are provided to <code>upsert()</code>, and an <code>onUpdate()</code> block
             is omitted, the statements in the <code>body</code> block will be used for both the insert and update parts
@@ -309,7 +309,7 @@
 
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
-                    include-symbol="updateAndInsertWithConfig"
+                    include-lines="28-46"
         />
         <p>If the update operation should be identical to the insert operation except for a few columns,
             then <code>onUpdateExclude</code> should be provided as an argument with the specific columns to exclude.
@@ -318,7 +318,7 @@
 
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
-                    include-symbol="onUpdateExclude"
+                    include-lines="50-64"
         />
         <p>If a specific database supports user-defined key columns and none are provided, the table's primary key is
             used. If there
@@ -363,7 +363,7 @@
 
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                    include-symbol="replace"
+                    include-lines="26-39"
         />
         <p>Unlike <code>upsert()</code>, none of the supporting databases allows a <code>WHERE</code> clause.
             Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there
@@ -380,7 +380,7 @@
         </p>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                    include-symbol="replaceWithQuery"
+                    include-lines="43-46"
         />
         <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
             are defined in the <code>Table</code> instance.
@@ -388,7 +388,7 @@
             parameter:</p>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                    include-symbol="replaceWithQueryAndColumns"
+                    include-lines="50-62"
         />
     </chapter>
     <chapter id="insertedCount" title="Retrieve the count of modified rows">

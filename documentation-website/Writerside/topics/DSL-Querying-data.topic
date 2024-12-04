@@ -313,9 +313,9 @@
             <code>SELECT</code> query by using the following custom function and class:</p>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/CustomSelectExamples.kt"
-                    include-lines="4-6,9,16-37"/>
+                    include-lines="4-6,9,18-39"/>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/CustomSelectExamples.kt"
-                    include-lines="41-51"/>
+                    include-lines="43-52"/>
     </chapter>
 </topic>

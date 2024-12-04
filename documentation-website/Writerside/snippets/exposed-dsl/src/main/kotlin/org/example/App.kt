@@ -48,7 +48,6 @@ fun createTables() {
     tables.forEach { table ->
         SchemaUtils.create(table)
     }
-
 }
 
 fun runCreateExamples() {

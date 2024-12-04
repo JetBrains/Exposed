@@ -6,17 +6,19 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.upsert
 
+private const val MOVIE_SEQUEL_ID = 9
+
 class UpdateOrInsertExamples {
     fun updateOrInsert() {
         // inserts a new row
         StarWarsFilmsTable.upsert {
-            it[sequelId] = 9 // column pre-defined with a unique index
+            it[sequelId] = MOVIE_SEQUEL_ID // column pre-defined with a unique index
             it[name] = "The Rise of Skywalker"
             it[director] = "Rian Johnson"
         }
         // updates existing row with the correct [director]
         StarWarsFilmsTable.upsert {
-            it[sequelId] = 9
+            it[sequelId] = MOVIE_SEQUEL_ID
             it[name] = "The Rise of Skywalker"
             it[director] = "JJ Abrams"
         }
@@ -28,7 +30,7 @@ class UpdateOrInsertExamples {
             onUpdate = { it[StarWarsFilmsTable.sequelId] = StarWarsFilmsTable.sequelId + 1 },
             where = { StarWarsFilmsTable.director like stringLiteral("JJ%") }
         ) {
-            it[sequelId] = 9
+            it[sequelId] = MOVIE_SEQUEL_ID
             it[name] = "The Rise of Skywalker"
             it[director] = "JJ Abrams"
         }
@@ -38,7 +40,7 @@ class UpdateOrInsertExamples {
                 it[StarWarsFilmsTable.director] = concat(insertValue(StarWarsFilmsTable.director), stringLiteral(" || "), StarWarsFilmsTable.director)
             }
         ) {
-            it[sequelId] = 9
+            it[sequelId] = MOVIE_SEQUEL_ID
             it[name] = "The Rise of Skywalker"
             it[director] = "Rian Johnson"
         }
@@ -47,7 +49,7 @@ class UpdateOrInsertExamples {
     fun onUpdateExclude() {
         // on conflict, all columns EXCEPT [director] are updated with values from the lambda block
         StarWarsFilmsTable.upsert(onUpdateExclude = listOf(StarWarsFilmsTable.director)) {
-            it[sequelId] = 9
+            it[sequelId] = MOVIE_SEQUEL_ID
             it[name] = "The Rise of Skywalker"
             it[director] = "JJ Abrams"
         }
@@ -56,7 +58,7 @@ class UpdateOrInsertExamples {
         StarWarsFilmsTable.upsert(
             onUpdateExclude = StarWarsFilmsTable.columns - setOf(StarWarsFilmsTable.director)
         ) {
-            it[sequelId] = 9
+            it[sequelId] = MOVIE_SEQUEL_ID
             it[name] = "The Rise of Skywalker"
             it[director] = "JJ Abrams"
         }

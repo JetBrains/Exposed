@@ -9,16 +9,17 @@ class AliasExamples {
     fun useAlias() {
         val filmTable1 = StarWarsFilmsTable.alias("ft1")
         val allFilms = filmTable1.selectAll() // can be used in joins etc'
+        println(allFilms)
 
-        //use the same table in a join multiple times
+        // use the same table in a join multiple times
         val sequelTable = StarWarsFilmsTable.alias("sql")
         val originalAndSequelNames = StarWarsFilmsTable
             .join(sequelTable, JoinType.INNER, StarWarsFilmsTable.sequelId, sequelTable[StarWarsFilmsTable.id])
             .select(StarWarsFilmsTable.name, sequelTable[StarWarsFilmsTable.name])
             .map { it[StarWarsFilmsTable.name] to it[sequelTable[StarWarsFilmsTable.name]] }
+        println(originalAndSequelNames)
 
-
-        //selecting from subqueries
+        // selecting from subqueries
         val starWarsFilms = StarWarsFilmsTable
             .select(StarWarsFilmsTable.id, StarWarsFilmsTable.name)
             .alias("swf")

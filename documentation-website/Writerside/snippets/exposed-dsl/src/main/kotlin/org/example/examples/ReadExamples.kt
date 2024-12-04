@@ -4,9 +4,8 @@ import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.selectAll
 
-const val MOVIE_SEQUELID = 8
-const val MIN_MOVIE_RATING = 5
-const val MOVIE_RATING = 4.2
+private const val MOVIE_SEQUEL_ID = 5
+private const val MOVIE_SEQUEL_2_ID = 6
 
 class ReadExamples {
 
@@ -29,8 +28,8 @@ class ReadExamples {
             SELECT DISTINCT STARWARSFILMS.DIRECTOR FROM STARWARSFILMS WHERE STARWARSFILMS.SEQUEL_ID < 5
          */
 
-        val directors = StarWarsFilmsTable.select(StarWarsFilmsTable.director)
-            .where { StarWarsFilmsTable.sequelId less 5 }.withDistinct()
+        StarWarsFilmsTable.select(StarWarsFilmsTable.director)
+            .where { StarWarsFilmsTable.sequelId less MOVIE_SEQUEL_ID }.withDistinct()
             .map {
                 it[StarWarsFilmsTable.director]
             }
@@ -43,7 +42,7 @@ class ReadExamples {
             ORDER BY STARWARSFILMS.DIRECTOR ASC, STARWARSFILMS."name" ASC
          */
 
-        val directorsDistinctOn = StarWarsFilmsTable.select(StarWarsFilmsTable.director, StarWarsFilmsTable.name)
+        StarWarsFilmsTable.select(StarWarsFilmsTable.director, StarWarsFilmsTable.name)
             .withDistinctOn(StarWarsFilmsTable.director)
             .orderBy(
                 StarWarsFilmsTable.director to SortOrder.ASC,
@@ -62,13 +61,14 @@ class ReadExamples {
          */
 
         val filmsByAscOrder = StarWarsFilmsTable.select(StarWarsFilmsTable.director, StarWarsFilmsTable.name)
-                .orderBy(
-                    StarWarsFilmsTable.director to SortOrder.ASC,
-                    StarWarsFilmsTable.name to SortOrder.ASC
-                )
-                .map {
-                    it[StarWarsFilmsTable.name]
-                }
+            .orderBy(
+                StarWarsFilmsTable.director to SortOrder.ASC,
+                StarWarsFilmsTable.name to SortOrder.ASC
+            )
+            .map {
+                it[StarWarsFilmsTable.name]
+            }
+        println(filmsByAscOrder)
 
         /*
             Sort results in descending order
@@ -86,6 +86,7 @@ class ReadExamples {
             .map {
                 it[StarWarsFilmsTable.name]
             }
+        println(filmsByDescOrder)
     }
 
     fun readAll() {
@@ -95,10 +96,11 @@ class ReadExamples {
             WHERE STARWARSFILMS.SEQUEL_ID = 8
          */
 
-        val query = StarWarsFilmsTable.selectAll().where { StarWarsFilmsTable.sequelId eq 6 }
+        StarWarsFilmsTable.selectAll()
+            .where { StarWarsFilmsTable.sequelId eq MOVIE_SEQUEL_ID }
 
-        val queryTraverse = StarWarsFilmsTable.selectAll().where { StarWarsFilmsTable.sequelId eq 6 }.forEach {
-            println(it[StarWarsFilmsTable.name])
-        }
+        StarWarsFilmsTable.selectAll()
+            .where { StarWarsFilmsTable.sequelId eq MOVIE_SEQUEL_2_ID }
+            .forEach { println(it[StarWarsFilmsTable.name]) }
     }
 }
