@@ -14,11 +14,11 @@
         </p>
         <p>We’ve categorized the available conditions into the following groups:</p>
         <list>
-            <li><a anchor="basic">Basic conditions</a>.</li>
-            <li><a anchor="logical-conditions">Logical conditions</a>.</li>
-            <li><a anchor="pattern-matching-conditions">Pattern-matching conditions</a>.</li>
-            <li><a anchor="range-conditions">Range conditions</a>.</li>
-            <li><a anchor="collection-conditions">Collection conditions</a>.</li>
+            <li><a anchor="basic">Basic conditions</a></li>
+            <li><a anchor="logical-conditions">Logical conditions</a></li>
+            <li><a anchor="pattern-matching-conditions">Pattern-matching conditions</a></li>
+            <li><a anchor="range-conditions">Range conditions</a></li>
+            <li><a anchor="collection-conditions">Collection conditions</a></li>
         </list>
         <chapter title="Basic conditions" id="basic">
             <p>

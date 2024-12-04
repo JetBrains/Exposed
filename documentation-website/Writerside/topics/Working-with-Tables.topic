@@ -44,7 +44,8 @@
         </tabs>
         <p>
             <include from="DAO-Table-Types.topic" element-id="IntIdTable-id-generation-note"/>
-            Therefore, there is no need to explicitly define the <code>id</code> column in the <code>Cities</code> object.
+            Therefore, there is no need to explicitly define the <code>id</code> column in the
+            <code>StarWarsFilmsTable</code> object.
         </p>
         <p>
             Creating the table with the above definition will result in the following SQL equivalent:
@@ -78,15 +79,15 @@
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/tables/TableWithCustomName.kt"
                         include-symbol="CustomStarWarsFilmsTable" />
-            <code-block lang="kotlin"
+            <code-block lang="sql"
                         src="exposed-dsl/src/main/kotlin/org/example/tables/TableWithCustomName.kt"
-                        include-lines="5-10" />
+                        include-lines="6-10" />
             <p>Some databases, like H2, fold unquoted identifiers to upper case. To keep table name case-sensitivity,
                 manually quote the provided argument:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/tables/TableWithCustomName.kt"
                         include-symbol="StarWarsFilms" />
-            <code-block lang="kotlin"
+            <code-block lang="sql"
                         src="exposed-dsl/src/main/kotlin/org/example/tables/TableWithCustomName.kt"
                         include-lines="21-25" />
             <p>Depending on what DBMS you use, the types of columns could be different in actual SQL queries.</p>

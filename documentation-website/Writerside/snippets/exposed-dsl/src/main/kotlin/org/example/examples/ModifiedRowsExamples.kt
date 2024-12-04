@@ -25,7 +25,7 @@ class ModifiedRowsExamples {
 
     fun returnData() {
         // returns all table columns by default
-        val created: LocalDateTime = Projects.insertReturning {
+        val createdProjects: LocalDateTime = Projects.insertReturning {
             it[title] = "Project A"
             it[budget] = 100
         }.single()[Projects.created]

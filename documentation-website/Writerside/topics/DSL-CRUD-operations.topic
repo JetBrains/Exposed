@@ -437,7 +437,7 @@
 
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/ModifiedRowsExamples.kt"
-                    include-symbol="created, updatedBudgets"
+                    include-symbol="createdProjects, updatedBudgets"
         />
         <note>
             Unlike the base variants of these CRUD operations, a <code>ReturningStatement</code> behaves like a
