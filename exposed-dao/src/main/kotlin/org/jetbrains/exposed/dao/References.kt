@@ -84,7 +84,7 @@ class OptionalBackReference<ParentID : Any, out Parent : Entity<ParentID>, Child
     factory: EntityClass<ParentID, Parent>,
     references: Map<Column<*>, Column<*>>? = null
 ) : ReadOnlyProperty<Child, Parent?> {
-    internal val delegate = OptionalReferrers<ChildID, Child, ParentID, Parent, REF>(reference, factory, true, references)
+    internal val delegate = Referrers<ChildID, Child, ParentID, Parent, REF?>(reference, factory, true, references)
 
     override operator fun getValue(thisRef: Child, property: KProperty<*>) =
         delegate.getValue(thisRef.apply { thisRef.id.value }, property).singleOrNull() // flush entity before to don't miss newly created entities
@@ -190,7 +190,7 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
 @Deprecated(
     message = "The OptionalReferrers class is a complete duplicate of the Referrers class; therefore, the latter should be used instead.",
     replaceWith = ReplaceWith("Referrers"),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 class OptionalReferrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any, out Child : Entity<ChildID>, REF>(
     reference: Column<REF?>,
@@ -345,7 +345,7 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
                 }
             }
             is OptionalBackReference<*, *, *, *, *> -> {
-                (refObject.delegate as OptionalReferrers<ID, Entity<ID>, *, Entity<*>, Any>).allReferences.let { refColumns ->
+                (refObject.delegate as Referrers<ID, Entity<ID>, *, Entity<*>, Any?>).allReferences.let { refColumns ->
                     val delegateRefColumn = refObject.delegate.reference
                     if (hasSingleReferenceWithReferee(refColumns)) {
                         val refIds = this.map { it.run { delegateRefColumn.referee<Any>()!!.lookup() } }
