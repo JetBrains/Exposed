@@ -14,19 +14,18 @@
 
         <chapter id="insert">
             <title><code>insert</code></title>
-            <p>To create a new table row, use the <code>insert</code> query. If the same row already exists in the table,
+            <p>To create a new table row, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert.html">
+                <code>insert</code>
+                </a> query. If the same row already exists in the table,
                 it throws an exception.</p>
-            <code-block lang="kotlin">
-                Cities.insert {
-                    it[name] = &quot;St. Petersburg&quot;
-                    it[country] = Country.RUSSIA
-                    it[population] = 500
-                }
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                        include-lines="23-27"/>
             <p>The example corresponds to the following SQL statement:</p>
-            <code-block lang="sql">
-                INSERT INTO CITIES (COUNTRY, &quot;NAME&quot;, POPULATION) VALUES ('RUSSIA', 'St. Petersburg', 300)
-            </code-block>
+            <code-block lang="sql"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                        include-lines="19-20"/>
         </chapter>
 
         <chapter id="insertAndGetId">
@@ -34,42 +33,36 @@
             <tldr>
                 <p> Supported table types: <code>IdTable()</code> </p>
             </tldr>
-            <p>To add a new row and return its ID, use <code>insertAndGetId</code>. If the same row already exists in
+            <p>To add a new row and return its ID, use
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-and-get-id.html">
+                    <code>insertAndGetId</code>
+                </a>. If the same row already exists in
                 the table, it throws an exception.</p>
 
-            <code-block lang="kotlin">
-                val id = Cities.insertAndGetId {
-                    it[name] = &quot;St. Petersburg&quot;
-                    it[country] = Country.RUSSIA
-                    it[population] = 500
-                }
-            </code-block>
-            <code-block lang="sql">
-                INSERT INTO CITIES (COUNTRY, &quot;NAME&quot;, POPULATION) VALUES ('RUSSIA', 'St. Petersburg', 300)
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                        include-symbol="id"/>
+            <code-block lang="sql"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                        include-lines="32-33"/>
         </chapter>
 
         <chapter id="insertIgnore">
-            <title><code>insertIgnore</code></title>
+            <title>
+              <code>insertIgnore</code>
+            </title>
             <tldr>
                 <p>Supported on: MySQL, MariaDB, PostgreSQL, and SQLite</p>
             </tldr>
-            <p>To allow insert statements to be executed without throwing any errors, use <code>insertIgnore</code>.
+            <p>To allow insert statements to be executed without throwing any errors, use
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-ignore.html">
+                    <code>insertIgnore</code>
+                </a>.
                 This may be useful, for example, when insertion conflicts are possible:</p>
 
-            <code-block lang="kotlin">
-                StarWarsFilms.insert {
-                    it[sequelId] = 8 // column pre-defined with a unique index
-                    it[name] = &quot;The Last Jedi&quot;
-                    it[director] = &quot;Rian Johnson&quot;
-                }
-
-                StarWarsFilms.insertIgnore {
-                    it[sequelId] = 8
-                    it[name] = &quot;The Rise of Skywalker&quot;
-                    it[director] = &quot;JJ Abrams&quot;
-                }
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                        include-lines="45-56"/>
             <p>
                 If <code>insert</code> was used instead of <code>insertIgnore</code>, this would throw a constraint violation exception
                 Instead, this new row is ignored and discarded.
@@ -82,56 +75,38 @@
                 <p>Supported on: MySQL, PostgreSQL, and SQLite</p>
                 <p>Table types: <code>IntIdTable()</code> </p>
             </tldr>
-            <p><code>insertIgnoreAndGetId</code> adds a new row and returns its ID. If the same row already
+            <p>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-ignore-and-get-id.html">
+                    <code>insertIgnoreAndGetId</code>
+                </a>
+                adds a new row and returns its ID. If the same row already
                 exists in the table, it ignores it and doesn't throw an exception.</p>
 
-            <code-block lang="kotlin">
-                val id = Cities.insertIgnoreAndGetId {
-                    it[name] = &quot;St. Petersburg&quot;
-                    it[country] = Country.RUSSIA
-                    it[population] = 500
-                }
-            </code-block>
-            <code-block lang="sql">
-                INSERT IGNORE INTO CITIES (COUNTRY, &quot;NAME&quot;, POPULATION) VALUES ('RUSSIA', 'St. Petersburg', 300)            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                        include-symbol="rowId"/>
+            <code-block lang="sql"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                        include-lines="58-59"/>
         </chapter>
 
         <chapter id="batch-insert">
             <title><code>batchInsert</code></title>
-            <p><code>batchInsert</code> allows mapping a list of entities into table rows in a single SQL statement.
+            <p>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/batch-insert.html">
+                    <code>batchInsert</code>
+                </a>
+                allows mapping a list of entities into table rows in a single SQL statement.
                 It is more efficient than using the <code>insert</code> query for each row as it initiates only one statement.
             </p>
             <p>The following example uses a simple list:</p>
-
-            <code-block lang="kotlin">
-                val cityNames = listOf(&quot;Paris&quot;, &quot;Moscow&quot;, &quot;Helsinki&quot;)
-                val allCitiesID = cities.batchInsert(cityNames) { name -&gt;
-                    this[cities.name] = name
-                }
-            </code-block>
-
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                        include-lines="71-75"/>
             <p>Here is an example that uses a list of data class instances:</p>
-
-            <code-block lang="kotlin">
-                data class SWFilmData(val sequelId: Int, val name: String, val director: String)
-
-                transaction {
-                    // ...
-                    val films = listOf(
-                        SWFilmData(5, &quot;The Empire Strikes Back&quot;, &quot;Irvin Kershner&quot;),
-                        SWFilmData(4, &quot;A New Hope&quot;, &quot;George Lucas&quot;),
-                        SWFilmData(7, &quot;The Force Awakens&quot;, &quot;JJ Abrams&quot;)
-                    )
-
-                    StarWarsFilms.batchInsert(films) { (id, name, director) -&gt;
-                        this[StarWarsFilms.sequelId] = id
-                        this[StarWarsFilms.name] = name
-                        this[StarWarsFilms.director] = director
-                    }
-
-                    StarWarsFilms.selectAll().count() // 3
-                }
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                        include-lines="79-91"/>
             <note>
                 The <code>batchInsert</code> function will still create multiple <code>INSERT</code> statements when
                 interacting with your database.
@@ -159,95 +134,89 @@
     <chapter title="Read" id="read">
         <chapter id="select">
             <title><code>select</code></title>
-            <p>The <code>select()</code> function allows you to select specific columns or/and expressions.</p>
-
-            <code-block lang="kotlin">
-                val filmAndDirector = StarWarsFilms.select(StarWarsFilms.name, StarWarsFilms.director).map {
-                    it[StarWarsFilms.name] to it[StarWarsFilms.director]
-                }
-            </code-block>
-
-            <p>If you want to select only distinct value then use <code>withDistinct()</code> function:</p>
-
-            <code-block lang="kotlin">
-                val directors =
-                    StarWarsFilms.select(StarWarsFilms.director)
-                        .where { StarWarsFilms.sequelId less 5 }.withDistinct()
-                        .map {
-                            it[StarWarsFilms.director]
-                        }
-            </code-block>
-
+            <p>The
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/select.html">
+                    <code>select()</code>
+                </a>
+                function allows you to select specific columns or/and expressions.</p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
+                        include-symbol="filmAndDirector"/>
+            <p>If you want to select only distinct value then use
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/with-distinct.html">
+                    <code>withDistinct()</code>
+                </a>
+                function:</p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
+                        include-lines="31-35"/>
             <p>Some SQL dialects, such as PostgreSQL and H2, also support the <code>DISTINCT ON</code> clause.
-                You can use this clause with the <code>withDistinctOn()</code> function:</p>
-
-            <code-block lang="kotlin">
-                val directors =
-                    StarWarsFilms.select(StarWarsFilms.director, StarWarsFilms.name)
-                        .withDistinctOn(StarWarsFilms.director)
-                        .orderBy(
-                            StarWarsFilms.director to SortOrder.ASC,
-                            StarWarsFilms.name to SortOrder.ASC
-                        )
-                        .map {
-                            it[StarWarsFilms.name]
-                        }
-            </code-block>
+                You can use this clause with the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/with-distinct-on.html">
+                    <code>withDistinctOn()</code>
+                </a>
+                function:</p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
+                        include-lines="45-53"/>
         </chapter>
         <chapter id="selectAll">
             <title><code>selectAll</code></title>
-            <p>To retrieve records from a table, use the <code>selectAll()</code> method:</p>
-            <code-block lang="kotlin">
-                val query: Query = StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq 8 }
-            </code-block>
+            <p>
+                To retrieve records from a table, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/select-all.html">
+                    <code>selectAll()</code>
+                </a>
+                method:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
+                        include-lines="99-100"/>
             <p><code>Query</code> inherits <code>Iterable</code> so it is possible to traverse it using <code>map()</code>
                 or <code>forEach()</code>:
                 </p>
 
-            <code-block lang="kotlin">
-                StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq 8 }.forEach {
-                    println(it[StarWarsFilms.name])
-                }
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
+                        include-lines="102-104"/>
         </chapter>
 
     </chapter>
     <chapter title="Update" id="update">
 
-        <p>To update a record, use the <code>update()</code> function.
-            By default, it returns the number of updated rows.
+        <p>To update a record, use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/update.html">
+                <code>update()</code>
+            </a>
+            function. By default, it returns the number of updated rows.
         </p>
-        <code-block lang="kotlin">
-            val updatedCount = StarWarsFilms.update({ StarWarsFilms.name like &quot;Episode%&quot; }) {
-                it[StarWarsFilms.director] = "George Lucas"
-            }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateExamples.kt"
+                    include-symbol="updatedRowCount"
+        />
         <p>To update a column value using an expression, such as an increment, use <code>update</code> function
             or setter:</p>
-
-        <code-block lang="kotlin">
-            StarWarsFilms.update({ StarWarsFilms.sequelId eq 8 }) {
-                it.update(StarWarsFilms.sequelId, StarWarsFilms.sequelId + 1)
-                // or
-                it[StarWarsFilms.sequelId] = StarWarsFilms.sequelId + 1
-            }
-        </code-block>
-
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateExamples.kt"
+                    include-symbol="updatedRowsWithIncrement"
+        />
     </chapter>
     <chapter title="Delete" id="delete">
         <chapter id="deleteWhere">
             <title><code>deleteWhere</code></title>
-            <p>To delete records and return the count of deleted rows, use the <code>deleteWhere</code> function.</p>
+            <p>To delete records and return the count of deleted rows, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-where.html">
+                    <code>deleteWhere</code>
+                </a>
+                function.</p>
             <p>
                 Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
                 parameter lambda block will require inclusion of an import statement like <code>import org.jetbrains.exposed.sql.SqlExpressionBuilder.*</code>.
             </p>
-            <code-block lang="kotlin">
-                import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-                import org.jetbrains.exposed.sql.deleteWhere
-
-                StarWarsFilms.deleteWhere { StarWarsFilms.sequelId eq 8 }
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
+                        include-symbol="deletedRowsCount"
+            />
         </chapter>
         <chapter id="deleteIgnoreWhere">
             <title><code>deleteIgnoreWhere</code></title>
@@ -255,68 +224,71 @@
                 <p>Supported on: MySQL and MariaDB</p>
             </tldr>
             <p>To delete records while ignoring any possible errors that occur during the process, use the
-                <code>deleteIgnoreWhere</code> function. The function will return the count of deleted rows.
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-ignore-where.html">
+                    <code>deleteIgnoreWhere</code>
+                </a>
+                function. The function will return the count of deleted rows.
             </p>
             <p>
                 Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
                 parameter lambda block will require inclusion of an import statement like <code>import org.jetbrains.exposed.sql.SqlExpressionBuilder.*</code>.
             </p>
-            <code-block lang="kotlin">
-                import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-                import org.jetbrains.exposed.sql.deleteIgnoreWhere
-
-                StarWarsFilms.deleteIgnoreWhere { StarWarsFilms.sequelId eq 8 }
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
+                        include-symbol="deleteIgnoreRowsCount"
+            />
         </chapter>
         <chapter id="deleteAll">
             <title><code>deleteAll</code></title>
-            <p>To delete all rows in a table and return the count of deleted rows, use the <code>deleteAll</code>
+            <p>To delete all rows in a table and return the count of deleted rows, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-all.html">
+                    <code>deleteAll</code>
+                </a>
                 function.</p>
-            <code-block lang="kotlin">
-                import org.jetbrains.exposed.sql.deleteAll
-
-                StarWarsFilms.deleteAll()
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
+                        include-symbol="allDeletedRowsCount"
+            />
         </chapter>
         <chapter id="join-delete">
             <title>Join <code>delete</code></title>
-            <p>To delete records from a table in a join relation, use the <code>delete</code> function with a
+            <p>To delete records from a table in a join relation, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete.html">
+                    <code>delete</code>
+                </a>
+                function with a
                 <code>Join</code> as its receiver. Provide the specific table from which records should be deleted as
                 the argument to the parameter <code>targetTable</code>.
             </p>
-            <code-block lang="kotlin">
-                import org.jetbrains.exposed.sql.delete
-
-                val join = StarWarsFilms innerJoin Actors
-                join.delete(targetTable = Actors) { Actors.sequelId greater 2 }
-            </code-block>
-            <tip>For more information on creating and using a <code>Join</code>, see <a href="DSL-Querying-data.topic#join-tables">Joining Tables</a>.</tip>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
+                        include-symbol="join,deletedActorsCount"
+            />
+            <tip>
+                For more information on creating and using a <code>Join</code>, see
+                <a href="DSL-Joining-tables.topic">
+                    Joining Tables
+                </a>
+                .</tip>
         </chapter>
 
     </chapter>
     <chapter title="Insert Or Update" id="insert-or-update">
         <p>Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if
             a duplicate constraint already exists.
-            The supported functionality of <code>upsert()</code> is dependent on the specific
-            database being used.
+            The supported functionality of
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upsert.html">
+                <code>upsert()</code>
+            </a>
+            is dependent on the specific database being used.
             For example, MySQL's <code>INSERT ... ON DUPLICATE KEY UPDATE</code> statement automatically assesses the
             primary key and unique indices
             for a duplicate value, so using the function in Exposed would look like this:</p>
 
-        <code-block lang="kotlin">
-            // inserts a new row
-            StarWarsFilms.upsert {
-                it[sequelId] = 9 // column pre-defined with a unique index
-                it[name] = &quot;The Rise of Skywalker&quot;
-                it[director] = &quot;Rian Johnson&quot;
-            }
-            // updates existing row with the correct [director]
-            StarWarsFilms.upsert {
-                it[sequelId] = 9
-                it[name] = &quot;The Rise of Skywalker&quot;
-                it[director] = &quot;JJ Abrams&quot;
-            }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
+                    include-lines="14-24"
+        />
         <p>If none of the optional arguments are provided to <code>upsert()</code>, and an <code>onUpdate()</code> block
             is omitted, the statements in the <code>body</code> block will be used for both the insert and update parts
             of the operation.
@@ -335,55 +307,19 @@
             values should be used for an update, and whether the update statement should have a <code>WHERE</code>
             clause:</p>
 
-        <code-block lang="kotlin">
-            StarWarsFilms.upsert(
-                StarWarsFilms.sequelId,
-                onUpdate = { it[StarWarsFilms.sequelId] = StarWarsFilms.sequelId + 1 },
-                where = { StarWarsFilms.director like stringLiteral(&quot;JJ%&quot;) }
-            ) {
-                it[sequelId] = 9
-                it[name] = &quot;The Rise of Skywalker&quot;
-                it[director] = &quot;JJ Abrams&quot;
-            }
-
-            StarWarsFilms.upsert(
-                onUpdate = {
-                    it[StarWarsFilms.director] = concat(insertValue(StarWarsFilms.director), stringLiteral(" || "), StarWarsFilms.director)
-                }
-            ) {
-                it[sequelId] = 9
-                it[name] = &quot;The Rise of Skywalker&quot;
-                it[director] = &quot;Rian Johnson&quot;
-            }
-        </code-block>
-
-        <note>
-            If the <code>insertValue()</code> for a particular column is used within the <code>onUpdate</code> block,
-            that column must be defined in the <code>insert</code> section, unless it has a client side default value.
-        </note>
-
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
+                    include-lines="28-46"
+        />
         <p>If the update operation should be identical to the insert operation except for a few columns,
-            then <code>onUpdateExclude</code> should be provided an argument with the specific columns to exclude.
+            then <code>onUpdateExclude</code> should be provided as an argument with the specific columns to exclude.
             This parameter could also be used for the reverse case when only a small subset of columns should be updated
             but duplicating the insert values is tedious:</p>
 
-        <code-block lang="kotlin">
-            // on conflict, all columns EXCEPT [director] are updated with values from the lambda block
-            StarWarsFilms.upsert(onUpdateExclude = listOf(StarWarsFilms.director)) {
-                it[sequelId] = 9
-                it[name] = &quot;The Rise of Skywalker&quot;
-                it[director] = &quot;JJ Abrams&quot;
-            }
-
-            // on conflict, ONLY column [director] is updated with value from the lambda block
-            StarWarsFilms.upsert(
-                onUpdateExclude = StarWarsFilms.columns - setOf(StarWarsFilms.director)
-            ) {
-                it[sequelId] = 9
-                it[name] = &quot;The Rise of Skywalker&quot;
-                it[director] = &quot;JJ Abrams&quot;
-            }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
+                    include-lines="50-64"
+        />
         <p>If a specific database supports user-defined key columns and none are provided, the table's primary key is
             used. If there
             is no defined primary key, the first unique index is used. If there are no unique indices, each database
@@ -400,65 +336,35 @@
     <chapter title="Insert From Select" id="insert-from-select">
         <p>If you want to use the <code>INSERT INTO ... SELECT </code> SQL clause try the function <code>Table.insert(Query)</code>:
         </p>
-
-        <code-block lang="kotlin">
-            val substring = users.name.substring(1, 2)
-            cities.insert(users.select(substring).orderBy(users.id).limit(2))
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/InsertSelectExamples.kt"
+                    include-symbol="substring, insertedRows"
+        />
         <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
             are defined in the <code>Table</code> instance. If you want to specify columns or change the
             order, provide a list of columns as the second parameter:</p>
-
-        <code-block lang="kotlin">
-            val userCount = users.selectAll().count()
-            users.insert(
-                users.select(
-                    stringParam(&quot;Foo&quot;),
-                    Random().castTo&lt;String&gt;(VarCharColumnType()).substring(1, 10)
-                ), columns = listOf(users.name, users.id)
-            )
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/InsertSelectExamples.kt"
+                    include-symbol="userCount, insertedUsers"
+        />
     </chapter>
     <chapter title="Replace" id="replace">
         <tldr>
             <p>Supported on: SQLite, MySQL, and MariaDB </p>
         </tldr>
         <p>
-            The <code>replace()</code>
+            The
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/replace.html">
+                <code>replace()</code>
+            </a>
             method acts in a similar manner to an <code>upsert()</code>. The only difference is that
             if an insertion would violate a unique constraint, the existing row is deleted before the new row is inserted.
         </p>
 
-        <code-block lang="kotlin">
-            object StarWarsFilms : Table() {
-                val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;).uniqueIndex()
-                val releaseYear: Column&lt;Int&gt; = integer(&quot;release_year&quot;)
-                val name: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
-                val director: Column&lt;String&gt; = varchar(&quot;director&quot;, 50)
-                val rating: Column&lt;Double&gt; = double(&quot;rating&quot;).default(10.0)
-
-                override val primaryKey = PrimaryKey(sequelId, releaseYear)
-            }
-
-            transaction {
-                // ...
-                // inserts a new row with default rating
-                StarWarsFilms.replace {
-                    it[sequelId] = 9
-                    it[releaseYear] = 2019
-                    it[name] = &quot;The Rise of Skywalker&quot;
-                    it[director] = &quot;JJ Abrams&quot;
-                }
-                // deletes existing row and inserts new row with set [rating]
-                StarWarsFilms.replace {
-                    it[sequelId] = 9
-                    it[releaseYear] = 2019
-                    it[name] = &quot;The Rise of Skywalker&quot;
-                    it[director] = &quot;JJ Abrams&quot;
-                    it[rating] = 5.2
-                }
-            }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
+                    include-lines="26-39"
+        />
         <p>Unlike <code>upsert()</code>, none of the supporting databases allows a <code>WHERE</code> clause.
             Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there
             is no parameter for a custom key set.</p>
@@ -472,47 +378,28 @@
         </p>
         <p>The <code>REPLACE INTO ... SELECT </code> SQL clause can be used by instead providing a query to <code>replace()</code>:
         </p>
-
-        <code-block lang="kotlin">
-            val allRowsWithLowRating: Query = StarWarsFilms.selectAll().where {
-                StarWarsFilms.rating less 5.0
-            }
-            StarWarsFilms.replace(allRowsWithLowRating)
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
+                    include-lines="43-46"
+        />
         <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
             are defined in the <code>Table</code> instance.
             If the columns need to be specified or the order should be changed, provide a list of columns as the second
             parameter:</p>
-
-        <code-block lang="kotlin">
-            val oneYearLater = StarWarsFilms.releaseYear.plus(1)
-            val allRowsWithNewYear: Query = StarWarsFilms.select(
-                oneYearLater, StarWarsFilms.sequelId, StarWarsFilms.director, StarWarsFilms.name
-            )
-            StarWarsFilms.replace(
-                allRowsWithNewYear,
-                columns = listOf(
-                    StarWarsFilms.releaseYear,
-                    StarWarsFilms.sequelId,
-                    StarWarsFilms.director,
-                    StarWarsFilms.name
-                )
-            )
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
+                    include-lines="50-62"
+        />
     </chapter>
     <chapter id="insertedCount" title="Retrieve the count of modified rows">
         <p>Some databases return a count of the number of rows inserted, updated, or deleted by the CRUD operation.
             For <code>insert</code>, <code>upsert</code>, and <code>replace</code>, this value can be accessed
             using the statement class property <code>insertedCount</code>:</p>
 
-        <code-block lang="kotlin">
-            val insertStatement = StarWarsFilms.insertIgnore {
-                it[name] = &quot;The Last Jedi&quot;
-                it[sequelId] = 8
-                it[director] = &quot;Rian Johnson&quot;
-            }
-            val rowCount: Int = insertStatement.insertedCount
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/ModifiedRowsExamples.kt"
+                    include-symbol="insertStatement, rowCount"
+        />
     </chapter>
     <chapter title="Return data from modified rows" id="returning-data-from-modified-rows">
         <tldr>
@@ -522,35 +409,36 @@
             This can be accomplished by using one of the following functions:
         </p>
         <list>
-            <li><code>insertReturning()</code></li>
-            <li><code>upsertReturning()</code></li>
-            <li><code>updateReturning()</code></li>
-            <li><code>deleteReturning()</code></li>
+            <li>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-returning.html">
+                    <code>insertReturning()</code>
+                </a>
+            </li>
+            <li>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upsert-returning.html">
+                    <code>upsertReturning()</code>
+                </a>
+            </li>
+            <li>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/update-returning.html">
+                    <code>updateReturning()</code>
+                </a>
+            </li>
+            <li>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-returning.html">
+                    <code>deleteReturning()</code>
+                </a>
+            </li>
         </list>
         <p>
             Each of them take a list of the required table columns
             as an argument. If not provided, all table columns will be returned by default:
         </p>
 
-        <code-block lang="kotlin">
-            object Projects : Table(&quot;projects&quot;) {
-                val title = varchar(&quot;title&quot;, 64)
-                val budget = integer(&quot;budget&quot;)
-                val created = datetime(&quot;created&quot;).defaultExpression(CurrentDateTime)
-            }
-
-            // returns all table columns by default
-            val created: LocalDateTime = Projects.insertReturning {
-                it[title] = &quot;Project A&quot;
-                it[budget] = 100
-            }.single()[Projects.created]
-
-            val updatedBudgets: List&lt;Int&gt; = Projects.updateReturning(listOf(Projects.budget)) {
-                it[budget] = Projects.budget.times(5)
-            }.map {
-                it[Projects.budget]
-            }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/ModifiedRowsExamples.kt"
+                    include-symbol="createdProjects, updatedBudgets"
+        />
         <note>
             Unlike the base variants of these CRUD operations, a <code>ReturningStatement</code> behaves like a
             <code>Query</code> by also extending <code>Iterable</code>,

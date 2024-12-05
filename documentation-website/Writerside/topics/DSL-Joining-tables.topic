@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Joining tables" id="DSL-Joining-tables" help-id="Joining-tables">
+
+    <show-structure for="chapter,procedure" depth="2"/>
+    <chapter title="Join" id="join">
+        <p>For the join examples below, consider the following tables:</p>
+        <tabs>
+            <tab id="StarWarsFilmsIntIdTable" title="StarWarsFilmsIntIdTable">
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/tables/StarWarsFilmsIntIdTable.kt"/>
+            </tab>
+            <tab id="ActorsIntIdTable" title="ActorsIntIdTable">
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/tables/ActorsIntIdTable.kt"/>
+            </tab>
+            <tab id="RolesTable" title="RolesTable">
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/tables/RolesTable.kt"/>
+            </tab>
+        </tabs>
+        <p>In the following example,a <code>join</code> is used to count how many actors star in each movie:</p>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
+                    include-lines="18-25"/>
+        <p>Instead of specifying <code>onColumn</code> and <code>otherColumn</code>, <code>additionalConstraint</code>
+            can be used (and allows specifying
+            other types of join conditions).</p>
+
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
+                    include-lines="29-35"/>
+        <p>When joining on a foreign key, the more concise <code>innerJoin</code> can be used:</p>
+
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
+                    include-lines="39-42"/>
+        <p>This is equivalent to the following:</p>
+
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
+                    include-lines="46-49"/>
+    </chapter>
+    <chapter title="Union" id="union">
+        <p>You can combine the results of multiple queries using <code>.union(...)</code>.
+            Per the SQL specification, the queries must have the same number of columns, and not be marked for update.
+            Subqueries may be combined when supported by the database.</p>
+
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
+                    include-symbol="lucasDirectedQuery,abramsDirectedQuery,filmNames"/>
+        <p>Only unique rows are returned by default. Duplicates may be returned using <code>.unionAll()</code>.</p>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
+                    include-symbol="lucasDirectedQuery,originalTrilogyQuery,allFilmNames"/>
+    </chapter>
+</topic>

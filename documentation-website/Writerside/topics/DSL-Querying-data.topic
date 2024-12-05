@@ -7,16 +7,24 @@
     <show-structure for="chapter,procedure" depth="2"/>
     <chapter id="where-expression">
         <title>Working with <code>where</code> expressions</title>
-        <p>The query expression <code>where</code> expects a boolean operator (<code>Op&lt;Boolean&gt;</code>).
-            We've split the allowed conditions in different categories:</p>
+        <p>
+            The <code>where</code> expression is a core component of building queries in Exposed, allowing you to
+            filter data by specifying conditions. A <code>where</code> expression expects a boolean operator
+            (<code>Op&lt;Boolean&gt;</code>), which evaluates to either <code>true</code> or <code>false</code>.
+        </p>
+        <p>We’ve categorized the available conditions into the following groups:</p>
         <list>
-            <li><a anchor="basic">Basic conditions</a>.</li>
-            <li><a anchor="logical-conditions">Logical conditions</a>.</li>
-            <li><a anchor="check-for-a-match-in-a-pattern">Conditions that check for a match in a pattern</a>.</li>
-            <li><a anchor="check-for-a-match-in-a-range">Conditions that check for a match in a range</a>.</li>
-            <li><a anchor="check-for-a-match-in-a-collection">Conditions that check for a match in a collection</a>.</li>
+            <li><a anchor="basic">Basic conditions</a></li>
+            <li><a anchor="logical-conditions">Logical conditions</a></li>
+            <li><a anchor="pattern-matching-conditions">Pattern-matching conditions</a></li>
+            <li><a anchor="range-conditions">Range conditions</a></li>
+            <li><a anchor="collection-conditions">Collection conditions</a></li>
         </list>
         <chapter title="Basic conditions" id="basic">
+            <p>
+                Basic conditions are simple comparisons, such as equality (<code>eq</code>) and inequality
+                (<code>neq</code>).
+            </p>
             <deflist type="medium">
                 <def id="eq">
                     <title><code>eq</code></title>
@@ -70,11 +78,9 @@
 
         </chapter>
         <chapter id="logical-conditions" title="Logical conditions">
+            <p>Logical conditions are those that use logical operators, such as <code>AND</code>, <code>OR</code>,
+                and <code>NOT</code>.</p>
             <deflist>
-                <def id="not">
-                    <title><code>not</code></title>
-                    Returns the inverse of an expression.
-                </def>
                 <def id="and">
                     <title><code>and</code></title>
                     Returns the result of performing a logical <code>and</code> operation between two expressions.
@@ -82,6 +88,10 @@
                 <def id="or">
                     <title><code>or</code></title>
                     Returns the result of performing a logical <code>or</code> operation between two expressions.
+                </def>
+                <def id="not">
+                    <title><code>not</code></title>
+                    Returns the inverse of an expression.
                 </def>
                 <def id="andIfNotNull">
                     <title><code>andIfNotNull</code></title>
@@ -105,25 +115,31 @@
                 </def>
             </deflist>
         </chapter>
-        <chapter title="Check for a match in a pattern" id="check-for-a-match-in-a-pattern">
+        <chapter title="Pattern-matching conditions" id="pattern-matching-conditions">
+            <p>
+                Conditions that allow you to check for a match in a pattern using operators, such as <code>LIKE</code>.
+            </p>
             <deflist>
                 <def id="like">
                     <title><code>like</code></title>
                     Checks if an expression matches the specified pattern.
-                    <code-block lang="kotlin">
-                        StarWarsFilms.selectAll().where { StarWarsFilms.name like &quot;The %&quot; }
-                    </code-block>
+                    <code-block lang="kotlin"
+                                src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                                include-symbol="allMoviesLike"/>
                 </def>
                 <def id="notLike">
                     <title><code>notLike</code></title>
                     Checks if an expression doesn't match the specified pattern.
+                    <code-block lang="kotlin"
+                                src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                                include-symbol="allMoviesNotLike"/>
                 </def>
                 <def id="regexp">
                     <title><code>regexp</code></title>
                     Checks if an expression matches a regular expression.
-                    <code-block lang="kotlin">
-                        StarWarsFilms.selectAll().where { StarWarsFilms.name regexp &quot;^The(\\s\\w+){2}\$&quot; }
-                    </code-block>
+                    <code-block lang="kotlin"
+                                src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                                include-symbol="allMatchingRegex"/>
                 </def>
                 <def id="match">
                     <title><code>match</code></title>
@@ -134,238 +150,156 @@
                 </def>
             </deflist>
     </chapter>
-        <chapter title="Check for a match in a range" id="check-for-a-match-in-a-range">
-            <deflist>
-                <def id="between">
-                    <title><code>between(from: T, to: T)</code></title>
-                    Checks if an expression is between the values from and to. Returns <code>true</code> if the
-                    expression is between the lower and upper range values (inclusive). Date and time values are also
-                    supported as arguments.
-                    <code-block lang="kotlin">
-                        StarWarsFilms.selectAll().where { StarWarsFilms.sequelId.between(4, 6) }
-                    </code-block>
-                </def>
-            </deflist>
+        <chapter title="Range conditions" id="range-conditions">
+            <p>
+                To check if a value lies within a specified range, use the <code>between()</code> function.
+            </p>
+            <p>
+                It checks if an expression is between the values from and to. Returns <code>true</code> if the
+                expression is between the lower and upper range values (inclusive). Date and time values are also
+                supported as arguments.
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                        include-symbol="allBetween"/>
         </chapter>
-        <chapter title="Check for a match in a collection" id="check-for-a-match-in-a-collection">
-            <deflist>
-                <def id="inList">
-                    <title><code>inList</code></title>
-                    <p>
-                        Checks if an expression is equal to any element from list.
-                    </p>
-                    <code-block lang="kotlin">
-                        StarWarsFilms.selectAll().where { StarWarsFilms.sequelId inList listOf(6, 4) }
-                    </code-block>
-                    <p><code>inList</code> also accepts multiple expressions to check for equality, either as a
-                        <code>Pair</code> or a <code>Triple</code>:</p>
+        <chapter title="Collection conditions" id="collection-conditions">
+            <p>
+                To check if an expression is equal or not to any element from a list, use the <code>inList</code> or
+                <code>notInList</code> operators.
+            </p>
+            <chapter id="collection-condition-lists">
+                <title>Using <code>inList</code> with lists</title>
+                <p>
+                    The <code>inList</code> operator checks if an expression matches any value in a list.
+                    In the following example, the query selects all films with <code>sequelId</code> values of 6 or 4.
+                </p>
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                            include-symbol="allInList"/>
+            </chapter>
+            <chapter id="collection-condition-pairs-or-triples">
+                <title>Using <code>inList</code> with Pairs or Triples</title>
+                <p>
+                    The <code>inList</code> operator can also handle multiple expressions, such as pairs or triples,
+                    to check for equality across multiple columns.
+                </p>
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                            include-symbol="topRated, multipleInList"/>
+            </chapter>
+            <chapter id="any-all">
+                <title>Using <code>ANY</code> and <code>ALL</code></title>
+                <p>In addition to the <code>IN</code> operator, the <code>ANY</code> and <code>ALL</code> operators are
+                    available with any preceding comparison operator:</p>
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                            include-symbol="anyFromArray"/>
+                <p><code>anyFrom()</code> and <code>allFrom()</code> also accept subqueries, tables, and array expressions
+                    as arguments.</p>
+            </chapter>
 
-                    <code-block lang="kotlin">
-                        val topRated = listOf(5 to &quot;Empire Strikes Back&quot;, 4 to &quot;A New Hope&quot;)
-                        StarWarsFilms.selectAll().where {
-                            StarWarsFilms.sequelId to StarWarsFilms.name inList topRated
-                        }
-                    </code-block>
-                </def>
-                <def id="notInList">
-                    <title><code>notInList</code></title>
-                    Checks if an expression is not equal to any element in the provided collection.
-                </def>
-            </deflist>
-
-            <p>In addition to the <code>IN</code> operator, the <code>ANY</code> and <code>ALL</code> operators are
-                available with any preceding comparison operator:</p>
-
-            <code-block lang="kotlin">
-                StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq anyFrom(arrayOf(6, 4)) }
-            </code-block>
-            <p><code>anyFrom()</code> and <code>allFrom()</code> also accept subqueries, tables, and array expressions
-                as arguments.</p>
         </chapter>
     </chapter>
     <chapter id="conditional-where">
-        <title>Conditional <code>where</code></title>
-        <p>It is a rather common case to have a query with a <code>where</code> clause that depends on some other code's
-            conditions. Moreover, independent or nested conditions could
-            make it more complicated to prepare such <code>where</code> clauses.
+        <title>Conditional <code>WHERE</code></title>
+        <p>When working with SQL databases, it is a rather common case to have a query with a <code>WHERE</code> clause
+            that depends on certain conditions. These conditions often come from application logic or user input.
+            Managing such conditions can become complex, especially with independent or nested conditions.
         </p>
         <p>
-            Let's imagine that we have a form on a website where a user can optionally filter "Star Wars"
-            films by a director and/or a sequel.
+            Imagine a form on a website where a user can optionally filter "Star Wars" films by a director and/or a
+            sequel. To construct such a query, you can use the <code>andWhere</code> function:
         </p>
-
-        <code-block lang="Kotlin">
-            val query = StarWarsFilms.selectAll()
-            directorName?.let {
-                query.andWhere { StarWarsFilms.director eq it }
-            }
-            sequelId?.let {
-                query.andWhere { StarWarsFilms.sequelId eq it }
-            }
-        </code-block>
-        <p>But what if we want to conditionally select from another table and join it only when a condition is true?
-            You have to use <code>adjustColumnSet</code> and <code>adjustSelect</code> functions, which allow to extend
-            and modify <code>join</code> and <code>select</code> parts of a query (see kdoc
-            on that functions):</p>
-
-        <code-block lang="Kotlin">
-            actorName?.let {
-                query.adjustColumnSet { innerJoin(Actors, { StarWarsFilms.sequelId }, { Actors.sequelId }) }
-                    .adjustSelect { select(fields + Actors.columns).set }
-                    .andWhere { Actors.name eq actorName }
-            }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                    include-symbol="findWithConditionalWhere"/>
+        <p>
+            In the above example, the query starts with <code>selectAll()</code>, which retrieves all rows from the
+            <code>StarWarsFilmsTable</code>. Then, the <code>let</code> function is used to ensure that conditional
+            <code>WHERE</code> clauses for the <code>directorName</code> and <code>sequelId</code> are applied only if
+            values are provided.
+        </p>
+        <chapter title="Conditional joins" id="conditional-joins">
+            <p>
+                Sometimes, you may need to modify not just the <code>WHERE</code> clause but also the underlying table
+                joins based on certain conditions. For example, filtering by an actor's name might require joining
+                <code>ActorsTable</code> conditionally.
+            </p>
+            <p>
+                In these cases, you can use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/adjust-column-set.html">
+                    <code>adjustColumnSet</code>
+                </a>
+                and
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/adjust-select.html">
+                    <code>adjustSelect</code>
+                </a> functions,
+                which allow to extend and modify <code>JOIN</code> and <code>SELECT</code> parts of a query:
+            </p>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                    include-symbol="findWithConditionalJoin"/>
+        </chapter>
     </chapter>
     <chapter title="Aggregating and sorting data" id="aggregate-and-sort">
         <chapter title="Count" id="count">
-            <p><code>count()</code> is a method of <code>Query</code> that is used like in the example below:</p>
-
-            <code-block lang="kotlin">
-                val count = StarWarsFilms.selectAll().where { StarWarsFilms.sequelId eq 8 }.count()
-            </code-block>
+            <p>
+                The <code>count()</code> method is used to determine the number of rows matching a query.
+                It is called on a <code>Query</code> object and returns the total count of rows.
+            </p>
+            <p>
+                The following example counts all rows where <code>sequelId</code> equals <code>8</code>:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                        include-symbol="count"/>
         </chapter>
         <chapter title="Order by" id="order-by">
-            <p><code>orderBy()</code> accepts a list of columns mapped to boolean indicates if sorting should be ascending or descending.
-                Example:</p>
-
-            <code-block lang="kotlin">
-                StarWarsFilms.selectAll().orderBy(StarWarsFilms.sequelId to SortOrder.ASC)
-            </code-block>
+            <p>
+                The <code>orderBy()</code> function allows you to sort query results by specifying a list of
+                columns and their sort order (ascending or descending).
+            </p>
+            <p>
+                In the following example, <code>StarWarsFilmsTable.sequelId </code> specifies the column to sort by and
+                <code>SortOrder.ASC</code> sets the sort order to be ascending:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                        include-symbol="sortedFilms"/>
         </chapter>
         <chapter title="Group by" id="group-by">
             <p>In <code>groupBy</code>, define fields and their functions by the <code>select()</code>
                 method.</p>
-
-            <code-block lang="kotlin">
-                StarWarsFilms
-                    .select(StarWarsFilms.sequelId.count(), StarWarsFilms.director)
-                    .groupBy(StarWarsFilms.director)
-            </code-block>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                        include-symbol="groupedFilms"/>
             <p>Available field functions are: <code>count</code>, <code>sum</code>, <code>average</code>, <code>min</code>
                 and <code>max</code>.</p>
         </chapter>
     </chapter>
     <chapter title="Limiting result sets" id="limit-result-sets">
         <p>You can use the <code>limit</code> function to prevent loading large data sets or to accomplish pagination by using the <code>offset</code>
-            function.</p>
-
-        <code-block lang="kotlin">
-            // Take 2 films after the first one.
-            StarWarsFilms
-                .selectAll()
-                .where { StarWarsFilms.sequelId eq Actors.sequelId }
-                .limit(2)
-                .offset(1)
-        </code-block>
-    </chapter>
-    <chapter title="Joining tables" id="join-tables">
-        <chapter title="Join" id="join">
-            <p>For the join examples below, consider the following tables:</p>
-
-            <code-block lang="kotlin">
-                object StarWarsFilms : IntIdTable() {
-                    val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;).uniqueIndex()
-                    val name: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
-                    val director: Column&lt;String&gt; = varchar(&quot;director&quot;, 50)
-                }
-                object Actors : IntIdTable() {
-                    val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;).uniqueIndex()
-                    val name: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
-                }
-                object Roles : Table() {
-                    val sequelId: Column&lt;Int&gt; = integer(&quot;sequel_id&quot;)
-                    val actorId: Column&lt;EntityID&lt;Int&gt;&gt; = reference(&quot;actor_id&quot;, Actors)
-                    val characterName: Column&lt;String&gt; = varchar(&quot;name&quot;, 50)
-                }
-            </code-block>
-            <p>Join to count how many actors star in each movie:</p>
-
-            <code-block lang="kotlin">
-                Actors.join(StarWarsFilms, JoinType.INNER, onColumn = Actors.sequelId, otherColumn = StarWarsFilms.sequelId)
-                    .select(Actors.name.count(), StarWarsFilms.name)
-                    .groupBy(StarWarsFilms.name)
-            </code-block>
-            <p>Instead of specifying <code>onColumn</code> and <code>otherColumn</code>, <code>additionalConstraint</code>
-                can be used (and allows specifying
-                other types of join conditions).</p>
-
-            <code-block lang="kotlin">
-                Actors.join(
-                    StarWarsFilms,
-                    JoinType.INNER,
-                    additionalConstraint = { StarWarsFilms.sequelId eq Actors.sequelId })
-                    .select(Actors.name.count(), StarWarsFilms.name)
-                    .groupBy(StarWarsFilms.name)
-            </code-block>
-            <p>When joining on a foreign key, the more concise <code>innerJoin</code> can be used:</p>
-
-            <code-block lang="kotlin">
-                (Actors innerJoin Roles)
-                    .select(Roles.characterName.count(), Actors.name)
-                    .groupBy(Actors.name)
-                    .toList()
-            </code-block>
-            <p>This is equivalent to the following:</p>
-
-            <code-block lang="kotlin">
-                Actors.join(Roles, JoinType.INNER, onColumn = Actors.id, otherColumn = Roles.actorId)
-                    .select(Roles.characterName.count(), Actors.name)
-                    .groupBy(Actors.name)
-                    .toList()
-            </code-block>
-        </chapter>
-        <chapter title="Union" id="union">
-            <p>You can combine the results of multiple queries using <code>.union(...)</code>.
-                Per the SQL specification, the queries must have the same number of columns, and not be marked for update.
-                Subqueries may be combined when supported by the database.</p>
-
-            <code-block lang="kotlin">
-                val lucasDirectedQuery =
-                    StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.director eq &quot;George Lucas&quot; }
-                val abramsDirectedQuery =
-                    StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.director eq &quot;J.J. Abrams&quot; }
-                val filmNames = lucasDirectedQuery.union(abramsDirectedQuery).map { it[StarWarsFilms.name] }
-            </code-block>
-            <p>Only unique rows are returned by default. Duplicates may be returned using <code>.unionAll()</code>.</p>
-
-            <code-block lang="kotlin">
-                val lucasDirectedQuery =
-                    StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.director eq &quot;George Lucas&quot; }
-                val originalTrilogyQuery =
-                    StarWarsFilms.select(StarWarsFilms.name).where { StarWarsFilms.sequelId inList (3..5) }
-                val filmNames = lucasDirectedQuery.unionAll(originalTrilogyQuery).map { it[StarWarsFilms.name] }
-            </code-block>
-        </chapter>
+            function.
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
+                    include-symbol="limitedFilms"/>
     </chapter>
     <chapter title="Mapping fields with alias" id="alias">
         <p>Aliases allow preventing ambiguity between field names and table names.
             Use the aliased var instead of original one:</p>
-
-        <code-block lang="Kotlin">
-            val filmTable1 = StarWarsFilms.alias(&quot;ft1&quot;)
-            filmTable1.selectAll() // can be used in joins etc'
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/AliasExamples.kt"
+                    include-symbol="filmTable1, allFilms"/>
         <p>Also, aliases allow you to use the same table in a join multiple times:</p>
-
-        <code-block lang="Kotlin">
-            val sequelTable = StarWarsFilms.alias(&quot;sql&quot;)
-            val originalAndSequelNames = StarWarsFilms
-                .innerJoin(sequelTable, { StarWarsFilms.sequelId }, { sequelTable[StarWarsFilms.id] })
-                .select(StarWarsFilms.name, sequelTable[StarWarsFilms.name])
-                .map { it[StarWarsFilms.name] to it[sequelTable[StarWarsFilms.name]] }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/AliasExamples.kt"
+                    include-symbol="sequelTable, originalAndSequelNames"/>
         <p>And they can be used when selecting from sub-queries:</p>
-
-        <code-block lang="kotlin">
-            val starWarsFilms = StarWarsFilms
-                .select(StarWarsFilms.id, StarWarsFilms.name)
-                .alias(&quot;swf&quot;)
-            val id = starWarsFilms[StarWarsFilms.id]
-            val name = starWarsFilms[StarWarsFilms.name]
-            starWarsFilms
-                .select(id, name)
-                .map { it[id] to it[name] }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/AliasExamples.kt"
+                    include-symbol="starWarsFilms, id, name, allStarWarsFilms"/>
     </chapter>
     <chapter title="Custom Select Queries" id="custom-select-queries">
         <p>A <code>Query</code> instance, which can be instantiated by calling <code>selectAll()</code> or <code>select()</code>
@@ -377,42 +311,11 @@
             implemented to enable its use with other standard queries.</p>
         <p>For example, MySQL index hints, which follow the table name in SQL, can be implemented on a
             <code>SELECT</code> query by using the following custom function and class:</p>
-
-        <code-block lang="kotlin">
-            fun Query.indexHint(hint: String) = IndexHintQuery(this, hint)
-
-            class IndexHintQuery(
-                val source: Query,
-                val indexHint: String
-            ) : Query(source.set, source.where) {
-
-                init {
-                    // copies any stored properties from the original query
-                    source.copyTo(this)
-                }
-
-                override fun prepareSQL(builder: QueryBuilder): String {
-                    val originalSql = super.prepareSQL(builder)
-                    val fromTableSql = &quot; FROM ${transaction.identity(set.source as Table)} &quot;
-                    return originalSql.replace(fromTableSql, &quot;$fromTableSql$indexHint &quot;)
-                }
-
-                override fun copy(): IndexHintQuery = IndexHintQuery(source.copy(), indexHint).also { copy -&gt;
-                    copyTo(copy)
-                }
-            }
-
-            transaction {
-                val originalQuery = StarWarsFilms
-                    .selectAll()
-                    .withDistinct()
-                    .where { StarWarsFilms.sequelId less 5 }
-                    .groupBy(StarWarsFilms.director)
-
-                val queryWithHint = originalQuery
-                    .indexHint(&quot;FORCE INDEX (PRIMARY)&quot;)
-                    .orderBy(StarWarsFilms.sequelId)
-            }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/CustomSelectExamples.kt"
+                    include-lines="4-6,9,18-39"/>
+        <code-block lang="kotlin"
+                    src="exposed-dsl/src/main/kotlin/org/example/examples/CustomSelectExamples.kt"
+                    include-lines="43-52"/>
     </chapter>
 </topic>

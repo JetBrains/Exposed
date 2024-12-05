@@ -7,7 +7,8 @@
     <show-structure for="chapter,procedure" depth="2"/>
     <snippet id="dsl-table-type">
         <snippet id="dsl-core-table-class">
-            In Exposed, the <code>Table</code> class is the core abstraction for defining database tables.
+            In Exposed, the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/index.html"><code>Table</code></a>
+            class is the core abstraction for defining database tables.
             This class provides methods to define various <a href="Data-Types.topic">column types</a>,
             <a href="Working-with-Tables.topic" anchor="constraints">constraints</a>, and other table-specific properties.
         </snippet>
@@ -20,20 +21,17 @@
         </p>
     </snippet>
     <p>
-        The following example defines a table with an auto-incrementing integer <code>id</code> column and a string
-        <code>name</code> column:
+        The following example defines a table with an auto-incrementing integer <code>id</code> column and string
+        <code>name</code> and <code>director</code> column:
     </p>
-    <code-block lang="kotlin" id="dsl-table-example">
-        import org.jetbrains.exposed.sql.Table
-
-        object Cities : Table("cities") {
-            val id = integer("id").autoIncrement()
-            val name = varchar("name", 50)
-        }
-    </code-block>
-    <code-block lang="sql" id="dsl-table-example-sql">
-        CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT NOT NULL, "name" VARCHAR(50) NOT NULL)
-    </code-block>
+    <code-block lang="kotlin"
+                id="StarWarsFilmsTable-dsl-code-block"
+                src="exposed-dsl/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt"
+                include-lines="3-4,17-24" />
+    <code-block lang="sql"
+                id="StarWarsFilmsTable-dsl-sql"
+                src="exposed-dsl/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt"
+                include-lines="10-14"/>
     <p>
         For more information on defining and configuring tables in Exposed, see <a href="Working-with-Tables.topic"/>.
     </p>
@@ -42,13 +40,9 @@
         <code>IdTable</code> subclasses from the DAO API for convenience.
         For example, to provide an auto-incrementing <code>id</code> column of type <code>Int</code>, you can use
         the <code>IntIdTable</code> subtype:
-    <code-block lang="kotlin">
-        object StarWarsFilms : IntIdTable() {
-            val sequelId = integer(&quot;sequel_id&quot;).uniqueIndex()
-            val name = varchar(&quot;name&quot;, 50)
-            val director = varchar(&quot;director&quot;, 50)
-        }
-    </code-block>
+    <code-block lang="kotlin"
+                src="exposed-dao/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt"
+                include-symbol="StarWarsFilmsTable"/>
         <p>
             It is important to note that the <code>id</code> column in this case is of type
             <code>Column&lt;EntityID&lt;Int>></code>.
@@ -57,9 +51,9 @@
         </p>
         To access the <code>id</code> column value, you
         need to use the <code>.value</code> property:
-        <code-block lang="kotlin">
-            val idValue = StarWarsFilms.id.value
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt"
+                    include-symbol="movieId"/>
         <p>
             For more information on <code>IdTable</code>, see <a href="DAO-Table-Types.topic">the DAO documentation</a>.
         </p>
