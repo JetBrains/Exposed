@@ -55,7 +55,7 @@ Dependencies mapping listed below is similar (by functionality) to the previous 
 <tabs>
   <tab title="Kotlin Gradle">
     <code-block lang="kotlin">
-      val exposedVersion: String = "0.56.0"
+      val exposedVersion: String = "0.57.0"
       dependencies {
           implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
           implementation("org.jetbrains.exposed:exposed-crypt:$exposedVersion")
@@ -82,59 +82,59 @@ Dependencies mapping listed below is similar (by functionality) to the previous 
     &lt;dependency&gt;
         &lt;groupId&gt;org.jetbrains.exposed&lt;/groupId&gt;
         &lt;artifactId&gt;exposed-core&lt;/artifactId&gt;
-        &lt;version&gt;0.56.0&lt;/version&gt;
+        &lt;version&gt;0.57.0&lt;/version&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.jetbrains.exposed&lt;/groupId&gt;
         &lt;artifactId&gt;exposed-crypt&lt;/artifactId&gt;
-        &lt;version&gt;0.56.0&lt;/version&gt;
+        &lt;version&gt;0.57.0&lt;/version&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.jetbrains.exposed&lt;/groupId&gt;
         &lt;artifactId&gt;exposed-dao&lt;/artifactId&gt;
-        &lt;version&gt;0.56.0&lt;/version&gt;
+        &lt;version&gt;0.57.0&lt;/version&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.jetbrains.exposed&lt;/groupId&gt;
         &lt;artifactId&gt;exposed-java-time&lt;/artifactId&gt;
-        &lt;version&gt;0.56.0&lt;/version&gt;
+        &lt;version&gt;0.57.0&lt;/version&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.jetbrains.exposed&lt;/groupId&gt;
         &lt;artifactId&gt;exposed-jdbc&lt;/artifactId&gt;
-        &lt;version&gt;0.56.0&lt;/version&gt;
+        &lt;version&gt;0.57.0&lt;/version&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.jetbrains.exposed&lt;/groupId&gt;
         &lt;artifactId&gt;exposed-jodatime&lt;/artifactId&gt;
-        &lt;version&gt;0.56.0&lt;/version&gt;
+        &lt;version&gt;0.57.0&lt;/version&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.jetbrains.exposed&lt;/groupId&gt;
         &lt;artifactId&gt;exposed-json&lt;/artifactId&gt;
-        &lt;version&gt;0.56.0&lt;/version&gt;
+        &lt;version&gt;0.57.0&lt;/version&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.jetbrains.exposed&lt;/groupId&gt;
         &lt;artifactId&gt;exposed-kotlin-datetime&lt;/artifactId&gt;
-        &lt;version&gt;0.56.0&lt;/version&gt;
+        &lt;version&gt;0.57.0&lt;/version&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.jetbrains.exposed&lt;/groupId&gt;
         &lt;artifactId&gt;exposed-money&lt;/artifactId&gt;
-        &lt;version&gt;0.56.0&lt;/version&gt;
+        &lt;version&gt;0.57.0&lt;/version&gt;
     &lt;/dependency&gt;
     &lt;dependency&gt;
         &lt;groupId&gt;org.jetbrains.exposed&lt;/groupId&gt;
         &lt;artifactId&gt;exposed-spring-boot-starter&lt;/artifactId&gt;
-        &lt;version&gt;0.56.0&lt;/version&gt;
+        &lt;version&gt;0.57.0&lt;/version&gt;
     &lt;/dependency&gt;
 &lt;/dependencies&gt;
     </code-block>
   </tab>
   <tab title="Groovy Gradle">
     <code-block lang="groovy">
-      def exposedVersion = "0.56.0"
+      def exposedVersion = "0.57.0"
       dependencies {
           implementation "org.jetbrains.exposed:exposed-core:$exposedVersion"
           implementation "org.jetbrains.exposed:exposed-crypt:$exposedVersion"
