@@ -58,11 +58,9 @@
 
     </chapter>
     <chapter title="Create a new project" id="create-new-project">
-        <p>
-            First, you will need a basic Kotlin project setup to build upon. You can
-            <resource src="init-kotlin-gradle-app.zip">download a pre-initialized
-            project</resource> or follow the steps below to generate a new project with Gradle.
-        </p>
+        First, you will need a basic Kotlin project setup to build upon. You can
+        <resource src="init-kotlin-gradle-app.zip">download a pre-initialized project</resource> or follow the steps
+        below to generate a new project with Gradle.
         <procedure id="create-new-project-procedure">
             <step>
                 <p>In a terminal window, navigate to the destination where you want to create your project and run
@@ -467,9 +465,8 @@
                 </p>
             </step>
             <step>
-                <p>
-                    <include from="lib.topic" element-id="intellij_idea_restart_application"/>
-                    You should now see the following result:</p>
+                <include from="lib.topic" element-id="intellij_idea_restart_application"/>
+                <p>You should now see the following result:</p>
                 <code-block lang="console">
                     SQL: SELECT VALUE FROM INFORMATION_SCHEMA.SETTINGS WHERE NAME = 'MODE'
                     SQL: CREATE TABLE IF NOT EXISTS TASKS (ID INT AUTO_INCREMENT NOT NULL, "name" VARCHAR(128) NOT NULL, DESCRIPTION VARCHAR(128) NOT NULL, COMPLETED BOOLEAN DEFAULT FALSE NOT NULL)
