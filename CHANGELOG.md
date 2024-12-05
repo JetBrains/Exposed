@@ -1,3 +1,42 @@
+# 0.57.0
+Infrastructure:
+* io.github.hakky54:logcaptor 2.10.0
+* Spring Boot 3.4.0
+* Spring Framework 6.2.0
+* log4j2 2.24.2
+* SQLite driver 3.47.1.0
+* Foojay Toolchains Plugin 0.9.0
+
+Breaking changes:
+* fix! EXPOSED-458 Stop sending default and null values in insert state… by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2295
+* chore!: Raise deprecation level of `OptionalReferrers` by @joc-a in https://github.com/JetBrains/Exposed/pull/2325
+
+Features:
+* feat: EXPOSED-628 Add comment position for optimizer hints after SELECT by @bog-walk in https://github.com/JetBrains/Exposed/pull/2294
+* chore: EXPOSED-642 Support both DSL and DAO transform by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2309
+* feat: EXPOSED-555 Allow read-only suspendable transactions by @RenanKummer in https://github.com/JetBrains/Exposed/pull/2274
+* feat: Add ability to use aliases on expressions with column type to fix EXPOSED-544 Coalesce mismatch error by @joc-a in https://github.com/JetBrains/Exposed/pull/2308
+
+Bug fixes:
+* fix: EXPOSED-623 Offset not applied in COUNT query by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2288
+* fix: EXPOSED-621 IllegalStateException on accessing autoincrement column after insert using Entity by @joc-a in https://github.com/JetBrains/Exposed/pull/2291
+* fix: EXPOSED-583 alias from inner query missing from outer select by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2281
+* fix: EXPOSED-629 aliased array throws java.lang.ClassCastException: o… by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2296
+* fix: EXPOSED-625 `SchemaUtils.listTables()` retrieves tables for the default schema only by @joc-a in https://github.com/JetBrains/Exposed/pull/2301
+* fix: EXPOSED-641 Byte, Short, Int, Long, UInt, ULong falsely generate database migration statements when they have a default (PostgreSQL and SQL Server) by @joc-a in https://github.com/JetBrains/Exposed/pull/2307
+* fix: Make using Java's ServiceLoader optional on Database.connect() by @makeevrserg in https://github.com/JetBrains/Exposed/pull/2293
+* fix: EXPOSED-646 count() voids distinctOn call on query by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2311
+* fix: EXPOSED-651 Try to close connection in ThreadLocalTransactionManager#connectionLazy if setup fails by @m-burst in https://github.com/JetBrains/Exposed/pull/2320
+
+Docs:
+* docs: EXPOSED-626 fix nullTransform example code by @kdhyo in https://github.com/JetBrains/Exposed/pull/2292
+* docs: EXPOSED-639 Add note about required imports with deleteWhere() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2303
+* EXPOSED-414 Docs Search: Add Algolia parameters to Writerside config by @vnikolova in https://github.com/JetBrains/Exposed/pull/2298
+* docs: EXPOSED-578 Extend the Entity definition topic and add examples by @vnikolova in https://github.com/JetBrains/Exposed/pull/2302
+* docs: EXPOSED-601 Add Exposed logo favicon to Writerside config by @vnikolova in https://github.com/JetBrains/Exposed/pull/2306
+* docs: EXPOSED-640 Extract DSL code snippets to a snippets project by @vnikolova in https://github.com/JetBrains/Exposed/pull/2321
+* docs: Fix markup validity issues in the Get started tutorial by @vnikolova in https://github.com/JetBrains/Exposed/pull/2312
+
 # 0.56.0
 Infrastructure:
 * junit-bom 5.11.3
