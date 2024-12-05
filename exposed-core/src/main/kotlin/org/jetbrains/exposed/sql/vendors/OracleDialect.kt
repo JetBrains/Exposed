@@ -33,8 +33,12 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = integerType()
     override fun uintegerType(): String = "NUMBER(10)"
     override fun uintegerAutoincType(): String = "NUMBER(10)"
-    override fun longType(): String = "NUMBER(19)"
-    override fun longAutoincType(): String = "NUMBER(19)"
+    override fun longType(): String = if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+        "BIGINT"
+    } else {
+        "NUMBER(19)"
+    }
+    override fun longAutoincType(): String = longType()
     override fun ulongType(): String = "NUMBER(20)"
     override fun ulongAutoincType(): String = "NUMBER(20)"
     override fun varcharType(colLength: Int): String = "VARCHAR2($colLength CHAR)"

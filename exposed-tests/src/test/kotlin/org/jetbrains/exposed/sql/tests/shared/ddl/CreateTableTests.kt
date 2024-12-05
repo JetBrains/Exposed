@@ -320,7 +320,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 fkName = fkName
             )
         }
-        withDb {
+        withDb { testDb ->
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
@@ -329,6 +329,11 @@ class CreateTableTests : DatabaseTestsBase() {
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
+                    if (testDb == TestDB.ORACLE) {
+                        ", CONSTRAINT chk_child1_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                    } else {
+                        ""
+                    } +
                     ")"
             )
             assertEqualCollections(child.ddl, expected)
@@ -346,12 +351,17 @@ class CreateTableTests : DatabaseTestsBase() {
                 onDelete = ReferenceOption.NO_ACTION,
             )
         }
-        withDb {
+        withDb { testDb ->
             val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
                 "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                 " CONSTRAINT ${"fk_Child_parent_id__id".inProperCase()}" +
                 " FOREIGN KEY (${this.identity(child.parentId)})" +
                 " REFERENCES ${this.identity(parent)}(${this.identity(parent.id)})" +
+                if (testDb == TestDB.ORACLE) {
+                    ", CONSTRAINT chk_Child_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                } else {
+                    ""
+                } +
                 ")"
             assertEquals(child.ddl.last(), expected)
         }
@@ -368,12 +378,17 @@ class CreateTableTests : DatabaseTestsBase() {
                 onDelete = ReferenceOption.NO_ACTION,
             )
         }
-        withDb {
+        withDb { testDb ->
             val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
                 "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                 " CONSTRAINT ${"fk_Child2_parent_id__id".inProperCase()}" +
                 " FOREIGN KEY (${this.identity(child.parentId)})" +
                 " REFERENCES ${this.identity(parent)}(${this.identity(parent.id)})" +
+                if (testDb == TestDB.ORACLE) {
+                    ", CONSTRAINT chk_Child2_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                } else {
+                    ""
+                } +
                 ")"
             assertEquals(child.ddl.last(), expected)
         }
@@ -394,7 +409,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 fkName = fkName
             )
         }
-        withDb {
+        withDb { testDb ->
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
@@ -403,6 +418,11 @@ class CreateTableTests : DatabaseTestsBase() {
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
+                    if (testDb == TestDB.ORACLE) {
+                        ", CONSTRAINT chk_child2_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                    } else {
+                        ""
+                    } +
                     ")"
             )
             assertEqualCollections(child.ddl, expected)
@@ -422,7 +442,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 fkName = fkName
             )
         }
-        withDb {
+        withDb { testDb ->
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
@@ -431,6 +451,11 @@ class CreateTableTests : DatabaseTestsBase() {
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.id)})" +
+                    if (testDb == TestDB.ORACLE) {
+                        ", CONSTRAINT chk_child3_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                    } else {
+                        ""
+                    } +
                     ")"
             )
             assertEqualCollections(child.ddl, expected)
@@ -453,7 +478,7 @@ class CreateTableTests : DatabaseTestsBase() {
                 fkName = fkName
             )
         }
-        withDb {
+        withDb { testDb ->
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
@@ -462,6 +487,11 @@ class CreateTableTests : DatabaseTestsBase() {
                     " CONSTRAINT ${t.db.identifierManager.cutIfNecessaryAndQuote(fkName).inProperCase()}" +
                     " FOREIGN KEY (${t.identity(child.parentId)})" +
                     " REFERENCES ${t.identity(parent)}(${t.identity(parent.uniqueId)})" +
+                    if (testDb == TestDB.ORACLE) {
+                        ", CONSTRAINT chk_child4_signed_long_id CHECK (${this.identity(parent.id)} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+                    } else {
+                        ""
+                    } +
                     ")"
             )
             assertEqualCollections(child.ddl, expected)

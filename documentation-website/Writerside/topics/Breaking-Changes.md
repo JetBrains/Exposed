@@ -24,6 +24,29 @@
   -- Starting from version 0.57.0
   INSERT INTO TEST DEFAULT VALUES
   ```
+* In H2 Oracle, the `long()` column now maps to data type `BIGINT` instead of `NUMBER(19)`.
+  In Oracle, using the long column in a table now also creates a CHECK constraint to ensure that no out-of-range values are inserted.
+  Exposed does not ensure this behaviour for SQLite. If you want to do that, please use the following CHECK constraint:
+
+```kotlin
+val long = long("long_column").check { column ->
+    fun typeOf(value: String) = object : ExpressionWithColumnType<String>() {
+        override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("typeof($value)") }
+        override val columnType: IColumnType<String> = TextColumnType()
+    }
+    Expression.build { typeOf(column.name) eq stringLiteral("integer") }
+}
+
+val long = long("long_column").nullable().check { column ->
+    fun typeOf(value: String) = object : ExpressionWithColumnType<String>() {
+        override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("typeof($value)") }
+        override val columnType: IColumnType<String> = TextColumnType()
+    }
+
+    val typeCondition = Expression.build { typeOf(column.name) eq stringLiteral("integer") }
+    column.isNull() or typeCondition
+}
+```
 
 ## 0.56.0
 * If the `distinct` parameter of `groupConcat()` is set to `true`, when using Oracle or SQL Server, this will now fail early with an
