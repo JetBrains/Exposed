@@ -17,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
     override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion") }
+    override val majorVersion: Int by lazyMetadata { databaseMajorVersion }
+    override val minorVersion: Int by lazyMetadata { databaseMinorVersion }
 
     override val databaseDialectName: String by lazyMetadata {
         when (driverName) {

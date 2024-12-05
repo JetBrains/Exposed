@@ -18,6 +18,12 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** The version number of the database as a `BigDecimal`. */
     abstract val version: BigDecimal
 
+    /**  The major version number of the database. */
+    abstract val majorVersion: Int
+
+    /**  The minor version number of the database. */
+    abstract val minorVersion: Int
+
     /** The name of the database based on the name of the underlying JDBC driver. */
     abstract val databaseDialectName: String
 
