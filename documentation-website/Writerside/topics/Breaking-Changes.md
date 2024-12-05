@@ -24,6 +24,7 @@
   -- Starting from version 0.57.0
   INSERT INTO TEST DEFAULT VALUES
   ```
+* The `OptionalReferrers` class is now deprecated as it is a complete duplicate of the `Referrers` class; therefore, the latter should be used instead.
 
 ## 0.56.0
 * If the `distinct` parameter of `groupConcat()` is set to `true`, when using Oracle or SQL Server, this will now fail early with an

@@ -146,12 +146,12 @@ public abstract class org/jetbrains/exposed/dao/EntityClass {
 	public final fun optionalBackReferencedOnOpt (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/dao/OptionalBackReference;
 	public final fun optionalReferencedOn (Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/OptionalReference;
 	public final fun optionalReferencedOn (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/dao/OptionalReference;
-	public final fun optionalReferrersOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/OptionalReferrers;
-	public final fun optionalReferrersOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/id/IdTable;Z)Lorg/jetbrains/exposed/dao/OptionalReferrers;
-	public final fun optionalReferrersOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/dao/OptionalReferrers;
-	public final fun optionalReferrersOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/sql/Column;Z)Lorg/jetbrains/exposed/dao/OptionalReferrers;
-	public static synthetic fun optionalReferrersOn$default (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/id/IdTable;ZILjava/lang/Object;)Lorg/jetbrains/exposed/dao/OptionalReferrers;
-	public static synthetic fun optionalReferrersOn$default (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/sql/Column;ZILjava/lang/Object;)Lorg/jetbrains/exposed/dao/OptionalReferrers;
+	public final fun optionalReferrersOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/Referrers;
+	public final fun optionalReferrersOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/id/IdTable;Z)Lorg/jetbrains/exposed/dao/Referrers;
+	public final fun optionalReferrersOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/dao/Referrers;
+	public final fun optionalReferrersOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/sql/Column;Z)Lorg/jetbrains/exposed/dao/Referrers;
+	public static synthetic fun optionalReferrersOn$default (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/id/IdTable;ZILjava/lang/Object;)Lorg/jetbrains/exposed/dao/Referrers;
+	public static synthetic fun optionalReferrersOn$default (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/sql/Column;ZILjava/lang/Object;)Lorg/jetbrains/exposed/dao/Referrers;
 	public final fun referencedOn (Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/Reference;
 	public final fun referencedOn (Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/dao/Reference;
 	public final fun referrersOn (Lorg/jetbrains/exposed/dao/EntityClass;Lorg/jetbrains/exposed/dao/id/IdTable;)Lorg/jetbrains/exposed/dao/Referrers;

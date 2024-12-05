@@ -654,7 +654,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.optionalReferrersOn(
         column: Column<REF?>
     ) =
-        registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
+        registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF?>(column, this, true) }
 
     /**
      * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
@@ -671,10 +671,10 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      */
     infix fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalReferrersOn(
         table: IdTable<*>
-    ): OptionalReferrers<ID, Entity<ID>, TargetID, Target, Any> {
+    ): Referrers<ID, Entity<ID>, TargetID, Target, Any?> {
         val tableFK = this@EntityClass.getCompositeForeignKey(table)
         val delegate = tableFK.from.first() as Column<Any?>
-        return registerRefRule(delegate) { OptionalReferrers(delegate, this, true, tableFK.references) }
+        return registerRefRule(delegate) { Referrers(delegate, this, true, tableFK.references) }
     }
 
     /**
@@ -694,7 +694,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         column: Column<REF?>,
         cache: Boolean = false
     ) =
-        registerRefRule(column) { OptionalReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, cache) }
+        registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF?>(column, this, cache) }
 
     /**
      * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
@@ -708,10 +708,10 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalReferrersOn(
         table: IdTable<*>,
         cache: Boolean = false
-    ): OptionalReferrers<ID, Entity<ID>, TargetID, Target, Any> {
+    ): Referrers<ID, Entity<ID>, TargetID, Target, Any?> {
         val tableFK = this@EntityClass.getCompositeForeignKey(table)
         val delegate = tableFK.from.first() as Column<Any?>
-        return registerRefRule(delegate) { OptionalReferrers(delegate, this, cache, tableFK.references) }
+        return registerRefRule(delegate) { Referrers(delegate, this, cache, tableFK.references) }
     }
 
     /**
