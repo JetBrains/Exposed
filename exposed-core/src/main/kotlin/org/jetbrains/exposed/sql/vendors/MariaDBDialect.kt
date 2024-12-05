@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
     override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
@@ -58,6 +59,9 @@ class MariaDBDialect : MysqlDialect() {
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
     override val supportsSetDefaultReferenceOption: Boolean = false
+    override val supportsCreateSequence: Boolean by lazy {
+        TransactionManager.current().db.isVersionCovers(SEQUENCE_MIN_MAJOR_VERSION, SEQUENCE_MIN_MINOR_VERSION)
+    }
 
     override fun createIndex(index: Index): String {
         if (index.functions != null) {
@@ -69,5 +73,8 @@ class MariaDBDialect : MysqlDialect() {
         return super.createIndex(index)
     }
 
-    companion object : DialectNameProvider("MariaDB")
+    companion object : DialectNameProvider("MariaDB") {
+        const val SEQUENCE_MIN_MAJOR_VERSION = 10
+        const val SEQUENCE_MIN_MINOR_VERSION = 3
+    }
 }

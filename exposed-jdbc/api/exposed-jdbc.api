@@ -42,7 +42,9 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 	public fun getDatabaseProductVersion ()Ljava/lang/String;
 	public fun getDefaultIsolationLevel ()I
 	public fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
+	public fun getMajorVersion ()I
 	public final fun getMetadata ()Ljava/sql/DatabaseMetaData;
+	public fun getMinorVersion ()I
 	public fun getSchemaNames ()Ljava/util/List;
 	public fun getSupportsAlterTableWithAddColumn ()Z
 	public fun getSupportsAlterTableWithDropColumn ()Z
