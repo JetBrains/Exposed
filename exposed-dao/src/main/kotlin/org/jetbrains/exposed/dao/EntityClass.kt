@@ -368,8 +368,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.testNewIdWithGet
      */
     open fun new(id: ID?, init: T.() -> Unit): T {
-        val entityId = if (id == null && table.id.defaultValueFun != null) {
-            table.id.defaultValueFun!!()
+        val entityId = if (id == null && table.id.hasDefaultValue()) {
+            table.id.defaultValue()!!
         } else {
             DaoEntityID(id, table)
         }
@@ -391,7 +391,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             val readValues = prototype._readValues!!
             val writeValues = prototype.writeValues
             table.columns.filter { col ->
-                col.defaultValueFun != null && col !in writeValues && readValues.hasValue(col)
+                col.hasClientDefaultValue() && col !in writeValues && readValues.hasValue(col)
             }.forEach { col ->
                 writeValues[col as Column<Any?>] = readValues[col]
             }

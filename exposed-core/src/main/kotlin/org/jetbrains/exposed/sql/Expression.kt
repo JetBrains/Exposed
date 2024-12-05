@@ -70,7 +70,7 @@ class QueryBuilder(
     fun <T> registerArgument(column: Column<*>, argument: T) {
         when (argument) {
             is Expression<*> -> append(argument)
-            DefaultValueMarker -> append(TransactionManager.current().db.dialect.dataTypeProvider.processForDefaultValue(column.dbDefaultValue!!))
+            DefaultValueMarker -> append(TransactionManager.current().db.dialect.dataTypeProvider.processForDefaultValue(column.databaseDefaultExpression()!!))
             else -> registerArgument(column.columnType, argument)
         }
     }

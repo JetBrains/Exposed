@@ -19,10 +19,11 @@ abstract class BaseBatchInsertStatement(
 
     internal val data = ArrayList<MutableMap<Column<*>, Any?>>()
 
-    private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null || isDatabaseGenerated
+    private fun Column<*>.isDefaultable() =
+        columnType.nullable || hasDefaultValue()
 
     override operator fun <S> set(column: Column<S>, value: S) {
-        if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
+        if (data.size > 1 && column !in data[data.size - 2] && !column.hasClientDefault()) {
             val fullIdentity = TransactionManager.current().fullIdentity(column)
             throw BatchDataInconsistentException("Can't set $value for $fullIdentity because previous insertion can't be defaulted for that column.")
         }
@@ -67,8 +68,9 @@ abstract class BaseBatchInsertStatement(
             )
         }
         val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter {
-            !it.isDefaultable() && !it.columnType.isAutoInc && it.dbDefaultValue == null && it.columnType !is EntityIDColumnType<*>
+            !it.isDefaultable() && !it.columnType.isAutoInc && it.columnType !is EntityIDColumnType<*> && !it.hasDatabaseDefault()
         }
+
         if (requiredInTargets.any()) {
             val columnList = requiredInTargets.joinToString { tr.fullIdentity(it) }
             throw BatchDataInconsistentException(
@@ -91,7 +93,7 @@ abstract class BaseBatchInsertStatement(
                     columnsToInsert.map { column ->
                         column to when {
                             values.contains(column) -> values[column]
-                            column.dbDefaultValue != null || column.isDatabaseGenerated -> DefaultValueMarker
+                            column.hasDatabaseDefault() -> DefaultValueMarker
                             else -> {
                                 require(column.columnType.nullable) {
                                     "The value for the column ${column.name} was not provided. " +

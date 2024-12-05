@@ -654,9 +654,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Converts the @receiver column to an [EntityID] column. */
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> Column<T>.entityId(): Column<EntityID<T>> {
-        val newColumn = Column<EntityID<T>>(table, name, EntityIDColumnType(this)).also {
-            it.defaultValueFun = defaultValueFun?.let { { EntityIDFunctionProvider.createEntityID(it(), table as IdTable<T>) } }
-            it.dbDefaultValue = dbDefaultValue?.let { default -> default as Expression<EntityID<T>> }
+        val newColumn = Column(table, name, EntityIDColumnType(this)).also {
+            it.default = default?.transform { EntityIDFunctionProvider.createEntityID(it, table as IdTable<T>) }
             it.extraDefinitions = extraDefinitions
         }
         (table as IdTable<T>).addIdColumnInternal(newColumn)
@@ -1023,8 +1022,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** Sets the default value for this column in the database side. */
     fun <T> Column<T>.default(defaultValue: T): Column<T> = apply {
-        dbDefaultValue = with(SqlExpressionBuilder) { asLiteral(defaultValue) }
-        defaultValueFun = { defaultValue }
+        default = DatabaseColumnDefaultExpressionWithValue(with(SqlExpressionBuilder) { asLiteral(defaultValue) }) { defaultValue }
     }
 
     /** Sets the default value for this column in the database side. */
@@ -1038,14 +1036,12 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** Sets the default value for this column in the database side. */
     fun <T> Column<T>.defaultExpression(defaultValue: Expression<T>): Column<T> = apply {
-        dbDefaultValue = defaultValue
-        defaultValueFun = null
+        default = DatabaseColumnDefaultExpression(defaultValue)
     }
 
     /** Sets the default value for this column in the client side. */
     fun <T> Column<T>.clientDefault(defaultValue: () -> T): Column<T> = apply {
-        dbDefaultValue = null
-        defaultValueFun = defaultValue
+        default = ClientColumnDefaultValue(defaultValue)
     }
 
     /**
@@ -1056,7 +1052,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * by using GENERATED ALWAYS AS via [Column.withDefinition], for example.
      */
     fun <T> Column<T>.databaseGenerated(): Column<T> = apply {
-        isDatabaseGenerated = true
+        default = DatabaseGeneratedColumnDefault()
     }
 
     /** UUID column will auto generate its value on a client side just before an insert. */
@@ -1290,10 +1286,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun <T : Any> Column<T>.nullable(): Column<T?> {
         val newColumn = Column<T?>(table, name, columnType)
         newColumn.foreignKey = foreignKey
-        newColumn.defaultValueFun = defaultValueFun
         @Suppress("UNCHECKED_CAST")
-        newColumn.dbDefaultValue = dbDefaultValue as Expression<T?>?
-        newColumn.isDatabaseGenerated = isDatabaseGenerated
+        newColumn.default = default?.let { it as ColumnDefault<T?> }
         newColumn.columnType.nullable = true
         newColumn.extraDefinitions = extraDefinitions
         return replaceColumn(this, newColumn)
@@ -1368,7 +1362,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         transformer: ColumnTransformer<Unwrapped, Wrapped>
     ): Column<Wrapped> {
         val newColumn = copyWithAnotherColumnType(ColumnWithTransform(this.columnType, transformer)) {
-            defaultValueFun = this@transform.defaultValueFun?.let { { transformer.wrap(it()) } }
+            default = this@transform.default?.transform(transformer::wrap)
         }
         return replaceColumn(this, newColumn)
     }
@@ -1423,7 +1417,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         transformer: ColumnTransformer<Unwrapped?, Wrapped?>
     ): Column<Wrapped?> {
         val newColumn = copyWithAnotherColumnType<Wrapped?>(NullableColumnWithTransform(this.columnType, transformer)) {
-            defaultValueFun = this@transform.defaultValueFun?.let { { it()?.let { value -> transformer.wrap(value) } } }
+            default = this@transform.default?.transform(transformer::wrap)
         }
         return replaceColumn(this, newColumn)
     }
@@ -1468,7 +1462,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         transformer: ColumnTransformer<Unwrapped, Wrapped?>
     ): Column<Wrapped?> {
         val newColumn = copyWithAnotherColumnType<Wrapped?>(NullableColumnWithTransform(this.columnType, transformer)) {
-            defaultValueFun = this@nullTransform.defaultValueFun?.let { { it().let { value -> transformer.wrap(value) } } }
+            default = this@nullTransform.default?.transform(transformer::wrap)
         }
         return replaceColumn(this, newColumn)
     }

@@ -19,6 +19,7 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
         exposedLogger.warn("The length of the binary column is not required.")
         return binaryType()
     }
+
     override fun blobType(): String = "bytea"
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
@@ -422,7 +423,7 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
                     append("NOT NULL")
                 }
                 if (columnDiff.defaults) {
-                    column.dbDefaultValue?.let {
+                    column.databaseDefaultExpression()?.let {
                         append(", ALTER COLUMN $colName SET DEFAULT ${PostgreSQLDataTypeProvider.processForDefaultValue(it)}")
                     } ?: run {
                         append(", ALTER COLUMN $colName DROP DEFAULT")

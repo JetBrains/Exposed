@@ -74,9 +74,8 @@ open class InsertStatement<Key : Any>(
         return table.columns
             .filter { column -> !exceptColumns.contains(column) }
             .mapNotNull { column ->
-                val defaultFn = column.defaultValueFun
                 when {
-                    defaultFn != null -> column to defaultFn()
+                    column.hasDefaultValue() -> column to column.defaultValue()
                     column.columnType.nullable -> column to null
                     else -> null
                 }
@@ -172,9 +171,9 @@ open class InsertStatement<Key : Any>(
         val result = values.toMutableMap()
         targets.forEach { table ->
             table.columns.forEach { column ->
-                if ((column.dbDefaultValue != null || column.defaultValueFun != null) && column !in values.keys) {
+                if (column.default != null && column !in values.keys) {
                     val value = when {
-                        column.defaultValueFun != null -> column.defaultValueFun!!()
+                        column.hasClientDefault() -> column.clientDefaultValueOrExpression()
                         else -> DefaultValueMarker
                     }
                     result[column] = value
@@ -194,13 +193,12 @@ open class InsertStatement<Key : Any>(
     }
 
     protected fun clientDefaultColumns() = targets
-        // The current check for existing client side without db side default value
-        .flatMap { it.columns.filter { column -> column.dbDefaultValue == null && column.defaultValueFun != null } }
+        .flatMap { it.columns.filter { column -> column.hasClientDefault() } }
 
     protected fun valuesAndClientDefaults(values: Map<Column<*>, Any?> = this.values): Map<Column<*>, Any?> {
         val clientDefaultValues = clientDefaultColumns()
             .filter { column -> column !in values.keys }
-            .map { column -> column to column.defaultValueFun!!() }
+            .map { column -> column to column.clientDefaultValueOrExpression() }
 
         return clientDefaultValues.toMap() + values
     }
@@ -295,13 +293,13 @@ open class InsertStatement<Key : Any>(
         (column.columnType as? EntityIDColumnType<*>)
             ?.idColumn
             ?.takeIf { it.columnType is UUIDColumnType }
-            ?.defaultValueFun != null
+            ?.hasClientDefault()
 
     /**
      * Returns the list of columns with default values that can not be taken locally.
      * It is the columns defined with `defaultExpression()`, `databaseGenerated()`
      */
-    private fun columnsWithDatabaseDefaults() = targets.flatMap { it.columns }.filter { it.defaultValueFun == null && it.dbDefaultValue != null }
+    private fun columnsWithDatabaseDefaults() = targets.flatMap { it.columns }.filter { it.hasDatabaseDefault() }
 
     /**
      * Returns all the columns for which value can not be derived without actual request.
