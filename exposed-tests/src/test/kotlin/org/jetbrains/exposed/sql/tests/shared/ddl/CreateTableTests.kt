@@ -666,4 +666,17 @@ class CreateTableTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun `two consequence transactions`() {
+        val testTable = object : IntIdTable("consequenceTable") {
+            val int = integer("intColumn")
+        }
+        withDb {
+            SchemaUtils.listTables()
+        }
+        withDb {
+            testTable.exists()
+        }
+    }
 }
