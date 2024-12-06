@@ -26,7 +26,7 @@
                 <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"/>
             </tab>
             <tab id="macos-install" title="StarWarsFilmsTable">
-                <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-code-block"/>
+                <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-dao-code-block"/>
             </tab>
         </tabs>
         <chapter id="entity-type" title="Entity type">
