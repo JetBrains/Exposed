@@ -1,9 +1,9 @@
 <!DOCTYPE html SYSTEM "about:legacy-compat">
-<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2024-10-30T15:56:54.609208579"><title>Relationships | Exposed</title><script type="application/json" id="virtual-toc-data">[{"id":"Many-to-one","level":0,"title":"Many-to-one","anchor":"#Many-to-one"},{"id":"optional-reference","level":0,"title":"Optional reference","anchor":"#optional-reference"},{"id":"ordered-reference","level":0,"title":"Ordered reference","anchor":"#ordered-reference"},{"id":"many-to-many-reference","level":0,"title":"Many-to-many reference","anchor":"#many-to-many-reference"},{"id":"parent-child-reference","level":0,"title":"Parent-Child reference","anchor":"#parent-child-reference"},{"id":"composite-primary-key-reference","level":0,"title":"Composite primary key reference","anchor":"#composite-primary-key-reference"},{"id":"eager-loading","level":0,"title":"Eager Loading","anchor":"#eager-loading"},{"id":"eager-loading-for-text-fields","level":1,"title":"Eager loading for Text Fields","anchor":"#eager-loading-for-text-fields"}]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.css" rel="stylesheet"><meta name="msapplication-TileColor" content="#000000"><link rel="apple-touch-icon" sizes="180x180" href="https://jetbrains.com/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://jetbrains.com/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://jetbrains.com/favicon-16x16.png"><meta name="msapplication-TileImage" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-144x144.png"><meta name="msapplication-square70x70logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-70x70.png"><meta name="msapplication-square150x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-150x150.png"><meta name="msapplication-wide310x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x150.png"><meta name="msapplication-square310x310logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x310.png"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="Relationships | Exposed"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="Exposed Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/docs/0.56.0/dao-relationships.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="Relationships | Exposed"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
+<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2024-12-06T09:08:37.348477633"><title>Relationships | Exposed</title><script type="application/json" id="virtual-toc-data">[{"id":"Many-to-one","level":0,"title":"Many-to-one","anchor":"#Many-to-one"},{"id":"optional-reference","level":0,"title":"Optional reference","anchor":"#optional-reference"},{"id":"ordered-reference","level":0,"title":"Ordered reference","anchor":"#ordered-reference"},{"id":"many-to-many-reference","level":0,"title":"Many-to-many reference","anchor":"#many-to-many-reference"},{"id":"parent-child-reference","level":0,"title":"Parent-Child reference","anchor":"#parent-child-reference"},{"id":"composite-primary-key-reference","level":0,"title":"Composite primary key reference","anchor":"#composite-primary-key-reference"},{"id":"eager-loading","level":0,"title":"Eager Loading","anchor":"#eager-loading"},{"id":"eager-loading-for-text-fields","level":1,"title":"Eager loading for Text Fields","anchor":"#eager-loading-for-text-fields"}]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.css" rel="stylesheet"><link rel="icon" type="image/svg" sizes="16x16" href="images/exposed-logo.svg"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="Relationships | Exposed"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="Exposed Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/docs/0.57.0/dao-relationships.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="Relationships | Exposed"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
     "@context": "http://schema.org",
     "@type": "WebPage",
-    "@id": "writerside-documentation/docs/0.56.0/dao-relationships.html#webpage",
-    "url": "writerside-documentation/docs/0.56.0/dao-relationships.html",
+    "@id": "writerside-documentation/docs/0.57.0/dao-relationships.html#webpage",
+    "url": "writerside-documentation/docs/0.57.0/dao-relationships.html",
     "name": "Relationships | Exposed",
     "description": "",
     "image": "",
@@ -13,7 +13,7 @@
     "@id": "writerside-documentation/docs/#website",
     "url": "writerside-documentation/docs/",
     "name": "Exposed Help"
-}</script><!-- End Schema.org --></head><body data-id="DAO-Relationships" data-main-title="Relationships" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs="Deep Dive into DAO"><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 0.56.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="DAO-Relationships" id="DAO-Relationships.topic">Relationships</h1><section class="chapter"><h2 id="Many-to-one" data-toc="Many-to-one">Many-to-one</h2><p id="-lc9hyw_2">Let's say you have this table:</p><div class="code-block" data-lang="kotlin">
+}</script><!-- End Schema.org --></head><body data-id="DAO-Relationships" data-main-title="Relationships" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs="Deep Dive into DAO"><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 0.57.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="DAO-Relationships" id="DAO-Relationships.topic">Relationships</h1><section class="chapter"><h2 id="Many-to-one" data-toc="Many-to-one">Many-to-one</h2><p id="fspbrt_2">Let's say you have this table:</p><div class="code-block" data-lang="kotlin">
             object Users : IntIdTable() {
                 val name = varchar(&quot;name&quot;, 50)
             }
@@ -22,7 +22,7 @@
 
                 var name by Users.name
             }
-        </div><p id="-lc9hyw_4">And now you want to add a table referencing this table (and other tables!):</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_4">And now you want to add a table referencing this table (and other tables!):</p><div class="code-block" data-lang="kotlin">
             object UserRatings : IntIdTable() {
                 val value = long(&quot;value&quot;)
                 val film = reference(&quot;film&quot;, StarWarsFilms)
@@ -35,26 +35,26 @@
                 var film by StarWarsFilm referencedOn UserRatings.film // use referencedOn for normal references
                 var user by User referencedOn UserRatings.user
             }
-        </div><p id="-lc9hyw_6">Now you can get the film for a <code class="code" id="-lc9hyw_7">UserRating</code> object, <code class="code" id="-lc9hyw_8">filmRating</code>, in the same way you would get any other field:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_6">Now you can get the film for a <code class="code" id="fspbrt_7">UserRating</code> object, <code class="code" id="fspbrt_8">filmRating</code>, in the same way you would get any other field:</p><div class="code-block" data-lang="kotlin">
             filmRating.film // returns a StarWarsFilm object
-        </div><p id="-lc9hyw_10">Now if you wanted to get all the ratings for a film, you could do that by using the <code class="code" id="-lc9hyw_11">filmRating.find</code> function, but it is much easier to just add a <code class="code" id="-lc9hyw_12">referrersOn</code> field to the <code class="code" id="-lc9hyw_13">StarWarsFilm</code> class:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_10">Now if you wanted to get all the ratings for a film, you could do that by using the <code class="code" id="fspbrt_11">filmRating.find</code> function, but it is much easier to just add a <code class="code" id="fspbrt_12">referrersOn</code> field to the <code class="code" id="fspbrt_13">StarWarsFilm</code> class:</p><div class="code-block" data-lang="kotlin">
             class StarWarsFilm(id: EntityID&lt;Int&gt;) : IntEntity(id) {
                 companion object : IntEntityClass&lt;StarWarsFilm&gt;(StarWarsFilms)
                 //...
                 val ratings by UserRating referrersOn UserRatings.film // make sure to use val and referrersOn
                 //...
             }
-        </div><p id="-lc9hyw_15">You can then access this field on a <code class="code" id="-lc9hyw_16">StarWarsFilm</code> object, <code class="code" id="-lc9hyw_17">movie</code>:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_15">You can then access this field on a <code class="code" id="fspbrt_16">StarWarsFilm</code> object, <code class="code" id="fspbrt_17">movie</code>:</p><div class="code-block" data-lang="kotlin">
             movie.ratings // returns all UserRating objects with this movie as film
-        </div><p id="-lc9hyw_19">Now imagine a scenario where a user only ever rates a single film. If you want to get the single rating for that user, you can add a <code class="code" id="-lc9hyw_20">backReferencedOn</code> field to the <code class="code" id="-lc9hyw_21">User</code> class to access the <code class="code" id="-lc9hyw_22">UserRating</code> table data:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_19">Now imagine a scenario where a user only ever rates a single film. If you want to get the single rating for that user, you can add a <code class="code" id="fspbrt_20">backReferencedOn</code> field to the <code class="code" id="fspbrt_21">User</code> class to access the <code class="code" id="fspbrt_22">UserRating</code> table data:</p><div class="code-block" data-lang="kotlin">
             class User(id: EntityID&lt;Int&gt;) : IntEntity(id) {
                 companion object : IntEntityClass&lt;User&gt;(Users)
                 //...
                 val rating by UserRating backReferencedOn UserRatings.user // make sure to use val and backReferencedOn
             }
-        </div><p id="-lc9hyw_24">You can then access this field on a <code class="code" id="-lc9hyw_25">User</code> object, <code class="code" id="-lc9hyw_26">user1</code>:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_24">You can then access this field on a <code class="code" id="fspbrt_25">User</code> object, <code class="code" id="fspbrt_26">user1</code>:</p><div class="code-block" data-lang="kotlin">
             user1.rating // returns a UserRating object
-        </div></section><section class="chapter"><h2 id="optional-reference" data-toc="optional-reference">Optional reference</h2><p id="-lc9hyw_28">You can also add an optional reference:</p><div class="code-block" data-lang="kotlin">
+        </div></section><section class="chapter"><h2 id="optional-reference" data-toc="optional-reference">Optional reference</h2><p id="fspbrt_28">You can also add an optional reference:</p><div class="code-block" data-lang="kotlin">
             object UserRatings : IntIdTable() {
                 //...
                 val secondUser = reference(&quot;second_user&quot;, Users).nullable() // this reference is nullable!
@@ -66,14 +66,14 @@
                 var secondUser by User optionalReferencedOn UserRatings.secondUser // use optionalReferencedOn for nullable references
                 //...
             }
-        </div><p id="-lc9hyw_30">Now <code class="code" id="-lc9hyw_31">secondUser</code> will be a nullable field, and <code class="code" id="-lc9hyw_32">optionalReferrersOn</code> should be used instead of <code class="code" id="-lc9hyw_33">referrersOn</code> to get all the ratings for a <code class="code" id="-lc9hyw_34">secondUser</code>.</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_30">Now <code class="code" id="fspbrt_31">secondUser</code> will be a nullable field, and <code class="code" id="fspbrt_32">optionalReferrersOn</code> should be used instead of <code class="code" id="fspbrt_33">referrersOn</code> to get all the ratings for a <code class="code" id="fspbrt_34">secondUser</code>.</p><div class="code-block" data-lang="kotlin">
             class User(id: EntityID&lt;Int&gt;) : IntEntity(id) {
                 companion object : IntEntityClass&lt;User&gt;(Users)
                 //...
                 val secondRatings by UserRating optionalReferrersOn UserRatings.secondUser // make sure to use val and optionalReferrersOn
                 //...
             }
-        </div></section><section class="chapter"><h2 id="ordered-reference" data-toc="ordered-reference">Ordered reference</h2><p id="-lc9hyw_36">You can also define the order in which referenced entities appear:</p><div class="code-block" data-lang="kotlin">
+        </div></section><section class="chapter"><h2 id="ordered-reference" data-toc="ordered-reference">Ordered reference</h2><p id="fspbrt_36">You can also define the order in which referenced entities appear:</p><div class="code-block" data-lang="kotlin">
             class User(id: EntityID&lt;Int&gt;) : IntEntity(id) {
                 companion object : IntEntityClass&lt;User&gt;(Users)
 
@@ -81,7 +81,7 @@
                 val ratings by UserRating referrersOn UserRatings.user orderBy UserRatings.value
                 //...
             }
-        </div><p id="-lc9hyw_38">In a more complex scenario, you can specify multiple columns along with the corresponding sort order for each:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_38">In a more complex scenario, you can specify multiple columns along with the corresponding sort order for each:</p><div class="code-block" data-lang="kotlin">
             class User(id: EntityID&lt;Int&gt;) : IntEntity(id) {
                 companion object : IntEntityClass&lt;User&gt;(Users)
 
@@ -89,7 +89,7 @@
                 val ratings by UserRating referrersOn UserRatings.user orderBy listOf(UserRatings.value to SortOrder.DESC, UserRatings.id to SortOrder.ASC)
                 //...
             }
-        </div><p id="-lc9hyw_40">Without using the <a href="https://kotlinlang.org/docs/functions.html#infix-notation" id="-lc9hyw_41" data-external="true" rel="noopener noreferrer">infix notation</a>, the <code class="code" id="-lc9hyw_42">orderBy</code> method is chained after <code class="code" id="-lc9hyw_43">referrersOn</code>:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_40">Without using the <a href="https://kotlinlang.org/docs/functions.html#infix-notation" id="fspbrt_41" data-external="true" rel="noopener noreferrer">infix notation</a>, the <code class="code" id="fspbrt_42">orderBy</code> method is chained after <code class="code" id="fspbrt_43">referrersOn</code>:</p><div class="code-block" data-lang="kotlin">
             class User(id: EntityID&lt;Int&gt;) : IntEntity(id) {
                 companion object : IntEntityClass&lt;User&gt;(Users)
 
@@ -98,7 +98,7 @@
                     .orderBy(UserRatings.value to SortOrder.DESC, UserRatings.id to SortOrder.ASC)
                 //...
             }
-        </div></section><section class="chapter"><h2 id="many-to-many-reference" data-toc="many-to-many-reference">Many-to-many reference</h2><p id="-lc9hyw_45">In some cases, a many-to-many reference may be required. Let's assume you want to add a reference to the following Actors table to the StarWarsFilm class:</p><div class="code-block" data-lang="kotlin">
+        </div></section><section class="chapter"><h2 id="many-to-many-reference" data-toc="many-to-many-reference">Many-to-many reference</h2><p id="fspbrt_45">In some cases, a many-to-many reference may be required. Let's assume you want to add a reference to the following Actors table to the StarWarsFilm class:</p><div class="code-block" data-lang="kotlin">
             object Actors : IntIdTable() {
                 val firstname = varchar(&quot;firstname&quot;, 50)
                 val lastname = varchar(&quot;lastname&quot;, 50)
@@ -109,20 +109,20 @@
                 var firstname by Actors.firstname
                 var lastname by Actors.lastname
             }
-        </div><p id="-lc9hyw_47">Create an additional intermediate table to store the references:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_47">Create an additional intermediate table to store the references:</p><div class="code-block" data-lang="kotlin">
             object StarWarsFilmActors : Table() {
                 val starWarsFilm = reference(&quot;starWarsFilm&quot;, StarWarsFilms)
                 val actor = reference(&quot;actor&quot;, Actors)
                 override val primaryKey = PrimaryKey(starWarsFilm, actor, name = &quot;PK_StarWarsFilmActors_swf_act&quot;) // PK_StarWarsFilmActors_swf_act is optional here
             }
-        </div><p id="-lc9hyw_49">Add a reference to <code class="code" id="-lc9hyw_50">StarWarsFilm</code>:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_49">Add a reference to <code class="code" id="fspbrt_50">StarWarsFilm</code>:</p><div class="code-block" data-lang="kotlin">
             class StarWarsFilm(id: EntityID&lt;Int&gt;) : IntEntity(id) {
                 companion object : IntEntityClass&lt;StarWarsFilm&gt;(StarWarsFilms)
                 //...
                 var actors by Actor via StarWarsFilmActors
                 //...
             }
-        </div><p id="-lc9hyw_52">Note: You can set up IDs manually inside a transaction like this:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_52">Note: You can set up IDs manually inside a transaction like this:</p><div class="code-block" data-lang="kotlin">
             transaction {
                 // only works with UUIDTable and UUIDEntity
                 StarWarsFilm.new (UUID.randomUUID()){
@@ -130,7 +130,7 @@
                     actors = SizedCollection(listOf(actor))
                 }
             }
-        </div></section><section class="chapter"><h2 id="parent-child-reference" data-toc="parent-child-reference">Parent-Child reference</h2><p id="-lc9hyw_54">Parent-child reference is very similar to many-to-many version, but an intermediate table contains both references to the same table. Let's assume you want to build a hierarchical entity which could have parents and children. Our tables and an entity mapping will look like</p><div class="code-block" data-lang="kotlin">
+        </div></section><section class="chapter"><h2 id="parent-child-reference" data-toc="parent-child-reference">Parent-Child reference</h2><p id="fspbrt_54">Parent-child reference is very similar to many-to-many version, but an intermediate table contains both references to the same table. Let's assume you want to build a hierarchical entity which could have parents and children. Our tables and an entity mapping will look like</p><div class="code-block" data-lang="kotlin">
             object NodeTable : IntIdTable() {
                 val name = varchar(&quot;name&quot;, 50)
             }
@@ -145,7 +145,7 @@
                 var parents by Node.via(NodeToNodes.child, NodeToNodes.parent)
                 var children by Node.via(NodeToNodes.parent, NodeToNodes.child)
             }
-        </div><p id="-lc9hyw_56">As you can see <code class="code" id="-lc9hyw_57">NodeToNodes</code> columns target only <code class="code" id="-lc9hyw_58">NodeTable</code> and another version of <code class="code" id="-lc9hyw_59">via</code> function were used. Now you can create a hierarchy of nodes.</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_56">As you can see <code class="code" id="fspbrt_57">NodeToNodes</code> columns target only <code class="code" id="fspbrt_58">NodeTable</code> and another version of <code class="code" id="fspbrt_59">via</code> function were used. Now you can create a hierarchy of nodes.</p><div class="code-block" data-lang="kotlin">
             val root = Node.new { name = &quot;root&quot; }
             val child1 = Node.new {
                 name = &quot;child1&quot;
@@ -153,7 +153,7 @@
             child1.parents = SizedCollection(root) // assign parent
             val child2 = Node.new { name = &quot;child2&quot; }
             root.children = SizedCollection(listOf(child1, child2)) // assign children
-        </div></section><section class="chapter"><h2 id="composite-primary-key-reference" data-toc="composite-primary-key-reference">Composite primary key reference</h2><p id="-lc9hyw_61">Assuming that we have the following <code class="code" id="-lc9hyw_62">CompositeIdTable</code>:</p><div class="code-block" data-lang="kotlin">
+        </div></section><section class="chapter"><h2 id="composite-primary-key-reference" data-toc="composite-primary-key-reference">Composite primary key reference</h2><p id="fspbrt_61">Assuming that we have the following <code class="code" id="fspbrt_62">CompositeIdTable</code>:</p><div class="code-block" data-lang="kotlin">
             object Directors : CompositeIdTable(&quot;directors&quot;) {
                 val name = varchar(&quot;name&quot;, 50).entityId()
                 val guildId = uuid(&quot;guild_id&quot;).autoGenerate().entityId()
@@ -167,7 +167,7 @@
 
                 var genre by Directors.genre
             }
-        </div><p id="-lc9hyw_64">We can refactor the <code class="code" id="-lc9hyw_65">StarWarsFilms</code> table to reference this table by adding columns to hold the appropriate primary key values and creating a table-level foreign key constraint:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_64">We can refactor the <code class="code" id="fspbrt_65">StarWarsFilms</code> table to reference this table by adding columns to hold the appropriate primary key values and creating a table-level foreign key constraint:</p><div class="code-block" data-lang="kotlin">
             object StarWarsFilms : IntIdTable() {
                 val sequelId = integer(&quot;sequel_id&quot;).uniqueIndex()
                 val name = varchar(&quot;name&quot;, 50)
@@ -186,26 +186,26 @@
                 var name by StarWarsFilms.name
                 var director by Director referencedOn StarWarsFilms
             }
-        </div><aside class="prompt" data-type="tip" data-title="" id="-lc9hyw_67"><p>For more information on creating table foreign key constraints, see <a href="working-with-tables.html#foreign-key" id="-lc9hyw_68" data-tooltip="The FOREIGN KEY SQL constraint links two tables. A foreign key is a column from one table that refers to the primary key or columns with a unique index from another table. To configure a foreign key on a column, use reference() or optReference() methods. The latter lets the foreign…">DSL Foreign Key</a>.</p></aside><p id="-lc9hyw_69">Now you can get the director for a <code class="code" id="-lc9hyw_70">StarWarsFilm</code> object, <code class="code" id="-lc9hyw_71">movie</code>, in the same way you would get any other field:</p><div class="code-block" data-lang="kotlin">
+        </div><aside class="prompt" data-type="tip" data-title="" id="fspbrt_67"><p>For more information on creating table foreign key constraints, see <a href="working-with-tables.html#foreign-key" id="fspbrt_68" data-tooltip="The FOREIGN KEY SQL constraint links two tables. A foreign key is a column from one table that refers to the primary key or columns with a unique index from another table. To configure a foreign key on a column, use reference() or optReference() methods. The latter lets the foreign…">DSL Foreign Key</a>.</p></aside><p id="fspbrt_69">Now you can get the director for a <code class="code" id="fspbrt_70">StarWarsFilm</code> object, <code class="code" id="fspbrt_71">movie</code>, in the same way you would get any other field:</p><div class="code-block" data-lang="kotlin">
             movie.director // returns a Director object
-        </div><p id="-lc9hyw_73">Now if you wanted to get all the films made by a director, you could add a <code class="code" id="-lc9hyw_74">referrersOn</code> field to the <code class="code" id="-lc9hyw_75">Director</code> class:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_73">Now if you wanted to get all the films made by a director, you could add a <code class="code" id="fspbrt_74">referrersOn</code> field to the <code class="code" id="fspbrt_75">Director</code> class:</p><div class="code-block" data-lang="kotlin">
             class Director(id: EntityID&lt;CompositeID&gt;) : CompositeEntity(id) {
                 companion object : CompositeEntityClass&lt;Director&gt;(Directors)
 
                 var genre by Directors.genre
                 val films by StarWarsFilm referrersOn StarWarsFilms
             }
-        </div><p id="-lc9hyw_77">You can then access this field on a <code class="code" id="-lc9hyw_78">Director</code> object, <code class="code" id="-lc9hyw_79">director</code>:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_77">You can then access this field on a <code class="code" id="fspbrt_78">Director</code> object, <code class="code" id="fspbrt_79">director</code>:</p><div class="code-block" data-lang="kotlin">
             director.films // returns all StarWarsFilm objects that reference this director
-        </div><p id="-lc9hyw_81">Using other previously mentioned <a href="https://kotlinlang.org/docs/functions.html#infix-notation" id="-lc9hyw_82" data-external="true" rel="noopener noreferrer">infix functions</a>, like <code class="code" id="-lc9hyw_83">optionalReferencedOn</code>, <code class="code" id="-lc9hyw_84">backReferencedOn</code>, and <code class="code" id="-lc9hyw_85">optionalReferrersOn</code>, is also supported for referencing or referenced <code class="code" id="-lc9hyw_86">CompositeEntity</code> objects, by using the respective overloads that accept an <code class="code" id="-lc9hyw_87">IdTable</code> as an argument. These overloads will automatically resolve the foreign key constraint associated with the composite primary key.</p></section><section class="chapter"><h2 id="eager-loading" data-toc="eager-loading">Eager Loading</h2><p id="-lc9hyw_88">References in Exposed are lazily loaded, meaning queries to fetch the data for the reference are made at the moment the reference is first utilised. For scenarios wherefore you know you will require references ahead of time, Exposed can eager load them at the time of the parent query, this is prevents the classic &quot;N+1&quot; problem as references can be aggregated and loaded in a single query. To eager load a reference you can call the &quot;load&quot; function and pass the DAO's reference as a KProperty:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_81">Using other previously mentioned <a href="https://kotlinlang.org/docs/functions.html#infix-notation" id="fspbrt_82" data-external="true" rel="noopener noreferrer">infix functions</a>, like <code class="code" id="fspbrt_83">optionalReferencedOn</code>, <code class="code" id="fspbrt_84">backReferencedOn</code>, and <code class="code" id="fspbrt_85">optionalReferrersOn</code>, is also supported for referencing or referenced <code class="code" id="fspbrt_86">CompositeEntity</code> objects, by using the respective overloads that accept an <code class="code" id="fspbrt_87">IdTable</code> as an argument. These overloads will automatically resolve the foreign key constraint associated with the composite primary key.</p></section><section class="chapter"><h2 id="eager-loading" data-toc="eager-loading">Eager Loading</h2><p id="fspbrt_88">References in Exposed are lazily loaded, meaning queries to fetch the data for the reference are made at the moment the reference is first utilised. For scenarios wherefore you know you will require references ahead of time, Exposed can eager load them at the time of the parent query, this is prevents the classic &quot;N+1&quot; problem as references can be aggregated and loaded in a single query. To eager load a reference you can call the &quot;load&quot; function and pass the DAO's reference as a KProperty:</p><div class="code-block" data-lang="kotlin">
             StarWarsFilm.findById(1).load(StarWarsFilm::actors)
-        </div><p id="-lc9hyw_90">This works for references of references also, for example if Actors had a rating reference you could:</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_90">This works for references of references also, for example if Actors had a rating reference you could:</p><div class="code-block" data-lang="kotlin">
             StarWarsFilm.findById(1).load(StarWarsFilm::actors, Actor::rating)
-        </div><p id="-lc9hyw_92">Similarly, you can eagerly load references on Collections of DAO's such as Lists and SizedIterables, for collections you can use the with function in the same fashion as before, passing the DAO's references as KProperty's.</p><div class="code-block" data-lang="kotlin">
+        </div><p id="fspbrt_92">Similarly, you can eagerly load references on Collections of DAO's such as Lists and SizedIterables, for collections you can use the with function in the same fashion as before, passing the DAO's references as KProperty's.</p><div class="code-block" data-lang="kotlin">
             StarWarsFilm.all().with(StarWarsFilm::actors)
-        </div><aside class="prompt" data-type="note" data-title="" id="-lc9hyw_94"><p>References that are eagerly loaded are stored inside the transaction cache; this means that they are not available in other transactions and thus must be loaded and referenced inside the same transaction. As of <a href="https://github.com/JetBrains/Exposed/blob/main/CHANGELOG.md#0351" id="-lc9hyw_95" data-external="true" rel="noopener noreferrer">0.35.1</a>, enabling <code class="code" id="-lc9hyw_96">keepLoadedReferencesOutOfTransaction</code> in <code class="code" id="-lc9hyw_97">DatabaseConfig</code> will allow getting referenced values outside the transaction block.</p></aside><section class="chapter"><h3 id="eager-loading-for-text-fields" data-toc="eager-loading-for-text-fields">Eager loading for Text Fields</h3><p id="-lc9hyw_98">Some database drivers do not load text content immediately (for performance and memory reasons) which means that you can obtain the column value only within the open transaction.</p><p id="-lc9hyw_99">If you desire to make content available outside the transaction, you can use the eagerLoading param when defining the DB Table.</p><div class="code-block" data-lang="kotlin">
+        </div><aside class="prompt" data-type="note" data-title="" id="fspbrt_94"><p>References that are eagerly loaded are stored inside the transaction cache; this means that they are not available in other transactions and thus must be loaded and referenced inside the same transaction. As of <a href="https://github.com/JetBrains/Exposed/blob/main/CHANGELOG.md#0351" id="fspbrt_95" data-external="true" rel="noopener noreferrer">0.35.1</a>, enabling <code class="code" id="fspbrt_96">keepLoadedReferencesOutOfTransaction</code> in <code class="code" id="fspbrt_97">DatabaseConfig</code> will allow getting referenced values outside the transaction block.</p></aside><section class="chapter"><h3 id="eager-loading-for-text-fields" data-toc="eager-loading-for-text-fields">Eager loading for Text Fields</h3><p id="fspbrt_98">Some database drivers do not load text content immediately (for performance and memory reasons) which means that you can obtain the column value only within the open transaction.</p><p id="fspbrt_99">If you desire to make content available outside the transaction, you can use the eagerLoading param when defining the DB Table.</p><div class="code-block" data-lang="kotlin">
                 object StarWarsFilms : Table() {
                     //...
                     val description = text(&quot;name&quot;, eagerLoading=true)
                 }
-            </div></section></section><div class="last-modified">Last modified: 30 October 2024</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="dao-crud-operations.html" class="navigation-links__prev">CRUD operations</a><a href="dao-field-transformations.html" class="navigation-links__next">Field transformations</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.js"></script></body></html>
+            </div></section></section><div class="last-modified">Last modified: 05 December 2024</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="dao-crud-operations.html" class="navigation-links__prev">CRUD operations</a><a href="breaking-changes.html" class="navigation-links__next">Breaking Changes</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.js"></script></body></html>

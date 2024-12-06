@@ -41,7 +41,7 @@
 <a class="library-name--link" href="../../../index.html">
                             exposed
                     </a>            </div>
-            <div class="library-version">0.56.0
+            <div class="library-version">0.57.0
             </div>
         </div>
         <div class="filter-section" id="filter-section">
@@ -62,7 +62,7 @@
   <div class="breadcrumbs"><a href="../../index.html">exposed-core</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.sql</a><span class="delimiter">/</span><span class="current">ExpressionAlias</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Expression</span><wbr><span><span>Alias</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">ExpressionAlias</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>delegate<span class="token operator">: </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>alias<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt; </span></div><p class="paragraph">Represents a temporary SQL identifier, <a href="alias.html">alias</a>, for a <a href="delegate.html">delegate</a> expression.</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">ExpressionAlias</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>delegate<span class="token operator">: </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>alias<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span> : <a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt; </span>, <a href="../-i-expression-alias/index.html">IExpressionAlias</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt; </span></div><p class="paragraph">Represents a temporary SQL identifier, <a href="alias.html">alias</a>, for a <a href="delegate.html">delegate</a> expression.</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
@@ -98,7 +98,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="alias.html">alias</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="alias.html">alias</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -113,7 +113,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="delegate.html">delegate</a><span class="token operator">: </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="delegate.html">delegate</a><span class="token operator">: </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -137,17 +137,17 @@
               </div>
             </div>
           </div>
-<a data-name="1167153265%2FFunctions%2F-1583301284" anchor-label="aliasOnlyExpression" id="1167153265%2FFunctions%2F-1583301284" data-filterable-set=":exposed-core:dokkaHtmlPartial/main"></a>
+<a data-name="-648627272%2FFunctions%2F-1583301284" anchor-label="aliasOnlyExpression" id="-648627272%2FFunctions%2F-1583301284" data-filterable-set=":exposed-core:dokkaHtmlPartial/main"></a>
           <div class="table-row" data-filterable-current=":exposed-core:dokkaHtmlPartial/main" data-filterable-set=":exposed-core:dokkaHtmlPartial/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="alias-only-expression.html"><span>alias</span><wbr><span>Only</span><wbr><span><span>Expression</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1167153265%2FFunctions%2F-1583301284"></span>
+                  <div><a href="../-i-expression-alias/alias-only-expression.html"><span>alias</span><wbr><span>Only</span><wbr><span><span>Expression</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-648627272%2FFunctions%2F-1583301284"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="alias-only-expression.html"><span class="token function">aliasOnlyExpression</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns an <a href="../-expression/index.html">Expression</a> containing only the string representation of this <a href="../alias.html">alias</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-i-expression-alias/alias-only-expression.html"><span class="token function">aliasOnlyExpression</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns an <a href="../-expression/index.html">Expression</a> containing only the string representation of this <a href="../alias.html">alias</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -613,6 +613,21 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix operator </span><span class="token keyword">fun </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../-i-sql-expression-builder/plus.html"><span class="token function">plus</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-concat/index.html">Concat</a></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">infix operator </span><span class="token keyword">fun </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../-i-sql-expression-builder/plus.html"><span class="token function">plus</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-concat/index.html">Concat</a></div><div class="brief "><p class="paragraph">Concatenate the value to the input expression.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1695065352%2FFunctions%2F-1583301284" anchor-label="queryBuilder" id="-1695065352%2FFunctions%2F-1583301284" data-filterable-set=":exposed-core:dokkaHtmlPartial/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core:dokkaHtmlPartial/main" data-filterable-set=":exposed-core:dokkaHtmlPartial/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-i-expression-alias/query-builder.html"><span>query</span><wbr><span><span>Builder</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1695065352%2FFunctions%2F-1583301284"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-i-expression-alias/query-builder.html"><span class="token function">queryBuilder</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">queryBuilder<span class="token operator">: </span><a href="../-query-builder/index.html">QueryBuilder</a></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
