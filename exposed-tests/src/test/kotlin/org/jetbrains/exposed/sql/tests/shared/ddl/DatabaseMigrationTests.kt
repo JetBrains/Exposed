@@ -521,6 +521,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                             assertEquals(1, statements.size)
                             assertEquals("ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", statements[0])
                         }
+                        TestDB.MARIADB -> {
+                            assertEquals(2, statements.size)
+                            assertEquals("ALTER TABLE test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL", statements[0])
+                            assertEquals(expectedDropSequenceStatement(sequenceName), statements[1])
+                        }
                         else -> {
                             assertEquals(2, statements.size)
                             assertTrue(statements[0].startsWith("ALTER TABLE TEST_TABLE ALTER COLUMN ID", ignoreCase = true))
@@ -621,6 +626,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         TestDB.H2_V1 -> {
                             assertEquals(1, statements.size)
                             assertEquals("ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", statements[0])
+                        }
+                        TestDB.MARIADB -> {
+                            assertEquals(2, statements.size)
+                            assertEquals("ALTER TABLE test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL", statements[0])
+                            assertEquals(expectedDropSequenceStatement(sequence.name), statements[1])
                         }
                         else -> {
                             assertEquals(2, statements.size)

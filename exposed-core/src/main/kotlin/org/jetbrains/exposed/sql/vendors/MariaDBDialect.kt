@@ -73,6 +73,16 @@ class MariaDBDialect : MysqlDialect() {
         return super.createIndex(index)
     }
 
+    override fun sequences(): List<String> {
+        val sequences = mutableListOf<String>()
+        TransactionManager.current().exec("SELECT SEQUENCE_NAME FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
+            while (rs.next()) {
+                sequences.add(rs.getString("SEQUENCE_NAME"))
+            }
+        }
+        return sequences
+    }
+
     companion object : DialectNameProvider("MariaDB") {
         const val SEQUENCE_MIN_MAJOR_VERSION = 10
         const val SEQUENCE_MIN_MINOR_VERSION = 3
