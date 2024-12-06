@@ -1,7 +1,7 @@
 package org.example
 
-import CreateExamples
 import org.example.examples.AliasExamples
+import org.example.examples.CreateExamples
 import org.example.examples.CustomSelectExamples
 import org.example.examples.DeleteExamples
 import org.example.examples.QueryingExamples
@@ -16,13 +16,26 @@ import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 
 fun main() {
-    Database.connect(
+    val h2Db = Database.connect(
         "jdbc:h2:mem:test",
         "org.h2.Driver",
         databaseConfig = DatabaseConfig { useNestedTransactions = true }
     )
 
-    transaction {
+    val sqliteDb = Database.connect(
+        "jdbc:sqlite:file:test?mode=memory&cache=shared",
+        "org.sqlite.JDBC",
+        databaseConfig = DatabaseConfig { useNestedTransactions = true }
+    )
+
+    val mysqlDb = Database.connect(
+        "jdbc:mysql://localhost:3306/test",
+        driver = "com.mysql.cj.jdbc.Driver",
+        user = "root",
+        password = "password",
+    )
+
+    transaction(h2Db) {
         addLogger(StdOutSqlLogger)
         createTables()
         runCreateExamples()
@@ -30,8 +43,25 @@ fun main() {
         runUpdateExamples()
         runQueryingExamples()
         runAliasExamples()
-        runCustomSelectExamples()
         runDeleteExamples()
+    }
+
+    transaction(sqliteDb) {
+        addLogger(StdOutSqlLogger)
+        SchemaUtils.create(StarWarsFilmsIntIdTable)
+        // run examples for insertIgnore and insertIgnoreAndGetId
+        CreateExamples().insertIgnoreRecords()
+    }
+
+    transaction(mysqlDb) {
+        addLogger(StdOutSqlLogger)
+        SchemaUtils.create(StarWarsFilmsIntIdTable)
+        SchemaUtils.create(ActorsIntIdTable)
+        runCustomSelectExamples()
+        // run examples for deleteIgnoreWhere
+        DeleteExamples().deleteIgnore()
+        // run examples for joinDelete and joinUpdate
+        DeleteExamples().joinDelete()
     }
 }
 
@@ -72,7 +102,6 @@ fun runUpdateExamples() {
 fun runDeleteExamples() {
     val deleteExamples = DeleteExamples()
     deleteExamples.delete()
-    deleteExamples.joinDelete()
     deleteExamples.deleteAll()
 }
 

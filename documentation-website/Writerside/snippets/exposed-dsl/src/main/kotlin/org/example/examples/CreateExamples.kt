@@ -1,17 +1,21 @@
+package org.example.examples
+
 import org.example.tables.CitiesTable
 import org.example.tables.StarWarsFilmsIntIdTable
 import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.sql.*
 
 /*
-    Important: The SQL statements in this file are referenced by line number in `DSL-CRUD-Operations.topic`.
+    Important: The contents of this file are referenced by line number in `DSL-CRUD-Operations.topic`.
     If you add, remove, or modify any lines, ensure you update the corresponding
     line numbers in the `code-block` element of the referenced file.
 */
 
 private const val MOVIE_ORIGINAL_ID = 4
-private const val MOVIE_SEQUEL_ID = 5
-private const val MOVIE_SEQUEL_2_ID = 6
+private const val MOVIE_ORIGINAL_2_ID = 5
+private const val MOVIE_ORIGINAL_3_ID = 6
+private const val MOVIE_SEQUEL_ID = 7
+private const val MOVIE_SEQUEL_2_ID = 8
 
 class CreateExamples {
     fun createFilmRecords() {
@@ -42,13 +46,13 @@ class CreateExamples {
     }
 
     fun insertIgnoreRecords() {
-        StarWarsFilmsTable.insert {
+        StarWarsFilmsIntIdTable.insert {
             it[sequelId] = MOVIE_SEQUEL_2_ID // column pre-defined with a unique index
             it[name] = "The Last Jedi"
             it[director] = "Rian Johnson"
         }
 
-        StarWarsFilmsTable.insertIgnore {
+        StarWarsFilmsIntIdTable.insertIgnore {
             it[sequelId] = MOVIE_SEQUEL_2_ID
             it[name] = "The Last Jedi"
             it[director] = "Rian Johnson"
@@ -79,9 +83,9 @@ class CreateExamples {
         data class SWFilmData(val sequelId: Int, val name: String, val director: String)
 
         val films = listOf(
-            SWFilmData(MOVIE_SEQUEL_ID, "The Empire Strikes Back", "Irvin Kershner"),
             SWFilmData(MOVIE_ORIGINAL_ID, "A New Hope", "George Lucas"),
-            SWFilmData(MOVIE_SEQUEL_2_ID, "Return of the Jedi", "Richard Marquand")
+            SWFilmData(MOVIE_ORIGINAL_2_ID, "The Empire Strikes Back", "Irvin Kershner"),
+            SWFilmData(MOVIE_ORIGINAL_3_ID, "Return of the Jedi", "Richard Marquand")
         )
 
         StarWarsFilmsTable.batchInsert(films) { (id, name, director) ->
