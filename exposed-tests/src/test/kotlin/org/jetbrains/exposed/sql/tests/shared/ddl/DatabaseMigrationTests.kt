@@ -432,6 +432,16 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
+                    // MariaDB does not allow to create auto column without defining it as a key
+                    val tableWithAutoIncrement = if (testDb == TestDB.MARIADB) {
+                        object : IdTable<Long>("test_table") {
+                            override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
+                            override val primaryKey = PrimaryKey(id)
+                        }
+                    } else {
+                        tableWithAutoIncrement
+                    }
+
                     SchemaUtils.create(tableWithAutoIncrement)
 
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrement, withLogs = false).size)
