@@ -63,6 +63,9 @@ class MariaDBDialect : MysqlDialect() {
         TransactionManager.current().db.isVersionCovers(SEQUENCE_MIN_MAJOR_VERSION, SEQUENCE_MIN_MINOR_VERSION)
     }
 
+    // actually MariaDb supports it but jdbc driver prepares statement without RETURNING clause
+    override val supportsSequenceAsGeneratedKeys: Boolean = false
+
     override fun createIndex(index: Index): String {
         if (index.functions != null) {
             exposedLogger.warn(
