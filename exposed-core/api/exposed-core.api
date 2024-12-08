@@ -4155,7 +4155,9 @@ public final class org/jetbrains/exposed/sql/vendors/MariaDBDialect : org/jetbra
 	public fun getName ()Ljava/lang/String;
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
+	public fun getSupportsSequenceAsGeneratedKeys ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z
+	public fun sequences ()Ljava/util/List;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/MariaDBDialect$Companion : org/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider {
