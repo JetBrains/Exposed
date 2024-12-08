@@ -228,7 +228,7 @@ class SequencesTests : DatabaseTestsBase() {
 
     @Test
     fun testExistingSequencesForAutoIncrementWithCustomSequence() {
-        val tableWithExplicitSequenceName = object : IdTable<Long>() {
+        val tableWithExplicitSequenceName = object : IdTable<Long>("tableWithExplicitCustomSequenceName") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(myseq).entityId()
         }
 
@@ -251,7 +251,7 @@ class SequencesTests : DatabaseTestsBase() {
     @Test
     fun testExistingSequencesForAutoIncrementWithExplicitSequenceName() {
         val sequenceName = "id_seq"
-        val tableWithExplicitSequenceName = object : IdTable<Long>() {
+        val tableWithExplicitSequenceName = object : IdTable<Long>("tableWithExplicitSequenceName") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
         }
 
