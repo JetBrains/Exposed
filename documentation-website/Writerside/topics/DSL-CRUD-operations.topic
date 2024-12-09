@@ -406,6 +406,7 @@
             <p>Supported on: PostgreSQL and SQLite</p>
         </tldr>
         <p>Some databases allow the return of additional data every time a row is either inserted, updated, or deleted.
+            Please note that MariaDB only allows the return of this data for insertions and deletions.
             This can be accomplished by using one of the following functions:
         </p>
         <list>
