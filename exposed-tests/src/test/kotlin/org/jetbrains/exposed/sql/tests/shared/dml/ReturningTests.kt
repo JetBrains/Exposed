@@ -17,7 +17,8 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class ReturningTests : DatabaseTestsBase() {
-    private val returningSupportedDb = TestDB.ALL_POSTGRES.toSet() + TestDB.SQLITE + TestDB.MARIADB
+    private val updateReturningSupportedDb = TestDB.ALL_POSTGRES.toSet() + TestDB.SQLITE
+    private val returningSupportedDb = updateReturningSupportedDb + TestDB.MARIADB
 
     object Items : IntIdTable("items") {
         val name = varchar("name", 32)
@@ -89,7 +90,7 @@ class ReturningTests : DatabaseTestsBase() {
 
     @Test
     fun testUpsertReturning() {
-        withTables(TestDB.ALL - returningSupportedDb + TestDB.MARIADB, Items) {
+        withTables(TestDB.ALL - returningSupportedDb, Items) { testDB ->
             // return all columns by default
             val result1 = Items.upsertReturning {
                 it[name] = "A"
@@ -110,17 +111,18 @@ class ReturningTests : DatabaseTestsBase() {
             assertEquals("A", result2[Items.name])
             assertEquals(990.0, result2[Items.price])
 
-            val result3 = Items.upsertReturning(
-                returning = listOf(Items.name),
-                onUpdateExclude = listOf(Items.price),
-                where = { Items.price greater 500.0 }
-            ) {
-                it[id] = 1
-                it[name] = "B"
-                it[price] = 200.0
-            }.single()
-            assertEquals("B", result3[Items.name])
-
+            if (testDB != TestDB.MARIADB) {
+                val result3 = Items.upsertReturning(
+                    returning = listOf(Items.name),
+                    onUpdateExclude = listOf(Items.price),
+                    where = { Items.price greater 500.0 }
+                ) {
+                    it[id] = 1
+                    it[name] = "B"
+                    it[price] = 200.0
+                }.single()
+                assertEquals("B", result3[Items.name])
+            }
             assertEquals(1, Items.selectAll().count())
         }
     }
@@ -196,7 +198,7 @@ class ReturningTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateReturning() {
-        withTables(TestDB.enabledDialects() - returningSupportedDb + TestDB.MARIADB, Items) {
+        withTables(TestDB.enabledDialects() - updateReturningSupportedDb, Items) {
             val input = listOf("A" to 99.0, "B" to 100.0, "C" to 200.0)
             Items.batchInsert(input) { (n, p) ->
                 this[Items.name] = n
