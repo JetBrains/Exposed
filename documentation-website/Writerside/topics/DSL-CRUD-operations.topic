@@ -64,16 +64,16 @@
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
                         include-lines="49-60"/>
             <p>
-                If <code>insert</code> was used instead of <code>insertIgnore</code>, this would throw a constraint violation exception
-                Instead, this new row is ignored and discarded.
+                If <code>insert</code> was used instead of <code>insertIgnore</code>, this would throw a constraint
+                violation exception. Instead, this new row is ignored and discarded.
             </p>
         </chapter>
 
         <chapter id="insertIgnoreAndGetId">
             <title><code>insertIgnoreAndGetId</code></title>
             <tldr>
-                <p>Supported on: MySQL, PostgreSQL, and SQLite</p>
-                <p>Table types: <code>IntIdTable()</code> </p>
+                <p>Supported on: MySQL, MariaDB, PostgreSQL, and SQLite</p>
+                <p>Table types: <code>IdTable()</code> </p>
             </tldr>
             <p>
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-ignore-and-get-id.html">

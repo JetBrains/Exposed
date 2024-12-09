@@ -316,6 +316,6 @@
                     include-lines="4-6,9,18-39"/>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/CustomSelectExamples.kt"
-                    include-lines="56-58"/>
+                    include-lines="43-48,56-58"/>
     </chapter>
 </topic>

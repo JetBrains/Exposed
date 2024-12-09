@@ -31,10 +31,10 @@ class DeleteExamples {
 
     fun joinDelete() {
         /*
-            MERGE INTO ACTORS USING STAR_WARS_FILMS_TABLE
-            ON STAR_WARS_FILMS_TABLE.ID = ACTORS.SEQUEL_ID
-            WHEN MATCHED AND ACTORS.SEQUEL_ID > 2
-            THEN DELETE
+            DELETE actors
+            FROM star_wars_films_table INNER JOIN actors
+            ON star_wars_films_table.id = actors.sequel_id
+            WHERE actors.sequel_id > 2
          */
 
         StarWarsFilmsIntIdTable.insertIgnore {
