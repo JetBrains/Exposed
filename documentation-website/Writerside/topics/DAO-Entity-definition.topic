@@ -22,11 +22,11 @@
             <code>StarWarsFilmsTable</code>:
         </p>
         <tabs>
-            <tab id="windows-install" title="StarWarsFilmEntity">
+            <tab id="StarWarsFilmEntity" title="StarWarsFilmEntity">
                 <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"/>
             </tab>
-            <tab id="macos-install" title="StarWarsFilmsTable">
-                <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-code-block"/>
+            <tab id="StarWarsFilmsTable" title="StarWarsFilmsTable">
+                <include from="DAO-Table-Types.topic" element-id="StarWarsFilmsTable-dao-code-block"/>
             </tab>
         </tabs>
         <chapter id="entity-type" title="Entity type">
