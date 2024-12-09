@@ -17,7 +17,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class ReturningTests : DatabaseTestsBase() {
-    private val returningSupportedDb = TestDB.ALL_POSTGRES.toSet() + TestDB.SQLITE
+    private val returningSupportedDb = TestDB.ALL_POSTGRES.toSet() + TestDB.SQLITE + TestDB.MARIADB
 
     object Items : IntIdTable("items") {
         val name = varchar("name", 32)
@@ -89,7 +89,7 @@ class ReturningTests : DatabaseTestsBase() {
 
     @Test
     fun testUpsertReturning() {
-        withTables(TestDB.ALL - returningSupportedDb, Items) {
+        withTables(TestDB.ALL - returningSupportedDb + TestDB.MARIADB, Items) {
             // return all columns by default
             val result1 = Items.upsertReturning {
                 it[name] = "A"
@@ -196,7 +196,7 @@ class ReturningTests : DatabaseTestsBase() {
 
     @Test
     fun testUpdateReturning() {
-        withTables(TestDB.enabledDialects() - returningSupportedDb, Items) {
+        withTables(TestDB.enabledDialects() - returningSupportedDb + TestDB.MARIADB, Items) {
             val input = listOf("A" to 99.0, "B" to 100.0, "C" to 200.0)
             Items.batchInsert(input) { (n, p) ->
                 this[Items.name] = n
