@@ -96,6 +96,7 @@ class TransactionExecTests : DatabaseTestsBase() {
             TestDB.SQLSERVER -> "SELECT current_value AS $columnAlias FROM sys.sequences"
             TestDB.ORACLE -> "SELECT ${ExecTable.id.autoIncColumnType?.autoincSeq}.CURRVAL AS $columnAlias FROM DUAL"
             TestDB.POSTGRESQL -> "SELECT lastval() AS $columnAlias"
+            TestDB.MARIADB -> "SELECT LASTVAL(${ExecTable.id.autoIncColumnType?.autoincSeq}) AS $columnAlias"
             else -> "SELECT LAST_INSERT_ID() AS $columnAlias"
         }
 
