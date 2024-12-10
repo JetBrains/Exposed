@@ -21,11 +21,11 @@
                 it throws an exception.</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="23-27"/>
+                        include-lines="27-31"/>
             <p>The example corresponds to the following SQL statement:</p>
             <code-block lang="sql"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="19-20"/>
+                        include-lines="23-24"/>
         </chapter>
 
         <chapter id="insertAndGetId">
@@ -44,7 +44,7 @@
                         include-symbol="id"/>
             <code-block lang="sql"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="32-33"/>
+                        include-lines="36-37"/>
         </chapter>
 
         <chapter id="insertIgnore">
@@ -62,18 +62,18 @@
 
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="45-56"/>
+                        include-lines="49-60"/>
             <p>
-                If <code>insert</code> was used instead of <code>insertIgnore</code>, this would throw a constraint violation exception
-                Instead, this new row is ignored and discarded.
+                If <code>insert</code> was used instead of <code>insertIgnore</code>, this would throw a constraint
+                violation exception. Instead, this new row is ignored and discarded.
             </p>
         </chapter>
 
         <chapter id="insertIgnoreAndGetId">
             <title><code>insertIgnoreAndGetId</code></title>
             <tldr>
-                <p>Supported on: MySQL, PostgreSQL, and SQLite</p>
-                <p>Table types: <code>IntIdTable()</code> </p>
+                <p>Supported on: MySQL, MariaDB, PostgreSQL, and SQLite</p>
+                <p>Table types: <code>IdTable()</code> </p>
             </tldr>
             <p>
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-ignore-and-get-id.html">
@@ -87,7 +87,7 @@
                         include-symbol="rowId"/>
             <code-block lang="sql"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="58-59"/>
+                        include-lines="62-63"/>
         </chapter>
 
         <chapter id="batch-insert">
@@ -102,11 +102,11 @@
             <p>The following example uses a simple list:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="71-75"/>
+                        include-lines="75-79"/>
             <p>Here is an example that uses a list of data class instances:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="79-91"/>
+                        include-lines="83-95"/>
             <note>
                 The <code>batchInsert</code> function will still create multiple <code>INSERT</code> statements when
                 interacting with your database.
