@@ -55,6 +55,8 @@ abstract class ExposedDatabaseMetadata(val database: String) {
      */
     abstract fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata
 
+    abstract fun tableNamesForAllSchemas(): List<String>
+
     /** Returns a map with the [ColumnMetadata] of all the defined columns in each of the specified [tables]. */
     abstract fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>>
 

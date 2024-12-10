@@ -3580,6 +3580,7 @@ public abstract class org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMe
 	public abstract fun sequences ()Ljava/util/List;
 	public abstract fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
 	public abstract fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
+	public abstract fun tableNamesForAllSchemas ()Ljava/util/List;
 }
 
 public abstract class org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {

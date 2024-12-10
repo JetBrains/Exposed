@@ -55,6 +55,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 	public fun sequences ()Ljava/util/List;
 	public fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
 	public fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
+	public fun tableNamesForAllSchemas ()Ljava/util/List;
 }
 
 public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadataImpl$Companion {
