@@ -32,17 +32,15 @@ abstract class VendorDialect(
         }
 
     protected fun getAllTableNamesCache(): Map<String, List<String>> {
-        val connection = TransactionManager.current().connection
         if (_allTableNames == null) {
-            _allTableNames = connection.metadata { tableNames }
+            _allTableNames = TransactionManager.current().connection.metadata { tableNames }
         }
         return _allTableNames!!
     }
 
     private fun getAllSchemaNamesCache(): List<String> {
-        val connection = TransactionManager.current().connection
         if (_allSchemaNames == null) {
-            _allSchemaNames = connection.metadata { schemaNames }
+            _allSchemaNames = TransactionManager.current().connection.metadata { schemaNames }
         }
         return _allSchemaNames!!
     }
@@ -53,7 +51,7 @@ abstract class VendorDialect(
 
     /** Returns a list with the names of all the defined tables with schema prefixes if the database supports it. */
     override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata {
-        getAllTableNamesCache().flatMap { it.value }
+        tableNamesForAllSchemas()
     }
 
     override fun tableExists(table: Table): Boolean {

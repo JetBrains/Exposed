@@ -131,6 +131,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return SchemaMetadata(currentSchema!!, tablesInSchema)
     }
 
+    override fun tableNamesForAllSchemas(): List<String> =
+        schemaNames.flatMap { tableNamesFor(it) }
+
     private fun ResultSet.extractColumns(): List<ColumnMetadata> {
         val result = mutableListOf<ColumnMetadata>()
         while (next()) {
