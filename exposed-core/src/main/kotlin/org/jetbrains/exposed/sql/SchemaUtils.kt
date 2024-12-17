@@ -317,8 +317,9 @@ object SchemaUtils {
      * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
      *
-     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ADD COLUMN` syntax completely.
-     * Please check the documentation.
+     * **Note:** Some databases, like **SQLite**, only support `ALTER TABLE ADD COLUMN` syntax in very restricted cases,
+     * which may cause unexpected behavior when adding some missing columns. Please check the documentation.
+     * For SQLite, please see [ALTER TABLE restrictions](https://www.sqlite.org/lang_altertable.html#alter_table_add_column).
      */
     fun addMissingColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
@@ -572,8 +573,9 @@ object SchemaUtils {
      * It creates any missing tables and, if possible, adds any missing columns for existing tables
      * (for example, when columns are nullable or have default values).
      *
-     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ADD COLUMN` syntax completely,
-     * which restricts the behavior when adding some missing columns. Please check the documentation.
+     * **Note:** Some databases, like **SQLite**, only support `ALTER TABLE ADD COLUMN` syntax in very restricted cases,
+     * which may cause unexpected behavior when adding some missing columns. Please check the documentation.
+     * For SQLite, please see [ALTER TABLE restrictions](https://www.sqlite.org/lang_altertable.html#alter_table_add_column).
      *
      * Also, if there is inconsistency between the database schema and table objects (for example,
      * excessive or missing indices), then SQL statements to fix this will be logged at the INFO level.
@@ -625,8 +627,9 @@ object SchemaUtils {
      * Returns the SQL statements that need to be executed to make the existing database schema compatible with
      * the table objects defined using Exposed.
      *
-     * **Note:** Some dialects, like SQLite, do not support `ALTER TABLE ADD COLUMN` syntax completely,
-     * which restricts the behavior when adding some missing columns. Please check the documentation.
+     * **Note:** Some databases, like **SQLite**, only support `ALTER TABLE ADD COLUMN` syntax in very restricted cases,
+     * which may cause unexpected behavior when adding some missing columns. Please check the documentation.
+     * For SQLite, please see [ALTER TABLE restrictions](https://www.sqlite.org/lang_altertable.html#alter_table_add_column).
      *
      * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
