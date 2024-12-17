@@ -20,36 +20,48 @@ val fullNames = FooTable.select(trimmedAndLoweredFullName).map { it[trimmedAndLo
 ```
 
 ## String functions
-### LowerCase/UpperCase
-Returns a lower-cased/upper-cased string value.
+### Lower case and upper case
+To convert a string expression to lower-case or upper-case, use the [`.lowerCase()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/lower-case.html)
+and
+[`.upperCase()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upper-case.html)
+functions respectively.
+
 ```kotlin
 val lowerCasedName = FooTable.name.lowerCase()
 val lowerCasedNames = FooTable.select(lowerCasedName).map { it[lowerCasedName] }
 
 ```
 ### Substring
-Returns a substring value from the specified start and with the specified length.
+The [.substring()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/substring.html)
+function returns a substring value from the specified start and with the specified length.
+
 ```kotlin
 val shortenedName = FooTable.name.substring(start = 1, length = 3)
 val shortenedNames = FooTable.select(shortenedName).map { it[shortenedName] }
 
 ```
-### Concat
-Returns a string value that concatenates the text representations of all non-null input values, separated by an optional separator.
+### Concatenate
+The [concat()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/concat.html)
+function returns a string value that concatenates the text representations of all non-null input values, separated by an optional separator.
+
 ```kotlin
 val userName = concat(stringLiteral("User - "), FooTable.name)
 val userNames = FooTable.select(userName).map { it[userName] }
 
 ```
 ### Locate
-Returns the index of the first occurrence of a specified substring or 0.
+The [.locate()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/locate.html)
+function returns the index of the first occurrence of a specified substring or 0.
+
 ```kotlin
 val firstAIndex = FooTable.name.locate("a")
 val firstAIndices = FooTable.select(firstAIndex).map { it[firstAIndex] }
 
 ```
-### CharLength
-Returns the length, measured in characters, or `null` if the String value is null.
+### Character length
+The [.charLength()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/char-length.html)
+function returns the length, measured in characters, or `null` if the String value is null.
+
 ```kotlin
 val nameLength = FooTable.name.charLength()
 val nameLengths = FooTable.select(nameLength).map { it[nameLength] }
@@ -59,7 +71,12 @@ val nameLengths = FooTable.select(nameLength).map { it[nameLength] }
 ## Aggregating functions
 These functions should be used in queries with [groupBy](DSL-Querying-data.topic#group-by).
 ### Min/Max/Average
-Returns minimum/maximum/average value and can be applied to any comparable expression:
+To get the minimum, maximum, and average values, use the 
+[.min()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/min.html)
+[.max()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/max.html)
+and [.avg](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/avg.html) functions
+respectively. These functions can be applied to any comparable expression:
+
 ```kotlin
 val minId = FooTable.id.min()
 val maxId = FooTable.id.max()
@@ -88,9 +105,9 @@ val replacedName = CustomFunction<String?>("REPLACE", VarCharColumnType(), FooTa
 `CustomFunction` class accepts a function name as a first parameter and the resulting column type as second. After that, you can provide any amount of parameters separated by a comma.
 
 There are also shortcuts for string, long, and datetime functions:
-* `CustomStringFunction`
-* `CustomLongFunction`
-* `CustomDateTimeFunction`
+* [`CustomStringFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-string-function.html)
+* [`CustomLongFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-long-function.html)
+* [`CustomDateTimeFunction`](https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.sql.jodatime/-custom-date-time-function.html)
 
 The code above could be simplified to:
 ```kotlin
@@ -109,9 +126,14 @@ val lastDayOfMonth = CustomDateFunction(
 ```
 3. Function that requires more complex query building:
 
-All functions in Exposed extend the abstract class `Function`, which takes a column type and allows overriding `toQueryBuilder()`. This is what `CustomFunction` actually does, which can be leveraged to create more complex queries.
+All functions in Exposed extend the abstract class [`Function`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-function/index.html),
+which takes a column type and allows overriding `toQueryBuilder()`. This is what `CustomFunction` actually does, 
+which can be leveraged to create more complex queries.
 
-For example, Exposed provides a `trim()` function that removes leading and trailing whitespace from a String. In MySQL, this is just the default behavior as specifiers can be provided to limit the trim to either leading or trailing, as well as providing a specific substring other than spaces to remove. The custom function below supports this extended behavior:
+For example, Exposed provides a `trim()` function that removes leading and trailing whitespace from a String. In MySQL,
+this is just the default behavior as specifiers can be provided to limit the trim to either leading or trailing, as well
+as providing a specific substring other than spaces to remove. The custom function below supports this extended behavior:
+
 ```kotlin
 enum class TrimSpecifier { BOTH, LEADING, TRAILING }
 

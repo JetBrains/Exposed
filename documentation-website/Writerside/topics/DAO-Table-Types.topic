@@ -11,7 +11,10 @@
         <snippet id="dao-table-types">
             <p>
                 Apart from the core <code>Table</code> class, Exposed provides the base
-                <code>IdTable</code> class and its subclasses through the DAO API.
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-id-table/index.html">
+                    <code>IdTable</code>
+                </a>
+                class and its subclasses through the DAO API.
             </p>
             <p>
                 The <code>IdTable</code> class extends <code>Table</code> and is
