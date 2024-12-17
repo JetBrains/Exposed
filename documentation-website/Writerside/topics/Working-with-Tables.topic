@@ -287,7 +287,8 @@
                     override val primaryKey = PrimaryKey(areaCode, latitude, longitude)
                 }
             </code-block>
-            <p id="add-id-column-tip">If any of the key component columns have already been marked by <code>entityId()</code>
+            <p id="add-id-column-tip">
+                If any of the key component columns have already been marked by <code>.entityId()</code>
                 in another table, they can still be identified using <code>addIdColumn()</code>. This might be useful for
                 key columns that reference another <code>IdTable</code>:</p>
             <code-block lang="kotlin">

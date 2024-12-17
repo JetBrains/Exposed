@@ -30,22 +30,22 @@
         <deflist type="medium">
             <def id="IntIdTable">
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-int-id-table/index.html"><code>IntIdTable</code></a></title>
-                <code>Int</code> id column</def>
+                <code>Int</code> ID column</def>
             <def id="LongIdTable">
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-long-id-table/index.html"><code>LongIdTable</code></a></title>
-                <code>Long</code> id column
+                <code>Long</code> ID column
             </def>
             <def id="UIntIdTable">
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-int-id-table/index.html"><code>UIntIdTable</code></a></title>
-                <code>UInt</code> id column
+                <code>UInt</code> ID column
             </def>
             <def id="ULongIdTable">
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-long-id-table/index.html"><code>ULongIdTable</code></a></title>
-                <code>ULong</code> id column
+                <code>ULong</code> ID column
             </def>
             <def id="UUIDTable">
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-u-i-d-table/index.html"><code>UUIDTable</code></a></title>
-                <code>UUID</code> id column
+                <code>UUID</code> ID column
             </def>
         </deflist>
         <p>The following example represents a table with custom columns <code>sequel_id</code>, <code>name</code>,
@@ -73,9 +73,14 @@
     <chapter title="Composite id table" id="composite-id-table">
         <p>
             To define multiple columns as part of the primary key and id, use
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-composite-id-table/index.html"><code>CompositeIdTable</code></a>
-            and mark each composite column using <code>entityId()</code>.
-            Each component column will be available for CRUD operations either individually (as for any standard column)
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-composite-id-table/index.html">
+                <code>CompositeIdTable</code>
+            </a>
+            and mark each composite column using
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/entity-id.html">
+                <code>.entityId()</code>
+            </a>
+            . Each component column will be available for CRUD operations either individually (as for any standard column)
             or all together as part of the <code>id</code> column:
         </p>
         <tabs>
