@@ -107,11 +107,15 @@ class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {
         .orEmpty()
 }
 
+/** Interface common to all [Expression]s with temporary SQL identifiers. */
 interface IExpressionAlias<T> {
+    /** The aliased expression. */
     val delegate: Expression<T>
 
+    /** The temporary SQL identifier string. */
     val alias: String
 
+    /** Appends the SQL representation of this aliased expression to the specified [queryBuilder]. */
     fun queryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         if (delegate is ComparisonOp && (currentDialectIfAvailable is SQLServerDialect || currentDialectIfAvailable is OracleDialect)) {
             +"(CASE WHEN "

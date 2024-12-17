@@ -203,7 +203,8 @@ For more information visit the links below:
 
 ## Filing issues
 
-Please note that we are moving away from GitHub Issues for reporting of bugs and features. Please log any new requests on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED). You must be logged in to view and log issues, otherwise you will be met with a 404.
+Please note that we are moving away from GitHub Issues for reporting of bugs and features. Please log any new requests on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED).
+While issues are visible publicly, either creating a new issue or commenting on an existing one does require logging in to YouTrack.
 
 ## Community
 
@@ -212,13 +213,15 @@ Do you have questions? Feel free to [request an invitation](https://surveys.jetb
 
 ## Pull requests
 
-We actively welcome your pull requests. However, linking your work to an existing issue is preferred.
+We actively welcome your pull requests. However, linking your work to an [existing issue](https://youtrack.jetbrains.com/issues/EXPOSED) is preferred.
 
--   Fork the repo and create your branch from main.
--   Name your branch something that is descriptive to the work you are doing. i.e. adds-new-thing.
+-   Fork the repo and create your branch from `main`.
+-   Name your branch something that is descriptive to the work you are doing. i.e. `adds-new-thing`.
 -   If you've added code that should be tested, add tests and ensure the test suite passes.
 -   Make sure you address any lint warnings.
--   If you make the existing code better, please let us know in your PR description.
+-   If you make the existing code better, please let us know by filling out the PR template description.
+-   Please choose a PR title that starts with a [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification,
+    followed by the issue code and description. e.g. `fix: EXPOSED-123 Fix a specific bug`.
 
 See the [contribution guidelines](https://jetbrains.github.io/Exposed/contributing.html) for more details.
 
