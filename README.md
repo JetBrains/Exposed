@@ -198,29 +198,27 @@ For more information visit the links below:
 -   [Migration Guide](https://jetbrains.github.io/Exposed/migration-guide.html)
 -   [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html) and any migration details
 -   [Slack Channel](https://kotlinlang.slack.com/messages/exposed/)
+-   [Filing Issues](#contributing)
 -   [Issue Tracker](https://youtrack.jetbrains.com/issues/EXPOSED)
 <br><br>
-
-## Filing issues
-
-Please note that we are moving away from GitHub Issues for reporting of bugs and features. Please log any new requests on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED). You must be logged in to view and log issues, otherwise you will be met with a 404.
 
 ## Community
 
 Do you have questions? Feel free to [request an invitation](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up) for the [kotlinlang slack](https://kotlinlang.slack.com/) and join the project conversation at our [#exposed](https://kotlinlang.slack.com/messages/exposed/) channel.
+
+## Contributing
+
+We encourage your feedback in any form, such as feature requests, bug reports, documentation updates, and questions.
+Note that we are moving away from GitHub Issues for this reporting. Log any new requests on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED).
+While issues are visible publicly, either creating a new issue or commenting on an existing one does require logging in to YouTrack.
+
+We also actively welcome your pull requests. However, linking your work to an [existing issue](https://youtrack.jetbrains.com/issues/EXPOSED) is preferred.
+
+
+See the full [contribution guide](https://jetbrains.github.io/Exposed/contributing.html) for more details.
+
+By contributing to the Exposed project, you agree that your contributions will be licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 <br><br>
-
-## Pull requests
-
-We actively welcome your pull requests. However, linking your work to an existing issue is preferred.
-
--   Fork the repo and create your branch from main.
--   Name your branch something that is descriptive to the work you are doing. i.e. adds-new-thing.
--   If you've added code that should be tested, add tests and ensure the test suite passes.
--   Make sure you address any lint warnings.
--   If you make the existing code better, please let us know in your PR description.
-
-See the [contribution guidelines](https://jetbrains.github.io/Exposed/contributing.html) for more details.
 
 ## Examples
 
@@ -487,8 +485,3 @@ Generated SQL:
     SQL: SELECT Users.id, Users.name, Users.city, Users.age FROM Users WHERE Users.age >= 18
     Adults: b, c
 ```
-
-## Contributing
-Please see the [contribution guide](https://jetbrains.github.io/Exposed/contributing.html) before contributing.
-
-By contributing to the Exposed project, you agree that your contributions will be licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
