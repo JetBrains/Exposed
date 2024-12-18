@@ -14,7 +14,7 @@ transaction {
 ```
 
 Transactions are executed synchronously on the current thread, so they _will block_ other parts of your application! If
-you need to execute a transaction asynchronously, consider running it on a separate `Thread`.
+you need to execute a transaction asynchronously, consider running it on a separate thread.
 
 ## Accessing returned values
 
