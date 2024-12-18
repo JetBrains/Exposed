@@ -49,6 +49,18 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
             sql
         }
     }
+
+    override fun returning(
+        mainSql: String,
+        returning: List<Expression<*>>,
+        transaction: Transaction
+    ): String {
+        return with(QueryBuilder(true)) {
+            +"$mainSql RETURNING "
+            returning.appendTo { +it }
+            toString()
+        }
+    }
 }
 
 /**
