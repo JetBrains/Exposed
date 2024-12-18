@@ -1,6 +1,6 @@
 package org.example.examples
 
-import org.example.tables.StarWarsFilmsTable
+import org.example.tables.StarWarsFilmsIntIdTable
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
@@ -40,15 +40,21 @@ class IndexHintQuery(
 
 class CustomSelectExamples {
     fun useCustomQueryWithHint() {
-        transaction {
-            val originalQuery = StarWarsFilmsTable
-                .selectAll()
-                .withDistinct()
-                .where { StarWarsFilmsTable.sequelId less MOVIE_SEQUEL_ID }
-                .groupBy(StarWarsFilmsTable.id)
+        val originalQuery = StarWarsFilmsIntIdTable
+            .selectAll()
+            .withDistinct()
+            .where { StarWarsFilmsIntIdTable.sequelId less MOVIE_SEQUEL_ID }
+            .groupBy(StarWarsFilmsIntIdTable.id)
 
-            originalQuery.indexHint("FORCE INDEX (PRIMARY)")
-                .orderBy(StarWarsFilmsTable.sequelId)
-        }
+        /*
+            SELECT DISTINCT star_wars_films_table.id, star_wars_films_table.sequel_id, star_wars_films_table.`name`, star_wars_films_table.director
+            FROM star_wars_films_table
+            FORCE INDEX (PRIMARY) WHERE star_wars_films_table.sequel_id < 8
+            GROUP BY star_wars_films_table.id
+            ORDER BY star_wars_films_table.sequel_id ASC
+         */
+        originalQuery.indexHint("FORCE INDEX (PRIMARY)")
+            .orderBy(StarWarsFilmsIntIdTable.sequelId)
+            .forEach { println(it[StarWarsFilmsIntIdTable.name]) }
     }
 }

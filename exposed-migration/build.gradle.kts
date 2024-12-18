@@ -11,7 +11,7 @@ repositories {
 dependencies {
     api(project(":exposed-core"))
 
-    testImplementation(platform("org.junit:junit-bom:5.11.3"))
+    testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
