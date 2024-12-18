@@ -2,15 +2,17 @@
 
 # Working with Databases
 
-In Exposed, the `Database` class represents a database instance, and encapsulates the necessary connection
-details and configuration required to interact with a specific database.
+In Exposed, the [`Database`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-database/index.html)
+class represents a database instance, and encapsulates the necessary connection details and configuration required to
+interact with a specific database.
 
 ## Connecting to a Database
 
 Every database access using Exposed is started by obtaining a connection and creating a transaction.
 
-First of all, you have to tell Exposed how to connect to a database by using the `Database.connect` function.
-It won't create a real database connection but will only provide a descriptor for future usage.
+First of all, you have to tell Exposed how to connect to a database by using the
+[`Database.connect()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-database/-companion/connect.html)
+function. It won't create a real database connection but will only provide a descriptor for future usage.
 
 A real connection will be instantiated later by calling the `transaction` lambda
 (see [Transactions](Transactions.md) for more details).
@@ -32,9 +34,12 @@ object DbSettings {
 </note>
 
 <note>
-    By default, Exposed uses a <code>ServiceLoader</code> to get an implementation of the <code>DatabaseConnectionAutoRegistration</code>
+    By default, Exposed uses a <code>ServiceLoader</code> to get an implementation of the
+    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-database-connection-auto-registration/index.html">
+        <code>DatabaseConnectionAutoRegistration</code>
+    </a>
     interface that represents a connection accessed by the <code>Database</code> instance.
-    This can be modified when calling the <code>Database.connect</code> method by providing an argument to <code>connectionAutoRegistration</code>
+    This can be modified when calling the <code>Database.connect()</code> method by providing an argument to <code>connectionAutoRegistration</code>
     in the parameter list.
 </note>
 
