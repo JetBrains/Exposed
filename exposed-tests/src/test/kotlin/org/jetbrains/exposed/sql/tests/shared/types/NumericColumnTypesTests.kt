@@ -161,4 +161,35 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
             )
         }
     }
+
+    @Test
+    fun testCustomCheckConstraintName() {
+        val tester = object : Table("tester") {
+            val byte = byte("byte_column", checkConstraintName = "custom_byte_check")
+            val ubyte = ubyte("ubyte_column", checkConstraintName = "custom_ubyte_check")
+            val short = short("short_column", checkConstraintName = "custom_short_check")
+            val ushort = ushort("ushort_column", checkConstraintName = "custom_ushort_check")
+            val integer = integer("integer_column", checkConstraintName = "custom_integer_check")
+            val uinteger = uinteger("uinteger_column", checkConstraintName = "custom_uinteger_check")
+        }
+
+        withTables(tester) {
+            assertEquals(
+                "CREATE TABLE ${addIfNotExistsIfSupported()}${tester.nameInDatabaseCase()} (" +
+                    "${tester.byte.nameInDatabaseCase()} ${tester.byte.columnType} NOT NULL, " +
+                    "${tester.ubyte.nameInDatabaseCase()} ${tester.ubyte.columnType} NOT NULL, " +
+                    "${tester.short.nameInDatabaseCase()} ${tester.short.columnType} NOT NULL, " +
+                    "${tester.ushort.nameInDatabaseCase()} ${tester.ushort.columnType} NOT NULL, " +
+                    "${tester.integer.nameInDatabaseCase()} ${tester.integer.columnType} NOT NULL, " +
+                    "${tester.uinteger.nameInDatabaseCase()} ${tester.uinteger.columnType} NOT NULL, " +
+                    "CONSTRAINT custom_byte_check CHECK (${tester.byte.nameInDatabaseCase()} BETWEEN ${Byte.MIN_VALUE} AND ${Byte.MAX_VALUE}), " +
+                    "CONSTRAINT custom_ubyte_check CHECK (${tester.ubyte.nameInDatabaseCase()} BETWEEN 0 AND ${UByte.MAX_VALUE}), " +
+                    "CONSTRAINT custom_short_check CHECK (${tester.short.nameInDatabaseCase()} BETWEEN ${Short.MIN_VALUE} AND ${Short.MAX_VALUE}), " +
+                    "CONSTRAINT custom_ushort_check CHECK (${tester.ushort.nameInDatabaseCase()} BETWEEN 0 AND ${UShort.MAX_VALUE}), " +
+                    "CONSTRAINT custom_integer_check CHECK (${tester.integer.nameInDatabaseCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE}), " +
+                    "CONSTRAINT custom_uinteger_check CHECK (${tester.uinteger.nameInDatabaseCase()} BETWEEN 0 AND ${UInt.MAX_VALUE}))",
+                tester.ddl
+            )
+        }
+    }
 }
