@@ -6,8 +6,7 @@
        title="Table types" id="DAO-Table-Types" help-id="DAO-Table-types">
 
     <include from="DSL-Table-Types.topic" element-id="dsl-core-table-class"/>
-    <chapter id="defining-tables">
-        <title>Auto-incrementing <code>id</code> column tables</title>
+    <chapter title="Auto-incrementing ID column tables" id="defining-tables">
         <snippet id="dao-table-types">
             <p>
                 Apart from the core <code>Table</code> class, Exposed provides the base
@@ -73,7 +72,7 @@
         </p>
     </chapter>
 
-    <chapter title="Composite id table" id="composite-id-table">
+    <chapter title="Composite ID table" id="composite-id-table">
         <p>
             To define multiple columns as part of the primary key and ID, use
             <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-composite-id-table/index.html">
@@ -109,7 +108,7 @@
 
     <chapter title="Custom column type table" id="custom-column-type">
         <p>
-            To define a custom column type as the primary key and id, use a typed <code>IdTable</code> directly and
+            To define a custom column type as the primary key and ID, use a typed <code>IdTable</code> directly and
             override the <code>id</code> column, as shown in the following example:
         </p>
         <tabs>

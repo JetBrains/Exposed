@@ -41,7 +41,7 @@
         <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/examples/CreateExamples.kt"
                     include-symbol="movie2"/>
         <p>
-            If the entity is a <code>CompositeEntity</code>, the id value can be constructed by creating a component
+            If the entity is a <code>CompositeEntity</code>, the ID value can be constructed by creating a component
             column-to-value association using the
             <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-composite-i-d/index.html">
                 <code>CompositeID</code>
@@ -94,7 +94,7 @@
                             include-symbol="specificMovie"/>
             </chapter>
             <chapter title="Find by ID" id="find-by-id">
-                To get an entity by its id value, use the
+                To get an entity by its ID value, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/find-by-id.html">
                     <code>.findById()</code>
                 </a>
@@ -171,7 +171,7 @@
         </note>
         <chapter title="Update by ID" id="findByIdAndUpdate">
             <p>
-                To search for an entity by its id and apply an update, use the
+                To search for an entity by its ID and apply an update, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/find-by-id-and-update.html">
                     <code>.findByIdAndUpdate()</code>
                 </a>
