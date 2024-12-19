@@ -12,13 +12,14 @@
     <chapter title="Create" id="create">
         <p>Exposed provides several functions to insert rows into a table:</p>
 
-        <chapter id="insert">
-            <title><code>insert</code></title>
-            <p>To create a new table row, use the
+        <chapter title="Insert a single row" id="insert">
+            <p>
+                To create a new table row, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert.html">
-                <code>insert</code>
-                </a> query. If the same row already exists in the table,
-                it throws an exception.</p>
+                    <code>.insert()</code>
+                </a>
+                function. If the same row already exists in the table, it throws an exception.
+            </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
                         include-lines="27-31"/>
@@ -26,37 +27,53 @@
             <code-block lang="sql"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
                         include-lines="23-24"/>
+            <chapter title="Insert and get ID" id="insertAndGetId">
+                <tldr>
+                    <p> Supported table types: <code>IdTable()</code> </p>
+                </tldr>
+                <p>To add a new row and return its ID, use
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-and-get-id.html">
+                        <code>.insertAndGetId()</code>
+                    </a>. If the same row already exists in
+                    the table, it throws an exception.</p>
+
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                            include-symbol="id"/>
+                <code-block lang="sql"
+                            src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                            include-lines="36-37"/>
+            </chapter>
         </chapter>
 
-        <chapter id="insertAndGetId">
-            <title><code>insertAndGetId</code></title>
-            <tldr>
-                <p> Supported table types: <code>IdTable()</code> </p>
-            </tldr>
-            <p>To add a new row and return its ID, use
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-and-get-id.html">
-                    <code>insertAndGetId</code>
-                </a>. If the same row already exists in
-                the table, it throws an exception.</p>
-
+        <chapter title="Insert from select" id="insert-from-select">
+            <p>
+                For the <code>INSERT INTO ... SELECT </code> SQL clause, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert.html">
+                    <code>.insert()</code>
+                </a>
+                function with a <code>Query</code> parameter:
+            </p>
             <code-block lang="kotlin"
-                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-symbol="id"/>
-            <code-block lang="sql"
-                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="36-37"/>
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/InsertSelectExamples.kt"
+                        include-symbol="substring, insertedRows"
+            />
+            <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
+                are defined in the <code>Table</code> instance. If you want to specify columns or change the
+                order, provide a list of columns as the second parameter:</p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/InsertSelectExamples.kt"
+                        include-symbol="userCount, insertedUsers"
+            />
         </chapter>
 
-        <chapter id="insertIgnore">
-            <title>
-              <code>insertIgnore</code>
-            </title>
+        <chapter title="Insert and ignore" id="insertIgnore">
             <tldr>
                 <p>Supported on: MySQL, MariaDB, PostgreSQL, and SQLite</p>
             </tldr>
             <p>To allow insert statements to be executed without throwing any errors, use
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-ignore.html">
-                    <code>insertIgnore</code>
+                    <code>.insertIgnore()</code>
                 </a>.
                 This may be useful, for example, when insertion conflicts are possible:</p>
 
@@ -64,37 +81,34 @@
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
                         include-lines="49-60"/>
             <p>
-                If <code>insert</code> was used instead of <code>insertIgnore</code>, this would throw a constraint
+                If <code>.insert()</code> was used instead of <code>.insertIgnore()</code>, this would throw a constraint
                 violation exception. Instead, this new row is ignored and discarded.
             </p>
+            <chapter title="Insert and ignore and get ID" id="insertIgnoreAndGetId">
+                <tldr>
+                    <p>Supported on: MySQL, MariaDB, PostgreSQL, and SQLite</p>
+                    <p>Table types: <code>IdTable()</code> </p>
+                </tldr>
+                <p>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-ignore-and-get-id.html">
+                        <code>.insertIgnoreAndGetId()</code>
+                    </a>
+                    adds a new row and returns its ID. If the same row already
+                    exists in the table, it ignores it and doesn't throw an exception.</p>
+
+                <code-block lang="kotlin"
+                            src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                            include-symbol="rowId"/>
+                <code-block lang="sql"
+                            src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
+                            include-lines="62-63"/>
+            </chapter>
         </chapter>
 
-        <chapter id="insertIgnoreAndGetId">
-            <title><code>insertIgnoreAndGetId</code></title>
-            <tldr>
-                <p>Supported on: MySQL, MariaDB, PostgreSQL, and SQLite</p>
-                <p>Table types: <code>IdTable()</code> </p>
-            </tldr>
-            <p>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-ignore-and-get-id.html">
-                    <code>insertIgnoreAndGetId</code>
-                </a>
-                adds a new row and returns its ID. If the same row already
-                exists in the table, it ignores it and doesn't throw an exception.</p>
-
-            <code-block lang="kotlin"
-                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-symbol="rowId"/>
-            <code-block lang="sql"
-                        src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
-                        include-lines="62-63"/>
-        </chapter>
-
-        <chapter id="batch-insert">
-            <title><code>batchInsert</code></title>
+        <chapter title="Batch insert" id="batch-insert">
             <p>
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/batch-insert.html">
-                    <code>batchInsert</code>
+                    <code>.batchInsert()</code>
                 </a>
                 allows mapping a list of entities into table rows in a single SQL statement.
                 It is more efficient than using the <code>insert</code> query for each row as it initiates only one statement.
@@ -108,7 +122,7 @@
                         src="exposed-dsl/src/main/kotlin/org/example/examples/CreateExamples.kt"
                         include-lines="83-95"/>
             <note>
-                The <code>batchInsert</code> function will still create multiple <code>INSERT</code> statements when
+                The <code>.batchInsert()</code> function will still create multiple <code>INSERT</code> statements when
                 interacting with your database.
                 <p>To convert the <code>INSERT</code> statements into a <code>BULK INSERT</code>, use the
                     <code>rewriteBatchedInserts=true</code>
@@ -120,23 +134,28 @@
                     <a href="https://jdbc.postgresql.org/documentation/use/">PostgresSQL</a>.</p>
             </note>
 
-            <p>If you don't need to get the newly generated values, such as the auto-incremented ID, set the
+            <p>
+                If you don't need to get the newly generated values, such as the auto-incremented ID, set the
                 <code>shouldReturnGeneratedValues</code> parameter to <code>false</code>. This increases the
                 performance of batch inserts by batching them in chunks, instead of always waiting for the database to
-                synchronize the newly inserted object state.</p>
-            <p>If you want to check if <code>rewriteBatchedInserts</code> and <code>batchInsert</code> are working
+                synchronize the newly inserted object state.
+            </p>
+            <p>
+                If you want to check if <code>rewriteBatchedInserts</code> and <code>batchInsert</code> are working
                 correctly, you need to enable JDBC logging for your driver. This is necessary, as Exposed will always
                 show the non-rewritten multiple inserts. For more information, see
-                <a href="https://jdbc.postgresql.org/documentation/logging/">how to enable logging in
-                    PostgresSQL</a>.</p>
+                <a href="https://jdbc.postgresql.org/documentation/logging/">
+                    how to enable logging in PostgresSQL
+                </a>
+                .
+            </p>
         </chapter>
     </chapter>
     <chapter title="Read" id="read">
-        <chapter id="select">
-            <title><code>select</code></title>
+        <chapter title="Retrieve a record" id="select">
             <p>The
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/select.html">
-                    <code>select()</code>
+                    <code>.select()</code>
                 </a>
                 function allows you to select specific columns or/and expressions.</p>
             <code-block lang="kotlin"
@@ -144,7 +163,7 @@
                         include-symbol="filmAndDirector"/>
             <p>If you want to select only distinct value then use
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/with-distinct.html">
-                    <code>withDistinct()</code>
+                    <code>.withDistinct()</code>
                 </a>
                 function:</p>
             <code-block lang="kotlin"
@@ -153,96 +172,259 @@
             <p>Some SQL dialects, such as PostgreSQL and H2, also support the <code>DISTINCT ON</code> clause.
                 You can use this clause with the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/with-distinct-on.html">
-                    <code>withDistinctOn()</code>
+                    <code>.withDistinctOn()</code>
                 </a>
                 function:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
                         include-lines="45-53"/>
         </chapter>
-        <chapter id="selectAll">
-            <title><code>selectAll</code></title>
+        <chapter title="Retrieve all records" id="selectAll">
             <p>
-                To retrieve records from a table, use the
+                To retrieve all records from a table, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/select-all.html">
-                    <code>selectAll()</code>
+                    <code>.selectAll()</code>
                 </a>
                 method:
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
                         include-lines="99-100"/>
-            <p><code>Query</code> inherits <code>Iterable</code> so it is possible to traverse it using <code>map()</code>
-                or <code>forEach()</code>:
-                </p>
-
+            <p>
+                <code>Query</code> inherits <code>Iterable</code> so it is possible to traverse it using <code>.map()</code>
+                or <code>.forEach()</code>:
+            </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
                         include-lines="102-104"/>
         </chapter>
+        <chapter id="insertedCount" title="Retrieve the count of modified rows">
+            <p>Some databases return a count of the number of rows inserted, updated, or deleted by the CRUD operation.
+                For <code>.insert()</code>, <code>.upsert()</code>, and <code>.replace()</code>, this value can be accessed
+                using the statement class property <code>insertedCount</code>:</p>
 
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/ModifiedRowsExamples.kt"
+                        include-symbol="insertStatement, rowCount"
+            />
+        </chapter>
+        <chapter title="Return data from modified rows" id="returning-data-from-modified-rows">
+            <tldr>
+                <p>Supported on: PostgreSQL, SQLite, and MariaDB (insertions and deletions only)</p>
+            </tldr>
+            <p>
+                Some databases allow the return of additional data every time a row is either inserted, updated, or deleted.
+                This can be accomplished by using one of the following functions:
+            </p>
+            <list>
+                <li>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-returning.html">
+                        <code>.insertReturning()</code>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upsert-returning.html">
+                        <code>.upsertReturning()</code>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/update-returning.html">
+                        <code>.updateReturning()</code>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-returning.html">
+                        <code>.deleteReturning()</code>
+                    </a>
+                </li>
+            </list>
+            <p>
+                Each of them take a list of the required table columns
+                as an argument. If not provided, all table columns will be returned by default:
+            </p>
+
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/ModifiedRowsExamples.kt"
+                        include-symbol="createdProjects, updatedBudgets"
+            />
+            <note>
+                Unlike the base variants of these CRUD operations, a <code>ReturningStatement</code> behaves like a
+                <code>Query</code> by also extending <code>Iterable</code>,
+                so it will not be run by the database until the first attempt to iterate over its results.
+            </note>
+        </chapter>
     </chapter>
     <chapter title="Update" id="update">
+        <chapter title="Update a record" id="update-record">
+            <p>To update a record, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/update.html">
+                    <code>.update()</code>
+                </a>
+                function. By default, it returns the number of updated rows.
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateExamples.kt"
+                        include-symbol="updatedRowCount"
+            />
+            <p>To update a column value using an expression, such as an increment, you can use either the
+                <code>.update()</code> function or the <code>update</code> setter:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateExamples.kt"
+                        include-symbol="updatedRowsWithIncrement"
+            />
+        </chapter>
+        <chapter title="Insert or update" id="insert-or-update">
+            <p>
+                Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if
+                a duplicate constraint already exists.
+                The supported functionality of
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upsert.html">
+                    <code>.upsert()</code>
+                </a>
+                is dependent on the specific database being used.
+                For example, MySQL's <code>INSERT ... ON DUPLICATE KEY UPDATE</code> statement automatically assesses the
+                primary key and unique indices
+                for a duplicate value, so using the function in Exposed would look like this:
+            </p>
 
-        <p>To update a record, use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/update.html">
-                <code>update()</code>
-            </a>
-            function. By default, it returns the number of updated rows.
-        </p>
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateExamples.kt"
-                    include-symbol="updatedRowCount"
-        />
-        <p>To update a column value using an expression, such as an increment, use <code>update</code> function
-            or setter:</p>
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateExamples.kt"
-                    include-symbol="updatedRowsWithIncrement"
-        />
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
+                        include-lines="14-24"
+            />
+            <p>
+                If none of the optional arguments are provided to <code>.upsert()</code>, and an <code>onUpdate</code> block
+                is omitted, the statements in the <code>body</code> block will be used for both the insert and update parts
+                of the operation.
+                This means that, for example, if a table mapping has columns with default values and these columns are
+                omitted from the <code>body</code> block, the default values will be
+                used for insertion as well as for the update operation.
+            </p>
+            <note>
+                If the update operation should differ from the insert operation, then <code>onUpdate</code> should be
+                provided an argument to set the specific columns to update, as seen in the example below.
+                <p>
+                    If the update operation involves functions that should use the values that would have been inserted,
+                    then these columns should be marked using <code>insertValue()</code>, as seen in the example below.
+                </p>
+            </note>
+            <p>
+                Using another example, PostgreSQL allows more control over which key constraint columns to check for
+                conflict, whether different values should be used for an update, and whether the update statement
+                should have a <code>WHERE</code> clause:
+            </p>
+
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
+                        include-lines="28-46"
+            />
+            <p>If the update operation should be identical to the insert operation except for a few columns,
+                then <code>onUpdateExclude</code> should be provided as an argument with the specific columns to exclude.
+                This parameter could also be used for the reverse case when only a small subset of columns should be updated
+                but duplicating the insert values is tedious:</p>
+
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
+                        include-lines="50-64"
+            />
+            <p>If a specific database supports user-defined key columns and none are provided, the table's primary key is
+                used. If there
+                is no defined primary key, the first unique index is used. If there are no unique indices, each database
+                handles this case
+                differently, so it is strongly advised that keys are defined to avoid unexpected results.</p>
+            <note>
+                Databases that do not support a specific Insert or Update command implement the standard <code>MERGE INTO
+                ... USING</code> statement with aliases and a derived table column list.
+                These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode).
+                Any columns defined as key constraints (to be used in the <code>ON</code> clause) must be included in the
+                statement block to avoid throwing an error.
+            </note>
+        </chapter>
+
+        <chapter title="Replace" id="replace">
+            <tldr>
+                <p>Supported on: SQLite, MySQL, and MariaDB </p>
+            </tldr>
+            <p>
+                The
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/replace.html">
+                    <code>.replace()</code>
+                </a>
+                method acts in a similar manner to an <code>.upsert()</code>. The only difference is that
+                if an insertion would violate a unique constraint, the existing row is deleted before the new row is inserted.
+            </p>
+
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
+                        include-lines="26-39"
+            />
+            <p>Unlike <code>.upsert()</code>, none of the supporting databases allows a <code>WHERE</code> clause.
+                Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there
+                is no parameter for a custom key set.</p>
+            <p>The values specified in the statement block will be used for the insert statement, and any omitted columns
+                are set to their default values, if applicable.</p>
+            <p>
+                In the example above, if the original row was inserted with a user-defined <code>rating</code> and <code>.replace()</code>
+                was executed with a block that omitted the <code>rating</code> column,
+                the newly inserted row would store the default rating value. This is because the old row was completely
+                deleted first.
+            </p>
+            <p>The <code>REPLACE INTO ... SELECT </code> SQL clause can be used by instead providing a query to <code>.replace()</code>:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
+                        include-lines="43-46"
+            />
+            <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
+                are defined in the <code>Table</code> instance.
+                If the columns need to be specified or the order should be changed, provide a list of columns as the second
+                parameter:</p>
+            <code-block lang="kotlin"
+                        src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
+                        include-lines="50-62"
+            />
+        </chapter>
     </chapter>
     <chapter title="Delete" id="delete">
-        <chapter id="deleteWhere">
-            <title><code>deleteWhere</code></title>
+        <chapter title="Delete with a condition" id="deleteWhere">
             <p>To delete records and return the count of deleted rows, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-where.html">
-                    <code>deleteWhere</code>
+                    <code>.deleteWhere()</code>
                 </a>
-                function.</p>
-            <p>
-                Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
-                parameter lambda block will require inclusion of an import statement like <code>import org.jetbrains.exposed.sql.SqlExpressionBuilder.*</code>.
+                function.
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
                         include-symbol="deletedRowsCount"
             />
+            <p>
+                Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
+                parameter lambda block will require inclusion of an import statement:
+            </p>
+            <code-block lang="kotlin">
+                import org.jetbrains.exposed.sql.SqlExpressionBuilder.*
+            </code-block>
         </chapter>
-        <chapter id="deleteIgnoreWhere">
-            <title><code>deleteIgnoreWhere</code></title>
+        <chapter title="Delete and ignore" id="deleteIgnoreWhere">
             <tldr>
                 <p>Supported on: MySQL and MariaDB</p>
             </tldr>
-            <p>To delete records while ignoring any possible errors that occur during the process, use the
+            <p>
+                To delete records while ignoring any possible errors that occur during the process, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-ignore-where.html">
-                    <code>deleteIgnoreWhere</code>
+                    <code>.deleteIgnoreWhere()</code>
                 </a>
                 function. The function will return the count of deleted rows.
-            </p>
-            <p>
-                Any <code>SqlExpressionBuilder</code> comparison operators or extension functions used in the <code>op</code>
-                parameter lambda block will require inclusion of an import statement like <code>import org.jetbrains.exposed.sql.SqlExpressionBuilder.*</code>.
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/DeleteExamples.kt"
                         include-symbol="deleteIgnoreRowsCount"
             />
         </chapter>
-        <chapter id="deleteAll">
-            <title><code>deleteAll</code></title>
+        <chapter title="Delete all" id="deleteAll">
             <p>To delete all rows in a table and return the count of deleted rows, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-all.html">
-                    <code>deleteAll</code>
+                    <code>.deleteAll()</code>
                 </a>
                 function.</p>
             <code-block lang="kotlin"
@@ -250,11 +432,10 @@
                         include-symbol="allDeletedRowsCount"
             />
         </chapter>
-        <chapter id="join-delete">
-            <title>Join <code>delete</code></title>
+        <chapter title="Join delete" id="join-delete">
             <p>To delete records from a table in a join relation, use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete.html">
-                    <code>delete</code>
+                    <code>.delete()</code>
                 </a>
                 function with a
                 <code>Join</code> as its receiver. Provide the specific table from which records should be deleted as
@@ -273,177 +454,5 @@
         </chapter>
 
     </chapter>
-    <chapter title="Insert Or Update" id="insert-or-update">
-        <p>Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if
-            a duplicate constraint already exists.
-            The supported functionality of
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upsert.html">
-                <code>upsert()</code>
-            </a>
-            is dependent on the specific database being used.
-            For example, MySQL's <code>INSERT ... ON DUPLICATE KEY UPDATE</code> statement automatically assesses the
-            primary key and unique indices
-            for a duplicate value, so using the function in Exposed would look like this:</p>
 
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
-                    include-lines="14-24"
-        />
-        <p>If none of the optional arguments are provided to <code>upsert()</code>, and an <code>onUpdate()</code> block
-            is omitted, the statements in the <code>body</code> block will be used for both the insert and update parts
-            of the operation.
-            This means that, for example, if a table mapping has columns with default values and these columns are
-            omitted from the <code>body</code> block, the default values will be
-            used for insertion as well as for the update operation.</p>
-        <note>
-            If the update operation should differ from the insert operation, then <code>onUpdate()</code> should be
-            provided an argument to set the specific columns to update, as seen in the example below.
-            <p>If the update operation involves functions that should use the values that would have been inserted, then
-                these columns
-                should be marked using <code>insertValue()</code>, as seen in the example below.</p>
-        </note>
-        <p>Using another example, PostgreSQL allows more control over which key constraint columns to check for
-            conflict, whether different
-            values should be used for an update, and whether the update statement should have a <code>WHERE</code>
-            clause:</p>
-
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
-                    include-lines="28-46"
-        />
-        <p>If the update operation should be identical to the insert operation except for a few columns,
-            then <code>onUpdateExclude</code> should be provided as an argument with the specific columns to exclude.
-            This parameter could also be used for the reverse case when only a small subset of columns should be updated
-            but duplicating the insert values is tedious:</p>
-
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/UpdateOrInsertExamples.kt"
-                    include-lines="50-64"
-        />
-        <p>If a specific database supports user-defined key columns and none are provided, the table's primary key is
-            used. If there
-            is no defined primary key, the first unique index is used. If there are no unique indices, each database
-            handles this case
-            differently, so it is strongly advised that keys are defined to avoid unexpected results.</p>
-        <note>
-            Databases that do not support a specific Insert or Update command implement the standard <code>MERGE INTO
-            ... USING</code> statement with aliases and a derived table column list.
-            These include Oracle, SQL Server, and H2 compatibility modes (except for MySQL mode).
-            Any columns defined as key constraints (to be used in the <code>ON</code> clause) must be included in the
-            statement block to avoid throwing an error.
-        </note>
-    </chapter>
-    <chapter title="Insert From Select" id="insert-from-select">
-        <p>If you want to use the <code>INSERT INTO ... SELECT </code> SQL clause try the function <code>Table.insert(Query)</code>:
-        </p>
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/InsertSelectExamples.kt"
-                    include-symbol="substring, insertedRows"
-        />
-        <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
-            are defined in the <code>Table</code> instance. If you want to specify columns or change the
-            order, provide a list of columns as the second parameter:</p>
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/InsertSelectExamples.kt"
-                    include-symbol="userCount, insertedUsers"
-        />
-    </chapter>
-    <chapter title="Replace" id="replace">
-        <tldr>
-            <p>Supported on: SQLite, MySQL, and MariaDB </p>
-        </tldr>
-        <p>
-            The
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/replace.html">
-                <code>replace()</code>
-            </a>
-            method acts in a similar manner to an <code>upsert()</code>. The only difference is that
-            if an insertion would violate a unique constraint, the existing row is deleted before the new row is inserted.
-        </p>
-
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                    include-lines="26-39"
-        />
-        <p>Unlike <code>upsert()</code>, none of the supporting databases allows a <code>WHERE</code> clause.
-            Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there
-            is no parameter for a custom key set.</p>
-        <p>The values specified in the statement block will be used for the insert statement, and any omitted columns
-            are set to their default values, if applicable.</p>
-        <p>
-            In the example above, if the original row was inserted with a user-defined <code>rating</code> and <code>replace()</code>
-            was executed with a block that omitted the <code>rating</code> column,
-            the newly inserted row would store the default rating value. This is because the old row was completely
-            deleted first.
-        </p>
-        <p>The <code>REPLACE INTO ... SELECT </code> SQL clause can be used by instead providing a query to <code>replace()</code>:
-        </p>
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                    include-lines="43-46"
-        />
-        <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
-            are defined in the <code>Table</code> instance.
-            If the columns need to be specified or the order should be changed, provide a list of columns as the second
-            parameter:</p>
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                    include-lines="50-62"
-        />
-    </chapter>
-    <chapter id="insertedCount" title="Retrieve the count of modified rows">
-        <p>Some databases return a count of the number of rows inserted, updated, or deleted by the CRUD operation.
-            For <code>insert</code>, <code>upsert</code>, and <code>replace</code>, this value can be accessed
-            using the statement class property <code>insertedCount</code>:</p>
-
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/ModifiedRowsExamples.kt"
-                    include-symbol="insertStatement, rowCount"
-        />
-    </chapter>
-    <chapter title="Return data from modified rows" id="returning-data-from-modified-rows">
-        <tldr>
-            <p>Supported on: PostgreSQL and SQLite</p>
-        </tldr>
-        <p>Some databases allow the return of additional data every time a row is either inserted, updated, or deleted.
-            Please note that MariaDB only allows the return of this data for insertions and deletions.
-            This can be accomplished by using one of the following functions:
-        </p>
-        <list>
-            <li>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-returning.html">
-                    <code>insertReturning()</code>
-                </a>
-            </li>
-            <li>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upsert-returning.html">
-                    <code>upsertReturning()</code>
-                </a>
-            </li>
-            <li>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/update-returning.html">
-                    <code>updateReturning()</code>
-                </a>
-            </li>
-            <li>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-returning.html">
-                    <code>deleteReturning()</code>
-                </a>
-            </li>
-        </list>
-        <p>
-            Each of them take a list of the required table columns
-            as an argument. If not provided, all table columns will be returned by default:
-        </p>
-
-        <code-block lang="kotlin"
-                    src="exposed-dsl/src/main/kotlin/org/example/examples/ModifiedRowsExamples.kt"
-                    include-symbol="createdProjects, updatedBudgets"
-        />
-        <note>
-            Unlike the base variants of these CRUD operations, a <code>ReturningStatement</code> behaves like a
-            <code>Query</code> by also extending <code>Iterable</code>,
-            so it will not be run by the database until the first attempt to iterate over its results.
-        </note>
-    </chapter>
 </topic>

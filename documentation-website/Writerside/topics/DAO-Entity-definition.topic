@@ -11,11 +11,11 @@
         database records just like regular Kotlin objects, taking full advantage of Kotlin's language features.
     </p>
     <p>
-        When using the DAO approach, <code>IdTable</code> needs to be associated with an <code>Entity</code>,
-        because every database record
-        in this table needs to be mapped to an <code>Entity</code> instance, identified by its primary key.
+        When you use the Data Access Object (DAO) approach, the <code>IdTable</code> needs to be associated with an
+        <code>Entity</code>. This is because every database record in this table needs to be mapped to an
+        <code>Entity</code> instance, identified by its primary key.
     </p>
-    <chapter id="defining-entity-class" title="Defining an Entity class">
+    <chapter id="defining-entity-class" title="Defining an Entity">
         <p>
             You define an entity instance by creating a class.
             In the following example, <code>StarWarsFilmEntity</code> is the entity class linked to the table
@@ -34,7 +34,7 @@
                 The entity type determines how the <code>Entity</code> class interacts with the table’s primary key.
                 Since <code>StarWarsFilmsTable</code> is an <code>IntIdTable</code>, the <code>StarWarsFilmsEntity</code>
                 class extends from <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-int-entity/index.html"><code>IntEntity</code></a>,
-                which indicates that the <code>id</code> and primary key of <code>StarWarsFilmsTable</code> is of type
+                which indicates that the ID and primary key of <code>StarWarsFilmsTable</code> is of type
                 <code>Int</code>.
             </p>
             <p>
@@ -48,7 +48,7 @@
                         </a>
                     </title>
                     <p>
-                        Base class for an entity instance identified by an id comprised of a wrapped <code>Int</code>
+                        Base class for an entity instance identified by an ID comprised of a wrapped <code>Int</code>
                         value.
                     </p>
                 </def>
@@ -59,7 +59,7 @@
                         </a>
                     </title>
                     <p>
-                        Base class for an entity instance identified by an id comprised of a wrapped <code>Long</code>
+                        Base class for an entity instance identified by an ID comprised of a wrapped <code>Long</code>
                         value.
                     </p>
                 </def>
@@ -70,7 +70,7 @@
                         </a>
                     </title>
                     <p>
-                        Base class for an entity instance identified by an id comprised of a wrapped <code>UInt</code>
+                        Base class for an entity instance identified by an ID comprised of a wrapped <code>UInt</code>
                         value.
                     </p>
                 </def>
@@ -81,7 +81,7 @@
                         </a>
                     </title>
                     <p>
-                        Base class for an entity instance identified by an id comprised of a wrapped <code>ULong</code>
+                        Base class for an entity instance identified by an ID comprised of a wrapped <code>ULong</code>
                         value.
                     </p>
                 </def>
@@ -92,7 +92,7 @@
                         </a>
                     </title>
                     <p>
-                        Base class for an entity instance identified by an id comprised of a wrapped <code>UUID</code>
+                        Base class for an entity instance identified by an ID comprised of a wrapped <code>UUID</code>
                         value.
                     </p>
                 </def>
@@ -103,12 +103,12 @@
                         </a>
                     </title>
                     <p>
-                        Base class for an entity instance identified by an id comprised of multiple wrapped values.
+                        Base class for an entity instance identified by an ID comprised of multiple wrapped values.
                     </p>
                 </def>
             </deflist>
         </chapter>
-        <chapter id="EntityClass" title="EntityClass">
+        <chapter title="Entity class" id="EntityClass">
             <p>
                 The <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-entity-class/index.html"><code>EntityClass</code></a>
                 in the <code>companion object</code> block is responsible for managing <code>Entity</code> instances,
@@ -120,7 +120,7 @@
                 parameters:</p>
             <deflist type="medium">
                 <def title="table" id="table-param">
-                    The <code>IdTable</code> containing rows mapped to entities managed by this class.
+                    The <code>IdTable</code> containing rows mapped to entities that are managed by this class.
                 </def>
                 <def title="entityType" id="entityType-param">
                     (Optional) The expected type of the <code>Entity</code> class. This can be omitted if it is the
@@ -151,7 +151,7 @@
         </chapter>
         <p>
             Once the entity class is defined, instances of this class allow you to manipulate individual records
-            from the corresponding table. This could involve
+            from the corresponding table. For example, by
             <a href="DAO-CRUD-Operations.topic" anchor="create">creating a new record</a>,
             <a href="DAO-CRUD-Operations.topic" anchor="read">retrieving a row based on its primary key</a>,
             <a href="DAO-CRUD-Operations.topic" anchor="update">updating values</a>, or
@@ -185,8 +185,8 @@
             <li>
                 The primary function of the entity class in this context is to query data from the associated table,
                 not to modify it. Therefore, inserts can only be performed using the
-                DSL <a href="DSL-CRUD-operations.topic" anchor="insert"><code>insert()</code></a> method and updates
-                can be done either through the DSL <a href="DSL-CRUD-operations.topic" anchor="update"><code>update()</code></a>
+                DSL <a href="DSL-CRUD-operations.topic" anchor="insert"><code>.insert()</code></a> method and updates
+                can be done either through the DSL <a href="DSL-CRUD-operations.topic" anchor="update"><code>.update()</code></a>
                 or the <a href="%BASE_API_URL%/exposed-dao/org.jetbrains.exposed.dao/-immutable-entity-class/force-update-entity.html">
                 <code>ImmutableEntityClass.forceUpdateEntity()</code></a> methods.
             </li>
@@ -202,33 +202,37 @@
         </p>
         <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/UserEntityWithOverride.kt"/>
         <p>
-            In this example, a custom message is printed before the <code>delete()</code> function of the superclass
+            In this example, a custom message is printed before the <code>.delete()</code> function of the superclass
             (<code>IntEntity</code>) completes the deletion.
         </p>
     </chapter>
     <chapter title="Field transformations" id="field-transformations">
         <p>
             As databases typically store only basic types, such as integers and strings, it's not always convenient to keep
-            the same simplicity on Data Access Object (DAO) level.
+            the same simplicity on DAO level.
         </p>
         <p>
             For example, you might need to parse JSON from a <code>VARCHAR</code> column, or retrieve values from a cache
             based on data from the database.
-            In such cases, the preferred approach is to use column transformations.
+            In such cases, we recommend to use column transformations.
         </p>
         <chapter title="Example: Defining an Unsigned Integer field" id="defining-unsigned-int-field">
             <p>
-                Suppose that you want to define an unsigned integer field on an entity, but Exposed doesn't have such
+                Suppose that you want to define an unsigned integer field on an entity, but Exposed doesn't have such a
                 column type yet. You can achieve this by using the following implementation:
             </p>
             <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/EntityWithUInt.kt"/>
             <p>
-                The <code>transform</code> function accept two lambdas that convert values to and from the original column type.
+                The
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/transform.html">
+                    <code>.transform()</code>
+                </a>
+                function accepts two lambdas that convert values to and from the original column type.
                 In this case, you make sure to store only <code>UInt</code> instances in the <code>uint</code> field.
             </p>
             <p>
-                Although it is still possible to insert or update values with negative integers via DAO, this approach assures
-                a cleaner business logic.
+                Although it is still possible to insert or update values with negative integers via DAO, this approach
+                assures a cleaner business logic.
             </p>
         </chapter>
 
@@ -236,7 +240,11 @@
         <chapter title="Memoized transformations" id="memoized-transformations">
             <p>
                 If your transformation function involves complex operations that impact performance,
-                you can use <code>memoizedTransform</code> to cache the result of the transformation.
+                you can use
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/memoized-transform.html">
+                    <code>.memoizedTransform()</code>
+                </a>
+                to cache the result of the transformation.
             </p>
 
             <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/EntityWithBase64.kt"/>

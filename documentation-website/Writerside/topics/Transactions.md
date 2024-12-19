@@ -3,7 +3,9 @@
 # Working with Transactions
 
 CRUD operations in Exposed must be called from within a _transaction._ Transactions encapsulate a set of DSL operations.
-To create and execute a transaction with default parameters, simply pass a function block to the `transaction` function:
+To create and execute a transaction with default parameters, simply pass a function block to the
+[`transaction()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.transactions/transaction.html)
+function:
 
 ```kotlin
 transaction {
@@ -12,11 +14,11 @@ transaction {
 ```
 
 Transactions are executed synchronously on the current thread, so they _will block_ other parts of your application! If
-you need to execute a transaction asynchronously, consider running it on a separate `Thread`.
+you need to execute a transaction asynchronously, consider running it on a separate thread.
 
 ## Accessing returned values
 
-Although you can modify variables from your code within the transaction block, `transaction` supports returning a value
+Although you can modify variables from your code within the transaction block, `transaction()` supports returning a value
 directly, enabling immutability:
 
 ```kotlin
@@ -53,7 +55,7 @@ val documentsWithContent = transaction {
 
 
 If you want to work with different databases, you have to store the database reference returned by `Database.connect()` and provide it
-to `transaction` function as the first parameter. The `transaction` block without parameters will work with the latest connected database.
+to `transaction()` function as the first parameter. The `transaction()` block without parameters will work with the latest connected database.
 
 ```kotlin
 val db1 = connect("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;", "org.h2.Driver", "root", "")
@@ -73,7 +75,7 @@ changes persist to the same database and what cross-database references are proh
 
 ## Setting default database
 
-`transaction` block without parameters will use the default database.
+A `transaction()` block without parameters will use the default database.
 As before 0.10.1 this will be the latest _connected_ database.
 It is also possible to set the default database explicitly.
 
@@ -84,7 +86,7 @@ TransactionManager.defaultDatabase = db
 
 ## Using nested transactions
 
-By default, a nested `transaction` block shares the transaction resources of its parent `transaction` block, so any
+By default, a nested `transaction()` block shares the transaction resources of its parent `transaction()` block, so any
 effect on the child affects the parent:
 
 ```kotlin
@@ -111,9 +113,9 @@ transaction {
 Since Exposed 0.16.1 it is possible to use nested transactions as separate transactions by
 setting `useNestedTransactions = true` on the desired `Database` instance.
 
-After that any exception or rollback operation that happens within a `transaction` block will not roll back the whole
-transaction but only the code inside the current `transaction`.
-Exposed uses SQL `SAVEPOINT` functionality to mark the current transaction at the beginning of a `transaction` block and
+After that any exception or rollback operation that happens within a transaction block will not roll back the whole
+transaction but only the code inside the current transaction.
+Exposed uses SQL `SAVEPOINT` functionality to mark the current transaction at the beginning of a `transaction()` block and
 release it on exit.
 
 Using `SAVEPOINT` could affect performance, so please read the documentation of the DBMS you use for more details.
@@ -156,7 +158,9 @@ Exposed stores some values in thread-local variables while coroutines could (and
 
 Starting from Exposed 0.15.1,
 bridge functions are available that give you a safe way to interact with Exposed within `suspend`
-blocks: `newSuspendedTransaction()` and `Transaction.withSuspendTransaction()`.
+blocks:
+[`newSuspendedTransaction()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.transactions.experimental/new-suspended-transaction.html)
+and [`Transaction.withSuspendTransaction()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.transactions.experimental/with-suspend-transaction.html).
 These have the same parameters as a
 blocking `transaction()` but allow you to provide a `CoroutineContext` argument that explicitly specifies
 the `CoroutineDispatcher` in which the function will be executed.
@@ -202,8 +206,8 @@ transaction {
 Please note that such code remains blocking (as it still uses JDBC) and you should not try to share a transaction
 between multiple threads as it may lead to undefined behavior.
 
-If you desire to execute some code asynchronously and use the result later, take a look
-at `suspendedTransactionAsync()`:
+If you desire to execute some code asynchronously and use the result later, take a look at
+[`suspendedTransactionAsync()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.transactions.experimental/suspended-transaction-async.html):
 
 ```kotlin
 runBlocking {
@@ -272,7 +276,9 @@ settled ([see the section above](#working-with-multiple-databases)).
 
 Transactions also provide a property, `maxAttempts`, which sets the maximum number of attempts that should be made to perform a transaction block.
 If this value is set to 1 and an SQLException occurs inside the transaction block, the exception will be thrown without performing a retry.
-If this property is not set, any default value provided in `DatabaseConfig` will be used instead:
+If this property is not set, any default value provided in
+[`DatabaseConfig`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-database-config/index.html)
+will be used instead:
 
 ```kotlin
 val db = Database.connect(
@@ -316,16 +322,16 @@ transaction {
 
 DSL operations within a transaction create SQL statements, on which commands like *Execute*, *Commit*, and *Rollback*
 are issued. Exposed provides
-the `StatementInterceptor` [interface](https://github.com/JetBrains/Exposed/blob/main/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/statements/StatementInterceptor.kt)
-that allows you to implement your own logic before and after these specific steps in a statement's lifecycle.
+the [`StatementInterceptor`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.statements/-statement-interceptor/index.html)
+interface that allows you to implement your own logic before and after these specific steps in a statement's lifecycle.
 
 `registerInterceptor()` and `unregisterInterceptor()` can be used to enable and disable a custom interceptor in a single
 transaction.
 
-To use a custom interceptor that acts on all transactions, extend the `GlobalStatementInterceptor` class instead.
-Exposed uses the Java SPI ServiceLoader to discover and load any implementations of this class. In this situation, a new
-file should be created in the *resources* folder
-named:
+To use a custom interceptor that acts on all transactions, implement the
+[`GlobalStatementInterceptor`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.statements/-global-statement-interceptor/index.html)
+interface instead. Exposed uses the Java SPI ServiceLoader to discover and load any implementations of this interface.
+In this situation, a new file should be created in the *resources* folder named:
 ```
 META-INF/services/org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
 ```

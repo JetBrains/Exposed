@@ -2,7 +2,7 @@
 
 # Working with DataSources
 
-It is also possible to provide a `javax.sql.DataSource` to the `Database.connect` function. This allows you to use more advanced features like
+It is also possible to provide a `javax.sql.DataSource` to the `Database.connect()` function. This allows you to use more advanced features like
 connection pooling, and lets you set configuration options like maximum number of connections, connection timeouts, etc.
 
 ```kotlin

@@ -152,7 +152,11 @@
     </chapter>
         <chapter title="Range conditions" id="range-conditions">
             <p>
-                To check if a value lies within a specified range, use the <code>between()</code> function.
+                To check if a value lies within a specified range, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/between.html">
+                    <code>.between()</code>
+                </a>
+                function.
             </p>
             <p>
                 It checks if an expression is between the values from and to. Returns <code>true</code> if the
@@ -195,7 +199,15 @@
                 <code-block lang="kotlin"
                             src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
                             include-symbol="anyFromArray"/>
-                <p><code>anyFrom()</code> and <code>allFrom()</code> also accept subqueries, tables, and array expressions
+                <p>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/any-from.html">
+                        <code>anyFrom()</code>
+                    </a>
+                    and
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/all-from.html">
+                        <code>allFrom()</code>
+                    </a>
+                    also accept subqueries, tables, and array expressions
                     as arguments.</p>
             </chapter>
 
@@ -203,13 +215,18 @@
     </chapter>
     <chapter id="conditional-where">
         <title>Conditional <code>WHERE</code></title>
-        <p>When working with SQL databases, it is a rather common case to have a query with a <code>WHERE</code> clause
+        <p>
+            When working with SQL databases, it is a rather common case to have a query with a <code>WHERE</code> clause
             that depends on certain conditions. These conditions often come from application logic or user input.
             Managing such conditions can become complex, especially with independent or nested conditions.
         </p>
         <p>
             Imagine a form on a website where a user can optionally filter "Star Wars" films by a director and/or a
-            sequel. To construct such a query, you can use the <code>andWhere</code> function:
+            sequel. To construct such a query, you can use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/and-where.html">
+                <code>.andWhere()</code>
+            </a>
+            function:
         </p>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
@@ -229,11 +246,11 @@
             <p>
                 In these cases, you can use the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/adjust-column-set.html">
-                    <code>adjustColumnSet</code>
+                    <code>.adjustColumnSet()</code>
                 </a>
                 and
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/adjust-select.html">
-                    <code>adjustSelect</code>
+                    <code>.adjustSelect()</code>
                 </a> functions,
                 which allow to extend and modify <code>JOIN</code> and <code>SELECT</code> parts of a query:
             </p>
@@ -245,7 +262,11 @@
     <chapter title="Aggregating and sorting data" id="aggregate-and-sort">
         <chapter title="Count" id="count">
             <p>
-                The <code>count()</code> method is used to determine the number of rows matching a query.
+                The
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/count.html">
+                    <code>.count()</code>
+                </a>
+                method is used to determine the number of rows matching a query.
                 It is called on a <code>Query</code> object and returns the total count of rows.
             </p>
             <p>
@@ -257,7 +278,11 @@
         </chapter>
         <chapter title="Order by" id="order-by">
             <p>
-                The <code>orderBy()</code> function allows you to sort query results by specifying a list of
+                The
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-abstract-query/order-by.html">
+                    <code>.orderBy()</code>
+                </a>
+                function allows you to sort query results by specifying a list of
                 columns and their sort order (ascending or descending).
             </p>
             <p>
@@ -269,17 +294,34 @@
                         include-symbol="sortedFilms"/>
         </chapter>
         <chapter title="Group by" id="group-by">
-            <p>In <code>groupBy</code>, define fields and their functions by the <code>select()</code>
-                method.</p>
+            <p>
+                In
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/group-by.html">
+                    <code>.groupBy()</code>
+                </a>
+                , define fields and their functions by the <code>.select()</code>
+                method.
+            </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
                         include-symbol="groupedFilms"/>
-            <p>Available field functions are: <code>count</code>, <code>sum</code>, <code>average</code>, <code>min</code>
-                and <code>max</code>.</p>
+            <p>
+                Available field functions are: <code>.count()</code>, <code>.sum()</code>, <code>.average()</code>,
+                <code>.min()</code>
+                and <code>.max()</code>.
+            </p>
         </chapter>
     </chapter>
     <chapter title="Limiting result sets" id="limit-result-sets">
-        <p>You can use the <code>limit</code> function to prevent loading large data sets or to accomplish pagination by using the <code>offset</code>
+        <p>
+            You can use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-abstract-query/limit.html">
+                <code>.limit()</code>
+            </a>
+            function to prevent loading large data sets or to accomplish pagination by using the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-abstract-query/offset.html">
+                <code>.offset()</code>
+            </a>
             function.
         </p>
         <code-block lang="kotlin"
@@ -287,12 +329,20 @@
                     include-symbol="limitedFilms"/>
     </chapter>
     <chapter title="Mapping fields with alias" id="alias">
-        <p>Aliases allow preventing ambiguity between field names and table names.
-            Use the aliased var instead of original one:</p>
+        <p>
+            Aliases allow preventing ambiguity between field names and table names.
+            To use the aliased <code>var</code> instead of the original one, use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/alias.html">
+                <code>.alias()</code>
+            </a>
+            function:
+        </p>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/AliasExamples.kt"
                     include-symbol="filmTable1, allFilms"/>
-        <p>Also, aliases allow you to use the same table in a join multiple times:</p>
+        <p>
+            Aliases also allow you to use the same table in a join multiple times:
+        </p>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/AliasExamples.kt"
                     include-symbol="sequelTable, originalAndSequelNames"/>
@@ -302,15 +352,24 @@
                     include-symbol="starWarsFilms, id, name, allStarWarsFilms"/>
     </chapter>
     <chapter title="Custom Select Queries" id="custom-select-queries">
-        <p>A <code>Query</code> instance, which can be instantiated by calling <code>selectAll()</code> or <code>select()</code>
+        <p>
+            A
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/index.html">
+                <code>Query</code>
+            </a>
+            instance, which can be instantiated by calling <code>.selectAll()</code> or <code>.select()</code>
             on a <code>Table</code> or <code>Join</code>, has many extension functions for building complex queries.
-            Some of these have already been mentioned above, like <a anchor="where-expression">where()</a>, <a
-                 anchor="group-by">groupBy()</a>, and <a anchor="order-by">orderBy()</a>.
+            Some of these have already been mentioned above, like <a anchor="where-expression">.where()</a>, <a
+                 anchor="group-by">.groupBy()</a>, and <a anchor="order-by">.orderBy()</a>.
         </p>
-        <p>If a <code>SELECT</code> query with a special clause is required, a custom extension function can be
-            implemented to enable its use with other standard queries.</p>
-        <p>For example, MySQL index hints, which follow the table name in SQL, can be implemented on a
-            <code>SELECT</code> query by using the following custom function and class:</p>
+        <p>
+            If a <code>SELECT</code> query with a special clause is required, a custom extension function can be
+            implemented to enable its use with other standard queries.
+        </p>
+        <p>
+            For example, MySQL index hints, which follow the table name in SQL, can be implemented on a
+            <code>SELECT</code> query by using the following custom function and class:
+        </p>
         <code-block lang="kotlin"
                     src="exposed-dsl/src/main/kotlin/org/example/examples/CustomSelectExamples.kt"
                     include-lines="4-6,9,18-39"/>

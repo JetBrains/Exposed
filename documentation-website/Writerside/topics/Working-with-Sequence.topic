@@ -8,12 +8,17 @@
     <p>A sequence is a database object that automatically generates integer values in sequential order. It is particularly
         useful in generating unique identifiers and primary keys.</p>
     <chapter title="Define a sequence" id="define-a-sequence">
-        To define a sequence in Exposed, use the <code>Sequence</code> class:
+        To define a sequence in Exposed, use the
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-sequence/index.html">
+            <code>Sequence</code>
+        </a>
+        class:
         <code-block lang="Kotlin">
             val myseq = Sequence("my_sequence") // my_sequence is the sequence name.
         </code-block>
-        <p>Several parameters can be specified to control the properties of the sequence:</p>
-
+        <p>
+            Several parameters can be specified to control the properties of the sequence:
+        </p>
         <code-block lang="Kotlin">
             private val myseq = Sequence(
                 name = &quot;my_sequence&quot;,
@@ -27,20 +32,41 @@
         </code-block>
     </chapter>
     <chapter title="Create a sequence" id="create-a-sequence">
-        To create a sequence, use the <code>createSequence()</code> method provided by <code>SchemaUtils</code>:
+        To create a sequence, use the
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/create-sequence.html">
+            <code>.createSequence()</code>
+        </a>
+        method provided by
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/index.html">
+            <code>SchemaUtils</code>
+        </a>
+        :
         <code-block lang="Kotlin">
             SchemaUtils.createSequence(myseq)
         </code-block>
     </chapter>
     <chapter title="Drop a sequence" id="drop-a-sequence">
-        To drop a sequence, use the <code>dropSequence()</code> method provided by <code>SchemaUtils</code>:
+        To drop a sequence, use the
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/drop-sequence.html">
+            <code>.dropSequence()</code>
+        </a>
+        method provided by
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/index.html">
+            <code>SchemaUtils</code>
+        </a>
+        :
         <code-block lang="Kotlin">
             SchemaUtils.dropSequence(myseq)
         </code-block>
     </chapter>
     <chapter title="Access the next value" id="access-next-value">
-        <p>You can access the next value in a sequence by using the <code>nextIntVal()</code> function:</p>
-
+        <p>
+            You can access the next value in a sequence by using the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/next-int-val.html">
+                <code>.nextIntVal()</code>
+            </a>
+            function:
+        </p>
         <code-block lang="Kotlin">
             val nextVal = myseq.nextIntVal()
             val id = StarWarsFilms.insertAndGetId {

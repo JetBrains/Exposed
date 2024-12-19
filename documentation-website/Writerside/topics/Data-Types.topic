@@ -6,44 +6,119 @@
 
     <show-structure for="chapter,procedure" depth="3"/>
     <p>Exposed supports the following data types in the table definition:</p>
-    <list>
-        <li><code>integer</code> - translates to DB <code>INT</code></li>
-        <li><code>short</code> - translates to DB <code>SMALLINT</code></li>
-        <li><code>long</code> - <code>BIGINT</code></li>
-        <li><code>float</code> - <code>FLOAT</code></li>
-        <li><code>decimal</code> - <code>DECIMAL</code> with scale and precision</li>
-        <li><code>bool</code> - <code>BOOLEAN</code></li>
-        <li><code>char</code> - <code>CHAR</code></li>
-        <li><code>varchar</code> - <code>VARCHAR</code> with length</li>
-        <li><code>text</code> - <code>TEXT</code></li>
-        <li><code>enumeration</code> - <code>INT</code> ordinal value</li>
-        <li><code>enumerationByName</code> - <code>VARCHAR</code></li>
-        <li><code>customEnumeration</code> - see <a anchor="how-to-use-database-enum-types">additional section</a></li>
-        <li><code>blob</code> - <code>BLOB</code></li>
-        <li><code>binary</code> - <code>VARBINARY</code> with length</li>
-        <li><code>uuid</code> - <code>BINARY(16)</code></li>
-        <li><code>reference</code> - a foreign key</li>
-        <li><code>array</code> - <code>ARRAY</code></li>
-    </list>
+    <deflist type="medium">
+        <def id="integer-type">
+            <title><code>integer</code></title>
+            Translates to a database <code>INT</code>
+        </def>
+        <def id="short-type">
+            <title><code>short</code></title>
+            Translates to DB <code>SMALLINT</code>
+        </def>
+        <def id="long-type">
+            <title><code>long</code></title>
+            <code>BIGINT</code>
+        </def>
+        <def id="float-type">
+            <title><code>float</code></title>
+            <code>FLOAT</code>
+        </def>
+        <def id="decimal-type">
+            <title><code>decimal</code></title>
+            <code>DECIMAL</code> with scale and precision
+        </def>
+        <def id="bool-type">
+            <title><code>bool</code></title>
+            <code>BOOLEAN</code>
+        </def>
+        <def id="char-type">
+            <title><code>char</code></title>
+            <code>CHAR</code>
+        </def>
+        <def id="varchar-type">
+            <title><code>varchar</code></title>
+            <code>VARCHAR</code> with length
+        </def>
+        <def id="text-type">
+            <title><code>text</code></title>
+            <code>TEXT</code>
+        </def>
+        <def id="enumeration-type">
+            <title><code>enumeration</code></title>
+            <code>INT</code> ordinal value
+        </def>
+        <def id="enumerationByName-type">
+            <title><code>enumerationByName</code></title>
+            <code>VARCHAR</code>
+        </def>
+        <def id="customEnumeration-type">
+            <title><code>customEnumeration</code></title>
+            See <a anchor="how-to-use-database-enum-types">additional section</a>
+        </def>
+        <def id="blob-type">
+            <title><code>blob</code></title>
+            <code>BLOB</code>
+        </def>
+        <def id="binary-type">
+            <title><code>binary</code></title>
+            <code>VARBINARY</code> with length
+        </def>
+        <def id="uuid-type">
+            <title><code>uuid</code></title>
+            <code>BINARY(16)</code>
+        </def>
+        <def id="reference-type">
+            <title><code>reference</code></title>
+            A foreign key
+        </def>
+        <def id="array-type">
+            <title><code>array</code></title>
+            <code>ARRAY</code>
+        </def>
+    </deflist>
     <p>The <code>exposed-java-time</code> extension
         (<code>org.jetbrains.exposed:exposed-java-time:$exposed_version</code>) provides additional types:</p>
-    <list>
-        <li><code>date</code> - <code>DATETIME</code></li>
-        <li><code>time</code> - <code>TIME</code></li>
-        <li><code>datetime</code> - <code>DATETIME</code></li>
-        <li><code>timestamp</code> - <code>TIMESTAMP</code></li>
-        <li><code>duration</code> - <code>DURATION</code></li>
-    </list>
+    <deflist type="medium">
+        <def id="date-type">
+            <title><code>date</code></title>
+            <code>DATETIME</code>
+        </def>
+        <def id="time-type">
+            <title><code>time</code></title>
+            <code>TIME</code>
+        </def>
+        <def id="datetime-type">
+            <title><code>datetime</code></title>
+            <code>DATETIME</code>
+        </def>
+        <def id="timestamp-type">
+            <title><code>timestamp</code></title>
+            <code>TIMESTAMP</code>
+        </def>
+        <def id="duration-type">
+            <title><code>duration</code></title>
+            <code>DURATION</code>
+        </def>
+    </deflist>
     <note>
-        Some types are different for specific DB dialect.
+        Some types may differ for specific database dialects.
     </note>
-    <p>The <code>exposed-json</code> extension (<code>org.jetbrains.exposed:exposed-json:$exposed_version</code>)
-        provides additional types
-        (see <a anchor="how-to-use-json-and-jsonb-types">how to use</a>):</p>
-    <list>
-        <li><code>json</code> - <code>JSON</code></li>
-        <li><code>jsonb</code> - <code>JSONB</code></li>
-    </list>
+    <p>
+        The <code>exposed-json</code> extension (<code>org.jetbrains.exposed:exposed-json:$exposed_version</code>)
+        provides the following additional types. For more information, see
+        <a anchor="how-to-use-json-and-jsonb-types" />
+        :
+    </p>
+    <deflist type="medium">
+        <def id="json-type">
+            <title><code>json</code></title>
+            <code>JSON</code>
+        </def>
+        <def id="jsonb-type">
+            <title><code>jsonb</code></title>
+            <code>JSONB</code>
+        </def>
+    </deflist>
     <note>
         Databases store JSON values either in text or binary format, so Exposed provides two types to account for any
         potential
@@ -69,28 +144,40 @@
             </li>
         </list>
     </note>
-    <chapter title="How to use database ENUM types" id="how-to-use-database-enum-types">
-        <p>Some of the databases (e.g. MySQL, PostgreSQL, H2) support explicit ENUM types. Because keeping such columns
-            in sync with
-            Kotlin enumerations using only JDBC metadata could be a huge challenge, Exposed doesn't provide a
-            possibility to manage
-            such columns in an automatic way, but that doesn't mean that you can't use such column types.</p>
-        <p>You have two options to work with ENUM database types and you should use <code>customEnumeration()</code>
-            (available since version 0.10.3) in both cases:</p>
+    <chapter title="How to use database enum types" id="how-to-use-database-enum-types">
+        <p>
+            Some databases (e.g. MySQL, PostgreSQL, H2) support explicit enum types. Because keeping such columns
+            in sync with Kotlin enumerations using only JDBC metadata could be a huge challenge, Exposed doesn't
+            provide a possibility to manage such columns in an automatic way, but that doesn't mean that you can't
+            use such column types.
+        </p>
+        <p>
+            To work with enum database types, use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/custom-enumeration.html">
+                <code>.customEnumeration()</code>
+            </a>
+            function in one of the following ways:
+        </p>
         <list type="decimal">
-            <li>Use an existing ENUM column from your table. In this case, the <code>sql</code> parameter in <code>customEnumeration()</code>
+            <li>
+                Use an existing enum column from your table.
+                In this case, the <code>sql</code> parameter in <code>.customEnumeration()</code>
                 can be left as <code>null</code>.
             </li>
-            <li>Create a new ENUM column using Exposed by providing the raw definition SQL to the <code>sql</code>
-                parameter in <code>customEnumeration()</code>.
+            <li>
+                Create a new ENUM column using Exposed by providing the raw definition SQL to the <code>sql</code>
+                parameter in <code>.customEnumeration()</code>.
             </li>
         </list>
-        <p>As a JDBC driver can provide/expect specific classes for ENUM types, you must also provide from/to
-            transformation functions for
-            them when defining a <code>customEnumeration</code>.</p>
-        <p>For a class like <code>enum class Foo { BAR, BAZ }</code>, you can use the provided code below for your
-            specific database:</p>
-        <chapter title="MySQL, H2" id="mysql-h2">
+        <p>
+            As a JDBC driver can provide/expect specific classes for enum types, you must also provide from/to
+            transformation functions for them when defining a custom enumeration.
+        </p>
+        <p>
+            For a class like <code>enum class Foo { BAR, BAZ }</code>, you can use the following code for your
+            specific database:
+        </p>
+        <chapter title="MySQL and H2" id="mysql-h2">
 
             <code-block lang="Kotlin">
                 val existingEnumColumn = customEnumeration("enumColumn", { value -> Foo.valueOf(value as String) }, { it.name })
@@ -98,7 +185,7 @@
             </code-block>
         </chapter>
         <chapter title="PostgreSQL" id="postgresql">
-            <p>PostgreSQL requires that ENUM is defined as a separate type, so you have to create it before creating
+            <p>PostgreSQL requires that enum is defined as a separate type, so you have to create it before creating
                 your table.
                 Also, the PostgreSQL JDBC driver returns <code>PGobject</code> instances for such values, so a <code>PGobject</code>
                 with its type manually set to the ENUM type needs to be used for the <code>toDb</code> parameter.
@@ -124,8 +211,11 @@
         </chapter>
     </chapter>
     <chapter title="How to use Json and JsonB types" id="how-to-use-json-and-jsonb-types">
-        <p>Add the following dependencies to your <code>build.gradle.kts</code>:</p>
-
+        <p>
+            Add the following dependencies to your
+            <path>build.gradle.kts</path>
+            :
+        </p>
         <code-block lang="kotlin">
             val exposedVersion: String by project
 
@@ -143,7 +233,11 @@
 
             fun <T : Any> jsonb(name: String, serialize: (T) -> String, deserialize: (String) -> T): Column<T>
         ]]></code-block>
-        <p>Here's an example that leverages <a href="https://github.com/Kotlin/kotlinx.serialization">kotlinx.serialization</a>
+        <p>
+            Here's an example that leverages
+            <a href="https://github.com/Kotlin/kotlinx.serialization">
+                <code>kotlinx.serialization</code>
+            </a>
             to support
             <code>@Serializable</code> classes. It uses a simpler form of <code>json()</code> that relies on the
             library's <code>KSerializer</code> interface:</p>
@@ -187,7 +281,7 @@
                 val project = json("project", { mapper.writeValueAsString(it) }, { mapper.readValue<Project>(it) })
             }
         ]]></code-block>
-        <chapter title="Json Functions" id="json-functions">
+        <chapter title="Json functions" id="json-functions">
             <p>JSON path strings can be used to extract values (either as JSON or as a scalar value) at a specific
                 field/key:</p>
 
@@ -203,7 +297,16 @@
                 if MySQL is being
                 used, the provided path arguments should be <code>.name</code> and <code>.language</code> respectively.
             </note>
-            <p>The JSON functions <code>exists()</code> and <code>contains()</code> are currently supported as well:</p>
+            <p>The JSON functions
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/exists.html">
+                    <code>.exists()</code>
+                </a>
+                and
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/contains.html">
+                    <code>.contains()</code>
+                </a>
+                are currently supported as well:
+            </p>
 
             <code-block lang="kotlin">
                 val hasActiveStatus = Teams.project.exists(".active")
@@ -224,7 +327,7 @@
                 val kotlinTeams = Teams.selectAll().where { usesKotlin }.count()
             </code-block>
         </chapter>
-        <chapter title="Json Arrays" id="json-arrays">
+        <chapter title="Json arrays" id="json-arrays">
             <p>JSON columns also accept JSON arrays as input values. For example, using the serializable data class
                 <code>Project</code> from the
                 example above, the following details some ways to create such a column:</p>
@@ -251,9 +354,9 @@
             ]]></code-block>
         </chapter>
     </chapter>
-    <chapter title="How to use Array types" id="how-to-use-array-types">
-        <p>PostgreSQL and H2 databases support the explicit ARRAY data type,
-            with multi-dimensional arrays being supported by PostgreSQL.</p>
+    <chapter title="How to use array types" id="how-to-use-array-types">
+        <p>PostgreSQL and H2 databases support the explicit array data type,
+            with multidimensional arrays being supported by PostgreSQL.</p>
 
         <p>Exposed allows defining columns as arrays, with the stored contents being any out-of-the-box or custom data type.
             If the contents are of a type with a supported <code>ColumnType</code> in the <code>exposed-core</code> module,
@@ -318,7 +421,7 @@
                 } } }
             }
         </code-block>
-        <chapter title="Array Functions" id="array-functions">
+        <chapter title="Array functions" id="array-functions">
             <p>A single element in a stored array can be accessed using the index reference <code>get()</code> operator:
             </p>
 
@@ -340,20 +443,28 @@
                 Both PostgreSQL and H2 use a one-based indexing convention, so the first element is retrieved by using
                 index 1.
             </note>
-            <p>A new subarray can also be accessed by using <code>slice()</code>, which takes a lower and upper bound
-                (inclusive):</p>
+            <p>
+                A new subarray can also be accessed by using
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/slice.html">
+                    <code>.slice()</code>
+                </a>
+                , which takes a lower and upper bound
+                (inclusive):
+            </p>
 
             <code-block lang="kotlin">
                 Teams.select(Teams.deadlines.slice(1, 3))
             </code-block>
 
-            <p>In the case of multidimensional arrays, the <code>slice()</code> calls can be nested:</p>
+            <p>In the case of multidimensional arrays, the <code>.slice()</code> calls can be nested:</p>
             <code-block lang="kotlin">
                 Teams.select(Teams.hierarchicalMemberNames.slice(1, 2).slice(3, 4))
             </code-block>
             <p>Both arguments for these bounds are optional if using PostgreSQL.</p>
-            <p>An array column can also be used as an argument for the <code>ANY</code> and <code>ALL</code> SQL
-                operators, either by providing the entire column or a new array expression via <code>slice()</code>:</p>
+            <p>
+                An array column can also be used as an argument for the <code>ANY</code> and <code>ALL</code> SQL
+                operators, either by providing the entire column or a new array expression via <code>.slice()</code>:
+            </p>
 
             <code-block lang="kotlin">
                 Teams
@@ -366,10 +477,15 @@
             </code-block>
         </chapter>
     </chapter>
-    <chapter title="Custom Data Types" id="custom-data-types">
-        <p>If a database-specific data type is not immediately supported by Exposed, any existing and open column type
-            class can be extended or
-            a custom <code>ColumnType</code> class can be implemented to achieve the same functionality.</p>
+    <chapter title="Custom data types" id="custom-data-types">
+        <p>
+            If a database-specific data type is not immediately supported by Exposed, any existing and open column type
+            class can be extended, or a custom
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-column-type/index.html">
+                <code>ColumnType</code>
+            </a>
+            class can be implemented to achieve the same functionality.
+        </p>
         <p>The following examples describe different ways to customize a column type, register a column with the custom
             type,
             and then start using it in transactions.</p>
@@ -864,18 +980,28 @@
                     )
             }
         </code-block>
-        <p>The <code>transform</code> function is used to apply custom transformations to the <code>mealTime</code>
-            column:</p>
+        <p>
+            The
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/transform.html">
+                <code>.transform()</code>
+            </a>
+            function is used to apply custom transformations to the <code>mealTime</code>
+            column:
+        </p>
         <list>
-            <li>The <code>wrap</code> function transforms the stored <code>LocalTime</code> values into
+            <li>The <code>wrap()</code> function transforms the stored <code>LocalTime</code> values into
                 <code>Meal</code> enums. It checks the hour of the stored time and returns the corresponding meal type.
             </li>
-            <li>The <code>unwrap</code> function transforms <code>Meal</code> enums back into <code>LocalTime</code>
+            <li>The <code>unwrap()</code> function transforms <code>Meal</code> enums back into <code>LocalTime</code>
                 values for storage in the database.
             </li>
         </list>
-        <p>Transformation could be also defined as an implementation of <code>ColumnTransformer</code> interface and
-            reused among different tables:</p>
+        <p>Transformation could be also defined as an implementation of the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-column-transformer/index.html">
+                <code>ColumnTransformer</code>
+            </a>
+            interface and reused across different tables:
+        </p>
 
         <code-block lang="kotlin">
             class MealTimeTransformer : ColumnTransformer&lt;LocalTime, Meal&gt; {
@@ -905,9 +1031,12 @@
 
     <chapter title="Null transform" id="null-transform">
         <p>
-            Special case is <code>nullTransform()</code> method.
-            That method applies a special transformation that allows a non-nullable database column
-            to accept and/or return values as `null` on the client side.
+            The
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/null-transform.html">
+                <code>.nullTransform()</code>
+            </a>
+            method applies a special transformation that allows a non-nullable database column
+            to accept and/or return values as <code>null</code> on the client side.
         </p>
 
         <p>
