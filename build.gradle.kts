@@ -1,4 +1,3 @@
-import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configurePublishing
 import org.jetbrains.exposed.gradle.testDb
@@ -12,8 +11,10 @@ plugins {
     alias(libs.plugins.dokka)
 }
 
-tasks.withType<DokkaMultiModuleTask> {
-    outputDirectory.set(project.file("docs/api"))
+dokka {
+    dokkaPublications.html {
+        outputDirectory.set(project.file("docs/api"))
+    }
 }
 
 repositories {

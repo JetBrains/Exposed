@@ -50,7 +50,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
 
       - name: Build API documentation with Dokka
-        run: ./gradlew dokkaHtmlMultiModule
+        run: ./gradlew :dokkaGenerate
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
