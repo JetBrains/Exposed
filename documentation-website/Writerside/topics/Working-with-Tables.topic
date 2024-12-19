@@ -119,19 +119,19 @@
             <list>
                 <li>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/default.html">
-                        <code>default(defaultValue: T)</code>
+                        <code>.default(defaultValue: T)</code>
                     </a>
                     accepts a value with a type of the column.
                 </li>
                 <li>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/default-expression.html">
-                        <code>defaultExpression(defaultValue: Expression&lt;T&gt;)</code>
+                        <code>.defaultExpression(defaultValue: Expression&lt;T&gt;)</code>
                     </a>
                     accepts an expression.
                 </li>
                 <li>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/client-default.html">
-                        <code>clientDefault(defaultValue: () -&gt; T)</code>
+                        <code>.clientDefault(defaultValue: () -&gt; T)</code>
                     </a>
                     accepts a function.
                 </li>

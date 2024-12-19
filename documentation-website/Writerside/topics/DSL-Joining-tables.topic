@@ -51,7 +51,7 @@
                         src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"
                         include-lines="39-42"/>
             <p>
-                This is equivalent to using a <code>join()</code> with a <code>JoinType.INNER</code>:
+                This is equivalent to using a <code>.join()</code> with a <code>JoinType.INNER</code>:
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/JoinExamples.kt"

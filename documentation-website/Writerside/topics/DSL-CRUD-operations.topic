@@ -191,8 +191,8 @@
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
                         include-lines="99-100"/>
             <p>
-                <code>Query</code> inherits <code>Iterable</code> so it is possible to traverse it using <code>map()</code>
-                or <code>forEach()</code>:
+                <code>Query</code> inherits <code>Iterable</code> so it is possible to traverse it using <code>.map()</code>
+                or <code>.forEach()</code>:
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
@@ -293,7 +293,7 @@
                         include-lines="14-24"
             />
             <p>
-                If none of the optional arguments are provided to <code>.upsert()</code>, and an <code>.onUpdate()</code> block
+                If none of the optional arguments are provided to <code>.upsert()</code>, and an <code>onUpdate</code> block
                 is omitted, the statements in the <code>body</code> block will be used for both the insert and update parts
                 of the operation.
                 This means that, for example, if a table mapping has columns with default values and these columns are
@@ -301,7 +301,7 @@
                 used for insertion as well as for the update operation.
             </p>
             <note>
-                If the update operation should differ from the insert operation, then <code>onUpdate()</code> should be
+                If the update operation should differ from the insert operation, then <code>onUpdate</code> should be
                 provided an argument to set the specific columns to update, as seen in the example below.
                 <p>
                     If the update operation involves functions that should use the values that would have been inserted,

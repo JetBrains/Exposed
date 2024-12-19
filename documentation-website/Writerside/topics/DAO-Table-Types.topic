@@ -75,7 +75,7 @@
 
     <chapter title="Composite id table" id="composite-id-table">
         <p>
-            To define multiple columns as part of the primary key and id, use
+            To define multiple columns as part of the primary key and ID, use
             <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-composite-id-table/index.html">
                 <code>CompositeIdTable</code>
             </a>
@@ -83,7 +83,7 @@
             <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/entity-id.html">
                 <code>.entityId()</code>
             </a>
-            . Each component column will be available for CRUD operations either individually (as for any standard column)
+            .Each component column will be available for CRUD operations either individually (as for any standard column)
             or all together as part of the <code>id</code> column:
         </p>
         <tabs>

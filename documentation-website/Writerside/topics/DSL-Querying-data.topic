@@ -299,7 +299,7 @@
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/group-by.html">
                     <code>.groupBy()</code>
                 </a>
-                , define fields and their functions by the <code>select()</code>
+                , define fields and their functions by the <code>.select()</code>
                 method.
             </p>
             <code-block lang="kotlin"

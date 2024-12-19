@@ -210,7 +210,7 @@
         <p>
             Suppose that you want to sort cities by the number of users in each city. To achieve this, you can write a
             subquery which counts the users in each city and
-            then order the result by that count.To do so, however, you need to convert the
+            then order the result by that count. To do so, however, you need to convert the
             <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/index.html">
                 <code>Query</code>
             </a>

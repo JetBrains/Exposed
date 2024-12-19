@@ -102,7 +102,8 @@ In SQL representation it will be `SQRT(FooTable.id)`
 val replacedName = CustomFunction<String?>("REPLACE", VarCharColumnType(), FooTable.name, stringParam("foo"), stringParam("bar"))
 
 ``` 
-`CustomFunction` class accepts a function name as a first parameter and the resulting column type as second. After that, you can provide any amount of parameters separated by a comma.
+The [`CustomFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-function/index.html)
+class accepts a function name as a first parameter and the resulting column type as second. After that, you can provide any amount of parameters separated by a comma.
 
 There are also shortcuts for string, long, and datetime functions:
 * [`CustomStringFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-string-function.html)
