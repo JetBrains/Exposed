@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.tests.shared.Category
 import org.jetbrains.exposed.sql.tests.shared.Item
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
@@ -664,6 +665,25 @@ class CreateTableTests : DatabaseTestsBase() {
             } finally {
                 SchemaUtils.drop(tester)
             }
+        }
+    }
+
+    @Test
+    fun testListTablesDoesNotCloseDatabaseConnection() {
+        val tester = object : IntIdTable("tester") {
+            val int = integer("intColumn")
+        }
+        withDb { testDb ->
+            val defaultSchemaName = when (currentDialectTest) {
+                is SQLServerDialect -> "dbo"
+                is OracleDialect -> testDb.user
+                is MysqlDialect -> testDb.db!!.name
+                else -> "public"
+            }
+            assertTrue(SchemaUtils.listTables().none { it.equals("$defaultSchemaName.${OneTable.tableName}", ignoreCase = true) })
+        }
+        withDb {
+            assertFalse(tester.exists())
         }
     }
 }
