@@ -6,12 +6,14 @@
        title="Table types" id="DAO-Table-Types" help-id="DAO-Table-types">
 
     <include from="DSL-Table-Types.topic" element-id="dsl-core-table-class"/>
-    <chapter id="defining-tables">
-        <title>Auto-incrementing <code>id</code> column tables</title>
+    <chapter title="Auto-incrementing ID column tables" id="defining-tables">
         <snippet id="dao-table-types">
             <p>
                 Apart from the core <code>Table</code> class, Exposed provides the base
-                <code>IdTable</code> class and its subclasses through the DAO API.
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-id-table/index.html">
+                    <code>IdTable</code>
+                </a>
+                class and its subclasses through the DAO API.
             </p>
             <p>
                 The <code>IdTable</code> class extends <code>Table</code> and is
@@ -30,22 +32,22 @@
         <deflist type="medium">
             <def id="IntIdTable">
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-int-id-table/index.html"><code>IntIdTable</code></a></title>
-                <code>Int</code> id column</def>
+                <code>Int</code> ID column</def>
             <def id="LongIdTable">
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-long-id-table/index.html"><code>LongIdTable</code></a></title>
-                <code>Long</code> id column
+                <code>Long</code> ID column
             </def>
             <def id="UIntIdTable">
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-int-id-table/index.html"><code>UIntIdTable</code></a></title>
-                <code>UInt</code> id column
+                <code>UInt</code> ID column
             </def>
             <def id="ULongIdTable">
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-long-id-table/index.html"><code>ULongIdTable</code></a></title>
-                <code>ULong</code> id column
+                <code>ULong</code> ID column
             </def>
             <def id="UUIDTable">
                 <title><a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-u-u-i-d-table/index.html"><code>UUIDTable</code></a></title>
-                <code>UUID</code> id column
+                <code>UUID</code> ID column
             </def>
         </deflist>
         <p>The following example represents a table with custom columns <code>sequel_id</code>, <code>name</code>,
@@ -70,12 +72,17 @@
         </p>
     </chapter>
 
-    <chapter title="Composite id table" id="composite-id-table">
+    <chapter title="Composite ID table" id="composite-id-table">
         <p>
-            To define multiple columns as part of the primary key and id, use
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-composite-id-table/index.html"><code>CompositeIdTable</code></a>
-            and mark each composite column using <code>entityId()</code>.
-            Each component column will be available for CRUD operations either individually (as for any standard column)
+            To define multiple columns as part of the primary key and ID, use
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.dao.id/-composite-id-table/index.html">
+                <code>CompositeIdTable</code>
+            </a>
+            and mark each composite column using
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/entity-id.html">
+                <code>.entityId()</code>
+            </a>
+            .Each component column will be available for CRUD operations either individually (as for any standard column)
             or all together as part of the <code>id</code> column:
         </p>
         <tabs>
@@ -101,7 +108,7 @@
 
     <chapter title="Custom column type table" id="custom-column-type">
         <p>
-            To define a custom column type as the primary key and id, use a typed <code>IdTable</code> directly and
+            To define a custom column type as the primary key and ID, use a typed <code>IdTable</code> directly and
             override the <code>id</code> column, as shown in the following example:
         </p>
         <tabs>

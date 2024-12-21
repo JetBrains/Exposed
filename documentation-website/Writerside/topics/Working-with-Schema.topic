@@ -10,7 +10,11 @@
     </p>
     <chapter title="Define a schema" id="define-a-sequence">
         <p>
-            To define a schema in Exposed, use the <code>Schema</code> class:
+            To define a schema in Exposed, use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema/index.html">
+                <code>Schema</code>
+            </a>
+            class:
         </p>
         <code-block lang="Kotlin">
             val schema = Schema("my_schema") // my_schema is the schema name.
@@ -23,14 +27,21 @@
     </chapter>
     <chapter title="Create a new schema" id="create-schema">
         <p>
-            To create a new schema, use the <code>createSchema()</code> method provided by <code>SchemaUtils</code>:
+            To create a new schema, use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/create-schema.html">
+                <code>.createSchema()</code>
+            </a>
+            method provided by <code>SchemaUtils</code>:
         </p>
         <code-block lang="kotlin">
             SchemaUtils.createSchema(schema)
         </code-block>
     </chapter>
     <chapter title="Set a default schema" id="default-schema">
-        <p>If you have many schemas, and you want to set a default one, you can use the <code>setSchema()</code>
+        <p>If you have many schemas, and you want to set a default one, you can use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/set-schema.html">
+                <code>.setSchema()</code>
+            </a>
             method from <code>SchemaUtils</code>:
         </p>
         <code-block lang="Kotlin">
@@ -39,7 +50,11 @@
     </chapter>
     <chapter title="Drop a schema" id="drop-schema">
         <p>
-            To drop a schema, use the <code>dropSchema()</code> method provided by <code>SchemaUtils</code>:
+            To drop a schema, use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/drop-schema.html">
+                <code>.dropSchema()</code>
+            </a>
+            method provided by <code>SchemaUtils</code>:
         </p>
         <code-block lang="Kotlin">
             SchemaUtils.dropSchema(schema)

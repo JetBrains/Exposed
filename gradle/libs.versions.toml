@@ -4,7 +4,7 @@ dokka = "2.0.0"
 detekt = "1.23.7" # When upgrading, also upgrade in detekt.yml and add corresponding detekt-formatting jar file.
 binary-compatibility-validator = "0.16.3"
 docker-compose = "0.17.5"
-kotlinCoroutines = "1.9.0"
+kotlinCoroutines = "1.10.0"
 kotlinxSerialization = "1.7.1"
 
 slf4j = "2.0.9"
@@ -23,7 +23,7 @@ sqlite3 = "3.47.1.0"
 sqlserver = "9.4.1.jre8"
 
 springFramework = "6.2.1"
-springBoot = "3.4.0"
+springBoot = "3.4.1"
 
 spring-security-crypto = "6.2.1"
 joda-time = "2.13.0"
