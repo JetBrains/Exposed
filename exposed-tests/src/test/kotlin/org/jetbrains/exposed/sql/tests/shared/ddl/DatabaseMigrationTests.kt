@@ -57,7 +57,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), noPKTable) {
             val script = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = scriptDirectory, scriptName = scriptName, withLogs = false)
             assertTrue(script.exists())
-            assertEquals("src/test/resources/$scriptName.sql", script.path)
+            assertEquals("src${File.separator}test${File.separator}resources${File.separator}$scriptName.sql", script.path)
 
             val expectedStatements: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable, withLogs = false)
             assertEquals(1, expectedStatements.size)
