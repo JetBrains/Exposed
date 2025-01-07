@@ -2,7 +2,7 @@ services:
     sqlserver:
         container_name: SQLServer
         restart: always
-        image: mcr.microsoft.com/azure-sql-edge:1.0.7
+        image: mcr.microsoft.com/azure-sql-edge:2.0.0
         ports:
             - "3005:1433"
         environment:
