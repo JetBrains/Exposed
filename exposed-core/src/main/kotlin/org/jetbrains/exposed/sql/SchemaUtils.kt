@@ -594,6 +594,12 @@ object SchemaUtils {
      * to use a lock based on synchronization with a dummy table.
      * @see SchemaUtils.withDataBaseLock
      */
+    @Deprecated(
+        "Execution of this function might lead to unpredictable state in the database if a failure occurs at any point. " +
+            "To prevent this, please use `MigrationUtils.statementsRequiredForDatabaseMigration` with a third-party migration tool (e.g., Flyway).",
+        ReplaceWith("MigrationUtils.statementsRequiredForDatabaseMigration"),
+        DeprecationLevel.WARNING
+    )
     fun createMissingTablesAndColumns(vararg tables: Table, inBatch: Boolean = false, withLogs: Boolean = true) {
         with(TransactionManager.current()) {
             db.dialect.resetCaches()
@@ -637,6 +643,11 @@ object SchemaUtils {
      * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
      */
+    @Deprecated(
+        "This function will be removed in future releases.",
+        ReplaceWith("MigrationUtils.statementsRequiredForDatabaseMigration"),
+        DeprecationLevel.WARNING
+    )
     fun statementsRequiredToActualizeScheme(vararg tables: Table, withLogs: Boolean = true): List<String> {
         val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() }
         val createStatements = logTimeSpent("Preparing create tables statements", withLogs) {
