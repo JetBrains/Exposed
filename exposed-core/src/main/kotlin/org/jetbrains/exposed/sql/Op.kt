@@ -299,6 +299,30 @@ class IsDistinctFromOp(
     }
 }
 
+/**
+ * Represents an SQL operator that returns the greatest (maximum) of [expr1] and [expr2].
+ */
+class GreatestOp<T, S : T>(
+    val expr1: Expression<T>,
+    val expr2: Expression<S>,
+) : Op<T>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        currentDialect.functionProvider.greatest(expr1, expr2, queryBuilder)
+    }
+}
+
+/**
+ * Represents an SQL operator that returns the least (minimum) of [expr1] and [expr2].
+ */
+class LeastOp<T, S : T>(
+    val expr1: Expression<T>,
+    val expr2: Expression<S>,
+) : Op<T>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        currentDialect.functionProvider.least(expr1, expr2, queryBuilder)
+    }
+}
+
 // Mathematical Operators
 
 /**

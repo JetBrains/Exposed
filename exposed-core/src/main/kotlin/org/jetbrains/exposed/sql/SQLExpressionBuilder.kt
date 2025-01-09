@@ -579,6 +579,26 @@ interface ISqlExpressionBuilder {
         other: ExpressionWithColumnType<E>
     ): IsDistinctFromOp = IsDistinctFromOp(this, other)
 
+    /**
+     * The greatest (maximum) of this expression and [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.greatest(t: T): GreatestOp<T, T> = GreatestOp(this, wrap(t))
+
+    /**
+     * The greatest (maximum) of this expression and [other].
+     */
+    infix fun <T, S : T> ExpressionWithColumnType<T>.greatest(other: Expression<S>): GreatestOp<T, S> = GreatestOp(this, other)
+
+    /**
+     * The least (minimum) of this expression and [t].
+     */
+    infix fun <T> ExpressionWithColumnType<T>.least(t: T): LeastOp<T, T> = LeastOp(this, wrap(t))
+
+    /**
+     * The least (minimum) of this expression and [other].
+     */
+    infix fun <T, S : T> ExpressionWithColumnType<T>.least(other: Expression<S>): LeastOp<T, S> = LeastOp(this, other)
+
     // Mathematical Operators
 
     /** Adds the [t] value to this expression. */
