@@ -856,11 +856,20 @@ object SchemaUtils {
     }
 
     /**
-     * Retrieves a list of all table names in the current database.
+     * Retrieves a list of all table names in the current database schema.
+     * The names will be returned with schema prefixes if the database supports it.
      *
      * @return A list of table names as strings.
      */
     fun listTables(): List<String> = currentDialect.allTablesNames()
+
+    /**
+     * Retrieves a list of all table names in the current database schema.
+     * The names will be returned with schema prefixes if the database supports it.
+     *
+     * @return A list of table names as strings.
+     */
+    fun listTablesInAllSchemas(): List<String> = currentDialect.allTablesNamesInAllSchemas()
 
     /** Drops all [tables], using a batch execution if [inBatch] is set to `true`. */
     fun drop(vararg tables: Table, inBatch: Boolean = false) {

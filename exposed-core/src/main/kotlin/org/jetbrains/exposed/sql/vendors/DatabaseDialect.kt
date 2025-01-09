@@ -78,8 +78,18 @@ interface DatabaseDialect {
     /** Returns the name of the current database. */
     fun getDatabase(): String
 
-    /** Returns a list with the names of all the defined tables. */
+    /**
+     * Returns a list with the names of all the defined tables in the current database schema.
+     * The names will be returned with schema prefixes if the database supports it.
+     */
     fun allTablesNames(): List<String>
+
+    /**
+     * Returns a list with the names of all the tables in all database schemas.
+     * The names will be returned with schema prefixes, if the database supports it, and non-user defined tables,
+     * like system information table names, will be included.
+     */
+    fun allTablesNamesInAllSchemas(): List<String>
 
     /** Checks if the specified table exists in the database. */
     fun tableExists(table: Table): Boolean

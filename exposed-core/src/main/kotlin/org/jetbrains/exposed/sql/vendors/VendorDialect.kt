@@ -24,7 +24,7 @@ abstract class VendorDialect(
     private var _allTableNames: Map<String, List<String>>? = null
     private var _allSchemaNames: List<String>? = null
 
-    /** Returns a list with the names of all the defined tables within default scheme. */
+    /** Returns a list with the names of all the defined tables in the current schema. */
     val allTablesNames: List<String>
         get() {
             val connection = TransactionManager.current().connection
@@ -49,9 +49,24 @@ abstract class VendorDialect(
 
     override fun getDatabase(): String = catalog(TransactionManager.current())
 
-    /** Returns a list with the names of all the defined tables with schema prefixes if the database supports it. */
+    /**
+     * Returns a list with the names of all the defined tables in the current database schema.
+     * The names will be returned with schema prefixes if the database supports it.
+     *
+     * **Note:** This method always re-reads data from the database. Using `allTablesNames` field is
+     * the preferred way to avoid unnecessary metadata queries.
+     */
     override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata {
-        tableNamesForAllSchemas()
+        tableNamesByCurrentSchema(null).tableNames
+    }
+
+    /**
+     * Returns a list with the names of all the tables in all database schemas.
+     * The names will be returned with schema prefixes, if the database supports it, and non-user defined tables,
+     * like system information table names, will be included.
+     */
+    override fun allTablesNamesInAllSchemas(): List<String> = getAllSchemaNamesCache().flatMap { schema ->
+        getAllTableNamesCache().getValue(schema)
     }
 
     override fun tableExists(table: Table): Boolean {
