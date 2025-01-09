@@ -864,8 +864,9 @@ object SchemaUtils {
     fun listTables(): List<String> = currentDialect.allTablesNames()
 
     /**
-     * Retrieves a list of all table names in the current database schema.
-     * The names will be returned with schema prefixes if the database supports it.
+     * Returns a list with the names of all the tables in all database schemas.
+     * The names will be returned with schema prefixes, if the database supports it, and non-user defined tables,
+     * like system information table names, will be included.
      *
      * @return A list of table names as strings.
      */
