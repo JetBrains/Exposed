@@ -25,12 +25,16 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
 
 @Suppress("TooManyFunctions")
 internal object SQLiteFunctionProvider : FunctionProvider() {
-    override fun <T, S : T> greatest(expr1: Expression<T>, expr2: Expression<S>, queryBuilder: QueryBuilder) = queryBuilder {
-        append("MAX(", expr1, ", ", expr2, ")")
+    override fun <T> greatest(queryBuilder: QueryBuilder, vararg expr: Expression<in T>) = queryBuilder {
+        append("MAX(")
+        expr.appendTo { +it }
+        append(")")
     }
 
-    override fun <T, S : T> least(expr1: Expression<T>, expr2: Expression<S>, queryBuilder: QueryBuilder) = queryBuilder {
-        append("MIN(", expr1, ", ", expr2, ")")
+    override fun <T> least(queryBuilder: QueryBuilder, vararg expr: Expression<in T>) = queryBuilder {
+        append("MIN(")
+        expr.appendTo { +it }
+        append(")")
     }
 
     override fun <T : String?> charLength(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {

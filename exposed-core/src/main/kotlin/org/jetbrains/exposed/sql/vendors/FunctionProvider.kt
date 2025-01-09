@@ -37,23 +37,25 @@ abstract class FunctionProvider {
     /**
      * SQL function that returns the greatest (maximum) of two values.
      *
-     * @param expr1 The first value.
-     * @param expr2 The second value.
      * @param queryBuilder Query builder to append the SQL function to.
+     * @param expr The expressions to compare.
      */
-    open fun <T, S : T> greatest(expr1: Expression<T>, expr2: Expression<S>, queryBuilder: QueryBuilder): Unit = queryBuilder {
-        append("GREATEST(", expr1, ", ", expr2, ")")
+    open fun <T> greatest(queryBuilder: QueryBuilder, vararg expr: Expression<in T>): Unit = queryBuilder {
+        append("GREATEST(")
+        expr.appendTo { +it }
+        append(")")
     }
 
     /**
      * SQL function that returns the least (minimum) of two values.
      *
-     * @param expr1 The first value.
-     * @param expr2 The second value.
      * @param queryBuilder Query builder to append the SQL function to.
+     * @param expr The expressions to compare.
      */
-    open fun <T, S : T> least(expr1: Expression<T>, expr2: Expression<S>, queryBuilder: QueryBuilder): Unit = queryBuilder {
-        append("LEAST(", expr1, ", ", expr2, ")")
+    open fun <T> least(queryBuilder: QueryBuilder, vararg expr: Expression<in T>): Unit = queryBuilder {
+        append("LEAST(")
+        expr.appendTo { +it }
+        append(")")
     }
 
     // String functions

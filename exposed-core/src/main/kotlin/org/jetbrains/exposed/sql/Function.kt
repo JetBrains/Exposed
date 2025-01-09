@@ -65,6 +65,44 @@ class Random(
     }
 }
 
+/**
+ * Represents an SQL operator that returns the greatest (maximum, largest
+ * value) of [expr1], [expr2], and [others].
+ *
+ * **Note:** The semantics of this function when applied to null values
+ * or values of multiple types depends on the vendor. Please check the
+ * documentation for your respective database.
+ */
+class Greatest<T>(
+    val expr1: Expression<in T>,
+    val expr2: Expression<in T>,
+    columnType: IColumnType<T & Any>,
+    vararg val others: Expression<in T>
+) : Function<T>(columnType) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        currentDialect.functionProvider.greatest(queryBuilder, expr1, expr2, *others)
+    }
+}
+
+/**
+ * Represents an SQL operator that returns the least (minimum, smallest
+ * value) of [expr1], [expr2], and [others].
+ *
+ * **Note:** The semantics of this function when applied to null values
+ * or values of multiple types depends on the vendor. Please check the
+ * documentation for your respective database.
+ */
+class Least<T>(
+    val expr1: Expression<in T>,
+    val expr2: Expression<in T>,
+    columnType: IColumnType<T & Any>,
+    vararg val others: Expression<in T>
+) : Function<T>(columnType) {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
+        currentDialect.functionProvider.least(queryBuilder, expr1, expr2, *others)
+    }
+}
+
 // String Functions
 
 /**
