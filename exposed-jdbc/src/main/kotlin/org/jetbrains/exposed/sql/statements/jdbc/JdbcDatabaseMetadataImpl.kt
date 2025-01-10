@@ -87,6 +87,18 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         override fun get(key: K): V? = map.getOrPut(key) { default(key) }
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false
+
+        override val entries: Set<Map.Entry<K, V>>
+            get() = throw UnsupportedOperationException(
+                "The entries field should not be used on CachableMapWithDefault because the lazy population of the collection for missing keys " +
+                    "and entries may lead to inconsistencies between calls."
+            )
+
+        override val keys: Set<K>
+            get() = throw UnsupportedOperationException(
+                "The keys field should not be used on CachableMapWithDefault because the lazy population of the collection for missing keys " +
+                    "and keys may lead to inconsistencies between calls."
+            )
     }
 
     override val tableNames: Map<String, List<String>>

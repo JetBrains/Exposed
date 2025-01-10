@@ -13,11 +13,13 @@ import org.jetbrains.exposed.sql.tests.shared.Category
 import org.jetbrains.exposed.sql.tests.shared.Item
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertFails
@@ -595,24 +597,70 @@ class CreateTableTests : DatabaseTestsBase() {
                 assertEquals(true, OneTable.exists())
                 assertEquals(false, OneOneTable.exists())
 
-                val defaultSchemaName = when (currentDialectTest) {
-                    is SQLServerDialect -> "dbo"
-                    is OracleDialect -> testDb.user
-                    is MysqlDialect -> testDb.db!!.name
-                    else -> "public"
-                }
-                assertTrue(SchemaUtils.listTables().any { it.equals("$defaultSchemaName.${OneTable.tableName}", ignoreCase = true) })
+                val schemaPrefixedName = testDb.getDefaultSchemaPrefixedTableName(OneTable.tableName)
+                assertTrue(SchemaUtils.listTables().any { it.equals(schemaPrefixedName, ignoreCase = true) })
 
                 SchemaUtils.createSchema(one)
                 SchemaUtils.create(OneOneTable)
                 assertEquals(true, OneTable.exists())
                 assertEquals(true, OneOneTable.exists())
 
-                assertTrue(SchemaUtils.listTables().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
+                assertTrue(SchemaUtils.listTablesInAllSchemas().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
             } finally {
                 SchemaUtils.drop(OneTable, OneOneTable)
                 val cascade = testDb != TestDB.SQLSERVER
                 SchemaUtils.dropSchema(one, cascade = cascade)
+            }
+        }
+    }
+
+    @Test
+    fun testListTablesInCurrentSchema() {
+        withDb { testDb ->
+            SchemaUtils.create(OneTable)
+
+            val schemaPrefixedName = testDb.getDefaultSchemaPrefixedTableName(OneTable.tableName)
+            assertTrue(SchemaUtils.listTables().any { it.equals(schemaPrefixedName, ignoreCase = true) })
+        }
+
+        withDb { testDb ->
+            // ensures that db connection has not been lost by calling listTables()
+            assertEquals(testDb != TestDB.SQLITE, OneTable.exists())
+
+            SchemaUtils.drop(OneTable)
+        }
+    }
+
+    private fun TestDB.getDefaultSchemaPrefixedTableName(tableName: String): String = when (currentDialectTest) {
+        is SQLServerDialect -> "dbo.$tableName"
+        is OracleDialect -> "${this.user}.$tableName"
+        is MysqlDialect -> "${this.db!!.name}.$tableName"
+        is SQLiteDialect -> tableName
+        else -> "public.$tableName"
+    }
+
+    @Test
+    fun testListTablesInAllSchemas() {
+        withDb { testDb ->
+            if (currentDialectTest.supportsCreateSchema) {
+                val one = prepareSchemaForTest("one")
+
+                try {
+                    SchemaUtils.createSchema(one)
+                    // table "one.one" is created in new schema by db because of name
+                    // even though current schema has not been set to the new one above
+                    SchemaUtils.create(OneOneTable)
+
+                    // so new table will not appear in list of tables in current schema
+                    assertFalse(SchemaUtils.listTables().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
+                    // but new table appears in list of tables from all schema
+                    assertTrue(SchemaUtils.listTablesInAllSchemas().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
+                    assertTrue(OneOneTable.exists())
+                } finally {
+                    SchemaUtils.drop(OneOneTable)
+                    val cascade = testDb != TestDB.SQLSERVER
+                    SchemaUtils.dropSchema(one, cascade = cascade)
+                }
             }
         }
     }

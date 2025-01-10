@@ -2202,6 +2202,7 @@ public final class org/jetbrains/exposed/sql/SchemaUtils {
 	public static synthetic fun dropSequence$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Sequence;ZILjava/lang/Object;)V
 	public final fun listDatabases ()Ljava/util/List;
 	public final fun listTables ()Ljava/util/List;
+	public final fun listTablesInAllSchemas ()Ljava/util/List;
 	public final fun setSchema (Lorg/jetbrains/exposed/sql/Schema;Z)V
 	public static synthetic fun setSchema$default (Lorg/jetbrains/exposed/sql/SchemaUtils;Lorg/jetbrains/exposed/sql/Schema;ZILjava/lang/Object;)V
 	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;
@@ -3824,6 +3825,7 @@ public abstract interface class org/jetbrains/exposed/sql/vendors/DatabaseDialec
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect$Companion;
 	public abstract fun addPrimaryKey (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/String;
 	public abstract fun allTablesNames ()Ljava/util/List;
+	public abstract fun allTablesNamesInAllSchemas ()Ljava/util/List;
 	public abstract fun catalog (Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
 	public abstract fun checkTableMapping (Lorg/jetbrains/exposed/sql/Table;)Z
 	public abstract fun columnConstraints ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
@@ -4320,6 +4322,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/VendorDialect : org/jetb
 	public fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/DataTypeProvider;Lorg/jetbrains/exposed/sql/vendors/FunctionProvider;)V
 	public fun addPrimaryKey (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Column;)Ljava/lang/String;
 	public fun allTablesNames ()Ljava/util/List;
+	public fun allTablesNamesInAllSchemas ()Ljava/util/List;
 	public fun catalog (Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
 	public fun checkTableMapping (Lorg/jetbrains/exposed/sql/Table;)Z
 	public fun columnConstraints ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
