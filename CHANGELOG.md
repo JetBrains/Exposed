@@ -2,12 +2,14 @@
 
 ## What's Changed
 
+Breaking changes:
+* fix: EXPOSED-662 SchemaUtils.listTables() returns empty list & closes db connection by @joc-a in https://github.com/JetBrains/Exposed/pull/2331
+  * `SchemaUtils.listTables()` returns only the tables from the current schema. The behaviour was returned to the 0.56.0 version.
+  * To get tables from all the schemas the method `SchemaUtils.listTablesInAllSchemas()` could be used.
+
 Features:
 * feat: [MariaDB] Support RETURNING clause by @devgor88 in https://github.com/JetBrains/Exposed/pull/2330
 * feat: EXPOSED-654 Allow customizing the check constraint names of columns with check constraints by @joc-a in https://github.com/JetBrains/Exposed/pull/2340
-
-Bug fixes:
-* fix: EXPOSED-662 SchemaUtils.listTables() returns empty list & closes db connection by @joc-a in https://github.com/JetBrains/Exposed/pull/2331
 
 Infrastructure:
 * springFramework 6.2.1
