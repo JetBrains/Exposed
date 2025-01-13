@@ -1,3 +1,35 @@
+# 0.58.0
+
+## What's Changed
+
+Features:
+* feat: [MariaDB] Support RETURNING clause by @devgor88 in https://github.com/JetBrains/Exposed/pull/2330
+* feat: EXPOSED-654 Allow customizing the check constraint names of columns with check constraints by @joc-a in https://github.com/JetBrains/Exposed/pull/2340
+
+Bug fixes:
+* fix: EXPOSED-662 SchemaUtils.listTables() returns empty list & closes db connection by @joc-a in https://github.com/JetBrains/Exposed/pull/2331
+
+Infrastructure:
+* springFramework 6.2.1
+* log4j2 2.24.3
+* org.junit:junit-bom 5.11.4
+* org.jetbrains.dokka 2.0.0
+* springBoot 3.4.1
+* kotlinCoroutines 1.10.0
+* kotlinCoroutines 1.10.1
+* org.xerial:sqlite-jdbc from 3.47.2.0
+* org.jetbrains.kotlinx.binary-compatibility-validator 0.17.0
+* org.jetbrains.kotlinx:kotlinx-serialization-json 1.8.0
+
+Docs:
+* docs: Update documentation website by @github-actions in https://github.com/JetBrains/Exposed/pull/2304
+* docs: EXPOSED-207 Add link to SQLite ALTER TABLE restrictions in SchemaUtils Kdocs by @bog-walk in https://github.com/JetBrains/Exposed/pull/2338
+* docs: EXPOSED-670 Adjust YouTrack issue visibility and PR guidelines by @bog-walk in https://github.com/JetBrains/Exposed/pull/2337
+* docs: EXPOSED-600 Add links to API docs for functions and classes by @vnikolova in https://github.com/JetBrains/Exposed/pull/2339
+* docs: EXPOSED-682 Switch api link from deprecated select() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2349
+* EXPOSED-675 Clarify that sort methods are from the Kotlin std lib by @vnikolova in https://github.com/JetBrains/Exposed/pull/2352
+
+
 # 0.57.0
 Infrastructure:
 * io.github.hakky54:logcaptor 2.10.0
