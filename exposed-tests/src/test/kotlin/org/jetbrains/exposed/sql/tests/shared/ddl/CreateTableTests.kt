@@ -714,4 +714,12 @@ class CreateTableTests : DatabaseTestsBase() {
             }
         }
     }
+
+    // https://youtrack.jetbrains.com/issue/EXPOSED-690
+    @Test
+    fun `identity with names required to be in quotes`() {
+        withDb {
+            assertEquals("\"prefix:my.company.package.my-service:table\"", this.identity(Table("prefix:my.company.package.my-service:table")))
+        }
+    }
 }
