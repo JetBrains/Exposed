@@ -975,7 +975,10 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         val distinctRefIds = references.distinct()
         val transaction = TransactionManager.current()
 
-        val inCache = transaction.entityCache.referrers[sourceRefColumn] ?: emptyMap()
+        val inCache = transaction.entityCache.referrers[sourceRefColumn]
+            ?.filterKeys { references.contains(it) }
+            ?: emptyMap()
+
         val loaded = ((distinctRefIds - inCache.keys).takeIf { it.isNotEmpty() } as List<EntityID<SID>>?)?.let { idsToLoad ->
             val alreadyInJoin = (dependsOnTables as? Join)?.alreadyInJoin(linkTable) ?: false
             val entityTables = if (alreadyInJoin) dependsOnTables else dependsOnTables.join(linkTable, JoinType.INNER, targetRefColumn, table.id)
