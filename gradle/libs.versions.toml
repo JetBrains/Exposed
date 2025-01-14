@@ -32,7 +32,7 @@ kotlinx-datetime = "0.6.1"
 javax-money = "1.1"
 moneta = "1.4.4"
 hikariCP = "4.0.3"
-logcaptor = "2.10.0"
+logcaptor = "2.10.1"
 
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
