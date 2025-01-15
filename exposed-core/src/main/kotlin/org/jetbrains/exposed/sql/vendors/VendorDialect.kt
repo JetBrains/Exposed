@@ -129,6 +129,9 @@ abstract class VendorDialect(
     override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> =
         TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
 
+    override fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> =
+        TransactionManager.current().db.metadata { existingSequences(*tables) }
+
     override fun sequences(): List<String> =
         TransactionManager.current().db.metadata { sequences() }
 

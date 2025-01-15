@@ -29,6 +29,8 @@ class Sequence(
     val identifier
         get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
 
+    override fun toString(): String = identifier
+
     /** The SQL statements that create this sequence. */
     val ddl: List<String>
         get() = createStatement()

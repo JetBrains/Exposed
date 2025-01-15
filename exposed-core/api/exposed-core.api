@@ -2226,6 +2226,7 @@ public final class org/jetbrains/exposed/sql/Sequence {
 	public final fun getMinValue ()Ljava/lang/Long;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getStartWith ()Ljava/lang/Long;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class org/jetbrains/exposed/sql/SetOperation : org/jetbrains/exposed/sql/AbstractQuery {
@@ -3564,6 +3565,7 @@ public abstract class org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMe
 	public abstract fun columns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public abstract fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public final fun getDatabase ()Ljava/lang/String;
 	public abstract fun getDatabaseDialectName ()Ljava/lang/String;
 	public abstract fun getDatabaseProductVersion ()Ljava/lang/String;
@@ -3837,6 +3839,7 @@ public abstract interface class org/jetbrains/exposed/sql/vendors/DatabaseDialec
 	public abstract fun dropSchema (Lorg/jetbrains/exposed/sql/Schema;Z)Ljava/lang/String;
 	public abstract fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public abstract fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun getDataTypeProvider ()Lorg/jetbrains/exposed/sql/vendors/DataTypeProvider;
 	public abstract fun getDatabase ()Ljava/lang/String;
 	public abstract fun getDefaultReferenceOption ()Lorg/jetbrains/exposed/sql/ReferenceOption;
@@ -3888,6 +3891,7 @@ public final class org/jetbrains/exposed/sql/vendors/DatabaseDialect$DefaultImpl
 	public static fun dropSchema (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;Lorg/jetbrains/exposed/sql/Schema;Z)Ljava/lang/String;
 	public static fun existingIndices (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;[Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public static fun existingPrimaryKeys (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;[Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public static fun existingSequences (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;[Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public static fun getDefaultReferenceOption (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public static fun getLikePatternSpecialChars (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Ljava/util/Map;
 	public static fun getNeedsQuotesWhenSymbolsInNames (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
@@ -4335,6 +4339,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/VendorDialect : org/jetb
 	public fun dropSchema (Lorg/jetbrains/exposed/sql/Schema;Z)Ljava/lang/String;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	protected fun fillConstraintCacheForTables (Ljava/util/List;)V
 	public final fun filterCondition (Lorg/jetbrains/exposed/sql/Index;)Ljava/lang/String;
 	protected final fun getAllTableNamesCache ()Ljava/util/Map;

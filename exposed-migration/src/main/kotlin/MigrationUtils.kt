@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.File
@@ -287,6 +288,7 @@ object MigrationUtils {
             }
         }
 
+        // all possible sequences checked, as 'mappedSequences' is the limiting factor, not 'existingSequencesNames'
         val existingSequencesNames: Set<String> = currentDialect.sequences().toSet()
 
         val missingSequences = mutableSetOf<Sequence>()
@@ -316,7 +318,12 @@ object MigrationUtils {
             }
         }
 
-        val existingSequencesNames: Set<String> = currentDialect.sequences().toSet()
+        val existingSequencesNames: Set<String> = if (currentDialect is PostgreSQLDialect) {
+            // only sequences with related links to [tables] are checked, to avoid dropping every unmapped sequence
+            currentDialect.existingSequences(*tables).values.flatMap { it.map { it.name } }
+        } else {
+            currentDialect.sequences()
+        }.toSet()
 
         val unmappedSequences = mutableSetOf<Sequence>()
 

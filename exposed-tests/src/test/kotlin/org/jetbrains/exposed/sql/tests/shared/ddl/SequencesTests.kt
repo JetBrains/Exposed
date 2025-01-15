@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
@@ -314,6 +315,83 @@ class SequencesTests : DatabaseTestsBase() {
                 // Clean up: create table and drop it for removing sequence
                 SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
                 SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
+            }
+        }
+    }
+
+    @Test
+    fun testExistingSequencesDetectedInIdentityTable() {
+        val identityTable = object : IntIdTable("identity_table") {}
+
+        withDb(TestDB.ALL_POSTGRES) {
+            try {
+                SchemaUtils.create(identityTable)
+
+                val foundSequence = currentDialectTest.existingSequences(identityTable)[identityTable]?.single()
+                assertNotNull(foundSequence)
+                assertEquals(identityTable.sequences.single().identifier, foundSequence.identifier)
+            } finally {
+                SchemaUtils.drop(identityTable)
+            }
+        }
+    }
+
+    @Test
+    fun testExistingSequencesNotDetectedWhenCreatedSeparately() {
+        val sequenceTable = object : Table("sequence_table") {
+            val counter = integer("counter").autoIncrement(myseq).defaultExpression(myseq.nextIntVal())
+        }
+
+        withDb(TestDB.ALL_POSTGRES) {
+            try {
+                SchemaUtils.create(sequenceTable)
+
+                assertTrue(currentDialectTest.existingSequences(sequenceTable)[sequenceTable].orEmpty().isEmpty())
+            } finally {
+                SchemaUtils.drop(sequenceTable)
+                SchemaUtils.dropSequence(myseq)
+            }
+        }
+    }
+
+    @Test
+    fun testExistingSequencesNotDetectedWhenUsedByTrigger() {
+        val sequenceTable = object : Table("sequence_table") {
+            val counter = integer("counter")
+        }
+
+        withDb(TestDB.ALL_POSTGRES) {
+            try {
+                SchemaUtils.create(sequenceTable)
+                SchemaUtils.createSequence(myseq)
+                exec(
+                    """
+                        CREATE OR REPLACE FUNCTION set_counter()
+                          RETURNS TRIGGER
+                          LANGUAGE PLPGSQL
+                          AS
+                        $$
+                        BEGIN
+                            New.counter:=nextval('${myseq.name}');
+                            RETURN NEW;
+                        END;
+                        $$;
+                    """.trimIndent()
+                )
+                exec(
+                    """
+                        CREATE TRIGGER set_counter
+                        BEFORE INSERT
+                        ON ${sequenceTable.tableName}
+                        FOR EACH ROW
+                        EXECUTE PROCEDURE set_counter();
+                    """.trimIndent()
+                )
+
+                assertTrue(currentDialectTest.existingSequences(sequenceTable)[sequenceTable].orEmpty().isEmpty())
+            } finally {
+                SchemaUtils.drop(sequenceTable)
+                SchemaUtils.dropSequence(myseq)
             }
         }
     }
