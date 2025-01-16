@@ -120,7 +120,9 @@ interface DatabaseDialect {
      * Returns a map with all the defined sequences that hold a relation to the specified [tables] in the database.
      *
      * **Note** PostgreSQL is currently the only database that maps relational dependencies for sequences created when
-     * a SERIAL column is registered to a table. Any sequence created using the CREATE SEQUENCE command will be ignored
+     * a SERIAL column is registered to an `IdTable`. Using this method with any other database returns an empty map.
+     *
+     * Any sequence created using the CREATE SEQUENCE command will be ignored
      * as it is not necessarily bound to any particular table. Sequences that are used in a table via triggers will also
      * not be returned.
      */

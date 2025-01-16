@@ -29,7 +29,7 @@ class Sequence(
     val identifier
         get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
 
-    override fun toString(): String = identifier
+    override fun toString(): String = "Sequence(identifier=$identifier)"
 
     /** The SQL statements that create this sequence. */
     val ddl: List<String>

@@ -1,5 +1,11 @@
 # Breaking Changes
 
+## 0.59.0
+* [PostgreSQL] `MigrationUtils.statementsRequiredForDatabaseMigration(*tables)` used to potentially return `DROP` statements for any database sequence not
+  mapped to an Exposed table object. Now it only checks against database sequences that have a relational dependency on any of the specified tables
+  (for example, any sequence automatically associated with a `SERIAL` column registered to `IdTable`). An unbound sequence created manually
+  via the `CREATE SEQUENCE` command will no longer be checked and will not generate a `DROP` statement.
+
 ## 0.57.0
 * Insert, Upsert, and Replace statements will no longer implicitly send all default values (except for client-side default values) in every SQL request. 
   This change will reduce the amount of data Exposed sends to the database and make Exposed rely more on the database's default values. 

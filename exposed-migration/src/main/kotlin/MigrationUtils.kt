@@ -5,7 +5,6 @@ import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveForeignKeyConstraints
 import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveIndices
 import org.jetbrains.exposed.sql.SchemaUtils.checkMappingConsistence
 import org.jetbrains.exposed.sql.SchemaUtils.createStatements
-import org.jetbrains.exposed.sql.SchemaUtils.statementsRequiredToActualizeScheme
 import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.exists
@@ -59,13 +58,21 @@ object MigrationUtils {
 
     /**
      * Returns the SQL statements that need to be executed to make the existing database schema compatible with
-     * the table objects defined using Exposed. Unlike [statementsRequiredToActualizeScheme], DROP/DELETE statements are
-     * included.
+     * the table objects defined using Exposed. Unlike `SchemaUtils.statementsRequiredToActualizeScheme()`,
+     * DROP/DELETE statements are included.
      *
      * **Note:** Some databases, like **SQLite**, only support `ALTER TABLE ADD COLUMN` syntax in very restricted cases,
      * which may cause unexpected behavior when adding some missing columns. For more information,
      * refer to the relevant documentation.
      * For SQLite, see [ALTER TABLE restrictions](https://www.sqlite.org/lang_altertable.html#alter_table_add_column).
+     *
+     * **Note:** If this method is called on a **PostgreSQL** database, it will check for a mapping inconsistency
+     * between the specified [tables] and existing sequences that have a relational dependency on any of these [tables]
+     * (for example, any sequence automatically associated with a `SERIAL` column registered to `IdTable`). This means
+     * that an unbound sequence created manually via the `CREATE SEQUENCE` command will no longer be checked and will
+     * not generate a DROP statement.
+     * When called on other databases, such an inconsistency will be checked against all sequences from the database,
+     * potentially returning DROP statements for any sequence unlinked or unrelated to [tables].
      *
      * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
@@ -140,7 +147,12 @@ object MigrationUtils {
 
     /**
      * Log Exposed table mappings <-> real database mapping problems and returns DDL Statements to fix them, including
-     * DROP/DELETE statements (unlike [checkMappingConsistence])
+     * DROP/DELETE statements (unlike [checkMappingConsistence]).
+     *
+     * **Note:** If this method is called on a PostgreSQL database, only sequences with a relational dependency on any
+     * of the specified [tables] will be checked for a mapping inconsistency. When called on other databases, all sequences
+     * from the database will be checked, potentially returning SQL statements to drop any sequences that are unlinked
+     * or unrelated to [tables].
      */
     private fun mappingConsistenceRequiredStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         return checkMissingIndices(tables = tables, withLogs).flatMap { it.createStatement() } +
@@ -304,6 +316,10 @@ object MigrationUtils {
     /**
      * Checks all [tables] for any that have sequences that exist in the database but are not mapped in the code. If
      * found, this function also logs the SQL statements that can be used to drop these sequences.
+     *
+     * **Note:** If this method is called on a PostgreSQL database, only sequences with a relational dependency on any
+     * of the specified [tables] will be checked for a mapping in Exposed code. When called on other databases, all sequences
+     * from the database will be checked, potentially returning any [Sequence] unlinked or unrelated to [tables].
      *
      * @return List of sequences that are unmapped and can be dropped.
      */
