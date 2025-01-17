@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE root
+    SYSTEM "https://resources.jetbrains.com/writerside/1.0/build-script.dtd">
+<root>
+    <builds>
+        <instance id="exposed" master="writerside.cfg" family="idea">
+            <artifact type="web2" universal-zip="false"/>
+        </instance>
+    </builds>
+</root>
