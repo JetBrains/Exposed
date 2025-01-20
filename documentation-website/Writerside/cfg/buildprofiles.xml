@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<buildprofiles xsi:noNamespaceSchemaLocation="https://helpserver.labs.jb.gg/help/schemas/mvp/build-profiles.xsd"
+<buildprofiles xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/build-profiles.xsd"
                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
+    <sitemap priority="0.35" change-frequency="monthly"/>
     <variables>
-        <product-web-url>https://jetbrains.github.io/Exposed/home.html</product-web-url>
+        <web-root>https://www.jetbrains.com/help</web-root>
+        <header-logo>exposed-logo-white.svg</header-logo>
         <algolia-id>MMA5Z3JT91</algolia-id>
         <algolia-index>prod_exposed</algolia-index>
         <algolia-api-key>119a138f76e4c043bcbb9f0c16119094</algolia-api-key>
@@ -13,8 +14,8 @@
     </variables>
     <build-profile instance="hi">
         <variables>
-            <header-logo>exposed-logo-white.svg</header-logo>
             <noindex-content>true</noindex-content>
+            <product-web-url>https://www.jetbrains.com/help/exposed/</product-web-url>
         </variables>
     </build-profile>
 

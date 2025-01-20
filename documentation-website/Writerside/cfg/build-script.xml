@@ -3,7 +3,7 @@
     SYSTEM "https://resources.jetbrains.com/writerside/1.0/build-script.dtd">
 <root>
     <builds>
-        <instance id="exposed" master="writerside.cfg" family="idea">
+        <instance id="hi" master="project.ihp" family="idea">
             <artifact type="web2" universal-zip="false"/>
         </instance>
     </builds>
