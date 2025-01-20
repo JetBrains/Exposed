@@ -10,9 +10,12 @@ import org.junit.Test
 
 class WarmUpLinkedReferencesTests : DatabaseTestsBase() {
 
-    object Box : IntIdTable()
+    object Box : IntIdTable() {
+        val value = integer("value")
+    }
 
     class EBox(id: EntityID<Int>) : IntEntity(id) {
+        var value by Box.value
 
         companion object : IntEntityClass<EBox>(Box)
     }
@@ -33,7 +36,11 @@ class WarmUpLinkedReferencesTests : DatabaseTestsBase() {
     @Test
     fun warmUpLinkedReferencesShouldNotReturnAllTheValueFromCache() {
         withTables(Box, BoxItem) {
-            val boxEntities = (0..4).map { EBox.new { } }
+            val boxEntities = (0..4).map {
+                EBox.new {
+                    value = it
+                }
+            }
 
             boxEntities.forEach {
                 EBoxItem.new {

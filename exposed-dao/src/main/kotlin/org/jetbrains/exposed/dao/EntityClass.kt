@@ -976,7 +976,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         val transaction = TransactionManager.current()
 
         val inCache = transaction.entityCache.referrers[sourceRefColumn]
-            ?.filterKeys { references.contains(it) }
+            ?.filterKeys { distinctRefIds.contains(it) }
             ?: emptyMap()
 
         val loaded = ((distinctRefIds - inCache.keys).takeIf { it.isNotEmpty() } as List<EntityID<SID>>?)?.let { idsToLoad ->
