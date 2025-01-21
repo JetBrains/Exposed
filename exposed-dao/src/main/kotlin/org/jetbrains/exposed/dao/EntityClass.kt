@@ -237,7 +237,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
                 else -> exp to value
             }
         }.toMap()
-        return wrapRow(ResultRow.createAndFillValues(newFieldsMapping))
+
+        return wrapRow(ResultRow.createAndFillFromWrappedValues(newFieldsMapping))
     }
 
     /**
@@ -265,7 +266,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
                 else -> exp to value
             }
         }.toMap()
-        return wrapRow(ResultRow.createAndFillValues(newFieldsMapping))
+
+        return wrapRow(ResultRow.createAndFillFromWrappedValues(newFieldsMapping))
     }
 
     /**
