@@ -10,12 +10,12 @@ fun Project.configureDetekt() {
     apply<DetektPlugin>()
 
     configure<DetektExtension> {
-        source.from(
-            files(
-                "$rootDir/documentation-website/Writerside/snippets",
-                "$rootDir/samples"
-            )
-        )
+//        source.from(
+//            files(
+//                "$rootDir/documentation-website/Writerside/snippets",
+//                "$rootDir/samples"
+//            )
+//        )
 
         ignoreFailures = false
         buildUponDefaultConfig = true
