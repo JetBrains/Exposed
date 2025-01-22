@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
@@ -374,7 +375,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             when (testDb) {
                 TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
                     assertEquals(2, statements.size)
-                    assertEquals("ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT", statements[0])
+                    assertEquals("ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT", statements[0])
                     assertEquals(expectedDropSequenceStatement("test_table_id_seq"), statements[1])
                 }
                 TestDB.ORACLE, TestDB.H2_V2_ORACLE -> {
@@ -731,15 +732,13 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
                 val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement)
                 assertEquals(2, statements.size)
-                assertEquals("ALTER TABLE test_table_auto ALTER COLUMN id TYPE INT", statements[0])
+                assertEquals("ALTER TABLE test_table_auto ALTER COLUMN id TYPE INT, ALTER COLUMN id DROP DEFAULT", statements[0])
                 assertEquals(expectedDropSequenceStatement("test_table_auto_id_seq"), statements[1])
 
-                // fails due to EXPOSED-696
-                // https://youtrack.jetbrains.com/issue/EXPOSED-696/PostgreSQL-Drop-of-auto-increment-sequence-fails-after-column-modified-without-dropping-default)
-//                statements.forEach { exec(it) }
-//                assertFalse(autoSeq.exists())
-//                assertTrue(sequence.exists())
-//                assertTrue(implicitSeq.exists())
+                statements.forEach { exec(it) }
+                assertFalse(autoSeq.exists())
+                assertTrue(sequence.exists())
+                assertTrue(implicitSeq.exists())
             } finally {
                 SchemaUtils.drop(tableWithAutoIncrement, tableWithExplSequence, tableWithImplSequence)
             }

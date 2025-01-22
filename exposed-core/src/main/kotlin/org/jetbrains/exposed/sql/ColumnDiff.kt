@@ -4,15 +4,15 @@ package org.jetbrains.exposed.sql
  * Represents differences between a column definition and database metadata for the existing column.
  */
 data class ColumnDiff(
-    /** Whether the nullability of the existing column is correct. */
+    /** Whether there is a mismatch between nullability of the existing column and the defined column. */
     val nullability: Boolean,
-    /** Whether the existing column has a matching auto-increment sequence. */
+    /** Whether there is a mismatch between auto-increment status of the existing column and the defined column. */
     val autoInc: Boolean,
-    /** Whether the default value of the existing column is correct. */
+    /** Whether the default value of the existing column matches that of the defined column. */
     val defaults: Boolean,
-    /** Whether the existing column identifier matches and has the correct casing. */
+    /** Whether the existing column identifier matches that of the defined column and has the correct casing. */
     val caseSensitiveName: Boolean,
-    /** Whether the size and scale of the existing column, if applicable, is correct. */
+    /** Whether the size and scale of the existing column, if applicable, match those of the defined column. */
     val sizeAndScale: Boolean,
 ) {
     /** Returns `true` if there is a difference between the column definition and the existing column in the database. */
