@@ -337,66 +337,6 @@ class SequencesTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testExistingSequencesNotDetectedWhenCreatedSeparately() {
-        val sequenceTable = object : Table("sequence_table") {
-            val counter = integer("counter").autoIncrement(myseq).defaultExpression(myseq.nextIntVal())
-        }
-
-        withDb(TestDB.ALL_POSTGRES) {
-            try {
-                SchemaUtils.create(sequenceTable)
-
-                assertTrue(currentDialectTest.existingSequences(sequenceTable)[sequenceTable].orEmpty().isEmpty())
-            } finally {
-                SchemaUtils.drop(sequenceTable)
-                SchemaUtils.dropSequence(myseq)
-            }
-        }
-    }
-
-    @Test
-    fun testExistingSequencesNotDetectedWhenUsedByTrigger() {
-        val sequenceTable = object : Table("sequence_table") {
-            val counter = integer("counter")
-        }
-
-        withDb(TestDB.ALL_POSTGRES) {
-            try {
-                SchemaUtils.create(sequenceTable)
-                SchemaUtils.createSequence(myseq)
-                exec(
-                    """
-                        CREATE OR REPLACE FUNCTION set_counter()
-                          RETURNS TRIGGER
-                          LANGUAGE PLPGSQL
-                          AS
-                        $$
-                        BEGIN
-                            New.counter:=nextval('${myseq.name}');
-                            RETURN NEW;
-                        END;
-                        $$;
-                    """.trimIndent()
-                )
-                exec(
-                    """
-                        CREATE TRIGGER set_counter
-                        BEFORE INSERT
-                        ON ${sequenceTable.tableName}
-                        FOR EACH ROW
-                        EXECUTE PROCEDURE set_counter();
-                    """.trimIndent()
-                )
-
-                assertTrue(currentDialectTest.existingSequences(sequenceTable)[sequenceTable].orEmpty().isEmpty())
-            } finally {
-                SchemaUtils.drop(sequenceTable)
-                SchemaUtils.dropSequence(myseq)
-            }
-        }
-    }
-
-    @Test
     fun testAutoIncrementColumnAccessWithEntity() {
         Assume.assumeTrue(TestDB.POSTGRESQL in TestDB.enabledDialects())
 

@@ -681,35 +681,47 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     @Test
     fun testOnlySpecifiedTableDropsSequence() {
-        val tableWithAutoIncrement = object : IntIdTable("test_table_1") {}
+        val tableWithAutoIncrement = object : IntIdTable("test_table_auto") {}
 
-        val tableWithoutAutoIncrement = object : IdTable<Int>("test_table_1") {
+        val tableWithoutAutoIncrement = object : IdTable<Int>("test_table_auto") {
             override val id: Column<EntityID<Int>> = integer("id").entityId()
             override val primaryKey = PrimaryKey(id)
         }
 
-        val tableWithSequence = object : Table("test_table_2") {
+        val tableWithExplSequence = object : Table("test_table_expl_seq") {
             val counter = integer("counter").autoIncrement(sequence)
             override val primaryKey = PrimaryKey(counter)
         }
+
+        val tableWithImplSequence = object : IntIdTable("test_table_impl_seq") {}
 
         withDb(TestDB.ALL_POSTGRES) {
             try {
                 SchemaUtils.create(
                     tableWithAutoIncrement, // uses SERIAL column
-                    tableWithSequence // uses Sequence 'my_sequence'
+                    tableWithExplSequence, // uses Sequence 'my_sequence'
+                    tableWithImplSequence // uses SERIAL column
                 )
 
+                val autoSeq = tableWithAutoIncrement.sequences.single()
+                val implicitSeq = tableWithImplSequence.sequences.single()
+                assertTrue(autoSeq.exists())
                 assertTrue(sequence.exists())
+                assertTrue(implicitSeq.exists())
 
                 val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement)
                 assertEquals(2, statements.size)
-                assertEquals("ALTER TABLE test_table_1 ALTER COLUMN id TYPE INT", statements[0])
-                assertEquals(expectedDropSequenceStatement("test_table_1_id_seq"), statements[1])
+                assertEquals("ALTER TABLE test_table_auto ALTER COLUMN id TYPE INT", statements[0])
+                assertEquals(expectedDropSequenceStatement("test_table_auto_id_seq"), statements[1])
 
-                assertTrue(sequence.exists())
+                // fails due to EXPOSED-696
+                // https://youtrack.jetbrains.com/issue/EXPOSED-696/PostgreSQL-Drop-of-auto-increment-sequence-fails-after-column-modified-without-dropping-default)
+//                statements.forEach { exec(it) }
+//                assertFalse(autoSeq.exists())
+//                assertTrue(sequence.exists())
+//                assertTrue(implicitSeq.exists())
             } finally {
-                SchemaUtils.drop(tableWithAutoIncrement, tableWithSequence)
+                SchemaUtils.drop(tableWithAutoIncrement, tableWithExplSequence, tableWithImplSequence)
             }
         }
     }
