@@ -431,6 +431,12 @@ interface ISqlExpressionBuilder {
         other: ExpressionWithColumnType<E>
     ): LessOp = LessOp(this, other)
 
+    /** Checks if this [EntityID] expression is less than some [other] [EntityID] expression. */
+    @JvmName("lessBetweenEntityIDs")
+    infix fun <T : Comparable<T>, E : EntityID<T>?> Expression<E>.less(
+        other: Expression<E>
+    ): LessOp = LessOp(this, other)
+
     // LESS THAN OR EQUAL
 
     /** Checks if this expression is less than or equal to some [t] value */
@@ -453,6 +459,12 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is less than or equal to some [other] [EntityID] expression. */
     infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.lessEq(
         other: ExpressionWithColumnType<E>
+    ): LessEqOp = LessEqOp(this, other)
+
+    /** Checks if this [EntityID] expression is less than or equal to some [other] [EntityID] expression. */
+    @JvmName("lessEqBetweenEntityIDs")
+    infix fun <T : Comparable<T>, E : EntityID<T>?> Expression<E>.lessEq(
+        other: Expression<E>
     ): LessEqOp = LessEqOp(this, other)
 
     // GREATER THAN
@@ -479,6 +491,12 @@ interface ISqlExpressionBuilder {
         other: ExpressionWithColumnType<E>
     ): GreaterOp = GreaterOp(this, other)
 
+    /** Checks if this [EntityID] expression is greater than some [other] [EntityID] expression. */
+    @JvmName("greaterBetweenEntityIDs")
+    infix fun <T : Comparable<T>, E : EntityID<T>?> Expression<E>.greater(
+        other: Expression<E>
+    ): GreaterOp = GreaterOp(this, other)
+
     // GREATER THAN OR EQUAL
 
     /** Checks if this expression is greater than or equal to some [t] value */
@@ -501,6 +519,12 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is greater than or equal to some [other] [EntityID] expression. */
     infix fun <T : Comparable<T>, V : T?, E : EntityID<T>?> Expression<V>.greaterEq(
         other: ExpressionWithColumnType<E>
+    ): GreaterEqOp = GreaterEqOp(this, other)
+
+    /** Checks if this [EntityID] expression is greater than or equal to some [other] [EntityID] expression. */
+    @JvmName("greaterEqBetweenEntityIDs")
+    infix fun <T : Comparable<T>, E : EntityID<T>?> Expression<E>.greaterEq(
+        other: Expression<E>
     ): GreaterEqOp = GreaterEqOp(this, other)
 
     // Comparison Predicates
