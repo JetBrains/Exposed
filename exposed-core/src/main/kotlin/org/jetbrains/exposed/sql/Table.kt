@@ -474,10 +474,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @see org.jetbrains.exposed.sql.vendors.VendorDialect.metadataMatchesTable
      */
     internal val tableNameWithoutSchemeSanitized: String
-        get() = tableNameWithoutScheme
-            .replace("\"", "")
-            .replace("'", "")
-            .replace("`", "")
+        get() = tableNameWithoutScheme.unquoted()
+
+    /**
+     * Returns the full table name with all quotes removed. If the table name includes a dot-prefixed schema name,
+     * the full name will be returned with '_' replacing the dot characters.
+     */
+    private val tableNameWithSchemaSanitized: String
+        get() = tableName.unquoted().replace('.', '_')
+
+    private fun String.unquoted(): String = replace("\"", "").replace("'", "").replace("`", "")
 
     private val _columns = mutableListOf<Column<*>>()
 
@@ -518,20 +524,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
 
     private val generatedUnsignedCheckPrefix
-        get() = "chk_${
-            tableName.replace("\"", "")
-                .replace("'", "")
-                .replace("`", "")
-                .replace('.', '_')
-        }_unsigned_"
+        get() = "chk_${tableNameWithSchemaSanitized}_unsigned_"
 
     private val generatedSignedCheckPrefix
-        get() = "chk_${
-            tableName.replace("\"", "")
-                .replace("'", "")
-                .replace("`", "")
-                .replace('.', '_')
-        }_signed_"
+        get() = "chk_${tableNameWithSchemaSanitized}_signed_"
 
     /**
      * Returns the table name in proper case.
@@ -1755,7 +1751,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                         }
                     }.ifEmpty { null }
                     filteredChecks?.mapIndexed { index, (name, op) ->
-                        val resolvedName = name.ifBlank { "check_${tableName}_$index" }
+                        val resolvedName = name.ifBlank { "check_${tableNameWithSchemaSanitized}_$index" }
                         CheckConstraint.from(this@Table, resolvedName, op).checkPart
                     }?.joinTo(this, prefix = ", ")
                 }

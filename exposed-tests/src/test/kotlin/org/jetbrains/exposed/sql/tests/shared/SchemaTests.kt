@@ -2,6 +2,10 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -172,6 +176,56 @@ class SchemaTests : DatabaseTestsBase() {
 
         transaction {
             SchemaUtils.dropSchema(schema)
+        }
+    }
+
+    @Test
+    fun testCheckConstraintsNamedWithoutSchemaPrefix() {
+        val schemaName = "my_schema"
+        val tester = object : Table("$schemaName.test_table") {
+            val amount1 = ushort("amount1") // implicit column check constraint
+            val amount2 = integer("amount2").check { it lessEq 100 } // explicit column check constraint
+            init {
+                check { (amount1 less 100.toUShort()) and (amount2 greater 50) } // explicit table check constraint
+            }
+        }
+
+        // SQLite does not recognize creation of schema other than the attached database.
+        // Check constraints only introduced in MySQL v8+.
+        withDb(excludeSettings = listOf(TestDB.SQLITE, TestDB.MYSQL_V5)) { testDb ->
+            val schema = prepareSchemaForTest(schemaName)
+            try {
+                SchemaUtils.createSchema(schema)
+                SchemaUtils.create(tester)
+
+                tester.insert {
+                    it[amount1] = 99u
+                    it[amount2] = 56
+                }
+
+                assertEquals(1L, tester.selectAll().count())
+
+                assertFailAndRollback("Column check constraints") {
+                    tester.insert {
+                        it[amount1] = 99999.toUShort()
+                        it[amount2] = Int.MAX_VALUE + 1
+                    }
+                }
+
+                assertFailAndRollback("Table check constraints") {
+                    tester.insert {
+                        it[amount1] = 101u
+                        it[amount2] = 49
+                    }
+                }
+            } finally {
+                if (testDb == TestDB.SQLSERVER) {
+                    SchemaUtils.drop(tester)
+                    SchemaUtils.dropSchema(schema)
+                } else {
+                    SchemaUtils.dropSchema(schema, cascade = true)
+                }
+            }
         }
     }
 }
