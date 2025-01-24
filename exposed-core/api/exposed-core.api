@@ -4147,8 +4147,6 @@ public final class org/jetbrains/exposed/sql/vendors/KeywordsKt {
 
 public final class org/jetbrains/exposed/sql/vendors/MariaDBDialect : org/jetbrains/exposed/sql/vendors/MysqlDialect {
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/MariaDBDialect$Companion;
-	public static final field SEQUENCE_MIN_MAJOR_VERSION I
-	public static final field SEQUENCE_MIN_MINOR_VERSION I
 	public fun <init> ()V
 	public fun createIndex (Lorg/jetbrains/exposed/sql/Index;)Ljava/lang/String;
 	public fun getFunctionProvider ()Lorg/jetbrains/exposed/sql/vendors/FunctionProvider;

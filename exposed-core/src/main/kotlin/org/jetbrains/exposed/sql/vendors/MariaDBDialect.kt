@@ -89,7 +89,7 @@ class MariaDBDialect : MysqlDialect() {
     }
 
     companion object : DialectNameProvider("MariaDB") {
-        const val SEQUENCE_MIN_MAJOR_VERSION = 10
-        const val SEQUENCE_MIN_MINOR_VERSION = 3
+        private const val SEQUENCE_MIN_MAJOR_VERSION = 10
+        private const val SEQUENCE_MIN_MINOR_VERSION = 3
     }
 }
