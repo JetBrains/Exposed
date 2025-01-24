@@ -474,10 +474,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @see org.jetbrains.exposed.sql.vendors.VendorDialect.metadataMatchesTable
      */
     internal val tableNameWithoutSchemeSanitized: String
-        get() = tableNameWithoutScheme
-            .replace("\"", "")
-            .replace("'", "")
-            .replace("`", "")
+        get() = tableNameWithoutScheme.unquoted()
+
+    /**
+     * Returns the full table name with all quotes removed. If the table name includes a dot-prefixed schema name,
+     * the full name will be returned with '_' replacing the dot characters.
+     */
+    private val tableNameWithSchemaSanitized: String
+        get() = tableName.unquoted().replace('.', '_')
+
+    private fun String.unquoted(): String = replace("\"", "").replace("'", "").replace("`", "")
 
     private val _columns = mutableListOf<Column<*>>()
 
@@ -518,20 +524,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private val checkConstraints = mutableListOf<Pair<String, Op<Boolean>>>()
 
     private val generatedUnsignedCheckPrefix
-        get() = "chk_${
-            tableName.replace("\"", "")
-                .replace("'", "")
-                .replace("`", "")
-                .replace('.', '_')
-        }_unsigned_"
+        get() = "chk_${tableNameWithSchemaSanitized}_unsigned_"
 
     private val generatedSignedCheckPrefix
-        get() = "chk_${
-            tableName.replace("\"", "")
-                .replace("'", "")
-                .replace("`", "")
-                .replace('.', '_')
-        }_signed_"
+        get() = "chk_${tableNameWithSchemaSanitized}_signed_"
 
     /**
      * Returns the table name in proper case.
@@ -708,52 +704,63 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // Numeric columns
 
-    /** Creates a numeric column, with the specified [name], for storing 1-byte integers. */
-    fun byte(name: String): Column<Byte> = registerColumn(name, ByteColumnType()).apply {
-        check("${generatedSignedCheckPrefix}byte_${this.unquotedName()}") { it.between(Byte.MIN_VALUE, Byte.MAX_VALUE) }
+    /** Creates a numeric column, with the specified [name], for storing 1-byte integers.
+     * An optional [checkConstraintName] can be passed to allow customizing the check constraint name when needed.
+     */
+    fun byte(name: String, checkConstraintName: String? = null): Column<Byte> = registerColumn(name, ByteColumnType()).apply {
+        check(checkConstraintName ?: "${generatedSignedCheckPrefix}byte_${this.unquotedName()}") { it.between(Byte.MIN_VALUE, Byte.MAX_VALUE) }
     }
 
     /** Creates a numeric column, with the specified [name], for storing 1-byte unsigned integers.
+     * An optional [checkConstraintName] can be passed to allow customizing the check constraint name when needed.
      *
      * **Note:** If the database being used is not MySQL, MariaDB, or SQL Server, this column will use the
      * database's 2-byte integer type with a check constraint that ensures storage of only values
      * between 0 and [UByte.MAX_VALUE] inclusive.
      */
-    fun ubyte(name: String): Column<UByte> = registerColumn(name, UByteColumnType()).apply {
-        check("${generatedUnsignedCheckPrefix}byte_${this.unquotedName()}") { it.between(0u, UByte.MAX_VALUE) }
+    fun ubyte(name: String, checkConstraintName: String? = null): Column<UByte> = registerColumn(name, UByteColumnType()).apply {
+        check(checkConstraintName ?: "${generatedUnsignedCheckPrefix}byte_${this.unquotedName()}") { it.between(0u, UByte.MAX_VALUE) }
     }
 
-    /** Creates a numeric column, with the specified [name], for storing 2-byte integers. */
-    fun short(name: String): Column<Short> = registerColumn(name, ShortColumnType()).apply {
-        check("${generatedSignedCheckPrefix}short_${this.unquotedName()}") { it.between(Short.MIN_VALUE, Short.MAX_VALUE) }
+    /** Creates a numeric column, with the specified [name], for storing 2-byte integers.
+     * An optional [checkConstraintName] can be passed to allow customizing the check constraint name when needed.
+     */
+    fun short(name: String, checkConstraintName: String? = null): Column<Short> = registerColumn(name, ShortColumnType()).apply {
+        check(checkConstraintName ?: "${generatedSignedCheckPrefix}short_${this.unquotedName()}") { it.between(Short.MIN_VALUE, Short.MAX_VALUE) }
     }
 
     /** Creates a numeric column, with the specified [name], for storing 2-byte unsigned integers.
+     * An optional [checkConstraintName] can be passed to allow customizing the check constraint name when needed.
      *
      * **Note:** If the database being used is not MySQL or MariaDB, this column will use the database's 4-byte
      * integer type with a check constraint that ensures storage of only values between 0 and [UShort.MAX_VALUE] inclusive.
      */
-    fun ushort(name: String): Column<UShort> = registerColumn(name, UShortColumnType()).apply {
-        check("$generatedUnsignedCheckPrefix${this.unquotedName()}") { it.between(0u, UShort.MAX_VALUE) }
+    fun ushort(name: String, checkConstraintName: String? = null): Column<UShort> = registerColumn(name, UShortColumnType()).apply {
+        check(checkConstraintName ?: "$generatedUnsignedCheckPrefix${this.unquotedName()}") { it.between(0u, UShort.MAX_VALUE) }
     }
 
-    /** Creates a numeric column, with the specified [name], for storing 4-byte integers. */
-    fun integer(name: String): Column<Int> = registerColumn(name, IntegerColumnType()).apply {
-        check("${generatedSignedCheckPrefix}integer_${this.unquotedName()}") { it.between(Int.MIN_VALUE, Int.MAX_VALUE) }
+    /** Creates a numeric column, with the specified [name], for storing 4-byte integers.
+     * An optional [checkConstraintName] can be passed to allow customizing the check constraint name when needed.
+     */
+    fun integer(name: String, checkConstraintName: String? = null): Column<Int> = registerColumn(name, IntegerColumnType()).apply {
+        check(checkConstraintName ?: "${generatedSignedCheckPrefix}integer_${this.unquotedName()}") { it.between(Int.MIN_VALUE, Int.MAX_VALUE) }
     }
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte unsigned integers.
+     * An optional [checkConstraintName] can be passed to allow customizing the check constraint name when needed.
      *
      * **Note:** If the database being used is not MySQL or MariaDB, this column will use the database's
      * 8-byte integer type with a check constraint that ensures storage of only values
      * between 0 and [UInt.MAX_VALUE] inclusive.
      */
-    fun uinteger(name: String): Column<UInt> = registerColumn(name, UIntegerColumnType()).apply {
-        check("$generatedUnsignedCheckPrefix${this.unquotedName()}") { it.between(0u, UInt.MAX_VALUE) }
+    fun uinteger(name: String, checkConstraintName: String? = null): Column<UInt> = registerColumn(name, UIntegerColumnType()).apply {
+        check(checkConstraintName ?: "$generatedUnsignedCheckPrefix${this.unquotedName()}") { it.between(0u, UInt.MAX_VALUE) }
     }
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
-    fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
+    fun long(name: String): Column<Long> = registerColumn(name, LongColumnType()).apply {
+        check("${generatedSignedCheckPrefix}long_${this.unquotedName()}") { it.between(Long.MIN_VALUE, Long.MAX_VALUE) }
+    }
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte unsigned integers.
      *
@@ -1698,6 +1705,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 append("IF NOT EXISTS ")
             }
             append(TransactionManager.current().identity(this@Table))
+
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { column ->
                     column.descriptionDdl(false)
@@ -1744,9 +1752,17 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                         } else {
                             it
                         }
+                    }.let {
+                        if (currentDialect !is OracleDialect) {
+                            it.filterNot { (name, _) ->
+                                name.startsWith("${generatedSignedCheckPrefix}long")
+                            }
+                        } else {
+                            it
+                        }
                     }.ifEmpty { null }
                     filteredChecks?.mapIndexed { index, (name, op) ->
-                        val resolvedName = name.ifBlank { "check_${tableName}_$index" }
+                        val resolvedName = name.ifBlank { "check_${tableNameWithSchemaSanitized}_$index" }
                         CheckConstraint.from(this@Table, resolvedName, op).checkPart
                     }?.joinTo(this, prefix = ", ")
                 }

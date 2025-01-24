@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests.shared.ddl
 import MigrationUtils
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -57,7 +58,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), noPKTable) {
             val script = MigrationUtils.generateMigrationScript(singlePKTable, scriptDirectory = scriptDirectory, scriptName = scriptName, withLogs = false)
             assertTrue(script.exists())
-            assertEquals("src/test/resources/$scriptName.sql", script.path)
+            assertEquals("src${File.separator}test${File.separator}resources${File.separator}$scriptName.sql", script.path)
 
             val expectedStatements: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(singlePKTable, withLogs = false)
             assertEquals(1, expectedStatements.size)
@@ -485,6 +486,10 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         TestDB.H2_V1 -> {
                             assertEquals(0, statements.size)
                         }
+                        in TestDB.ALL_POSTGRES -> {
+                            // previous sequence used by column is altered but no longer dropped as not linked
+                            assertEquals(0, statements.size)
+                        }
                         else -> {
                             assertEquals(1, statements.size)
                             assertTrue(statements[0].equals(expectedDropSequenceStatement(sequenceName), ignoreCase = true))
@@ -509,11 +514,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrement, withLogs = false)
                     when (testDb) {
                         TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
-                            assertEquals(4, statements.size)
+                            // previous sequence used by column is altered but no longer dropped as not linked
+                            assertEquals(3, statements.size)
                             assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
                             assertEquals("ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')", statements[1])
                             assertEquals("ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id", statements[2])
-                            assertEquals(expectedDropSequenceStatement(sequenceName), statements[3])
                         }
                         TestDB.SQLSERVER -> {
                             assertEquals(4, statements.size)
@@ -564,6 +569,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                             assertEquals(1, statements.size)
                             assertEquals(expectedCreateSequenceStatement(sequence.name), statements[0])
                         }
+                        in TestDB.ALL_POSTGRES -> {
+                            // previous sequence used by column is altered but no longer dropped as not linked
+                            assertEquals(1, statements.size)
+                            assertEquals(expectedCreateSequenceStatement(sequence.name), statements[0])
+                        }
                         else -> {
                             assertEquals(2, statements.size)
                             assertEquals(expectedCreateSequenceStatement(sequence.name), statements[0])
@@ -588,7 +598,8 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement, withLogs = false)
                     when (testDb) {
-                        TestDB.H2_V1 -> {
+                        TestDB.H2_V1, in TestDB.ALL_POSTGRES -> {
+                            // previous sequence used by column is altered but no longer dropped as not linked
                             assertEquals(0, statements.size)
                         }
                         else -> {
@@ -615,11 +626,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrement, withLogs = false)
                     when (testDb) {
                         TestDB.POSTGRESQL, TestDB.POSTGRESQLNG -> {
-                            assertEquals(4, statements.size)
+                            // previous sequence used by column is altered but no longer dropped as not linked
+                            assertEquals(3, statements.size)
                             assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
                             assertEquals("ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')", statements[1])
                             assertEquals("ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id", statements[2])
-                            assertEquals(expectedDropSequenceStatement(sequence.name), statements[3])
                         }
                         TestDB.SQLSERVER -> {
                             assertEquals(4, statements.size)
@@ -670,6 +681,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                             assertEquals(1, statements.size)
                             assertEquals(expectedCreateSequenceStatement(sequenceName), statements[0])
                         }
+                        in TestDB.ALL_POSTGRES -> {
+                            // previous sequence used by column is altered but no longer dropped as not linked
+                            assertEquals(1, statements.size)
+                            assertEquals(expectedCreateSequenceStatement(sequenceName), statements[0])
+                        }
                         else -> {
                             assertEquals(2, statements.size)
                             assertEquals(expectedCreateSequenceStatement(sequenceName), statements[0])
@@ -679,6 +695,53 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 } finally {
                     SchemaUtils.drop(tableWithAutoIncrementCustomSequence)
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testOnlySpecifiedTableDropsSequence() {
+        val tableWithAutoIncrement = object : IntIdTable("test_table_auto") {}
+
+        val tableWithoutAutoIncrement = object : IdTable<Int>("test_table_auto") {
+            override val id: Column<EntityID<Int>> = integer("id").entityId()
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        val tableWithExplSequence = object : Table("test_table_expl_seq") {
+            val counter = integer("counter").autoIncrement(sequence)
+            override val primaryKey = PrimaryKey(counter)
+        }
+
+        val tableWithImplSequence = object : IntIdTable("test_table_impl_seq") {}
+
+        withDb(TestDB.ALL_POSTGRES) {
+            try {
+                SchemaUtils.create(
+                    tableWithAutoIncrement, // uses SERIAL column
+                    tableWithExplSequence, // uses Sequence 'my_sequence'
+                    tableWithImplSequence // uses SERIAL column
+                )
+
+                val autoSeq = tableWithAutoIncrement.sequences.single()
+                val implicitSeq = tableWithImplSequence.sequences.single()
+                assertTrue(autoSeq.exists())
+                assertTrue(sequence.exists())
+                assertTrue(implicitSeq.exists())
+
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement)
+                assertEquals(2, statements.size)
+                assertEquals("ALTER TABLE test_table_auto ALTER COLUMN id TYPE INT", statements[0])
+                assertEquals(expectedDropSequenceStatement("test_table_auto_id_seq"), statements[1])
+
+                // fails due to EXPOSED-696
+                // https://youtrack.jetbrains.com/issue/EXPOSED-696/PostgreSQL-Drop-of-auto-increment-sequence-fails-after-column-modified-without-dropping-default)
+//                statements.forEach { exec(it) }
+//                assertFalse(autoSeq.exists())
+//                assertTrue(sequence.exists())
+//                assertTrue(implicitSeq.exists())
+            } finally {
+                SchemaUtils.drop(tableWithAutoIncrement, tableWithExplSequence, tableWithImplSequence)
             }
         }
     }

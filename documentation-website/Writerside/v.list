@@ -2,7 +2,8 @@
 <!DOCTYPE vars SYSTEM "https://helpserver.labs.jb.gg/help/schemas/mvp/vars.dtd">
 <vars>
     <var name="product" value="Writerside"/>
-    <var name="exposed_version" value="0.57.0"/>
+    <var name="exposed_version" value="0.58.0"/>
     <var name="h2_db_version" value="2.2.224"/>
+    <var name="slf4j_nop_version" value="1.7.30"/>
     <var name="BASE_API_URL" value="https://jetbrains.github.io/Exposed/api"/>
 </vars>

@@ -1,5 +1,34 @@
 # Breaking Changes
 
+## 0.59.0
+* [PostgreSQL] `MigrationUtils.statementsRequiredForDatabaseMigration(*tables)` used to potentially return `DROP` statements for any database sequence not
+  mapped to an Exposed table object. Now it only checks against database sequences that have a relational dependency on any of the specified tables
+  (for example, any sequence automatically associated with a `SERIAL` column registered to `IdTable`). An unbound sequence created manually
+  via the `CREATE SEQUENCE` command will no longer be checked and will not generate a `DROP` statement.
+* In H2 Oracle, the `long()` column now maps to data type `BIGINT` instead of `NUMBER(19)`.
+  In Oracle, using the long column in a table now also creates a CHECK constraint to ensure that no out-of-range values are inserted.
+  Exposed does not ensure this behaviour for SQLite. If you want to do that, please use the following CHECK constraint:
+
+```kotlin
+val long = long("long_column").check { column ->
+    fun typeOf(value: String) = object : ExpressionWithColumnType<String>() {
+        override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("typeof($value)") }
+        override val columnType: IColumnType<String> = TextColumnType()
+    }
+    Expression.build { typeOf(column.name) eq stringLiteral("integer") }
+}
+
+val long = long("long_column").nullable().check { column ->
+    fun typeOf(value: String) = object : ExpressionWithColumnType<String>() {
+        override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("typeof($value)") }
+        override val columnType: IColumnType<String> = TextColumnType()
+    }
+
+    val typeCondition = Expression.build { typeOf(column.name) eq stringLiteral("integer") }
+    column.isNull() or typeCondition
+}
+```
+
 ## 0.57.0
 * Insert, Upsert, and Replace statements will no longer implicitly send all default values (except for client-side default values) in every SQL request. 
   This change will reduce the amount of data Exposed sends to the database and make Exposed rely more on the database's default values. 

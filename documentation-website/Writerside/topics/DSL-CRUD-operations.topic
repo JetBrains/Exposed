@@ -154,7 +154,7 @@
     <chapter title="Read" id="read">
         <chapter title="Retrieve a record" id="select">
             <p>The
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/select.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-column-set/select.html">
                     <code>.select()</code>
                 </a>
                 function allows you to select specific columns or/and expressions.</p>

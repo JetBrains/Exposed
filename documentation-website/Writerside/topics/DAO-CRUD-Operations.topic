@@ -140,9 +140,22 @@
                         include-symbol="users"/>
         </chapter>
         <chapter title="Sort results" id="sort-by">
+            <p>
+                The <code>.all()</code> function returns a <code>SizedIterable</code> that stores all entity instances
+                associated with the invoking entity class. <code>SizedIterable</code> implements the Kotlin
+                <code>Iterable</code> interface, which allows calling any sorting methods from the
+                <a href="https://kotlinlang.org/api/core/kotlin-stdlib/">
+                    Kotlin standard library
+                </a>
+                .
+            </p>
             <chapter title="Ascending order" id="sortedBy">
                 <p>
-                    To sort results in ascending order, use the <code>.sortedBy()</code> function:
+                    To sort results in ascending order, use the
+                    <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/sorted-by.html">
+                        <code>.sortedBy()</code>
+                    </a>
+                    function:
                 </p>
                 <code-block lang="kotlin"
                             src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt"
@@ -150,7 +163,11 @@
             </chapter>
             <chapter title="Descending order" id="sortedByDescending">
                 <p>
-                    To sort results in descending order, use <code>.sortedByDescending()</code>:
+                    To sort results in descending order, use the
+                    <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/sorted-by-descending.html">
+                        <code>.sortedByDescending()</code>
+                    </a>
+                    function:
                 </p>
                 <code-block lang="kotlin"
                             src="exposed-dao/src/main/kotlin/org/example/examples/ReadExamples.kt"
