@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
@@ -314,6 +315,23 @@ class SequencesTests : DatabaseTestsBase() {
                 // Clean up: create table and drop it for removing sequence
                 SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
                 SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
+            }
+        }
+    }
+
+    @Test
+    fun testExistingSequencesDetectedInIdentityTable() {
+        val identityTable = object : IntIdTable("identity_table") {}
+
+        withDb(TestDB.ALL_POSTGRES) {
+            try {
+                SchemaUtils.create(identityTable)
+
+                val foundSequence = currentDialectTest.existingSequences(identityTable)[identityTable]?.single()
+                assertNotNull(foundSequence)
+                assertEquals(identityTable.sequences.single().identifier, foundSequence.identifier)
+            } finally {
+                SchemaUtils.drop(identityTable)
             }
         }
     }

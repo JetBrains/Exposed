@@ -594,6 +594,12 @@ object SchemaUtils {
      * to use a lock based on synchronization with a dummy table.
      * @see SchemaUtils.withDataBaseLock
      */
+    @Deprecated(
+        "Execution of this function might lead to unpredictable state in the database if a failure occurs at any point. " +
+            "To prevent this, please use `MigrationUtils.statementsRequiredForDatabaseMigration` with a third-party migration tool (e.g., Flyway).",
+        ReplaceWith("MigrationUtils.statementsRequiredForDatabaseMigration"),
+        DeprecationLevel.WARNING
+    )
     fun createMissingTablesAndColumns(vararg tables: Table, inBatch: Boolean = false, withLogs: Boolean = true) {
         with(TransactionManager.current()) {
             db.dialect.resetCaches()
@@ -637,6 +643,11 @@ object SchemaUtils {
      * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
      */
+    @Deprecated(
+        "This function will be removed in future releases.",
+        ReplaceWith("MigrationUtils.statementsRequiredForDatabaseMigration"),
+        DeprecationLevel.WARNING
+    )
     fun statementsRequiredToActualizeScheme(vararg tables: Table, withLogs: Boolean = true): List<String> {
         val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() }
         val createStatements = logTimeSpent("Preparing create tables statements", withLogs) {
@@ -845,11 +856,21 @@ object SchemaUtils {
     }
 
     /**
-     * Retrieves a list of all table names in the current database.
+     * Retrieves a list of all table names in the current database schema.
+     * The names will be returned with schema prefixes if the database supports it.
      *
      * @return A list of table names as strings.
      */
     fun listTables(): List<String> = currentDialect.allTablesNames()
+
+    /**
+     * Returns a list with the names of all the tables in all database schemas.
+     * The names will be returned with schema prefixes, if the database supports it, and non-user defined tables,
+     * like system information table names, will be included.
+     *
+     * @return A list of table names as strings.
+     */
+    fun listTablesInAllSchemas(): List<String> = currentDialect.allTablesNamesInAllSchemas()
 
     /** Drops all [tables], using a batch execution if [inBatch] is set to `true`. */
     fun drop(vararg tables: Table, inBatch: Boolean = false) {

@@ -78,8 +78,18 @@ interface DatabaseDialect {
     /** Returns the name of the current database. */
     fun getDatabase(): String
 
-    /** Returns a list with the names of all the defined tables. */
+    /**
+     * Returns a list with the names of all the defined tables in the current database schema.
+     * The names will be returned with schema prefixes if the database supports it.
+     */
     fun allTablesNames(): List<String>
+
+    /**
+     * Returns a list with the names of all the tables in all database schemas.
+     * The names will be returned with schema prefixes, if the database supports it, and non-user defined tables,
+     * like system information table names, will be included.
+     */
+    fun allTablesNamesInAllSchemas(): List<String>
 
     /** Checks if the specified table exists in the database. */
     fun tableExists(table: Table): Boolean
@@ -105,6 +115,18 @@ interface DatabaseDialect {
 
     /** Returns a map with the primary key metadata in each of the specified [tables]. */
     fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> = emptyMap()
+
+    /**
+     * Returns a map with all the defined sequences that hold a relation to the specified [tables] in the database.
+     *
+     * **Note** PostgreSQL is currently the only database that maps relational dependencies for sequences created when
+     * a SERIAL column is registered to an `IdTable`. Using this method with any other database returns an empty map.
+     *
+     * Any sequence created using the CREATE SEQUENCE command will be ignored
+     * as it is not necessarily bound to any particular table. Sequences that are used in a table via triggers will also
+     * not be returned.
+     */
+    fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> = emptyMap()
 
     /** Returns a list of the names of all sequences in the database. */
     fun sequences(): List<String>

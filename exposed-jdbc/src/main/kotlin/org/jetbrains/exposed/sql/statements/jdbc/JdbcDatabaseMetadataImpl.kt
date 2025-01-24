@@ -89,6 +89,18 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         override fun get(key: K): V? = map.getOrPut(key) { default(key) }
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false
+
+        override val entries: Set<Map.Entry<K, V>>
+            get() = throw UnsupportedOperationException(
+                "The entries field should not be used on CachableMapWithDefault because the lazy population of the collection for missing keys " +
+                    "and entries may lead to inconsistencies between calls."
+            )
+
+        override val keys: Set<K>
+            get() = throw UnsupportedOperationException(
+                "The keys field should not be used on CachableMapWithDefault because the lazy population of the collection for missing keys " +
+                    "and keys may lead to inconsistencies between calls."
+            )
     }
 
     override val tableNames: Map<String, List<String>>
@@ -314,6 +326,63 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 rs.close()
                 if (pkName.isEmpty()) null else PrimaryKeyMetadata(pkName, columnNames)
             }
+        }
+    }
+
+    override fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> {
+        if (currentDialect !is PostgreSQLDialect) return emptyMap()
+
+        val transaction = TransactionManager.current()
+        return tables.associateWith { table ->
+            val (_, tableSchema) = tableCatalogAndSchema(table)
+            transaction.exec(
+                """
+                    SELECT seq_details.sequence_name,
+                    seq_details.start,
+                    seq_details.increment,
+                    seq_details.max,
+                    seq_details.min,
+                    seq_details.cache,
+                    seq_details.cycle
+                    FROM pg_catalog.pg_namespace tns
+                             INNER JOIN pg_catalog.pg_class t ON tns.oid = t.relnamespace AND t.relkind IN ('p', 'r')
+                             INNER JOIN pg_catalog.pg_depend d ON t.oid = d.refobjid
+                             LEFT OUTER JOIN (
+                                SELECT s.relname AS sequence_name,
+                                seq.seqstart AS start,
+                                seq.seqincrement AS increment,
+                                seq.seqmax AS max,
+                                seq.seqmin AS min,
+                                seq.seqcache AS cache,
+                                seq.seqcycle AS cycle,
+                                s.oid AS seq_id
+                                FROM pg_catalog.pg_sequence seq
+                                JOIN pg_catalog.pg_class s ON s.oid = seq.seqrelid AND s.relkind = 'S'
+                                JOIN pg_catalog.pg_namespace sns ON s.relnamespace = sns.oid
+                                WHERE sns.nspname = '$tableSchema'
+                             ) seq_details ON seq_details.seq_id = d.objid
+                    WHERE tns.nspname = '$tableSchema' AND t.relname = '${table.nameInDatabaseCaseUnquoted()}'
+                """.trimIndent()
+            ) { rs ->
+                val tmpSequences = mutableListOf<Sequence>()
+                while (rs.next()) {
+                    rs.getString("sequence_name")?.let {
+                        tmpSequences.add(
+                            Sequence(
+                                it,
+                                rs.getLong("start"),
+                                rs.getLong("increment"),
+                                rs.getLong("min"),
+                                rs.getLong("max"),
+                                rs.getBoolean("cycle"),
+                                rs.getLong("cache")
+                            )
+                        )
+                    }
+                }
+                rs.close()
+                tmpSequences
+            }.orEmpty()
         }
     }
 
