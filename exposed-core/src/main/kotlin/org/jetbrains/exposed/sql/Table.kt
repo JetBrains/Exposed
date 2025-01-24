@@ -758,7 +758,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
-    fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
+    fun long(name: String): Column<Long> = registerColumn(name, LongColumnType()).apply {
+        check("${generatedSignedCheckPrefix}long_${this.unquotedName()}") { it.between(Long.MIN_VALUE, Long.MAX_VALUE) }
+    }
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte unsigned integers.
      *
@@ -1703,6 +1705,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 append("IF NOT EXISTS ")
             }
             append(TransactionManager.current().identity(this@Table))
+
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { column ->
                     column.descriptionDdl(false)
@@ -1745,6 +1748,14 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                         if (currentDialect !is SQLiteDialect && currentDialect !is OracleDialect) {
                             it.filterNot { (name, _) ->
                                 name.startsWith("${generatedSignedCheckPrefix}integer")
+                            }
+                        } else {
+                            it
+                        }
+                    }.let {
+                        if (currentDialect !is OracleDialect) {
+                            it.filterNot { (name, _) ->
+                                name.startsWith("${generatedSignedCheckPrefix}long")
                             }
                         } else {
                             it
