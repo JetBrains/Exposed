@@ -2085,7 +2085,6 @@ public final class org/jetbrains/exposed/sql/ResultRow {
 public final class org/jetbrains/exposed/sql/ResultRow$Companion {
 	public final fun create (Ljava/sql/ResultSet;Ljava/util/Map;)Lorg/jetbrains/exposed/sql/ResultRow;
 	public final fun createAndFillDefaults (Ljava/util/List;)Lorg/jetbrains/exposed/sql/ResultRow;
-	public final fun createAndFillFromWrappedValues (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/ResultRow;
 	public final fun createAndFillValues (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/ResultRow;
 }
 

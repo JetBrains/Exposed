@@ -238,7 +238,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             }
         }.toMap()
 
-        return wrapRow(ResultRow.createAndFillFromWrappedValues(newFieldsMapping))
+        return wrapRow(ResultRow.createAndFillValues(unwrapColumnValues(newFieldsMapping)))
     }
 
     /**
@@ -267,7 +267,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             }
         }.toMap()
 
-        return wrapRow(ResultRow.createAndFillFromWrappedValues(newFieldsMapping))
+        return wrapRow(ResultRow.createAndFillValues(unwrapColumnValues(newFieldsMapping)))
     }
 
     /**
@@ -1171,4 +1171,10 @@ abstract class ImmutableCachedEntityClass<ID : Any, out T : Entity<ID>>(
         entity._readValues?.set(column, value)
         expireCache()
     }
+}
+
+internal fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
+    if (col !is ExpressionWithColumnType<*>) return@mapValues value
+
+    value?.let { (col.columnType as? ColumnWithTransform<Any, Any>)?.unwrapRecursive(it) } ?: value
 }

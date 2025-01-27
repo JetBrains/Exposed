@@ -162,13 +162,6 @@ class ResultRow(
             return ResultRow(fieldIndex, values)
         }
 
-        /** Creates a [ResultRow] using the expressions and values provided by [data].
-         *  If the value associated with [ColumnWithTransform] column it will be unwrapped.
-         *  [ResultRow] supposed to store unwrapped values. */
-        fun createAndFillFromWrappedValues(data: Map<Expression<*>, Any?>): ResultRow {
-            return createAndFillValues(unwrapColumnValues(data))
-        }
-
         /** Creates a [ResultRow] storing [columns] with their default or nullable values. */
         fun createAndFillDefaults(columns: List<Column<*>>): ResultRow =
             ResultRow(columns.withIndex().associate { it.value to it.index }).apply {
