@@ -279,6 +279,26 @@ class SelectTests : DatabaseTestsBase() {
     }
 
     @Test
+    fun testEqSubQuery() {
+        withCitiesAndUsers { _, _, userData ->
+            val query = userData.selectAll().where {
+                userData.value eqSubQuery userData.select(userData.value).where { userData.user_id eq "eugene" }
+            }
+            assertEquals(2, query.count())
+        }
+    }
+
+    @Test
+    fun testNotEqSubQuery() {
+        withCitiesAndUsers { _, _, userData ->
+            val query = userData.selectAll().where {
+                userData.value notEqSubQuery userData.select(userData.value).where { userData.user_id eq "sergey" }
+            }
+            assertEquals(3, query.count())
+        }
+    }
+
+    @Test
     fun testLessSubQuery() {
         withCitiesAndUsers { _, _, userData ->
             val query = userData.selectAll().where {
