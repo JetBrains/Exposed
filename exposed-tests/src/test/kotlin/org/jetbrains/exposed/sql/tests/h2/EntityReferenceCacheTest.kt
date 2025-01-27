@@ -95,6 +95,29 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun `test backReferencedOn works out of transaction via warmup`() {
+        var y1: EntityTestsData.YEntity by Delegates.notNull()
+        var b1: EntityTestsData.BEntity by Delegates.notNull()
+        executeOnH2(EntityTestsData.XTable, EntityTestsData.YTable) {
+            transaction(db) {
+                y1 = EntityTestsData.YEntity.new {}
+                b1 = EntityTestsData.BEntity.new {
+                    this.y = y1
+                }
+            }
+            assertFails { y1.b }
+
+            transaction(dbWithCache) {
+                y1.refresh()
+                b1.refresh()
+                y1.load(EntityTestsData.YEntity::b)
+            }
+
+            assertEquals(b1.id, y1.b?.id)
+        }
+    }
+
+    @Test
     fun `test referenceOn works out of transaction via with`() {
         var b1: EntityTests.Board by Delegates.notNull()
         var p1: EntityTests.Post by Delegates.notNull()
