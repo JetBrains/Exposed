@@ -627,6 +627,26 @@ class EqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp
  */
 class NotEqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("!=", expr, query)
 
+/**
+ * Represents an SQL operator that checks if [expr] is less than the single value returned from [query].
+ */
+class LessSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("<", expr, query)
+
+/**
+ * Represents an SQL operator that checks if [expr] is less than or equal to the single value returned from [query].
+ */
+class LessEqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>("<=", expr, query)
+
+/**
+ * Represents an SQL operator that checks if [expr] is greater than the single value returned from [query].
+ */
+class GreaterSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>(">", expr, query)
+
+/**
+ * Represents an SQL operator that checks if [expr] is greater than or equal to the single value returned from [query].
+ */
+class GreaterEqSubQueryOp<T>(expr: Expression<T>, query: AbstractQuery<*>) : SubQueryOp<T>(">=", expr, query)
+
 // Literals
 
 /**

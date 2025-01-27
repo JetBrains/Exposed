@@ -881,6 +881,18 @@ interface ISqlExpressionBuilder {
     /** Checks if this expression is not equals to single value returned from [query]. */
     infix fun <T> Expression<T>.notEqSubQuery(query: AbstractQuery<*>): NotEqSubQueryOp<T> = NotEqSubQueryOp(this, query)
 
+    /** Checks if this expression is less than the single value returned from [query]. */
+    infix fun <T> Expression<T>.lessSubQuery(query: AbstractQuery<*>): LessSubQueryOp<T> = LessSubQueryOp(this, query)
+
+    /** Checks if this expression is less than or equal to the single value returned from [query]. */
+    infix fun <T> Expression<T>.lessEqSubQuery(query: AbstractQuery<*>): LessEqSubQueryOp<T> = LessEqSubQueryOp(this, query)
+
+    /** Checks if this expression is greater than the single value returned from [query]. */
+    infix fun <T> Expression<T>.greaterSubQuery(query: AbstractQuery<*>): GreaterSubQueryOp<T> = GreaterSubQueryOp(this, query)
+
+    /** Checks if this expression is greater than or equal to the single value returned from [query]. */
+    infix fun <T> Expression<T>.greaterEqSubQuery(query: AbstractQuery<*>): GreaterEqSubQueryOp<T> = GreaterEqSubQueryOp(this, query)
+
     // Array Comparisons
 
     /**
