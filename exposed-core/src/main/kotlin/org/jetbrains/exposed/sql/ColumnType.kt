@@ -148,7 +148,7 @@ class AutoIncColumnType<T>(
                 it,
                 startWith = 1,
                 minValue = 1,
-                maxValue = Long.MAX_VALUE
+                maxValue = currentDialect.sequenceMaxValue
             )
         }
 

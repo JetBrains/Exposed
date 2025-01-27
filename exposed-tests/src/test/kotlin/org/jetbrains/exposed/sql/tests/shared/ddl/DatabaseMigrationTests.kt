@@ -25,9 +25,18 @@ import kotlin.test.assertNull
 @OptIn(ExperimentalDatabaseMigrationApi::class)
 class DatabaseMigrationTests : DatabaseTestsBase() {
 
+    private lateinit var sequence: Sequence
+
     @Before
     fun dropAllSequences() {
         withDb {
+            sequence = Sequence(
+                name = "my_sequence",
+                startWith = 1,
+                minValue = 1,
+                maxValue = currentDialectTest.sequenceMaxValue
+            )
+
             if (currentDialectTest.supportsCreateSequence) {
                 val allSequences = currentDialectTest.sequences().map { name -> Sequence(name) }.toSet()
                 allSequences.forEach { sequence ->
@@ -769,33 +778,34 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
     private fun expectedCreateSequenceStatement(sequenceName: String) =
         "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
-            "$sequenceName START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807"
+            "$sequenceName START WITH 1 MINVALUE 1 MAXVALUE ${currentDialectTest.sequenceMaxValue}"
 
     private fun expectedDropSequenceStatement(sequenceName: String) =
         "DROP SEQUENCE${" IF EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} $sequenceName"
 
-    private val sequence = Sequence(
-        name = "my_sequence",
-        startWith = 1,
-        minValue = 1,
-        maxValue = 9223372036854775807
-    )
+    private val sequenceName by lazy { "custom_sequence" }
 
-    private val sequenceName = "custom_sequence"
-
-    private val tableWithoutAutoIncrement = object : IdTable<Long>("test_table") {
-        override val id: Column<EntityID<Long>> = long("id").entityId()
+    private val tableWithoutAutoIncrement by lazy {
+        object : IdTable<Long>("test_table") {
+            override val id: Column<EntityID<Long>> = long("id").entityId()
+        }
     }
 
-    private val tableWithAutoIncrement = object : IdTable<Long>("test_table") {
-        override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
+    private val tableWithAutoIncrement by lazy {
+        object : IdTable<Long>("test_table") {
+            override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
+        }
     }
 
-    private val tableWithAutoIncrementCustomSequence = object : IdTable<Long>("test_table") {
-        override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
+    private val tableWithAutoIncrementCustomSequence by lazy {
+        object : IdTable<Long>("test_table") {
+            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
+        }
     }
 
-    private val tableWithAutoIncrementSequenceName = object : IdTable<Long>("test_table") {
-        override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
+    private val tableWithAutoIncrementSequenceName by lazy {
+        object : IdTable<Long>("test_table") {
+            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
+        }
     }
 }
