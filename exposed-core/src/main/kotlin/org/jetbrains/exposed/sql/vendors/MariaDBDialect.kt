@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
     override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
@@ -70,6 +71,12 @@ class MariaDBDialect : MysqlDialect() {
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
     override val supportsSetDefaultReferenceOption: Boolean = false
+    override val supportsCreateSequence: Boolean by lazy {
+        TransactionManager.current().db.isVersionCovers(SEQUENCE_MIN_MAJOR_VERSION, SEQUENCE_MIN_MINOR_VERSION)
+    }
+
+    // actually MariaDb supports it but jdbc driver prepares statement without RETURNING clause
+    override val supportsSequenceAsGeneratedKeys: Boolean = false
 
     override fun createIndex(index: Index): String {
         if (index.functions != null) {
@@ -81,5 +88,8 @@ class MariaDBDialect : MysqlDialect() {
         return super.createIndex(index)
     }
 
-    companion object : DialectNameProvider("MariaDB")
+    companion object : DialectNameProvider("MariaDB") {
+        private const val SEQUENCE_MIN_MAJOR_VERSION = 10
+        private const val SEQUENCE_MIN_MINOR_VERSION = 3
+    }
 }

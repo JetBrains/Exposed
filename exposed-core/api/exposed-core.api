@@ -662,6 +662,8 @@ public final class org/jetbrains/exposed/sql/Database {
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public final fun getDialect ()Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;
 	public final fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
+	public final fun getMajorVersion ()I
+	public final fun getMinorVersion ()I
 	public final fun getSupportsAlterTableWithAddColumn ()Z
 	public final fun getSupportsAlterTableWithDropColumn ()Z
 	public final fun getSupportsMultipleResultSets ()Z
@@ -669,6 +671,7 @@ public final class org/jetbrains/exposed/sql/Database {
 	public final fun getUseNestedTransactions ()Z
 	public final fun getVendor ()Ljava/lang/String;
 	public final fun getVersion ()Ljava/math/BigDecimal;
+	public final fun isVersionCovers (II)Z
 	public final fun isVersionCovers (Ljava/math/BigDecimal;)Z
 	public final fun setUseNestedTransactions (Z)V
 	public fun toString ()Ljava/lang/String;
@@ -3571,6 +3574,8 @@ public abstract class org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMe
 	public abstract fun getDatabaseProductVersion ()Ljava/lang/String;
 	public abstract fun getDefaultIsolationLevel ()I
 	public abstract fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
+	public abstract fun getMajorVersion ()I
+	public abstract fun getMinorVersion ()I
 	public abstract fun getSchemaNames ()Ljava/util/List;
 	public abstract fun getSupportsAlterTableWithAddColumn ()Z
 	public abstract fun getSupportsAlterTableWithDropColumn ()Z
@@ -4158,7 +4163,9 @@ public final class org/jetbrains/exposed/sql/vendors/MariaDBDialect : org/jetbra
 	public fun createIndex (Lorg/jetbrains/exposed/sql/Index;)Ljava/lang/String;
 	public fun getFunctionProvider ()Lorg/jetbrains/exposed/sql/vendors/FunctionProvider;
 	public fun getName ()Ljava/lang/String;
+	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
+	public fun getSupportsSequenceAsGeneratedKeys ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z
 }
 

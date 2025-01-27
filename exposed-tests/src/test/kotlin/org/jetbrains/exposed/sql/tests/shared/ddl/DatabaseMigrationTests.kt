@@ -433,6 +433,16 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
+                    // MariaDB does not allow to create auto column without defining it as a key
+                    val tableWithAutoIncrement = if (testDb == TestDB.MARIADB) {
+                        object : IdTable<Long>("test_table") {
+                            override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
+                            override val primaryKey = PrimaryKey(id)
+                        }
+                    } else {
+                        tableWithAutoIncrement
+                    }
+
                     SchemaUtils.create(tableWithAutoIncrement)
 
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrement, withLogs = false).size)
@@ -525,6 +535,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         TestDB.H2_V1 -> {
                             assertEquals(1, statements.size)
                             assertEquals("ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", statements[0])
+                        }
+                        TestDB.MARIADB -> {
+                            assertEquals(2, statements.size)
+                            assertEquals("ALTER TABLE test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL", statements[0])
+                            assertEquals(expectedDropSequenceStatement(sequenceName), statements[1])
                         }
                         else -> {
                             assertEquals(2, statements.size)
@@ -632,6 +647,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         TestDB.H2_V1 -> {
                             assertEquals(1, statements.size)
                             assertEquals("ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", statements[0])
+                        }
+                        TestDB.MARIADB -> {
+                            assertEquals(2, statements.size)
+                            assertEquals("ALTER TABLE test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL", statements[0])
+                            assertEquals(expectedDropSequenceStatement(sequence.name), statements[1])
                         }
                         else -> {
                             assertEquals(2, statements.size)
