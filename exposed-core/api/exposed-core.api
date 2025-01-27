@@ -1048,8 +1048,16 @@ public final class org/jetbrains/exposed/sql/GreaterEqOp : org/jetbrains/exposed
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)V
 }
 
+public final class org/jetbrains/exposed/sql/GreaterEqSubQueryOp : org/jetbrains/exposed/sql/SubQueryOp {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)V
+}
+
 public final class org/jetbrains/exposed/sql/GreaterOp : org/jetbrains/exposed/sql/ComparisonOp {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)V
+}
+
+public final class org/jetbrains/exposed/sql/GreaterSubQueryOp : org/jetbrains/exposed/sql/SubQueryOp {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)V
 }
 
 public final class org/jetbrains/exposed/sql/GroupConcat : org/jetbrains/exposed/sql/Function {
@@ -1145,6 +1153,8 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun greaterEq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public abstract fun greaterEqBetweenEntityIDs (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public abstract fun greaterEqEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
+	public abstract fun greaterEqSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/GreaterEqSubQueryOp;
+	public abstract fun greaterSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/GreaterSubQueryOp;
 	public abstract fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/EqOp;
 	public abstract fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/EqOp;
 	public abstract fun inList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -1185,6 +1195,8 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun lessEq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessEqOp;
 	public abstract fun lessEqBetweenEntityIDs (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessEqOp;
 	public abstract fun lessEqEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/LessEqOp;
+	public abstract fun lessEqSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/LessEqSubQueryOp;
+	public abstract fun lessSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/LessSubQueryOp;
 	public abstract fun like (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/LikeEscapeOp;
 	public abstract fun like (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LikeEscapeOp;
 	public abstract fun like (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/LikePattern;)Lorg/jetbrains/exposed/sql/LikeEscapeOp;
@@ -1283,6 +1295,8 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun greaterEq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public static fun greaterEqBetweenEntityIDs (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public static fun greaterEqEntityID (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
+	public static fun greaterEqSubQuery (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/GreaterEqSubQueryOp;
+	public static fun greaterSubQuery (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/GreaterSubQueryOp;
 	public static fun hasFlag (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/EqOp;
 	public static fun hasFlag (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/EqOp;
 	public static fun inList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -1325,6 +1339,8 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun lessEq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessEqOp;
 	public static fun lessEqBetweenEntityIDs (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessEqOp;
 	public static fun lessEqEntityID (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/LessEqOp;
+	public static fun lessEqSubQuery (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/LessEqSubQueryOp;
+	public static fun lessSubQuery (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/LessSubQueryOp;
 	public static fun like (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/LikeEscapeOp;
 	public static fun like (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LikeEscapeOp;
 	public static fun like (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/LikePattern;)Lorg/jetbrains/exposed/sql/LikeEscapeOp;
@@ -1570,8 +1586,16 @@ public final class org/jetbrains/exposed/sql/LessEqOp : org/jetbrains/exposed/sq
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)V
 }
 
+public final class org/jetbrains/exposed/sql/LessEqSubQueryOp : org/jetbrains/exposed/sql/SubQueryOp {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)V
+}
+
 public final class org/jetbrains/exposed/sql/LessOp : org/jetbrains/exposed/sql/ComparisonOp {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)V
+}
+
+public final class org/jetbrains/exposed/sql/LessSubQueryOp : org/jetbrains/exposed/sql/SubQueryOp {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)V
 }
 
 public final class org/jetbrains/exposed/sql/LikeEscapeOp : org/jetbrains/exposed/sql/ComparisonOp {
@@ -2369,6 +2393,8 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun greaterEq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public fun greaterEqBetweenEntityIDs (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public fun greaterEqEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
+	public fun greaterEqSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/GreaterEqSubQueryOp;
+	public fun greaterSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/GreaterSubQueryOp;
 	public fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/EqOp;
 	public fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/EqOp;
 	public fun inList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -2409,6 +2435,8 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun lessEq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessEqOp;
 	public fun lessEqBetweenEntityIDs (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessEqOp;
 	public fun lessEqEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/LessEqOp;
+	public fun lessEqSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/LessEqSubQueryOp;
+	public fun lessSubQuery (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/AbstractQuery;)Lorg/jetbrains/exposed/sql/LessSubQueryOp;
 	public fun like (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/LikeEscapeOp;
 	public fun like (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LikeEscapeOp;
 	public fun like (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/LikePattern;)Lorg/jetbrains/exposed/sql/LikeEscapeOp;

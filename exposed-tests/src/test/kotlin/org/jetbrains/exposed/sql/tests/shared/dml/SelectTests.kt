@@ -278,6 +278,46 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testLessSubQuery() {
+        withCitiesAndUsers { _, _, userData ->
+            val query = userData.selectAll().where {
+                userData.value lessSubQuery userData.select(userData.value).where { userData.user_id eq "sergey" }
+            }
+            assertEquals(3, query.count())
+        }
+    }
+
+    @Test
+    fun testLessEqSubQuery() {
+        withCitiesAndUsers { _, _, userData ->
+            val query = userData.selectAll().where {
+                userData.value lessEqSubQuery userData.select(userData.value).where { userData.user_id eq "eugene" }
+            }
+            assertEquals(3, query.count())
+        }
+    }
+
+    @Test
+    fun testGreaterSubQuery() {
+        withCitiesAndUsers { _, _, userData ->
+            val query = userData.selectAll().where {
+                userData.value greaterSubQuery userData.select(userData.value).where { userData.value eq 10 }
+            }
+            assertEquals(3, query.count())
+        }
+    }
+
+    @Test
+    fun testGreaterEqSubQuery() {
+        withCitiesAndUsers { _, _, userData ->
+            val query = userData.selectAll().where {
+                userData.value greaterEqSubQuery userData.select(userData.value).where { userData.value eq 10 }
+            }
+            assertEquals(4, query.count())
+        }
+    }
+
     private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.ALL_H2 + TestDB.MYSQL_V8
 
     @Test
