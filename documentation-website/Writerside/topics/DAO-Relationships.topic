@@ -5,275 +5,302 @@
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="Relationships" id="DAO-Relationships">
     <show-structure for="chapter" depth="2" />
+    <tldr>
+        <p><b>Code example</b>:
+            <a href="https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-dao-relationships/">
+                exposed-dao-relationships
+            </a>
+        </p>
+    </tldr>
 
-    <chapter title="Many-to-one" id="Many-to-one">
-        <p>Let's say you have this table:</p>
-        <code-block lang="kotlin"><![CDATA[
-            object Users : IntIdTable() {
-                val name = varchar("name", 50)
-            }
-            class User(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<User>(Users)
+    <p>
+        Relationships define how entities are associated with one another in your database schema and provide
+        mechanisms to query and manipulate these associations. There are four ways entities could reference one another:
+    </p>
+    <list>
+        <li><a anchor="many-to-one-reference">Many-to-one reference</a></li>
+        <li><a anchor="optional-reference">Optional reference</a></li>
+        <li><a anchor="many-to-many-reference">Many-to-many reference</a></li>
+        <li><a anchor="parent-child-reference">Parent-child reference</a></li>
+    </list>
+    <chapter title="Many-to-one reference" id="many-to-one-reference">
+        <p>
+            A many-to-one reference is a relationship between two database tables where multiple rows in one table
+            (the "child" table) can reference a single row in another table (the "parent" table).
+        </p>
+        <p>
+            Consider the following <code>UsersTable</code> and its corresponding entity:
+        </p>
+        <tabs>
+            <tab id="users-table" title="UsersTable">
+                <code-block lang="kotlin"
+                            src="exposed-dao-relationships/src/main/kotlin/org/example/tables/UsersTable.kt"
+                            include-symbol="UsersTable"
+                />
+            </tab>
+            <tab id="user-entity" title="UserEntity">
+                <code-block lang="kotlin"
+                            src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
+                            include-lines="15-18,20"
+                />
+            </tab>
+        </tabs>
+        <p>
+            Assume you want to add another table, <code>UserRatingsTable</code>, to store user ratings for a particular
+            film. Each rating is associated with a user, but a user can be associated with many ratings. This is a
+            many-to-one relationship.
+        </p>
+        <p>
+            You can implement this relationship by using a reference column in the child table
+            (<code>UserRatingsTable</code>) that links to the parent table (<code>UsersTable</code>):
+        </p>
+        <tabs>
+            <tab id="user-ratings-table" title="UserRatingsTable">
+                <code-block lang="kotlin"
+                            src="exposed-dao-relationships/src/main/kotlin/org/example/tables/UserRatingsTable.kt"
+                            include-symbol="UserRatingsTable"
+                />
+            </tab>
+            <tab id="user-ratings-entity" title="UserRatingEntity">
+                <code-block lang="kotlin"
+                            src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserRatingEntity.kt"
+                            include-lines="15-20,22"
+                />
+            </tab>
+        </tabs>
 
-                var name by Users.name
-            }
-        ]]></code-block>
-        <p>And now you want to add a table referencing this table (and other tables!):</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            object UserRatings : IntIdTable() {
-                val value = long("value")
-                val film = reference("film", StarWarsFilms)
-                val user = reference("user", Users)
-            }
-            class UserRating(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<UserRating>(UserRatings)
-
-                var value by UserRatings.value
-                var film by StarWarsFilm referencedOn UserRatings.film // use referencedOn for normal references
-                var user by User referencedOn UserRatings.user
-            }
-        ]]></code-block>
-        <p>Now you can get the film for a <code>UserRating</code> object, <code>filmRating</code>, in the same way you would get any other field:</p>
-
-        <code-block lang="kotlin">
-            filmRating.film // returns a StarWarsFilm object
-        </code-block>
-        <p>Now if you wanted to get all the ratings for a film, you could do that by using the <code>filmRating.find</code> function, but it is much easier to
-            just add a <code>referrersOn</code> field to the <code>StarWarsFilm</code> class:</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
-                //...
-                val ratings by UserRating referrersOn UserRatings.film // make sure to use val and referrersOn
-                //...
-            }
-        ]]></code-block>
-        <p>You can then access this field on a <code>StarWarsFilm</code> object, <code>movie</code>:</p>
-
-        <code-block lang="kotlin">
-            movie.ratings // returns all UserRating objects with this movie as film
-        </code-block>
-        <p>Now imagine a scenario where a user only ever rates a single film. If you want to get the single rating for that user, you can add a <code>backReferencedOn</code>
-            field to the <code>User</code> class to access the <code>UserRating</code> table data:</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            class User(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<User>(Users)
-                //...
-                val rating by UserRating backReferencedOn UserRatings.user // make sure to use val and backReferencedOn
-            }
-        ]]></code-block>
-        <p>You can then access this field on a <code>User</code> object, <code>user1</code>:</p>
-
-        <code-block lang="kotlin">
-            user1.rating // returns a UserRating object
-        </code-block>
+        <chapter title="Accessing data" id="accessing-data">
+            <p>
+                You can retrieve the film for a <code>UserRatingEntity</code> object in the same way
+                you would get any other field:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dao-relationships/src/main/kotlin/org/example/examples/OneToManyExamples.kt"
+                        include-symbol="film"
+            />
+        </chapter>
+        <chapter title="Reverse access" id="reverse-access">
+            <p>
+                If you wanted to get all the ratings for a film, you could do that by using the <code>.find()</code>
+                function of the entity class. However, it is much easier to add a <code>referrersOn</code> field to the
+                class representing the film, <code>StarWarsFilmEntity</code>:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dao-relationships/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"
+                        include-lines="19-25,27"
+            />
+            <p>
+                You can then access this field on an entity object:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dao-relationships/src/main/kotlin/org/example/examples/OneToManyExamples.kt"
+                        include-symbol="filmRatings"
+            />
+        </chapter>
+        <chapter title="Back reference" id="back-reference">
+            <p>
+                If each user rates only one film, you can define a <code>backReferencedOn</code>
+                field to the <code>UserEntity</code> class to access the <code>UserRatingsTable</code> data:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserRatingEntity.kt"
+                        include-symbol="UserRatingEntity"
+            />
+            <p>You can then access this field on a <code>UserRatingEntity</code> object:</p>
+            <code-block lang="kotlin">
+                user1.rating // returns a UserRating object
+            </code-block>
+        </chapter>
     </chapter>
     <chapter title="Optional reference" id="optional-reference">
-        <p>You can also add an optional reference:</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            object UserRatings : IntIdTable() {
-                //...
-                val secondUser = reference("second_user", Users).nullable() // this reference is nullable!
-                //...
-            }
-            class UserRating(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<UserRating>(UserRatings)
-                //...
-                var secondUser by User optionalReferencedOn UserRatings.secondUser // use optionalReferencedOn for nullable references
-                //...
-            }
-        ]]></code-block>
-        <p>Now <code>secondUser</code> will be a nullable field, and <code>optionalReferrersOn</code> should be used instead of <code>referrersOn</code> to get
-            all the ratings for a <code>secondUser</code>.</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            class User(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<User>(Users)
-                //...
-                val secondRatings by UserRating optionalReferrersOn UserRatings.secondUser // make sure to use val and optionalReferrersOn
-                //...
-            }
-        ]]></code-block>
+        <p>In Exposed, you can also add an optional reference.</p>
+        <p>
+            For example, if you want to include anonymous user ratings to your table, you can do so by setting
+            the reference field as nullable and using <code>optionalReferencedOn</code> in your entity definition:
+        </p>
+        <tabs>
+            <tab id="user-ratings-table-with-optional-reference" title="UserRatingsWithOptionalUserTable">
+                <code-block lang="kotlin"
+                            src="exposed-dao-relationships/src/main/kotlin/org/example/tables/UserRatingsTable.kt"
+                            include-symbol="UserRatingsWithOptionalUserTable"
+                />
+            </tab>
+            <tab id="user-ratings-entity-with-optional-reference" title="UserRatingWithOptionalUserEntity">
+                <code-block lang="kotlin"
+                            src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserRatingEntity.kt"
+                            include-symbol="UserRatingWithOptionalUserEntity"
+                />
+            </tab>
+        </tabs>
     </chapter>
     <chapter title="Ordered reference" id="ordered-reference">
-        <p>You can also define the order in which referenced entities appear:</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            class User(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<User>(Users)
-
-                //...
-                val ratings by UserRating referrersOn UserRatings.user orderBy UserRatings.value
-                //...
-            }
-        ]]></code-block>
-        <p>In a more complex scenario, you can specify multiple columns along with the corresponding sort order for each:</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            class User(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<User>(Users)
-
-                //...
-                val ratings by UserRating referrersOn UserRatings.user orderBy listOf(UserRatings.value to SortOrder.DESC, UserRatings.id to SortOrder.ASC)
-                //...
-            }
-        ]]></code-block>
+        <p>
+            You can define the order in which referenced entities appear using <code>orderBy</code>:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
+                    include-symbol="UserEntity"
+        />
+        <p>
+            In a more complex scenario, you can specify multiple columns along with the corresponding sort order
+            for each:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
+                    include-lines="23-26,35-39"
+        />
         <p>Without using the <a href="https://kotlinlang.org/docs/functions.html#infix-notation">infix notation</a>, the <code>orderBy</code> method is chained
             after <code>referrersOn</code>:</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            class User(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<User>(Users)
-
-                //...
-                val ratings by UserRating.referrersOn(UserRatings.user)
-                    .orderBy(UserRatings.value to SortOrder.DESC, UserRatings.id to SortOrder.ASC)
-                //...
-            }
-        ]]></code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
+                    include-lines="23-26,30-33,39"
+        />
     </chapter>
     <chapter title="Many-to-many reference" id="many-to-many-reference">
-        <p>In some cases, a many-to-many reference may be required.
-            Let's assume you want to add a reference to the following Actors table to the StarWarsFilm class:</p>
+        <p>
+            A many-to-many reference is a relationship between two database tables where multiple records in one table
+            are related to multiple records in another table. This type of relationship is modeled by using an
+            intermediate table to link the two tables.
+        </p>
+        <p>
+            Consider the following table, <code>ActorsTable</code>, and it's corresponding entity:
+        </p>
+        <tabs>
+            <tab id="actors-table" title="ActorsTable">
+                <code-block lang="kotlin"
+                            src="exposed-dao-relationships/src/main/kotlin/org/example/tables/ActorsTable.kt"
+                            include-symbol="ActorsTable"
+                />
+            </tab>
+            <tab id="actor-entity" title="ActorEntity">
+                <code-block lang="kotlin"
+                            src="exposed-dao-relationships/src/main/kotlin/org/example/entities/ActorEntity.kt"
+                            include-symbol="ActorEntity"
+                />
+            </tab>
+        </tabs>
 
-        <code-block lang="kotlin"><![CDATA[
-            object Actors : IntIdTable() {
-                val firstname = varchar("firstname", 50)
-                val lastname = varchar("lastname", 50)
-            }
-            class Actor(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<Actor>(Actors)
+        <p>
+            Suppose you now want to extend this table to include a reference of to the <code>StarWarsFilmEntity</code>
+            class. To achieve this, you can create an additional intermediate table to store the references:
+        </p>
 
-                var firstname by Actors.firstname
-                var lastname by Actors.lastname
-            }
-        ]]></code-block>
-        <p>Create an additional intermediate table to store the references:</p>
-
-        <code-block lang="kotlin">
-            object StarWarsFilmActors : Table() {
-                val starWarsFilm = reference("starWarsFilm", StarWarsFilms)
-                val actor = reference("actor", Actors)
-                override val primaryKey = PrimaryKey(starWarsFilm, actor, name = "PK_StarWarsFilmActors_swf_act") // PK_StarWarsFilmActors_swf_act is optional here
-            }
-        </code-block>
-        <p>Add a reference to <code>StarWarsFilm</code>:</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
-                //...
-                var actors by Actor via StarWarsFilmActors
-                //...
-            }
-        ]]></code-block>
-        <p>Note: You can set up IDs manually inside a transaction like this:</p>
-
-        <code-block lang="kotlin">
-            transaction {
-                // only works with UUIDTable and UUIDEntity
-                StarWarsFilm.new (UUID.randomUUID()){
-                    //...
-                    actors = SizedCollection(listOf(actor))
-                }
-            }
-        </code-block>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/tables/ActorsTable.kt"
+                    include-symbol="StarWarsFilmActorsTable"
+        />
+        <p>Add a reference to the <code>ActorEntity</code> in the <code>StarWarsFilmEntity</code> using the
+            <code>via</code> keyword:</p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"
+                    include-lines="24"
+        />
+        <p>The final <code>StarWarsFilmEntity</code> will look in the following way:</p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"
+                    include-symbol="StarWarsFilmEntity"
+        />
     </chapter>
     <chapter title="Parent-Child reference" id="parent-child-reference">
-        <p>Parent-child reference is very similar to many-to-many version, but an intermediate table contains both references to the same table.
-            Let's assume you want to build a hierarchical entity which could have parents and children. Our tables and an entity mapping will look like</p>
 
-        <code-block lang="kotlin"><![CDATA[
-            object NodeTable : IntIdTable() {
-                val name = varchar("name", 50)
-            }
-            object NodeToNodes : Table() {
-                val parent = reference("parent_node_id", NodeTable)
-                val child = reference("child_user_id", NodeTable)
-            }
-            class Node(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<Node>(NodeTable)
-
-                var name by NodeTable.name
-                var parents by Node.via(NodeToNodes.child, NodeToNodes.parent)
-                var children by Node.via(NodeToNodes.parent, NodeToNodes.child)
-            }
-        ]]></code-block>
-        <p>As you can see <code>NodeToNodes</code> columns target only <code>NodeTable</code> and another version of <code>via</code> function were used.
-            Now you can create a hierarchy of nodes.</p>
-
-        <code-block lang="kotlin">
-            val root = Node.new { name = "root" }
-            val child1 = Node.new {
-                name = "child1"
-            }
-            child1.parents = SizedCollection(root) // assign parent
-            val child2 = Node.new { name = "child2" }
-            root.children = SizedCollection(listOf(child1, child2)) // assign children
-        </code-block>
+        <p>
+            A parent-child reference is very similar to a many-to-many relationship, but an intermediate table contains
+            both references to the same table.
+        </p>
+        <p>
+            A parent-child relationship can represent hierarchical data, such as a series of films and their directors.
+            For example, you may want to track how directors oversee multiple Star Wars films, including sequels or
+            spin-offs. For this, you would create a self-referencing intermediate table to define the relationships
+            between a parent film (original) and its child films (sequels or spin-offs):
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt"
+                    include-symbol="StarWarsFilmRelationsTable"
+        />
+        <p>
+            In this example, <code>parentFilm</code> represents the original film, whereas <code>childFilm</code>
+            represents a sequel, prequel, or spin-off. As you can see <code>StarWarsFilmRelationsTable</code> columns
+            target only <code>StarWarsFilmsTable</code>.
+        </p>
+        <p>
+            You then need to update the entity class to include relationships for parent and child films using the
+            <code>via</code> function:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"
+                    include-symbol="StarWarsFilmWithParentAndChildEntity"
+        />
+        <p>
+            Here’s how you can create and query the parent-child hierarchy for <code>StarWarsFilmsTable</code>:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/examples/ParentChildExamples.kt"
+                    include-lines="16-40"
+        />
     </chapter>
     <chapter title="Composite primary key reference" id="composite-primary-key-reference">
-        <p>Assuming that we have the following <code>CompositeIdTable</code>:</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            object Directors : CompositeIdTable("directors") {
-                val name = varchar("name", 50).entityId()
-                val guildId = uuid("guild_id").autoGenerate().entityId()
-                val genre = enumeration<Genre>("genre")
-
-                override val primaryKey = PrimaryKey(name, guildId)
-            }
-
-            class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
-                companion object : CompositeEntityClass<Director>(Directors)
-
-                var genre by Directors.genre
-            }
-        ]]></code-block>
-        <p>We can refactor the <code>StarWarsFilms</code> table to reference this table by adding columns to hold the appropriate primary key values and creating
-            a table-level foreign key constraint:</p>
-
-        <code-block lang="kotlin"><![CDATA[
-            object StarWarsFilms : IntIdTable() {
-                val sequelId = integer("sequel_id").uniqueIndex()
-                val name = varchar("name", 50)
-                val directorName = varchar("director_name", 50)
-                val directorGuildId = uuid("director_guild_id")
-
-                init {
-                    foreignKey(directorName, directorGuildId, target = Directors.primaryKey)
-                }
-            }
-
-            class StarWarsFilm(id: EntityID<Int>) : IntEntity(id) {
-                companion object : IntEntityClass<StarWarsFilm>(StarWarsFilms)
-
-                var sequelId by StarWarsFilms.sequelId
-                var name by StarWarsFilms.name
-                var director by Director referencedOn StarWarsFilms
-            }
-        ]]></code-block>
-        <tip>For more information on creating table foreign key constraints, see <a href="Working-with-Tables.topic#foreign-key">DSL Foreign Key</a>.</tip>
-        <p>Now you can get the director for a <code>StarWarsFilm</code> object, <code>movie</code>, in the same way you would get any other field:</p>
-
+        <p>
+            In some database schemas, a composite primary key is used to uniquely identify rows by combining
+            multiple columns. Here's how you can reference composite ID tables.
+        </p>
+        <p>
+            Assume that you have the following <code>CompositeIdTable</code> and its relevant entity:
+        </p>
+        <tabs>
+            <tab id="directors-table" title="DirectorsCompositeIdTable">
+                <code-block lang="kotlin"
+                            src="exposed-dao-relationships/src/main/kotlin/org/example/tables/DirectorsTable.kt"
+                            include-symbol="DirectorsCompositeIdTable"
+                />
+            </tab>
+            <tab id="director-entity" title="DirectorCompositeIDEntity">
+                <code-block lang="kotlin"
+                            src="exposed-dao-relationships/src/main/kotlin/org/example/entities/DirectorEntity.kt"
+                            include-lines="26-29,31"
+                />
+            </tab>
+        </tabs>
+        <p>
+            We can refactor the <code>StarWarsFilmsTable</code> table to reference this table by adding columns to hold the
+            appropriate primary key values and creating a table-level foreign key constraint:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/tables/StarWarsFilmsTable.kt"
+                    include-symbol="StarWarsFilmsWithCompositeRefTable"
+        />
+        <p>
+            Then, add the field to the entity using the <code>referencedOn</code> function:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"
+                    include-symbol="StarWarsFilmWithCompositeRefEntity"
+        />
+        <tip>
+            For more information on creating table foreign key constraints, see the
+            <a href="Working-with-Tables.topic#foreign-key">
+                Foreign Key constraint
+            </a>
+            section.
+        </tip>
+        <p>
+            Now you can get the director for a <code>StarWarsFilm</code> object, <code>movie</code>,
+            in the same way you would get any other field:
+        </p>
         <code-block lang="kotlin">
             movie.director // returns a Director object
         </code-block>
-        <p>Now if you wanted to get all the films made by a director, you could add a <code>referrersOn</code> field to the <code>Director</code> class:</p>
+        <p>
+            If you wanted to get all the films made by a director, you could add a <code>referrersOn</code>
+            field to the <code>DirectorCompositeIDEntity</code> class:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/entities/DirectorEntity.kt"
+                    include-symbol="DirectorCompositeIDEntity"
+        />
 
-        <code-block lang="kotlin"><![CDATA[
-            class Director(id: EntityID<CompositeID>) : CompositeEntity(id) {
-                companion object : CompositeEntityClass<Director>(Directors)
-
-                var genre by Directors.genre
-                val films by StarWarsFilm referrersOn StarWarsFilms
-            }
-        ]]></code-block>
-        <p>You can then access this field on a <code>Director</code> object, <code>director</code>:</p>
+        <p>
+            You can then access this field on a <code>DirectorCompositeIDEntity</code> object, <code>director</code>:
+        </p>
 
         <code-block lang="kotlin">
             director.films // returns all StarWarsFilm objects that reference this director
@@ -285,39 +312,57 @@
             These overloads will automatically resolve the foreign key constraint associated with the composite primary key.</p>
     </chapter>
     <chapter title="Eager Loading" id="eager-loading">
-        <p>References in Exposed are lazily loaded, meaning queries to fetch the data for the reference are made at the moment the reference is first utilised.
-            For scenarios wherefore you know you will require references ahead of time, Exposed can eager load them at the time of the parent query, this is
-            prevents the classic &quot;N+1&quot; problem as references can be aggregated and loaded in a single query.
-            To eager load a reference you can call the &quot;load&quot; function and pass the DAO's reference as a KProperty:</p>
-
-        <code-block lang="kotlin">
-            StarWarsFilm.findById(1).load(StarWarsFilm::actors)
-        </code-block>
-        <p>This works for references of references also, for example if Actors had a rating reference you could:</p>
-        <code-block lang="kotlin">
-            StarWarsFilm.findById(1).load(StarWarsFilm::actors, Actor::rating)
-        </code-block>
-        <p>Similarly, you can eagerly load references on Collections of DAO's such as Lists and SizedIterables, for collections you can use the with function in
-            the same fashion as before, passing the DAO's references as KProperty's.
+        <p>
+            References in Exposed are lazily loaded, meaning queries to fetch the data for the reference are made at
+            the moment the reference is first utilised. In cases where you know you will require references
+            ahead of time, Exposed can eager load them at the time of the parent query. This is
+            preventing the classic &quot;N+1&quot;problem as references can be aggregated and loaded in a single query.
         </p>
-        <code-block lang="kotlin">
-            StarWarsFilm.all().with(StarWarsFilm::actors)
-        </code-block>
+        <p>
+            To eager load a reference, use the <code>.load()</code> function and pass the DAO's reference as
+            a <code>KProperty</code>:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/examples/EagerLoadingExamples.kt"
+                    include-lines="11"
+        />
+        <p>
+            This works for references of references. For example, if <code>UserRatingTable</code> had a <code>film</code>
+            reference you could do the following:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-dao-relationships/src/main/kotlin/org/example/examples/EagerLoadingExamples.kt"
+                    include-lines="14"
+        />
         <note>
-            References that are eagerly loaded are stored inside the transaction cache;
-            this means that they are not available in other transactions
-            and thus must be loaded and referenced inside the same transaction.
-            As of <a href="https://github.com/JetBrains/Exposed/blob/main/CHANGELOG.md#0351">0.35.1</a>,
-            enabling <code>keepLoadedReferencesOutOfTransaction</code> in <code>DatabaseConfig</code>
+            References that are eagerly loaded are stored inside the transaction cache.
+            This means that they are not available in other transactions
+            and thus, must be loaded and referenced inside the same transaction.
+            Enabling <code>keepLoadedReferencesOutOfTransaction</code> in <code>DatabaseConfig</code>
             will allow getting referenced values outside the transaction block.
         </note>
-        <chapter title="Eager loading for Text Fields" id="eager-loading-for-text-fields">
-            <p>Some database drivers do not load text content immediately (for performance and memory reasons) which means that you can obtain the column value
-                only within the open transaction.</p>
-            <p>If you desire to make content available outside the transaction, you can use the eagerLoading param when defining the DB Table.</p>
-
+        <chapter title="Loading collections" id="eager-loading-collections">
+            <p>
+                To eagerly load references on <code>Collections</code> of DAO's such as <code>List</code>
+                and <code>SizedIterable</code>, use the <code>.with()</code> function and pass
+                each reference as <code>KProperty</code>.
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dao-relationships/src/main/kotlin/org/example/examples/EagerLoadingExamples.kt"
+                        include-lines="17"
+            />
+        </chapter>
+        <chapter title="Loading text fields" id="eager-loading-text-fields">
+            <p>
+                Some database drivers do not load text content immediately due to performance and memory reasons.
+                This means that you can obtain the column value only within the open transaction.
+            </p>
+            <p>
+                To make content available outside the transaction, use the <code>eagerLoading</code>
+                parameter in your field definition:
+            </p>
             <code-block lang="kotlin">
-                object StarWarsFilms : Table() {
+                object StarWarsFilmsTable : Table() {
                     //...
                     val description = text("name", eagerLoading=true)
                 }
