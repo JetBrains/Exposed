@@ -95,13 +95,22 @@ class ConditionsTests : DatabaseTestsBase() {
             val amount = long("amount")
         }
 
+        val longTable2 = object : LongIdTable("long_table_2") {
+            val longRef = reference("long_ref", longTable)
+        }
+
         fun selectIdWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<Long> {
             val query = longTable.select(longTable.id).where(SqlExpressionBuilder.condition())
             return query.map { it[longTable.id].value }
         }
 
+        fun selectIdFromJoinWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<Long> {
+            val query = (longTable innerJoin longTable2).select(longTable.id).where(SqlExpressionBuilder.condition())
+            return query.map { it[longTable.id].value }
+        }
+
         // SQL Server doesn't support an explicit id for auto-increment table
-        withTables(excludeSettings = listOf(TestDB.SQLSERVER), longTable) {
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER), longTable, longTable2) {
             val id1 = longTable.insertAndGetId {
                 it[id] = 1
                 it[amount] = 9999
@@ -114,6 +123,10 @@ class ConditionsTests : DatabaseTestsBase() {
                 it[id] = 3
                 it[amount] = 1
             }.value
+            longTable2.insertAndGetId {
+                it[id] = 99
+                it[longRef] = id1
+            }
 
             // the incorrect overload operator would previously throw an exception and
             // a warning would show about 'Type argument ... cannot be inferred ... incompatible upper bounds'
@@ -126,18 +139,22 @@ class ConditionsTests : DatabaseTestsBase() {
             val id1Only = listOf(id1)
             assertEqualLists(id1Only, selectIdWhere { longTable.id less longTable.amount })
             assertEqualLists(id1Only, selectIdWhere { longTable.id less 2 })
+            assertEqualLists(id1Only, selectIdFromJoinWhere { longTable.id less longTable2.id })
 
             val id1AndId2 = listOf(id1, id2)
             assertEqualLists(id1AndId2, selectIdWhere { longTable.id lessEq longTable.amount })
             assertEqualLists(id1AndId2, selectIdWhere { longTable.id lessEq 2 })
+            assertEqualLists(id1Only, selectIdFromJoinWhere { longTable.id lessEq longTable2.id })
 
             val id3Only = listOf(id3)
             assertEqualLists(id3Only, selectIdWhere { longTable.id greater longTable.amount })
             assertEqualLists(id3Only, selectIdWhere { longTable.id greater 2 })
+            assertEqualLists(id1Only, selectIdFromJoinWhere { longTable2.id greater longTable.id })
 
             val id2AndId3 = listOf(id2, id3)
             assertEqualLists(id2AndId3, selectIdWhere { longTable.id greaterEq longTable.amount })
             assertEqualLists(id2AndId3, selectIdWhere { longTable.id greaterEq 2 })
+            assertEqualLists(id1Only, selectIdFromJoinWhere { longTable2.id greaterEq longTable.id })
 
             assertEqualLists(id2AndId3, selectIdWhere { longTable.id.between(2, 3) })
 
