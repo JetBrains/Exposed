@@ -408,6 +408,11 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
                         val fallbackSequenceName = fallbackSequenceName(tableName = column.table.tableName, columnName = column.name)
                         append("ALTER COLUMN $colName SET DEFAULT nextval('$fallbackSequenceName')")
                     }
+                } else if (columnDiff.autoInc && column.autoIncColumnType == null) {
+                    // based on logic in SchemaUtils.isIncorrectAutoInc this should only be possible if the existing
+                    // column in database is auto-incrementing while defined table is not
+                    append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
+                    append(", ALTER COLUMN $colName DROP DEFAULT")
                 } else {
                     append("ALTER COLUMN $colName TYPE ${column.columnType.sqlType()}")
                 }
