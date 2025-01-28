@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.sql.DatabaseMetaData
 
 /**
  * Common interface for all database dialects.
@@ -188,14 +187,13 @@ interface DatabaseDialect {
         }
     }
 
-    /** Returns the corresponding [ReferenceOption] for the specified [refOption] from JDBC. */
-    fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption = when (refOption) {
-        DatabaseMetaData.importedKeyCascade -> ReferenceOption.CASCADE
-        DatabaseMetaData.importedKeySetNull -> ReferenceOption.SET_NULL
-        DatabaseMetaData.importedKeyRestrict -> ReferenceOption.RESTRICT
-        DatabaseMetaData.importedKeyNoAction -> ReferenceOption.NO_ACTION
-        DatabaseMetaData.importedKeySetDefault -> ReferenceOption.SET_DEFAULT
-        else -> currentDialect.defaultReferenceOption
+    @Deprecated(
+        message = "This function will be removed in future releases.",
+        level = DeprecationLevel.WARNING
+    )
+    fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption {
+        @OptIn(InternalApi::class)
+        return TransactionManager.current().db.metadata { resolveReferenceOption(refOption.toString())!! }
     }
 
     companion object {

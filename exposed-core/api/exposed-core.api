@@ -3597,6 +3597,7 @@ public abstract class org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMe
 	public abstract fun getUrl ()Ljava/lang/String;
 	public abstract fun getVersion ()Ljava/math/BigDecimal;
 	public abstract fun resetCurrentScheme ()V
+	public abstract fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public abstract fun sequences ()Ljava/util/List;
 	public abstract fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
 	public abstract fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
@@ -4133,7 +4134,6 @@ public class org/jetbrains/exposed/sql/vendors/H2Dialect : org/jetbrains/exposed
 	public final fun isSecondVersion ()Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
-	public fun resolveRefOptionFromJdbc (I)Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public fun sequences ()Ljava/util/List;
 	public fun toString ()Ljava/lang/String;
 }
@@ -4229,7 +4229,6 @@ public class org/jetbrains/exposed/sql/vendors/OracleDialect : org/jetbrains/exp
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
-	public fun resolveRefOptionFromJdbc (I)Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public fun sequences ()Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 }

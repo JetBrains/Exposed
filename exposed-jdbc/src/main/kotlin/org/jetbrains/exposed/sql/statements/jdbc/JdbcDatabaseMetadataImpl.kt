@@ -417,10 +417,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val targetColumn = allTables[targetTableName]?.columns?.firstOrNull {
                     identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
                 } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
-                val constraintUpdateRule = getObject("UPDATE_RULE")?.toString()?.toIntOrNull()?.let {
-                    currentDialect.resolveRefOptionFromJdbc(it)
-                }
-                val constraintDeleteRule = currentDialect.resolveRefOptionFromJdbc(getInt("DELETE_RULE"))
+                val constraintUpdateRule = getObject("UPDATE_RULE")?.toString()?.let { resolveReferenceOption(it) }
+                val constraintDeleteRule = getObject("DELETE_RULE")?.toString()?.let { resolveReferenceOption(it) }
                 ForeignKeyConstraint(
                     target = targetColumn,
                     from = fromColumn,
@@ -429,6 +427,32 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     name = constraintName
                 )
             }.filterNotNull().groupBy { it.fkName }.values.map { it.reduce(ForeignKeyConstraint::plus) }
+        }
+    }
+
+    @OptIn(InternalApi::class)
+    override fun resolveReferenceOption(refOption: String): ReferenceOption? {
+        val dialect = currentDialect
+
+        // MySQL/MariaDB use custom query that returns string-name values
+        if (dialect is MysqlDialect) {
+            return ReferenceOption.valueOf(refOption.replace(" ", "_"))
+        }
+
+        val refOptionInt = refOption.toIntOrNull() ?: return null
+
+        return when (refOptionInt) {
+            DatabaseMetaData.importedKeyCascade -> ReferenceOption.CASCADE
+            DatabaseMetaData.importedKeyRestrict -> {
+                val restrictNotSupported = dialect is OracleDialect ||
+                    dialect.h2Mode == H2CompatibilityMode.Oracle ||
+                    dialect.h2Mode == H2CompatibilityMode.SQLServer
+                if (restrictNotSupported) ReferenceOption.NO_ACTION else ReferenceOption.RESTRICT
+            }
+            DatabaseMetaData.importedKeySetNull -> ReferenceOption.SET_NULL
+            DatabaseMetaData.importedKeyNoAction -> ReferenceOption.NO_ACTION
+            DatabaseMetaData.importedKeySetDefault -> ReferenceOption.SET_DEFAULT
+            else -> currentDialect.defaultReferenceOption
         }
     }
 
