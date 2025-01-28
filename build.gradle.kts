@@ -17,6 +17,21 @@ dokka {
     }
 }
 
+dependencies {
+    dokka(projects.exposed.exposedCore)
+    dokka(projects.exposed.exposedCrypt)
+    dokka(projects.exposed.exposedDao)
+    dokka(projects.exposed.exposedJavaTime)
+    dokka(projects.exposed.exposedJdbc)
+    dokka(projects.exposed.exposedJodatime)
+    dokka(projects.exposed.exposedJson)
+    dokka(projects.exposed.exposedKotlinDatetime)
+    dokka(projects.exposed.exposedMigration)
+    dokka(projects.exposed.exposedMoney)
+    dokka(projects.exposed.exposedSpringBootStarter)
+    dokka(projects.exposed.springTransaction)
+}
+
 repositories {
     mavenLocal()
     mavenCentral()

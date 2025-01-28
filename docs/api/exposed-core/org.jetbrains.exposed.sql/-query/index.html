@@ -1,0 +1,1035 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>Query</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+<a class="library-name--link" href="../../../index.html">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">0.58.0
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-core/main" data-filter=":exposed-core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-core::org.jetbrains.exposed.sql/Query///PointingToDeclaration//-1435837140">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-core</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.sql</a><span class="delimiter">/</span><span class="current">Query</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Query</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="index.html">Query</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>set<span class="token operator">: </span><a href="../-field-set/index.html">FieldSet</a><span class="token punctuation">, </span></span><span class="parameter ">where<span class="token operator">: </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span> : <a href="../-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><a href="index.html">Query</a><span class="token operator">&gt; </span></div><p class="paragraph">Class representing an SQL <code class="lang-kotlin">SELECT</code> statement on which query clauses can be built.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="-556044687%2FConstructors%2F-1435837140" anchor-label="Query" id="-556044687%2FConstructors%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-query.html"><span><span>Query</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-556044687%2FConstructors%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">set<span class="token operator">: </span><a href="../-field-set/index.html">FieldSet</a><span class="token punctuation">, </span></span><span class="parameter ">where<span class="token operator">: </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="-392021824%2FClasslikes%2F-1435837140" anchor-label="CommentPosition" id="-392021824%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-comment-position/index.html"><span>Comment</span><wbr><span><span>Position</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-392021824%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-comment-position/index.html">CommentPosition</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-comment-position/index.html">Query.CommentPosition</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the position at which an SQL comment will be added in a <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-908135887%2FProperties%2F-1435837140" anchor-label="comments" id="-908135887%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="comments.html"><span><span>comments</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-908135887%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="comments.html">comments</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="-comment-position/index.html">Query.CommentPosition</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The stored comments and their <a href="-comment-position/index.html">CommentPosition</a>s in this <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1903778345%2FProperties%2F-1435837140" anchor-label="distinct" id="1903778345%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="distinct.html"><span><span>distinct</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1903778345%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="distinct.html">distinct</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether only distinct results should be retrieved by this <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1957998070%2FProperties%2F-1435837140" anchor-label="distinctOn" id="-1957998070%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="distinct-on.html"><span>distinct</span><wbr><span><span>On</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1957998070%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="distinct-on.html">distinctOn</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">List of columns on which the query should be distinct.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1513396580%2FProperties%2F-1435837140" anchor-label="fetchSize" id="-1513396580%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/fetch-size.html"><span>fetch</span><wbr><span><span>Size</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1513396580%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-abstract-query/fetch-size.html">fetchSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The number of results that should be fetched when this query is executed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1428549411%2FProperties%2F-1435837140" anchor-label="groupedByColumns" id="-1428549411%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="grouped-by-columns.html"><span>grouped</span><wbr><span>By</span><wbr><span><span>Columns</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1428549411%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="grouped-by-columns.html">groupedByColumns</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The stored list of columns for a <code class="lang-kotlin">GROUP BY</code> clause in this <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1602244832%2FProperties%2F-1435837140" anchor-label="having" id="-1602244832%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="having.html"><span><span>having</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1602244832%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="having.html">having</a><span class="token operator">: </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The stored condition for a <code class="lang-kotlin">HAVING</code> clause in this <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="213466935%2FProperties%2F-1435837140" anchor-label="isAlwaysBatch" id="213466935%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.jetbrains.exposed.sql.statements/-statement/is-always-batch.html"><span>is</span><wbr><span>Always</span><wbr><span><span>Batch</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="213466935%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../../org.jetbrains.exposed.sql.statements/-statement/is-always-batch.html">isAlwaysBatch</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the SQL statement is meant to be performed as part of a batch execution.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="94249404%2FProperties%2F-1435837140" anchor-label="limit" id="94249404%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/limit.html"><span><span>limit</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="94249404%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-abstract-query/limit.html">limit</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The stored value for a <code class="lang-kotlin">LIMIT</code> clause in this query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="894039152%2FProperties%2F-1435837140" anchor-label="offset" id="894039152%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/offset.html"><span><span>offset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="894039152%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-abstract-query/offset.html">offset</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><p class="paragraph">The stored value for an <code class="lang-kotlin">OFFSET</code> clause in this query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-592725491%2FProperties%2F-1435837140" anchor-label="orderByExpressions" id="-592725491%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/order-by-expressions.html"><span>order</span><wbr><span>By</span><wbr><span><span>Expressions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-592725491%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-abstract-query/order-by-expressions.html">orderByExpressions</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-sort-order/index.html">SortOrder</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The stored list of columns and their <a href="../-sort-order/index.html">SortOrder</a> for an <code class="lang-kotlin">ORDER BY</code> clause in this query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1619503437%2FProperties%2F-1435837140" anchor-label="set" id="-1619503437%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set.html"><span><span>set</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1619503437%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="set.html">set</a><span class="token operator">: </span><a href="../-field-set/index.html">FieldSet</a></div><div class="brief "><p class="paragraph">The set of columns on which a query should be executed, contained by a <a href="../-column-set/index.html">ColumnSet</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1712496758%2FProperties%2F-1435837140" anchor-label="targets" id="1712496758%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.jetbrains.exposed.sql.statements/-statement/targets.html"><span><span>targets</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1712496758%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="../../org.jetbrains.exposed.sql.statements/-statement/targets.html">targets</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-table/index.html">Table</a><span class="token operator">&gt;</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2046327848%2FProperties%2F-1435837140" anchor-label="type" id="2046327848%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.jetbrains.exposed.sql.statements/-statement/type.html"><span><span>type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2046327848%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="../../org.jetbrains.exposed.sql.statements/-statement/type.html">type</a><span class="token operator">: </span><a href="../../org.jetbrains.exposed.sql.statements/-statement-type/index.html">StatementType</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1565630414%2FProperties%2F-1435837140" anchor-label="where" id="1565630414%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="where.html"><span><span>where</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1565630414%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="where.html">where</a><span class="token operator">: </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The stored condition for a <code class="lang-kotlin">WHERE</code> clause in this <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="2038637706%2FFunctions%2F-1435837140" anchor-label="adjustColumnSet" id="2038637706%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="adjust-column-set.html"><span>adjust</span><wbr><span>Column</span><wbr><span><span>Set</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2038637706%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">inline </span><span class="token keyword">fun </span><a href="adjust-column-set.html"><span class="token function">adjustColumnSet</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">body<span class="token operator">: </span><a href="../-column-set/index.html">ColumnSet</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-column-set/index.html">ColumnSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Assigns a new column set, either a <a href="../-table/index.html">Table</a> or a <a href="../-join/index.html">Join</a>, by changing the <code class="lang-kotlin">source</code> property of this query's <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/index.html">set</a>, while preserving its <code class="lang-kotlin">fields</code> property.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1838169232%2FFunctions%2F-1435837140" anchor-label="adjustComments" id="-1838169232%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="adjust-comments.html"><span>adjust</span><wbr><span><span>Comments</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1838169232%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="adjust-comments.html"><span class="token function">adjustComments</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">position<span class="token operator">: </span><a href="-comment-position/index.html">Query.CommentPosition</a><span class="token punctuation">, </span></span><span class="parameter ">content<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Changes the <a href="adjust-comments.html">content</a> of the <a href="comments.html">comments</a> field at the specified <a href="adjust-comments.html">position</a> in this query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-584690208%2FFunctions%2F-1435837140" anchor-label="adjustHaving" id="-584690208%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="adjust-having.html"><span>adjust</span><wbr><span><span>Having</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-584690208%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="adjust-having.html"><span class="token function">adjustHaving</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">body<span class="token operator">: </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Changes the <a href="having.html">having</a> field of this query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1660273055%2FFunctions%2F-1435837140" anchor-label="adjustSelect" id="1660273055%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="adjust-select.html"><span>adjust</span><wbr><span><span>Select</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1660273055%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">inline </span><span class="token keyword">fun </span><a href="adjust-select.html"><span class="token function">adjustSelect</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">body<span class="token operator">: </span><a href="../-column-set/index.html">ColumnSet</a><span class="token punctuation">.</span><span class="token punctuation">(</span><a href="../-field-set/index.html">FieldSet</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="index.html">Query</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Assigns a new selection of columns, by changing the <code class="lang-kotlin">fields</code> property of this query's <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/index.html">set</a>, while preserving its <code class="lang-kotlin">source</code> property.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1587988447%2FFunctions%2F-1435837140" anchor-label="adjustSlice" id="-1587988447%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="adjust-slice.html"><span>adjust</span><wbr><span><span>Slice</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1587988447%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="adjust-slice.html"><span class="token function"><strike>adjustSlice</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">body<span class="token operator">: </span><a href="../-column-set/index.html">ColumnSet</a><span class="token punctuation">.</span><span class="token punctuation">(</span><a href="../-field-set/index.html">FieldSet</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-field-set/index.html">FieldSet</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1121829260%2FFunctions%2F-1435837140" anchor-label="adjustWhere" id="1121829260%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="adjust-where.html"><span>adjust</span><wbr><span><span>Where</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1121829260%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="adjust-where.html"><span class="token function">adjustWhere</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">body<span class="token operator">: </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Changes the <a href="where.html">where</a> field of this query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="722425568%2FFunctions%2F-1435837140" anchor-label="andHaving" id="722425568%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../and-having.html"><span>and</span><wbr><span><span>Having</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="722425568%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html">Query</a><span class="token punctuation">.</span><a href="../and-having.html"><span class="token function">andHaving</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">andPart<span class="token operator">: </span><a href="../-sql-expression-builder/index.html">SqlExpressionBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Mutate Query instance and add <code class="lang-kotlin">andPart</code> to having condition with <code class="lang-kotlin">and</code> operator.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1065861680%2FFunctions%2F-1435837140" anchor-label="andWhere" id="1065861680%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../and-where.html"><span>and</span><wbr><span><span>Where</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1065861680%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html">Query</a><span class="token punctuation">.</span><a href="../and-where.html"><span class="token function">andWhere</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">andPart<span class="token operator">: </span><a href="../-sql-expression-builder/index.html">SqlExpressionBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Mutate Query instance and add <code class="lang-kotlin">andPart</code> to where condition with <code class="lang-kotlin">and</code> operator.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2074283440%2FFunctions%2F-1435837140" anchor-label="appendTo" id="2074283440%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../append-to.html"><span>append</span><wbr><span><span>To</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2074283440%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../append-to.html">T</a><span class="token operator">&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="../append-to.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../append-to.html"><span class="token function">appendTo</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">builder<span class="token operator">: </span><a href="../-query-builder/index.html">QueryBuilder</a><span class="token punctuation">, </span></span><span class="parameter ">separator<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-char-sequence/index.html">CharSequence</a><span class="token operator"> = </span><span class="token string">", "</span><span class="token punctuation">, </span></span><span class="parameter ">prefix<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-char-sequence/index.html">CharSequence</a><span class="token operator"> = </span><span class="token string">""</span><span class="token punctuation">, </span></span><span class="parameter ">postfix<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-char-sequence/index.html">CharSequence</a><span class="token operator"> = </span><span class="token string">""</span><span class="token punctuation">, </span></span><span class="parameter ">transform<span class="token operator">: </span><a href="../-query-builder/index.html">QueryBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><a href="../append-to.html">T</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-query-builder/index.html">QueryBuilder</a></div><div class="brief "><p class="paragraph">Appends all the elements separated using <a href="../append-to.html">separator</a> and using the given <a href="../append-to.html">prefix</a> and <a href="../append-to.html">postfix</a> if supplied.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-954553471%2FFunctions%2F-1435837140" anchor-label="arguments" id="-954553471%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/arguments.html"><span><span>arguments</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-954553471%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-abstract-query/arguments.html"><span class="token function">arguments</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../-i-column-type/index.html">IColumnType</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns all mappings of columns and expression types to their values needed to prepare an SQL statement.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1650656993%2FFunctions%2F-1435837140" anchor-label="comment" id="-1650656993%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="comment.html"><span><span>comment</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1650656993%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="comment.html"><span class="token function">comment</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">content<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">position<span class="token operator">: </span><a href="-comment-position/index.html">Query.CommentPosition</a><span class="token operator"> = </span>CommentPosition.FRONT</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Appends an SQL comment, with <a href="comment.html">content</a> wrapped by <code class="lang-kotlin">/* */</code>, at the specified <a href="-comment-position/index.html">CommentPosition</a> in this <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1511172144%2FFunctions%2F-1435837140" anchor-label="copy" id="-1511172144%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="copy.html"><span><span>copy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1511172144%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="copy.html"><span class="token function">copy</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Creates a new <a href="index.html">Query</a> instance using all stored properties of this <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2081982859%2FFunctions%2F-1435837140" anchor-label="copyTo" id="-2081982859%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="copy-to.html"><span>copy</span><wbr><span><span>To</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2081982859%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="copy-to.html"><span class="token function">copyTo</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="index.html">Query</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Copies all stored properties of this <code class="lang-kotlin">SELECT</code> query into the properties of <a href="copy-to.html">other</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1265923930%2FFunctions%2F-1435837140" anchor-label="count" id="-1265923930%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="count.html"><span><span>count</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1265923930%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="count.html"><span class="token function">count</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><p class="paragraph">Returns the number of results retrieved after query execution.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="274003496%2FFunctions%2F-1435837140" anchor-label="empty" id="274003496%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="empty.html"><span><span>empty</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="274003496%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="empty.html"><span class="token function">empty</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns whether any results were retrieved by query execution.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1200019244%2FFunctions%2F-1435837140" anchor-label="except" id="1200019244%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../except.html"><span><span>except</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1200019244%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../except.html"><span class="token function">except</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="index.html">Query</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-except/index.html">Except</a></div><div class="brief "><p class="paragraph">Returns only distinct results from <a href="../../../exposed-core/org.jetbrains.exposed.sql/index.html">this</a> query that are NOT common to the results of <a href="../except.html">other</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="563837649%2FFunctions%2F-1435837140" anchor-label="execute" id="563837649%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.jetbrains.exposed.sql.statements/-statement/execute.html"><span><span>execute</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="563837649%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.sql.statements/-statement/execute.html"><span class="token function">execute</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../-transaction/index.html">Transaction</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html">ResultSet</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Executes the SQL statement directly in the provided <a href="../../org.jetbrains.exposed.sql.statements/-statement/execute.html">transaction</a> and returns the generated result, or <code class="lang-kotlin">null</code> if either no result was retrieved or if the transaction blocked statement execution.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="74921797%2FFunctions%2F-1435837140" anchor-label="executeInternal" id="74921797%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="execute-internal.html"><span>execute</span><wbr><span><span>Internal</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="74921797%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.sql.statements.api/-prepared-statement-api/index.html">PreparedStatementApi</a><span class="token punctuation">.</span><a href="execute-internal.html"><span class="token function">executeInternal</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../-transaction/index.html">Transaction</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html">ResultSet</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Determines the exact way that an SQL statement is executed in a <a href="execute-internal.html">transaction</a> and applies any necessary logic before returning the result generated by the executed statement.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-674665697%2FFunctions%2F-1435837140" anchor-label="fetchBatchedResults" id="-674665697%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="fetch-batched-results.html"><span>fetch</span><wbr><span>Batched</span><wbr><span><span>Results</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-674665697%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="fetch-batched-results.html"><span class="token function">fetchBatchedResults</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">batchSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">1000</span><span class="token punctuation">, </span></span><span class="parameter ">sortOrder<span class="token operator">: </span><a href="../-sort-order/index.html">SortOrder</a><span class="token operator"> = </span>SortOrder.ASC</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="../-result-row/index.html">ResultRow</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Iterates over multiple executions of this <code class="lang-kotlin">SELECT</code> query with its <code class="lang-kotlin">LIMIT</code> clause set to <a href="fetch-batched-results.html">batchSize</a> until the amount of results retrieved from the database is less than <a href="fetch-batched-results.html">batchSize</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1111044806%2FFunctions%2F-1435837140" anchor-label="fetchSize" id="-1111044806%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/fetch-size.html"><span>fetch</span><wbr><span><span>Size</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1111044806%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-abstract-query/fetch-size.html"><span class="token function">fetchSize</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">n<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Modifies the number of results that should be fetched when this query is executed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1957605611%2FFunctions%2F-1435837140" anchor-label="forUpdate" id="1957605611%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="for-update.html"><span>for</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1957605611%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="for-update.html"><span class="token function">forUpdate</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">option<span class="token operator">: </span><a href="../../org.jetbrains.exposed.sql.vendors/-for-update-option/index.html">ForUpdateOption</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Returns a new <a href="../-sized-iterable/index.html">SizedIterable</a> with a locking read for the elements according to the rules specified by <a href="for-update.html">option</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-934270755%2FFunctions%2F-1435837140" anchor-label="groupBy" id="-934270755%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="group-by.html"><span>group</span><wbr><span><span>By</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-934270755%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="group-by.html"><span class="token function">groupBy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Appends a <code class="lang-kotlin">GROUP BY</code> clause with the specified <a href="group-by.html">columns</a> to this <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-654396469%2FFunctions%2F-1435837140" anchor-label="hasCustomForUpdateState" id="-654396469%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="has-custom-for-update-state.html"><span>has</span><wbr><span>Custom</span><wbr><span>For</span><wbr><span>Update</span><wbr><span><span>State</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-654396469%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="has-custom-for-update-state.html"><span class="token function">hasCustomForUpdateState</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether this <code class="lang-kotlin">SELECT</code> query already has a stored value option for performing locking reads.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1173762581%2FFunctions%2F-1435837140" anchor-label="having" id="1173762581%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="having.html"><span><span>having</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1173762581%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="having.html"><span class="token function">having</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">op<span class="token operator">: </span><a href="../-sql-expression-builder/index.html">SqlExpressionBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Appends a <code class="lang-kotlin">HAVING</code> clause with the specified <a href="having.html">op</a> condition to this <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="650968822%2FFunctions%2F-1435837140" anchor-label="intersect" id="650968822%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../intersect.html"><span><span>intersect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="650968822%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../intersect.html"><span class="token function">intersect</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="index.html">Query</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-intersect/index.html">Intersect</a></div><div class="brief "><p class="paragraph">Returns only results from <a href="../../../exposed-core/org.jetbrains.exposed.sql/index.html">this</a> query that are common to the results of <a href="../intersect.html">other</a>, WITHOUT including any duplicates.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1328216851%2FFunctions%2F-1435837140" anchor-label="isForUpdate" id="-1328216851%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-for-update.html"><span>is</span><wbr><span>For</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1328216851%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="is-for-update.html"><span class="token function">isForUpdate</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether this <code class="lang-kotlin">SELECT</code> query will perform a locking read.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1817842827%2FFunctions%2F-1435837140" anchor-label="iterator" id="-1817842827%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/iterator.html"><span><span>iterator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1817842827%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">operator override </span><span class="token keyword">fun </span><a href="../-abstract-query/iterator.html"><span class="token function">iterator</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterator/index.html">Iterator</a><span class="token operator">&lt;</span><a href="../-result-row/index.html">ResultRow</a><span class="token operator">&gt;</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1268109698%2FFunctions%2F-1435837140" anchor-label="limit" id="1268109698%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/limit.html"><span><span>limit</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1268109698%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-abstract-query/limit.html"><span class="token function">limit</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">count<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Modifies this query to return only <a href="../-abstract-query/limit.html">count</a> results.</p></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-abstract-query/limit.html"><span class="token function"><strike>limit</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">n<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">offset<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1551095480%2FFunctions%2F-1435837140" anchor-label="mapLazy" id="1551095480%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../map-lazy.html"><span>map</span><wbr><span><span>Lazy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1551095480%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">infix </span><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../map-lazy.html">T</a><span class="token punctuation">, </span><a href="../map-lazy.html">R</a><span class="token operator">&gt; </span><a href="../-sized-iterable/index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="../map-lazy.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../map-lazy.html"><span class="token function">mapLazy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">f<span class="token operator">: </span><span class="token punctuation">(</span><a href="../map-lazy.html">T</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../map-lazy.html">R</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-sized-iterable/index.html">SizedIterable</a><span class="token operator">&lt;</span><a href="../map-lazy.html">R</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a <a href="../-sized-iterable/index.html">SizedIterable</a> containing the lazily evaluated results of applying the function <a href="../map-lazy.html">f</a> to each original element.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1357803226%2FFunctions%2F-1435837140" anchor-label="notForUpdate" id="-1357803226%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="not-for-update.html"><span>not</span><wbr><span>For</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1357803226%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="not-for-update.html"><span class="token function">notForUpdate</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Returns a new <a href="../-sized-iterable/index.html">SizedIterable</a> without any locking read for the elements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-629587767%2FFunctions%2F-1435837140" anchor-label="offset" id="-629587767%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/offset.html"><span><span>offset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-629587767%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-abstract-query/offset.html"><span class="token function">offset</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">start<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Modifies this query to return only results starting after the specified <a href="../-abstract-query/offset.html">start</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="813962590%2FFunctions%2F-1435837140" anchor-label="orderBy" id="813962590%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/order-by.html"><span>order</span><wbr><span><span>By</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="813962590%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-abstract-query/order-by.html"><span class="token function">orderBy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>order<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-sort-order/index.html">SortOrder</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Modifies this query to sort results according to the provided <a href="../-abstract-query/order-by.html">order</a> of expressions.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-abstract-query/order-by.html"><span class="token function">orderBy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">column<span class="token operator">: </span><a href="../-expression/index.html">Expression</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">order<span class="token operator">: </span><a href="../-sort-order/index.html">SortOrder</a><span class="token operator"> = </span>SortOrder.ASC</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Modifies this query to sort results by the specified <a href="../-abstract-query/order-by.html">column</a>, according to the provided <a href="../-abstract-query/order-by.html">order</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="884800152%2FFunctions%2F-1435837140" anchor-label="orHaving" id="884800152%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../or-having.html"><span>or</span><wbr><span><span>Having</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="884800152%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html">Query</a><span class="token punctuation">.</span><a href="../or-having.html"><span class="token function">orHaving</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">orPart<span class="token operator">: </span><a href="../-sql-expression-builder/index.html">SqlExpressionBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Mutate Query instance and add <code class="lang-kotlin">orPart</code> to having condition with <code class="lang-kotlin">or</code> operator.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-868563080%2FFunctions%2F-1435837140" anchor-label="orWhere" id="-868563080%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../or-where.html"><span>or</span><wbr><span><span>Where</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-868563080%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html">Query</a><span class="token punctuation">.</span><a href="../or-where.html"><span class="token function">orWhere</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">orPart<span class="token operator">: </span><a href="../-sql-expression-builder/index.html">SqlExpressionBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Mutate Query instance and add <code class="lang-kotlin">orPart</code> to where condition with <code class="lang-kotlin">or</code> operator.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2085320212%2FFunctions%2F-1435837140" anchor-label="prepared" id="2085320212%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.jetbrains.exposed.sql.statements/-statement/prepared.html"><span><span>prepared</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2085320212%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../../org.jetbrains.exposed.sql.statements/-statement/prepared.html"><span class="token function">prepared</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../-transaction/index.html">Transaction</a><span class="token punctuation">, </span></span><span class="parameter ">sql<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.sql.statements.api/-prepared-statement-api/index.html">PreparedStatementApi</a></div><div class="brief "><p class="paragraph">Uses a <a href="../../org.jetbrains.exposed.sql.statements/-statement/prepared.html">transaction</a> connection and an <a href="../../org.jetbrains.exposed.sql.statements/-statement/prepared.html">sql</a> string representation to return a precompiled SQL statement, stored as an implementation of <a href="../../org.jetbrains.exposed.sql.statements.api/-prepared-statement-api/index.html">PreparedStatementApi</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-284581477%2FFunctions%2F-1435837140" anchor-label="prepareSQL" id="-284581477%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-abstract-query/prepare-s-q-l.html"><span>prepare</span><wbr><span><span>SQL</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-284581477%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-abstract-query/prepare-s-q-l.html"><span class="token function">prepareSQL</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">transaction<span class="token operator">: </span><a href="../-transaction/index.html">Transaction</a><span class="token punctuation">, </span></span><span class="parameter ">prepared<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the string representation of an SQL statement.</p></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="prepare-s-q-l.html"><span class="token function">prepareSQL</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">builder<span class="token operator">: </span><a href="../-query-builder/index.html">QueryBuilder</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Returns the string representation of an SQL query, generated by appending SQL expressions to a <a href="../-query-builder/index.html">QueryBuilder</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1810520031%2FFunctions%2F-1435837140" anchor-label="select" id="-1810520031%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../select.html"><span><span>select</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1810520031%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">inline </span><span class="token keyword">fun </span><a href="index.html">Query</a><span class="token punctuation">.</span><a href="../select.html"><span class="token function"><strike>select</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">where<span class="token operator">: </span><a href="../-sql-expression-builder/index.html">SqlExpressionBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html">Query</a><span class="token punctuation">.</span><a href="../select.html"><span class="token function"><strike>select</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">where<span class="token operator">: </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="343717063%2FFunctions%2F-1435837140" anchor-label="selectAllBatched" id="343717063%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../select-all-batched.html"><span>select</span><wbr><span>All</span><wbr><span><span>Batched</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="343717063%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html">Query</a><span class="token punctuation">.</span><a href="../select-all-batched.html"><span class="token function"><strike>selectAllBatched</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">batchSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">1000</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="../-result-row/index.html">ResultRow</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="960404618%2FFunctions%2F-1435837140" anchor-label="selectBatched" id="960404618%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../select-batched.html"><span>select</span><wbr><span><span>Batched</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="960404618%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html">Query</a><span class="token punctuation">.</span><a href="../select-batched.html"><span class="token function"><strike>selectBatched</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">batchSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">1000</span><span class="token punctuation">, </span></span><span class="parameter ">where<span class="token operator">: </span><a href="../-sql-expression-builder/index.html">SqlExpressionBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="../-result-row/index.html">ResultRow</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-561875546%2FFunctions%2F-1435837140" anchor-label="union" id="-561875546%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../union.html"><span><span>union</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-561875546%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../union.html"><span class="token function">union</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="index.html">Query</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-union/index.html">Union</a></div><div class="brief "><p class="paragraph">Combines all results from <a href="../../../exposed-core/org.jetbrains.exposed.sql/index.html">this</a> query with the results of <a href="../union.html">other</a>, WITHOUT including duplicates.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2125052069%2FFunctions%2F-1435837140" anchor-label="unionAll" id="2125052069%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../union-all.html"><span>union</span><wbr><span><span>All</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2125052069%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../union-all.html"><span class="token function">unionAll</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="index.html">Query</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-union-all/index.html">UnionAll</a></div><div class="brief "><p class="paragraph">Combines all results from <a href="../../../exposed-core/org.jetbrains.exposed.sql/index.html">this</a> query with the results of <a href="../union-all.html">other</a>, WITH duplicates included.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="127536177%2FFunctions%2F-1435837140" anchor-label="where" id="127536177%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="where.html"><span><span>where</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="127536177%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="where.html"><span class="token function">where</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">predicate<span class="token operator">: </span><a href="../-sql-expression-builder/index.html">SqlExpressionBuilder</a><span class="token punctuation">.</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="where.html"><span class="token function">where</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">predicate<span class="token operator">: </span><a href="../-op/index.html">Op</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Appends a <code class="lang-kotlin">WHERE</code> clause with the specified <a href="where.html">predicate</a> to this <code class="lang-kotlin">SELECT</code> query.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1440068600%2FFunctions%2F-1435837140" anchor-label="withDistinct" id="-1440068600%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="with-distinct.html"><span>with</span><wbr><span><span>Distinct</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1440068600%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="with-distinct.html"><span class="token function">withDistinct</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Modifies this query to retrieve only distinct results if <a href="with-distinct.html">value</a> is set to <code class="lang-kotlin">true</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2046628679%2FFunctions%2F-1435837140" anchor-label="withDistinctOn" id="-2046628679%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="with-distinct-on.html"><span>with</span><wbr><span>Distinct</span><wbr><span><span>On</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2046628679%2FFunctions%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="with-distinct-on.html"><span class="token function">withDistinctOn</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-pair/index.html">Pair</a><span class="token operator">&lt;</span><a href="../-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="../-sort-order/index.html">SortOrder</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Specifies that the <code class="lang-kotlin">SELECT</code> query should retrieve distinct results based on the given list of columns with sort orders. This method sets a <code class="lang-kotlin">DISTINCT ON</code> clause and may reorder the results as indicated.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="with-distinct-on.html"><span class="token function">withDistinctOn</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>columns<span class="token operator">: </span><a href="../-column/index.html">Column</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Query</a></div><div class="brief "><p class="paragraph">Specifies that the <code class="lang-kotlin">SELECT</code> query should retrieve distinct results based on the given list of columns.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

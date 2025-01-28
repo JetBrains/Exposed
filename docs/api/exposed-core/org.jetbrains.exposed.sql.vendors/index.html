@@ -1,0 +1,426 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>org.jetbrains.exposed.sql.vendors</title>
+<link href="../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+<a class="library-name--link" href="../../index.html">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">0.58.0
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-core/main" data-filter=":exposed-core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="package" id="content" pageids="exposed-core::org.jetbrains.exposed.sql.vendors////PointingToDeclaration//-1435837140">
+  <div class="breadcrumbs"><a href="../index.html">exposed-core</a><span class="delimiter">/</span><span class="current">org.jetbrains.exposed.sql.vendors</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="PROPERTY,EXTENSION_PROPERTY">Properties</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="1978379224%2FClasslikes%2F-1435837140" anchor-label="ColumnMetadata" id="1978379224%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-column-metadata/index.html"><span>Column</span><wbr><span><span>Metadata</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1978379224%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-column-metadata/index.html">ColumnMetadata</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>type<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>nullable<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>size<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>scale<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>autoIncrement<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>defaultDbValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Represents metadata information about a specific column.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="857335610%2FClasslikes%2F-1435837140" anchor-label="DatabaseDialect" id="857335610%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-database-dialect/index.html"><span>Database</span><wbr><span><span>Dialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="857335610%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-database-dialect/index.html">DatabaseDialect</a></div><div class="brief "><p class="paragraph">Common interface for all database dialects.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-582830232%2FClasslikes%2F-1435837140" anchor-label="DataTypeProvider" id="-582830232%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-data-type-provider/index.html"><span>Data</span><wbr><span>Type</span><wbr><span><span>Provider</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-582830232%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-data-type-provider/index.html">DataTypeProvider</a></div><div class="brief "><p class="paragraph">Provides definitions for all the supported SQL data types. By default, definitions from the SQL standard are provided but if a vendor doesn't support a specific type, or it is implemented differently, the corresponding function should be overridden.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-9321250%2FClasslikes%2F-1435837140" anchor-label="ForUpdateOption" id="-9321250%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-for-update-option/index.html"><span>For</span><wbr><span>Update</span><wbr><span><span>Option</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-9321250%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-for-update-option/index.html">ForUpdateOption</a></div><div class="brief "><p class="paragraph">Clauses that perform a locking read at row-level for SELECT statements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1044030444%2FClasslikes%2F-1435837140" anchor-label="FunctionProvider" id="-1044030444%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-function-provider/index.html"><span>Function</span><wbr><span><span>Provider</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1044030444%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-function-provider/index.html">FunctionProvider</a></div><div class="brief "><p class="paragraph">Provides definitions for all the supported SQL functions. By default, definitions from the SQL standard are provided but if a vendor doesn't support a specific function, or it is implemented differently, the corresponding function should be overridden.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2117506441%2FClasslikes%2F-1435837140" anchor-label="H2Dialect" id="2117506441%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-h2-dialect/index.html"><span><span>H2Dialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2117506441%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-h2-dialect/index.html">H2Dialect</a> : <a href="-vendor-dialect/index.html">VendorDialect</a></div><div class="brief "><p class="paragraph">H2 dialect implementation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1391571061%2FClasslikes%2F-1435837140" anchor-label="MariaDBDialect" id="-1391571061%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-maria-d-b-dialect/index.html"><span>Maria</span><wbr><span><span>DBDialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1391571061%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-maria-d-b-dialect/index.html">MariaDBDialect</a> : <a href="-mysql-dialect/index.html">MysqlDialect</a></div><div class="brief "><p class="paragraph">MariaDB dialect implementation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1521246919%2FClasslikes%2F-1435837140" anchor-label="MysqlDialect" id="-1521246919%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-mysql-dialect/index.html"><span>Mysql</span><wbr><span><span>Dialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1521246919%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-mysql-dialect/index.html">MysqlDialect</a> : <a href="-vendor-dialect/index.html">VendorDialect</a></div><div class="brief "><p class="paragraph">MySQL dialect implementation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-855266243%2FClasslikes%2F-1435837140" anchor-label="OracleDialect" id="-855266243%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-oracle-dialect/index.html"><span>Oracle</span><wbr><span><span>Dialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-855266243%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-oracle-dialect/index.html">OracleDialect</a> : <a href="-vendor-dialect/index.html">VendorDialect</a></div><div class="brief "><p class="paragraph">Oracle dialect implementation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1672067059%2FClasslikes%2F-1435837140" anchor-label="PostgreSQLDialect" id="1672067059%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-postgre-s-q-l-dialect/index.html"><span>Postgre</span><wbr><span><span>SQLDialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1672067059%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-postgre-s-q-l-dialect/index.html">PostgreSQLDialect</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator"> = </span>dialectName</span></span><span class="token punctuation">)</span> : <a href="-vendor-dialect/index.html">VendorDialect</a></div><div class="brief "><p class="paragraph">PostgreSQL dialect implementation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1198357420%2FClasslikes%2F-1435837140" anchor-label="PostgreSQLNGDialect" id="1198357420%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-postgre-s-q-l-n-g-dialect/index.html"><span>Postgre</span><wbr><span><span>SQLNGDialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1198357420%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-postgre-s-q-l-n-g-dialect/index.html">PostgreSQLNGDialect</a> : <a href="-postgre-s-q-l-dialect/index.html">PostgreSQLDialect</a></div><div class="brief "><p class="paragraph">PostgreSQL dialect implementation using the pgjdbc-ng jdbc driver.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-521430767%2FClasslikes%2F-1435837140" anchor-label="PrimaryKeyMetadata" id="-521430767%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-primary-key-metadata/index.html"><span>Primary</span><wbr><span>Key</span><wbr><span><span>Metadata</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-521430767%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-primary-key-metadata/index.html">PrimaryKeyMetadata</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>columnNames<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Represents metadata information about a specific table's primary key.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-924057875%2FClasslikes%2F-1435837140" anchor-label="SchemaMetadata" id="-924057875%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-schema-metadata/index.html"><span>Schema</span><wbr><span><span>Metadata</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-924057875%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-schema-metadata/index.html">SchemaMetadata</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>schemaName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>tableNames<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Represents metadata information about the current schema and its associated tables.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1836000565%2FClasslikes%2F-1435837140" anchor-label="SQLiteDialect" id="-1836000565%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-s-q-lite-dialect/index.html"><span>SQLite</span><wbr><span><span>Dialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1836000565%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-s-q-lite-dialect/index.html">SQLiteDialect</a> : <a href="-vendor-dialect/index.html">VendorDialect</a></div><div class="brief "><p class="paragraph">SQLite dialect implementation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="667413832%2FClasslikes%2F-1435837140" anchor-label="SQLServerDialect" id="667413832%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-s-q-l-server-dialect/index.html"><span>SQLServer</span><wbr><span><span>Dialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="667413832%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="-s-q-l-server-dialect/index.html">SQLServerDialect</a> : <a href="-vendor-dialect/index.html">VendorDialect</a></div><div class="brief "><p class="paragraph">SQLServer dialect implementation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-534467577%2FClasslikes%2F-1435837140" anchor-label="VendorDialect" id="-534467577%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-vendor-dialect/index.html"><span>Vendor</span><wbr><span><span>Dialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-534467577%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-vendor-dialect/index.html">VendorDialect</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>dataTypeProvider<span class="token operator">: </span><a href="-data-type-provider/index.html">DataTypeProvider</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>functionProvider<span class="token operator">: </span><a href="-function-provider/index.html">FunctionProvider</a></span></span><span class="token punctuation">)</span> : <a href="-database-dialect/index.html">DatabaseDialect</a></div><div class="brief "><p class="paragraph">Base implementation of a vendor dialect</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="1738052647%2FProperties%2F-1435837140" anchor-label="ANSI_SQL_2003_KEYWORDS" id="1738052647%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-a-n-s-i_-s-q-l_2003_-k-e-y-w-o-r-d-s.html"><span>ANSI_</span><wbr><span>SQL_</span><wbr><span>2003_</span><wbr><span>KEYWORDS</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1738052647%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="-a-n-s-i_-s-q-l_2003_-k-e-y-w-o-r-d-s.html">ANSI_SQL_2003_KEYWORDS</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-set/index.html">Set</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a set with all the keywords that are part of the SQL:2003 standard.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1939358315%2FProperties%2F-1435837140" anchor-label="currentDialect" id="-1939358315%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="current-dialect.html"><span>current</span><wbr><span><span>Dialect</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1939358315%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="current-dialect.html">currentDialect</a><span class="token operator">: </span><a href="-database-dialect/index.html">DatabaseDialect</a></div><div class="brief "><p class="paragraph">Returns the dialect used in the current transaction, may throw an exception if there is no current transaction.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-976864897%2FProperties%2F-1435837140" anchor-label="h2Mode" id="-976864897%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="h2-mode.html"><span><span>h2Mode</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-976864897%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="-database-dialect/index.html">DatabaseDialect</a><span class="token punctuation">.</span><a href="h2-mode.html">h2Mode</a><span class="token operator">: </span><a href="-h2-dialect/-h2-compatibility-mode/index.html">H2Dialect.H2CompatibilityMode</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The current H2 database compatibility mode or <code class="lang-kotlin">null</code> if the current database is not H2.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="416764548%2FProperties%2F-1435837140" anchor-label="VENDORS_KEYWORDS" id="416764548%2FProperties%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-v-e-n-d-o-r-s_-k-e-y-w-o-r-d-s.html"><span>VENDORS_</span><wbr><span>KEYWORDS</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="416764548%2FProperties%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="-v-e-n-d-o-r-s_-k-e-y-w-o-r-d-s.html">VENDORS_KEYWORDS</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a map of vendor specific keywords.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
