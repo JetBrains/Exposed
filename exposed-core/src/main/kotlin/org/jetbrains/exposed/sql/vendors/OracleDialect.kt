@@ -366,22 +366,6 @@ internal object OracleFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun insert(
-        ignore: Boolean,
-        table: Table,
-        columns: List<Column<*>>,
-        expr: String,
-        transaction: Transaction
-    ): String {
-        val def = super.insert(ignore, table, columns, expr, transaction)
-        return if (def.endsWith(" $DEFAULT_VALUE_EXPRESSION")) {
-            val oracleDefaults = "VALUES(DEFAULT${", DEFAULT".repeat(table.columns.lastIndex)})"
-            "${def.removeSuffix(DEFAULT_VALUE_EXPRESSION)}$oracleDefaults"
-        } else {
-            def
-        }
-    }
-
     override fun explain(
         analyze: Boolean,
         options: String?,
