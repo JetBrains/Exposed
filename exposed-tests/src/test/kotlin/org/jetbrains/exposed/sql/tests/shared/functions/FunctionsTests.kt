@@ -4,6 +4,8 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.coalesce
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greatest
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.least
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -376,6 +378,112 @@ class FunctionsTests : DatabaseTestsBase() {
             val rand = Random()
             val resultRow = t.select(rand).limit(1).single()
             assertNotNull(resultRow[rand])
+        }
+    }
+
+    val nullIgnoredDatabases = TestDB.ALL_SQLSERVER_LIKE + TestDB.ALL_POSTGRES_LIKE + TestDB.ALL_H2_V1
+
+    @Test
+    fun testGreatestLeastFunction01() {
+        val table = object : IntIdTable("test_comparison_table") {
+            val intColumn = integer("int_column")
+            val intColumn2 = integer("int_column2")
+            val intColumnNullable = integer("int_column_nullable").nullable()
+
+            val doubleColumn = double("double_column")
+            val doubleColumn2 = double("double_column2")
+            val doubleColumnNullable = double("double_column_nullable").nullable()
+        }
+        withTables(table) { db ->
+            table.insert {
+                it[intColumn] = 1
+                it[intColumn2] = 2
+                it[intColumnNullable] = 3
+
+                it[doubleColumn] = 1.0
+                it[doubleColumn2] = 2.0
+                it[doubleColumnNullable] = 3.0
+            }
+            table.insert {
+                it[intColumn] = 6
+                it[intColumn2] = 5
+                it[intColumnNullable] = 4
+
+                it[doubleColumn] = 6.0
+                it[doubleColumn2] = 5.0
+                it[doubleColumnNullable] = 4.0
+            }
+            table.insert {
+                it[intColumn] = 3
+                it[intColumn2] = 2
+
+                it[doubleColumn] = 3.0
+                it[doubleColumn2] = 2.0
+            }
+
+            val greatestInt = greatest(table.intColumn, table.intColumn2, table.intColumnNullable)
+            val greatestDouble = greatest(table.doubleColumn, table.doubleColumn2, table.doubleColumnNullable)
+            val leastInt = least(table.intColumn, table.intColumn2, table.intColumnNullable)
+            val leastDouble = least(table.doubleColumn, table.doubleColumn2, table.doubleColumnNullable)
+
+            val result = table.select(greatestInt, greatestDouble, leastInt, leastDouble).where { table.id.eq(1) }.single()
+            assertEquals(3, result[greatestInt])
+            assertEquals(3.0, result[greatestDouble])
+            assertEquals(1, result[leastInt])
+            assertEquals(1.0, result[leastDouble])
+
+            val result2 = table.select(greatestInt, greatestDouble, leastInt, leastDouble).where { table.id.eq(2) }.single()
+            assertEquals(6, result2[greatestInt])
+            assertEquals(6.0, result2[greatestDouble])
+            assertEquals(4, result2[leastInt])
+            assertEquals(4.0, result2[leastDouble])
+
+            val result3 = table.select(greatestInt, greatestDouble, leastInt, leastDouble).where { table.id.eq(3) }.single()
+            if (db in nullIgnoredDatabases) {
+                assertEquals(3, result3[greatestInt])
+                assertEquals(3.0, result3[greatestDouble])
+                assertEquals(2, result3[leastInt])
+                assertEquals(2.0, result3[leastDouble])
+            } else {
+                assertNull(result3[greatestInt])
+                assertNull(result3[greatestDouble])
+                assertNull(result3[leastInt])
+                assertNull(result3[leastDouble])
+            }
+        }
+    }
+
+    @Test
+    fun testGreatestLeastFunction02() {
+        val table = object : IntIdTable("test_comparison_table") {
+            val intColumn = integer("int_column")
+        }
+        withTables(table) { db ->
+            table.insert {
+                it[intColumn] = 1
+            }
+
+            val greatestExpression = greatest(table.intColumn, intLiteral(999), Op.nullOp(), intParam(56666))
+            val greatestLiteralsMix = greatest(10, table.intColumn)
+            val greatestLiteralsOnly = greatest(3, intLiteral(5))
+            val leastExpression = least(table.intColumn, intLiteral(999), Op.nullOp(), intParam(56666))
+            val leastLiteralsMix = least(0, table.intColumn)
+            val leastLiteralsOnly = least(3, intLiteral(5))
+
+            val result = table.select(greatestExpression, greatestLiteralsMix, greatestLiteralsOnly, leastExpression, leastLiteralsMix, leastLiteralsOnly)
+                .where { table.id.eq(1) }.single()
+            if (db in nullIgnoredDatabases)
+                assertEquals(56666, result[greatestExpression])
+            else
+                assertEquals(null, result[greatestExpression])
+            assertEquals(10, result[greatestLiteralsMix])
+            assertEquals(5, result[greatestLiteralsOnly])
+            if (db in nullIgnoredDatabases)
+                assertEquals(1, result[leastExpression])
+            else
+                assertEquals(null, result[leastExpression])
+            assertEquals(0, result[leastLiteralsMix])
+            assertEquals(3, result[leastLiteralsOnly])
         }
     }
 

@@ -603,6 +603,59 @@ interface ISqlExpressionBuilder {
         other: ExpressionWithColumnType<E>
     ): IsDistinctFromOp = IsDistinctFromOp(this, other)
 
+    /**
+     * The greatest (maximum, largest value) of [expr1], [expr2], and [others].
+     *
+     * **Note:** The semantics of this function when applied to null values
+     * or values of multiple types depends on the vendor. Please check the
+     * documentation for your respective database.
+     */
+    fun <T> greatest(
+        expr1: ExpressionWithColumnType<T>,
+        expr2: Expression<in T>,
+        vararg others: Expression<in T>,
+    ): Greatest<T> = Greatest(expr1, expr2, expr1.columnType, *others)
+
+    /**
+     * The greatest (maximum, largest value) of [literal], [expr1], and
+     * [others].
+     *
+     * **Note:** The semantics of this function when applied to null values
+     * or values of multiple types depends on the vendor. Please check the
+     * documentation for your respective database.
+     */
+    fun <T> greatest(
+        literal: T,
+        expr1: ExpressionWithColumnType<T>,
+        vararg others: Expression<in T>,
+    ): Greatest<T> = Greatest(expr1.wrap(literal), expr1, expr1.columnType, *others)
+
+    /**
+     * The least (minimum, smallest value) of [expr1], [expr2], and [others].
+     *
+     * **Note:** The semantics of this function when applied to null values
+     * or values of multiple types depends on the vendor. Please check the
+     * documentation for your respective database.
+     */
+    fun <T> least(
+        expr1: ExpressionWithColumnType<T>,
+        expr2: Expression<in T>,
+        vararg others: Expression<in T>,
+    ): Least<T> = Least(expr1, expr2, expr1.columnType, *others)
+
+    /**
+     * The least (minimum, smallest value) of [literal], [expr1], and [others].
+     *
+     * **Note:** The semantics of this function when applied to null values
+     * or values of multiple types depends on the vendor. Please check the
+     * documentation for your respective database.
+     */
+    fun <T> least(
+        literal: T,
+        expr1: ExpressionWithColumnType<T>,
+        vararg others: Expression<in T>,
+    ): Least<T> = Least(expr1.wrap(literal), expr1, expr1.columnType, *others)
+
     // Mathematical Operators
 
     /** Adds the [t] value to this expression. */

@@ -34,6 +34,30 @@ abstract class FunctionProvider {
      */
     open fun random(seed: Int?): String = "RANDOM(${seed?.toString().orEmpty()})"
 
+    /**
+     * SQL function that returns the greatest (maximum) of two values.
+     *
+     * @param queryBuilder Query builder to append the SQL function to.
+     * @param expr The expressions to compare.
+     */
+    open fun <T> greatest(queryBuilder: QueryBuilder, vararg expr: Expression<in T>): Unit = queryBuilder {
+        append("GREATEST(")
+        expr.appendTo { +it }
+        append(")")
+    }
+
+    /**
+     * SQL function that returns the least (minimum) of two values.
+     *
+     * @param queryBuilder Query builder to append the SQL function to.
+     * @param expr The expressions to compare.
+     */
+    open fun <T> least(queryBuilder: QueryBuilder, vararg expr: Expression<in T>): Unit = queryBuilder {
+        append("LEAST(")
+        expr.appendTo { +it }
+        append(")")
+    }
+
     // String functions
 
     /**

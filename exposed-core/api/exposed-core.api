@@ -1052,6 +1052,14 @@ public final class org/jetbrains/exposed/sql/GreaterOp : org/jetbrains/exposed/s
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)V
 }
 
+public final class org/jetbrains/exposed/sql/Greatest : org/jetbrains/exposed/sql/Function {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/IColumnType;[Lorg/jetbrains/exposed/sql/Expression;)V
+	public final fun getExpr1 ()Lorg/jetbrains/exposed/sql/Expression;
+	public final fun getExpr2 ()Lorg/jetbrains/exposed/sql/Expression;
+	public final fun getOthers ()[Lorg/jetbrains/exposed/sql/Expression;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+}
+
 public final class org/jetbrains/exposed/sql/GroupConcat : org/jetbrains/exposed/sql/Function {
 	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;Z[Lkotlin/Pair;)V
 	public final fun getDistinct ()Z
@@ -1145,6 +1153,8 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun greaterEq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public abstract fun greaterEqBetweenEntityIDs (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public abstract fun greaterEqEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
+	public abstract fun greatest (Ljava/lang/Object;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Greatest;
+	public abstract fun greatest (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Greatest;
 	public abstract fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/EqOp;
 	public abstract fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/EqOp;
 	public abstract fun inList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -1173,6 +1183,8 @@ public abstract interface class org/jetbrains/exposed/sql/ISqlExpressionBuilder 
 	public abstract fun lag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Lag;
 	public abstract fun lastValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LastValue;
 	public abstract fun lead (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Lead;
+	public abstract fun least (Ljava/lang/Object;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Least;
+	public abstract fun least (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Least;
 	public abstract fun less (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessOp;
 	public abstract fun less (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LessOp;
 	public abstract fun less (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/LessOp;
@@ -1283,6 +1295,8 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun greaterEq (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public static fun greaterEqBetweenEntityIDs (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public static fun greaterEqEntityID (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
+	public static fun greatest (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Ljava/lang/Object;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Greatest;
+	public static fun greatest (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Greatest;
 	public static fun hasFlag (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/EqOp;
 	public static fun hasFlag (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/EqOp;
 	public static fun inList (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -1313,6 +1327,8 @@ public final class org/jetbrains/exposed/sql/ISqlExpressionBuilder$DefaultImpls 
 	public static fun lastValue (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LastValue;
 	public static fun lead (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Lead;
 	public static synthetic fun lead$default (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Lead;
+	public static fun least (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Ljava/lang/Object;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Least;
+	public static fun least (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Least;
 	public static fun less (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessOp;
 	public static fun less (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LessOp;
 	public static fun less (Lorg/jetbrains/exposed/sql/ISqlExpressionBuilder;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/LessOp;
@@ -1563,6 +1579,14 @@ public final class org/jetbrains/exposed/sql/Lead : org/jetbrains/exposed/sql/Wi
 	public final fun getExpr ()Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
 	public final fun getOffset ()Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;
 	public fun over ()Lorg/jetbrains/exposed/sql/WindowFunctionDefinition;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/sql/Least : org/jetbrains/exposed/sql/Function {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/IColumnType;[Lorg/jetbrains/exposed/sql/Expression;)V
+	public final fun getExpr1 ()Lorg/jetbrains/exposed/sql/Expression;
+	public final fun getExpr2 ()Lorg/jetbrains/exposed/sql/Expression;
+	public final fun getOthers ()[Lorg/jetbrains/exposed/sql/Expression;
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
@@ -2369,6 +2393,8 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun greaterEq (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public fun greaterEqBetweenEntityIDs (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
 	public fun greaterEqEntityID (Lorg/jetbrains/exposed/sql/Column;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/GreaterEqOp;
+	public fun greatest (Ljava/lang/Object;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Greatest;
+	public fun greatest (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Greatest;
 	public fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/sql/EqOp;
 	public fun hasFlag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/EqOp;
 	public fun inList (Ljava/util/List;Ljava/lang/Iterable;)Lorg/jetbrains/exposed/sql/ops/InListOrNotInListBaseOp;
@@ -2397,6 +2423,8 @@ public final class org/jetbrains/exposed/sql/SqlExpressionBuilder : org/jetbrain
 	public fun lag (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Lag;
 	public fun lastValue (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LastValue;
 	public fun lead (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/Lead;
+	public fun least (Ljava/lang/Object;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Least;
+	public fun least (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Least;
 	public fun less (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/LessOp;
 	public fun less (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;)Lorg/jetbrains/exposed/sql/LessOp;
 	public fun less (Lorg/jetbrains/exposed/sql/ExpressionWithColumnType;Ljava/lang/Comparable;)Lorg/jetbrains/exposed/sql/LessOp;
@@ -4061,6 +4089,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/FunctionProvider {
 	public fun delete (ZLorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/Integer;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
 	public fun explain (ZLjava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
 	public fun getDEFAULT_VALUE_EXPRESSION ()Ljava/lang/String;
+	public fun greatest (Lorg/jetbrains/exposed/sql/QueryBuilder;[Lorg/jetbrains/exposed/sql/Expression;)V
 	public fun groupConcat (Lorg/jetbrains/exposed/sql/GroupConcat;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun hour (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun insert (ZLorg/jetbrains/exposed/sql/Table;Ljava/util/List;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Transaction;)Ljava/lang/String;
@@ -4068,6 +4097,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/FunctionProvider {
 	public fun jsonContains (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun jsonExists (Lorg/jetbrains/exposed/sql/Expression;[Ljava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 	public fun jsonExtract (Lorg/jetbrains/exposed/sql/Expression;[Ljava/lang/String;ZLorg/jetbrains/exposed/sql/IColumnType;Lorg/jetbrains/exposed/sql/QueryBuilder;)V
+	public fun least (Lorg/jetbrains/exposed/sql/QueryBuilder;[Lorg/jetbrains/exposed/sql/Expression;)V
 	public fun locate (Lorg/jetbrains/exposed/sql/QueryBuilder;Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;)V
 	public fun match (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/FunctionProvider$MatchMode;)Lorg/jetbrains/exposed/sql/Op;
 	public static synthetic fun match$default (Lorg/jetbrains/exposed/sql/vendors/FunctionProvider;Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/FunctionProvider$MatchMode;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Op;
