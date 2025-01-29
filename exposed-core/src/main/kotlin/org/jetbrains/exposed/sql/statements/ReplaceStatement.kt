@@ -20,7 +20,7 @@ open class ReplaceStatement<Key : Any>(table: Table) : InsertStatement<Key>(tabl
         val valuesSql = values.toSqlString(prepared)
         val dialect = transaction.db.dialect
         val functionProvider = when (dialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.MySQL, H2Dialect.H2CompatibilityMode.MariaDB -> MysqlFunctionProvider()
+            H2Dialect.H2CompatibilityMode.MySQL, H2Dialect.H2CompatibilityMode.MariaDB -> MysqlFunctionProvider.INSTANCE
             else -> dialect.functionProvider
         }
         return functionProvider.replace(table, values.unzip().first, valuesSql, transaction, prepared)
@@ -42,7 +42,7 @@ open class ReplaceSelectStatement(
         val querySql = selectQuery.prepareSQL(transaction, prepared)
         val dialect = transaction.db.dialect
         val functionProvider = when (dialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.MySQL, H2Dialect.H2CompatibilityMode.MariaDB -> MysqlFunctionProvider()
+            H2Dialect.H2CompatibilityMode.MySQL, H2Dialect.H2CompatibilityMode.MariaDB -> MysqlFunctionProvider.INSTANCE
             else -> dialect.functionProvider
         }
         return functionProvider.replace(targets.single(), columns, querySql, transaction, prepared)

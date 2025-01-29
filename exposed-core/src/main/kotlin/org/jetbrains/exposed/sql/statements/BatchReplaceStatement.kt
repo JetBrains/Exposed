@@ -23,7 +23,7 @@ open class BatchReplaceStatement(
         val valuesSql = values.toSqlString(prepared)
         val dialect = transaction.db.dialect
         val functionProvider = when (dialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.MySQL, H2Dialect.H2CompatibilityMode.MariaDB -> MysqlFunctionProvider()
+            H2Dialect.H2CompatibilityMode.MySQL, H2Dialect.H2CompatibilityMode.MariaDB -> MysqlFunctionProvider.INSTANCE
             else -> dialect.functionProvider
         }
         return functionProvider.replace(table, values.unzip().first, valuesSql, transaction, prepared)

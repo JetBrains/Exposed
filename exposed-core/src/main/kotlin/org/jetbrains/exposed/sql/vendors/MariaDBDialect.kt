@@ -1,7 +1,21 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+
+internal object MariaDBDataTypeProvider : MysqlDataTypeProvider() {
+    override fun timestampWithTimeZoneType(): String {
+        throw UnsupportedByDialectException("This vendor does not support timestamp with time zone data type", currentDialect)
+    }
+
+    override fun processForDefaultValue(e: Expression<*>): String = when {
+        e is LiteralOp<*> -> (e.columnType as IColumnType<Any?>).valueAsDefaultString(e.value)
+        e is Function<*> || currentDialect is MariaDBDialect -> "$e"
+        else -> "($e)"
+    }
+}
 
 internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
     override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
@@ -70,6 +84,7 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
  */
 open class MariaDBDialect : MysqlDialect() {
     override val name: String = dialectName
+    override val dataTypeProvider: DataTypeProvider = MariaDBDataTypeProvider
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
     override val supportsSetDefaultReferenceOption: Boolean = false
