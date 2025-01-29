@@ -53,5 +53,5 @@ fun discoverExposedTables(applicationContext: ApplicationContext, excludedPackag
     excludedPackages.forEach { provider.addExcludeFilter(RegexPatternTypeFilter(Pattern.compile(it.replace(".", "\\.") + ".*"))) }
     val packages = AutoConfigurationPackages.get(applicationContext)
     val components = packages.map { provider.findCandidateComponents(it) }.flatten()
-    return components.map { Class.forName(it.beanClassName).kotlin.objectInstance as Table }
+    return components.mapNotNull { Class.forName(it.beanClassName).kotlin.objectInstance as? Table }
 }
