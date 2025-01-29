@@ -11,7 +11,7 @@ object StarWarsFilmsTable : IntIdTable() {
     val director = varchar("director", MAX_VARCHAR_LENGTH)
 }
 
-object StarWarsFilmsWithDirectorTable: IntIdTable() {
+object StarWarsFilmsWithDirectorTable : IntIdTable() {
     val name = varchar("name", MAX_VARCHAR_LENGTH)
     val director = reference("director", DirectorsTable)
 }
@@ -24,8 +24,8 @@ object StarWarsFilmRelationsTable : Table() {
 
 object StarWarsFilmsWithCompositeRefTable : IntIdTable() {
     val sequelId = integer("sequel_id").uniqueIndex()
-    val name = varchar("name", 50)
-    val directorName = varchar("director_name", 50)
+    val name = varchar("name", MAX_VARCHAR_LENGTH)
+    val directorName = varchar("director_name", MAX_VARCHAR_LENGTH)
     val directorGuildId = uuid("director_guild_id")
 
     init {

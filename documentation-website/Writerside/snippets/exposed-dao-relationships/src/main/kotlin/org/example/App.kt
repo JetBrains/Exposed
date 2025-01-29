@@ -1,7 +1,7 @@
 package org.example
 
-import org.example.tables.*
 import org.example.examples.*
+import org.example.tables.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils

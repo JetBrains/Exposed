@@ -1,7 +1,7 @@
 package org.example.examples
 
-import org.example.entities.StarWarsFilmWithParentAndChildEntity
 import org.example.entities.DirectorEntity
+import org.example.entities.StarWarsFilmWithParentAndChildEntity
 import org.example.tables.Genre
 import org.jetbrains.exposed.sql.SizedCollection
 

@@ -28,4 +28,3 @@ class UserRatingWithOptionalUserEntity(id: EntityID<Int>) : IntEntity(id) {
     var film by StarWarsFilmEntity referencedOn UserRatingsWithOptionalUserTable.film // use referencedOn for normal references
     var user by UserEntity optionalReferencedOn UserRatingsWithOptionalUserTable.user
 }
-

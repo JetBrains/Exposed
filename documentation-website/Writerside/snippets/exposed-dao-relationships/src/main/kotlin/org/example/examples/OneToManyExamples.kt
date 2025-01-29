@@ -5,11 +5,12 @@ import org.example.entities.UserEntity
 import org.example.entities.UserRatingEntity
 
 const val MOVIE_SEQUEL_ID = 8
+const val MOVIE_RATING = 4
 
 class OneToManyExamples {
     fun queryRatings() {
         // create film
-        val starWarsFilm = StarWarsFilmEntity.new{
+        val starWarsFilm = StarWarsFilmEntity.new {
             name = "The Last Jedi"
             sequelId = MOVIE_SEQUEL_ID
             director = "Rian Johnson"
@@ -19,7 +20,7 @@ class OneToManyExamples {
         }
 
         val filmRating = UserRatingEntity.new {
-            value = 4
+            value = MOVIE_RATING
             film = starWarsFilm
             user = user1
         }

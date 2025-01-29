@@ -1,7 +1,7 @@
 package org.example.entities
 
-import org.example.tables.DirectorsTable
 import org.example.tables.DirectorsCompositeIdTable
+import org.example.tables.DirectorsTable
 import org.example.tables.StarWarsFilmsWithCompositeRefTable
 import org.jetbrains.exposed.dao.CompositeEntity
 import org.jetbrains.exposed.dao.CompositeEntityClass

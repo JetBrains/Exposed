@@ -1,7 +1,7 @@
 package org.example.entities
 
-import org.example.tables.UsersTable
 import org.example.tables.UserRatingsTable
+import org.example.tables.UsersTable
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -24,6 +24,7 @@ class UserOrderedEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<UserOrderedEntity>(UsersTable)
 
     var name by UsersTable.name
+
     /*
         Without infix notation:
 
@@ -37,5 +38,3 @@ class UserOrderedEntity(id: EntityID<Int>) : IntEntity(id) {
         UserRatingsTable.id to SortOrder.ASC
     )
 }
-
-

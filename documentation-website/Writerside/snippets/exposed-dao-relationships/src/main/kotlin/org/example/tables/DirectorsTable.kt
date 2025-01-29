@@ -12,7 +12,7 @@ object DirectorsTable : IntIdTable("directors") {
 }
 
 object DirectorsCompositeIdTable : CompositeIdTable() {
-    val name = varchar("name", 50).entityId()
+    val name = varchar("name", NAME_LENGTH).entityId()
     val guildId = uuid("guild_id").autoGenerate().entityId()
     val genre = enumeration<Genre>("genre")
 

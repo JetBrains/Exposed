@@ -41,7 +41,7 @@
             <tab id="user-entity" title="UserEntity">
                 <code-block lang="kotlin"
                             src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
-                            include-lines="15-18,20"
+                            include-lines="16-19,21"
                 />
             </tab>
         </tabs>
@@ -147,13 +147,13 @@
         </p>
         <code-block lang="kotlin"
                     src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
-                    include-lines="23-26,35-39"
+                    include-lines="23-26,36-40"
         />
         <p>Without using the <a href="https://kotlinlang.org/docs/functions.html#infix-notation">infix notation</a>, the <code>orderBy</code> method is chained
             after <code>referrersOn</code>:</p>
         <code-block lang="kotlin"
                     src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
-                    include-lines="23-26,30-33,39"
+                    include-lines="23-26,31-34,40"
         />
     </chapter>
     <chapter title="Many-to-many reference" id="many-to-many-reference">
@@ -193,7 +193,7 @@
             <code>via</code> keyword:</p>
         <code-block lang="kotlin"
                     src="exposed-dao-relationships/src/main/kotlin/org/example/entities/StarWarsFilmEntity.kt"
-                    include-lines="24"
+                    include-lines="26"
         />
         <p>The final <code>StarWarsFilmEntity</code> will look in the following way:</p>
         <code-block lang="kotlin"
