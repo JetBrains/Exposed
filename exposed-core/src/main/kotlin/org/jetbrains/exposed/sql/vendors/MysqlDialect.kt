@@ -356,10 +356,11 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
 
     override val supportsSetDefaultReferenceOption: Boolean = false
 
-    /** Returns `true` if the MySQL JDBC connector version is greater than or equal to 5.6. */
-    fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(BigDecimal("5.6"))
+    /** Returns `true` if the MySQL database version is greater than or equal to 5.6. */
+    @Suppress("MagicNumber")
+    open fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(5, 6)
 
-    /** Returns `true` if a MySQL JDBC connector is being used and its version is greater than or equal to 8.0. */
+    /** Returns `true` if a MySQL database is being used and its version is greater than or equal to 8.0. */
     fun isTimeZoneOffsetSupported(): Boolean = (currentDialect !is MariaDBDialect) && isMysql8
 
     private val notAcceptableDefaults = mutableListOf("CURRENT_DATE()", "CURRENT_DATE")

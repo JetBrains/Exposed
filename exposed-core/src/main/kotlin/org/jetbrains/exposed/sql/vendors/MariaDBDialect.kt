@@ -87,6 +87,10 @@ class MariaDBDialect : MysqlDialect() {
         }
     }
 
+    /** Returns `true` if the MariaDB database version is greater than or equal to 5.3. */
+    @Suppress("MagicNumber")
+    override fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(5, 3)
+
     override fun createIndex(index: Index): String {
         if (index.functions != null) {
             exposedLogger.warn(
