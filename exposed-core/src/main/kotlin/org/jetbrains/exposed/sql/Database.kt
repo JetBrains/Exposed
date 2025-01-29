@@ -72,7 +72,7 @@ class Database private constructor(
 
     /** Whether the version number of the database is equal to or greater than the provided [majorVersion] and [minorVersion]. */
     fun isVersionCovers(majorVersion: Int, minorVersion: Int) =
-        this.majorVersion >= majorVersion && this.minorVersion >= minorVersion
+        this.majorVersion > majorVersion || (this.majorVersion == majorVersion && this.minorVersion >= minorVersion)
 
     /** Whether the database supports ALTER TABLE with an add column clause. */
     val supportsAlterTableWithAddColumn by lazy(
