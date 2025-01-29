@@ -314,8 +314,8 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
     }
 
-    private fun isUpsertAliasSupported(dialect: DatabaseDialect): Boolean = when (dialect) {
-        is MysqlDialect -> dialect !is MariaDBDialect && dialect.fullVersion >= "8.0.19"
+    open fun isUpsertAliasSupported(dialect: DatabaseDialect): Boolean = when (dialect) {
+        is MysqlDialect -> dialect.fullVersion >= "8.0.19"
         else -> false // H2_MySQL mode also uses this function provider & requires older unsupported version
     }
 
@@ -361,13 +361,13 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     open fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(5, 6)
 
     /** Returns `true` if a MySQL database is being used and its version is greater than or equal to 8.0. */
-    fun isTimeZoneOffsetSupported(): Boolean = (currentDialect !is MariaDBDialect) && isMysql8
+    open fun isTimeZoneOffsetSupported(): Boolean = isMysql8
 
-    private val notAcceptableDefaults = mutableListOf("CURRENT_DATE()", "CURRENT_DATE")
+    protected val notAcceptableDefaults = mutableListOf("CURRENT_DATE()", "CURRENT_DATE")
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true
-        if ((currentDialect is MariaDBDialect && fullVersion >= "10.2.1") || (currentDialect !is MariaDBDialect && fullVersion >= "8.0.13")) {
+        if (fullVersion >= "8.0.13") {
             return true
         }
 

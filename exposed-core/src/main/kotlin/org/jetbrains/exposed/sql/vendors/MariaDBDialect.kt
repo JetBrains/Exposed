@@ -61,6 +61,8 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
             toString()
         }
     }
+
+    override fun isUpsertAliasSupported(dialect: DatabaseDialect): Boolean = false
 }
 
 /**
@@ -90,6 +92,20 @@ open class MariaDBDialect : MysqlDialect() {
     /** Returns `true` if the MariaDB database version is greater than or equal to 5.3. */
     @Suppress("MagicNumber")
     override fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(5, 3)
+
+    override fun isTimeZoneOffsetSupported(): Boolean = false
+
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
+        if (e is LiteralOp<*>) return true
+        if (fullVersion >= "10.2.1") {
+            return true
+        }
+
+        // This check is quite optimistic, it will not allow to create a varchar columns with "CURRENT_DATE" default value for example
+        // Comparing to the previous variant with white list of functions the new variant does not reject valid values,
+        // it could be checked on the test UpsertTests::testUpsertWithColumnExpressions()
+        return e.toString().trim() !in notAcceptableDefaults
+    }
 
     override fun createIndex(index: Index): String {
         if (index.functions != null) {

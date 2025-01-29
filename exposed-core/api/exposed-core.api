@@ -4207,7 +4207,9 @@ public class org/jetbrains/exposed/sql/vendors/MariaDBDialect : org/jetbrains/ex
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z
+	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public fun isFractionDateTimeSupported ()Z
+	public fun isTimeZoneOffsetSupported ()Z
 }
 
 public final class org/jetbrains/exposed/sql/vendors/MariaDBDialect$Companion : org/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider {
@@ -4221,6 +4223,7 @@ public class org/jetbrains/exposed/sql/vendors/MysqlDialect : org/jetbrains/expo
 	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
 	public fun dropSchema (Lorg/jetbrains/exposed/sql/Schema;Z)Ljava/lang/String;
 	protected fun fillConstraintCacheForTables (Ljava/util/List;)V
+	protected final fun getNotAcceptableDefaults ()Ljava/util/List;
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z
@@ -4228,7 +4231,7 @@ public class org/jetbrains/exposed/sql/vendors/MysqlDialect : org/jetbrains/expo
 	public fun getSupportsTernaryAffectedRowValues ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public fun isFractionDateTimeSupported ()Z
-	public final fun isTimeZoneOffsetSupported ()Z
+	public fun isTimeZoneOffsetSupported ()Z
 	protected fun metadataMatchesTable (Ljava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Table;)Z
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 }
