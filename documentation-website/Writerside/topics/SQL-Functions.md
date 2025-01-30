@@ -10,16 +10,16 @@ For the function examples below, consider the following table:
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/tables/SalesTable.kt"/>
 
 ## How to use functions
-If you want to retrieve an SQL function result from a query using `.select()`, you should declare the function as a variable first:
+To retrieve the result of an SQL function result from a query using `.select()`, declare the function as a variable first:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="35-36"/>
 
-This function could also be aliased, in the same way that a [table or query could be aliased](DSL-Querying-data.topic#alias):
+You can alias this function in the same way you [alias a table or query](DSL-Querying-data.topic#alias):
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="39-40"/>
 
-Also, functions could be chained and combined as needed. The example below generates SQL that concatenates the string values
-stored in 2 columns, before wrapping the function in `TRIM()` and `LOWER()`:
+SQL functions can be chained and combined as needed. The example below generates SQL that concatenates the string values
+stored in two columns, before wrapping the function in `TRIM()` and `LOWER()`:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="43-46"/>
 
@@ -72,12 +72,12 @@ respectively. These functions can be applied to any comparable expression:
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="19-27"/>
 
 ### Sum/Count
-You can also use SQL functions like `SUM()` and `COUNT()` directly with a column expression:
+You can use SQL functions like `SUM()` and `COUNT()` directly with a column expression:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="30-37"/>
 
 ### Statistics
-Some databases provide aggregate functions specifically for statistics and Exposed provides support for 4 of these:
+Some databases provide aggregate functions specifically for statistics and Exposed provides support for four of these:
 [`.stdDevPop()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/stdDevPop.html),
 [`.stdDevSamp()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/stdDevSamp.html),
 [`.varPop()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/varPop.html),
@@ -90,14 +90,19 @@ The following example retrieves the population standard deviation of values stor
 If you can't find your most loved function used in your database (as Exposed provides only basic support for classic SQL functions), you can define your own functions.
 
 There are multiple options to define custom functions:
-1. Functions without parameters:
+
+1. [Functions without parameters](#functions-without-parameters)
+2. [Functions with additional parameters](#functions-with-additional-parameters)
+3. [Functions that require more complex query building](#functions-that-require-more-complex-query-building)
+
+### Functions without parameters
 
 [`.function()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/function.html) simply wraps the column expression 
 in parentheses with the string argument as the function name:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="28-33"/>
 
-2. Functions with additional parameters:
+### Functions with additional parameters
 
 The [`CustomFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-function/index.html) class accepts 
 a function name as the first argument and the column type that should be used to handle its results as the second.
@@ -105,7 +110,7 @@ After that, you can provide any amount of additional parameters separated by a c
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="36-42"/>
 
-There are also shortcuts for string, long, and datetime functions:
+There are also shortcuts for `String`, `Long`, and `DateTime` functions:
 * [`CustomStringFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-string-function.html)
 * [`CustomLongFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-long-function.html)
 * [`CustomDateTimeFunction`](https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.sql.jodatime/-custom-date-time-function.html)
@@ -114,12 +119,14 @@ Using one of these shortcuts, the example above could be simplified to:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="45-47"/>
 
-As an additional example, the following could be used in H2 to mimic its `DATEADD()` function in order to calculate a date 3 months before the current date.
-This could then be chained with Exposed's built-in `.month()` function to return the month of the date found, so it can be used in a query:
+In the following example, `CustomDateFunction` is used in an H2 database to mimic its `DATEADD()` function in order to
+calculate a date three months before the current one.
+In is then chained with Exposed's built-in `.month()` function to return the month of the date found,
+so it can be used in a query:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="54-64"/>
 
-3. Functions that require more complex query building:
+### Functions that require more complex query building
 
 All functions in Exposed extend the abstract class [`Function`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-function/index.html),
 which takes a column type and allows overriding `toQueryBuilder()`. This is what `CustomFunction` actually does, 
@@ -158,11 +165,11 @@ Existing aggregate functions (like `sum()`, `avg()`) can be used, as well as new
 * `rowNumber()`
 
 To use a window function, include the `OVER` clause by chaining `.over()` after the function call. A `PARTITION BY` and 
-`ORDER BY` clause can be optionally chained using `.partitionBy()` and `.orderBy()`, which both take multiple arguments:
+`ORDER BY` clause can be optionally chained using `.partitionBy()` and `.orderBy()`, taking multiple arguments:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/WindowFuncExamples.kt" include-lines="17-21,23-28,30-34"/>
 
-Frame clause functions (like `rows()`, `range()`, and `groups()`) are also supported and take a `WindowFrameBound` option 
+Frame clause functions, such as `rows()`, `range()`, and `groups()`, are also supported and take a `WindowFrameBound` option 
 depending on the expected result:
 * `WindowFrameBound.currentRow()`
 * `WindowFrameBound.unboundedPreceding()`
