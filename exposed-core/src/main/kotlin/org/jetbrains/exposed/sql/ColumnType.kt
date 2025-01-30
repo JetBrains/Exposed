@@ -374,7 +374,9 @@ open class ColumnWithTransform<Unwrapped, Wrapped>(
     }
 }
 
-internal fun unwrapColumnValues(values: Map<Column<*>, Any?>): Map<Column<*>, Any?> = values.mapValues { (col, value) ->
+internal fun <T : Expression<*>>unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
+    if (col !is ExpressionWithColumnType<*>) return@mapValues value
+
     value?.let { (col.columnType as? ColumnWithTransform<Any, Any>)?.unwrapRecursive(it) } ?: value
 }
 

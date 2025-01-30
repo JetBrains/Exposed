@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -372,6 +373,25 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
             }
 
             assertEquals(2, tester.selectAll().first()[tester.v1].value)
+        }
+    }
+
+    @Test
+    fun testWrapRowWithAliases() {
+        withTables(TransformTable) {
+            TransformEntity.new {
+                simple = TransformDataHolder(10)
+            }
+            entityCache.clear()
+
+            val tableAlias = TransformTable.alias("table_alias")
+            val e2 = tableAlias.selectAll().map { TransformEntity.wrapRow(it, tableAlias) }.first()
+            assertEquals(10, e2.simple.value)
+            entityCache.clear()
+
+            val queryAlias = TransformTable.selectAll().alias("query_alias")
+            val e3 = queryAlias.selectAll().map { TransformEntity.wrapRow(it, queryAlias) }.first()
+            assertEquals(10, e3.simple.value)
         }
     }
 }
