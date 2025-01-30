@@ -5,19 +5,23 @@
 Exposed provides basic support for classic SQL functions. This topic consists of definitions for those functions, and their 
 usage examples. It also explains how to define [custom functions](#custom-functions).
 
+For the function examples below, consider the following table:
+
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/tables/SalesTable.kt"/>
+
 ## How to use functions
-If you want to retrieve a function result from a query, you have to declare the function as a variable:
-```kotlin
-val lowerCasedName = FooTable.name.lowerCase()
-val lowerCasedNames = FooTable.select(lowerCasedName).map { it[lowerCasedName] }
+If you want to retrieve an SQL function result from a query using `.select()`, you should declare the function as a variable first:
 
-``` 
-Also, functions could be chained and combined:
-```kotlin
-val trimmedAndLoweredFullName = Concat(FooTable.firstName, stringLiteral(" "), FooTable.lastName).trim().lowerCase()
-val fullNames = FooTable.select(trimmedAndLoweredFullName).map { it[trimmedAndLoweredFullName] }
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="35-36"/>
 
-```
+This function could also be aliased, in the same way that a [table or query could be aliased](DSL-Querying-data.topic#alias):
+
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="39-40"/>
+
+Also, functions could be chained and combined as needed. The example below generates SQL that concatenates the string values
+stored in 2 columns, before wrapping the function in `TRIM()` and `LOWER()`:
+
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="43-46"/>
 
 ## String functions
 ### Lower case and upper case
@@ -26,153 +30,117 @@ and
 [`.upperCase()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upper-case.html)
 functions respectively.
 
-```kotlin
-val lowerCasedName = FooTable.name.lowerCase()
-val lowerCasedNames = FooTable.select(lowerCasedName).map { it[lowerCasedName] }
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="35-36"/>
 
-```
 ### Substring
-The [.substring()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/substring.html)
+The [`.substring()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/substring.html)
 function returns a substring value from the specified start and with the specified length.
 
-```kotlin
-val shortenedName = FooTable.name.substring(start = 1, length = 3)
-val shortenedNames = FooTable.select(shortenedName).map { it[shortenedName] }
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="49-50"/>
 
-```
 ### Concatenate
-The [concat()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/concat.html)
+The [`concat()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/concat.html)
 function returns a string value that concatenates the text representations of all non-null input values, separated by an optional separator.
 
-```kotlin
-val userName = concat(stringLiteral("User - "), FooTable.name)
-val userNames = FooTable.select(userName).map { it[userName] }
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="53-57"/>
 
-```
+<note>
+This <code>concat()</code> requires import statement <code>import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat</code>.
+</note>
+
 ### Locate
-The [.locate()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/locate.html)
-function returns the index of the first occurrence of a specified substring or 0.
+The [`.locate()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/locate.html)
+function returns the index of the first occurrence of a specified substring, or 0 if the substring is not found.
 
-```kotlin
-val firstAIndex = FooTable.name.locate("a")
-val firstAIndices = FooTable.select(firstAIndex).map { it[firstAIndex] }
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="60-61"/>
 
-```
 ### Character length
-The [.charLength()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/char-length.html)
+The [`.charLength()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/char-length.html)
 function returns the length, measured in characters, or `null` if the String value is null.
 
-```kotlin
-val nameLength = FooTable.name.charLength()
-val nameLengths = FooTable.select(nameLength).map { it[nameLength] }
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="64-65"/>
 
-```
-
-## Aggregating functions
-These functions should be used in queries with [groupBy](DSL-Querying-data.topic#group-by).
+## Aggregate functions
+These functions should most likely be used in queries with [`.groupBy()`](DSL-Querying-data.topic#group-by).
 ### Min/Max/Average
 To get the minimum, maximum, and average values, use the 
-[.min()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/min.html)
-[.max()](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/max.html)
-and [.avg](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/avg.html) functions
+[`.min()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/min.html)
+[`.max()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/max.html)
+and [`.avg()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/avg.html) functions
 respectively. These functions can be applied to any comparable expression:
 
-```kotlin
-val minId = FooTable.id.min()
-val maxId = FooTable.id.max()
-val averageId = FooTable.id.avg()
-val (min, max, avg) = FooTable.select(minId, maxId, averageId).map { 
-    Triple(it[minId], it[maxId], it[averageId]) 
-}
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="19-27"/>
 
-```
+### Sum/Count
+You can also use SQL functions like `SUM()` and `COUNT()` directly with a column expression:
+
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="30-37"/>
+
+### Statistics
+Some databases provide aggregate functions specifically for statistics and Exposed provides support for 4 of these:
+[`.stdDevPop()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/stdDevPop.html),
+[`.stdDevSamp()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/stdDevSamp.html),
+[`.varPop()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/varPop.html),
+[`.varSamp()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/varSamp.html).
+The following example retrieves the population standard deviation of values stored in the `amount` column:
+
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="40-44"/>
 
 ## Custom functions
 If you can't find your most loved function used in your database (as Exposed provides only basic support for classic SQL functions), you can define your own functions.
 
-Since Exposed 0.15.1 there multiple options to define custom functions:
-1. Function without parameters:
-```kotlin
-val sqrt = FooTable.id.function("SQRT")
-```
-In SQL representation it will be `SQRT(FooTable.id)`
+There are multiple options to define custom functions:
+1. Functions without parameters:
 
-2. Function with additional parameters:
-```kotlin
-val replacedName = CustomFunction<String?>("REPLACE", VarCharColumnType(), FooTable.name, stringParam("foo"), stringParam("bar"))
+[`.function()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/function.html) simply wraps the column expression 
+in parentheses with the string argument as the function name:
 
-``` 
-The [`CustomFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-function/index.html)
-class accepts a function name as a first parameter and the resulting column type as second. After that, you can provide any amount of parameters separated by a comma.
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="28-33"/>
+
+2. Functions with additional parameters:
+
+The [`CustomFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-function/index.html) class accepts 
+a function name as the first argument and the column type that should be used to handle its results as the second.
+After that, you can provide any amount of additional parameters separated by a comma:
+
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="36-42"/>
 
 There are also shortcuts for string, long, and datetime functions:
 * [`CustomStringFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-string-function.html)
 * [`CustomLongFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-long-function.html)
 * [`CustomDateTimeFunction`](https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.sql.jodatime/-custom-date-time-function.html)
 
-The code above could be simplified to:
-```kotlin
-val replacedName = CustomStringFunction("REPLACE", FooTable.name, stringParam("foo"), stringParam("bar"))
+Using one of these shortcuts, the example above could be simplified to:
 
-``` 
-For example, the following could be used in SQLite to mimic its `date()` function:
-```kotlin
-val lastDayOfMonth = CustomDateFunction(
-    "date",
-    FooTable.dateColumn,
-    stringLiteral("start of month"),
-    stringLiteral("+1 month"),
-    stringLiteral("-1 day")
-)
-```
-3. Function that requires more complex query building:
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="45-47"/>
+
+As an additional example, the following could be used in H2 to mimic its `DATEADD()` function in order to calculate a date 3 months before the current date.
+This could then be chained with Exposed's built-in `.month()` function to return the month of the date found, so it can be used in a query:
+
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="54-64"/>
+
+3. Functions that require more complex query building:
 
 All functions in Exposed extend the abstract class [`Function`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-function/index.html),
 which takes a column type and allows overriding `toQueryBuilder()`. This is what `CustomFunction` actually does, 
 which can be leveraged to create more complex queries.
 
-For example, Exposed provides a `trim()` function that removes leading and trailing whitespace from a String. In MySQL,
-this is just the default behavior as specifiers can be provided to limit the trim to either leading or trailing, as well
-as providing a specific substring other than spaces to remove. The custom function below supports this extended behavior:
+For example, Exposed provides a `.trim()` function that removes leading and trailing whitespace from a String. In some databases (like H2 and MySQL),
+this is just the default behavior as specifiers can be provided to limit the trim to either leading or trailing. These databases also allow you 
+to provide a specific substring other than spaces to remove. The custom function below supports this extended behavior:
 
-```kotlin
-enum class TrimSpecifier { BOTH, LEADING, TRAILING }
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomTrimFunction.kt" />
 
-class CustomTrim<T : String?>(
-    val expression: Expression<T>,
-    val toRemove: Expression<T>?,
-    val trimSpecifier: TrimSpecifier
-) : Function<T>(TextColumnType()) {
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-        queryBuilder {
-            append("TRIM(")
-            append(trimSpecifier.name)
-            toRemove?.let { +" $it" }
-            append(" FROM ")
-            append(expression)
-            append(")")
-        }
-    }
-}
+<note>
+Ensure that the correct import statement is used: <code>import org.jetbrains.exposed.sql.Function</code>. Otherwise <code>Function</code> 
+from <code>kotlin-stdlib</code> may be resolved instead and cause compilation errors.
+</note>
 
-fun <T : String?> Expression<T>.customTrim(
-    toRemove: Expression<T>? = null,
-    specifier: TrimSpecifier = TrimSpecifier.BOTH
-): CustomTrim<T> = CustomTrim(this, toRemove, specifier)
+This custom function can then be used to achieve the exact trim that is needed:
 
-transaction {
-    FooTable.insert { it[name] = "xxxbarxxx" }
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="71-80,82-84"/>
 
-    val leadingXTrim = FooTable.name.customTrim(stringLiteral("x"), TrimSpecifier.LEADING)
-    val trailingXTrim = FooTable.name.customTrim(stringLiteral("x"), TrimSpecifier.TRAILING)
-
-    FooTable.select(leadingXTrim) // barxxx
-    FooTable.select(trailingXTrim)  // xxxbar
-}
-
-```
-
-## Window Functions
+## Window functions
 
 Window functions allow calculations across a set of table rows that are related to the current row.
 
@@ -191,13 +159,9 @@ Existing aggregate functions (like `sum()`, `avg()`) can be used, as well as new
 
 To use a window function, include the `OVER` clause by chaining `.over()` after the function call. A `PARTITION BY` and 
 `ORDER BY` clause can be optionally chained using `.partitionBy()` and `.orderBy()`, which both take multiple arguments:
-```kotlin
-FooTable.amount.sum().over().partitionBy(FooTable.year, FooTable.product).orderBy(FooTable.amount)
 
-rowNumber().over().partitionBy(FooTable.year, FooTable.product).orderBy(FooTable.amount)
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/WindowFuncExamples.kt" include-lines="17-21,23-28,30-34"/>
 
-FooTable.amount.sum().over().orderBy(FooTable.year to SortOrder.DESC, FooTable.product to SortOrder.ASC_NULLS_FIRST)
-```
 Frame clause functions (like `rows()`, `range()`, and `groups()`) are also supported and take a `WindowFrameBound` option 
 depending on the expected result:
 * `WindowFrameBound.currentRow()`
@@ -205,12 +169,8 @@ depending on the expected result:
 * `WindowFrameBound.unboundedFollowing()`
 * `WindowFrameBound.offsetPreceding()`
 * `WindowFrameBound.offsetFollowing()`
-```kotlin
-FooTable.amount.sum().over()
-    .partitionBy(FooTable.year, FooTable.product)
-    .orderBy(FooTable.amount)
-    .range(WindowFrameBound.offsetPreceding(2), WindowFrameBound.currentRow())
-```
+
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/WindowFuncExamples.kt" include-lines="37-42"/>
 
 <note>
 If multiple frame clause functions are chained together, only the last one will be used.
