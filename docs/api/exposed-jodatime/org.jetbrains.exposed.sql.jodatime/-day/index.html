@@ -1,0 +1,356 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>Day</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+<a class="library-name--link" href="../../../index.html">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">0.58.0
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-jodatime/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-jodatime/main" data-filter=":exposed-jodatime/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-jodatime::org.jetbrains.exposed.sql.jodatime/Day///PointingToDeclaration//-1270904612">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-jodatime</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.sql.jodatime</a><span class="delimiter">/</span><span class="current">Day</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Day</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">Day</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator"> : </span><span data-unresolved-link="org.joda.time/DateTime///PointingToDeclaration/">DateTime</span><span class="token operator">?</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>expr<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../../../exposed-core/org.jetbrains.exposed.sql/-function/index.html">Function</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt; </span></div><p class="paragraph">Represents an SQL function that extracts the day field from a given datetime <a href="expr.html">expr</a>.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="-2001560297%2FConstructors%2F-1270904612" anchor-label="Day" id="-2001560297%2FConstructors%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-day.html"><span><span>Day</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2001560297%2FConstructors%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expr<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="2112738119%2FProperties%2F-1270904612" anchor-label="columnType" id="2112738119%2FProperties%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-second/index.html#2112738119%2FProperties%2F-1270904612"><span>column</span><wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2112738119%2FProperties%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="../-second/index.html#2112738119%2FProperties%2F-1270904612">columnType</a><span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-i-column-type/index.html">IColumnType</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt;</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1585926565%2FProperties%2F-1270904612" anchor-label="expr" id="1585926565%2FProperties%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="expr.html"><span><span>expr</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1585926565%2FProperties%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="expr.html">expr</a><span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="index.html">T</a><span class="token operator">&gt;</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-812174445%2FFunctions%2F-1270904612" anchor-label="date" id="-812174445%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../date.html"><span><span>date</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-812174445%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../date.html">T</a><span class="token operator"> : </span><span data-unresolved-link="org.joda.time/DateTime///PointingToDeclaration/">DateTime</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../date.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../date.html"><span class="token function">date</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-date/index.html">Date</a><span class="token operator">&lt;</span><a href="../date.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the date from this datetime expression.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-850844893%2FFunctions%2F-1270904612" anchor-label="day" id="-850844893%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../day.html"><span><span>day</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-850844893%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../day.html">T</a><span class="token operator"> : </span><span data-unresolved-link="org.joda.time/DateTime///PointingToDeclaration/">DateTime</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../day.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../day.html"><span class="token function">day</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Day</a><span class="token operator">&lt;</span><a href="../day.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the day from this datetime expression, as an integer between 1 and 31 inclusive.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1573813098%2FFunctions%2F-1270904612" anchor-label="equals" id="1573813098%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-second/index.html#1573813098%2FFunctions%2F-1270904612"><span><span>equals</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1573813098%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">operator override </span><span class="token keyword">fun </span><a href="../-second/index.html#1573813098%2FFunctions%2F-1270904612"><span class="token function">equals</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-731165124%2FFunctions%2F-1270904612" anchor-label="hashCode" id="-731165124%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-second/index.html#-731165124%2FFunctions%2F-1270904612"><span>hash</span><wbr><span><span>Code</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-731165124%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-second/index.html#-731165124%2FFunctions%2F-1270904612"><span class="token function">hashCode</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="663643721%2FFunctions%2F-1270904612" anchor-label="hour" id="663643721%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../hour.html"><span><span>hour</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="663643721%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../hour.html">T</a><span class="token operator"> : </span><span data-unresolved-link="org.joda.time/DateTime///PointingToDeclaration/">DateTime</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../hour.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../hour.html"><span class="token function">hour</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-hour/index.html">Hour</a><span class="token operator">&lt;</span><a href="../hour.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the hour from this datetime expression, as an integer between 0 and 23 inclusive.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="247887545%2FFunctions%2F-1270904612" anchor-label="minute" id="247887545%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../minute.html"><span><span>minute</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="247887545%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../minute.html">T</a><span class="token operator"> : </span><span data-unresolved-link="org.joda.time/DateTime///PointingToDeclaration/">DateTime</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../minute.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../minute.html"><span class="token function">minute</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-minute/index.html">Minute</a><span class="token operator">&lt;</span><a href="../minute.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the minute from this datetime expression, as an integer between 0 and 59 inclusive.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-972480313%2FFunctions%2F-1270904612" anchor-label="month" id="-972480313%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../month.html"><span><span>month</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-972480313%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../month.html">T</a><span class="token operator"> : </span><span data-unresolved-link="org.joda.time/DateTime///PointingToDeclaration/">DateTime</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../month.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../month.html"><span class="token function">month</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-month/index.html">Month</a><span class="token operator">&lt;</span><a href="../month.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the month from this datetime expression, as an integer between 1 and 12 inclusive.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1015487769%2FFunctions%2F-1270904612" anchor-label="second" id="1015487769%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../second.html"><span><span>second</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1015487769%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../second.html">T</a><span class="token operator"> : </span><span data-unresolved-link="org.joda.time/DateTime///PointingToDeclaration/">DateTime</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../second.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../second.html"><span class="token function">second</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-second/index.html">Second</a><span class="token operator">&lt;</span><a href="../second.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the second from this datetime expression, as an integer between 0 and 59 inclusive.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2068629490%2FFunctions%2F-1270904612" anchor-label="time" id="2068629490%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../time.html"><span><span>time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2068629490%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../time.html">T</a><span class="token operator"> : </span><span data-unresolved-link="org.joda.time/DateTime///PointingToDeclaration/">DateTime</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../time.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../time.html"><span class="token function">time</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-time/index.html">Time</a><span class="token operator">&lt;</span><a href="../time.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the time from this datetime expression.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-529516823%2FFunctions%2F-1270904612" anchor-label="toQueryBuilder" id="-529516823%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="to-query-builder.html"><span>to</span><wbr><span>Query</span><wbr><span><span>Builder</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-529516823%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="to-query-builder.html"><span class="token function">toQueryBuilder</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">queryBuilder<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-query-builder/index.html">QueryBuilder</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-909331189%2FFunctions%2F-1270904612" anchor-label="toString" id="-909331189%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-second/index.html#-909331189%2FFunctions%2F-1270904612"><span>to</span><wbr><span><span>String</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-909331189%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-second/index.html#-909331189%2FFunctions%2F-1270904612"><span class="token function">toString</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1029288290%2FFunctions%2F-1270904612" anchor-label="year" id="1029288290%2FFunctions%2F-1270904612" data-filterable-set=":exposed-jodatime/main"></a>
+          <div class="table-row" data-togglable="EXTENSION_FUNCTION" data-filterable-current=":exposed-jodatime/main" data-filterable-set=":exposed-jodatime/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../year.html"><span><span>year</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1029288290%2FFunctions%2F-1270904612"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-jodatime/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="../year.html">T</a><span class="token operator"> : </span><span data-unresolved-link="org.joda.time/DateTime///PointingToDeclaration/">DateTime</span><span class="token operator">?</span><span class="token operator">&gt; </span><a href="../../../exposed-core/org.jetbrains.exposed.sql/-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="../year.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="../year.html"><span class="token function">year</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-year/index.html">Year</a><span class="token operator">&lt;</span><a href="../year.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns the year from this datetime expression, as an integer.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

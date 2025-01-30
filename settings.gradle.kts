@@ -1,4 +1,7 @@
 rootProject.name = "exposed"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+
 include("exposed-core")
 include("exposed-dao")
 include("exposed-jodatime")
