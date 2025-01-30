@@ -1,6 +1,6 @@
 package org.example.examples
 
-import org.example.tables.SalesTable
+import org.example.tables.FilmBoxOfficeTable
 import org.jetbrains.exposed.sql.avg
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.max
@@ -16,32 +16,32 @@ import org.jetbrains.exposed.sql.sum
 
 class AggregateFuncExamples {
     fun selectAggregateFunctions() {
-        val minAmount = SalesTable.amount.min()
-        val maxAmount = SalesTable.amount.max()
-        val averageAmount = SalesTable.amount.avg()
-        val amountStats = SalesTable
-            .select(minAmount, maxAmount, averageAmount, SalesTable.label)
-            .groupBy(SalesTable.label)
+        val minRevenue = FilmBoxOfficeTable.revenue.min()
+        val maxRevenue = FilmBoxOfficeTable.revenue.max()
+        val averageRevenue = FilmBoxOfficeTable.revenue.avg()
+        val revenueStats = FilmBoxOfficeTable
+            .select(minRevenue, maxRevenue, averageRevenue, FilmBoxOfficeTable.region)
+            .groupBy(FilmBoxOfficeTable.region)
             .map {
-                Triple(it[minAmount], it[maxAmount], it[averageAmount])
+                Triple(it[minRevenue], it[maxRevenue], it[averageRevenue])
             }
-        println(amountStats)
+        println(revenueStats)
 
-        val amountSum = SalesTable.amount.sum()
-        val amountCount = SalesTable.amount.count()
-        val amountReport = SalesTable
-            .select(amountSum, amountCount, SalesTable.label)
-            .groupBy(SalesTable.label)
+        val revenueSum = FilmBoxOfficeTable.revenue.sum()
+        val revenueCount = FilmBoxOfficeTable.revenue.count()
+        val revenueReport = FilmBoxOfficeTable
+            .select(revenueSum, revenueCount, FilmBoxOfficeTable.region)
+            .groupBy(FilmBoxOfficeTable.region)
             .map {
-                it[amountSum] to it[amountCount]
+                it[revenueSum] to it[revenueCount]
             }
-        println(amountReport)
+        println(revenueReport)
 
-        val amountStdDev = SalesTable.amount.stdDevPop()
-        val stdDev = SalesTable
-            .select(amountStdDev)
+        val revenueStdDev = FilmBoxOfficeTable.revenue.stdDevPop()
+        val stdDev = FilmBoxOfficeTable
+            .select(revenueStdDev)
             .singleOrNull()
-            ?.get(amountStdDev)
+            ?.get(revenueStdDev)
         println(stdDev)
     }
 }

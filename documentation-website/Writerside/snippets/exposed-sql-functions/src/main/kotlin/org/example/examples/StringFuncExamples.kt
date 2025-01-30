@@ -1,6 +1,6 @@
 package org.example.examples
 
-import org.example.tables.SalesTable
+import org.example.tables.FilmBoxOfficeTable
 import org.jetbrains.exposed.sql.Concat
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.sql.alias
@@ -19,50 +19,50 @@ import org.jetbrains.exposed.sql.upperCase
     line numbers in the `code-block` element of the referenced file.
 */
 
-private const val SALES_MONTH = 1
-private const val SALES_YEAR = 2025
+private const val REVENUE_MONTH = 1
+private const val REVENUE_YEAR = 2019
 
 class StringFuncExamples {
     fun selectStringFunctions() {
-        SalesTable.insert {
-            it[label] = "Label A"
-            it[product] = "Product A"
-            it[amount] = 99.toBigDecimal()
-            it[month] = SALES_MONTH
-            it[year] = SALES_YEAR
+        FilmBoxOfficeTable.insert {
+            it[title] = "The Rise of Skywalker"
+            it[region] = "Netherlands"
+            it[revenue] = 99.toBigDecimal()
+            it[month] = REVENUE_MONTH
+            it[year] = REVENUE_YEAR
         }
 
-        val lowerCaseLabel = SalesTable.label.lowerCase()
-        val lowerCaseLabels = SalesTable.select(lowerCaseLabel).map { it[lowerCaseLabel] }
-        println(lowerCaseLabels)
+        val lowerCaseTitle = FilmBoxOfficeTable.title.lowerCase()
+        val lowerCaseTitles = FilmBoxOfficeTable.select(lowerCaseTitle).map { it[lowerCaseTitle] }
+        println(lowerCaseTitles)
 
-        val upperCaseProduct = SalesTable.product.upperCase().alias("prd_all_caps")
-        val upperCaseProducts = SalesTable.select(upperCaseProduct).map { it[upperCaseProduct] }
-        println(upperCaseProducts)
+        val upperCaseRegion = FilmBoxOfficeTable.region.upperCase().alias("reg_all_caps")
+        val upperCaseRegions = FilmBoxOfficeTable.select(upperCaseRegion).map { it[upperCaseRegion] }
+        println(upperCaseRegions)
 
-        val fullProductLabel = Concat(separator = " ", SalesTable.product, stringLiteral("||"), SalesTable.label)
+        val fullFilmTitle = Concat(separator = " ", FilmBoxOfficeTable.region, stringLiteral("||"), FilmBoxOfficeTable.title)
             .trim()
             .lowerCase()
-        val fullProductLabels = SalesTable.select(fullProductLabel).map { it[fullProductLabel] }
-        println(fullProductLabels)
+        val fullFilmTitles = FilmBoxOfficeTable.select(fullFilmTitle).map { it[fullFilmTitle] }
+        println(fullFilmTitles)
 
-        val shortenedLabel = SalesTable.label.substring(start = 1, length = 3)
-        val shortenedLabels = SalesTable.select(shortenedLabel).map { it[shortenedLabel] }
-        println(shortenedLabels)
+        val shortenedTitle = FilmBoxOfficeTable.title.substring(start = 1, length = 3)
+        val shortenedTitles = FilmBoxOfficeTable.select(shortenedTitle).map { it[shortenedTitle] }
+        println(shortenedTitles)
 
-        val productName = concat(
+        val filmTitle = concat(
             separator = " - ",
-            expr = listOf(stringLiteral("Product"), SalesTable.product)
+            expr = listOf(stringLiteral("Title"), FilmBoxOfficeTable.title)
         )
-        val productNames = SalesTable.select(productName).map { it[productName] }
-        println(productNames)
+        val filmTitles = FilmBoxOfficeTable.select(filmTitle).map { it[filmTitle] }
+        println(filmTitles)
 
-        val firstXSIndex = SalesTable.label.locate("XS")
-        val firstXSIndices = SalesTable.select(firstXSIndex).map { it[firstXSIndex] }
+        val firstXSIndex = FilmBoxOfficeTable.title.locate("XS")
+        val firstXSIndices = FilmBoxOfficeTable.select(firstXSIndex).map { it[firstXSIndex] }
         println(firstXSIndices)
 
-        val labelLength = SalesTable.label.charLength()
-        val labelLengths = SalesTable.select(labelLength).map { it[labelLength] }
-        println(labelLengths)
+        val titleLength = FilmBoxOfficeTable.title.charLength()
+        val titleLengths = FilmBoxOfficeTable.select(titleLength).map { it[titleLength] }
+        println(titleLengths)
     }
 }

@@ -4,7 +4,7 @@ import org.example.examples.AggregateFuncExamples
 import org.example.examples.CustomFuncExamples
 import org.example.examples.StringFuncExamples
 import org.example.examples.WindowFuncExamples
-import org.example.tables.SalesTable
+import org.example.tables.FilmBoxOfficeTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -21,7 +21,7 @@ fun main() {
 
     transaction {
         addLogger(StdOutSqlLogger)
-        SchemaUtils.create(SalesTable)
+        SchemaUtils.create(FilmBoxOfficeTable)
         runStringFuncExamples()
         runAggregateFuncExamples()
         runWindowFuncExamples()

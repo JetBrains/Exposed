@@ -7,21 +7,28 @@ usage examples. It also explains how to define [custom functions](#custom-functi
 
 For the function examples below, consider the following table:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/tables/SalesTable.kt"/>
+<code-block lang="kotlin"
+            src="exposed-sql-functions/src/main/kotlin/org/example/tables/FilmBoxOfficeTable.kt"/>
 
 ## How to use functions
 To retrieve the result of an SQL function result from a query using `.select()`, declare the function as a variable first:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="35-36"/>
+<code-block lang="kotlin"
+            src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt"
+            include-lines="35-36"/>
 
 You can alias this function in the same way you [alias a table or query](DSL-Querying-data.topic#alias):
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="39-40"/>
+<code-block lang="kotlin"
+            src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt"
+            include-lines="39-40"/>
 
 SQL functions can be chained and combined as needed. The example below generates SQL that concatenates the string values
 stored in two columns, before wrapping the function in `TRIM()` and `LOWER()`:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="43-46"/>
+<code-block lang="kotlin"
+            src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt"
+            include-lines="43-46"/>
 
 ## String functions
 ### Lower case and upper case
@@ -30,19 +37,25 @@ and
 [`.upperCase()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upper-case.html)
 functions respectively.
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="35-36"/>
+<code-block lang="kotlin"
+            src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt"
+            include-lines="35-36"/>
 
 ### Substring
 The [`.substring()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/substring.html)
 function returns a substring value from the specified start and with the specified length.
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="49-50"/>
+<code-block lang="kotlin"
+            src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt"
+            include-lines="49-50"/>
 
 ### Concatenate
 The [`concat()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/concat.html)
 function returns a string value that concatenates the text representations of all non-null input values, separated by an optional separator.
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt" include-lines="53-57"/>
+<code-block lang="kotlin"
+            src="exposed-sql-functions/src/main/kotlin/org/example/examples/StringFuncExamples.kt"
+            include-lines="53-57"/>
 
 <note>
 This <code>concat()</code> requires import statement <code>import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat</code>.

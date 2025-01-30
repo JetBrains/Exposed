@@ -1,6 +1,6 @@
 package org.example.examples
 
-import org.example.tables.SalesTable
+import org.example.tables.FilmBoxOfficeTable
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.rowNumber
 import org.jetbrains.exposed.sql.WindowFrameBound
@@ -14,32 +14,32 @@ import org.jetbrains.exposed.sql.sum
 
 class WindowFuncExamples {
     fun selectWindowFunctions() {
-        val window1 = SalesTable.amount.sum()
+        val window1 = FilmBoxOfficeTable.revenue.sum()
             .over()
-            .partitionBy(SalesTable.year, SalesTable.product)
-            .orderBy(SalesTable.amount)
-        val result1 = SalesTable.select(window1).map { it[window1] }
+            .partitionBy(FilmBoxOfficeTable.year, FilmBoxOfficeTable.title)
+            .orderBy(FilmBoxOfficeTable.revenue)
+        val result1 = FilmBoxOfficeTable.select(window1).map { it[window1] }
         println(result1)
 
         val window2 = rowNumber()
             .over()
-            .partitionBy(SalesTable.year, SalesTable.product)
-            .orderBy(SalesTable.amount)
-        val result2 = SalesTable.select(window2).map { it[window2] }
+            .partitionBy(FilmBoxOfficeTable.year, FilmBoxOfficeTable.title)
+            .orderBy(FilmBoxOfficeTable.revenue)
+        val result2 = FilmBoxOfficeTable.select(window2).map { it[window2] }
         println(result2)
 
-        val window3 = SalesTable.amount.sum()
+        val window3 = FilmBoxOfficeTable.revenue.sum()
             .over()
-            .orderBy(SalesTable.year to SortOrder.DESC, SalesTable.product to SortOrder.ASC_NULLS_FIRST)
-        val result3 = SalesTable.select(window3).map { it[window3] }
+            .orderBy(FilmBoxOfficeTable.year to SortOrder.DESC, FilmBoxOfficeTable.title to SortOrder.ASC_NULLS_FIRST)
+        val result3 = FilmBoxOfficeTable.select(window3).map { it[window3] }
         println(result3)
 
-        val window4 = SalesTable.amount.sum()
+        val window4 = FilmBoxOfficeTable.revenue.sum()
             .over()
-            .partitionBy(SalesTable.year, SalesTable.product)
-            .orderBy(SalesTable.amount)
+            .partitionBy(FilmBoxOfficeTable.year, FilmBoxOfficeTable.title)
+            .orderBy(FilmBoxOfficeTable.revenue)
             .range(WindowFrameBound.offsetPreceding(2), WindowFrameBound.currentRow())
-        val result4 = SalesTable.select(window4).map { it[window4] }
+        val result4 = FilmBoxOfficeTable.select(window4).map { it[window4] }
         println(result4)
     }
 }
