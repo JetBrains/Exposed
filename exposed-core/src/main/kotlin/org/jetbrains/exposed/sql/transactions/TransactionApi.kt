@@ -45,13 +45,13 @@ private object NotInitializedManager : TransactionManager {
 
     override var defaultMaxRetryDelay: Long = 0
 
-    @Deprecated("This will be removed when the interface property is fully deprecated", level = DeprecationLevel.ERROR)
+    @Deprecated("This will be removed when the interface property is fully deprecated", level = DeprecationLevel.HIDDEN)
     override var defaultRepetitionAttempts: Int = -1
 
-    @Deprecated("This will be removed when the interface property is fully deprecated", level = DeprecationLevel.ERROR)
+    @Deprecated("This will be removed when the interface property is fully deprecated", level = DeprecationLevel.HIDDEN)
     override var defaultMinRepetitionDelay: Long = 0
 
-    @Deprecated("This will be removed when the interface property is fully deprecated", level = DeprecationLevel.ERROR)
+    @Deprecated("This will be removed when the interface property is fully deprecated", level = DeprecationLevel.HIDDEN)
     override var defaultMaxRepetitionDelay: Long = 0
 
     override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction =
@@ -87,21 +87,21 @@ interface TransactionManager {
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMaxAttempts"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     var defaultRepetitionAttempts: Int
 
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMinRetryDelay"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     var defaultMinRepetitionDelay: Long
 
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMaxRetryDelay"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     var defaultMaxRepetitionDelay: Long
 

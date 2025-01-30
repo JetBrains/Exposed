@@ -34,7 +34,7 @@ class ThreadLocalTransactionManager(
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMaxAttempts"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     override var defaultRepetitionAttempts: Int
         get() = defaultMaxAttempts
@@ -43,7 +43,7 @@ class ThreadLocalTransactionManager(
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMinRetryDelay"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     override var defaultMinRepetitionDelay: Long
         get() = defaultMinRetryDelay
@@ -52,7 +52,7 @@ class ThreadLocalTransactionManager(
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("defaultMaxRetryDelay"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     override var defaultMaxRepetitionDelay: Long
         get() = defaultMaxRetryDelay
@@ -76,7 +76,7 @@ class ThreadLocalTransactionManager(
             return field
         }
 
-        @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel", level = DeprecationLevel.ERROR)
+        @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel", level = DeprecationLevel.HIDDEN)
         @TestOnly
         set
 

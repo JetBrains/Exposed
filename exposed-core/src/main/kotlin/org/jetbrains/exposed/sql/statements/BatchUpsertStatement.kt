@@ -27,7 +27,7 @@ open class BatchUpsertStatement(
 ) : BaseBatchInsertStatement(table, ignore = false, shouldReturnGeneratedValues), UpsertBuilder {
     @Deprecated(
         "This constructor with `onUpdate` that takes a List may be removed in future releases.",
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     constructor(
         table: Table,
@@ -38,12 +38,11 @@ open class BatchUpsertStatement(
         shouldReturnGeneratedValues: Boolean
     ) : this(table, keys = keys, onUpdateExclude, where, shouldReturnGeneratedValues) {
         onUpdate?.let {
-            this.onUpdate = it
             updateValues.putAll(it)
         }
     }
 
-    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.WARNING)
+    @Deprecated("This property will be removed in future releases.", level = DeprecationLevel.ERROR)
     var onUpdate: List<Pair<Column<*>, Expression<*>>>? = null
         private set
 

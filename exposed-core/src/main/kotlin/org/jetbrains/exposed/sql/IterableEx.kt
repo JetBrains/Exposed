@@ -5,17 +5,18 @@ import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 /** Represents the iterable elements of a database result. */
 interface SizedIterable<out T> : Iterable<T> {
     @Deprecated(
-        "This function will be removed in future releases.",
+        "This function will be removed in future releases. Overrides for replacement methods limit(count) " +
+            "& offset(start) must be provided when implementing this interface.",
         ReplaceWith("limit(n).offset(offset)"),
-        DeprecationLevel.WARNING
+        DeprecationLevel.ERROR
     )
     fun limit(n: Int, offset: Long): SizedIterable<T>
 
     /** Returns a new [SizedIterable] containing only [count] elements. */
-    fun limit(count: Int): SizedIterable<T> = limit(count, 0)
+    fun limit(count: Int): SizedIterable<T>
 
     /** Returns a new [SizedIterable] containing only elements starting from the specified [start]. */
-    fun offset(start: Long): SizedIterable<T> = limit(Int.MAX_VALUE, start)
+    fun offset(start: Long): SizedIterable<T>
 
     /** Returns the number of elements stored. */
     fun count(): Long
@@ -53,7 +54,7 @@ class EmptySizedIterable<out T> : SizedIterable<T>, Iterator<T> {
     @Deprecated(
         "This function will be removed in future releases.",
         ReplaceWith("limit(n).offset(offset)"),
-        DeprecationLevel.WARNING
+        DeprecationLevel.ERROR
     )
     override fun limit(n: Int, offset: Long): SizedIterable<T> = this
 
@@ -83,7 +84,7 @@ class SizedCollection<out T>(val delegate: Collection<T>) : SizedIterable<T> {
     @Deprecated(
         "This function will be removed in future releases.",
         ReplaceWith("limit(n).offset(offset)"),
-        DeprecationLevel.WARNING
+        DeprecationLevel.ERROR
     )
     override fun limit(n: Int, offset: Long): SizedIterable<T> {
         return if (offset >= Int.MAX_VALUE) {
@@ -126,7 +127,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
     @Deprecated(
         "This function will be removed in future releases.",
         ReplaceWith("limit(n).offset(offset)"),
-        DeprecationLevel.WARNING
+        DeprecationLevel.ERROR
     )
     override fun limit(n: Int, offset: Long): SizedIterable<T> = LazySizedCollection(delegate.limit(n).offset(offset))
     override fun limit(count: Int): SizedIterable<T> = LazySizedCollection(delegate.limit(count))
@@ -196,7 +197,7 @@ infix fun <T, R> SizedIterable<T>.mapLazy(f: (T) -> R): SizedIterable<R> {
         @Deprecated(
             "This function will be removed in future releases.",
             ReplaceWith("limit(n).offset(offset)"),
-            DeprecationLevel.WARNING
+            DeprecationLevel.ERROR
         )
         override fun limit(n: Int, offset: Long): SizedIterable<R> = source.copy().limit(n).offset(offset).mapLazy(f)
         override fun limit(count: Int): SizedIterable<R> = source.copy().limit(count).mapLazy(f)

@@ -111,14 +111,14 @@ abstract class ColumnSet : FieldSet {
     @Deprecated(
         message = "As part of SELECT DSL design changes, this will be removed in future releases.",
         replaceWith = ReplaceWith("select(column, *columns)"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     fun slice(column: Expression<*>, vararg columns: Expression<*>): FieldSet = Slice(this, listOf(column) + columns)
 
     @Deprecated(
         message = "As part of SELECT DSL design changes, this will be removed in future releases.",
         replaceWith = ReplaceWith("select(columns)"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
 
