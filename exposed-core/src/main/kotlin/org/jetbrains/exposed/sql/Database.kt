@@ -24,7 +24,7 @@ class Database private constructor(
 ) {
     /** Whether nested transaction blocks are configured to act like top-level transactions. */
     var useNestedTransactions: Boolean = config.useNestedTransactions
-        @Deprecated("Use DatabaseConfig to define the useNestedTransactions", level = DeprecationLevel.ERROR)
+        @Deprecated("Use DatabaseConfig to define the useNestedTransactions", level = DeprecationLevel.HIDDEN)
         @TestOnly
         set
 
@@ -94,7 +94,7 @@ class Database private constructor(
     var defaultFetchSize: Int? = config.defaultFetchSize
         private set
 
-    @Deprecated("Use DatabaseConfig to define the defaultFetchSize", level = DeprecationLevel.ERROR)
+    @Deprecated("Use DatabaseConfig to define the defaultFetchSize", level = DeprecationLevel.HIDDEN)
     @TestOnly
     fun defaultFetchSize(size: Int): Database {
         defaultFetchSize = size
@@ -236,7 +236,7 @@ class Database private constructor(
          */
         @Deprecated(
             message = "Use Database.connect() with a connection pool DataSource instead. This may be removed in future releases.",
-            level = DeprecationLevel.ERROR
+            level = DeprecationLevel.HIDDEN
         )
         fun connectPool(
             datasource: ConnectionPoolDataSource,

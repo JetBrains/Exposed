@@ -833,7 +833,7 @@ abstract class FunctionProvider {
     @Deprecated(
         "This function will be removed in future releases.",
         ReplaceWith("queryLimitAndOffset(size, offset, alreadyOrdered)"),
-        DeprecationLevel.WARNING
+        DeprecationLevel.ERROR
     )
     open fun queryLimit(size: Int, offset: Long, alreadyOrdered: Boolean): String = queryLimitAndOffset(size, offset, alreadyOrdered)
 

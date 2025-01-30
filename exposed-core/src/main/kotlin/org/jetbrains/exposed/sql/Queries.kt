@@ -11,7 +11,7 @@ import kotlin.sequences.Sequence
 @Deprecated(
     message = "As part of SELECT DSL design changes, this will be removed in future releases.",
     replaceWith = ReplaceWith("selectAll().where { where.invoke() }", "import org.jetbrains.exposed.sql.selectAll"),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 inline fun FieldSet.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = Query(this, SqlExpressionBuilder.where())
 
@@ -19,14 +19,14 @@ inline fun FieldSet.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query
 @Deprecated(
     message = "This method only exists as part of the migration for SELECT DSL design changes.",
     replaceWith = ReplaceWith("where { where.invoke() }"),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 inline fun Query.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = this
 
 @Deprecated(
     message = "As part of SELECT DSL design changes, this will be removed in future releases.",
     replaceWith = ReplaceWith("selectAll().where(where)", "import org.jetbrains.exposed.sql.selectAll"),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 fun FieldSet.select(where: Op<Boolean>): Query = Query(this, where)
 
@@ -34,7 +34,7 @@ fun FieldSet.select(where: Op<Boolean>): Query = Query(this, where)
 @Deprecated(
     message = "This method only exists as part of the migration for SELECT DSL design changes.",
     replaceWith = ReplaceWith("where(where)"),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 fun Query.select(where: Op<Boolean>): Query = this
 
@@ -53,7 +53,7 @@ fun FieldSet.selectAll(): Query = Query(this, null)
         "selectAll().where { where.invoke() }.fetchBatchedResults(batchSize)",
         "import org.jetbrains.exposed.sql.selectAll"
     ),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 fun FieldSet.selectBatched(
     batchSize: Int = 1000,
@@ -65,7 +65,7 @@ fun FieldSet.selectBatched(
 @Deprecated(
     message = "This method only exists as part of the migration for SELECT DSL design changes.",
     replaceWith = ReplaceWith("where { where.invoke() }.fetchBatchedResults(batchSize)"),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 fun Query.selectBatched(
     batchSize: Int = 1000,
@@ -80,7 +80,7 @@ fun Query.selectBatched(
         "selectAll().fetchBatchedResults(batchSize)",
         "import org.jetbrains.exposed.sql.selectAll"
     ),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 fun FieldSet.selectAllBatched(
     batchSize: Int = 1000
@@ -91,7 +91,7 @@ fun FieldSet.selectAllBatched(
 @Deprecated(
     message = "This method only exists as part of the migration for SELECT DSL design changes.",
     replaceWith = ReplaceWith("fetchBatchedResults(batchSize)"),
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.HIDDEN
 )
 fun Query.selectAllBatched(
     batchSize: Int = 1000
@@ -104,7 +104,7 @@ fun Query.selectAllBatched(
         "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
         "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
     ReplaceWith("deleteWhere(limit) { op.invoke() }"),
-    DeprecationLevel.WARNING
+    DeprecationLevel.ERROR
 )
 @Suppress("UnusedParameter")
 fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
@@ -129,7 +129,7 @@ inline fun <T : Table> T.deleteWhere(
         "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
         "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
     ReplaceWith("deleteIgnoreWhere(limit) { op.invoke() }"),
-    DeprecationLevel.WARNING
+    DeprecationLevel.ERROR
 )
 @Suppress("UnusedParameter")
 fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
@@ -742,7 +742,7 @@ fun <T : Table> T.upsert(
 @Deprecated(
     "This `upsert()` with `onUpdate` parameter that accepts a List will be removed in future releases. " +
         "Please use `upsert()` with `onUpdate` parameter that takes an `UpdateStatement` lambda block instead.",
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun <T : Table> T.upsert(
     vararg keys: Column<*>,
@@ -793,7 +793,7 @@ fun <T : Table> T.upsertReturning(
 @Deprecated(
     "This `upsertReturning()` with `onUpdate` parameter that accepts a List will be removed in future releases. " +
         "Please use `upsertReturning()` with `onUpdate` parameter that takes an `UpdateStatement` lambda block instead.",
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun <T : Table> T.upsertReturning(
     vararg keys: Column<*>,
@@ -841,7 +841,7 @@ fun <T : Table, E : Any> T.batchUpsert(
 @Deprecated(
     "This `batchUpsert()` with `onUpdate` parameter that accepts a List will be removed in future releases. " +
         "Please use `batchUpsert()` with `onUpdate` parameter that takes an `UpdateStatement` lambda block instead.",
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun <T : Table, E : Any> T.batchUpsert(
     data: Iterable<E>,
@@ -887,7 +887,7 @@ fun <T : Table, E : Any> T.batchUpsert(
 @Deprecated(
     "This `batchUpsert()` with `onUpdate` parameter that accepts a List will be removed in future releases. " +
         "Please use `batchUpsert()` with `onUpdate` parameter that takes an `UpdateStatement` lambda block instead.",
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun <T : Table, E : Any> T.batchUpsert(
     data: Sequence<E>,

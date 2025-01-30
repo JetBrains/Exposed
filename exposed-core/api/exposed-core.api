@@ -492,8 +492,8 @@ public abstract class org/jetbrains/exposed/sql/ColumnSet : org/jetbrains/expose
 	public abstract fun rightJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public final fun select (Ljava/util/List;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun select (Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Query;
-	public final fun slice (Ljava/util/List;)Lorg/jetbrains/exposed/sql/FieldSet;
-	public final fun slice (Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/FieldSet;
+	public final synthetic fun slice (Ljava/util/List;)Lorg/jetbrains/exposed/sql/FieldSet;
+	public final synthetic fun slice (Lorg/jetbrains/exposed/sql/Expression;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/FieldSet;
 }
 
 public abstract interface class org/jetbrains/exposed/sql/ColumnTransformer {
@@ -656,7 +656,7 @@ public class org/jetbrains/exposed/sql/CustomOperator : org/jetbrains/exposed/sq
 public final class org/jetbrains/exposed/sql/Database {
 	public static final field Companion Lorg/jetbrains/exposed/sql/Database$Companion;
 	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun defaultFetchSize (I)Lorg/jetbrains/exposed/sql/Database;
+	public final synthetic fun defaultFetchSize (I)Lorg/jetbrains/exposed/sql/Database;
 	public final fun getConfig ()Lorg/jetbrains/exposed/sql/DatabaseConfig;
 	public final fun getConnector ()Lkotlin/jvm/functions/Function0;
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
@@ -673,7 +673,7 @@ public final class org/jetbrains/exposed/sql/Database {
 	public final fun getVersion ()Ljava/math/BigDecimal;
 	public final fun isVersionCovers (II)Z
 	public final fun isVersionCovers (Ljava/math/BigDecimal;)Z
-	public final fun setUseNestedTransactions (Z)V
+	public final synthetic fun setUseNestedTransactions (Z)V
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -684,7 +684,7 @@ public final class org/jetbrains/exposed/sql/Database$Companion {
 	public static synthetic fun connect$default (Lorg/jetbrains/exposed/sql/Database$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lorg/jetbrains/exposed/sql/DatabaseConnectionAutoRegistration;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Database;
 	public static synthetic fun connect$default (Lorg/jetbrains/exposed/sql/Database$Companion;Ljavax/sql/DataSource;Lkotlin/jvm/functions/Function1;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lorg/jetbrains/exposed/sql/DatabaseConnectionAutoRegistration;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Database;
 	public static synthetic fun connect$default (Lorg/jetbrains/exposed/sql/Database$Companion;Lkotlin/jvm/functions/Function0;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lorg/jetbrains/exposed/sql/DatabaseConnectionAutoRegistration;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Database;
-	public final fun connectPool (Ljavax/sql/ConnectionPoolDataSource;Lkotlin/jvm/functions/Function1;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lorg/jetbrains/exposed/sql/DatabaseConnectionAutoRegistration;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Database;
+	public final synthetic fun connectPool (Ljavax/sql/ConnectionPoolDataSource;Lkotlin/jvm/functions/Function1;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lorg/jetbrains/exposed/sql/DatabaseConnectionAutoRegistration;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Database;
 	public static synthetic fun connectPool$default (Lorg/jetbrains/exposed/sql/Database$Companion;Ljavax/sql/ConnectionPoolDataSource;Lkotlin/jvm/functions/Function1;Lorg/jetbrains/exposed/sql/DatabaseConfig;Lorg/jetbrains/exposed/sql/DatabaseConnectionAutoRegistration;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Database;
 	public final fun getDefaultIsolationLevel (Lorg/jetbrains/exposed/sql/Database;)I
 	public final fun getDialectName (Ljava/lang/String;)Ljava/lang/String;
@@ -698,12 +698,12 @@ public final class org/jetbrains/exposed/sql/DatabaseConfig {
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public final fun getDefaultIsolationLevel ()I
 	public final fun getDefaultMaxAttempts ()I
-	public final fun getDefaultMaxRepetitionDelay ()J
+	public final synthetic fun getDefaultMaxRepetitionDelay ()J
 	public final fun getDefaultMaxRetryDelay ()J
-	public final fun getDefaultMinRepetitionDelay ()J
+	public final synthetic fun getDefaultMinRepetitionDelay ()J
 	public final fun getDefaultMinRetryDelay ()J
 	public final fun getDefaultReadOnly ()Z
-	public final fun getDefaultRepetitionAttempts ()I
+	public final synthetic fun getDefaultRepetitionAttempts ()I
 	public final fun getDefaultSchema ()Lorg/jetbrains/exposed/sql/Schema;
 	public final fun getExplicitDialect ()Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;
 	public final fun getKeepLoadedReferencesOutOfTransaction ()Z
@@ -722,12 +722,12 @@ public final class org/jetbrains/exposed/sql/DatabaseConfig$Builder {
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
 	public final fun getDefaultIsolationLevel ()I
 	public final fun getDefaultMaxAttempts ()I
-	public final fun getDefaultMaxRepetitionDelay ()J
+	public final synthetic fun getDefaultMaxRepetitionDelay ()J
 	public final fun getDefaultMaxRetryDelay ()J
-	public final fun getDefaultMinRepetitionDelay ()J
+	public final synthetic fun getDefaultMinRepetitionDelay ()J
 	public final fun getDefaultMinRetryDelay ()J
 	public final fun getDefaultReadOnly ()Z
-	public final fun getDefaultRepetitionAttempts ()I
+	public final synthetic fun getDefaultRepetitionAttempts ()I
 	public final fun getDefaultSchema ()Lorg/jetbrains/exposed/sql/Schema;
 	public final fun getExplicitDialect ()Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;
 	public final fun getKeepLoadedReferencesOutOfTransaction ()Z
@@ -740,12 +740,12 @@ public final class org/jetbrains/exposed/sql/DatabaseConfig$Builder {
 	public final fun setDefaultFetchSize (Ljava/lang/Integer;)V
 	public final fun setDefaultIsolationLevel (I)V
 	public final fun setDefaultMaxAttempts (I)V
-	public final fun setDefaultMaxRepetitionDelay (J)V
+	public final synthetic fun setDefaultMaxRepetitionDelay (J)V
 	public final fun setDefaultMaxRetryDelay (J)V
-	public final fun setDefaultMinRepetitionDelay (J)V
+	public final synthetic fun setDefaultMinRepetitionDelay (J)V
 	public final fun setDefaultMinRetryDelay (J)V
 	public final fun setDefaultReadOnly (Z)V
-	public final fun setDefaultRepetitionAttempts (I)V
+	public final synthetic fun setDefaultRepetitionAttempts (I)V
 	public final fun setDefaultSchema (Lorg/jetbrains/exposed/sql/Schema;)V
 	public final fun setExplicitDialect (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)V
 	public final fun setKeepLoadedReferencesOutOfTransaction (Z)V
@@ -1567,9 +1567,7 @@ public abstract interface class org/jetbrains/exposed/sql/LazySizedIterable : or
 
 public final class org/jetbrains/exposed/sql/LazySizedIterable$DefaultImpls {
 	public static fun forUpdate (Lorg/jetbrains/exposed/sql/LazySizedIterable;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
-	public static fun limit (Lorg/jetbrains/exposed/sql/LazySizedIterable;I)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public static fun notForUpdate (Lorg/jetbrains/exposed/sql/LazySizedIterable;)Lorg/jetbrains/exposed/sql/SizedIterable;
-	public static fun offset (Lorg/jetbrains/exposed/sql/LazySizedIterable;J)Lorg/jetbrains/exposed/sql/SizedIterable;
 }
 
 public final class org/jetbrains/exposed/sql/Lead : org/jetbrains/exposed/sql/WindowFunction {
@@ -1919,17 +1917,17 @@ public final class org/jetbrains/exposed/sql/QueriesKt {
 	public static final fun replace (Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReplaceStatement;
 	public static final fun replace (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/AbstractQuery;Ljava/util/List;)Ljava/lang/Integer;
 	public static synthetic fun replace$default (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/AbstractQuery;Ljava/util/List;ILjava/lang/Object;)Ljava/lang/Integer;
-	public static final fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
-	public static final fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
-	public static final fun select (Lorg/jetbrains/exposed/sql/Query;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
-	public static final fun select (Lorg/jetbrains/exposed/sql/Query;Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
+	public static final synthetic fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
+	public static final synthetic fun select (Lorg/jetbrains/exposed/sql/FieldSet;Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
+	public static final synthetic fun select (Lorg/jetbrains/exposed/sql/Query;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
+	public static final synthetic fun select (Lorg/jetbrains/exposed/sql/Query;Lorg/jetbrains/exposed/sql/Op;)Lorg/jetbrains/exposed/sql/Query;
 	public static final fun selectAll (Lorg/jetbrains/exposed/sql/FieldSet;)Lorg/jetbrains/exposed/sql/Query;
-	public static final fun selectAllBatched (Lorg/jetbrains/exposed/sql/FieldSet;I)Ljava/lang/Iterable;
-	public static final fun selectAllBatched (Lorg/jetbrains/exposed/sql/Query;I)Ljava/lang/Iterable;
+	public static final synthetic fun selectAllBatched (Lorg/jetbrains/exposed/sql/FieldSet;I)Ljava/lang/Iterable;
+	public static final synthetic fun selectAllBatched (Lorg/jetbrains/exposed/sql/Query;I)Ljava/lang/Iterable;
 	public static synthetic fun selectAllBatched$default (Lorg/jetbrains/exposed/sql/FieldSet;IILjava/lang/Object;)Ljava/lang/Iterable;
 	public static synthetic fun selectAllBatched$default (Lorg/jetbrains/exposed/sql/Query;IILjava/lang/Object;)Ljava/lang/Iterable;
-	public static final fun selectBatched (Lorg/jetbrains/exposed/sql/FieldSet;ILkotlin/jvm/functions/Function1;)Ljava/lang/Iterable;
-	public static final fun selectBatched (Lorg/jetbrains/exposed/sql/Query;ILkotlin/jvm/functions/Function1;)Ljava/lang/Iterable;
+	public static final synthetic fun selectBatched (Lorg/jetbrains/exposed/sql/FieldSet;ILkotlin/jvm/functions/Function1;)Ljava/lang/Iterable;
+	public static final synthetic fun selectBatched (Lorg/jetbrains/exposed/sql/Query;ILkotlin/jvm/functions/Function1;)Ljava/lang/Iterable;
 	public static synthetic fun selectBatched$default (Lorg/jetbrains/exposed/sql/FieldSet;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Iterable;
 	public static synthetic fun selectBatched$default (Lorg/jetbrains/exposed/sql/Query;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Iterable;
 	public static final fun update (Lorg/jetbrains/exposed/sql/Join;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)I
@@ -1967,7 +1965,7 @@ public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/Abstrac
 	public static synthetic fun adjustComments$default (Lorg/jetbrains/exposed/sql/Query;Lorg/jetbrains/exposed/sql/Query$CommentPosition;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun adjustHaving (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun adjustSelect (Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/Query;
-	public final fun adjustSlice (Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/Query;
+	public final synthetic fun adjustSlice (Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun adjustWhere (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
 	public final fun comment (Ljava/lang/String;Lorg/jetbrains/exposed/sql/Query$CommentPosition;)Lorg/jetbrains/exposed/sql/Query;
 	public static synthetic fun comment$default (Lorg/jetbrains/exposed/sql/Query;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Query$CommentPosition;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Query;
@@ -2324,9 +2322,7 @@ public abstract interface class org/jetbrains/exposed/sql/SizedIterable : java/l
 public final class org/jetbrains/exposed/sql/SizedIterable$DefaultImpls {
 	public static fun forUpdate (Lorg/jetbrains/exposed/sql/SizedIterable;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public static synthetic fun forUpdate$default (Lorg/jetbrains/exposed/sql/SizedIterable;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/SizedIterable;
-	public static fun limit (Lorg/jetbrains/exposed/sql/SizedIterable;I)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public static fun notForUpdate (Lorg/jetbrains/exposed/sql/SizedIterable;)Lorg/jetbrains/exposed/sql/SizedIterable;
-	public static fun offset (Lorg/jetbrains/exposed/sql/SizedIterable;J)Lorg/jetbrains/exposed/sql/SizedIterable;
 }
 
 public final class org/jetbrains/exposed/sql/Slf4jSqlDebugLogger : org/jetbrains/exposed/sql/SqlLogger {
@@ -2754,14 +2750,14 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun getDuration ()J
 	public final fun getId ()Ljava/lang/String;
 	public final fun getMaxAttempts ()I
-	public final fun getMaxRepetitionDelay ()J
+	public final synthetic fun getMaxRepetitionDelay ()J
 	public final fun getMaxRetryDelay ()J
-	public final fun getMinRepetitionDelay ()J
+	public final synthetic fun getMinRepetitionDelay ()J
 	public final fun getMinRetryDelay ()J
 	public fun getOuterTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
 	public final fun getQueryTimeout ()Ljava/lang/Integer;
 	public fun getReadOnly ()Z
-	public final fun getRepetitionAttempts ()I
+	public final synthetic fun getRepetitionAttempts ()I
 	public final fun getStatementCount ()I
 	public final fun getStatementStats ()Ljava/util/HashMap;
 	public final fun getStatements ()Ljava/lang/StringBuilder;
@@ -2775,12 +2771,12 @@ public class org/jetbrains/exposed/sql/Transaction : org/jetbrains/exposed/sql/U
 	public final fun setDebug (Z)V
 	public final fun setDuration (J)V
 	public final fun setMaxAttempts (I)V
-	public final fun setMaxRepetitionDelay (J)V
+	public final synthetic fun setMaxRepetitionDelay (J)V
 	public final fun setMaxRetryDelay (J)V
-	public final fun setMinRepetitionDelay (J)V
+	public final synthetic fun setMinRepetitionDelay (J)V
 	public final fun setMinRetryDelay (J)V
 	public final fun setQueryTimeout (Ljava/lang/Integer;)V
-	public final fun setRepetitionAttempts (I)V
+	public final synthetic fun setRepetitionAttempts (I)V
 	public final fun setStatementCount (I)V
 	public final fun setWarnLongQueriesDuration (Ljava/lang/Long;)V
 	public final fun unregisterInterceptor (Lorg/jetbrains/exposed/sql/statements/StatementInterceptor;)Z
@@ -3699,22 +3695,22 @@ public final class org/jetbrains/exposed/sql/transactions/ThreadLocalTransaction
 	public fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
 	public fun getDefaultIsolationLevel ()I
 	public fun getDefaultMaxAttempts ()I
-	public fun getDefaultMaxRepetitionDelay ()J
+	public synthetic fun getDefaultMaxRepetitionDelay ()J
 	public fun getDefaultMaxRetryDelay ()J
-	public fun getDefaultMinRepetitionDelay ()J
+	public synthetic fun getDefaultMinRepetitionDelay ()J
 	public fun getDefaultMinRetryDelay ()J
 	public fun getDefaultReadOnly ()Z
-	public fun getDefaultRepetitionAttempts ()I
+	public synthetic fun getDefaultRepetitionAttempts ()I
 	public final fun getThreadLocal ()Ljava/lang/ThreadLocal;
 	public fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/Transaction;
-	public fun setDefaultIsolationLevel (I)V
+	public synthetic fun setDefaultIsolationLevel (I)V
 	public fun setDefaultMaxAttempts (I)V
-	public fun setDefaultMaxRepetitionDelay (J)V
+	public synthetic fun setDefaultMaxRepetitionDelay (J)V
 	public fun setDefaultMaxRetryDelay (J)V
-	public fun setDefaultMinRepetitionDelay (J)V
+	public synthetic fun setDefaultMinRepetitionDelay (J)V
 	public fun setDefaultMinRetryDelay (J)V
 	public fun setDefaultReadOnly (Z)V
-	public fun setDefaultRepetitionAttempts (I)V
+	public synthetic fun setDefaultRepetitionAttempts (I)V
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -3748,21 +3744,21 @@ public abstract interface class org/jetbrains/exposed/sql/transactions/Transacti
 	public abstract fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
 	public abstract fun getDefaultIsolationLevel ()I
 	public abstract fun getDefaultMaxAttempts ()I
-	public abstract fun getDefaultMaxRepetitionDelay ()J
+	public abstract synthetic fun getDefaultMaxRepetitionDelay ()J
 	public abstract fun getDefaultMaxRetryDelay ()J
-	public abstract fun getDefaultMinRepetitionDelay ()J
+	public abstract synthetic fun getDefaultMinRepetitionDelay ()J
 	public abstract fun getDefaultMinRetryDelay ()J
 	public abstract fun getDefaultReadOnly ()Z
-	public abstract fun getDefaultRepetitionAttempts ()I
+	public abstract synthetic fun getDefaultRepetitionAttempts ()I
 	public abstract fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/Transaction;
 	public abstract fun setDefaultIsolationLevel (I)V
 	public abstract fun setDefaultMaxAttempts (I)V
-	public abstract fun setDefaultMaxRepetitionDelay (J)V
+	public abstract synthetic fun setDefaultMaxRepetitionDelay (J)V
 	public abstract fun setDefaultMaxRetryDelay (J)V
-	public abstract fun setDefaultMinRepetitionDelay (J)V
+	public abstract synthetic fun setDefaultMinRepetitionDelay (J)V
 	public abstract fun setDefaultMinRetryDelay (J)V
 	public abstract fun setDefaultReadOnly (Z)V
-	public abstract fun setDefaultRepetitionAttempts (I)V
+	public abstract synthetic fun setDefaultRepetitionAttempts (I)V
 }
 
 public final class org/jetbrains/exposed/sql/transactions/TransactionManager$Companion {

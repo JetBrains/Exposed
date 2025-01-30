@@ -59,7 +59,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     @Deprecated(
         "This function will be removed in future releases.",
         ReplaceWith("limit(n).offset(offset)"),
-        DeprecationLevel.WARNING
+        DeprecationLevel.ERROR
     )
     override fun limit(n: Int, offset: Long): T = apply {
         limit = n

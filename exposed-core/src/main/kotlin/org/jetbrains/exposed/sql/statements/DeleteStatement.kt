@@ -27,7 +27,7 @@ open class DeleteStatement(
     @Deprecated(
         "This constructor will be removed in future releases.",
         ReplaceWith("DeleteStatement(targetsSet = table, where, isIgnore, limit, emptyList())"),
-        DeprecationLevel.WARNING
+        DeprecationLevel.ERROR
     )
     @Suppress("UnusedPrivateProperty")
     constructor(
@@ -42,7 +42,7 @@ open class DeleteStatement(
         "This property will be removed in future releases and replaced with a property that stores a `ColumnSet`," +
             "which may be a `Table` or a `Join`. To access the table(s) to which the columns belong, use `ColumnSet.targetTables()`",
         ReplaceWith("targetsSet"),
-        DeprecationLevel.WARNING
+        DeprecationLevel.ERROR
     )
     val table: Table = targets.first()
 
@@ -50,7 +50,7 @@ open class DeleteStatement(
         "This property is not being used and will be removed in future releases. Please leave a comment on " +
             "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
             "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     val offset: Long? = null
 
@@ -92,7 +92,7 @@ open class DeleteStatement(
                 "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
                 "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
             ReplaceWith("where(transaction, table, op, isIgnore, limit)"),
-            DeprecationLevel.WARNING
+            DeprecationLevel.ERROR
         )
         @Suppress("UnusedParameter")
         fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null, offset: Long? = null): Int =

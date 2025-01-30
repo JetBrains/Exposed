@@ -87,7 +87,7 @@ open class Transaction(
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("maxAttempts"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     var repetitionAttempts: Int
         get() = maxAttempts
@@ -96,7 +96,7 @@ open class Transaction(
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("minRetryDelay"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     var minRepetitionDelay: Long
         get() = minRetryDelay
@@ -105,7 +105,7 @@ open class Transaction(
     @Deprecated(
         message = "This property will be removed in future releases",
         replaceWith = ReplaceWith("maxRetryDelay"),
-        level = DeprecationLevel.ERROR
+        level = DeprecationLevel.HIDDEN
     )
     var maxRepetitionDelay: Long
         get() = maxRetryDelay

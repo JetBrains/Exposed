@@ -18,7 +18,7 @@ class View<out Target : Entity<*>> (val op: Op<Boolean>, val factory: EntityClas
     @Deprecated(
         "This function will be removed in future releases.",
         ReplaceWith("limit(n).offset(offset)"),
-        DeprecationLevel.WARNING
+        DeprecationLevel.ERROR
     )
     override fun limit(n: Int, offset: Long): SizedIterable<Target> = factory.find(op).limit(n).offset(offset)
     override fun limit(count: Int): SizedIterable<Target> = factory.find(op).limit(count)

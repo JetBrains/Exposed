@@ -166,7 +166,8 @@ open class InsertStatement<Key : Any>(
         "This function is used in derived classes to build a list of arguments. " +
             "It's recommended to avoid including all default and nullable values in insert statements, " +
             "as these values can often be generated automatically by the database. " +
-            "There are no usages of that function inside Exposed. Saved as deprecated for back compatability"
+            "There are no usages of that function inside Exposed. Saved as deprecated for back compatability",
+        level = DeprecationLevel.WARNING
     )
     protected open fun valuesAndDefaults(values: Map<Column<*>, Any?> = this.values): Map<Column<*>, Any?> {
         val result = values.toMutableMap()
@@ -187,7 +188,8 @@ open class InsertStatement<Key : Any>(
     @Deprecated(
         "This function has been obsolete since version 0.57.0, " +
             "following the removal of default values from insert statements. " +
-            "It's safe to remove any overrides of this function from your code."
+            "It's safe to remove any overrides of this function from your code.",
+        level = DeprecationLevel.WARNING
     )
     protected open fun isColumnValuePreferredFromResultSet(column: Column<*>, value: Any?): Boolean {
         return column.columnType.isAutoInc || value is NextVal<*>
