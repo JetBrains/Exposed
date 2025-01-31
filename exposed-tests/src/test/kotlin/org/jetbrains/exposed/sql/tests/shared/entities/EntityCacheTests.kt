@@ -3,8 +3,11 @@ package org.jetbrains.exposed.sql.tests.shared.entities
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.entityCache
+import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -168,6 +171,48 @@ class EntityCacheTests : DatabaseTestsBase() {
             assertEquals(entity, TestEntity.testCache(entity.id))
             commit()
             assertEquals(entity, TestEntity.testCache(entity.id))
+        }
+    }
+
+    object TableWithDefaultValue : IdTable<Int>() {
+        val value = integer("value")
+        val valueWithDefault = integer("valueWithDefault")
+            .default(10)
+
+        override val id: Column<EntityID<Int>> = integer("id")
+            .clientDefault { Random.nextInt() }
+            .entityId()
+
+        override val primaryKey: PrimaryKey = PrimaryKey(id)
+    }
+
+    class TableWithDefaultValueEntity(id: EntityID<Int>) : IntEntity(id) {
+        var value by TableWithDefaultValue.value
+
+        var valueWithDefault by TableWithDefaultValue.valueWithDefault
+
+        companion object : IntEntityClass<TableWithDefaultValueEntity>(TableWithDefaultValue)
+    }
+
+    @Test
+    fun entitiesWithDifferentAmountOfFieldsCouldBeCreated() {
+        withTables(TableWithDefaultValue) {
+            TableWithDefaultValueEntity.new {
+                value = 1
+            }
+            TableWithDefaultValueEntity.new {
+                value = 2
+                valueWithDefault = 1
+            }
+
+            // It's the key flush. It must not fail with inconsistent batch insert statement.
+            // The table also should have client side default value. Otherwise the `writeValues`
+            // would be extended with default values inside `EntityClass::new()` method.
+            flushCache()
+            entityCache.clear()
+
+            val entity = TableWithDefaultValueEntity.find { TableWithDefaultValue.value eq 1 }.first()
+            assertEquals(10, entity.valueWithDefault)
         }
     }
 }

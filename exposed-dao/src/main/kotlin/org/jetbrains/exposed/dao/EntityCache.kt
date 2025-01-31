@@ -228,18 +228,15 @@ class EntityCache(private val transaction: Transaction) {
 
     @Suppress("TooGenericExceptionCaught")
     internal fun flushInserts(table: IdTable<*>) {
-        var toFlush: List<Entity<*>> = inserts.remove(table)?.toList().orEmpty()
-        while (toFlush.isNotEmpty()) {
-            val partition = toFlush.partition { entity ->
-                entity.writeValues.none {
-                    val (key, value) = it
-                    key.referee == table.id && value is EntityID<*> && value._value == null
-                }
-            }
-            toFlush = partition.first
+        var entitiesToInsert = inserts.remove(table)?.toList().orEmpty()
+
+        while (entitiesToInsert.isNotEmpty()) {
+            val (currentBatch, nextBatch) = partitionEntitiesForInsert(entitiesToInsert, table)
+            entitiesToInsert = nextBatch
+
             val ids = try {
                 executeAsPartOfEntityLifecycle {
-                    table.batchInsert(toFlush) { entry ->
+                    table.batchInsert(currentBatch) { entry ->
                         for ((c, v) in entry.writeValues) {
                             this[c] = v
                         }
@@ -250,8 +247,7 @@ class EntityCache(private val transaction: Transaction) {
                 // this try/catch should help to get information about the flaky test.
                 // try/catch can be safely removed after the fixing the issue
                 // TooGenericExceptionCaught suppress also can be removed
-                val toFlushString = toFlush.joinToString("; ") {
-                        entry ->
+                val toFlushString = currentBatch.joinToString("; ") { entry ->
                     entry.writeValues.map { writeValue -> "${writeValue.key.name}=${writeValue.value}" }.joinToString { ", " }
                 }
 
@@ -259,7 +255,7 @@ class EntityCache(private val transaction: Transaction) {
                 throw cause
             }
 
-            for ((entry, genValues) in toFlush.zip(ids)) {
+            for ((entry, genValues) in currentBatch.zip(ids)) {
                 if (entry.id._value == null) {
                     val id = genValues[table.id]
                     entry.id._value = id._value
@@ -274,10 +270,28 @@ class EntityCache(private val transaction: Transaction) {
                 transaction.registerChange(entry.klass, entry.id, EntityChangeType.Created)
                 pendingInitializationLambdas[entry]?.forEach { it(entry) }
             }
-
-            toFlush = partition.second
         }
         transaction.alertSubscribers()
+    }
+
+    /**
+     * That method places the entities with different `writeValues` column sets into different partitions.
+     * It prevents the issues with inconsistent batch insert statement.
+     *
+     * The entities that have referee in the same table and these referee are not created yet
+     * are also put into the second partition
+     */
+    private fun partitionEntitiesForInsert(entities: Collection<Entity<*>>, table: IdTable<*>): Pair<List<Entity<*>>, List<Entity<*>>> {
+        val firstEntityColumns = entities.first().writeValues.keys
+        return entities.partition { entity ->
+            val refereeFromSameTableAlreadyCreated = entity.writeValues.none { (key, value) ->
+                key.referee == table.id && value is EntityID<*> && value._value == null
+            }
+
+            val columnSetAlignedWithFirstEntity = entity.writeValues.keys == firstEntityColumns
+
+            refereeFromSameTableAlreadyCreated && columnSetAlignedWithFirstEntity
+        }
     }
 
     /**
