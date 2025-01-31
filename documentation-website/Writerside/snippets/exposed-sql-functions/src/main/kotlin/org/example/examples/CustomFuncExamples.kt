@@ -25,12 +25,12 @@ private const val REVENUE_YEAR = 1999
 
 class CustomFuncExamples {
     fun selectCustomFunctions() {
-        val sqrtAmount = FilmBoxOfficeTable.revenue.function("SQRT")
-        // generates SQL: SQRT(SALES.AMOUNT)
+        val sqrtRevenue = FilmBoxOfficeTable.revenue.function("SQRT")
+        // generates SQL: SQRT(SALES.REVENUE)
         val sqrt = FilmBoxOfficeTable
-            .select(sqrtAmount)
+            .select(sqrtRevenue)
             .singleOrNull()
-            ?.get(sqrtAmount)
+            ?.get(sqrtRevenue)
         println(sqrt)
 
         val replacedTitle = CustomFunction(
@@ -58,11 +58,11 @@ class CustomFuncExamples {
             CurrentDate
         ).month()
         // generates SQL: MONTH(DATEADD('MONTH', -3, CURRENT_DATE))
-        val revenueInLast3Months = FilmBoxOfficeTable
+        val filmsInLast3Months = FilmBoxOfficeTable
             .selectAll()
             .where { FilmBoxOfficeTable.month greater threeMonthsAgo }
             .map { it[FilmBoxOfficeTable.title] }
-        println(revenueInLast3Months)
+        println(filmsInLast3Months)
     }
 
     fun selectCustomTrimFunction() {
@@ -77,7 +77,7 @@ class CustomFuncExamples {
         }
 
         val leadingStarWarsTrim = FilmBoxOfficeTable.title.customTrim(stringLiteral("Star Wars:"), TrimSpecifier.LEADING)
-        val titleWithoutPrefix = FilmBoxOfficeTable.select(leadingStarWarsTrim).single()[leadingStarWarsTrim] // Episode I - The Phantom Menace
+        val titleWithoutPrefix = FilmBoxOfficeTable.select(leadingStarWarsTrim).single()[leadingStarWarsTrim] // The Phantom Menace - Episode I
         println(titleWithoutPrefix)
 
         val trailingEpisodeTrim = FilmBoxOfficeTable.title.customTrim(stringLiteral("- Episode I"), TrimSpecifier.TRAILING)

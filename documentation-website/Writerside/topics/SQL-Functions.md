@@ -91,11 +91,11 @@ You can use SQL functions like `SUM()` and `COUNT()` directly with a column expr
 
 ### Statistics
 Some databases provide aggregate functions specifically for statistics and Exposed provides support for four of these:
-[`.stdDevPop()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/stdDevPop.html),
-[`.stdDevSamp()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/stdDevSamp.html),
-[`.varPop()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/varPop.html),
-[`.varSamp()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/varSamp.html).
-The following example retrieves the population standard deviation of values stored in the `amount` column:
+[`.stdDevPop()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/std-dev-pop.html),
+[`.stdDevSamp()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/std-dev-samp.html),
+[`.varPop()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/var-pop.html),
+[`.varSamp()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/var-samp.html).
+The following example retrieves the population standard deviation of values stored in the `revenue` column:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="40-44"/>
 
@@ -126,16 +126,16 @@ After that, you can provide any amount of additional parameters separated by a c
 There are also shortcuts for `String`, `Long`, and `DateTime` functions:
 * [`CustomStringFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-string-function.html)
 * [`CustomLongFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-custom-long-function.html)
-* [`CustomDateTimeFunction`](https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.sql.jodatime/-custom-date-time-function.html)
+* [`CustomDateTimeFunction`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.sql.kotlin.datetime/-custom-date-time-function.html)
 
 Using one of these shortcuts, the example above could be simplified to:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="45-47"/>
 
-In the following example, `CustomDateFunction` is used in an H2 database to mimic its `DATEADD()` function in order to
-calculate a date three months before the current one.
-In is then chained with Exposed's built-in `.month()` function to return the month of the date found,
-so it can be used in a query:
+In the following example, [`CustomDateFunction`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.sql.kotlin.datetime/-custom-date-function.html) 
+is used in an H2 database to mimic its `DATEADD()` function in order to calculate a date three months before the current one.
+In is then chained with Exposed's built-in [`.month()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.sql.kotlin.datetime/month.html) 
+function to return the month of the date found, so it can be used in a query:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="54-64"/>
 
@@ -145,7 +145,8 @@ All functions in Exposed extend the abstract class [`Function`](https://jetbrain
 which takes a column type and allows overriding `toQueryBuilder()`. This is what `CustomFunction` actually does, 
 which can be leveraged to create more complex queries.
 
-For example, Exposed provides a `.trim()` function that removes leading and trailing whitespace from a String. In some databases (like H2 and MySQL),
+For example, Exposed provides a [`.trim()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/trim.html) 
+function that removes leading and trailing whitespace from a String. In some databases (like H2 and MySQL),
 this is just the default behavior as specifiers can be provided to limit the trim to either leading or trailing. These databases also allow you 
 to provide a specific substring other than spaces to remove. The custom function below supports this extended behavior:
 
@@ -165,30 +166,37 @@ This custom function can then be used to achieve the exact trim that is needed:
 Window functions allow calculations across a set of table rows that are related to the current row.
 
 Existing aggregate functions (like `sum()`, `avg()`) can be used, as well as new rank and value functions:
-* `cumeDist()`
-* `denseRank()`
-* `firstValue()`
-* `lag()`
-* `lastValue()`
-* `lead()`
-* `nthValue()`
-* `nTile()`
-* `percentRank()`
-* `rank()`
-* `rowNumber()`
+* [`cumeDist()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/cume-dist.html)
+* [`denseRank()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/dense-rank.html)
+* [`firstValue()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/first-value.html)
+* [`lag()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/lag.html)
+* [`lastValue()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/last-value.html)
+* [`lead()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/lead.html)
+* [`nthValue()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/nth-value.html)
+* [`nTile()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/ntile.html)
+* [`percentRank()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/percent-rank.html)
+* [`rank()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/rank.html)
+* [`rowNumber()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/row-number.html)
 
-To use a window function, include the `OVER` clause by chaining `.over()` after the function call. A `PARTITION BY` and 
-`ORDER BY` clause can be optionally chained using `.partitionBy()` and `.orderBy()`, taking multiple arguments:
+To use a window function, include the `OVER` clause by chaining 
+[`.over()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-function/over.html) after the function call. 
+A `PARTITION BY` and `ORDER BY` clause can be optionally chained using 
+[`.partitionBy()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-function-definition/partition-by.html) 
+and [`.orderBy()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-function-definition/order-by.html), 
+taking multiple arguments:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/WindowFuncExamples.kt" include-lines="17-21,23-28,30-34"/>
 
-Frame clause functions, such as `rows()`, `range()`, and `groups()`, are also supported and take a `WindowFrameBound` option 
-depending on the expected result:
-* `WindowFrameBound.currentRow()`
-* `WindowFrameBound.unboundedPreceding()`
-* `WindowFrameBound.unboundedFollowing()`
-* `WindowFrameBound.offsetPreceding()`
-* `WindowFrameBound.offsetFollowing()`
+Frame clause functions, such as [`rows()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-function-definition/rows.html), 
+[`range()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-function-definition/range.html), 
+and [`groups()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-function-definition/groups.html), 
+are also supported and take a [`WindowFrameBound`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-frame-bound/index.html) 
+option depending on the expected result:
+* [`WindowFrameBound.currentRow()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-frame-bound/-companion/current-row.html)
+* [`WindowFrameBound.unboundedPreceding()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-frame-bound/-companion/unbounded-preceding.html)
+* [`WindowFrameBound.unboundedFollowing()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-frame-bound/-companion/unbounded-following.html)
+* [`WindowFrameBound.offsetPreceding()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-frame-bound/-companion/offset-preceding.html)
+* [`WindowFrameBound.offsetFollowing()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-window-frame-bound/-companion/offset-following.html)
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/WindowFuncExamples.kt" include-lines="37-42"/>
 
