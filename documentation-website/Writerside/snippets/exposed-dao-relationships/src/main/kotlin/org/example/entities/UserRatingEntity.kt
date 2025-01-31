@@ -18,7 +18,6 @@ class UserRatingEntity(id: EntityID<Int>) : IntEntity(id) {
     var value by UserRatingsTable.value
     var film by StarWarsFilmEntity referencedOn UserRatingsTable.film // use referencedOn for normal references
     var user by UserEntity referencedOn UserRatingsTable.user
-    val rating by UserRatingEntity backReferencedOn UserRatingsTable.user // make sure to use val and backReferencedOn
 }
 
 class UserRatingWithOptionalUserEntity(id: EntityID<Int>) : IntEntity(id) {

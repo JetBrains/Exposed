@@ -64,7 +64,7 @@
             <tab id="user-ratings-entity" title="UserRatingEntity">
                 <code-block lang="kotlin"
                             src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserRatingEntity.kt"
-                            include-lines="15-20,22"
+                            include-symbol="UserRatingEntity"
                 />
             </tab>
         </tabs>
@@ -100,13 +100,13 @@
         <chapter title="Back reference" id="back-reference">
             <p>
                 If each user rates only one film, you can define a <code>backReferencedOn</code>
-                field to the <code>UserEntity</code> class to access the <code>UserRatingsTable</code> data:
+                field to the entity class to access the <code>UserRatingsTable</code> data:
             </p>
             <code-block lang="kotlin"
-                        src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserRatingEntity.kt"
-                        include-symbol="UserRatingEntity"
+                        src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
+                        include-symbol="UserWithSingleRatingEntity"
             />
-            <p>You can then access this field on a <code>UserRatingEntity</code> object:</p>
+            <p>You can then access this field on a <code>UserWithSingleRatingEntity</code> object:</p>
             <code-block lang="kotlin">
                 user1.rating // returns a UserRating object
             </code-block>
@@ -116,7 +116,8 @@
         <p>In Exposed, you can also add an optional reference.</p>
         <p>
             For example, if you want to include anonymous user ratings to your table, you can do so by setting
-            the reference field as nullable and using <code>optionalReferencedOn</code> in your entity definition:
+            the reference field as optional using <code>optReference()</code> in your table and
+            <code>optionalReferencedOn</code> in your entity definition:
         </p>
         <tabs>
             <tab id="user-ratings-table-with-optional-reference" title="UserRatingsWithOptionalUserTable">
@@ -147,13 +148,13 @@
         </p>
         <code-block lang="kotlin"
                     src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
-                    include-lines="23-26,36-40"
+                    include-lines="23-27,37-41"
         />
         <p>Without using the <a href="https://kotlinlang.org/docs/functions.html#infix-notation">infix notation</a>, the <code>orderBy</code> method is chained
             after <code>referrersOn</code>:</p>
         <code-block lang="kotlin"
                     src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
-                    include-lines="23-26,31-34,40"
+                    include-lines="23-27,32-35,41"
         />
     </chapter>
     <chapter title="Many-to-many reference" id="many-to-many-reference">
@@ -220,7 +221,7 @@
         <p>
             In this example, <code>parentFilm</code> represents the original film, whereas <code>childFilm</code>
             represents a sequel, prequel, or spin-off. As you can see <code>StarWarsFilmRelationsTable</code> columns
-            target only <code>StarWarsFilmsTable</code>.
+            target only <code>StarWarsFilmsWithDirectorTable</code>.
         </p>
         <p>
             You then need to update the entity class to include relationships for parent and child films using the
@@ -316,7 +317,7 @@
             References in Exposed are lazily loaded, meaning queries to fetch the data for the reference are made at
             the moment the reference is first utilised. In cases where you know you will require references
             ahead of time, Exposed can eager load them at the time of the parent query. This is
-            preventing the classic &quot;N+1&quot;problem as references can be aggregated and loaded in a single query.
+            preventing the classic &quot;N+1&quot; problem as references can be aggregated and loaded in a single query.
         </p>
         <p>
             To eager load a reference, use the <code>.load()</code> function and pass the DAO's reference as
@@ -345,12 +346,21 @@
             <p>
                 To eagerly load references on <code>Collections</code> of DAO's such as <code>List</code>
                 and <code>SizedIterable</code>, use the <code>.with()</code> function and pass
-                each reference as <code>KProperty</code>.
+                each reference as <code>KProperty</code>:
             </p>
             <code-block lang="kotlin"
                         src="exposed-dao-relationships/src/main/kotlin/org/example/examples/EagerLoadingExamples.kt"
                         include-lines="17"
             />
+            <p>
+                <code>.with()</code> eagerly loads references for all <code>Entity</code> instances in the
+                <code>SizedIterable</code> returned by <code>.all()</code> and returns this collection.
+            </p>
+            <note>
+                <code>SizedIterable</code> requires a transaction to execute any of its methods, so the loaded
+                collection cannot be directly used outside a <code>transaction</code> block unless it is first
+                converted to a standard collection, such as by calling <code>.toList()</code>.
+            </note>
         </chapter>
         <chapter title="Loading text fields" id="eager-loading-text-fields">
             <p>

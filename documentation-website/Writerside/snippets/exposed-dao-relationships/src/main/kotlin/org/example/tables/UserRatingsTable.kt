@@ -11,5 +11,5 @@ object UserRatingsTable : IntIdTable() {
 object UserRatingsWithOptionalUserTable : IntIdTable() {
     val value = long("value")
     val film = reference("film", StarWarsFilmsTable)
-    val user = reference("user", UsersTable).nullable()
+    val user = optReference("user", UsersTable)
 }

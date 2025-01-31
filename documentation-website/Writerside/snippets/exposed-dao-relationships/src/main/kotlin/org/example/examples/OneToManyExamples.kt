@@ -5,7 +5,7 @@ import org.example.entities.UserEntity
 import org.example.entities.UserRatingEntity
 
 const val MOVIE_SEQUEL_ID = 8
-const val MOVIE_RATING = 4
+const val MOVIE_RATING = 4L
 
 class OneToManyExamples {
     fun queryRatings() {

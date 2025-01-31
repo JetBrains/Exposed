@@ -1,5 +1,6 @@
 package org.example.entities
 
+import org.example.entities.UserRatingEntity.Companion.backReferencedOn
 import org.example.tables.UserRatingsTable
 import org.example.tables.UsersTable
 import org.jetbrains.exposed.dao.IntEntity
@@ -37,4 +38,11 @@ class UserOrderedEntity(id: EntityID<Int>) : IntEntity(id) {
         UserRatingsTable.value to SortOrder.DESC,
         UserRatingsTable.id to SortOrder.ASC
     )
+}
+
+class UserWithSingleRatingEntity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<UserWithSingleRatingEntity>(UsersTable)
+
+    var name by UsersTable.name
+    val rating by UserRatingEntity backReferencedOn UserRatingsTable.user // make sure to use val and backReferencedOn
 }
