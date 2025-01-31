@@ -95,7 +95,7 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test backReferencedOn works out of transaction via warmup`() {
+    fun `test backReferencedOn & optionalBackReferencedOn work out of transaction via load`() {
         var y1: EntityTestsData.YEntity by Delegates.notNull()
         var b1: EntityTestsData.BEntity by Delegates.notNull()
         executeOnH2(EntityTestsData.XTable, EntityTestsData.YTable) {
@@ -106,14 +106,16 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
                 }
             }
             assertFails { y1.b }
+            assertFails { y1.bOpt }
 
             transaction(dbWithCache) {
                 y1.refresh()
                 b1.refresh()
-                y1.load(EntityTestsData.YEntity::b)
+                y1.load(EntityTestsData.YEntity::b, EntityTestsData.YEntity::bOpt)
             }
 
             assertEquals(b1.id, y1.b?.id)
+            assertEquals(b1.id, y1.bOpt?.id)
         }
     }
 
