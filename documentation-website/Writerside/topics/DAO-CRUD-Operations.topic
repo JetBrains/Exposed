@@ -333,7 +333,7 @@
         </p>
         <tip>
             For more details about using statement interceptors, see
-            <a href="Transactions.md" anchor="statement-interceptors">DSL Statement Interceptors</a>.
+            <a href="Statement-Interceptors.md">DSL Statement Interceptors</a>.
         </tip>
     </chapter>
 
