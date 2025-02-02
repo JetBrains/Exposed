@@ -30,6 +30,9 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** The name of the database based on the name of the underlying JDBC driver. */
     abstract val databaseDialectName: String
 
+    /** The name of the mode of the database. This is currently applicable only to H2 databases. */
+    abstract val databaseDialectMode: String?
+
     /** The version number of the database product as a `String`. */
     abstract val databaseProductVersion: String
 

@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
+import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
@@ -46,6 +47,22 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             MysqlDialect.dialectName, MariaDBDialect.dialectName -> currentSchema!!
             else -> database
         }
+
+    override val databaseDialectMode: String? by lazy {
+        val dialect = currentDialect
+        if (dialect !is H2Dialect) null
+
+        val (settingNameField, settingValueField) = when ((dialect as H2Dialect).majorVersion) {
+            H2Dialect.H2MajorVersion.One -> "NAME" to "VALUE"
+            H2Dialect.H2MajorVersion.Two -> "SETTING_NAME" to "SETTING_VALUE"
+        }
+
+        @Language("H2")
+        val modeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
+        TransactionManager.current().exec(modeQuery) { rs ->
+            rs.iterate { getString(settingValueField) }
+        }?.firstOrNull()
+    }
 
     override val databaseProductVersion by lazyMetadata { databaseProductVersion!! }
 
@@ -388,12 +405,35 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
     @Suppress("MagicNumber")
     override fun sequences(): List<String> {
-        val sequences = mutableListOf<String>()
-        val rs = metadata.getTables(null, null, null, arrayOf("SEQUENCE"))
-        while (rs.next()) {
-            sequences.add(rs.getString(3))
-        }
-        return sequences
+        val dialect = currentDialect
+        val transaction = TransactionManager.current()
+        val fieldName = "SEQUENCE_NAME"
+        return when (dialect) {
+            is OracleDialect -> transaction.exec("SELECT $fieldName FROM USER_SEQUENCES") { rs ->
+                rs.iterate {
+                    val seqName = getString(fieldName)
+                    if (identifierManager.isDotPrefixedAndUnquoted(seqName)) "\"$seqName\"" else seqName
+                }
+            }
+            is H2Dialect -> transaction.exec("SELECT $fieldName FROM INFORMATION_SCHEMA.SEQUENCES") { rs ->
+                rs.iterate {
+                    val seqName = getString(fieldName)
+                    if (dialect.h2Mode == H2CompatibilityMode.Oracle && identifierManager.isDotPrefixedAndUnquoted(seqName)) {
+                        "\"$seqName\""
+                    } else {
+                        seqName
+                    }
+                }
+            }
+            is SQLServerDialect -> transaction.exec("SELECT name AS $fieldName FROM sys.sequences") { rs ->
+                rs.iterate {
+                    getString(fieldName)
+                }
+            }
+            else -> metadata.getTables(null, null, null, arrayOf("SEQUENCE")).iterate {
+                getString(3)
+            }
+        } ?: emptyList()
     }
 
     @Synchronized

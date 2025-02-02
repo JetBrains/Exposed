@@ -3606,6 +3606,7 @@ public abstract class org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMe
 	public abstract fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public final fun getDatabase ()Ljava/lang/String;
+	public abstract fun getDatabaseDialectMode ()Ljava/lang/String;
 	public abstract fun getDatabaseDialectName ()Ljava/lang/String;
 	public abstract fun getDatabaseProductVersion ()Ljava/lang/String;
 	public abstract fun getDefaultIsolationLevel ()I
@@ -3645,6 +3646,7 @@ public abstract class org/jetbrains/exposed/sql/statements/api/IdentifierManager
 	protected abstract fun getSupportsMixedIdentifiers ()Z
 	protected abstract fun getSupportsMixedQuotedIdentifiers ()Z
 	public final fun inProperCase (Ljava/lang/String;)Ljava/lang/String;
+	public final fun isDotPrefixedAndUnquoted (Ljava/lang/String;)Z
 	protected abstract fun isLowerCaseIdentifiers ()Z
 	protected abstract fun isLowerCaseQuotedIdentifiers ()Z
 	protected abstract fun isUpperCaseIdentifiers ()Z
@@ -4158,7 +4160,6 @@ public class org/jetbrains/exposed/sql/vendors/H2Dialect : org/jetbrains/exposed
 	public final fun isSecondVersion ()Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
-	public fun sequences ()Ljava/util/List;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -4253,7 +4254,6 @@ public class org/jetbrains/exposed/sql/vendors/OracleDialect : org/jetbrains/exp
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
-	public fun sequences ()Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 }
 
@@ -4325,7 +4325,6 @@ public class org/jetbrains/exposed/sql/vendors/SQLServerDialect : org/jetbrains/
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
-	public fun sequences ()Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
 }
 
