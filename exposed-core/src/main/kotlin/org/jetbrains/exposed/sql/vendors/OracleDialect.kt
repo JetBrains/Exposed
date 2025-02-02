@@ -8,7 +8,6 @@ import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.INSERT
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.UPDATE
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.sql.DatabaseMetaData
 import java.util.*
 
 @Suppress("TooManyFunctions")
@@ -473,17 +472,6 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         if (cascade) {
             append(" CASCADE")
         }
-    }
-
-    /**
-     * The SQL that gets the constraint information for Oracle returns a 1 for NO ACTION and does not support RESTRICT.
-     * `decode (f.delete_rule, 'CASCADE', 0, 'SET NULL', 2, 1) as delete_rule`
-     */
-    override fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption = when (refOption) {
-        DatabaseMetaData.importedKeyCascade -> ReferenceOption.CASCADE
-        DatabaseMetaData.importedKeySetNull -> ReferenceOption.SET_NULL
-        DatabaseMetaData.importedKeyRestrict -> ReferenceOption.NO_ACTION
-        else -> currentDialect.defaultReferenceOption
     }
 
     override fun sequences(): List<String> {

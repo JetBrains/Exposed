@@ -2,6 +2,8 @@ package org.jetbrains.exposed.sql.statements.api
 
 import org.jetbrains.exposed.sql.ForeignKeyConstraint
 import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.InternalApi
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.ColumnMetadata
@@ -91,6 +93,14 @@ abstract class ExposedDatabaseMetadata(val database: String) {
      * with the table name used as the key.
      */
     abstract fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>>
+
+    // THIS should become protected after the usage in DatabaseDialect is fully deprecated
+    /**
+     * Returns the corresponding [ReferenceOption] for the specified [refOption] result,
+     * or `null` if the database result is an invalid string without a corresponding match.
+     */
+    @InternalApi
+    abstract fun resolveReferenceOption(refOption: String): ReferenceOption?
 
     /** Clears any cached values. */
     abstract fun cleanCache()

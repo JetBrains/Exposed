@@ -55,6 +55,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 	public fun getUrl ()Ljava/lang/String;
 	public fun getVersion ()Ljava/math/BigDecimal;
 	public fun resetCurrentScheme ()V
+	public fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public fun sequences ()Ljava/util/List;
 	public fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
 	public fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
