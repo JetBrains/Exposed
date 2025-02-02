@@ -520,10 +520,11 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
 
     /**
      * Registers an optional reference as an immutable field of the parent entity class, which returns a child object of
-     * this `EntityClass`.
+     * this `EntityClass` or `null` if no child references the parent entity.
      *
-     * The reference should have been defined by the creation of a [column] using either `optReference()` or
-     * `reference().nullable()` on the child table.
+     * The reference could have been defined on the child table in 1 of the following ways:
+     * - By the creation of a [column] using either `optReference()` or `reference().nullable()`
+     * - By the creation of a non-nullable `reference()` [column] where either 0 or 1 row(s) is expected in the relationship
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Student
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.StudentBios
@@ -536,10 +537,11 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
 
     /**
      * Registers an optional reference as an immutable field of the parent entity class, which returns a child object of
-     * this `EntityClass`.
+     * this `EntityClass` or `null` if no child references the parent entity.
      *
-     * The reference should have been defined by the creation of a [column] using either `optReference()` or
-     * `reference().nullable()` on the child table.
+     * The reference could have been defined on the child table in 1 of the following ways:
+     * - By the creation of a [column] using either `optReference()` or `reference().nullable()`
+     * - By the creation of a non-nullable `reference()` [column] where either 0 or 1 row(s) is expected in the relationship
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.Student
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.StudentBios
@@ -553,7 +555,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
 
     /**
      * Registers an optional reference as an immutable field of the parent entity class, which returns a child object of
-     * this `EntityClass`.
+     * this `EntityClass` or `null` if no child references the parent entity.
      *
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
