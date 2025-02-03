@@ -8,6 +8,8 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.kotlin.datetime.CurrentTimestamp
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
@@ -786,6 +788,26 @@ class InsertTests : DatabaseTestsBase() {
                 assertEquals("nullableDefaultNotNull", it[testerWithFakeDefaults.nullableDefaultNotNull])
                 assertEquals(1, it[testerWithFakeDefaults.databaseGenerated])
             }
+        }
+    }
+
+    @Test
+    fun testInsertOfDefaultValuesOnly() {
+        val defaultAmount = 101
+        val defaultLabel = "none"
+        val defaultsOnlyTable = object : Table("defaults_only") {
+            val amount = integer("amount").default(defaultAmount)
+            val label = varchar("label", 32).default(defaultLabel)
+            val active = bool("active").nullable()
+        }
+
+        withTables(defaultsOnlyTable) {
+            defaultsOnlyTable.insert { }
+
+            val defaultsOnlyInserted = (defaultsOnlyTable.amount eq defaultAmount) and
+                (defaultsOnlyTable.label like defaultLabel) and
+                defaultsOnlyTable.active.isNull()
+            assertEquals(1, defaultsOnlyTable.selectAll().where { defaultsOnlyInserted }.count())
         }
     }
 }
