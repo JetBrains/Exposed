@@ -154,7 +154,10 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
         }
         val transaction = TransactionManager.currentOrNull()
         return when {
-            transaction == null -> thisRef.getReferenceFromCache(reference)
+            transaction == null -> {
+                val cachedValue = thisRef.getReferenceFromCache<Any?>(reference)
+                cachedValue as? SizedIterable<Child> ?: LazySizedCollection(SizedCollection(cachedValue as Child))
+            }
             cache -> {
                 transaction.entityCache.getOrPutReferrers(thisRef.id, reference, query).also {
                     thisRef.storeReferenceInCache(reference, it)

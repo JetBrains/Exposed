@@ -88,6 +88,7 @@ object EntityTestsData {
     class YEntity(id: EntityID<String>) : Entity<String>(id) {
         var x by YTable.x
         val b: BEntity? by BEntity.backReferencedOn(XTable.y1)
+        val bOpt by BEntity optionalBackReferencedOn XTable.y1
 
         companion object : EntityClass<String, YEntity>(YTable)
     }
