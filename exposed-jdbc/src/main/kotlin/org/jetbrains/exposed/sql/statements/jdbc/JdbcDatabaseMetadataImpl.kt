@@ -530,6 +530,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun resolveReferenceOption(refOption: String): ReferenceOption? {
         val dialect = currentDialect
 
+        // MySQL/MariaDB use custom query that returns string-name values
+        if (dialect is MysqlDialect) {
+            return ReferenceOption.valueOf(refOption.replace(" ", "_"))
+        }
+
         val refOptionInt = refOption.toIntOrNull() ?: return null
 
         return when (refOptionInt) {
