@@ -74,6 +74,7 @@ interface DatabaseDialect {
     /** Returns true if autoCommit should be enabled to create/drop a database. */
     val requiresAutoCommitOnCreateDrop: Boolean get() = false
 
+    /** Returns the allowed maximum sequence value for a dialect, as a [Long]. */
     val sequenceMaxValue: Long get() = Long.MAX_VALUE
 
     /** Returns the name of the current database. */
