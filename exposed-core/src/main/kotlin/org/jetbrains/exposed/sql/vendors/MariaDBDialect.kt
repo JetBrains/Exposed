@@ -1,7 +1,21 @@
 package org.jetbrains.exposed.sql.vendors
 
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+
+internal object MariaDBDataTypeProvider : MysqlDataTypeProvider() {
+    override fun timestampWithTimeZoneType(): String {
+        throw UnsupportedByDialectException("This vendor does not support timestamp with time zone data type", currentDialect)
+    }
+
+    override fun processForDefaultValue(e: Expression<*>): String = when {
+        e is LiteralOp<*> -> (e.columnType as IColumnType<Any?>).valueAsDefaultString(e.value)
+        e is Function<*> || currentDialect is MariaDBDialect -> "$e"
+        else -> "($e)"
+    }
+}
 
 internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
     override fun nextVal(seq: Sequence, builder: QueryBuilder) = builder {
@@ -61,6 +75,8 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
             toString()
         }
     }
+
+    override fun isUpsertAliasSupported(dialect: DatabaseDialect): Boolean = false
 }
 
 /**
@@ -68,6 +84,7 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
  */
 open class MariaDBDialect : MysqlDialect() {
     override val name: String = dialectName
+    override val dataTypeProvider: DataTypeProvider = MariaDBDataTypeProvider
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
     override val supportsSetDefaultReferenceOption: Boolean = false
@@ -90,6 +107,20 @@ open class MariaDBDialect : MysqlDialect() {
     /** Returns `true` if the MariaDB database version is greater than or equal to 5.3. */
     @Suppress("MagicNumber")
     override fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(5, 3)
+
+    override fun isTimeZoneOffsetSupported(): Boolean = false
+
+    override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
+        if (e is LiteralOp<*>) return true
+        if (fullVersion >= "10.2.1") {
+            return true
+        }
+
+        // This check is quite optimistic, it will not allow to create a varchar columns with "CURRENT_DATE" default value for example
+        // Comparing to the previous variant with white list of functions the new variant does not reject valid values,
+        // it could be checked on the test UpsertTests::testUpsertWithColumnExpressions()
+        return e.toString().trim() !in notAcceptableDefaults
+    }
 
     override fun createIndex(index: Index): String {
         if (index.functions != null) {

@@ -6,8 +6,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.math.BigDecimal
 
-internal object MysqlDataTypeProvider : DataTypeProvider() {
-
+internal open class MysqlDataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String {
         exposedLogger.error("The length of the Binary column is missing.")
         error("The length of the Binary column is missing.")
@@ -19,11 +18,7 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
         if ((currentDialect as? MysqlDialect)?.isTimeZoneOffsetSupported() == true) {
             "TIMESTAMP(6)"
         } else {
-            throw UnsupportedByDialectException(
-                "This vendor does not support timestamp with time zone data type" +
-                    ((currentDialect as? MariaDBDialect)?.let { "" } ?: " for this version"),
-                currentDialect
-            )
+            throw UnsupportedByDialectException("This vendor does not support timestamp with time zone data type for this version", currentDialect)
         }
 
     override fun ubyteType(): String = "TINYINT UNSIGNED"
@@ -56,14 +51,12 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
 
     override fun processForDefaultValue(e: Expression<*>): String = when {
         e is LiteralOp<*> && e.columnType is JsonColumnMarker -> when {
-            currentDialect is MariaDBDialect -> super.processForDefaultValue(e)
             ((currentDialect as? MysqlDialect)?.fullVersion ?: "0") >= "8.0.13" -> "(${super.processForDefaultValue(e)})"
             else -> throw UnsupportedByDialectException(
                 "MySQL versions prior to 8.0.13 do not accept default values on JSON columns",
                 currentDialect
             )
         }
-        currentDialect is MariaDBDialect -> super.processForDefaultValue(e)
         // The default value specified in a DEFAULT clause can be a literal constant or an expression. With one
         // exception, enclose expression default values within parentheses to distinguish them from literal constant
         // default values. The exception is that, for TIMESTAMP and DATETIME columns, you can specify the
@@ -91,11 +84,13 @@ internal object MysqlDataTypeProvider : DataTypeProvider() {
     }
 
     override fun hexToDb(hexString: String): String = "0x$hexString"
+
+    companion object {
+        internal val INSTANCE = MysqlDataTypeProvider()
+    }
 }
 
 internal open class MysqlFunctionProvider : FunctionProvider() {
-    internal object INSTANCE : MysqlFunctionProvider()
-
     override fun random(seed: Int?): String = "RAND(${seed?.toString().orEmpty()})"
 
     private class MATCH(val expr: Expression<*>, val pattern: String, val mode: MatchMode) : Op<Boolean>() {
@@ -314,8 +309,8 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
     }
 
-    private fun isUpsertAliasSupported(dialect: DatabaseDialect): Boolean = when (dialect) {
-        is MysqlDialect -> dialect !is MariaDBDialect && dialect.fullVersion >= "8.0.19"
+    open fun isUpsertAliasSupported(dialect: DatabaseDialect): Boolean = when (dialect) {
+        is MysqlDialect -> dialect.fullVersion >= "8.0.19"
         else -> false // H2_MySQL mode also uses this function provider & requires older unsupported version
     }
 
@@ -331,12 +326,16 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         }
         return super.queryLimitAndOffset(size, offset, alreadyOrdered)
     }
+
+    companion object {
+        internal val INSTANCE = MysqlFunctionProvider()
+    }
 }
 
 /**
  * MySQL dialect implementation.
  */
-open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, MysqlFunctionProvider.INSTANCE) {
+open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTANCE, MysqlFunctionProvider.INSTANCE) {
 
     internal val isMysql8: Boolean by lazy {
         TransactionManager.current().db.isVersionCovers(BigDecimal("8.0"))
@@ -361,13 +360,13 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider, Mysq
     open fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(5, 6)
 
     /** Returns `true` if a MySQL database is being used and its version is greater than or equal to 8.0. */
-    fun isTimeZoneOffsetSupported(): Boolean = (currentDialect !is MariaDBDialect) && isMysql8
+    open fun isTimeZoneOffsetSupported(): Boolean = isMysql8
 
-    private val notAcceptableDefaults = mutableListOf("CURRENT_DATE()", "CURRENT_DATE")
+    protected val notAcceptableDefaults = mutableListOf("CURRENT_DATE()", "CURRENT_DATE")
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean {
         if (super.isAllowedAsColumnDefault(e)) return true
-        if ((currentDialect is MariaDBDialect && fullVersion >= "10.2.1") || (currentDialect !is MariaDBDialect && fullVersion >= "8.0.13")) {
+        if (fullVersion >= "8.0.13") {
             return true
         }
 
