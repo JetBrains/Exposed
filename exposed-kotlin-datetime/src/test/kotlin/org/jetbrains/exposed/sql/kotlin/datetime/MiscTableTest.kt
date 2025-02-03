@@ -23,23 +23,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 
-object Misc : MiscTable() {
-    val d = date("d")
-    val dn = date("dn").nullable()
-
-    val t = time("t")
-    val tn = time("tn").nullable()
-
-    val dt = datetime("dt")
-    val dtn = datetime("dtn").nullable()
-
-    val ts = timestamp("ts")
-    val tsn = timestamp("tsn").nullable()
-
-    val dr = duration("dr")
-    val drn = duration("drn").nullable()
-}
-
 @Suppress("LargeClass")
 class MiscTableTest : DatabaseTestsBase() {
     @Test
@@ -1234,6 +1217,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
         override val primaryKey = PrimaryKey(id)
     }
+
     private val zeroDateTimeTableDdl = """
         CREATE TABLE `zerodatetimetable` (
         `id` INT NOT NULL AUTO_INCREMENT,
@@ -1265,6 +1249,23 @@ class MiscTableTest : DatabaseTestsBase() {
             }
         }
     }
+}
+
+object Misc : MiscTable() {
+    val d = date("d")
+    val dn = date("dn").nullable()
+
+    val t = time("t")
+    val tn = time("tn").nullable()
+
+    val dt = datetime("dt")
+    val dtn = datetime("dtn").nullable()
+
+    val ts = timestamp("ts")
+    val tsn = timestamp("tsn").nullable()
+
+    val dr = duration("dr")
+    val drn = duration("drn").nullable()
 }
 
 @Suppress("LongParameterList")

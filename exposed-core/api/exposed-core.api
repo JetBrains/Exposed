@@ -3855,6 +3855,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/DataTypeProvider {
 	public fun shortType ()Ljava/lang/String;
 	public fun textType ()Ljava/lang/String;
 	public fun timeType ()Ljava/lang/String;
+	public fun timestampType ()Ljava/lang/String;
 	public fun timestampWithTimeZoneType ()Ljava/lang/String;
 	public fun ubyteType ()Ljava/lang/String;
 	public fun uintegerAutoincType ()Ljava/lang/String;

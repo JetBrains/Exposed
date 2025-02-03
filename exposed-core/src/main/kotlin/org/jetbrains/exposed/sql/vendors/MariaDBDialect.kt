@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
 internal object MariaDBDataTypeProvider : MysqlDataTypeProvider() {
+    override fun timestampType(): String = if ((currentDialect as? MariaDBDialect)?.isFractionDateTimeSupported() == true) "TIMESTAMP(6)" else "TIMESTAMP"
+
     override fun timestampWithTimeZoneType(): String {
         throw UnsupportedByDialectException("This vendor does not support timestamp with time zone data type", currentDialect)
     }

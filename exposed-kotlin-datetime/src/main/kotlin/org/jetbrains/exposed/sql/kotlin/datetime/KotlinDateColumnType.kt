@@ -363,7 +363,7 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
 class KotlinInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     override val hasTimePart: Boolean = true
 
-    override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType()
+    override fun sqlType(): String = currentDialect.dataTypeProvider.timestampType()
 
     override fun nonNullValueToString(value: Instant): String {
         val instant = value.toJavaInstant()
