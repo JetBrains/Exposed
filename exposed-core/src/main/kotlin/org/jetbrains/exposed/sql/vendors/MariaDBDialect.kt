@@ -66,7 +66,7 @@ internal object MariaDBFunctionProvider : MysqlFunctionProvider() {
 /**
  * MariaDB dialect implementation.
  */
-class MariaDBDialect : MysqlDialect() {
+open class MariaDBDialect : MysqlDialect() {
     override val name: String = dialectName
     override val functionProvider: FunctionProvider = MariaDBFunctionProvider
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
@@ -86,6 +86,10 @@ class MariaDBDialect : MysqlDialect() {
             Long.MAX_VALUE - 1
         }
     }
+
+    /** Returns `true` if the MariaDB database version is greater than or equal to 5.3. */
+    @Suppress("MagicNumber")
+    override fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(5, 3)
 
     override fun createIndex(index: Index): String {
         if (index.functions != null) {
