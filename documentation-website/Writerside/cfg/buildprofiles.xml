@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <buildprofiles xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/build-profiles.xsd"
                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <sitemap priority="0.35" change-frequency="monthly"/>
     <variables>
         <web-root>https://www.jetbrains.com/help</web-root>
         <header-logo>exposed-logo-white.svg</header-logo>
