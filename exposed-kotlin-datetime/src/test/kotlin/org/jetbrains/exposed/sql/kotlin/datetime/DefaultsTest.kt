@@ -247,6 +247,7 @@ class DefaultsTest : DatabaseTestsBase() {
         withTables(testTable) { testDb ->
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
             val dType = currentDialectTest.dataTypeProvider.dateType()
+            val timestampType = currentDialectTest.dataTypeProvider.timestampType()
             val longType = currentDialectTest.dataTypeProvider.longType()
             val timeType = currentDialectTest.dataTypeProvider.timeType()
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(100)
@@ -264,8 +265,8 @@ class DefaultsTest : DatabaseTestsBase() {
                 "${"t2".inProperCase()} $dtType${testTable.t2.constraintNamePart()} ${nowExpression.itOrNull()}, " +
                 "${"t3".inProperCase()} $dtType${testTable.t3.constraintNamePart()} ${dtLiteral.itOrNull()}, " +
                 "${"t4".inProperCase()} $dType${testTable.t4.constraintNamePart()} ${dLiteral.itOrNull()}, " +
-                "${"t5".inProperCase()} $dtType${testTable.t5.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
-                "${"t6".inProperCase()} $dtType${testTable.t6.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
+                "${"t5".inProperCase()} $timestampType${testTable.t5.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
+                "${"t6".inProperCase()} $timestampType${testTable.t6.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
                 "${"t7".inProperCase()} $longType${testTable.t7.constraintNamePart()} ${durLiteral.itOrNull()}, " +
                 "${"t8".inProperCase()} $longType${testTable.t8.constraintNamePart()} ${durLiteral.itOrNull()}, " +
                 "${"t9".inProperCase()} $timeType${testTable.t9.constraintNamePart()} ${tLiteral.itOrNull()}, " +
