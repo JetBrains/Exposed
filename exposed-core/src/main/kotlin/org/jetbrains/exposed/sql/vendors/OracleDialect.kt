@@ -233,6 +233,21 @@ internal object OracleFunctionProvider : FunctionProvider() {
         }
     }
 
+    override fun insert(
+        ignore: Boolean,
+        table: Table,
+        columns: List<Column<*>>,
+        expr: String,
+        transaction: Transaction
+    ): String {
+        val newExpr = if (columns.isEmpty() && expr.isEmpty()) {
+            table.columns.joinToString(prefix = "VALUES(", postfix = ")") { "DEFAULT" }
+        } else {
+            expr
+        }
+        return super.insert(ignore, table, columns, newExpr, transaction)
+    }
+
     override fun update(
         target: Table,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
