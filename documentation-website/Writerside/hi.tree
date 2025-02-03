@@ -4,45 +4,110 @@
 
 <instance-profile id="hi"
                   name="Exposed"
-                  start-page="Home.topic">
+                  start-page="Home.topic"
+>
 
     <toc-element topic="Home.topic" toc-title="Home"/>
-    <toc-element topic="About.topic" toc-title="About"/>
-    <toc-element topic="Getting-Started-with-Exposed.topic" toc-title="Get started with Exposed"/>
-    <toc-element topic="Exposed-Modules.md"/>
-    <toc-element toc-title="Databases">
-        <toc-element topic="Working-with-Database.md"/>
-        <toc-element topic="Working-with-DataSource.md"/>
+    <toc-element toc-title="About"
+                 hidden="true"
+                 accepts-web-file-names="about.html"
+                 target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/about.html"/>
+    <toc-element topic="Getting-Started-with-Exposed.topic"
+                 hidden="true"
+                 toc-title="Get started with Exposed"
+                 accepts-web-file-names="getting-started-with-exposed.html"
+                 target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/getting-started-with-exposed.html"/>
+    <toc-element topic="Exposed-Modules.md"
+                 hidden="true"
+                 accepts-web-file-names="exposed-modules.html"
+                 target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/exposed-modules.html"/>
+    <toc-element toc-title="Databases" hidden="true">
+        <toc-element topic="Working-with-Database.md"
+                     hidden="true"
+                     accepts-web-file-names="working-with-database.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/working-with-database.html"/>
+        <toc-element topic="Working-with-DataSource.md"
+                     hidden="true"
+                     accepts-web-file-names="working-with-datasource.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/working-with-datasource.html"/>
     </toc-element>
-    <toc-element toc-title="Schemas">
-        <toc-element topic="Working-with-Tables.topic"/>
-        <toc-element topic="Data-Types.topic"/>
-        <toc-element topic="SQL-Functions.md"/>
-        <toc-element topic="Working-with-Schema.topic"/>
+    <toc-element toc-title="Schemas" hidden="true">
+        <toc-element topic="Working-with-Tables.topic"
+                     hidden="true"
+                     accepts-web-file-names="working-with-tables.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/working-with-tables.html"/>
+        <toc-element topic="Data-Types.topic"
+                     hidden="true"
+                     accepts-web-file-names="data-types.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/data-types.html"/>
+        <toc-element topic="SQL-Functions.md"
+                     hidden="true"
+                     accepts-web-file-names="sql-functions.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/sql-functions.html"/>
+        <toc-element topic="Working-with-Schema.topic"
+                     hidden="true"
+                     accepts-web-file-names="working-with-schema.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/working-with-schema.html"/>
     </toc-element>
-    <toc-element toc-title="Transactions">
-        <toc-element topic="Transactions.md"/>
-        <toc-element topic="Working-with-SQL-Strings.md"/>
-        <toc-element topic="Statement-Interceptors.md"/>
+    <toc-element toc-title="Transactions" hidden="true">
+        <toc-element topic="Transactions.md"
+                     accepts-web-file-names="transactions.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/transactions.html"
+                     hidden="true"/>
     </toc-element>
-    <toc-element toc-title="Deep Dive into DSL">
-        <toc-element topic="DSL-Table-Types.topic"/>
-        <toc-element topic="DSL-Joining-tables.topic"/>
-        <toc-element topic="DSL-CRUD-operations.topic"/>
-        <toc-element topic="Working-with-Sequence.topic"/>
-        <toc-element topic="DSL-Querying-data.topic"/>
+    <toc-element toc-title="Deep Dive into DSL" hidden="true">
+        <toc-element topic="DSL-Table-Types.topic"
+                     hidden="true"
+                     accepts-web-file-names="dsl-table-types.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/dsl-table-types.html"/>
+        <toc-element topic="DSL-Joining-tables.topic"
+                     accepts-web-file-names="dsl-joining-tables.html"
+                     hidden="true"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/dsl-joining-tables.html"/>
+        <toc-element topic="DSL-CRUD-operations.topic"
+                     hidden="true"
+                     accepts-web-file-names="dsl-crud-operations.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/dsl-crud-operations.html"/>
+        <toc-element topic="Working-with-Sequence.topic"
+                     hidden="true"
+                     accepts-web-file-names="working-with-sequence.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/working-with-sequence.html"/>
+        <toc-element topic="DSL-Querying-data.topic"
+                     hidden="true"
+                     accepts-web-file-names="dsl-querying-data.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/dsl-querying-data.html"/>
     </toc-element>
-    <toc-element toc-title="Deep Dive into DAO">
-        <toc-element topic="DAO-Table-Types.topic"/>
-        <toc-element topic="DAO-Entity-definition.topic" accepts-web-file-names="dao-field-transformations.html"/>
-        <toc-element topic="DAO-CRUD-Operations.topic"/>
-        <toc-element topic="DAO-Relationships.topic"/>
+    <toc-element toc-title="Deep Dive into DAO" hidden="true">
+        <toc-element topic="DAO-Table-Types.topic"
+                     hidden="true"
+                     accepts-web-file-names="dao-table-types.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/dao-table-types.html"/>
+        <toc-element topic="DAO-Entity-definition.topic"
+                     hidden="true"
+                     accepts-web-file-names="dao-field-transformations.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/dao-entity-definition.html"/>
+        <toc-element topic="DAO-CRUD-Operations.topic"
+                     hidden="true"
+                     accepts-web-file-names="dao-crud-operations.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/dao-crud-operations.html"/>
+        <toc-element topic="DAO-Relationships.topic"
+                     hidden="true"
+                     accepts-web-file-names="dao-relationships.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/dao-relationships.html"/>
     </toc-element>
-    <toc-element toc-title="Releases">
-        <toc-element topic="Breaking-Changes.md"/>
-        <toc-element topic="Migration-Guide.md"/>
+    <toc-element toc-title="Releases" hidden="true">
+        <toc-element topic="Breaking-Changes.md"
+                     hidden="true"
+                     accepts-web-file-names="breaking-changes.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/breaking-changes.html"/>
+        <toc-element topic="Migration-Guide.md"
+                     hidden="true"
+                     accepts-web-file-names="migration-guide.html"
+                     target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/migration-guide.html"/>
     </toc-element>
-    <toc-element topic="Frequently-Asked-Questions.md"/>
-    <toc-element toc-title="Samples" href="https://github.com/JetBrains/Exposed/tree/main/samples"/>
+    <toc-element topic="Frequently-Asked-Questions.md"
+                 hidden="true"
+                 accepts-web-file-names="frequently-asked-questions.html"
+                 target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/frequently-asked-questions.html"/>
     <toc-element topic="Contributing.md"/>
 </instance-profile>
