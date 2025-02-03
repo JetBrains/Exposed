@@ -456,8 +456,12 @@ abstract class FunctionProvider {
             isInsertFromSelect -> columns to expr
             nextValExpression != null && columns.isNotEmpty() -> (columns + autoIncColumn) to expr.dropLast(1) + ", $nextValExpression)"
             nextValExpression != null -> listOf(autoIncColumn) to "VALUES ($nextValExpression)"
-            columns.isEmpty() && expr.isEmpty() -> emptyList<Column<*>>() to DEFAULT_VALUE_EXPRESSION
-            else -> columns to expr
+            columns.isNotEmpty() -> columns to expr
+            currentDialect is OracleDialect -> {
+                val oracleDefaults = table.columns.joinToString(prefix = "VALUES(", postfix = ")") { "DEFAULT" }
+                emptyList<Column<*>>() to oracleDefaults
+            }
+            else -> emptyList<Column<*>>() to DEFAULT_VALUE_EXPRESSION
         }
         val columnsExpr = columnsToInsert.takeIf { it.isNotEmpty() }?.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) } ?: ""
 
