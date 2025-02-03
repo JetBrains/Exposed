@@ -599,6 +599,30 @@ class JavaTimeTests : DatabaseTestsBase() {
             assertTrue(statements.isEmpty())
         }
     }
+
+    @Test
+    fun testTimestampAlwaysSavedInUTC() {
+        val tester = object : Table("tester") {
+            val timestamp_col = timestamp("timestamp_col")
+        }
+
+        withTables(tester) {
+            // Cairo time zone
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+            assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
+
+            val instant = Instant.now()
+
+            tester.insert {
+                it[timestamp_col] = instant
+            }
+
+            assertEquals(
+                instant,
+                tester.selectAll().single()[tester.timestamp_col]
+            )
+        }
+    }
 }
 
 fun <T : Temporal> assertEqualDateTime(d1: T?, d2: T?) {
