@@ -78,6 +78,15 @@ class MariaDBDialect : MysqlDialect() {
     // actually MariaDb supports it but jdbc driver prepares statement without RETURNING clause
     override val supportsSequenceAsGeneratedKeys: Boolean = false
 
+    @Suppress("MagicNumber")
+    override val sequenceMaxValue: Long by lazy {
+        if (TransactionManager.current().db.isVersionCovers(11, 5)) {
+            super.sequenceMaxValue
+        } else {
+            Long.MAX_VALUE - 1
+        }
+    }
+
     override fun createIndex(index: Index): String {
         if (index.functions != null) {
             exposedLogger.warn(

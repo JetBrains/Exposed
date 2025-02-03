@@ -3893,6 +3893,7 @@ public abstract interface class org/jetbrains/exposed/sql/vendors/DatabaseDialec
 	public abstract fun getNeedsQuotesWhenSymbolsInNames ()Z
 	public abstract fun getNeedsSequenceToAutoInc ()Z
 	public abstract fun getRequiresAutoCommitOnCreateDrop ()Z
+	public abstract fun getSequenceMaxValue ()J
 	public abstract fun getSupportsCreateSchema ()Z
 	public abstract fun getSupportsCreateSequence ()Z
 	public abstract fun getSupportsDualTableConcept ()Z
@@ -3941,6 +3942,7 @@ public final class org/jetbrains/exposed/sql/vendors/DatabaseDialect$DefaultImpl
 	public static fun getNeedsQuotesWhenSymbolsInNames (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getNeedsSequenceToAutoInc (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getRequiresAutoCommitOnCreateDrop (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
+	public static fun getSequenceMaxValue (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)J
 	public static fun getSupportsCreateSchema (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsCreateSequence (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
 	public static fun getSupportsDualTableConcept (Lorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)Z
@@ -4200,6 +4202,7 @@ public final class org/jetbrains/exposed/sql/vendors/MariaDBDialect : org/jetbra
 	public fun createIndex (Lorg/jetbrains/exposed/sql/Index;)Ljava/lang/String;
 	public fun getFunctionProvider ()Lorg/jetbrains/exposed/sql/vendors/FunctionProvider;
 	public fun getName ()Ljava/lang/String;
+	public fun getSequenceMaxValue ()J
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z
@@ -4396,6 +4399,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/VendorDialect : org/jetb
 	public fun getNeedsQuotesWhenSymbolsInNames ()Z
 	public fun getNeedsSequenceToAutoInc ()Z
 	public fun getRequiresAutoCommitOnCreateDrop ()Z
+	public fun getSequenceMaxValue ()J
 	public fun getSupportsCreateSchema ()Z
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsDualTableConcept ()Z
