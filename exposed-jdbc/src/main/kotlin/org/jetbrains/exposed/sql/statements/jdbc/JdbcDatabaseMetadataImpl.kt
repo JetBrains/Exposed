@@ -439,40 +439,101 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     @Synchronized
     override fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>> {
         val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCaseUnquoted() }
-        return allTables.keys.associateWith { table ->
-            val (catalog, tableSchema) = tableCatalogAndSchema(allTables[table]!!)
-            metadata.getImportedKeys(catalog, identifierManager.inProperCase(tableSchema), table).iterate {
-                val fromTableName = getString("FKTABLE_NAME")!!
-                val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
-                    getString("FKCOLUMN_NAME")!!
-                )
-                val fromColumn = allTables[fromTableName]?.columns?.firstOrNull {
-                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name) == fromColumnName
-                } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
-                val constraintName = getString("FK_NAME")!!
-                val targetTableName = getString("PKTABLE_NAME")!!
-                val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
-                    identifierManager.inProperCase(getString("PKCOLUMN_NAME")!!)
-                )
-                val targetColumn = allTables[targetTableName]?.columns?.firstOrNull {
-                    identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
-                } ?: return@iterate null // Do not crash if there are missing fields in Exposed's tables
-                val constraintUpdateRule = getObject("UPDATE_RULE")?.toString()?.let { resolveReferenceOption(it) }
-                val constraintDeleteRule = getObject("DELETE_RULE")?.toString()?.let { resolveReferenceOption(it) }
-                ForeignKeyConstraint(
-                    target = targetColumn,
-                    from = fromColumn,
-                    onUpdate = constraintUpdateRule,
-                    onDelete = constraintDeleteRule,
-                    name = constraintName
-                )
-            }.filterNotNull().groupBy { it.fkName }.values.map { it.reduce(ForeignKeyConstraint::plus) }
+
+        val dialect = currentDialect
+
+        return if (dialect is MysqlDialect) {
+            val transaction = TransactionManager.current()
+            val inTableList = allTables.keys.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
+            val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: currentSchema}'"
+            val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()
+            transaction.exec(
+                """
+                    SELECT
+                      rc.CONSTRAINT_NAME AS FK_NAME,
+                      ku.TABLE_NAME AS FKTABLE_NAME,
+                      ku.COLUMN_NAME AS FKCOLUMN_NAME,
+                      ku.REFERENCED_TABLE_NAME AS PKTABLE_NAME,
+                      ku.REFERENCED_COLUMN_NAME AS PKCOLUMN_NAME,
+                      rc.UPDATE_RULE,
+                      rc.DELETE_RULE
+                    FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+                      INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku
+                        ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
+                    WHERE ku.TABLE_SCHEMA = $tableSchema
+                      AND ku.CONSTRAINT_SCHEMA = $tableSchema
+                      AND rc.CONSTRAINT_SCHEMA = $tableSchema
+                      AND $inTableList
+                    ORDER BY ku.ORDINAL_POSITION
+                """.trimIndent()
+            ) { rs ->
+                while (rs.next()) {
+                    rs.extractForeignKeys(allTables, true)?.let { (fromTableName, fk) ->
+                        constraintsToLoad.getOrPut(fromTableName) { mutableMapOf() }
+                            .merge(fk.fkName, fk, ForeignKeyConstraint::plus)
+                    }
+                }
+            }
+            // This ensures MySQL/MariaDB have same behavior as before: a map entry for every table even if no FKs
+            allTables.keys.forEach { constraintsToLoad.putIfAbsent(it, mutableMapOf()) }
+            constraintsToLoad.mapValues { (_, v) -> v.values.toList() }
+        } else {
+            allTables.keys.associateWith { table ->
+                val (catalog, tableSchema) = tableCatalogAndSchema(allTables[table]!!)
+                metadata.getImportedKeys(catalog, identifierManager.inProperCase(tableSchema), table)
+                    .iterate { extractForeignKeys(allTables, false) }
+                    .filterNotNull()
+                    .unzip().second
+                    .groupBy { it.fkName }.values
+                    .map { it.reduce(ForeignKeyConstraint::plus) }
+            }
         }
+    }
+
+    private fun ResultSet.extractForeignKeys(
+        allTables: Map<String, Table>,
+        isMysqlDialect: Boolean
+    ): Pair<String, ForeignKeyConstraint>? {
+        val fromTableName = getString("FKTABLE_NAME")!!
+        if (isMysqlDialect && fromTableName !in allTables.keys) return null
+        val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+            getString("FKCOLUMN_NAME")!!
+        )
+        val fromColumn = allTables[fromTableName]?.columns?.firstOrNull {
+            val identifier = if (isMysqlDialect) it.nameInDatabaseCase() else it.name
+            identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(identifier) == fromColumnName
+        } ?: return null // Do not crash if there are missing fields in Exposed's tables
+        val constraintName = getString("FK_NAME")!!
+        val targetTableName = getString("PKTABLE_NAME")!!
+        val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+            if (isMysqlDialect) {
+                getString("PKCOLUMN_NAME")!!
+            } else {
+                identifierManager.inProperCase(getString("PKCOLUMN_NAME")!!)
+            }
+        )
+        val targetColumn = allTables[targetTableName]?.columns?.firstOrNull {
+            identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
+        } ?: return null // Do not crash if there are missing fields in Exposed's tables
+        val constraintUpdateRule = getObject("UPDATE_RULE")?.toString()?.let { resolveReferenceOption(it) }
+        val constraintDeleteRule = getObject("DELETE_RULE")?.toString()?.let { resolveReferenceOption(it) }
+        return fromTableName to ForeignKeyConstraint(
+            target = targetColumn,
+            from = fromColumn,
+            onUpdate = constraintUpdateRule,
+            onDelete = constraintDeleteRule,
+            name = constraintName
+        )
     }
 
     @OptIn(InternalApi::class)
     override fun resolveReferenceOption(refOption: String): ReferenceOption? {
         val dialect = currentDialect
+
+        // MySQL/MariaDB use custom query that returns string-name values
+        if (dialect is MysqlDialect) {
+            return ReferenceOption.valueOf(refOption.replace(" ", "_"))
+        }
 
         val refOptionInt = refOption.toIntOrNull() ?: return null
 

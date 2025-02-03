@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests.sqlite
 
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -186,22 +187,15 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(category, item) { testDb ->
+        withTables(category, item) {
             if (currentDialectTest.supportsOnUpdate) {
                 val constraints = connection.metadata {
                     tableConstraints(listOf(item))
                 }
                 constraints.values.forEach { list ->
                     list.forEach {
-                        // According to the documentation: "NO ACTION: A keyword from standard SQL. For InnoDB, this is equivalent to RESTRICT;"
-                        // https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html
-                        if (testDb == TestDB.MYSQL_V5) {
-                            assertEquals(ReferenceOption.NO_ACTION, it.updateRule)
-                            assertEquals(ReferenceOption.NO_ACTION, it.deleteRule)
-                        } else {
-                            assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
-                            assertEquals(currentDialectTest.defaultReferenceOption, it.deleteRule)
-                        }
+                        assertEquals(currentDialectTest.defaultReferenceOption, it.updateRule)
+                        assertEquals(currentDialectTest.defaultReferenceOption, it.deleteRule)
                     }
                 }
             }
@@ -280,6 +274,24 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
                 SchemaUtils.drop(childTester)
                 SchemaUtils.drop(parentTester)
             }
+        }
+    }
+
+    @Test
+    fun testColumnConstraintsWithFKColumnsThatNeedQuoting() {
+        val parent = object : LongIdTable("parent") {
+            val scale = integer("scale").uniqueIndex()
+        }
+        val child = object : LongIdTable("child") {
+            val scale = reference("scale", parent.scale)
+        }
+
+        // EXPOSED-711 https://youtrack.jetbrains.com/issue/EXPOSED-711/Oracle-tableConstraints-columnContraints-dont-return-foreign-keys
+        withTables(excludeSettings = listOf(TestDB.ORACLE), child, parent) {
+            val constraints = currentDialectTest.columnConstraints(child)
+            // columnConstraints() only return entry for table that has column with FK
+            assertEquals(1, constraints.keys.size)
+            assertEquals(child.scale.foreignKey?.fkName, constraints.entries.single().value.single().fkName)
         }
     }
 }

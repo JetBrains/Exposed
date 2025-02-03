@@ -376,65 +376,6 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
         return e.toString().trim() !in notAcceptableDefaults
     }
 
-    override fun fillConstraintCacheForTables(tables: List<Table>) {
-        val allTables = SchemaUtils.sortTablesByReferences(tables).associateBy { it.nameInDatabaseCaseUnquoted() }
-        val allTableNames = allTables.keys
-        val inTableList = allTableNames.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
-        val tr = TransactionManager.current()
-        val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: getDatabase()}'"
-        val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()
-        tr.exec(
-            """SELECT
-                  rc.CONSTRAINT_NAME,
-                  ku.TABLE_NAME,
-                  ku.COLUMN_NAME,
-                  ku.REFERENCED_TABLE_NAME,
-                  ku.REFERENCED_COLUMN_NAME,
-                  rc.UPDATE_RULE,
-                  rc.DELETE_RULE
-                FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
-                  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku
-                    ON ku.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND rc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
-                WHERE ku.TABLE_SCHEMA = $tableSchema
-                  AND ku.CONSTRAINT_SCHEMA = $tableSchema
-                  AND rc.CONSTRAINT_SCHEMA = $tableSchema
-                  AND $inTableList
-                ORDER BY ku.ORDINAL_POSITION
-            """.trimIndent()
-        ) { rs ->
-            while (rs.next()) {
-                val fromTableName = rs.getString("TABLE_NAME")!!
-                if (fromTableName !in allTableNames) continue
-                val fromColumnName = rs.getString("COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
-                allTables.getValue(fromTableName).columns.firstOrNull {
-                    it.nameInDatabaseCase().quoteIdentifierWhenWrongCaseOrNecessary(tr) == fromColumnName
-                }?.let { fromColumn ->
-                    val constraintName = rs.getString("CONSTRAINT_NAME")!!
-                    val targetTableName = rs.getString("REFERENCED_TABLE_NAME")!!
-                    val targetColumnName = rs.getString("REFERENCED_COLUMN_NAME")!!.quoteIdentifierWhenWrongCaseOrNecessary(tr)
-                    val targetColumn = allTables.getValue(targetTableName).columns.first {
-                        it.nameInDatabaseCase().quoteIdentifierWhenWrongCaseOrNecessary(tr) == targetColumnName
-                    }
-                    val constraintUpdateRule = ReferenceOption.valueOf(rs.getString("UPDATE_RULE")!!.replace(" ", "_"))
-                    val constraintDeleteRule = ReferenceOption.valueOf(rs.getString("DELETE_RULE")!!.replace(" ", "_"))
-                    constraintsToLoad.getOrPut(fromTableName) { mutableMapOf() }.merge(
-                        constraintName,
-                        ForeignKeyConstraint(
-                            target = targetColumn,
-                            from = fromColumn,
-                            onUpdate = constraintUpdateRule,
-                            onDelete = constraintDeleteRule,
-                            name = constraintName
-                        ),
-                        ForeignKeyConstraint::plus
-                    )
-                }
-            }
-
-            columnConstraintsCache.putAll(constraintsToLoad.mapValues { (_, v) -> v.values })
-        }
-    }
-
     override fun createIndex(index: Index): String {
         if (index.functions != null && !isMysql8) {
             exposedLogger.warn(

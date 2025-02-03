@@ -40,20 +40,32 @@ class ConnectionTests : DatabaseTestsBase() {
         }
     }
 
-    // GitHub issue #838
     @Test
-    fun testTableConstraints() {
+    fun testTableConstraintsWithFKColumnsThatNeedQuoting() {
         val parent = object : LongIdTable("parent") {
             val scale = integer("scale").uniqueIndex()
         }
         val child = object : LongIdTable("child") {
             val scale = reference("scale", parent.scale)
         }
-        withTables(listOf(TestDB.MYSQL_V5), child, parent) {
+
+        withTables(child, parent) { testDb ->
             val constraints = connection.metadata {
                 tableConstraints(listOf(child))
             }
+            // tableConstraints() returns entries for all tables involved in the FK (parent + child)
             assertEquals(2, constraints.keys.size)
+
+            // EXPOSED-711 https://youtrack.jetbrains.com/issue/EXPOSED-711/Oracle-tableConstraints-columnContraints-dont-return-foreign-keys
+            // but only child entry has a non-empty list of FKs
+            if (testDb != TestDB.ORACLE) {
+                assertEquals(
+                    1,
+                    constraints.values.count { fks ->
+                        fks.any { it.fkName == child.scale.foreignKey?.fkName }
+                    }
+                )
+            }
         }
     }
 }
