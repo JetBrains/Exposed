@@ -9,7 +9,7 @@ Breaking changes:
 * fix!: EXPOSED-691 [PostgreSQL] Restrict dropping unmapped sequences to related tables only by @bog-walk in https://github.com/JetBrains/Exposed/pull/2357
 * chore!: Change H2 Oracle longType and longAutoincType from NUMBER(19) to BIGINT and add CHECK constraint in Oracle by @joc-a in https://github.com/JetBrains/Exposed/pull/2273
 * chore!: EXPOSED-693 Change timestamp column type for MariaDB from "DATETIME" to "TIMESTAMP" by @joc-a in https://github.com/JetBrains/Exposed/pull/2389
-More details at [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-59-0)
+* More details at [Breaking Changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-59-0)
 
 Deprecations:
 * deprecate: Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2384
