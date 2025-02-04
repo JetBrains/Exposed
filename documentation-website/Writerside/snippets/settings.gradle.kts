@@ -13,6 +13,7 @@ plugins {
 rootProject.name = "snippets"
 include("exposed-dao")
 include("exposed-dao-relationships")
+include("exposed-data-types")
 include("exposed-dsl")
 include("exposed-modules-maven")
 include("exposed-modules-kotlin-gradle")

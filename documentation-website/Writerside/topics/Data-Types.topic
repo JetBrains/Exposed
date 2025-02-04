@@ -5,44 +5,60 @@
        id="Data-Types" title="Data Types">
 
     <show-structure for="chapter,procedure" depth="3"/>
-    <p>Exposed supports the following data types in the table definition:</p>
+    <p>
+        Exposed supports various data types in the table definition. We've split them into the following categories:
+    </p>
+    <list>
+        <li><a anchor="basic-data-types">Basic data types</a></li>
+        <li><a anchor="enum-types">Enumeration types</a></li>
+        <li><a anchor="date-time-types">Date and time types</a></li>
+        <li><a anchor="json-and-jsonb-types">JSON and JSONB types</a></li>
+        <li><a anchor="array-types">Array types</a></li>
+        <li><a anchor="custom-data-types">Custom data types</a></li>
+    </list>
+    <chapter title="Basic data types" id="basic-data-types">
+        <p>Basic data types include numeric, boolean, string and text types.</p>
+        <deflist type="medium">
+            <def id="integer-type">
+                <title><code>integer</code></title>
+                Translates to a database <code>INT</code>
+            </def>
+            <def id="short-type">
+                <title><code>short</code></title>
+                Translates to DB <code>SMALLINT</code>
+            </def>
+            <def id="long-type">
+                <title><code>long</code></title>
+                <code>BIGINT</code>
+            </def>
+            <def id="float-type">
+                <title><code>float</code></title>
+                <code>FLOAT</code>
+            </def>
+            <def id="decimal-type">
+                <title><code>decimal</code></title>
+                <code>DECIMAL</code> with scale and precision
+            </def>
+            <def id="bool-type">
+                <title><code>bool</code></title>
+                <code>BOOLEAN</code>
+            </def>
+            <def id="char-type">
+                <title><code>char</code></title>
+                <code>CHAR</code>
+            </def>
+            <def id="varchar-type">
+                <title><code>varchar</code></title>
+                <code>VARCHAR</code> with length
+            </def>
+            <def id="text-type">
+                <title><code>text</code></title>
+                <code>TEXT</code>
+            </def>
+        </deflist>
+    </chapter>
     <deflist type="medium">
-        <def id="integer-type">
-            <title><code>integer</code></title>
-            Translates to a database <code>INT</code>
-        </def>
-        <def id="short-type">
-            <title><code>short</code></title>
-            Translates to DB <code>SMALLINT</code>
-        </def>
-        <def id="long-type">
-            <title><code>long</code></title>
-            <code>BIGINT</code>
-        </def>
-        <def id="float-type">
-            <title><code>float</code></title>
-            <code>FLOAT</code>
-        </def>
-        <def id="decimal-type">
-            <title><code>decimal</code></title>
-            <code>DECIMAL</code> with scale and precision
-        </def>
-        <def id="bool-type">
-            <title><code>bool</code></title>
-            <code>BOOLEAN</code>
-        </def>
-        <def id="char-type">
-            <title><code>char</code></title>
-            <code>CHAR</code>
-        </def>
-        <def id="varchar-type">
-            <title><code>varchar</code></title>
-            <code>VARCHAR</code> with length
-        </def>
-        <def id="text-type">
-            <title><code>text</code></title>
-            <code>TEXT</code>
-        </def>
+
         <def id="enumeration-type">
             <title><code>enumeration</code></title>
             <code>INT</code> ordinal value
@@ -53,7 +69,7 @@
         </def>
         <def id="customEnumeration-type">
             <title><code>customEnumeration</code></title>
-            See <a anchor="how-to-use-database-enum-types">additional section</a>
+            See <a anchor="enum-types">additional section</a>
         </def>
         <def id="blob-type">
             <title><code>blob</code></title>
@@ -76,78 +92,10 @@
             <code>ARRAY</code>
         </def>
     </deflist>
-    <p>The <code>exposed-java-time</code> extension
-        (<code>org.jetbrains.exposed:exposed-java-time:$exposed_version</code>) provides additional types:</p>
-    <deflist type="medium">
-        <def id="date-type">
-            <title><code>date</code></title>
-            <code>DATETIME</code>
-        </def>
-        <def id="time-type">
-            <title><code>time</code></title>
-            <code>TIME</code>
-        </def>
-        <def id="datetime-type">
-            <title><code>datetime</code></title>
-            <code>DATETIME</code>
-        </def>
-        <def id="timestamp-type">
-            <title><code>timestamp</code></title>
-            <code>TIMESTAMP</code>
-        </def>
-        <def id="duration-type">
-            <title><code>duration</code></title>
-            <code>DURATION</code>
-        </def>
-    </deflist>
-    <note>
-        Some types may differ for specific database dialects.
-    </note>
-    <p>
-        The <code>exposed-json</code> extension (<code>org.jetbrains.exposed:exposed-json:$exposed_version</code>)
-        provides the following additional types. For more information, see
-        <a anchor="how-to-use-json-and-jsonb-types" />
-        :
-    </p>
-    <deflist type="medium">
-        <def id="json-type">
-            <title><code>json</code></title>
-            <code>JSON</code>
-        </def>
-        <def id="jsonb-type">
-            <title><code>jsonb</code></title>
-            <code>JSONB</code>
-        </def>
-    </deflist>
-    <note>
-        Databases store JSON values either in text or binary format, so Exposed provides two types to account for any
-        potential
-        differences, if they exist, for example:
-        <list>
-            <li>
-                <control>PostgreSQL</control>
-                : <code>json()</code> maps to <code>JSON</code>, while <code>jsonb()</code> maps to <code>JSONB</code>.
-            </li>
-            <li>
-                <control>SQLite</control>
-                : No native JSON type, so <code>json()</code> maps to TEXT, while <code>jsonb()</code> throws.
-            </li>
-            <li>
-                <control>MySQL</control>
-                : JSON type only supports binary format, so <code>json()</code> and <code>jsonb()</code> both map to
-                JSON.
-            </li>
-            <li>
-                <control>Oracle</control>
-                : Exposed does not currently support the JSON binary format of Oracle 21c; only text format
-                <code>json()</code> can be used.
-            </li>
-        </list>
-    </note>
-    <chapter title="How to use database enum types" id="how-to-use-database-enum-types">
+    <chapter title="Enumeration types" id="enum-types">
         <p>
-            Some databases (e.g. MySQL, PostgreSQL, H2) support explicit enum types. Because keeping such columns
-            in sync with Kotlin enumerations using only JDBC metadata could be a huge challenge, Exposed doesn't
+            Some databases, such as MySQL, PostgreSQL, and H2, support explicit enumeration types. Because keeping such
+            columns in sync with Kotlin enumerations using only JDBC metadata could be a challenge, Exposed doesn't
             provide a possibility to manage such columns in an automatic way, but that doesn't mean that you can't
             use such column types.
         </p>
@@ -210,39 +158,110 @@
             ]]></code-block>
         </chapter>
     </chapter>
-    <chapter title="How to use Json and JsonB types" id="how-to-use-json-and-jsonb-types">
+    <chapter title="Date-Time types" id="date-time-types">
+        <p>The <code>exposed-java-time</code> extension
+            (<code>org.jetbrains.exposed:exposed-java-time:$exposed_version</code>) provides additional types:</p>
+        <deflist type="medium">
+            <def id="date-type">
+                <title><code>date</code></title>
+                <code>DATETIME</code>
+            </def>
+            <def id="time-type">
+                <title><code>time</code></title>
+                <code>TIME</code>
+            </def>
+            <def id="datetime-type">
+                <title><code>datetime</code></title>
+                <code>DATETIME</code>
+            </def>
+            <def id="timestamp-type">
+                <title><code>timestamp</code></title>
+                <code>TIMESTAMP</code>
+            </def>
+            <def id="duration-type">
+                <title><code>duration</code></title>
+                <code>DURATION</code>
+            </def>
+        </deflist>
+        <note>
+            Some types may differ for specific database dialects.
+        </note>
+    </chapter>
+    <chapter title="JSON and JSONB types" id="json-and-jsonb-types">
         <p>
-            Add the following dependencies to your
-            <path>build.gradle.kts</path>
+            The <code>exposed-json</code> extension (<code>org.jetbrains.exposed:exposed-json:$exposed_version</code>)
+            provides the following additional types. For more information, see
+            <a anchor="how-to-use-json-and-jsonb-types" />
             :
         </p>
-        <code-block lang="kotlin">
-            val exposedVersion: String by project
+        <deflist type="medium">
+            <def id="json-type">
+                <title><code>json</code></title>
+                <code>JSON</code>
+            </def>
+            <def id="jsonb-type">
+                <title><code>jsonb</code></title>
+                <code>JSONB</code>
+            </def>
+        </deflist>
+        <note>
+            Databases store JSON values either in text or binary format, so Exposed provides two types to account for any
+            potential
+            differences, if they exist, for example:
+            <list>
+                <li>
+                    <control>PostgreSQL</control>
+                    : <code>json()</code> maps to <code>JSON</code>, while <code>jsonb()</code> maps to <code>JSONB</code>.
+                </li>
+                <li>
+                    <control>SQLite</control>
+                    : No native JSON type, so <code>json()</code> maps to TEXT, while <code>jsonb()</code> throws.
+                </li>
+                <li>
+                    <control>MySQL</control>
+                    : JSON type only supports binary format, so <code>json()</code> and <code>jsonb()</code> both map to
+                    JSON.
+                </li>
+                <li>
+                    <control>Oracle</control>
+                    : Exposed does not currently support the JSON binary format of Oracle 21c; only text format
+                    <code>json()</code> can be used.
+                </li>
+            </list>
+        </note>
+        <chapter title="How to use Json and JsonB types" id="how-to-use-json-and-jsonb-types">
+            <p>
+                Add the following dependencies to your
+                <path>build.gradle.kts</path>
+                :
+            </p>
+            <code-block lang="kotlin">
+                val exposedVersion: String by project
 
-            dependencies {
-                implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-                implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
-            }
-        </code-block>
-        <p>Exposed works together with the JSON serialization/deserialization library of your choice by allowing column
-            definitions
-            that accept generic serializer and deserializer arguments:</p>
+                dependencies {
+                    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+                    implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
+                }
+            </code-block>
+            <p>Exposed works together with the JSON serialization/deserialization library of your choice by allowing column
+                definitions
+                that accept generic serializer and deserializer arguments:</p>
 
-        <code-block lang="kotlin"><![CDATA[
+            <code-block lang="kotlin"><![CDATA[
             fun <T : Any> json(name: String, serialize: (T) -> String, deserialize: (String) -> T): Column<T>
 
             fun <T : Any> jsonb(name: String, serialize: (T) -> String, deserialize: (String) -> T): Column<T>
         ]]></code-block>
-        <p>
-            Here's an example that leverages
-            <a href="https://github.com/Kotlin/kotlinx.serialization">
-                <code>kotlinx.serialization</code>
-            </a>
-            to support
-            <code>@Serializable</code> classes. It uses a simpler form of <code>json()</code> that relies on the
-            library's <code>KSerializer</code> interface:</p>
+            <p>
+                Here's an example that leverages
+                <a href="https://github.com/Kotlin/kotlinx.serialization">
+                    <code>kotlinx.serialization</code>
+                </a>
+                to support
+                <code>@Serializable</code> classes. It uses a simpler form of <code>json()</code> that relies on the
+                library's <code>KSerializer</code> interface:</p>
 
-        <code-block lang="kotlin"><![CDATA[
+            <code-block lang="kotlin"><![CDATA[
             @Serializable
             data class Project(val name: String, val language: String, val active: Boolean)
 
@@ -267,11 +286,11 @@
                 // Team A -> Project(name=Main, language=Kotlin, active=true)
             }
         ]]></code-block>
-        <p>Here's how the same <code>Project</code> and <code>Teams</code> would be defined using <a
+            <p>Here's how the same <code>Project</code> and <code>Teams</code> would be defined using <a
                 href="https://github.com/FasterXML/jackson">Jackson</a>
-            with the <code>jackson-module-kotlin</code> dependency and the full form of <code>json()</code>:</p>
+                with the <code>jackson-module-kotlin</code> dependency and the full form of <code>json()</code>:</p>
 
-        <code-block lang="kotlin"><![CDATA[
+            <code-block lang="kotlin"><![CDATA[
             val mapper = jacksonObjectMapper()
 
             data class Project(val name: String, val language: String, val active: Boolean)
@@ -281,58 +300,58 @@
                 val project = json("project", { mapper.writeValueAsString(it) }, { mapper.readValue<Project>(it) })
             }
         ]]></code-block>
-        <chapter title="Json functions" id="json-functions">
-            <p>JSON path strings can be used to extract values (either as JSON or as a scalar value) at a specific
-                field/key:</p>
+            <chapter title="Json functions" id="json-functions">
+                <p>JSON path strings can be used to extract values (either as JSON or as a scalar value) at a specific
+                    field/key:</p>
 
-            <code-block lang="kotlin"><![CDATA[
+                <code-block lang="kotlin"><![CDATA[
                 val projectName = Teams.project.extract<String>("name")
                 val languageIsKotlin = Teams.project.extract<String>("language").lowerCase() eq "kotlin"
                 Teams.select(projectName).where { languageIsKotlin }.map { it[projectName] }
             ]]></code-block>
-            <note>
-                Databases that support a path context root <code>$</code> will have this value appended to the generated
-                SQL path expression
-                by default, so it is not necessary to include it in the provided argument String. In the above example,
-                if MySQL is being
-                used, the provided path arguments should be <code>.name</code> and <code>.language</code> respectively.
-            </note>
-            <p>The JSON functions
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/exists.html">
-                    <code>.exists()</code>
-                </a>
-                and
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/contains.html">
-                    <code>.contains()</code>
-                </a>
-                are currently supported as well:
-            </p>
+                <note>
+                    Databases that support a path context root <code>$</code> will have this value appended to the generated
+                    SQL path expression
+                    by default, so it is not necessary to include it in the provided argument String. In the above example,
+                    if MySQL is being
+                    used, the provided path arguments should be <code>.name</code> and <code>.language</code> respectively.
+                </note>
+                <p>The JSON functions
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/exists.html">
+                        <code>.exists()</code>
+                    </a>
+                    and
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/contains.html">
+                        <code>.contains()</code>
+                    </a>
+                    are currently supported as well:
+                </p>
 
-            <code-block lang="kotlin">
-                val hasActiveStatus = Teams.project.exists(".active")
-                val activeProjects = Teams.selectAll().where { hasActiveStatus }.count()
+                <code-block lang="kotlin">
+                    val hasActiveStatus = Teams.project.exists(".active")
+                    val activeProjects = Teams.selectAll().where { hasActiveStatus }.count()
 
-                // Depending on the database, filter paths can be provided instead, as well as optional arguments
-                // PostgreSQL example
-                val mainId = "Main"
-                val hasMainProject = Teams.project.exists(".name ? (@ == \$main)", optional = "{\"main\":\"$mainId\"}")
-                val mainProjects = Teams.selectAll().where { hasMainProject }.map { it[Teams.groupId] }
+                    // Depending on the database, filter paths can be provided instead, as well as optional arguments
+                    // PostgreSQL example
+                    val mainId = "Main"
+                    val hasMainProject = Teams.project.exists(".name ? (@ == \$main)", optional = "{\"main\":\"$mainId\"}")
+                    val mainProjects = Teams.selectAll().where { hasMainProject }.map { it[Teams.groupId] }
 
-                val usesKotlin = Teams.project.contains("{\"language\":\"Kotlin\"}")
-                val kotlinTeams = Teams.selectAll().where { usesKotlin }.count()
+                    val usesKotlin = Teams.project.contains("{\"language\":\"Kotlin\"}")
+                    val kotlinTeams = Teams.selectAll().where { usesKotlin }.count()
 
-                // Depending on the database, an optional path can be provided too
-                // MySQL example
-                val usesKotlin = Teams.project.contains("\"Kotlin\"", ".language")
-                val kotlinTeams = Teams.selectAll().where { usesKotlin }.count()
-            </code-block>
-        </chapter>
-        <chapter title="Json arrays" id="json-arrays">
-            <p>JSON columns also accept JSON arrays as input values. For example, using the serializable data class
-                <code>Project</code> from the
-                example above, the following details some ways to create such a column:</p>
+                    // Depending on the database, an optional path can be provided too
+                    // MySQL example
+                    val usesKotlin = Teams.project.contains("\"Kotlin\"", ".language")
+                    val kotlinTeams = Teams.selectAll().where { usesKotlin }.count()
+                </code-block>
+            </chapter>
+            <chapter title="Json arrays" id="json-arrays">
+                <p>JSON columns also accept JSON arrays as input values. For example, using the serializable data class
+                    <code>Project</code> from the
+                    example above, the following details some ways to create such a column:</p>
 
-            <code-block lang="kotlin"><![CDATA[
+                <code-block lang="kotlin"><![CDATA[
                 object TeamProjects : Table("team_projects") {
                     val memberIds = json<IntArray>("member_ids", Json.Default)
                     val projects = json<Array<Project>>("projects", Json.Default)
@@ -352,9 +371,10 @@
                     // INSERT INTO team_projects (member_ids, projects) VALUES ([1,2,3], [{"name":"A","language":"Kotlin","active":true},{"name":"B","language":"Java","active":true}])
                 }
             ]]></code-block>
+            </chapter>
         </chapter>
     </chapter>
-    <chapter title="How to use array types" id="how-to-use-array-types">
+    <chapter title="Array types" id="array-types">
         <p>PostgreSQL and H2 databases support the explicit array data type,
             with multidimensional arrays being supported by PostgreSQL.</p>
 
