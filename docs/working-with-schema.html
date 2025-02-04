@@ -1,26 +1,9 @@
-<!DOCTYPE html SYSTEM "about:legacy-compat">
-<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2025-01-15T14:46:39.997998595"><title>Working with Schema | Exposed</title><script type="application/json" id="virtual-toc-data">[{"id":"define-a-sequence","level":0,"title":"Define a schema","anchor":"#define-a-sequence"},{"id":"create-schema","level":0,"title":"Create a new schema","anchor":"#create-schema"},{"id":"default-schema","level":0,"title":"Set a default schema","anchor":"#default-schema"},{"id":"drop-schema","level":0,"title":"Drop a schema","anchor":"#drop-schema"}]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.css" rel="stylesheet"><link rel="icon" type="image/svg" sizes="16x16" href="images/exposed-logo.svg"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="Working with Schema | Exposed"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="Exposed Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/docs/0.58.0/working-with-schema.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="Working with Schema | Exposed"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
-    "@context": "http://schema.org",
-    "@type": "WebPage",
-    "@id": "writerside-documentation/docs/0.58.0/working-with-schema.html#webpage",
-    "url": "writerside-documentation/docs/0.58.0/working-with-schema.html",
-    "name": "Working with Schema | Exposed",
-    "description": "",
-    "image": "",
-    "inLanguage":"en-US"
-}</script><!-- End Schema.org --><!-- Schema.org WebSite --><script type="application/ld+json">{
-    "@type": "WebSite",
-    "@id": "writerside-documentation/docs/#website",
-    "url": "writerside-documentation/docs/",
-    "name": "Exposed Help"
-}</script><!-- End Schema.org --></head><body data-id="Working-with-Schema" data-main-title="Working with Schema" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs="Schemas"><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 0.58.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="Working-with-Schema" id="Working-with-Schema.topic">Working with Schema</h1><p id="-372fva_1">A database schema defines how data is organized in a relational database. With Exposed, you can create and drop a new or an existing schema.</p><section class="chapter"><h2 id="define-a-sequence" data-toc="define-a-sequence">Define a schema</h2><p id="-372fva_2">To define a schema in Exposed, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema/index.html" id="-372fva_3" data-external="true" rel="noopener noreferrer"><code class="code" id="-372fva_4">Schema</code></a> class:</p><div class="code-block" data-lang="kotlin">
-            val schema = Schema(&quot;my_schema&quot;) // my_schema is the schema name.
-        </div><p id="-372fva_6">Additionally, you can specify the schema owner by passing an <code class="code" id="-372fva_7">authorization</code> argument (some databases require the explicit owner) :</p><div class="code-block" data-lang="kotlin">
-            val schema = Schema(&quot;my_schema&quot;, authorization = &quot;owner&quot;)
-        </div></section><section class="chapter"><h2 id="create-schema" data-toc="create-schema">Create a new schema</h2><p id="-372fva_9">To create a new schema, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/create-schema.html" id="-372fva_10" data-external="true" rel="noopener noreferrer"><code class="code" id="-372fva_11">.createSchema()</code></a> method provided by <code class="code" id="-372fva_12">SchemaUtils</code>:</p><div class="code-block" data-lang="kotlin">
-            SchemaUtils.createSchema(schema)
-        </div></section><section class="chapter"><h2 id="default-schema" data-toc="default-schema">Set a default schema</h2><p id="-372fva_14">If you have many schemas, and you want to set a default one, you can use the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/set-schema.html" id="-372fva_15" data-external="true" rel="noopener noreferrer"><code class="code" id="-372fva_16">.setSchema()</code></a> method from <code class="code" id="-372fva_17">SchemaUtils</code>:</p><div class="code-block" data-lang="kotlin">
-            SchemaUtils.setSchema(schema)
-        </div></section><section class="chapter"><h2 id="drop-schema" data-toc="drop-schema">Drop a schema</h2><p id="-372fva_19">To drop a schema, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/drop-schema.html" id="-372fva_20" data-external="true" rel="noopener noreferrer"><code class="code" id="-372fva_21">.dropSchema()</code></a> method provided by <code class="code" id="-372fva_22">SchemaUtils</code>:</p><div class="code-block" data-lang="kotlin">
-            SchemaUtils.dropSchema(schema)
-        </div></section><div class="last-modified">Last modified: 14 January 2025</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="sql-functions.html" class="navigation-links__prev">SQL Functions</a><a href="dsl-table-types.html" class="navigation-links__next">Table types</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en-US">
+<meta charset="utf-8">
+<title>You will be redirected shortly</title>
+<meta http-equiv="refresh" content="0; url=https://www.jetbrains.com/help/exposed/working-with-schema.html">
+<h1>Redirecting&hellip;</h1>
+<a href="https://www.jetbrains.com/help/exposed/working-with-schema.html">Click here if you are not redirected.</a>
+<script>location = "https://www.jetbrains.com/help/exposed/working-with-schema.html"</script>
+</html>
