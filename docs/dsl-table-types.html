@@ -1,35 +1,9 @@
-<!DOCTYPE html SYSTEM "about:legacy-compat">
-<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2025-01-15T14:46:40.020680132"><title>Table types | Exposed</title><script type="application/json" id="virtual-toc-data">[]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.css" rel="stylesheet"><link rel="icon" type="image/svg" sizes="16x16" href="images/exposed-logo.svg"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="Table types | Exposed"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="Exposed Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/docs/0.58.0/dsl-table-types.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="Table types | Exposed"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
-    "@context": "http://schema.org",
-    "@type": "WebPage",
-    "@id": "writerside-documentation/docs/0.58.0/dsl-table-types.html#webpage",
-    "url": "writerside-documentation/docs/0.58.0/dsl-table-types.html",
-    "name": "Table types | Exposed",
-    "description": "",
-    "image": "",
-    "inLanguage":"en-US"
-}</script><!-- End Schema.org --><!-- Schema.org WebSite --><script type="application/ld+json">{
-    "@type": "WebSite",
-    "@id": "writerside-documentation/docs/#website",
-    "url": "writerside-documentation/docs/",
-    "name": "Exposed Help"
-}</script><!-- End Schema.org --></head><body data-id="DSL-Table-Types" data-main-title="Table types" data-article-props="{&quot;seeAlso&quot;:[{&quot;title&quot;:&quot;Related topics&quot;,&quot;links&quot;:[{&quot;url&quot;:&quot;working-with-tables.html&quot;,&quot;text&quot;:&quot;Working with tables&quot;,&quot;tooltip&quot;:&quot;In this topic, we will explain how to define, configure, and create tables. All examples use the H2 database to generate SQL.&quot;,&quot;description&quot;:&quot;In this topic, we will explain how to define, configure, and create tables. All examples use the H2 database to generate SQL.&quot;},{&quot;url&quot;:&quot;data-types.html&quot;,&quot;text&quot;:&quot;Data Types&quot;,&quot;tooltip&quot;:&quot;Exposed supports the following data types in the table definition:&quot;,&quot;description&quot;:&quot;Exposed supports the following data types in the table definition:&quot;}]}],&quot;seeAlsoStyle&quot;:&quot;cards&quot;}" data-template="article" data-breadcrumbs="Deep Dive into DSL"><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 0.58.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="DSL-Table-Types" id="DSL-Table-Types.topic">Table types</h1><p> In Exposed, the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/index.html" id="-d4ux92_2" data-external="true" rel="noopener noreferrer"><code class="code" id="-d4ux92_3">Table</code></a> class is the core abstraction for defining database tables. This class provides methods to define various <a href="data-types.html" id="-d4ux92_4" data-tooltip="Exposed supports the following data types in the table definition:">column types</a>, <a href="working-with-tables.html#constraints" id="-d4ux92_5" data-tooltip="The NOT NULL SQL constraint restricts the column to accept the null value. By default, Exposed applies this constraint to all the columns. To allow the column to be nullable, apply the .nullable() method to a definition of an appropriate column.">constraints</a>, and other table-specific properties. </p><p id="-d4ux92_6"><code class="code" id="-d4ux92_7">Table</code> is located in the <span class="control" id="-d4ux92_8">org.jetbrains.exposed.v1.sql</span> package of the <span class="control" id="-d4ux92_9">exposed-core</span> module.</p><p id="-d4ux92_10">The following example defines a table with an auto-incrementing integer <code class="code" id="-d4ux92_11">id</code> column and string <code class="code" id="-d4ux92_12">name</code> and <code class="code" id="-d4ux92_13">director</code> column:</p><div class="code-block" data-lang="kotlin" id="StarWarsFilmsTable-dsl-code-block" data-disable-link-processing="true">import org.jetbrains.exposed.v1.core.Table
-
-const val MAX_VARCHAR_LENGTH = 50
-
-object StarWarsFilmsTable : Table() {
-    val id = integer(&quot;id&quot;).autoIncrement()
-    val sequelId = integer(&quot;sequel_id&quot;).uniqueIndex()
-    val name = varchar(&quot;name&quot;, MAX_VARCHAR_LENGTH)
-    val director = varchar(&quot;director&quot;, MAX_VARCHAR_LENGTH)
-}</div><div class="code-block" data-lang="sql" id="StarWarsFilmsTable-dsl-sql" data-disable-link-processing="true">     CREATE TABLE IF NOT EXISTS STARWARSFILMS
-     (ID INT AUTO_INCREMENT NOT NULL,
-      SEQUEL_ID INT NOT NULL,
-      &quot;name&quot; VARCHAR(50) NOT NULL,
-      DIRECTOR VARCHAR(50) NOT NULL)</div><p id="-d4ux92_14">For more information on defining and configuring tables in Exposed, see <a href="working-with-tables.html" id="-d4ux92_15" data-tooltip="In this topic, we will explain how to define, configure, and create tables. All examples use the H2 database to generate SQL.">Working with tables</a>.</p><aside class="prompt" data-type="tip" data-title="" id="-d4ux92_16"><p>While <code class="code" id="-d4ux92_17">Table</code> is the foundational class for defining tables in DSL, you can also use the <code class="code" id="-d4ux92_18">IdTable</code> subclasses from the DAO API for convenience. For example, to provide an auto-incrementing <code class="code" id="-d4ux92_19">id</code> column of type <code class="code" id="-d4ux92_20">Int</code>, you can use the <code class="code" id="-d4ux92_21">IntIdTable</code> subtype: </p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">object StarWarsFilmsTable : IntIdTable() {
-    val sequelId = integer(&quot;sequel_id&quot;).uniqueIndex()
-    val name = varchar(&quot;name&quot;, MAX_VARCHAR_LENGTH)
-    val director = varchar(&quot;director&quot;, MAX_VARCHAR_LENGTH)
-}
-</div><p id="-d4ux92_23">It is important to note that the <code class="code" id="-d4ux92_24">id</code> column in this case is of type <code class="code" id="-d4ux92_25">Column&lt;EntityID&lt;Int&gt;&gt;</code>. The <code class="code" id="-d4ux92_26">EntityID</code> wrapper ensures that the <code class="code" id="-d4ux92_27">id</code> values are handled consistently across the DSL and DAO APIs.</p><p> To access the <code class="code" id="-d4ux92_28">id</code> column value, you need to use the <code class="code" id="-d4ux92_29">.value</code> property: </p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">            val movieId: Int = movie.id.value
-</div><p id="-d4ux92_31">For more information on <code class="code" id="-d4ux92_32">IdTable</code>, see <a href="dao-table-types.html" id="-d4ux92_33" data-tooltip="Apart from the core Table class, Exposed provides the base IdTable class and its subclasses through the DAO API.">the DAO documentation</a>.</p></aside><div class="last-modified">Last modified: 14 January 2025</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="working-with-schema.html" class="navigation-links__prev">Working with Schema</a><a href="dsl-joining-tables.html" class="navigation-links__next">Joining tables</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en-US">
+<meta charset="utf-8">
+<title>You will be redirected shortly</title>
+<meta http-equiv="refresh" content="0; url=https://www.jetbrains.com/help/exposed/dsl-table-types.html">
+<h1>Redirecting&hellip;</h1>
+<a href="https://www.jetbrains.com/help/exposed/dsl-table-types.html">Click here if you are not redirected.</a>
+<script>location = "https://www.jetbrains.com/help/exposed/dsl-table-types.html"</script>
+</html>
