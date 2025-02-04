@@ -1,6 +1,52 @@
-# 0.58.0
+# 0.59.0
+Infrastructure:
+* Spring Framework 6.2.2
+* PostgreSQL driver 42.7.5
+* SQLite driver 3.48.0.0
+* Spring Boot 3.4.2
 
-## What's Changed
+Breaking changes:
+* fix!: EXPOSED-691 [PostgreSQL] Restrict dropping unmapped sequences to related tables only by @bog-walk in https://github.com/JetBrains/Exposed/pull/2357
+* chore!: Change H2 Oracle longType and longAutoincType from NUMBER(19) to BIGINT and add CHECK constraint in Oracle by @joc-a in https://github.com/JetBrains/Exposed/pull/2273
+* chore!: EXPOSED-693 Change timestamp column type for MariaDB from "DATETIME" to "TIMESTAMP" by @joc-a in https://github.com/JetBrains/Exposed/pull/2389
+More details at [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html#0-59-0)
+
+Deprecations:
+* deprecate: Raise deprecation levels of API elements by @bog-walk in https://github.com/JetBrains/Exposed/pull/2384
+
+Features:
+* feat: Add support for creating sequence in MariaDB by @devgor88 in https://github.com/JetBrains/Exposed/pull/2324
+* feat: EXPOSED-697 Add `lessSubQuery`, `lessEqSubQuery`, `greaterSubQuery`, and `greaterEqSubQuery` operators by @joc-a in https://github.com/JetBrains/Exposed/pull/2373
+
+Bug fixes:
+* EXPOSED-689 warmUpLinkedReferences() should not return all the values from cache by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2355
+* fix: EXPOSED-695 DDL for unnamed check constraints fails when table has schema name by @bog-walk in https://github.com/JetBrains/Exposed/pull/2368
+* fix: EXPOSED-680 Less & greater infix ops cannot compile with 2 EntityID expressions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2367
+* fix: EXPOSED-696 [PostgreSQL] Drop of auto-increment sequence fails after column modified without dropping default by @bog-walk in https://github.com/JetBrains/Exposed/pull/2369
+* fix: EXPOSED-669 transform() broken for entities instantiated via wrapRow through an alias by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2370
+* fix: EXPOSED-714 [exposed-spring-boot-starter] Fix NPE from DatabaseInitializer when non-object Table is defined by @PeraSite in https://github.com/JetBrains/Exposed/pull/2382
+* fix: EXPOSED-694 Entities insertion could fail if batches have different column sets by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2365
+* fix: EXPOSED-706 Handle MariaDB sequence max value for versions earlier than 11.5 by @joc-a in https://github.com/JetBrains/Exposed/pull/2375
+* fix: EXPOSED-707 Handle MariaDB fractional seconds support since version 5.3 by @joc-a in https://github.com/JetBrains/Exposed/pull/2378
+* fix: EXPOSED-718 Fix timestamp column not storing values in UTC time zone by @joc-a in https://github.com/JetBrains/Exposed/pull/2386
+* fix: EXPOSED-704 ClassCastException when referencing an eager-loaded backReferencedOn with keepLoadedReferencesOutOfTransaction = true by @bystam in https://github.com/JetBrains/Exposed/pull/2374
+* fix: EXPOSED-701 [Oracle] Insert into table using only database default values fails by @bog-walk in https://github.com/JetBrains/Exposed/pull/2371
+
+Docs:
+* docs: EXPOSED-668 Update the Modules topic and extract code examples to snippets by @vnikolova in https://github.com/JetBrains/Exposed/pull/2361
+* docs: EXPOSED-699 Fix API Docs generation by @e5l in https://github.com/JetBrains/Exposed/pull/2376
+* docs: EXPOSED-672 Update the DAO's Relationships topic and add a new example project by @vnikolova in https://github.com/JetBrains/Exposed/pull/2377
+* docs: EXPOSED-715 Fix broken custom function examples & move to example project by @bog-walk in https://github.com/JetBrains/Exposed/pull/2383
+* docs: EXPOSED-684 Add documentation for exec() and move transaction docs to new element by @bog-walk in https://github.com/JetBrains/Exposed/pull/2385
+* docs: EXPOSED-705 Clarify optionalBackReferencedOn() usage in KDocs by @bog-walk in https://github.com/JetBrains/Exposed/pull/2387
+
+Refactors:
+* refactor: EXPOSED-708 Remove JDBC DatabaseMetaData from exposed-core module by @bog-walk in https://github.com/JetBrains/Exposed/pull/2379
+* refactor: EXPOSED-709 Remove plain SQL execution from core DatabaseDialect by @bog-walk in https://github.com/JetBrains/Exposed/pull/2381
+* refactor: EXPOSED-722 Refactor MariaDB code to reduce checks in MySQL code and make it neater by @joc-a in https://github.com/JetBrains/Exposed/pull/2388
+* refactor: EXPOSED-710 Move plain SQL for retrieving foreign keys from MysqlDialect by @bog-walk in https://github.com/JetBrains/Exposed/pull/2380
+
+# 0.58.0
 
 Breaking changes:
 * fix: EXPOSED-662 SchemaUtils.listTables() returns empty list & closes db connection by @joc-a in https://github.com/JetBrains/Exposed/pull/2331
