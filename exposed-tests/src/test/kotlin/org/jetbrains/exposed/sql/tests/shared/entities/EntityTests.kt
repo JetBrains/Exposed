@@ -1597,9 +1597,8 @@ class EntityTests : DatabaseTestsBase() {
 
             val creditCard = CreditCard.new {
                 number = "0000111122223333"
-            }.apply {
-                flush()
             }
+
             assertEquals(10000uL, creditCard.spendingLimit)
         }
     }
