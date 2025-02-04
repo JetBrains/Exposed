@@ -189,14 +189,14 @@ Check out the [samples](samples/README.md) for a quick start.
 
 ## Links
 
-Currently, Exposed is available for **maven/gradle builds**. Check the [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) and read [Getting Started](https://jetbrains.github.io/Exposed/getting-started-with-exposed.html) to get an insight on setting up Exposed.
+Currently, Exposed is available for **maven/gradle builds**. Check the [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) and read [Getting Started](https://www.jetbrains.com/help/exposed/getting-started-with-exposed.html) to get an insight on setting up Exposed.
 <br><br>
 For more information visit the links below:
 
--   [Documentation](https://jetbrains.github.io/Exposed/home.html) with examples and docs
+-   [Documentation](https://www.jetbrains.com/help/exposed/home.html) with examples and docs
 -   [Contributing to Exposed](#contributing)
--   [Migration Guide](https://jetbrains.github.io/Exposed/migration-guide.html)
--   [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html) and any migration details
+-   [Migration Guide](https://www.jetbrains.com/help/exposed/migration-guide.html)
+-   [Breaking changes](https://www.jetbrains.com/help/exposed/breaking-changes.html) and any migration details
 -   [Slack Channel](https://kotlinlang.slack.com/messages/exposed/)
 -   [Filing Issues](#contributing)
 -   [Issue Tracker](https://youtrack.jetbrains.com/issues/EXPOSED)
@@ -215,7 +215,7 @@ While issues are visible publicly, either creating a new issue or commenting on 
 We also actively welcome your pull requests. However, linking your work to an [existing issue](https://youtrack.jetbrains.com/issues/EXPOSED) is preferred.
 
 
-See the full [contribution guide](https://jetbrains.github.io/Exposed/contributing.html) for more details.
+See the full [contribution guide](https://www.jetbrains.com/help/exposed/contributing.html) for more details.
 
 By contributing to the Exposed project, you agree that your contributions will be licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 <br><br>
