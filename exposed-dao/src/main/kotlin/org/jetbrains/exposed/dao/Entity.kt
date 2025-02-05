@@ -273,7 +273,12 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     @Suppress("UNCHECKED_CAST", "USELESS_CAST")
     fun <T> Column<T>.lookup(): T = when {
         writeValues.containsKey(this as Column<out Any?>) -> writeValues[this as Column<out Any?>] as T
-        id._value == null && _readValues?.hasValue(this)?.not() ?: true -> defaultValueFun?.invoke() as T
+        id._value == null && _readValues?.hasValue(this)?.not() ?: true -> {
+            when {
+                isDatabaseGenerated() -> flush().let { readValues[this]!! }
+                else -> defaultValueFun?.invoke() as T
+            }
+        }
         columnType.nullable -> readValues[this]
         else -> readValues[this]!!
     }
