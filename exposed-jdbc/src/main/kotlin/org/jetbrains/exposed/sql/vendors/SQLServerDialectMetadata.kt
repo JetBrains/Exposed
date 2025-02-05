@@ -1,3 +1,3 @@
 package org.jetbrains.exposed.sql.vendors
 
-class SQLServerDialectMetadata : DatabaseDialectMetadata()
+open class SQLServerDialectMetadata : DatabaseDialectMetadata()

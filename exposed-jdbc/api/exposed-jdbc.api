@@ -853,37 +853,38 @@ public final class org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadataKt {
 	public static final fun getCurrentDialectMetadata ()Lorg/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata;
 }
 
-public final class org/jetbrains/exposed/sql/vendors/H2DialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
+public class org/jetbrains/exposed/sql/vendors/H2DialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
 	public fun <init> ()V
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 }
 
-public final class org/jetbrains/exposed/sql/vendors/MariaDBDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
+public class org/jetbrains/exposed/sql/vendors/MariaDBDialectMetadata : org/jetbrains/exposed/sql/vendors/MysqlDialectMetadata {
 	public fun <init> ()V
 }
 
-public final class org/jetbrains/exposed/sql/vendors/MysqlDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
+public class org/jetbrains/exposed/sql/vendors/MysqlDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
+	public fun <init> ()V
+	protected fun metadataMatchesTable (Ljava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/sql/Table;)Z
+}
+
+public class org/jetbrains/exposed/sql/vendors/OracleDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
 	public fun <init> ()V
 }
 
-public final class org/jetbrains/exposed/sql/vendors/OracleDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
-	public fun <init> ()V
-}
-
-public final class org/jetbrains/exposed/sql/vendors/PostgreSQLDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
+public class org/jetbrains/exposed/sql/vendors/PostgreSQLDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
 	public fun <init> ()V
 	public fun supportsLimitWithUpdateOrDelete ()Z
 }
 
-public final class org/jetbrains/exposed/sql/vendors/PostgreSQLNGDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
+public final class org/jetbrains/exposed/sql/vendors/PostgreSQLNGDialectMetadata : org/jetbrains/exposed/sql/vendors/PostgreSQLDialectMetadata {
 	public fun <init> ()V
 }
 
-public final class org/jetbrains/exposed/sql/vendors/SQLServerDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
+public class org/jetbrains/exposed/sql/vendors/SQLServerDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
 	public fun <init> ()V
 }
 
-public final class org/jetbrains/exposed/sql/vendors/SQLiteDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
+public class org/jetbrains/exposed/sql/vendors/SQLiteDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
 	public fun <init> ()V
 	public fun supportsLimitWithUpdateOrDelete ()Z
 }

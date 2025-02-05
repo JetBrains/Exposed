@@ -1,3 +1,3 @@
 package org.jetbrains.exposed.sql.vendors
 
-class MariaDBDialectMetadata : DatabaseDialectMetadata()
+open class MariaDBDialectMetadata : MysqlDialectMetadata()
