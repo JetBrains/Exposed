@@ -125,7 +125,7 @@ class MysqlTests : DatabaseTestsBase() {
             // Hint places a limit of N milliseconds on how long a query should take before termination
             val queryWithHint = tester
                 .select(sleepNSeconds)
-                .comment("+ MAX_EXECUTION_TIME(1000) ", Query.CommentPosition.AFTER_SELECT)
+                .comment("+ MAX_EXECUTION_TIME(1000) ", AbstractQuery.CommentPosition.AFTER_SELECT)
             if (testDb in TestDB.ALL_MYSQL) {
                 // Query execution was interrupted, max statement execution time exceeded
                 expectException<ExposedSQLException> {

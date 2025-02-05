@@ -6,8 +6,8 @@ import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.tests.LogDbInTestName
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -117,7 +117,7 @@ class ConnectionPoolTests : LogDbInTestName() {
 
 private val TestTable = object : IntIdTable("HIKARI_TESTER") { }
 
-private fun Transaction.getReadOnlyMode(): Boolean {
+private fun JdbcTransaction.getReadOnlyMode(): Boolean {
     val mode = exec("SHOW transaction_read_only;") {
         it.next()
         it.getBoolean(1)

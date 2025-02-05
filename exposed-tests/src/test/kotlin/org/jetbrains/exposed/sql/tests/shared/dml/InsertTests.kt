@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.kotlin.datetime.CurrentTimestamp
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
+import org.jetbrains.exposed.sql.statements.BatchInsertBlockingExecutable
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -61,8 +62,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    private val insertIgnoreUnsupportedDB = TestDB.entries -
-        listOf(TestDB.SQLITE, TestDB.MYSQL_V5, TestDB.H2_V2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_V2_PSQL)
+    private val insertIgnoreUnsupportedDB = TestDB.ALL -
+        (TestDB.ALL_MYSQL + TestDB.H2_V2_MYSQL + TestDB.SQLITE + TestDB.ALL_POSTGRES_LIKE).toSet()
 
     @Test
     fun testInsertIgnoreAndGetId01() {
@@ -99,7 +100,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test insert and get id when column has different name and get value by id column`() {
+    fun testInsertAndGetIdWhenColumnHasDifferentNameAndGetValueByIdColumn() {
         val testTableWithId = object : IdTable<Int>("testTableWithId") {
             val code = integer("code")
             override val id: Column<EntityID<Int>> = code.entityId()
@@ -121,7 +122,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test id and column have different names and get value by original column`() {
+    fun testIdAndColumnHaveDifferentNamesAndGetValueByOriginalColumn() {
         val exampleTable = object : IdTable<String>("test_id_and_column_table") {
             val exampleColumn = varchar("example_column", 200)
             override val id = exampleColumn.entityId()
@@ -133,7 +134,7 @@ class InsertTests : DatabaseTestsBase() {
                 it[exampleColumn] = value
             }
 
-            val resultValues: List<String> = exampleTable.selectAll().map { it[exampleTable.exampleColumn] }
+            val resultValues = exampleTable.selectAll().map { it[exampleTable.exampleColumn] }
 
             assertEquals(value, resultValues.first())
         }
@@ -204,7 +205,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `batchInserting using empty sequence should work`() {
+    fun batchInsertingUsingEmptySequenceShouldWork() {
         val cities = DMLTestsData.Cities
         withTables(cities) {
             val names = emptySequence<String>()
@@ -432,7 +433,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test that column length checked on insert`() {
+    fun testThatColumnLengthCheckedOnInsert() {
         val stringTable = object : IntIdTable("StringTable") {
             val name = varchar("name", 10)
         }
@@ -448,7 +449,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test subquery in an insert or update statement`() {
+    fun testSubqueryInAnInsertOrUpdateStatement() {
         val tab1 = object : Table("tab1") {
             val id = varchar("id", 10)
         }
@@ -567,7 +568,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test optReference allows null values`() {
+    fun testOptReferenceAllowsNullValues() {
         withTables(EntityTests.Posts) {
             val id1 = EntityTests.Posts.insertAndGetId {
                 it[board] = null
@@ -631,12 +632,15 @@ class InsertTests : DatabaseTestsBase() {
         withTables(excludeSettings = insertIgnoreUnsupportedDB, tab) {
             tab.insert { it[id] = "foo" }
 
-            val numInserted = BatchInsertOnConflictDoNothing(tab).run {
-                addBatch()
-                this[tab.id] = "foo"
+            val executable = BatchInsertBlockingExecutable(
+                BatchInsertOnConflictDoNothing(tab)
+            )
+            val numInserted = executable.run {
+                statement.addBatch()
+                statement[tab.id] = "foo"
 
-                addBatch()
-                this[tab.id] = "bar"
+                statement.addBatch()
+                statement[tab.id] = "bar"
 
                 execute(this@withTables)
             }

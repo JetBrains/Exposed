@@ -1,15 +1,15 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
+import org.jetbrains.exposed.sql.ArrayColumnType
 import org.jetbrains.exposed.sql.BinaryColumnType
 import org.jetbrains.exposed.sql.BlobColumnType
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.statements.StatementResult
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.InputStream
 import java.sql.PreparedStatement
-import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Types
 
@@ -22,14 +22,14 @@ import java.sql.Types
 class JdbcPreparedStatementImpl(
     val statement: PreparedStatement,
     val wasGeneratedKeysRequested: Boolean
-) : PreparedStatementApi {
-    override val resultSet: ResultSet?
+) : JdbcPreparedStatementApi {
+    override val resultSet: JdbcResult?
         get() = when {
-            !wasGeneratedKeysRequested -> statement.resultSet
+            !wasGeneratedKeysRequested -> statement.resultSet?.let { JdbcResult(it) }
             currentDialect is SQLiteDialect -> {
-                statement.connection.prepareStatement("select last_insert_rowid();").executeQuery()
+                statement.connection.prepareStatement("select last_insert_rowid();").executeQuery()?.let { JdbcResult(it) }
             }
-            else -> statement.generatedKeys
+            else -> statement.generatedKeys?.let { JdbcResult(it) }
         }
 
     override var fetchSize: Int?
@@ -48,20 +48,20 @@ class JdbcPreparedStatementImpl(
         statement.addBatch()
     }
 
-    override fun executeQuery(): ResultSet = statement.executeQuery()
+    override fun executeQuery(): JdbcResult = JdbcResult(statement.executeQuery())
 
     override fun executeUpdate(): Int = statement.executeUpdate()
 
     override fun executeMultiple(): List<StatementResult> {
         // execute() returns true only if first result is a ResultSet
         return if (statement.execute()) {
-            listOf(StatementResult.Object(statement.resultSet))
+            listOf(StatementResult.Object(JdbcResult(statement.resultSet)))
         } else {
             // getMoreResults() returns true only if next result is a ResultSet
             while (!statement.getMoreResults(Statement.CLOSE_CURRENT_RESULT)) {
                 if (statement.updateCount == -1) return emptyList()
             }
-            listOf(StatementResult.Object(statement.resultSet))
+            listOf(StatementResult.Object(JdbcResult(statement.resultSet)))
         }
     }
 
@@ -85,8 +85,10 @@ class JdbcPreparedStatementImpl(
         }
     }
 
-    override fun setArray(index: Int, type: String, array: Array<*>) {
-        statement.setArray(index, statement.connection.createArrayOf(type, array))
+    // TODO we changed interface here, it's breaking change.
+    // TODO Could we avoid it by creating separate method, and deprecating this one?
+    override fun setArray(index: Int, type: ArrayColumnType<*, *>, array: Array<*>) {
+        statement.setArray(index, statement.connection.createArrayOf(type.delegateType, array))
     }
 
     override fun closeIfPossible() {

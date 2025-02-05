@@ -1,8 +1,12 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.EntityIDColumnType
+import org.jetbrains.exposed.sql.InternalApi
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.isAutoInc
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 
 /**
  * Base class representing the SQL statement that batch inserts new rows into a table.
@@ -10,20 +14,22 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
  * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  */
+@Suppress("ForbiddenComment")
+// TODO: Merge BatchInsertStatement with BaseBatchInsertStatement
 abstract class BaseBatchInsertStatement(
     table: Table,
     ignore: Boolean,
-    protected val shouldReturnGeneratedValues: Boolean = true
+    val shouldReturnGeneratedValues: Boolean = true
 ) : InsertStatement<List<ResultRow>>(table, ignore) {
-    override val isAlwaysBatch = true
-
-    internal val data = ArrayList<MutableMap<Column<*>, Any?>>()
+    @InternalApi
+    val data = ArrayList<MutableMap<Column<*>, Any?>>()
 
     private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null || isDatabaseGenerated
 
     override operator fun <S> set(column: Column<S>, value: S) {
+        @OptIn(InternalApi::class)
         if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
-            val fullIdentity = TransactionManager.current().fullIdentity(column)
+            val fullIdentity = CoreTransactionManager.currentTransaction().fullIdentity(column)
             throw BatchDataInconsistentException("Can't set $value for $fullIdentity because previous insertion can't be defaulted for that column.")
         }
         super.set(column, value)
@@ -36,6 +42,7 @@ abstract class BaseBatchInsertStatement(
      * provided by the implementing `BatchInsertStatement` instance.
      */
     fun addBatch() {
+        @OptIn(InternalApi::class)
         if (data.isNotEmpty()) {
             validateLastBatch()
             data[data.size - 1] = LinkedHashMap(values)
@@ -43,11 +50,13 @@ abstract class BaseBatchInsertStatement(
             values.clear()
             hasBatchedValues = true
         }
+        @OptIn(InternalApi::class)
         data.add(values)
         arguments = null
     }
 
-    internal fun removeLastBatch() {
+    @OptIn(InternalApi::class)
+    fun removeLastBatch() {
         data.removeAt(data.size - 1)
         allColumnsInDataSet.clear()
         data.flatMapTo(allColumnsInDataSet) { it.keys }
@@ -57,8 +66,9 @@ abstract class BaseBatchInsertStatement(
         hasBatchedValues = data.size > 0
     }
 
-    internal open fun validateLastBatch() {
-        val tr = TransactionManager.current()
+    @InternalApi
+    open fun validateLastBatch() {
+        val tr = CoreTransactionManager.currentTransaction()
         val cantBeDefaulted = (allColumnsInDataSet - values.keys).filterNot { it.isDefaultable() }
         if (cantBeDefaulted.isNotEmpty()) {
             val columnList = cantBeDefaulted.joinToString { tr.fullIdentity(it) }
@@ -78,13 +88,15 @@ abstract class BaseBatchInsertStatement(
     }
 
     private val allColumnsInDataSet = mutableSetOf<Column<*>>()
+
+    @OptIn(InternalApi::class)
     private fun allColumnsInDataSet() = allColumnsInDataSet +
         (data.lastOrNull()?.keys ?: throw BatchDataInconsistentException("No data provided for inserting into ${table.tableName}"))
 
     override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
         get() = field ?: run {
             val columnsToInsert = (allColumnsInDataSet() + clientDefaultColumns()).toSet()
-
+            @OptIn(InternalApi::class)
             data
                 .map { valuesAndClientDefaults(it) as MutableMap }
                 .map { values ->
@@ -103,12 +115,4 @@ abstract class BaseBatchInsertStatement(
                     }
                 }.apply { field = this }
         }
-
-    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
-        return if (!shouldReturnGeneratedValues) {
-            transaction.connection.prepareStatement(sql, false)
-        } else {
-            super.prepared(transaction, sql)
-        }
-    }
 }

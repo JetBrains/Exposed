@@ -33,7 +33,7 @@ class PostgresqlTests : DatabaseTestsBase() {
             return table.selectAll().where { table.id eq id }.forUpdate(option).city()
         }
 
-        withTables(excludeSettings = TestDB.ALL - listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), table) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, table) {
             val name = "name"
             table.insert {
                 it[table.id] = id
@@ -80,7 +80,7 @@ class PostgresqlTests : DatabaseTestsBase() {
             val age = integer("age")
         }
 
-        fun <T : Any> Transaction.assertPrimaryKey(transform: (ResultSet) -> T): T? {
+        fun <T : Any> JdbcTransaction.assertPrimaryKey(transform: (ResultSet) -> T): T? {
             return exec(
                 """
                 SELECT ct.relname as TABLE_NAME, ci.relname AS PK_NAME
@@ -93,7 +93,7 @@ class PostgresqlTests : DatabaseTestsBase() {
                 transform(rs)
             }
         }
-        withDb(listOf(TestDB.POSTGRESQLNG, TestDB.POSTGRESQL)) {
+        withDb(TestDB.ALL_POSTGRES) {
             val defaultPKName = "tester_pkey"
             SchemaUtils.createMissingTablesAndColumns(tester1)
             assertPrimaryKey {

@@ -6,7 +6,7 @@ import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.currentTestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
@@ -34,7 +34,7 @@ class UpdateTests : DatabaseTestsBase() {
     @Test
     fun testUpdateWithLimit() {
         withCitiesAndUsers { _, users, _ ->
-            if (!currentDialectTest.supportsLimitWithUpdateOrDelete()) {
+            if (!currentDialectMetadataTest.supportsLimitWithUpdateOrDelete()) {
                 expectException<UnsupportedByDialectException> {
                     users.update({ users.id like "a%" }, limit = 1) {
                         it[users.id] = "NewName"

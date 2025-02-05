@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
@@ -65,8 +65,9 @@ data class ForeignKeyConstraint(
         name: String?
     ) : this(mapOf(from to target), onUpdate, onDelete, name)
 
+    @OptIn(InternalApi::class)
     private val tx: Transaction
-        get() = TransactionManager.current()
+        get() = CoreTransactionManager.currentTransaction()
 
     /** The columns of the referenced parent table. */
     val target: LinkedHashSet<Column<*>> = LinkedHashSet(references.values)
@@ -110,6 +111,7 @@ data class ForeignKeyConstraint(
 
     /** Name of this foreign key constraint. */
     val fkName: String
+        @OptIn(InternalApi::class)
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
             name ?: (
                 "fk_${fromTable.tableNameWithoutSchemeSanitized.replace('.', '_')}_${from.joinToString("_") { it.name }}__" +
@@ -221,7 +223,7 @@ data class CheckConstraint(
     companion object {
         fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank()) { "Check constraint name cannot be blank" }
-            val tr = TransactionManager.current()
+            val tr = CoreTransactionManager.currentTransaction()
             val identifierManager = tr.db.identifierManager
             val tableName = tr.identity(table)
             val checkOpSQL = op.toString().replace("$tableName.", "")

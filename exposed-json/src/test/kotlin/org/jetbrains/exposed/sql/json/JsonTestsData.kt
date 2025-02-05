@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -46,7 +46,7 @@ object JsonTestsData {
 
 fun DatabaseTestsBase.withJsonTable(
     exclude: Collection<TestDB> = emptyList(),
-    statement: Transaction.(tester: JsonTestsData.JsonTable, user1: User, data1: DataHolder, testDb: TestDB) -> Unit
+    statement: JdbcTransaction.(tester: JsonTestsData.JsonTable, user1: User, data1: DataHolder, testDb: TestDB) -> Unit
 ) {
     val tester = JsonTestsData.JsonTable
 
@@ -62,7 +62,12 @@ fun DatabaseTestsBase.withJsonTable(
 
 fun DatabaseTestsBase.withJsonBTable(
     exclude: Collection<TestDB> = emptyList(),
-    statement: Transaction.(tester: JsonTestsData.JsonBTable, user1: User, data1: DataHolder, testDb: TestDB) -> Unit
+    statement: JdbcTransaction.(
+        tester: JsonTestsData.JsonBTable,
+        user1: User,
+        data1: DataHolder,
+        testDb: TestDB
+    ) -> Unit
 ) {
     val tester = JsonTestsData.JsonBTable
 
@@ -78,7 +83,7 @@ fun DatabaseTestsBase.withJsonBTable(
 
 fun DatabaseTestsBase.withJsonArrays(
     exclude: Collection<TestDB> = emptyList(),
-    statement: Transaction.(
+    statement: JdbcTransaction.(
         tester: JsonTestsData.JsonArrays,
         singleId: EntityID<Int>,
         tripleId: EntityID<Int>,
@@ -103,7 +108,7 @@ fun DatabaseTestsBase.withJsonArrays(
 
 fun DatabaseTestsBase.withJsonBArrays(
     exclude: Collection<TestDB> = emptyList(),
-    statement: Transaction.(
+    statement: JdbcTransaction.(
         tester: JsonTestsData.JsonBArrays,
         singleId: EntityID<Int>,
         tripleId: EntityID<Int>,

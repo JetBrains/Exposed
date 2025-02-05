@@ -1,8 +1,10 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import java.sql.ResultSet
+import org.jetbrains.exposed.sql.InternalApi
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.autoIncColumnType
 
 /** An exception thrown when the provided data cannot be validated or processed to prepare a batch statement. */
 class BatchDataInconsistentException(message: String) : Exception(message)
@@ -27,8 +29,7 @@ open class SQLServerBatchInsertStatement(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true
 ) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
-    override val isAlwaysBatch: Boolean = false
-
+    @OptIn(InternalApi::class)
     override fun validateLastBatch() {
         super.validateLastBatch()
         if (data.size > OUTPUT_ROW_LIMIT) {
@@ -36,7 +37,8 @@ open class SQLServerBatchInsertStatement(
         }
     }
 
-    private val columnToReturnValue = table.autoIncColumn?.takeIf {
+    @InternalApi
+    val columnToReturnValue = table.autoIncColumn?.takeIf {
         shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null
     }
 
@@ -45,6 +47,7 @@ open class SQLServerBatchInsertStatement(
         val sql = if (values.isEmpty()) {
             ""
         } else {
+            @OptIn(InternalApi::class)
             val output = columnToReturnValue?.let {
                 " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS"
             }.orEmpty()
@@ -60,15 +63,8 @@ open class SQLServerBatchInsertStatement(
         return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.firstOrNull()?.map { it.first }.orEmpty(), sql, transaction)
     }
 
-    override fun arguments() = listOfNotNull(super.arguments().flatten().takeIf { data.isNotEmpty() })
-
-    override fun PreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
-        val rs = if (columnToReturnValue != null) {
-            executeQuery()
-        } else {
-            executeUpdate()
-            null
-        }
-        return arguments!!.size to rs
-    }
+    override fun arguments() = listOfNotNull(
+        @OptIn(InternalApi::class)
+        super.arguments().flatten().takeIf { data.isNotEmpty() }
+    )
 }

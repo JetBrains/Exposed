@@ -3,6 +3,7 @@ package org.jetbrains.exposed
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.javatime.*
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -11,6 +12,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.assertNotNull
+
+// TODO think about design of datetime module packages & extracting tests to JDBC + R2DBC test modules
 
 class DateTimeLiteralTest : DatabaseTestsBase() {
     private val defaultDate = LocalDate.of(2000, 1, 1)

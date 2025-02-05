@@ -5,12 +5,16 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
+import org.jetbrains.exposed.sql.vendors.DatabaseDialectMetadata
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import java.util.EnumSet
+import java.util.*
 
 fun String.inProperCase(): String = TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this) ?: this
 
 val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
+
+val currentDialectMetadataTest: DatabaseDialectMetadata
+    get() = TransactionManager.current().db.dialectMetadata
 
 val currentDialectIfAvailableTest: DatabaseDialect?
     get() =

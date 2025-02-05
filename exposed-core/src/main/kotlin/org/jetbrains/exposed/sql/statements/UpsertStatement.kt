@@ -1,8 +1,7 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 
 /**
@@ -61,15 +60,6 @@ open class UpsertStatement<Key : Any>(
             it + additionalArgs
         }
     }
-
-    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
-        // We must return values from upsert because returned id could be different depending on insert or upsert happened
-        if (!currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
-            return transaction.connection.prepareStatement(sql, true)
-        }
-
-        return super.prepared(transaction, sql)
-    }
 }
 
 /**
@@ -99,12 +89,13 @@ sealed interface UpsertBuilder {
      */
     fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
 
+    @OptIn(InternalApi::class)
     private class InsertValue<T>(
         val column: Column<T>,
         override val columnType: IColumnType<T & Any>
     ) : ExpressionWithColumnType<T>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-            val transaction = TransactionManager.current()
+            val transaction = CoreTransactionManager.currentTransaction()
             val functionProvider = getFunctionProvider(transaction.db.dialect)
             functionProvider.insertValue(transaction.identity(column), queryBuilder)
         }

@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.DELETE
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.INSERT
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.UPDATE
 import org.jetbrains.exposed.sql.statements.StatementType
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import java.util.*
 
 internal object SQLServerDataTypeProvider : DataTypeProvider() {
@@ -93,7 +93,8 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
-        val tr = TransactionManager.current()
+        @OptIn(InternalApi::class)
+        val tr = CoreTransactionManager.currentTransaction()
         return when {
             expr.separator == null -> tr.throwUnsupportedException("SQL Server requires explicit separator in STRING_AGG")
             expr.distinct -> tr.throwUnsupportedException("SQL Server doesn't support DISTINCT in STRING_AGG")
@@ -122,7 +123,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         pattern: Expression<String>,
         caseSensitive: Boolean,
         queryBuilder: QueryBuilder
-    ): Unit = TransactionManager.current().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead.")
+    ) {
+        @OptIn(InternalApi::class)
+        CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead.")
+    }
 
     override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
         append("CAST(", expr, " AS DATE)")
@@ -179,8 +183,9 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
+        @OptIn(InternalApi::class)
         if (path.size > 1) {
-            TransactionManager.current().throwUnsupportedException("SQLServer does not support multiple JSON path arguments")
+            CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLServer does not support multiple JSON path arguments")
         }
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
@@ -358,7 +363,8 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     }
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
-        val transaction = TransactionManager.current()
+        @OptIn(InternalApi::class)
+        val transaction = CoreTransactionManager.currentTransaction()
 
         val alterTablePart = "ALTER TABLE ${transaction.identity(column.table)} "
 

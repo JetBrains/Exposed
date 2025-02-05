@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
 import org.jetbrains.exposed.sql.vendors.h2Mode
@@ -17,6 +16,7 @@ import org.jetbrains.exposed.sql.vendors.h2Mode
  * @param limit Maximum number of rows to delete.
  * @param targetTables List of specific tables from [targetsSet] to delete rows from.
  */
+@Suppress("ForbiddenComment", "AnnotationSpacing")
 open class DeleteStatement(
     val targetsSet: ColumnSet,
     val where: Op<Boolean>? = null,
@@ -54,10 +54,6 @@ open class DeleteStatement(
     )
     val offset: Long? = null
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
-        return executeUpdate()
-    }
-
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val dialect = transaction.db.dialect
         return when (targetsSet) {
@@ -87,30 +83,38 @@ open class DeleteStatement(
     }
 
     companion object {
+        @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
         @Deprecated(
-            "This function that accepts an 'offset' argument will be removed in future releases. Please leave a comment on " +
-                "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
-                "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
-            ReplaceWith("where(transaction, table, op, isIgnore, limit)"),
-            DeprecationLevel.ERROR
+            message = """
+                Statement execution has been removed from exposed-core.
+                Replace directly with a table extension function:
+                    `table.deleteWhere(limit) { op }` OR `table.deleteIgnoreWhere(limit) { op }`
+
+                Or pass the expected statement to an instance of Executable:
+                For JDBC:
+                `DeleteBlockingExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
+
+                FOR R2DBC:
+                `DeleteSuspendExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
+            """,
+            level = DeprecationLevel.ERROR
         )
-        @Suppress("UnusedParameter")
-        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null, offset: Long? = null): Int =
-            where(transaction, table, op, isIgnore, limit)
+        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null): Int = 0
 
-        /**
-         * Creates a [DeleteStatement] that deletes only rows in [table] that match the provided [op].
-         *
-         * @return Count of deleted rows.
-         */
-        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null): Int =
-            DeleteStatement(table, op, isIgnore, limit, emptyList()).execute(transaction) ?: 0
+        @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
+        @Deprecated(
+            message = """
+                Statement execution has been removed from exposed-core.
+                Replace directly with a table extension function or pass the expected statement to an instance of Executable:
 
-        /**
-         * Creates a [DeleteStatement] that deletes all rows in [table].
-         *
-         * @return Count of deleted rows.
-         */
-        fun all(transaction: Transaction, table: Table): Int = DeleteStatement(table).execute(transaction) ?: 0
+                For JDBC:
+                `DeleteBlockingExecutable(buildStatement { table.deleteAll() }).execute(transaction) ?: 0`
+
+                FOR R2DBC:
+                `DeleteSuspendExecutable(buildStatement { table.deleteAll() }).execute(transaction) ?: 0`
+            """,
+            level = DeprecationLevel.ERROR
+        )
+        fun all(transaction: Transaction, table: Table): Int = 0
     }
 }

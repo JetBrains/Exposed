@@ -3,9 +3,9 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.statements.api.RowApi
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.withDialect
-import java.sql.ResultSet
 
 /** A row of data representing a single record retrieved from a database result set. */
 class ResultRow(
@@ -13,7 +13,8 @@ class ResultRow(
     val fieldIndex: Map<Expression<*>, Int>,
     private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
 ) {
-    private val database: Database? = TransactionManager.currentOrNull()?.db
+    @OptIn(InternalApi::class)
+    private val database: DatabaseApi? = CoreTransactionManager.currentTransactionOrNull()?.db
 
     private val lookUpCache = ResultRowCache()
 
@@ -68,13 +69,14 @@ class ResultRow(
      */
     fun <T> getOrNull(expression: Expression<T>): T? = if (hasValue(expression)) getInternal(expression, checkNullability = false) else null
 
+    @OptIn(InternalApi::class)
     private fun <T> getInternal(expression: Expression<T>, checkNullability: Boolean): T = lookUpCache.cached(expression) {
         val rawValue = getRaw(expression)
 
         if (checkNullability) {
             if (rawValue == null && expression is Column<*> && expression.dbDefaultValue != null && !expression.columnType.nullable) {
                 exposedLogger.warn(
-                    "Column ${TransactionManager.current().fullIdentity(expression)} is marked as not null, " +
+                    "Column ${CoreTransactionManager.currentTransaction().fullIdentity(expression)} is marked as not null, " +
                         "has default db value, but returns null. Possible have to re-read it from DB."
                 )
             }
@@ -135,11 +137,11 @@ class ResultRow(
     internal object NotInitializedValue
 
     companion object {
-        /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [ResultSet]. */
-        fun create(rs: ResultSet, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
+        /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [RowApi]. */
+        fun create(rs: RowApi, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             return ResultRow(fieldsIndex).apply {
                 fieldsIndex.forEach { (field, index) ->
-                    val columnType = (field as? ExpressionWithColumnType)?.columnType
+                    val columnType: IColumnType<out Any>? = (field as? ExpressionWithColumnType)?.columnType
                     val value = if (columnType != null) {
                         columnType.readObject(rs, index + 1)
                     } else {

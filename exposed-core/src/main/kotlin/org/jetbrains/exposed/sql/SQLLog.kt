@@ -4,9 +4,8 @@ import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.statements.expandArgs
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.slf4j.LoggerFactory
-import java.util.*
 
 /** Base class representing a provider of log messages. */
 interface SqlLogger {
@@ -33,8 +32,9 @@ object Slf4jSqlDebugLogger : SqlLogger {
      * **Note:** This is only logged if DEBUG level is currently enabled.
      */
     override fun log(context: StatementContext, transaction: Transaction) {
+        @OptIn(InternalApi::class)
         if (exposedLogger.isDebugEnabled) {
-            exposedLogger.debug(context.expandArgs(TransactionManager.current()))
+            exposedLogger.debug(context.expandArgs(CoreTransactionManager.currentTransaction()))
         }
     }
 }
@@ -63,13 +63,5 @@ class CompositeSqlLogger : SqlLogger, StatementInterceptor {
         contexts.forEach {
             log(it, transaction)
         }
-    }
-}
-
-/** Adds one or more [SqlLogger]s to [this] transaction. */
-fun Transaction.addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
-    return CompositeSqlLogger().apply {
-        logger.forEach { this.addLogger(it) }
-        registerInterceptor(this)
     }
 }

@@ -2,8 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.util.concurrent.ConcurrentHashMap
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 
 /**
  * Base implementation of a vendor dialect
@@ -15,152 +14,13 @@ abstract class VendorDialect(
 ) : DatabaseDialect {
 
     protected val identifierManager
-        get() = TransactionManager.current().db.identifierManager
+        @OptIn(InternalApi::class)
+        get() = CoreTransactionManager.currentTransaction().db.identifierManager
 
     @Suppress("UnnecessaryAbstractClass")
     abstract class DialectNameProvider(val dialectName: String)
 
-    /* Cached values */
-    private var _allTableNames: Map<String, List<String>>? = null
-    private var _allSchemaNames: List<String>? = null
-
-    /** Returns a list with the names of all the defined tables in the current schema. */
-    val allTablesNames: List<String>
-        get() {
-            val connection = TransactionManager.current().connection
-            return connection.metadata { tableNamesByCurrentSchema(getAllTableNamesCache()).tableNames }
-        }
-
-    protected fun getAllTableNamesCache(): Map<String, List<String>> {
-        if (_allTableNames == null) {
-            _allTableNames = TransactionManager.current().connection.metadata { tableNames }
-        }
-        return _allTableNames!!
-    }
-
-    private fun getAllSchemaNamesCache(): List<String> {
-        if (_allSchemaNames == null) {
-            _allSchemaNames = TransactionManager.current().connection.metadata { schemaNames }
-        }
-        return _allSchemaNames!!
-    }
-
     override val supportsMultipleGeneratedKeys: Boolean = true
-
-    override fun supportsLimitWithUpdateOrDelete(): Boolean = true
-
-    override fun getDatabase(): String = catalog(TransactionManager.current())
-
-    /**
-     * Returns a list with the names of all the defined tables in the current database schema.
-     * The names will be returned with schema prefixes if the database supports it.
-     *
-     * **Note:** This method always re-reads data from the database. Using `allTablesNames` field is
-     * the preferred way to avoid unnecessary metadata queries.
-     */
-    override fun allTablesNames(): List<String> = TransactionManager.current().connection.metadata {
-        tableNamesByCurrentSchema(null).tableNames
-    }
-
-    /**
-     * Returns a list with the names of all the tables in all database schemas.
-     * The names will be returned with schema prefixes, if the database supports it, and non-user defined tables,
-     * like system information table names, will be included.
-     */
-    override fun allTablesNamesInAllSchemas(): List<String> = getAllSchemaNamesCache().flatMap { schema ->
-        getAllTableNamesCache().getValue(schema)
-    }
-
-    override fun tableExists(table: Table): Boolean {
-        return table.schemaName?.let { schema ->
-            getAllTableNamesCache().getValue(schema.inProperCase()).any {
-                it == table.nameInDatabaseCase()
-            }
-        } ?: run {
-            val (schema, allTables) = TransactionManager.current().connection.metadata {
-                tableNamesByCurrentSchema(getAllTableNamesCache())
-            }
-            allTables.any {
-                it.metadataMatchesTable(schema, table)
-            }
-        }
-    }
-
-    protected open fun String.metadataMatchesTable(schema: String, table: Table): Boolean {
-        return when {
-            schema.isEmpty() -> this == table.nameInDatabaseCaseUnquoted()
-            else -> {
-                val sanitizedTableName = table.tableNameWithoutSchemeSanitized
-                val nameInDb = "$schema.$sanitizedTableName".inProperCase()
-                this == nameInDb
-            }
-        }
-    }
-
-    override fun schemaExists(schema: Schema): Boolean {
-        val allSchemas = getAllSchemaNamesCache()
-        return allSchemas.any { it == schema.identifier.inProperCase() }
-    }
-
-    override fun sequenceExists(sequence: Sequence): Boolean {
-        return sequences().any { it == sequence.identifier.inProperCase() }
-    }
-
-    override fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> =
-        TransactionManager.current().connection.metadata { columns(*tables) }
-
-    override fun columnConstraints(
-        vararg tables: Table
-    ): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> {
-        val constraints = HashMap<Pair<Table, LinkedHashSet<Column<*>>>, MutableList<ForeignKeyConstraint>>()
-
-        val tablesToLoad = tables.filter { !columnConstraintsCache.containsKey(it.nameInDatabaseCaseUnquoted()) }
-
-        fillConstraintCacheForTables(tablesToLoad)
-        tables.forEach { table ->
-            columnConstraintsCache[table.nameInDatabaseCaseUnquoted()].orEmpty().forEach {
-                constraints.getOrPut(table to it.from) { arrayListOf() }.add(it)
-            }
-        }
-        return constraints
-    }
-
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
-        TransactionManager.current().db.metadata { existingIndices(*tables) }
-
-    override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> =
-        TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
-
-    override fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> =
-        TransactionManager.current().db.metadata { existingSequences(*tables) }
-
-    override fun sequences(): List<String> =
-        TransactionManager.current().db.metadata { sequences() }
-
-    private val supportsSelectForUpdate: Boolean by lazy {
-        TransactionManager.current().db.metadata { supportsSelectForUpdate }
-    }
-
-    override fun supportsSelectForUpdate(): Boolean = supportsSelectForUpdate
-
-    protected fun String.quoteIdentifierWhenWrongCaseOrNecessary(tr: Transaction): String =
-        tr.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(this)
-
-    protected val columnConstraintsCache: MutableMap<String, Collection<ForeignKeyConstraint>> = ConcurrentHashMap()
-
-    protected open fun fillConstraintCacheForTables(tables: List<Table>): Unit =
-        columnConstraintsCache.putAll(TransactionManager.current().db.metadata { tableConstraints(tables) })
-
-    override fun resetCaches() {
-        _allTableNames = null
-        columnConstraintsCache.clear()
-        TransactionManager.current().db.metadata { cleanCache() }
-    }
-
-    override fun resetSchemaCaches() {
-        _allSchemaNames = null
-        resetCaches()
-    }
 
     fun filterCondition(index: Index): String? {
         return index.filterCondition?.let {
@@ -197,7 +57,8 @@ abstract class VendorDialect(
      * Unique indexes can be partial
      */
     override fun createIndex(index: Index): String {
-        val t = TransactionManager.current()
+        @OptIn(InternalApi::class)
+        val t = CoreTransactionManager.currentTransaction()
         val quotedTableName = t.identity(index.table)
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
         val keyFields = index.columns.plus(index.functions ?: emptyList())
@@ -248,10 +109,12 @@ abstract class VendorDialect(
     }
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
-        listOf("ALTER TABLE ${TransactionManager.current().identity(column.table)} MODIFY COLUMN ${column.descriptionDdl(true)}")
+        @OptIn(InternalApi::class)
+        listOf("ALTER TABLE ${CoreTransactionManager.currentTransaction().identity(column.table)} MODIFY COLUMN ${column.descriptionDdl(true)}")
 
     override fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String {
-        val transaction = TransactionManager.current()
+        @OptIn(InternalApi::class)
+        val transaction = CoreTransactionManager.currentTransaction()
         val columns = pkColumns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) }
         val constraint = pkName?.let { " CONSTRAINT ${identifierManager.quoteIfNecessary(it)} " } ?: " "
         return "ALTER TABLE ${transaction.identity(table)} ADD${constraint}PRIMARY KEY $columns"

@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
 /**
  * The base implementation of SQL merge command that is used by statements like [MergeSelectStatement], [MergeTableStatement]
@@ -12,10 +11,6 @@ abstract class MergeStatement(val table: Table) : Statement<Int>(
     StatementType.MERGE, listOf(table)
 ) {
     protected val clauses = mutableListOf<Clause>()
-
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int? {
-        return executeUpdate()
-    }
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> {
         val result = QueryBuilder(true).run {

@@ -19,6 +19,7 @@ dependencies {
     compileOnly(libs.postgre)
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
+    testImplementation(project(":exposed-jdbc"))
     testImplementation(libs.junit)
     testImplementation(kotlin("test-junit"))
 }

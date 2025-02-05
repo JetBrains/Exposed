@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 /**
@@ -26,8 +26,9 @@ class Sequence(
     val cache: Long? = null
 ) {
     /** This name of this sequence in proper database casing. */
-    val identifier
-        get() = TransactionManager.current().db.identifierManager.cutIfNecessaryAndQuote(name)
+    val identifier: String
+        @OptIn(InternalApi::class)
+        get() = CoreTransactionManager.currentTransaction().db.identifierManager.cutIfNecessaryAndQuote(name)
 
     override fun toString(): String = "Sequence(identifier=$identifier)"
 
@@ -78,9 +79,4 @@ class Sequence(
 
         return listOf(dropSequenceDDL)
     }
-
-    /**
-     * Returns whether this sequence exists in the database.
-     */
-    fun exists(): Boolean = currentDialect.sequenceExists(this)
 }

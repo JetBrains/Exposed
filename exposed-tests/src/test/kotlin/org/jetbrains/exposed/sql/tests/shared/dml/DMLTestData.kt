@@ -5,9 +5,9 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -55,7 +55,7 @@ object DMLTestsData {
 @Suppress("LongMethod")
 fun DatabaseTestsBase.withCitiesAndUsers(
     exclude: Collection<TestDB> = emptyList(),
-    statement: Transaction.(
+    statement: JdbcTransaction.(
         cities: DMLTestsData.Cities,
         users: DMLTestsData.Users,
         userData: DMLTestsData.UserData
@@ -143,57 +143,60 @@ fun DatabaseTestsBase.withCitiesAndUsers(
 
 fun DatabaseTestsBase.withSales(
     excludeSettings: Collection<TestDB> = emptyList(),
-    statement: Transaction.(testDb: TestDB, sales: DMLTestsData.Sales) -> Unit
+    statement: JdbcTransaction.(testDb: TestDB, sales: DMLTestsData.Sales) -> Unit
 ) {
     val sales = DMLTestsData.Sales
 
     withTables(excludeSettings, sales) {
-        insertSale(2018, 11, "tea", "550.10")
-        insertSale(2018, 12, "coffee", "1500.25")
-        insertSale(2018, 12, "tea", "900.30")
-        insertSale(2019, 1, "coffee", "1620.10")
-        insertSale(2019, 1, "tea", "650.70")
-        insertSale(2019, 2, "coffee", "1870.90")
-        insertSale(2019, 2, null, "10.20")
+        sales.insertSaleData()
 
         statement(it, sales)
     }
 }
 
-private fun insertSale(year: Int, month: Int, product: String?, amount: String) {
-    val sales = DMLTestsData.Sales
-    sales.insert {
-        it[sales.year] = year
-        it[sales.month] = month
-        it[sales.product] = product
-        it[sales.amount] = BigDecimal(amount)
-    }
+private fun DMLTestsData.Sales.insertSaleData() {
+    insertSale(2018, 11, "tea", "550.10")
+    insertSale(2018, 12, "coffee", "1500.25")
+    insertSale(2018, 12, "tea", "900.30")
+    insertSale(2019, 1, "coffee", "1620.10")
+    insertSale(2019, 1, "tea", "650.70")
+    insertSale(2019, 2, "coffee", "1870.90")
+    insertSale(2019, 2, null, "10.20")
 }
 
-fun DatabaseTestsBase.withSomeAmounts(
-    statement: Transaction.(testDb: TestDB, someAmounts: DMLTestsData.SomeAmounts) -> Unit
-) {
-    val someAmounts = DMLTestsData.SomeAmounts
-
-    withTables(someAmounts) {
-        fun insertAmount(amount: BigDecimal) =
-            someAmounts.insert { it[someAmounts.amount] = amount }
-        insertAmount(BigDecimal("650.70"))
-        insertAmount(BigDecimal("1500.25"))
-        insertAmount(BigDecimal(1000))
-
-        statement(it, someAmounts)
+private fun DMLTestsData.Sales.insertSale(year: Int, month: Int, product: String?, amount: String) {
+    insert {
+        it[this.year] = year
+        it[this.month] = month
+        it[this.product] = product
+        it[this.amount] = BigDecimal(amount)
     }
 }
 
 fun DatabaseTestsBase.withSalesAndSomeAmounts(
-    statement: Transaction.(testDb: TestDB, sales: DMLTestsData.Sales, someAmounts: DMLTestsData.SomeAmounts) -> Unit
-) =
-    withSales { testDb, sales ->
-        withSomeAmounts { _, someAmounts ->
-            statement(testDb, sales, someAmounts)
-        }
+    excludeSettings: Collection<TestDB> = emptyList(),
+    statement: JdbcTransaction.(
+        testDb: TestDB,
+        sales: DMLTestsData.Sales,
+        someAmounts: DMLTestsData.SomeAmounts
+    ) -> Unit
+) {
+    val sales = DMLTestsData.Sales
+    val someAmounts = DMLTestsData.SomeAmounts
+
+    withTables(excludeSettings, sales, someAmounts) {
+        sales.insertSaleData()
+        someAmounts.insertAmount(BigDecimal("650.70"))
+        someAmounts.insertAmount(BigDecimal("1500.25"))
+        someAmounts.insertAmount(BigDecimal(1000))
+
+        statement(it, sales, someAmounts)
     }
+}
+
+private fun DMLTestsData.SomeAmounts.insertAmount(amount: BigDecimal) {
+    insert { it[this.amount] = amount }
+}
 
 object OrgMemberships : IntIdTable() {
     val orgId = reference("org", Orgs.uid)

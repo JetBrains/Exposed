@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
-import org.jetbrains.exposed.sql.statements.ReturningStatement
+import org.jetbrains.exposed.sql.statements.ReturningBlockingExecutable
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
@@ -163,7 +163,7 @@ class ReturningTests : DatabaseTestsBase() {
                 it[name] = "A"
                 it[price] = 99.0
             }
-            assertIs<ReturningStatement>(stmt)
+            assertIs<ReturningBlockingExecutable>(stmt)
 
             assertEquals(0, Items.selectAll().count())
 

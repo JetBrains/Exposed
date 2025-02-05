@@ -1,8 +1,12 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.DatabaseMetaData
 
+/**
+ * Class responsible for the parsing and processing of identifier tokens in SQL command syntax.
+ */
 internal class JdbcIdentifierManager(metadata: DatabaseMetaData) : IdentifierManagerApi() {
     override val quoteString = metadata.identifierQuoteString!!.trim()
     override val isUpperCaseIdentifiers = metadata.storesUpperCaseIdentifiers()
@@ -24,3 +28,7 @@ internal class JdbcIdentifierManager(metadata: DatabaseMetaData) : IdentifierMan
     }
     override val maxColumnNameLength: Int = metadata.maxColumnNameLength
 }
+
+// TODO could we make it public for internal API and remove duplication functions like org.jetbrains.exposed.sql.vendors.DatabaseDialectKt.inProperCase
+internal fun String.inProperCase(): String =
+    TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

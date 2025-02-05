@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.vendors.*
 import java.io.InputStream
 import java.math.BigDecimal
@@ -15,8 +16,6 @@ import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.sql.Blob
 import java.sql.Clob
-import java.sql.ResultSet
-import java.sql.SQLException
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -83,7 +82,9 @@ interface IColumnType<T> {
     fun nonNullValueAsDefaultString(value: T & Any): String = nonNullValueToString(value)
 
     /** Returns the object at the specified [index] in the [rs]. */
-    fun readObject(rs: ResultSet, index: Int): Any? = rs.getObject(index)
+    // TODO Could we avoid breaking change here for users?
+    // TODO What should do the users with custom column types that override this method?
+    fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index)
 
     /** Sets the [value] at the specified [index] into the [stmt]. */
     fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
@@ -260,7 +261,7 @@ class EntityIDColumnType<T : Any>(
         idColumn.table as IdTable<T>
     )
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = idColumn.columnType.readObject(rs, index)
+    override fun readObject(rs: RowApi, index: Int): Any? = idColumn.columnType.readObject(rs, index)
 
     override fun equals(other: Any?): Boolean {
         if (other !is EntityIDColumnType<*>) return false
@@ -379,12 +380,6 @@ open class ColumnWithTransform<Unwrapped, Wrapped>(
     override fun parameterMarker(value: Wrapped?): String {
         return delegate.parameterMarker(value?.let { transformer.unwrap(it) })
     }
-}
-
-internal fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
-    if (col !is ExpressionWithColumnType<*>) return@mapValues value
-
-    value?.let { (col.columnType as? ColumnWithTransform<Any, Any>)?.unwrapRecursive(it) } ?: value
 }
 
 /**
@@ -624,10 +619,9 @@ class ULongColumnType : ColumnType<ULong>() {
                     ?: error("Value out of range: $value")
             }
 
-            dialect is PostgreSQLDialect ||
-                (dialect is H2Dialect && dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL) -> {
-                BigInteger(value.toString())
-            }
+            dialect is PostgreSQLDialect -> BigInteger(value.toString())
+            // Long is also an accepted mapping, but this would require handling as above for Oor errors
+            dialect is H2Dialect -> BigDecimal(value.toString())
 
             else -> value.toString()
         }
@@ -697,15 +691,13 @@ class DecimalColumnType(
 ) : ColumnType<BigDecimal>() {
     override fun sqlType(): String = "DECIMAL($precision, $scale)"
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getObject(index)
-    }
-
     override fun valueFromDB(value: Any): BigDecimal = when (value) {
         is BigDecimal -> value
         is Double -> {
             if (value.isNaN()) {
-                throw SQLException("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
+                // TODO check for all `throw SQLException` in the code?
+                // TODO could some of them replaced wit other errors?
+                error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
             } else {
                 value.toBigDecimal()
             }
@@ -927,7 +919,7 @@ open class TextColumnType(
         }
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
+    override fun readObject(rs: RowApi, index: Int): Any? {
         val value = super.readObject(rs, index)
         return if (eagerLoading && value != null) {
             valueFromDB(value)
@@ -959,12 +951,12 @@ open class LargeTextColumnType(
 open class BasicBinaryColumnType : ColumnType<ByteArray>() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.binaryType()
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = rs.getBytes(index)
-
     override fun valueFromDB(value: Any): ByteArray = when (value) {
         is Blob -> value.binaryStream.use { it.readBytes() }
         is InputStream -> value.use { it.readBytes() }
         is ByteArray -> value
+        is String -> value.toByteArray()
+        is ByteBuffer -> value.array()
         else -> error("Unexpected value $value of type ${value::class.qualifiedName}")
     }
 
@@ -1024,6 +1016,7 @@ class BlobColumnType(
         is InputStream -> ExposedBlob(value)
         is ByteArray -> ExposedBlob(value)
         is Blob -> ExposedBlob(value.binaryStream)
+        is ByteBuffer -> ExposedBlob(value.array())
         else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
     }
 
@@ -1033,10 +1026,11 @@ class BlobColumnType(
             .hexToDb(value.hexString())
     }
 
-    override fun readObject(rs: ResultSet, index: Int) = when {
-        currentDialect is SQLServerDialect -> rs.getBytes(index)?.let(::ExposedBlob)
-        currentDialect is PostgreSQLDialect && useObjectIdentifier -> rs.getBlob(index)?.binaryStream?.let(::ExposedBlob)
-        else -> rs.getBinaryStream(index)?.let(::ExposedBlob)
+    override fun readObject(rs: RowApi, index: Int) = when {
+        currentDialect is PostgreSQLDialect && useObjectIdentifier -> {
+            rs.getObject(index, java.sql.Blob::class.java)?.binaryStream?.let(::ExposedBlob)
+        }
+        else -> rs.getObject(index)
     }
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
@@ -1059,10 +1053,14 @@ class UUIDColumnType : ColumnType<UUID>() {
         value is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
         value is String && value.matches(uuidRegexp) -> UUID.fromString(value)
         value is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
+        value is ByteBuffer -> value.let { b -> UUID(b.long, b.long) }
         else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
     }
 
-    override fun notNullValueToDB(value: UUID): Any = currentDialect.dataTypeProvider.uuidToDB(value)
+    override fun notNullValueToDB(value: UUID): Any {
+        return ((currentDialect as? H2Dialect)?.originalDataTypeProvider ?: currentDialect.dataTypeProvider)
+            .uuidToDB(value)
+    }
 
     override fun nonNullValueToString(value: UUID): String = "'$value'"
 
@@ -1267,6 +1265,9 @@ class ArrayColumnType<T, R : List<Any?>>(
     val maximumCardinality: List<Int>? = null,
     val dimensions: Int = 1
 ) : ColumnType<R>() {
+
+    private val nullElementString = "null"
+
     /**
      * Constructor with maximum cardinality for a single dimension.
      *
@@ -1325,16 +1326,14 @@ class ArrayColumnType<T, R : List<Any?>>(
         else -> (value as Array<Any?>).map { it?.let { delegate.valueFromDB(it) } }
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        return rs.getArray(index)?.array
-    }
+    override fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when {
             value is Array<*> && isArrayOfByteArrays(value) ->
-                stmt.setArray(index, delegateType, Array(value.size) { value[it] as ByteArray })
+                stmt.setArray(index, this, Array(value.size) { value[it] as ByteArray })
 
-            value is Array<*> -> stmt.setArray(index, delegateType, value)
+            value is Array<*> -> stmt.setArray(index, this, value)
             else -> super.setParameter(stmt, index, value)
         }
     }
@@ -1345,7 +1344,7 @@ class ArrayColumnType<T, R : List<Any?>>(
 
     private fun recursiveNonNullValueToString(value: Any?, level: Int): String = when {
         level > 1 -> (value as List<Any?>).joinToString(",", "[", "]") { recursiveNonNullValueToString(it, level - 1) }
-        else -> (value as List<T & Any>).joinToString(",", "[", "]") { delegate.nonNullValueToString(it) }
+        else -> (value as List<T>).joinToString(",", "[", "]") { it?.let { delegate.nonNullValueToString(it) } ?: nullElementString }
     }
 
     override fun nonNullValueAsDefaultString(value: R): String {
@@ -1354,7 +1353,7 @@ class ArrayColumnType<T, R : List<Any?>>(
 
     private fun recursiveNonNullValueAsDefaultString(value: Any?, level: Int): String = when {
         level > 1 -> (value as List<Any?>).joinToString(",", "[", "]") { recursiveNonNullValueAsDefaultString(it, level - 1) }
-        else -> (value as List<T & Any>).joinToString(",", "[", "]") { delegate.nonNullValueAsDefaultString(it) }
+        else -> (value as List<T>).joinToString(",", "[", "]") { it?.let { delegate.nonNullValueAsDefaultString(it) } ?: nullElementString }
     }
 
     private fun arrayLiteralPrefix(): String {
@@ -1381,6 +1380,12 @@ class ArrayColumnType<T, R : List<Any?>>(
         if (currentDialect is H2Dialect) {
             val columnType = if (delegate is ColumnWithTransform<*, *>) delegate.originalColumnType else delegate
             return castH2ParameterMarker(columnType) ?: super.parameterMarker(value)
+        }
+
+        // For PostgreSQL, add a cast for date arrays to ensure they're properly recognized
+        if (currentDialect is PostgreSQLDialect && delegate is IDateColumnType) {
+            val pgType = if (delegate.hasTimePart) "timestamp[]" else "date[]"
+            return "?::$pgType"
         }
 
         return super.parameterMarker(value)

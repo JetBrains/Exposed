@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
@@ -12,7 +13,7 @@ import org.joda.time.LocalTime
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.ISODateTimeFormat
-import java.sql.ResultSet
+import java.sql.Timestamp
 import java.time.OffsetDateTime
 import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
@@ -133,7 +134,7 @@ class DateColumnType(val time: Boolean) : ColumnType<DateTime>(), IDateColumnTyp
         }
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? {
+    override fun readObject(rs: RowApi, index: Int): Any? {
         // Since MySQL ConnectorJ 8.0.23, driver returns LocalDateTime instead of String for DateTime columns.
         val dialect = currentDialect
         return when {
@@ -209,6 +210,7 @@ class LocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         return "'${DEFAULT_TIME_STRING_FORMATTER.print(value)}'"
     }
 
+    // TODO run jdbc tests & check all green
     override fun valueFromDB(value: Any): LocalTime? = when (value) {
         is LocalTime -> value
         is java.sql.Time -> value.toLocalTime().let { LocalTime(it.hour, it.minute, it.second) }
@@ -217,19 +219,27 @@ class LocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         is Long -> longToLocalTime(value)
         is String -> {
             val dialect = currentDialect
-            val formatter = if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-                formatterForDateTimeString(value)
+            if (value.contains('T')) {
+                // Handle ISO format like "1970-01-01T12:00"
+                val timeStr = value.substringAfter('T')
+                val formatter = ISODateTimeFormat.timeParser().withLocale(Locale.ROOT).withZone(DateTimeZone.getDefault())
+                LocalTime.parse(timeStr, formatter)
+            } else if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+                val formatter = formatterForDateTimeString(value)
+                LocalTime.parse(value, formatter)
             } else {
-                ISODateTimeFormat.timeParser().withLocale(Locale.ROOT).withZone(DateTimeZone.getDefault())
+                val formatter = ISODateTimeFormat.timeParser().withLocale(Locale.ROOT).withZone(DateTimeZone.getDefault())
+                LocalTime.parse(value, formatter)
             }
-            LocalTime.parse(value, formatter)
         }
         else -> valueFromDB(value.toString())
     }
 
     override fun notNullValueToDB(value: LocalTime): Any = when {
         currentDialect is SQLiteDialect -> DEFAULT_TIME_STRING_FORMATTER.print(value)
-        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> ORACLE_TIME_STRING_FORMATTER.print(value)
+        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
+            Timestamp.valueOf(ORACLE_TIME_STRING_FORMATTER.print(value)).toInstant()
+        }
         else -> java.sql.Time.valueOf(DEFAULT_TIME_STRING_FORMATTER.print(value))
     }
 
@@ -286,7 +296,7 @@ class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
+    override fun readObject(rs: RowApi, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
         is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java)
         else -> rs.getObject(index, OffsetDateTime::class.java)

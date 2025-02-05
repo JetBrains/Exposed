@@ -4,7 +4,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ArraySerializer
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -148,7 +147,7 @@ class JsonColumnTests : DatabaseTestsBase() {
     }
 
     private val jsonContainsNotSupported = TestDB.entries -
-        (TestDB.ALL_POSTGRES + TestDB.ALL_MARIADB + TestDB.MYSQL_V5)
+        (TestDB.ALL_POSTGRES + TestDB.ALL_MYSQL_MARIADB)
 
     @Test
     fun testJsonContains() {

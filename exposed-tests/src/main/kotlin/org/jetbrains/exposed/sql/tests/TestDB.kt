@@ -80,7 +80,7 @@ enum class TestDB(
         "com.impossibl.postgres.jdbc.PGDriver",
     ),
     ORACLE(driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345", connection = {
-        "jdbc:oracle:thin:@127.0.0.1:3003/XEPDB1"
+        "jdbc:oracle:thin:@127.0.0.1:3003/FREEPDB1"
     }, beforeConnection = {
         Locale.setDefault(Locale.ENGLISH)
         val tmp = Database.connect(
@@ -91,6 +91,13 @@ enum class TestDB(
         )
         transaction(Connection.TRANSACTION_READ_COMMITTED, db = tmp) {
             maxAttempts = 1
+
+            @Suppress("SwallowedException", "TooGenericExceptionCaught")
+            try {
+                exec("CREATE TABLESPACE users DATAFILE '/opt/oracle/oradata/FREE/FREEPDB1/users01.dbf' SIZE 100M AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED")
+            } catch (e: Exception) { // ignore
+                exposedLogger.warn("Tablespace users already exists", e)
+            }
 
             @Suppress("SwallowedException", "TooGenericExceptionCaught")
             try {

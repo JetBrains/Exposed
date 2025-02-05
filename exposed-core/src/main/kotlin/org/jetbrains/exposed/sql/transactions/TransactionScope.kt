@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.transactions
 
+import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.Key
 import org.jetbrains.exposed.sql.Transaction
 import kotlin.properties.ReadWriteProperty
@@ -29,7 +30,8 @@ class TransactionStore<T : Any>(val init: (Transaction.() -> T)? = null) : ReadW
     private val key = Key<T>()
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): T? {
-        val currentOrNullTransaction = TransactionManager.currentOrNull()
+        @OptIn(InternalApi::class)
+        val currentOrNullTransaction = CoreTransactionManager.currentTransactionOrNull()
         return currentOrNullTransaction?.getUserData(key)
             ?: init?.let {
                 val value = currentOrNullTransaction?.it() ?: error("Can't init value outside the transaction")
@@ -39,7 +41,8 @@ class TransactionStore<T : Any>(val init: (Transaction.() -> T)? = null) : ReadW
     }
 
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T?) {
-        TransactionManager.currentOrNull()?.let {
+        @OptIn(InternalApi::class)
+        CoreTransactionManager.currentTransactionOrNull()?.let {
             if (value == null) {
                 it.removeUserData(key)
             } else {

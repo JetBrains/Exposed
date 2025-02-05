@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
 import org.jetbrains.exposed.sql.vendors.OracleDialect
@@ -22,12 +21,11 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
     UpdateBuilder<Int>(StatementType.UPDATE, targetsSet.targetTables()) {
 
     /** The initial list of columns to update with their updated values. */
-    open val firstDataSet: List<Pair<Column<*>, Any?>> get() = values.toList()
-
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
-        if (values.isEmpty()) return 0
-        return executeUpdate()
-    }
+    open val firstDataSet: List<Pair<Column<*>, Any?>>
+        get() {
+            @OptIn(InternalApi::class)
+            return values.toList()
+        }
 
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         require(firstDataSet.isNotEmpty()) { "Can't prepare UPDATE statement without fields to update" }
@@ -77,6 +75,7 @@ open class UpdateStatement(val targetsSet: ColumnSet, val limit: Int?, val where
     }
 
     private fun QueryBuilder.registerUpdateArgs() {
+        @OptIn(InternalApi::class)
         values.forEach { registerArgument(it.key, it.value) }
     }
 

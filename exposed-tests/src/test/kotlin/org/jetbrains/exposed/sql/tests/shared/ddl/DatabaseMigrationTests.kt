@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.money.CurrencyColumnType
 import org.jetbrains.exposed.sql.money.currency
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
@@ -55,7 +56,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             )
 
             if (currentDialectTest.supportsCreateSequence) {
-                val allSequences = currentDialectTest.sequences().map { name -> Sequence(name) }.toSet()
+                val allSequences = currentDialectMetadataTest.sequences().map { name -> Sequence(name) }.toSet()
                 allSequences.forEach { sequence ->
                     val dropStatements = sequence.dropStatement()
                     dropStatements.forEach { statement ->
@@ -216,7 +217,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.SQLITE), noPKTable) {
-            val primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
+            val primaryKey: PrimaryKeyMetadata? = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             assertNull(primaryKey)
 
             val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"

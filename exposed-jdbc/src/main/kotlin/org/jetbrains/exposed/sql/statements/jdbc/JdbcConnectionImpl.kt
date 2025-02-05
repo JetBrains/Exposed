@@ -1,19 +1,23 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
 import org.jetbrains.exposed.sql.ColumnType
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.statements.BlockingExecutable
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
-import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.statements.api.JdbcExposedDatabaseMetadata
+import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.Connection
 import java.sql.PreparedStatement
 
+// TODO Introduce package versioning & rearrange packages to reflect
+// org.jetbrains.exposed.v1.jdbc.sql.statements
 /**
- * Class representing a wrapped database [connection].
+ * Class representing a wrapped JDBC database [Connection].
  */
 class JdbcConnectionImpl(override val connection: Connection) : ExposedConnection<Connection> {
 
@@ -69,9 +73,9 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         JdbcDatabaseMetadataImpl(catalog, connection.metaData)
     }
 
-    override fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T = metadata.body()
+    override fun <T> metadata(body: JdbcExposedDatabaseMetadata.() -> T): T = metadata.body()
 
-    override fun prepareStatement(sql: String, returnKeys: Boolean): PreparedStatementApi {
+    override fun prepareStatement(sql: String, returnKeys: Boolean): JdbcPreparedStatementImpl {
         val generated = if (returnKeys) {
             PreparedStatement.RETURN_GENERATED_KEYS
         } else {
@@ -80,7 +84,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         return JdbcPreparedStatementImpl(connection.prepareStatement(sql, generated), returnKeys)
     }
 
-    override fun prepareStatement(sql: String, columns: Array<String>): PreparedStatementApi {
+    override fun prepareStatement(sql: String, columns: Array<String>): JdbcPreparedStatementImpl {
         return JdbcPreparedStatementImpl(connection.prepareStatement(sql, columns), true)
     }
 
@@ -96,16 +100,16 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         }
 
         val type = types.distinct().singleOrNull() ?: StatementType.OTHER
-        val prepStatement = object : Statement<Unit>(type, emptyList()) {
+        val prepStatement = object : Statement<Unit>(type, emptyList()), BlockingExecutable<Unit, Statement<Unit>> {
 
-            override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
+            override fun prepared(transaction: JdbcTransaction, sql: String): JdbcPreparedStatementApi {
                 val originalStatement = super.prepared(transaction, sql.substringBefore('\n'))
                 val batchStatement = connection.createStatement().apply {
                     sqls.forEach {
                         addBatch(it)
                     }
                 }
-                return object : PreparedStatementApi by originalStatement {
+                return object : JdbcPreparedStatementApi by originalStatement {
                     override fun closeIfPossible() {
                         batchStatement.close()
                         originalStatement.closeIfPossible()
@@ -118,7 +122,10 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
                 }
             }
 
-            override fun PreparedStatementApi.executeInternal(transaction: Transaction) {
+            override val statement: Statement<Unit>
+                get() = this
+
+            override fun JdbcPreparedStatementApi.executeInternal(transaction: JdbcTransaction) {
                 executeUpdate()
             }
 

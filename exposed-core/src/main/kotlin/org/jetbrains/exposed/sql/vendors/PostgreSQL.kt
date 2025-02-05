@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementType
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import java.util.*
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
@@ -54,7 +54,8 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
-        val tr = TransactionManager.current()
+        @OptIn(InternalApi::class)
+        val tr = CoreTransactionManager.currentTransaction()
         return when (expr.separator) {
             null -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG function.")
             else -> queryBuilder {
@@ -173,8 +174,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
+        @OptIn(InternalApi::class)
         path?.let {
-            TransactionManager.current().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
+            CoreTransactionManager.currentTransaction().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
         val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
@@ -192,8 +194,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
+        @OptIn(InternalApi::class)
         if (path.size > 1) {
-            TransactionManager.current().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
+            CoreTransactionManager.currentTransaction().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
         }
         val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
@@ -364,14 +367,13 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
 
     override val supportsWindowFrameGroupsMode: Boolean = true
 
-    override fun supportsLimitWithUpdateOrDelete(): Boolean = false
-
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        @OptIn(InternalApi::class)
         val list = mutableListOf(
             buildString {
-                val tr = TransactionManager.current()
+                val tr = CoreTransactionManager.currentTransaction()
                 append("ALTER TABLE ${tr.identity(column.table)} ")
                 val colName = tr.identity(column)
 

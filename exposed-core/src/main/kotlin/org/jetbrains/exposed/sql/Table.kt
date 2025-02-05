@@ -9,7 +9,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.util.*
@@ -107,40 +107,6 @@ abstract class ColumnSet : FieldSet {
 
     /** Creates a cross join relation with [otherTable]. */
     abstract fun crossJoin(otherTable: ColumnSet): Join
-
-    @Deprecated(
-        message = "As part of SELECT DSL design changes, this will be removed in future releases.",
-        replaceWith = ReplaceWith("select(column, *columns)"),
-        level = DeprecationLevel.HIDDEN
-    )
-    fun slice(column: Expression<*>, vararg columns: Expression<*>): FieldSet = Slice(this, listOf(column) + columns)
-
-    @Deprecated(
-        message = "As part of SELECT DSL design changes, this will be removed in future releases.",
-        replaceWith = ReplaceWith("select(columns)"),
-        level = DeprecationLevel.HIDDEN
-    )
-    fun slice(columns: List<Expression<*>>): FieldSet = Slice(this, columns)
-
-    /**
-     * Creates a `SELECT` [Query] by selecting either a single [column], or a subset of [columns], from this [ColumnSet].
-     *
-     * The column set selected from may be either a [Table] or a [Join].
-     * Arguments provided to [column] and [columns] may be table object columns or function expressions.
-     *
-     * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
-     */
-    @LowPriorityInOverloadResolution
-    fun select(column: Expression<*>, vararg columns: Expression<*>): Query =
-        Query(Select(this, listOf(column) + columns), null)
-
-    /**
-     * Creates a `SELECT` [Query] using a list of [columns] or expressions from this [ColumnSet].
-     *
-     * The column set selected from may be either a [Table] or a [Join].
-     */
-    @LowPriorityInOverloadResolution
-    fun select(columns: List<Expression<*>>): Query = Query(Select(this, columns), null)
 }
 
 /**
@@ -462,7 +428,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * If the table is quoted, a dot in the name is considered part of the table name and the whole string is taken to
      * be the table name as is. If it is not quoted, whatever is after the dot is considered to be the table name.
      */
-    internal val tableNameWithoutScheme: String
+    @InternalApi
+    val tableNameWithoutScheme: String
         get() = if (!tableName.isAlreadyQuoted()) tableName.substringAfterLast(".") else tableName
 
     /**
@@ -473,7 +440,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * 2. Comparing table names from database metadata (except MySQL and MariaDB)
      * @see org.jetbrains.exposed.sql.vendors.VendorDialect.metadataMatchesTable
      */
-    internal val tableNameWithoutSchemeSanitized: String
+    @InternalApi
+    val tableNameWithoutSchemeSanitized: String
         get() = tableNameWithoutScheme.unquoted()
 
     /**
@@ -569,8 +537,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * backtick character as the identifier quotation.
      */
     fun nameInDatabaseCaseUnquoted(): String = if (currentDialect is MysqlDialect) {
+        @OptIn(InternalApi::class)
         tableNameWithoutScheme.inProperCase()
     } else {
+        @OptIn(InternalApi::class)
         tableNameWithoutScheme.inProperCase().trim('\"', '\'')
     }
 
@@ -639,6 +609,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     // Primary keys
 
     internal fun isCustomPKNameDefined(): Boolean = primaryKey?.let {
+        @OptIn(InternalApi::class)
         it.name != "pk_$tableNameWithoutSchemeSanitized"
     } == true
 
@@ -654,7 +625,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         name: String? = null
     ) {
         /** Returns the name of the primary key. */
-        val name: String by lazy { name ?: "pk_$tableNameWithoutSchemeSanitized" }
+        val name: String by lazy {
+            @OptIn(InternalApi::class)
+            name ?: "pk_$tableNameWithoutSchemeSanitized"
+        }
 
         constructor(firstColumn: Column<*>, vararg columns: Column<*>, name: String? = null) :
             this(arrayOf(firstColumn) + columns.asList(), name)
@@ -1717,9 +1691,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // DDL statements
 
+    @OptIn(InternalApi::class)
     internal fun primaryKeyConstraint(): String? {
         return primaryKey?.let { primaryKey ->
-            val tr = TransactionManager.current()
+            val tr = CoreTransactionManager.currentTransaction()
             val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
             return primaryKey.columns
                 .joinToString(prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")", transform = tr::identity)
@@ -1727,16 +1702,18 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     }
 
     override fun createStatement(): List<String> {
-        val addForeignKeysInAlterPart = SchemaUtils.checkCycle(this) && currentDialect !is SQLiteDialect
+        @OptIn(InternalApi::class)
+        val addForeignKeysInAlterPart = TableUtils.checkCycle(this) && currentDialect !is SQLiteDialect
 
         val foreignKeyConstraints = foreignKeys
 
+        @OptIn(InternalApi::class)
         val createTable = buildString {
             append("CREATE TABLE ")
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table))
+            append(CoreTransactionManager.currentTransaction().identity(this@Table))
 
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { column ->
@@ -1776,15 +1753,16 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         throw UnsupportedOperationException("Use modify on columns and indices")
 
     override fun dropStatement(): List<String> {
+        @OptIn(InternalApi::class)
         val dropTable = buildString {
             append("DROP TABLE ")
             if (currentDialect.supportsIfNotExists) {
                 append("IF EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table))
+            append(CoreTransactionManager.currentTransaction().identity(this@Table))
             if (currentDialectIfAvailable is OracleDialect) {
                 append(" CASCADE CONSTRAINTS")
-            } else if (currentDialectIfAvailable is PostgreSQLDialect && SchemaUtils.checkCycle(this@Table)) {
+            } else if (currentDialectIfAvailable is PostgreSQLDialect && TableUtils.checkCycle(this@Table)) {
                 append(" CASCADE")
             }
         }
@@ -1823,7 +1801,7 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     else -> error("No target provided for update")
 }
 
-internal fun String.isAlreadyQuoted(): Boolean =
+private fun String.isAlreadyQuoted(): Boolean =
     listOf("\"", "'", "`").any { quoteString ->
         startsWith(quoteString) && endsWith(quoteString)
     }

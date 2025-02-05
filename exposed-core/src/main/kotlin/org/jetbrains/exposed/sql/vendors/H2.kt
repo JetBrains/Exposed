@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
 import java.sql.Types
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import java.util.*
 
 internal object H2DataTypeProvider : DataTypeProvider() {
@@ -13,7 +14,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
     override fun uuidType(): String = "UUID"
 
-    override fun uuidToDB(value: UUID): Any = value.toString()
+    override fun uuidToDB(value: UUID): Any = value
 
     override fun dateTimeType(): String = "DATETIME(9)"
 
@@ -31,7 +32,8 @@ internal object H2FunctionProvider : FunctionProvider() {
         get() = h2Mode == H2Dialect.H2CompatibilityMode.Oracle
 
     override fun nextVal(seq: Sequence, builder: QueryBuilder) =
-        when ((TransactionManager.current().db.dialect as H2Dialect).majorVersion) {
+        @OptIn(InternalApi::class)
+        when ((CoreTransactionManager.currentTransaction().db.dialect as H2Dialect).majorVersion) {
             H2Dialect.H2MajorVersion.One -> super.nextVal(seq, builder)
             H2Dialect.H2MajorVersion.Two -> builder {
                 append("NEXT VALUE FOR ${seq.identifier}")
@@ -204,8 +206,9 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         One, Two
     }
 
+    @OptIn(InternalApi::class)
     internal val version by lazy {
-        exactH2Version(TransactionManager.current())
+        exactH2Version(CoreTransactionManager.currentTransaction())
     }
 
     val majorVersion: H2MajorVersion by lazy {
@@ -219,7 +222,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     /** Indicates whether the H2 Database Engine version is greater than or equal to 2.0. */
     val isSecondVersion get() = majorVersion == H2MajorVersion.Two
 
-    private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata { databaseProductVersion.substringBefore(" (") }
+    private fun exactH2Version(transaction: Transaction): String = transaction.db.version.toString()
 
     /** H2 database compatibility modes that emulate the behavior of other specific databases. */
     enum class H2CompatibilityMode {
@@ -240,9 +243,10 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     private var delegatedDialect: DatabaseDialect? = null
 
+    @OptIn(InternalApi::class)
     private fun resolveDelegatedDialect(): DatabaseDialect? {
         return delegatedDialect ?: delegatedDialectNameProvider?.dialectName?.lowercase()?.let {
-            val dialect = Database.dialects[it]?.invoke() ?: error("Can't resolve dialect for $it")
+            val dialect = DatabaseApi.dialects[it]?.invoke() ?: error("Can't resolve dialect for $it")
             delegatedDialect = dialect
             dialect
         }
@@ -264,7 +268,8 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     /** The H2 database compatibility mode retrieved from metadata. */
     val h2Mode: H2CompatibilityMode? by lazy {
-        val modeValue = TransactionManager.current().db.metadata { databaseDialectMode }
+        @OptIn(InternalApi::class)
+        val modeValue = CoreTransactionManager.currentTransaction().db.dialectMode
         when {
             modeValue == null -> null
             modeValue.equals("MySQL", ignoreCase = true) -> H2CompatibilityMode.MySQL
@@ -301,10 +306,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsOrderByNullsFirstLast: Boolean by lazy { resolveDelegatedDialect()?.supportsOrderByNullsFirstLast ?: super.supportsOrderByNullsFirstLast }
     override val supportsWindowFrameGroupsMode: Boolean by lazy { resolveDelegatedDialect()?.supportsWindowFrameGroupsMode ?: super.supportsWindowFrameGroupsMode }
     override val supportsColumnTypeChange: Boolean get() = isSecondVersion
-
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
-        super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }
-            .filterValues { it.isNotEmpty() }
 
     override fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
         val result = mutableMapOf<Table, List<CheckConstraint>>()

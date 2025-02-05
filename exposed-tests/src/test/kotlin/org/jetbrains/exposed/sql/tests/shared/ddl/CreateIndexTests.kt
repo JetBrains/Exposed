@@ -6,13 +6,13 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.expect
 
@@ -113,7 +113,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             }
         }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+        withDb(TestDB.ALL_POSTGRES) {
             SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
             assertTrue(partialIndexTable.exists())
 
@@ -179,7 +179,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             }
         }
 
-        withDb(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.POSTGRESQLNG, TestDB.POSTGRESQL)) {
+        withDb(TestDB.ALL_POSTGRES + TestDB.SQLITE + TestDB.SQLSERVER) {
             SchemaUtils.createMissingTablesAndColumns(tester)
             assertTrue(tester.exists())
 
@@ -250,7 +250,7 @@ class CreateIndexTests : DatabaseTestsBase() {
                 is PostgreSQLDialect, is SQLServerDialect, is SQLiteDialect -> 1
                 else -> 0
             }
-            val actualIndexCount = currentDialectTest.existingIndices(tester)[tester].orEmpty().size
+            val actualIndexCount = currentDialectMetadataTest.existingIndices(tester)[tester].orEmpty().size
             assertEquals(expectedIndexCount, actualIndexCount)
         }
     }
@@ -285,8 +285,8 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
     }
 
-    private fun Transaction.getIndices(table: Table): List<Index> {
-        db.dialect.resetCaches()
-        return currentDialect.existingIndices(table)[table].orEmpty()
+    private fun JdbcTransaction.getIndices(table: Table): List<Index> {
+        db.dialectMetadata.resetCaches()
+        return currentDialectMetadataTest.existingIndices(table)[table].orEmpty()
     }
 }

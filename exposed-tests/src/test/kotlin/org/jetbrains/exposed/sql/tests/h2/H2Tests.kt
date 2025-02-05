@@ -4,17 +4,20 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.TransactionManagerApi
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.test.assertNotEquals
 
 class H2Tests : DatabaseTestsBase() {
     @Test
@@ -30,6 +33,7 @@ class H2Tests : DatabaseTestsBase() {
 
                 assertTrue(systemTestName == "h2_v2" || systemTestName == "h2_v1")
                 if (systemTestName == "h2_v2") {
+                    assertNotEquals("2.1.214", version)
                     assertEquals("2", version?.first()?.toString())
                 }
                 if (systemTestName == "h2_v1") {
@@ -69,10 +73,8 @@ class H2Tests : DatabaseTestsBase() {
             val originalManager = TransactionManager.manager
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
-                TransactionManager.registerManager(
-                    db,
-                    WrappedTransactionManager(db.transactionManager)
-                )
+                @OptIn(InternalApi::class)
+                CoreTransactionManager.registerDatabaseManager(db, WrappedTransactionManager(db.transactionManager))
                 Executors.newSingleThreadExecutor().apply {
                     submit { TransactionManager.closeAndUnregister(db) }
                         .get(1, TimeUnit.SECONDS)
@@ -102,9 +104,9 @@ class H2Tests : DatabaseTestsBase() {
                     "ALTER TABLE ${tableName.inProperCase()} ADD CONSTRAINT pk_$tableName PRIMARY KEY (${"id".inProperCase()})",
                     t.id.ddl[1]
                 )
-                assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
+                assertEquals(1, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
                 SchemaUtils.createMissingTablesAndColumns(t)
-                assertEquals(2, currentDialectTest.tableColumns(t)[t]!!.size)
+                assertEquals(2, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
             } finally {
                 SchemaUtils.drop(t)
             }
@@ -128,8 +130,8 @@ class H2Tests : DatabaseTestsBase() {
         }
     }
 
-    class WrappedTransactionManager(val transactionManager: TransactionManager) :
-        TransactionManager by transactionManager
+    class WrappedTransactionManager(val transactionManager: TransactionManagerApi) :
+        TransactionManagerApi by transactionManager
 
     object Testing : Table("H2_TESTING") {
         val id = integer("id").autoIncrement() // Column<Int>

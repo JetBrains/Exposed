@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 
 /**
  * Common interface for all database dialects.
@@ -81,82 +82,11 @@ interface DatabaseDialect {
     /** Returns whether Exposed currently supports column type change in migrations for this dialect. */
     val supportsColumnTypeChange: Boolean get() = false
 
-    /** Returns `true` if the database supports the `LIMIT` clause with update and delete statements. */
-    fun supportsLimitWithUpdateOrDelete(): Boolean
-
-    /** Returns the name of the current database. */
-    fun getDatabase(): String
-
-    /**
-     * Returns a list with the names of all the defined tables in the current database schema.
-     * The names will be returned with schema prefixes if the database supports it.
-     */
-    fun allTablesNames(): List<String>
-
-    /**
-     * Returns a list with the names of all the tables in all database schemas.
-     * The names will be returned with schema prefixes, if the database supports it, and non-user defined tables,
-     * like system information table names, will be included.
-     */
-    fun allTablesNamesInAllSchemas(): List<String>
-
-    /** Checks if the specified table exists in the database. */
-    fun tableExists(table: Table): Boolean
-
-    /** Checks if the specified schema exists. */
-    fun schemaExists(schema: Schema): Boolean
-
-    /** Returns whether the specified sequence exists. */
-    fun sequenceExists(sequence: Sequence): Boolean
-
-    fun checkTableMapping(table: Table): Boolean = true
-
-    /** Returns a map with the column metadata of all the defined columns in each of the specified [tables]. */
-    fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> = emptyMap()
-
-    /** Returns a map with the foreign key constraints of all the defined columns sets in each of the specified [tables]. */
-    fun columnConstraints(
-        vararg tables: Table
-    ): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> = emptyMap()
-
-    /** Returns a map with all the defined indices in each of the specified [tables]. */
-    fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
-
-    /** Returns a map with the primary key metadata in each of the specified [tables]. */
-    fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> = emptyMap()
-
-    /**
-     * Returns a map with all the defined sequences that hold a relation to the specified [tables] in the database.
-     *
-     * **Note** PostgreSQL is currently the only database that maps relational dependencies for sequences created when
-     * a SERIAL column is registered to an `IdTable`. Using this method with any other database returns an empty map.
-     *
-     * Any sequence created using the CREATE SEQUENCE command will be ignored
-     * as it is not necessarily bound to any particular table. Sequences that are used in a table via triggers will also
-     * not be returned.
-     */
-    fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> = emptyMap()
-
-    /** Returns a list of the names of all sequences in the database. */
-    fun sequences(): List<String>
-
-    /** Returns a map with the CHECK constraints in each of the specified [tables] in the database. */
-    fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> = emptyMap()
-
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
-    fun supportsSelectForUpdate(): Boolean
+    val supportsSelectForUpdate: Boolean get() = false
 
     /** Returns `true` if the specified [e] is allowed as a default column value in the dialect, `false` otherwise. */
     fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = e is LiteralOp<*>
-
-    /** Returns the catalog name of the connection of the specified [transaction]. */
-    fun catalog(transaction: Transaction): String = transaction.connection.catalog
-
-    /** Clears any cached values. */
-    fun resetCaches()
-
-    /** Clears any cached values including schema names. */
-    fun resetSchemaCaches()
 
     // Specific SQL statements
 
@@ -200,27 +130,22 @@ interface DatabaseDialect {
         }
     }
 
-    @Deprecated(
-        message = "This function will be removed in future releases.",
-        level = DeprecationLevel.WARNING
-    )
-    fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption {
-        @OptIn(InternalApi::class)
-        return TransactionManager.current().db.metadata { resolveReferenceOption(refOption.toString())!! }
-    }
-
+    // TODO move it to JDBC or R2DBC metadata
     /** Returns a map of all the columns' names mapped to their type. */
     fun fetchAllColumnTypes(tableName: String): Map<String, String> = emptyMap()
 
+    // TODO move it to JDBC or R2DBC metadata
     /** Returns the SQL type of the column in [resultSet]. If available, [prefetchedColumnTypes] is used to get the column type. */
     fun getColumnType(resultSet: ResultSet, prefetchedColumnTypes: Map<String, String> = emptyMap()): String = ""
 
+    // TODO move it to JDBC or R2DBC metadata
     /** Returns whether the [columnMetadataSqlType] type and the [columnType] are equivalent.
      *
      * [columnMetadataJdbcType], the value of which comes from [java.sql.Types], is taken into consideration if needed by a specific database.
      * @see [H2Dialect.areEquivalentColumnTypes] */
     fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean =
         columnMetadataSqlType.equals(columnType, ignoreCase = true)
+
 
     companion object {
         private val defaultLikePatternSpecialChars = mapOf('%' to null, '_' to null)
@@ -239,14 +164,20 @@ internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
 }
 
 /** Returns the dialect used in the current transaction, may throw an exception if there is no current transaction. */
-val currentDialect: DatabaseDialect get() = explicitDialect.get() ?: TransactionManager.current().db.dialect
+val currentDialect: DatabaseDialect
+    get() {
+        @OptIn(InternalApi::class)
+        return explicitDialect.get() ?: CoreTransactionManager.currentTransaction().db.dialect
+    }
 
+@OptIn(InternalApi::class)
 internal val currentDialectIfAvailable: DatabaseDialect?
-    get() = if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
+    get() = if (CoreTransactionManager.getDefaultDatabaseOrFirst() != null && CoreTransactionManager.currentTransactionOrNull() != null) {
         currentDialect
     } else {
         null
     }
 
+@OptIn(InternalApi::class)
 internal fun String.inProperCase(): String =
-    TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
+    CoreTransactionManager.currentTransactionOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

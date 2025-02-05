@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.DELETE
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.INSERT
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.UPDATE
 import org.jetbrains.exposed.sql.statements.StatementType
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import java.util.*
 
 @Suppress("TooManyFunctions")
@@ -131,7 +131,8 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expr: GroupConcat<T>,
         queryBuilder: QueryBuilder
     ): Unit = queryBuilder {
-        val tr = TransactionManager.current()
+        @OptIn(InternalApi::class)
+        val tr = CoreTransactionManager.currentTransaction()
         if (expr.distinct) tr.throwUnsupportedException("Oracle doesn't support DISTINCT in LISTAGG")
         if (expr.orderBy.size > 1) {
             tr.throwUnsupportedException("Oracle supports only single column in ORDER BY clause in LISTAGG")
@@ -206,8 +207,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
+        @OptIn(InternalApi::class)
         if (path.size > 1) {
-            TransactionManager.current().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+            CoreTransactionManager.currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
@@ -224,8 +226,9 @@ internal object OracleFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
+        @OptIn(InternalApi::class)
         if (path.size > 1) {
-            TransactionManager.current().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+            CoreTransactionManager.currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
         queryBuilder {
             append("JSON_EXISTS(", expression, ", ")
@@ -265,11 +268,23 @@ internal object OracleFunctionProvider : FunctionProvider() {
             expression to ((expression as? ExpressionWithColumnType<*>)?.alias("c$index") ?: expression.alias("c$index"))
         }.toMap()
 
-        val subQuery = targets.select(columnsToSelect.values.toList())
+        // TODO check if it could be replaced with buildStatement
+        // TODO The old version:
+        // TODO val subQuery = targets.select(columnsToSelect.values.toList())
+        // TODO        where?.let {
+        // TODO            subQuery.adjustWhere { it }
+        // TODO        }
+        // TODO        subQuery.prepareSQL(this)
+        // TODO        +") x"
+        +"SELECT "
+        columnsToSelect.values.appendTo { +it }
+        +" FROM "
+        @OptIn(InternalApi::class)
+        targets.describe(CoreTransactionManager.currentTransaction(), this)
         where?.let {
-            subQuery.adjustWhere { it }
+            +" WHERE "
+            +it
         }
-        subQuery.prepareSQL(this)
         +") x"
 
         columnsAndValues.appendTo(this, prefix = " SET ") { (col, value) ->
@@ -347,13 +362,17 @@ internal object OracleFunctionProvider : FunctionProvider() {
             )
         targets.checkJoinTypes(StatementType.DELETE)
 
+        // TODO the same as above
+        @OptIn(InternalApi::class)
         return with(QueryBuilder(true)) {
-            +"DELETE ("
-            val subQuery = targets.select(tableToDelete.columns)
+            +"DELETE (SELECT "
+            tableToDelete.columns.appendTo { +it }
+            +" FROM "
+            targets.describe(CoreTransactionManager.currentTransaction(), this)
             where?.let {
-                subQuery.adjustWhere { it }
+                +" WHERE "
+                +it
             }
-            subQuery.prepareSQL(this)
             +") x"
             limit?.let {
                 +" WHERE ROWNUM <= $it"

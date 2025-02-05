@@ -13,13 +13,18 @@ import kotlin.internal.LowPriorityInOverloadResolution
  */
 abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) : Statement<T>(type, targets) {
     /** The mapping of columns scheduled for change with their new values. */
-    protected val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
+    @InternalApi
+    val values: MutableMap<Column<*>, Any?> = LinkedHashMap()
 
-    open operator fun contains(column: Column<*>): Boolean = values.contains(column)
+    open operator fun contains(column: Column<*>): Boolean {
+        @OptIn(InternalApi::class)
+        return values.contains(column)
+    }
 
     /** Whether the underlying mapping has at least one stored value that is a batched statement. */
     protected var hasBatchedValues: Boolean = false
 
+    @OptIn(InternalApi::class)
     private fun checkThatExpressionWasNotSetInPreviousBatch(column: Column<*>) {
         require(!(values.containsKey(column) && hasBatchedValues)) { "$column is already initialized in a batch" }
     }
@@ -34,6 +39,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
             (value.value as CompositeID).setComponentValues()
         } else {
             column.columnType.validateValueBeforeUpdate(value)
+            @OptIn(InternalApi::class)
             values[column] = value
         }
     }
@@ -46,6 +52,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
         } else {
             val entityId: EntityID<S> = EntityID(value, (column.foreignKey?.targetTable ?: column.table) as IdTable<S>)
             column.columnType.validateValueBeforeUpdate(entityId)
+            @OptIn(InternalApi::class)
             values[column] = entityId
         }
     }
@@ -61,6 +68,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
         } else {
             val entityId: EntityID<S>? = value?.let { EntityID(it, (column.foreignKey?.targetTable ?: column.table) as IdTable<S>) }
             column.columnType.validateValueBeforeUpdate(entityId)
+            @OptIn(InternalApi::class)
             values[column] = entityId
         }
     }
@@ -71,12 +79,13 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
             "Trying to set null to not nullable column $column"
         }
         checkThatExpressionWasNotSetInPreviousBatch(column)
+        @OptIn(InternalApi::class)
         values[column] = value
     }
 
     open operator fun <T, S : T?, E : Expression<S>> set(column: Column<T>, value: E) = update(column, value)
 
-    open operator fun <S> set(column: Column<S>, value: Query) = update(column, wrapAsExpression(value))
+    open operator fun <S> set(column: Column<S>, value: AbstractQuery<*>) = update(column, wrapAsExpression(value))
 
     open operator fun <S> set(column: CompositeColumn<S>, value: S) {
         column.getRealColumnsWithValues(value).forEach { (realColumn, itsValue) ->
@@ -97,6 +106,7 @@ abstract class UpdateBuilder<out T>(type: StatementType, targets: List<Table>) :
      **/
     open fun <T, S : T?> update(column: Column<T>, value: Expression<S>) {
         checkThatExpressionWasNotSetInPreviousBatch(column)
+        @OptIn(InternalApi::class)
         values[column] = value
     }
 

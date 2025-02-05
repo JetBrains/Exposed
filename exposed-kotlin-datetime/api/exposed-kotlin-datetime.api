@@ -121,7 +121,6 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDurationColum
 	public fun nonNullValueToString-LRDsOJo (J)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB-LRDsOJo (J)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB-5sfh64U (Ljava/lang/Object;)J
@@ -140,7 +139,7 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinInstantColumn
 	public fun nonNullValueToString (Lkotlinx/datetime/Instant;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Lkotlinx/datetime/Instant;)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/RowApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lkotlinx/datetime/Instant;
@@ -159,6 +158,7 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateColu
 	public fun nonNullValueToString (Lkotlinx/datetime/LocalDate;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Lkotlinx/datetime/LocalDate;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/RowApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lkotlinx/datetime/LocalDate;
@@ -177,7 +177,7 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateTime
 	public fun nonNullValueToString (Lkotlinx/datetime/LocalDateTime;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Lkotlinx/datetime/LocalDateTime;)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/RowApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lkotlinx/datetime/LocalDateTime;
@@ -196,6 +196,7 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalTimeColu
 	public fun nonNullValueToString (Lkotlinx/datetime/LocalTime;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Lkotlinx/datetime/LocalTime;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/RowApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lkotlinx/datetime/LocalTime;
@@ -214,7 +215,7 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinOffsetDateTim
 	public fun nonNullValueToString (Ljava/time/OffsetDateTime;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Ljava/time/OffsetDateTime;)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/RowApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/time/OffsetDateTime;

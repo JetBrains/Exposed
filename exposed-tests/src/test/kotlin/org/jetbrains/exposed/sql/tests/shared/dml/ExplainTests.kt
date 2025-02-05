@@ -3,12 +3,13 @@ package org.jetbrains.exposed.sql.tests.shared.dml
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.statements.IStatementBuilder
+import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
@@ -49,7 +50,7 @@ class ExplainTests : DatabaseTestsBase() {
         var explainCount = 0
         val cityName = "City A"
 
-        fun Transaction.explainAndIncrement(body: Transaction.() -> Any?) = explain(body = body).also {
+        fun JdbcTransaction.explainAndIncrement(body: IStatementBuilder.() -> Statement<*>) = explain(body = body).also {
             it.toList() // as with select queries, explain is only executed when iterated over
             explainCount++
         }
@@ -172,16 +173,6 @@ class ExplainTests : DatabaseTestsBase() {
     @Test
     fun testExplainWithInvalidStatements() {
         withTables(excludeSettings = explainUnsupportedDb, Countries) {
-            expectException<IllegalStateException> {
-                explain { Countries.insertAndGetId { it[code] = "ABC" } }
-            }
-            expectException<IllegalStateException> {
-                explain {
-                    Countries.selectAll()
-                    "Last line in lambda should be expected return value - statement"
-                }
-            }
-
             debug = true
             statementCount = 0
 

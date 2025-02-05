@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.tests.currentDialectIfAvailableTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.currentTestDB
@@ -33,12 +33,12 @@ fun <T> assertEqualCollections(actual: Iterable<T>, expected: Collection<T>) {
 }
 
 fun <T> assertEqualLists(actual: List<T>, expected: List<T>) {
-    assertEquals(actual.size, expected.size, "Count mismatch on ${currentDialectIfAvailableTest?.name.orEmpty()}")
+    assertEquals(expected.size, actual.size, "Count mismatch on ${currentDialectIfAvailableTest?.name.orEmpty()}")
     expected.forEachIndexed { index, exp ->
         val act = actual.getOrElse(index) {
             fail("Value absent at pos $index on ${currentDialectIfAvailableTest?.name.orEmpty()}")
         }
-        assertEquals(act, exp, "Error at pos $index on ${currentDialectIfAvailableTest?.name.orEmpty()}:")
+        assertEquals(exp, act, "Error at pos $index on ${currentDialectIfAvailableTest?.name.orEmpty()}:")
     }
 }
 
@@ -46,14 +46,14 @@ fun <T> assertEqualLists(actual: List<T>, vararg expected: T) {
     assertEqualLists(actual, expected.toList())
 }
 
-private val Transaction.failedOn: String get() = currentTestDB?.name ?: currentDialectTest.name
+private val JdbcTransaction.failedOn: String get() = currentTestDB?.name ?: currentDialectTest.name
 
-fun Transaction.assertTrue(actual: Boolean) = assertTrue(actual, "Failed on $failedOn")
-fun Transaction.assertFalse(actual: Boolean) = assertFalse(actual, "Failed on $failedOn")
-fun <T> Transaction.assertEquals(exp: T, act: T) = assertEquals(exp, act, "Failed on $failedOn")
-fun <T> Transaction.assertEquals(exp: T, act: List<T>) = assertEquals(exp, act.single(), "Failed on $failedOn")
+fun JdbcTransaction.assertTrue(actual: Boolean) = assertTrue(actual, "Failed on $failedOn")
+fun JdbcTransaction.assertFalse(actual: Boolean) = assertFalse(actual, "Failed on $failedOn")
+fun <T> JdbcTransaction.assertEquals(exp: T, act: T) = assertEquals(exp, act, "Failed on $failedOn")
+fun <T> JdbcTransaction.assertEquals(exp: T, act: List<T>) = assertEquals(exp, act.single(), "Failed on $failedOn")
 
-fun Transaction.assertFailAndRollback(message: String, block: () -> Unit) {
+fun JdbcTransaction.assertFailAndRollback(message: String, block: () -> Unit) {
     commit()
     assertFails("Failed on ${currentDialectTest.name}. $message") {
         block()

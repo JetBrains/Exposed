@@ -355,7 +355,6 @@ public final class org/jetbrains/exposed/dao/View : org/jetbrains/exposed/sql/Si
 	public final fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun iterator ()Ljava/util/Iterator;
 	public fun limit (I)Lorg/jetbrains/exposed/sql/SizedIterable;
-	public fun limit (IJ)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun notForUpdate ()Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun offset (J)Lorg/jetbrains/exposed/sql/SizedIterable;
 	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/sql/SizedIterable;

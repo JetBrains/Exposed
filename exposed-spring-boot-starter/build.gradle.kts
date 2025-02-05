@@ -21,6 +21,8 @@ dependencies {
     api(project(":exposed-core"))
     api(project(":exposed-dao"))
     api(project(":spring-transaction"))
+    // how to avoid this
+    compileOnly(project(":exposed-jdbc"))
     api(libs.spring.boot.starter.jdbc)
     api(libs.spring.boot.autoconfigure)
     compileOnly(libs.spring.boot.configuration.processor)
@@ -28,6 +30,7 @@ dependencies {
     // put in testImplementation so no hard dependency for those using the starter
     testImplementation(libs.spring.boot.starter.webflux)
     testImplementation(libs.h2)
+    testImplementation(project(":exposed-jdbc"))
 }
 
 tasks.withType<KotlinCompile>().configureEach {
