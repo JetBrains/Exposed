@@ -1,0 +1,66 @@
+# This workflow ensures that all commit messages in a pull request adhere to the Conventional Commits specification.
+
+name: Commit Message Validation
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Triggers the workflow on pull request events targeting the main branch
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  validate-commits:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit messages
+        run: |
+          # Regex for Conventional Commits specification
+          COMMIT_REGEX="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^\)]*\))?:\s?(EXPOSED-[0-9]+\s?)?.+$"
+          
+          # Get all commits in the pull request (from base to head)
+          COMMITS=$(git log --format=%s --no-merges origin/main..${{ github.sha }})
+
+          # Initialize counters and store invalid commits
+          INVALID_COMMITS=()
+          VALID_COMMITS=()
+          
+          echo "ℹ️ Checking if commit messages are following the Conventional Commits specification..."
+
+          # Loop through each commit message
+          IFS=$'\n'
+          for COMMIT_MSG in $COMMITS; do
+            # Check if commit message matches the regex
+            if [[ ! "$COMMIT_MSG" =~ $COMMIT_REGEX ]]; then
+              INVALID_COMMITS+=("$COMMIT_MSG")
+              echo -e "❌ $COMMIT_MSG"
+            else
+              VALID_COMMITS+=("$COMMIT_MSG")
+              echo -e "✅ $COMMIT_MSG"
+            fi
+          done
+
+          # If there are invalid commits, print the summary
+          if [ ${#INVALID_COMMITS[@]} -gt 0 ]; then
+            echo ""
+            echo "🛑 Some commit messages are not following the Conventional Commits specification."
+            echo ""
+            echo "Valid commit message format: <type>(<optional scope>): <subject>"
+            echo "Example: fix: Bug in insert"
+            echo "Please check https://www.conventionalcommits.org/en/v1.0.0/#summary"
+            exit 1
+          fi
+
+          echo "🎉 All commit messages are following the Conventional Commits specification."

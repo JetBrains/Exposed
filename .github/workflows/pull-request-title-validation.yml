@@ -1,0 +1,45 @@
+# This workflow ensures that all commit messages in a pull request adhere to the Conventional Commits specification.
+
+name: Pull Request Title Validation
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Triggers the workflow on pull request events targeting the main branch
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - edited
+      - reopened
+
+jobs:
+  validate-PR-title:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Validate PR title
+        run: |
+          # Regex for Conventional Commits specification
+          PR_TITLE_REGEX="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^\)]*\))?:\s?(EXPOSED-[0-9]+\s?)?.+$"
+
+          # Get the PR title
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          # Check if PR title matches the regex
+          if [[ ! "$PR_TITLE" =~ $PR_TITLE_REGEX ]]; then
+            echo "❌ The PR title does not follow the Conventional Commits specification."
+            echo "PR Title -> $PR_TITLE"
+            echo "Valid PR title format: <type>(<optional scope>): <optional EXPOSED-<number>> <subject>"
+            echo "Example: fix: Bug in insert"
+            echo "Please check https://www.conventionalcommits.org/en/v1.0.0/#summary"
+            exit 1
+          else
+            echo "🎉 The PR title is following the Conventional Commits specification."
+          fi
