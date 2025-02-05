@@ -49,7 +49,7 @@ class MultiDatabaseTest {
     fun before() {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+            currentDB = (TransactionManager.currentOrNull() as? JdbcTransaction)?.db
         }
     }
 
@@ -256,16 +256,16 @@ class MultiDatabaseTest {
         val coroutineDispatcher1 = newSingleThreadContext("first")
         TransactionManager.defaultDatabase = db1
         newSuspendedTransaction(coroutineDispatcher1) {
-            assertEquals(db1.name, TransactionManager.current().db.name) // when running all tests together, this one usually fails
-            TransactionManager.current().exec("SELECT 1") { rs ->
+            assertEquals(db1.name, (TransactionManager.current() as JdbcTransaction).db.name) // when running all tests together, this one usually fails
+            (TransactionManager.current() as JdbcTransaction).exec("SELECT 1") { rs ->
                 rs.next()
                 assertEquals(1, rs.getInt(1))
             }
         }
         TransactionManager.defaultDatabase = db2
         newSuspendedTransaction(coroutineDispatcher1) {
-            assertEquals(db2.name, TransactionManager.current().db.name) // fails??
-            TransactionManager.current().exec("SELECT 1") { rs ->
+            assertEquals(db2.name, (TransactionManager.current() as JdbcTransaction).db.name) // fails??
+            (TransactionManager.current() as JdbcTransaction).exec("SELECT 1") { rs ->
                 rs.next()
                 assertEquals(1, rs.getInt(1))
             }
@@ -281,8 +281,8 @@ class MultiDatabaseTest {
         TransactionManager.defaultDatabase = db1
         threadpool.submit {
             transaction {
-                assertEquals(db1.name, TransactionManager.current().db.name)
-                TransactionManager.current().exec("SELECT 1") { rs ->
+                assertEquals(db1.name, (TransactionManager.current() as JdbcTransaction).db.name)
+                (TransactionManager.current() as JdbcTransaction).exec("SELECT 1") { rs ->
                     rs.next()
                     assertEquals(1, rs.getInt(1))
                 }
@@ -292,8 +292,8 @@ class MultiDatabaseTest {
         TransactionManager.defaultDatabase = db2
         threadpool.submit {
             transaction {
-                assertEquals(db2.name, TransactionManager.current().db.name)
-                TransactionManager.current().exec("SELECT 1") { rs ->
+                assertEquals(db2.name, (TransactionManager.current() as JdbcTransaction).db.name)
+                (TransactionManager.current() as JdbcTransaction).exec("SELECT 1") { rs ->
                     rs.next()
                     assertEquals(1, rs.getInt(1))
                 }

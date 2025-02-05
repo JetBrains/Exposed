@@ -342,7 +342,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
     }
 
     internal val fullVersion: String by lazy {
-        TransactionManager.current().db.metadata { databaseProductVersion }
+        TransactionManager.current().db.fullVersion
     }
 
     override val supportsCreateSequence: Boolean = false
@@ -404,17 +404,6 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
     }
 
     override fun dropSchema(schema: Schema, cascade: Boolean): String = "DROP SCHEMA IF EXISTS ${schema.identifier}"
-
-    override fun String.metadataMatchesTable(schema: String, table: Table): Boolean {
-        return when {
-            schema.isEmpty() -> this == table.nameInDatabaseCaseUnquoted()
-            else -> {
-                val sanitizedTableName = table.tableNameWithoutScheme.replace("`", "")
-                val nameInDb = "$schema.$sanitizedTableName".inProperCase()
-                this == nameInDb
-            }
-        }
-    }
 
     companion object : DialectNameProvider("MySQL")
 }

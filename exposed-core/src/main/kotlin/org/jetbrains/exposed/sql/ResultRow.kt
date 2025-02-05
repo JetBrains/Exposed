@@ -3,9 +3,9 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.withDialect
-import java.sql.ResultSet
 
 /** A row of data representing a single record retrieved from a database result set. */
 class ResultRow(
@@ -13,7 +13,7 @@ class ResultRow(
     val fieldIndex: Map<Expression<*>, Int>,
     private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
 ) {
-    private val database: Database? = TransactionManager.currentOrNull()?.db
+    private val database: DatabaseApi? = TransactionManager.currentOrNull()?.db
 
     private val lookUpCache = ResultRowCache()
 
@@ -135,8 +135,8 @@ class ResultRow(
     internal object NotInitializedValue
 
     companion object {
-        /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [ResultSet]. */
-        fun create(rs: ResultSet, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
+        /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [ResultApi]. */
+        fun create(rs: ResultApi, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             return ResultRow(fieldsIndex).apply {
                 fieldsIndex.forEach { (field, index) ->
                     val columnType = (field as? ExpressionWithColumnType)?.columnType

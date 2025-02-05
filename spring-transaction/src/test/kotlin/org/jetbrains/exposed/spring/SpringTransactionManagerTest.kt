@@ -2,6 +2,7 @@ package org.jetbrains.exposed.spring
 
 import junit.framework.TestCase.assertEquals
 import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
@@ -308,11 +309,11 @@ class SpringTransactionManagerTest {
                 propagationBehavior = TransactionDefinition.PROPAGATION_NOT_SUPPORTED
             ) {
                 assertFailsWith<IllegalStateException> {
-                    TransactionManager.current().connection
+                    (TransactionManager.current() as JdbcTransaction).connection
                 }
             }
             assertTrue(it.isNewTransaction)
-            TransactionManager.current().connection
+            (TransactionManager.current() as JdbcTransaction).connection
         }
 
         assertEquals(1, con1.commitCallCount)
@@ -326,7 +327,7 @@ class SpringTransactionManagerTest {
             assertTrue(it.isNewTransaction)
             tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_MANDATORY)
             assertTrue(it.isNewTransaction)
-            TransactionManager.current().connection
+            (TransactionManager.current() as JdbcTransaction).connection
         }
 
         assertEquals(1, con1.commitCallCount)
@@ -348,7 +349,7 @@ class SpringTransactionManagerTest {
             assertTrue(it.isNewTransaction)
             tm.executeAssert(propagationBehavior = TransactionDefinition.PROPAGATION_SUPPORTS)
             assertTrue(it.isNewTransaction)
-            TransactionManager.current().connection
+            (TransactionManager.current() as JdbcTransaction).connection
         }
 
         assertEquals(1, con1.commitCallCount)
@@ -400,7 +401,7 @@ class SpringTransactionManagerTest {
                 TransactionManager.managerFor(TransactionManager.currentOrNull()?.db),
                 TransactionManager.manager
             )
-            if (initializeConnection) TransactionManager.current().connection
+            if (initializeConnection) (TransactionManager.current() as JdbcTransaction).connection
             body(it)
         }
     }

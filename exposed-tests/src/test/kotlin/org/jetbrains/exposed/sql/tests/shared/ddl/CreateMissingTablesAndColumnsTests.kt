@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
@@ -253,9 +254,9 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLITE, tables = arrayOf(initialTable)) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
-            assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
+            assertEquals(1, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)
-            assertEquals(2, currentDialectTest.tableColumns(t)[t]!!.size)
+            assertEquals(2, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
         }
     }
 
@@ -274,7 +275,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
             SchemaUtils.createMissingTablesAndColumns(noPKTable)
-            var primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
+            var primaryKey: PrimaryKeyMetadata? = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             assertNull(primaryKey)
 
             val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
@@ -282,7 +283,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             assertEquals(expected, statements.single())
 
             SchemaUtils.createMissingTablesAndColumns(singlePKTable)
-            primaryKey = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
+            primaryKey = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             assertNotNull(primaryKey)
             assertEquals("bar".inProperCase(), primaryKey.columnNames.single())
 

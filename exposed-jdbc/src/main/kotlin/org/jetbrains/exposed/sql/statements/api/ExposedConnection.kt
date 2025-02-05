@@ -33,7 +33,7 @@ interface ExposedConnection<OriginalConnection : Any> {
      *
      * To indicate that auto-generated keys should be made available for retrieval, set [returnKeys] to `true`.
      */
-    fun prepareStatement(sql: String, returnKeys: Boolean): PreparedStatementApi
+    fun prepareStatement(sql: String, returnKeys: Boolean): JdbcPreparedStatementApi
 
     /**
      * Returns a precompiled [sql] statement stored as a [PreparedStatementApi] implementation.
@@ -41,7 +41,7 @@ interface ExposedConnection<OriginalConnection : Any> {
      * To indicate that auto-generated keys should be made available for retrieval, provide the names of
      * the target [columns] that contain the keys to be returned.
      */
-    fun prepareStatement(sql: String, columns: Array<String>): PreparedStatementApi
+    fun prepareStatement(sql: String, columns: Array<String>): JdbcPreparedStatementApi
 
     /** Sends a collection of SQL strings to the database for execution as a batch statement. */
     fun executeInBatch(sqls: List<String>)
@@ -56,7 +56,7 @@ interface ExposedConnection<OriginalConnection : Any> {
      * Calls the specified function [body] with an [ExposedDatabaseMetadata] implementation as its receiver and
      * returns the retrieved metadata as a result.
      */
-    fun <T> metadata(body: ExposedDatabaseMetadata.() -> T): T
+    fun <T> metadata(body: JdbcExposedDatabaseMetadata.() -> T): T
 
     /** Sets and returns a new savepoint with the specified [name]. */
     fun setSavepoint(name: String): ExposedSavepoint

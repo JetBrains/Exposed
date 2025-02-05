@@ -6,7 +6,8 @@ import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.InternalApi
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.closeStatementsAndConnection
@@ -18,29 +19,29 @@ import java.util.concurrent.ThreadLocalRandom
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
-internal class TransactionContext(val manager: TransactionManager?, val transaction: Transaction?)
+internal class TransactionContext(val manager: TransactionManager?, val transaction: JdbcTransaction?)
 
 internal class TransactionScope(
-    internal val tx: Lazy<Transaction>,
+    internal val tx: Lazy<JdbcTransaction>,
     parent: CoroutineContext
 ) : CoroutineScope, CoroutineContext.Element {
     private val baseScope = CoroutineScope(parent)
     override val coroutineContext get() = baseScope.coroutineContext + this
     override val key = Companion
 
-    internal fun holdsSameTransaction(transaction: Transaction?) =
+    internal fun holdsSameTransaction(transaction: JdbcTransaction?) =
         transaction != null && tx.isInitialized() && tx.value == transaction
     companion object : CoroutineContext.Key<TransactionScope>
 }
 
 internal class TransactionCoroutineElement(
-    private val newTransaction: Lazy<Transaction>,
+    private val newTransaction: Lazy<JdbcTransaction>,
     val manager: TransactionManager
 ) : ThreadContextElement<TransactionContext> {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
-        val currentTransaction = TransactionManager.currentOrNull()
+        val currentTransaction = TransactionManager.currentOrNull() as? JdbcTransaction
         val currentManager = currentTransaction?.db?.transactionManager
         manager.bindTransactionToThread(newTransaction.value)
         TransactionManager.resetCurrent(manager)
@@ -69,7 +70,7 @@ suspend fun <T> newSuspendedTransaction(
     db: Database? = null,
     transactionIsolation: Int? = null,
     readOnly: Boolean? = null,
-    statement: suspend Transaction.() -> T
+    statement: suspend JdbcTransaction.() -> T
 ): T =
     withTransactionScope(context, null, db, transactionIsolation, readOnly) {
         suspendedTransactionAsyncInternal(true, statement).await()
@@ -83,9 +84,9 @@ suspend fun <T> newSuspendedTransaction(
  *
  * @sample org.jetbrains.exposed.sql.tests.shared.CoroutineTests.suspendedTx
  */
-suspend fun <T> Transaction.withSuspendTransaction(
+suspend fun <T> JdbcTransaction.withSuspendTransaction(
     context: CoroutineContext? = null,
-    statement: suspend Transaction.() -> T
+    statement: suspend JdbcTransaction.() -> T
 ): T =
     withTransactionScope(context, this, db = null, transactionIsolation = null, readOnly = null) {
         suspendedTransactionAsyncInternal(false, statement).await()
@@ -104,16 +105,16 @@ suspend fun <T> suspendedTransactionAsync(
     db: Database? = null,
     transactionIsolation: Int? = null,
     readOnly: Boolean? = null,
-    statement: suspend Transaction.() -> T
+    statement: suspend JdbcTransaction.() -> T
 ): Deferred<T> {
-    val currentTransaction = TransactionManager.currentOrNull()
+    val currentTransaction = TransactionManager.currentOrNull() as? JdbcTransaction
     return withTransactionScope(context, null, db, transactionIsolation, readOnly) {
         suspendedTransactionAsyncInternal(!holdsSameTransaction(currentTransaction), statement)
     }
 }
 
-private fun Transaction.closeAsync() {
-    val currentTransaction = TransactionManager.currentOrNull()
+private fun JdbcTransaction.closeAsync() {
+    val currentTransaction = TransactionManager.currentOrNull() as? JdbcTransaction
     try {
         val temporaryManager = this.db.transactionManager
         temporaryManager.bindTransactionToThread(this)
@@ -128,22 +129,26 @@ private fun Transaction.closeAsync() {
 
 private suspend fun <T> withTransactionScope(
     context: CoroutineContext?,
-    currentTransaction: Transaction?,
+    currentTransaction: JdbcTransaction?,
     db: Database? = null,
     transactionIsolation: Int?,
     readOnly: Boolean?,
     body: suspend TransactionScope.() -> T
 ): T {
     val currentScope = coroutineContext[TransactionScope]
-    suspend fun newScope(currentTransaction: Transaction?): T {
-        val currentDatabase: Database? = currentTransaction?.db ?: db ?: TransactionManager.currentDefaultDatabase.get()
+
+    @OptIn(InternalApi::class)
+    suspend fun newScope(currentTransaction: JdbcTransaction?): T {
+        val currentDatabase: Database? = currentTransaction?.db
+            ?: db
+            ?: TransactionManager.currentDefaultDatabase.get() as? Database
         val manager = currentDatabase?.transactionManager ?: TransactionManager.manager
 
         val tx = lazy(LazyThreadSafetyMode.NONE) {
             currentTransaction ?: manager.newTransaction(
                 isolation = transactionIsolation ?: manager.defaultIsolationLevel,
                 readOnly = readOnly ?: manager.defaultReadOnly
-            )
+            ) as JdbcTransaction
         }
 
         val element = TransactionCoroutineElement(tx, manager)
@@ -162,7 +167,7 @@ private suspend fun <T> withTransactionScope(
     }
 }
 
-private fun Transaction.resetIfClosed(): Transaction {
+private fun JdbcTransaction.resetIfClosed(): JdbcTransaction {
     return if (connection.isClosed) {
         // Repetition attempts will throw org.h2.jdbc.JdbcSQLException: The object is already closed
         // unless the transaction is reset before every attempt (after the 1st failed attempt)
@@ -178,7 +183,7 @@ private fun Transaction.resetIfClosed(): Transaction {
 @Suppress("CyclomaticComplexMethod")
 private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     shouldCommit: Boolean,
-    statement: suspend Transaction.() -> T
+    statement: suspend JdbcTransaction.() -> T
 ): Deferred<T> = async {
     var attempts = 0
     var intermediateDelay: Long = 0

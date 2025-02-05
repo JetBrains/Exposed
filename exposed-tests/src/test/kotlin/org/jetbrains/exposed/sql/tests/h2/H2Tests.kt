@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
@@ -102,9 +102,9 @@ class H2Tests : DatabaseTestsBase() {
                     "ALTER TABLE ${tableName.inProperCase()} ADD CONSTRAINT pk_$tableName PRIMARY KEY (${"id".inProperCase()})",
                     t.id.ddl[1]
                 )
-                assertEquals(1, currentDialectTest.tableColumns(t)[t]!!.size)
+                assertEquals(1, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
                 SchemaUtils.createMissingTablesAndColumns(t)
-                assertEquals(2, currentDialectTest.tableColumns(t)[t]!!.size)
+                assertEquals(2, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
             } finally {
                 SchemaUtils.drop(t)
             }

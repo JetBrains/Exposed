@@ -33,11 +33,6 @@ data class Schema(
     val ddl: List<String>
         get() = createStatement()
 
-    /**
-     * Checks if this schema exists or not.
-     */
-    fun exists(): Boolean = currentDialect.schemaExists(this)
-
     /** Returns the SQL statements that create this schema. */
     fun createStatement(): List<String> {
         if (!currentDialect.supportsCreateSchema) {

@@ -82,7 +82,7 @@ class PostgresqlTests : DatabaseTestsBase() {
             val age = integer("age")
         }
 
-        fun <T : Any> Transaction.assertPrimaryKey(transform: (ResultSet) -> T): T? {
+        fun <T : Any> JdbcTransaction.assertPrimaryKey(transform: (ResultSet) -> T): T? {
             return exec(
                 """
                 SELECT ct.relname as TABLE_NAME, ci.relname AS PK_NAME
@@ -116,7 +116,7 @@ class PostgresqlTests : DatabaseTestsBase() {
         }
     }
 
-    private fun Transaction.withTable(statement: Transaction.() -> Unit) {
+    private fun JdbcTransaction.withTable(statement: JdbcTransaction.() -> Unit) {
         SchemaUtils.create(table)
         try {
             statement()

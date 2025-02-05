@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionScope
@@ -115,11 +116,12 @@ fun Transaction.registeredChanges() = entityEvents.toList()
  *
  * The [action] will be unregistered at the end of the call to the [body] block.
  */
+// HERE
 fun <T> withHook(action: (EntityChange) -> Unit, body: () -> T): T {
     EntityHook.subscribe(action)
     try {
         return body().apply {
-            TransactionManager.current().commit()
+            (TransactionManager.current() as JdbcTransaction).commit()
         }
     } finally {
         EntityHook.unsubscribe(action)

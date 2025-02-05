@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 
@@ -60,15 +59,6 @@ open class UpsertStatement<Key : Any>(
         return super.arguments().map {
             it + additionalArgs
         }
-    }
-
-    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
-        // We must return values from upsert because returned id could be different depending on insert or upsert happened
-        if (!currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
-            return transaction.connection.prepareStatement(sql, true)
-        }
-
-        return super.prepared(transaction, sql)
     }
 }
 

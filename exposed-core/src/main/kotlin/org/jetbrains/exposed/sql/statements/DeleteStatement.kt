@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import org.jetbrains.exposed.sql.vendors.H2FunctionProvider
 import org.jetbrains.exposed.sql.vendors.h2Mode
@@ -54,10 +53,6 @@ open class DeleteStatement(
     )
     val offset: Long? = null
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int {
-        return executeUpdate()
-    }
-
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val dialect = transaction.db.dialect
         return when (targetsSet) {
@@ -84,33 +79,5 @@ open class DeleteStatement(
         }
         where?.toQueryBuilder(this)
         listOf(args)
-    }
-
-    companion object {
-        @Deprecated(
-            "This function that accepts an 'offset' argument will be removed in future releases. Please leave a comment on " +
-                "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
-                "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
-            ReplaceWith("where(transaction, table, op, isIgnore, limit)"),
-            DeprecationLevel.ERROR
-        )
-        @Suppress("UnusedParameter")
-        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null, offset: Long? = null): Int =
-            where(transaction, table, op, isIgnore, limit)
-
-        /**
-         * Creates a [DeleteStatement] that deletes only rows in [table] that match the provided [op].
-         *
-         * @return Count of deleted rows.
-         */
-        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null): Int =
-            DeleteStatement(table, op, isIgnore, limit, emptyList()).execute(transaction) ?: 0
-
-        /**
-         * Creates a [DeleteStatement] that deletes all rows in [table].
-         *
-         * @return Count of deleted rows.
-         */
-        fun all(transaction: Transaction, table: Table): Int = DeleteStatement(table).execute(transaction) ?: 0
     }
 }

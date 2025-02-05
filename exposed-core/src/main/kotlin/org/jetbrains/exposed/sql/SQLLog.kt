@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.statements.expandArgs
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.slf4j.LoggerFactory
-import java.util.*
 
 /** Base class representing a provider of log messages. */
 interface SqlLogger {
@@ -63,13 +62,5 @@ class CompositeSqlLogger : SqlLogger, StatementInterceptor {
         contexts.forEach {
             log(it, transaction)
         }
-    }
-}
-
-/** Adds one or more [SqlLogger]s to [this] transaction. */
-fun Transaction.addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
-    return CompositeSqlLogger().apply {
-        logger.forEach { this.addLogger(it) }
-        registerInterceptor(this)
     }
 }

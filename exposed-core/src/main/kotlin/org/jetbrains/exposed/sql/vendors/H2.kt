@@ -217,7 +217,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     /** Indicates whether the H2 Database Engine version is greater than or equal to 2.0. */
     val isSecondVersion get() = majorVersion == H2MajorVersion.Two
 
-    private fun exactH2Version(transaction: Transaction): String = transaction.db.metadata { databaseProductVersion.substringBefore(" (") }
+    private fun exactH2Version(transaction: Transaction): String = transaction.db.version.toString()
 
     /** H2 database compatibility modes that emulate the behavior of other specific databases. */
     enum class H2CompatibilityMode {
@@ -238,9 +238,10 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     private var delegatedDialect: DatabaseDialect? = null
 
+    @OptIn(InternalApi::class)
     private fun resolveDelegatedDialect(): DatabaseDialect? {
         return delegatedDialect ?: delegatedDialectNameProvider?.dialectName?.lowercase()?.let {
-            val dialect = Database.dialects[it]?.invoke() ?: error("Can't resolve dialect for $it")
+            val dialect = DatabaseApi.dialects[it]?.invoke() ?: error("Can't resolve dialect for $it")
             delegatedDialect = dialect
             dialect
         }
@@ -262,7 +263,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     /** The H2 database compatibility mode retrieved from metadata. */
     val h2Mode: H2CompatibilityMode? by lazy {
-        val modeValue = TransactionManager.current().db.metadata { databaseDialectMode }
+        val modeValue = TransactionManager.current().db.dialectMode
         when {
             modeValue == null -> null
             modeValue.equals("MySQL", ignoreCase = true) -> H2CompatibilityMode.MySQL
@@ -299,10 +300,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsOrderByNullsFirstLast: Boolean by lazy { resolveDelegatedDialect()?.supportsOrderByNullsFirstLast ?: super.supportsOrderByNullsFirstLast }
     override val supportsWindowFrameGroupsMode: Boolean by lazy { resolveDelegatedDialect()?.supportsWindowFrameGroupsMode ?: super.supportsWindowFrameGroupsMode }
 //    override val likePatternSpecialChars: Map<Char, Char?> by lazy { resolveDelegatedDialect()?.likePatternSpecialChars ?: super.likePatternSpecialChars }
-
-    override fun existingIndices(vararg tables: Table): Map<Table, List<Index>> =
-        super.existingIndices(*tables).mapValues { entry -> entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") } }
-            .filterValues { it.isNotEmpty() }
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 

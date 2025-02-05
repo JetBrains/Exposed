@@ -362,7 +362,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
     private fun withTestTableAndExcludeSettings(
         vararg tables: Table = arrayOf(ArrayTestTable),
         excludeSettings: Collection<TestDB> = arrayTypeUnsupportedDb,
-        statement: Transaction.(TestDB) -> Unit
+        statement: JdbcTransaction.(TestDB) -> Unit
     ) {
         withTables(excludeSettings = excludeSettings, *tables) { db ->
             statement(db)

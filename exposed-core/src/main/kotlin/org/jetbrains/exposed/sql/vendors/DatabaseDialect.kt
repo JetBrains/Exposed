@@ -77,79 +77,11 @@ interface DatabaseDialect {
     /** Returns the allowed maximum sequence value for a dialect, as a [Long]. */
     val sequenceMaxValue: Long get() = Long.MAX_VALUE
 
-    /** Returns `true` if the database supports the `LIMIT` clause with update and delete statements. */
-    fun supportsLimitWithUpdateOrDelete(): Boolean
-
-    /** Returns the name of the current database. */
-    fun getDatabase(): String
-
-    /**
-     * Returns a list with the names of all the defined tables in the current database schema.
-     * The names will be returned with schema prefixes if the database supports it.
-     */
-    fun allTablesNames(): List<String>
-
-    /**
-     * Returns a list with the names of all the tables in all database schemas.
-     * The names will be returned with schema prefixes, if the database supports it, and non-user defined tables,
-     * like system information table names, will be included.
-     */
-    fun allTablesNamesInAllSchemas(): List<String>
-
-    /** Checks if the specified table exists in the database. */
-    fun tableExists(table: Table): Boolean
-
-    /** Checks if the specified schema exists. */
-    fun schemaExists(schema: Schema): Boolean
-
-    /** Returns whether the specified sequence exists. */
-    fun sequenceExists(sequence: Sequence): Boolean
-
-    fun checkTableMapping(table: Table): Boolean = true
-
-    /** Returns a map with the column metadata of all the defined columns in each of the specified [tables]. */
-    fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> = emptyMap()
-
-    /** Returns a map with the foreign key constraints of all the defined columns sets in each of the specified [tables]. */
-    fun columnConstraints(
-        vararg tables: Table
-    ): Map<Pair<Table, LinkedHashSet<Column<*>>>, List<ForeignKeyConstraint>> = emptyMap()
-
-    /** Returns a map with all the defined indices in each of the specified [tables]. */
-    fun existingIndices(vararg tables: Table): Map<Table, List<Index>> = emptyMap()
-
-    /** Returns a map with the primary key metadata in each of the specified [tables]. */
-    fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> = emptyMap()
-
-    /**
-     * Returns a map with all the defined sequences that hold a relation to the specified [tables] in the database.
-     *
-     * **Note** PostgreSQL is currently the only database that maps relational dependencies for sequences created when
-     * a SERIAL column is registered to an `IdTable`. Using this method with any other database returns an empty map.
-     *
-     * Any sequence created using the CREATE SEQUENCE command will be ignored
-     * as it is not necessarily bound to any particular table. Sequences that are used in a table via triggers will also
-     * not be returned.
-     */
-    fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> = emptyMap()
-
-    /** Returns a list of the names of all sequences in the database. */
-    fun sequences(): List<String>
-
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
-    fun supportsSelectForUpdate(): Boolean
+    val supportsSelectForUpdate: Boolean get() = false
 
     /** Returns `true` if the specified [e] is allowed as a default column value in the dialect, `false` otherwise. */
     fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = e is LiteralOp<*>
-
-    /** Returns the catalog name of the connection of the specified [transaction]. */
-    fun catalog(transaction: Transaction): String = transaction.connection.catalog
-
-    /** Clears any cached values. */
-    fun resetCaches()
-
-    /** Clears any cached values including schema names. */
-    fun resetSchemaCaches()
 
     // Specific SQL statements
 
@@ -191,15 +123,6 @@ interface DatabaseDialect {
         if (cascade) {
             append(" CASCADE")
         }
-    }
-
-    @Deprecated(
-        message = "This function will be removed in future releases.",
-        level = DeprecationLevel.WARNING
-    )
-    fun resolveRefOptionFromJdbc(refOption: Int): ReferenceOption {
-        @OptIn(InternalApi::class)
-        return TransactionManager.current().db.metadata { resolveReferenceOption(refOption.toString())!! }
     }
 
     companion object {

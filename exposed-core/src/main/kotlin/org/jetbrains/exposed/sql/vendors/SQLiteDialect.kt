@@ -285,10 +285,6 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
 
     override val supportsWindowFrameGroupsMode: Boolean = true
 
-    override fun supportsLimitWithUpdateOrDelete(): Boolean {
-        return TransactionManager.current().db.metadata { supportsLimitWithUpdateOrDelete() }
-    }
-
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun createIndex(index: Index): String {
@@ -316,14 +312,5 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
 
     override fun dropDatabase(name: String) = "DETACH DATABASE ${name.inProperCase()}"
 
-    companion object : DialectNameProvider("SQLite") {
-        @Deprecated(
-            message = "This property will be removed in future releases.",
-            replaceWith = ReplaceWith("currentDialect.supportsLimitWithUpdateOrDelete()"),
-            level = DeprecationLevel.WARNING
-        )
-        val ENABLE_UPDATE_DELETE_LIMIT: Boolean by lazy {
-            TransactionManager.current().db.metadata { supportsLimitWithUpdateOrDelete() }
-        }
-    }
+    companion object : DialectNameProvider("SQLite")
 }

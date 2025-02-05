@@ -17,24 +17,6 @@ class DatabaseConfig private constructor(
     val defaultMaxAttempts: Int,
     val defaultMinRetryDelay: Long,
     val defaultMaxRetryDelay: Long,
-    @Deprecated(
-        message = "This property will be removed in future releases",
-        replaceWith = ReplaceWith("defaultMaxAttempts"),
-        level = DeprecationLevel.HIDDEN
-    )
-    val defaultRepetitionAttempts: Int,
-    @Deprecated(
-        message = "This property will be removed in future releases",
-        replaceWith = ReplaceWith("defaultMinRetryDelay"),
-        level = DeprecationLevel.HIDDEN
-    )
-    val defaultMinRepetitionDelay: Long,
-    @Deprecated(
-        message = "This property will be removed in future releases",
-        replaceWith = ReplaceWith("defaultMaxRetryDelay"),
-        level = DeprecationLevel.HIDDEN
-    )
-    val defaultMaxRepetitionDelay: Long,
     val defaultReadOnly: Boolean,
     val warnLongQueriesDuration: Long?,
     val maxEntitiesToStoreInCachePerEntity: Int,
@@ -136,34 +118,7 @@ class DatabaseConfig private constructor(
          */
         @ExperimentalKeywordApi
         var preserveKeywordCasing: Boolean = true,
-    ) {
-        @Deprecated(
-            message = "This property will be removed in future releases",
-            replaceWith = ReplaceWith("defaultMaxAttempts"),
-            level = DeprecationLevel.HIDDEN
-        )
-        var defaultRepetitionAttempts: Int
-            get() = defaultMaxAttempts
-            set(value) { defaultMaxAttempts = value }
-
-        @Deprecated(
-            message = "This property will be removed in future releases",
-            replaceWith = ReplaceWith("defaultMinRetryDelay"),
-            level = DeprecationLevel.HIDDEN
-        )
-        var defaultMinRepetitionDelay: Long
-            get() = defaultMinRetryDelay
-            set(value) { defaultMinRetryDelay = value }
-
-        @Deprecated(
-            message = "This property will be removed in future releases",
-            replaceWith = ReplaceWith("defaultMaxRetryDelay"),
-            level = DeprecationLevel.HIDDEN
-        )
-        var defaultMaxRepetitionDelay: Long
-            get() = defaultMaxRetryDelay
-            set(value) { defaultMaxRetryDelay = value }
-    }
+    )
 
     companion object {
         operator fun invoke(body: Builder.() -> Unit = {}): DatabaseConfig {
@@ -179,9 +134,6 @@ class DatabaseConfig private constructor(
                 defaultMaxAttempts = builder.defaultMaxAttempts,
                 defaultMinRetryDelay = builder.defaultMinRetryDelay,
                 defaultMaxRetryDelay = builder.defaultMaxRetryDelay,
-                defaultRepetitionAttempts = builder.defaultMaxAttempts,
-                defaultMinRepetitionDelay = builder.defaultMinRetryDelay,
-                defaultMaxRepetitionDelay = builder.defaultMaxRetryDelay,
                 defaultReadOnly = builder.defaultReadOnly,
                 warnLongQueriesDuration = builder.warnLongQueriesDuration,
                 maxEntitiesToStoreInCachePerEntity = builder.maxEntitiesToStoreInCachePerEntity,

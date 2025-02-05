@@ -4,7 +4,6 @@ import org.jetbrains.exposed.sql.AbstractQuery
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
 /**
  * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table.
@@ -26,8 +25,6 @@ open class InsertSelectStatement(
         if (tables.count() > 1) error("Can't insert to different tables ${tables.joinToString { it.name }} from single select")
         if (columns.size != selectQuery.set.fields.size) error("Columns count doesn't equal to query columns count")
     }
-
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int? = executeUpdate()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = selectQuery.arguments()
 

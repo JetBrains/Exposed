@@ -2,8 +2,8 @@ package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -57,7 +57,7 @@ class SpringTransactionManager(
 
     override fun doGetTransaction(): Any {
         val outerManager = TransactionManager.manager
-        val outer = threadLocalTransactionManager.currentOrNull()
+        val outer = threadLocalTransactionManager.currentOrNull() as? JdbcTransaction
 
         return ExposedTransactionObject(
             manager = threadLocalTransactionManager,
@@ -71,7 +71,7 @@ class SpringTransactionManager(
         val currentManager = trxObject.manager
 
         return SuspendedObject(
-            transaction = currentManager.currentOrNull() as Transaction,
+            transaction = currentManager.currentOrNull() as JdbcTransaction,
             manager = currentManager,
         ).apply {
             currentManager.bindTransactionToThread(null)
@@ -87,7 +87,7 @@ class SpringTransactionManager(
     }
 
     private data class SuspendedObject(
-        val transaction: Transaction,
+        val transaction: JdbcTransaction,
         val manager: TransactionManager
     )
 
@@ -107,6 +107,7 @@ class SpringTransactionManager(
             readOnly = definition.isReadOnly,
             outerTransaction = currentTransactionManager.currentOrNull()
         ).apply {
+            this as JdbcTransaction
             if (definition.timeout != TransactionDefinition.TIMEOUT_DEFAULT) {
                 queryTimeout = definition.timeout
             }
@@ -139,7 +140,7 @@ class SpringTransactionManager(
         trxObject.setCurrentToOuter()
     }
 
-    private fun closeStatementsAndConnections(transaction: Transaction) {
+    private fun closeStatementsAndConnections(transaction: JdbcTransaction) {
         val currentStatement = transaction.currentStatement
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -168,12 +169,12 @@ class SpringTransactionManager(
     private data class ExposedTransactionObject(
         val manager: TransactionManager,
         val outerManager: TransactionManager,
-        private val outerTransaction: Transaction?,
+        private val outerTransaction: JdbcTransaction?,
     ) : SmartTransactionObject {
 
         private var isRollback: Boolean = false
 
-        fun cleanUpTransactionIfIsPossible(block: (transaction: Transaction) -> Unit) {
+        fun cleanUpTransactionIfIsPossible(block: (transaction: JdbcTransaction) -> Unit) {
             val currentTransaction = getCurrentTransaction()
             if (currentTransaction != null) {
                 block(currentTransaction)
@@ -188,7 +189,7 @@ class SpringTransactionManager(
         @Suppress("TooGenericExceptionCaught")
         fun commit() {
             try {
-                manager.currentOrNull()?.commit()
+                (manager.currentOrNull() as? JdbcTransaction)?.commit()
             } catch (error: Exception) {
                 throw TransactionSystemException(error.message.orEmpty(), error)
             }
@@ -197,13 +198,13 @@ class SpringTransactionManager(
         @Suppress("TooGenericExceptionCaught")
         fun rollback() {
             try {
-                manager.currentOrNull()?.rollback()
+                (manager.currentOrNull() as? JdbcTransaction)?.rollback()
             } catch (error: Exception) {
                 throw TransactionSystemException(error.message.orEmpty(), error)
             }
         }
 
-        fun getCurrentTransaction(): Transaction? = manager.currentOrNull()
+        fun getCurrentTransaction(): JdbcTransaction? = manager.currentOrNull() as? JdbcTransaction
 
         fun setRollbackOnly() {
             isRollback = true
@@ -212,7 +213,7 @@ class SpringTransactionManager(
         override fun isRollbackOnly() = isRollback
 
         override fun flush() {
-            // Do noting
+            // Do nothing
         }
     }
 }

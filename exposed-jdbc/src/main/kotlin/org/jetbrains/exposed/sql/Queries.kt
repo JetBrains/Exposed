@@ -1,3 +1,5 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
@@ -5,39 +7,21 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectMetadata
+import kotlin.collections.ArrayList
+import kotlin.collections.Iterable
+import kotlin.collections.Iterator
+import kotlin.collections.List
+import kotlin.collections.emptyList
+import kotlin.collections.forEach
+import kotlin.collections.isNotEmpty
+import kotlin.collections.listOf
+import kotlin.collections.orEmpty
+import kotlin.collections.plus
+import kotlin.collections.plusAssign
+import kotlin.internal.LowPriorityInOverloadResolution
 import kotlin.sequences.Sequence
-
-@Deprecated(
-    message = "As part of SELECT DSL design changes, this will be removed in future releases.",
-    replaceWith = ReplaceWith("selectAll().where { where.invoke() }", "import org.jetbrains.exposed.sql.selectAll"),
-    level = DeprecationLevel.HIDDEN
-)
-inline fun FieldSet.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = Query(this, SqlExpressionBuilder.where())
-
-@Suppress("UnusedParameter")
-@Deprecated(
-    message = "This method only exists as part of the migration for SELECT DSL design changes.",
-    replaceWith = ReplaceWith("where { where.invoke() }"),
-    level = DeprecationLevel.HIDDEN
-)
-inline fun Query.select(where: SqlExpressionBuilder.() -> Op<Boolean>): Query = this
-
-@Deprecated(
-    message = "As part of SELECT DSL design changes, this will be removed in future releases.",
-    replaceWith = ReplaceWith("selectAll().where(where)", "import org.jetbrains.exposed.sql.selectAll"),
-    level = DeprecationLevel.HIDDEN
-)
-fun FieldSet.select(where: Op<Boolean>): Query = Query(this, where)
-
-@Suppress("UnusedParameter")
-@Deprecated(
-    message = "This method only exists as part of the migration for SELECT DSL design changes.",
-    replaceWith = ReplaceWith("where(where)"),
-    level = DeprecationLevel.HIDDEN
-)
-fun Query.select(where: Op<Boolean>): Query = this
 
 /**
  * Creates a `SELECT` [Query] by selecting all columns from this [ColumnSet].
@@ -48,68 +32,25 @@ fun Query.select(where: Op<Boolean>): Query = this
  */
 fun FieldSet.selectAll(): Query = Query(this, null)
 
-@Deprecated(
-    message = "As part of SELECT DSL design changes, this will be removed in future releases.",
-    replaceWith = ReplaceWith(
-        "selectAll().where { where.invoke() }.fetchBatchedResults(batchSize)",
-        "import org.jetbrains.exposed.sql.selectAll"
-    ),
-    level = DeprecationLevel.HIDDEN
-)
-fun FieldSet.selectBatched(
-    batchSize: Int = 1000,
-    where: SqlExpressionBuilder.() -> Op<Boolean>
-): Iterable<Iterable<ResultRow>> {
-    return selectBatched(batchSize, SqlExpressionBuilder.where())
-}
+/**
+ * Creates a `SELECT` [Query] by selecting either a single [column], or a subset of [columns], from this [ColumnSet].
+ *
+ * The column set selected from may be either a [Table] or a [Join].
+ * Arguments provided to [column] and [columns] may be table object columns or function expressions.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
+ */
+@LowPriorityInOverloadResolution
+fun ColumnSet.select(column: Expression<*>, vararg columns: Expression<*>): Query =
+    Query(Select(this, listOf(column) + columns), null)
 
-@Deprecated(
-    message = "This method only exists as part of the migration for SELECT DSL design changes.",
-    replaceWith = ReplaceWith("where { where.invoke() }.fetchBatchedResults(batchSize)"),
-    level = DeprecationLevel.HIDDEN
-)
-fun Query.selectBatched(
-    batchSize: Int = 1000,
-    where: SqlExpressionBuilder.() -> Op<Boolean>
-): Iterable<Iterable<ResultRow>> {
-    return where { SqlExpressionBuilder.where() }.fetchBatchedResults(batchSize)
-}
-
-@Deprecated(
-    message = "As part of SELECT DSL design changes, this will be removed in future releases.",
-    replaceWith = ReplaceWith(
-        "selectAll().fetchBatchedResults(batchSize)",
-        "import org.jetbrains.exposed.sql.selectAll"
-    ),
-    level = DeprecationLevel.HIDDEN
-)
-fun FieldSet.selectAllBatched(
-    batchSize: Int = 1000
-): Iterable<Iterable<ResultRow>> {
-    return selectBatched(batchSize, Op.TRUE)
-}
-
-@Deprecated(
-    message = "This method only exists as part of the migration for SELECT DSL design changes.",
-    replaceWith = ReplaceWith("fetchBatchedResults(batchSize)"),
-    level = DeprecationLevel.HIDDEN
-)
-fun Query.selectAllBatched(
-    batchSize: Int = 1000
-): Iterable<Iterable<ResultRow>> {
-    return fetchBatchedResults(batchSize)
-}
-
-@Deprecated(
-    "This `offset` parameter is not being used and will be removed in future releases. Please leave a comment on " +
-        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
-        "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
-    ReplaceWith("deleteWhere(limit) { op.invoke() }"),
-    DeprecationLevel.ERROR
-)
-@Suppress("UnusedParameter")
-fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
-    deleteWhere(limit, op)
+/**
+ * Creates a `SELECT` [Query] using a list of [columns] or expressions from this [ColumnSet].
+ *
+ * The column set selected from may be either a [Table] or a [Join].
+ */
+@LowPriorityInOverloadResolution
+fun ColumnSet.select(columns: List<Expression<*>>): Query = Query(Select(this, columns), null)
 
 /**
  * Represents the SQL statement that deletes only rows in a table that match the provided [op].
@@ -119,26 +60,16 @@ fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(I
  * @return Count of deleted rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
  */
-inline fun <T : Table> T.deleteWhere(
+fun <T : Table> T.deleteWhere(
     limit: Int? = null,
     op: T.(ISqlExpressionBuilder) -> Op<Boolean>
 ): Int {
-    if (limit != null && !currentDialect.supportsLimitWithUpdateOrDelete()) {
+    if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
         throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
     }
-    return DeleteStatement.where(TransactionManager.current(), this@deleteWhere, op(SqlExpressionBuilder), false, limit)
+    val stmt = StatementBuilder { deleteWhere(limit, op) }
+    return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
-
-@Deprecated(
-    "This `offset` parameter is not being used and will be removed in future releases. Please leave a comment on " +
-        "[YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-550/DeleteStatement-holds-unused-offset-property) " +
-        "with a use-case if your database supports the OFFSET clause in a DELETE statement.",
-    ReplaceWith("deleteIgnoreWhere(limit) { op.invoke() }"),
-    DeprecationLevel.ERROR
-)
-@Suppress("UnusedParameter")
-fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op: T.(ISqlExpressionBuilder) -> Op<Boolean>): Int =
-    deleteIgnoreWhere(limit, op)
 
 /**
  * Represents the SQL statement that deletes only rows in a table that match the provided [op], while ignoring any
@@ -150,14 +81,15 @@ fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op
  * @param op Condition that determines which rows to delete.
  * @return Count of deleted rows.
  */
-inline fun <T : Table> T.deleteIgnoreWhere(
+fun <T : Table> T.deleteIgnoreWhere(
     limit: Int? = null,
     op: T.(ISqlExpressionBuilder) -> Op<Boolean>
 ): Int {
-    if (limit != null && !currentDialect.supportsLimitWithUpdateOrDelete()) {
+    if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
         throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
     }
-    return DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, op(SqlExpressionBuilder), true, limit)
+    val stmt = StatementBuilder { deleteIgnoreWhere(limit, op) }
+    return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -166,8 +98,10 @@ inline fun <T : Table> T.deleteIgnoreWhere(
  * @return Count of deleted rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
  */
-fun Table.deleteAll(): Int =
-    DeleteStatement.all(TransactionManager.current(), this@deleteAll)
+fun Table.deleteAll(): Int {
+    val stmt = StatementBuilder { deleteAll() }
+    return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
+}
 
 @Deprecated(
     "This `deleteReturning()` with a nullable `where` parameter will be removed in future releases. Please leave a comment on " +
@@ -180,7 +114,7 @@ fun Table.deleteAll(): Int =
 fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
-): ReturningStatement {
+): ReturningExecutable {
     return where?.let { deleteReturning(returning, it) } ?: deleteReturning(returning)
 }
 
@@ -193,12 +127,12 @@ fun <T : Table> T.deleteReturning(
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testDeleteReturning
  */
-inline fun <T : Table> T.deleteReturning(
+fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
     where: SqlExpressionBuilder.() -> Op<Boolean>
-): ReturningStatement {
-    val delete = DeleteStatement(this, SqlExpressionBuilder.where(), false, null)
-    return ReturningStatement(this, returning, delete)
+): ReturningExecutable {
+    val stmt = StatementBuilder { deleteReturning(returning, where) }
+    return ReturningExecutable(stmt)
 }
 
 /**
@@ -211,9 +145,9 @@ inline fun <T : Table> T.deleteReturning(
  */
 fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns
-): ReturningStatement {
-    val delete = DeleteStatement(this, null, false, null)
-    return ReturningStatement(this, returning, delete)
+): ReturningExecutable {
+    val stmt = StatementBuilder { deleteReturning(returning) }
+    return ReturningExecutable(stmt)
 }
 
 @Deprecated(
@@ -250,16 +184,15 @@ fun Join.delete(
  * @return The number of deleted rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDeleteWithSingleJoin
  */
-inline fun Join.delete(
+fun Join.delete(
     targetTable: Table,
     vararg targetTables: Table,
     ignore: Boolean = false,
     limit: Int? = null,
     where: SqlExpressionBuilder.() -> Op<Boolean>
 ): Int {
-    val targets = listOf(targetTable) + targetTables
-    val delete = DeleteStatement(this, SqlExpressionBuilder.where(), ignore, limit, targets)
-    return delete.execute(TransactionManager.current()) ?: 0
+    val stmt = StatementBuilder { delete(targetTable, targetTables = targetTables, ignore, limit, where) }
+    return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -281,9 +214,8 @@ fun Join.delete(
     ignore: Boolean = false,
     limit: Int? = null
 ): Int {
-    val targets = listOf(targetTable) + targetTables
-    val delete = DeleteStatement(this, null, ignore, limit, targets)
-    return delete.execute(TransactionManager.current()) ?: 0
+    val stmt = StatementBuilder { delete(targetTable, targetTables = targetTables, ignore, limit, null) }
+    return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -291,11 +223,11 @@ fun Join.delete(
  *
  * @sample org.jetbrains.exposed.sql.tests.h2.H2Tests.insertInH2
  */
-inline fun <T : Table> T.insert(
-    crossinline body: T.(InsertStatement<Number>) -> Unit
-): InsertStatement<Number> = InsertStatement<Number>(this).apply {
-    body(this)
-    execute(TransactionManager.current())
+fun <T : Table> T.insert(
+    body: T.(UpdateBuilder<*>) -> Unit
+): InsertStatement<Number> {
+    val stmt = StatementBuilder { insert(body) }
+    return InsertExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -304,14 +236,108 @@ inline fun <T : Table> T.insert(
  * @return The generated ID for the new row.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testGeneratedKey04
  */
-inline fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
-    crossinline body: T.(InsertStatement<EntityID<Key>>) -> Unit
-): EntityID<Key> =
-    InsertStatement<EntityID<Key>>(this, false).run {
-        body(this)
+fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
+    body: T.(UpdateBuilder<*>) -> Unit
+): EntityID<Key> {
+    val stmt = StatementBuilder { insert(body) }
+    return InsertExecutable(stmt).run {
         execute(TransactionManager.current())
-        get(id)
+        statement[id]
     }
+}
+
+/**
+ * Represents the SQL statement that inserts a new row into a table, while ignoring any possible errors that occur
+ * during the process.
+ *
+ * For example, if the new row would violate a unique constraint, its insertion would be ignored.
+ * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetIdWithPredefinedId
+ */
+fun <T : Table> T.insertIgnore(
+    body: T.(UpdateBuilder<*>) -> Unit
+): InsertStatement<Long> {
+    val stmt = StatementBuilder { insertIgnore(body) }
+    return InsertExecutable<Long, InsertStatement<Long>>(stmt).apply { execute(TransactionManager.current()) }.statement
+}
+
+/**
+ * Represents the SQL statement that inserts a new row into a table, while ignoring any possible errors that occur
+ * during the process.
+ *
+ * For example, if the new row would violate a unique constraint, its insertion would be ignored.
+ * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
+ *
+ * @return The generated ID for the new row, or `null` if none was retrieved after statement execution.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetId01
+ */
+fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
+    body: T.(UpdateBuilder<*>) -> Unit
+): EntityID<Key>? {
+    val stmt = StatementBuilder { insertIgnore(body) }
+    return InsertExecutable<Long, InsertStatement<Long>>(stmt).run {
+        when (execute(TransactionManager.current())) {
+            null, 0 -> null
+            else -> statement.getOrNull(id)
+        }
+    }
+}
+
+/**
+ * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table.
+ *
+ * @param selectQuery Source `SELECT` query that provides the values to insert.
+ * @param columns Columns to insert the values into. This defaults to all columns in the table that are not
+ * auto-increment columns without a valid sequence to generate new values.
+ * @return The number of inserted rows, or `null` if nothing was retrieved after statement execution.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertSelectTests.testInsertSelect04
+ */
+fun <T : Table> T.insert(
+    selectQuery: AbstractQuery<*>,
+    columns: List<Column<*>>? = null
+): Int? {
+    val stmt = StatementBuilder { insert(selectQuery, columns) }
+    return InsertSelectExecutable(stmt).execute(TransactionManager.current())
+}
+
+/**
+ * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table,
+ * while ignoring any possible errors that occur during the process.
+ *
+ * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
+ *
+ * @param selectQuery Source `SELECT` query that provides the values to insert.
+ * @param columns Columns to insert the values into. This defaults to all columns in the table that are not
+ * auto-increment columns without a valid sequence to generate new values.
+ * @return The number of inserted rows, or `null` if nothing was retrieved after statement execution.
+ */
+fun <T : Table> T.insertIgnore(
+    selectQuery: AbstractQuery<*>,
+    columns: List<Column<*>>? = null
+): Int? {
+    val stmt = StatementBuilder { insertIgnore(selectQuery, columns) }
+    return InsertSelectExecutable(stmt).execute(TransactionManager.current())
+}
+
+/**
+ * Represents the SQL statement that inserts new rows into a table and returns specified data from the inserted rows.
+ *
+ * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
+ * @param ignoreErrors Whether to ignore any possible errors that occur during the process.
+ * Note `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
+ * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
+ * expressions mapped to their resulting data.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testInsertReturning
+ */
+fun <T : Table> T.insertReturning(
+    returning: List<Expression<*>> = columns,
+    ignoreErrors: Boolean = false,
+    body: T.(InsertStatement<Number>) -> Unit
+): ReturningExecutable {
+    val stmt = StatementBuilder { insertReturning(returning, ignoreErrors, body) }
+    return ReturningExecutable(stmt)
+}
 
 /**
  * Represents the SQL statement that batch inserts new rows into a table.
@@ -355,11 +381,43 @@ private fun <T : Table, E> T.batchInsert(
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    if (currentDialect is SQLServerDialect && this.autoIncColumn != null) {
-        SQLServerBatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
-    } else {
-        BatchInsertStatement(this, ignoreErrors, shouldReturnGeneratedValues)
-    }
+    val stmt = StatementBuilder { batchInsert(ignoreErrors, shouldReturnGeneratedValues, body) }
+    stmt.executable()
+}
+
+/**
+ * Represents the SQL statement that either inserts a new row into a table, or, if insertion would violate a unique constraint,
+ * first deletes the existing row before inserting a new row.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceWithExpression
+ */
+fun <T : Table> T.replace(
+    body: T.(UpdateBuilder<*>) -> Unit
+): ReplaceStatement<Long> {
+    val stmt = StatementBuilder { replace(body) }
+    return ReplaceExecutable<Long>(stmt).apply { execute(TransactionManager.current()) }.statement
+}
+
+/**
+ * Represents the SQL statement that uses data retrieved from a [selectQuery] to either insert a new row into a table,
+ * or, if insertion would violate a unique constraint, first delete the existing row before inserting a new row.
+ *
+ * **Note:** This operation is not supported by all vendors, please check the documentation.
+ *
+ * @param selectQuery Source `SELECT` query that provides the values to insert.
+ * @param columns Columns to either insert values into or delete values from then insert into. This defaults to all
+ * columns in the table that are not auto-increment columns without a valid sequence to generate new values.
+ * @return The number of inserted (and possibly deleted) rows, or `null` if nothing was retrieved after statement execution.
+ * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceSelect
+ */
+fun <T : Table> T.replace(
+    selectQuery: AbstractQuery<*>,
+    columns: List<Column<*>>? = null
+): Int? {
+    val stmt = StatementBuilder { replace(selectQuery, columns) }
+    return ReplaceSelectExecutable(stmt).execute(TransactionManager.current())
 }
 
 /**
@@ -401,175 +459,55 @@ private fun <T : Table, E> T.batchReplace(
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchReplaceStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    BatchReplaceStatement(this, shouldReturnGeneratedValues)
+    val stmt = StatementBuilder { batchReplace(shouldReturnGeneratedValues, body) }
+    BatchReplaceExecutable(stmt)
 }
 
-private fun <E, S : BaseBatchInsertStatement> executeBatch(
+@OptIn(InternalApi::class)
+private fun <E, S1 : BaseBatchInsertStatement, S2 : BaseBatchInsertExecutable<S1>> executeBatch(
     data: Iterator<E>,
-    body: S.(E) -> Unit,
-    newBatchStatement: () -> S
+    body: S1.(E) -> Unit,
+    newBatchStatement: () -> S2
 ): List<ResultRow> {
     if (!data.hasNext()) return emptyList()
 
-    var statement = newBatchStatement()
+    var executable = newBatchStatement()
 
     val result = ArrayList<ResultRow>()
-    fun S.handleBatchException(removeLastData: Boolean = false, body: S.() -> Unit) {
+    fun S2.handleBatchException(removeLastData: Boolean = false, body: S1.() -> Unit) {
         try {
-            body()
-            if (removeLastData) validateLastBatch()
+            statement.body()
+            if (removeLastData) statement.validateLastBatch()
         } catch (e: BatchDataInconsistentException) {
-            if (this.data.size == 1) {
+            if (this.statement.data.size == 1) {
                 throw e
             }
-            val notTheFirstBatch = this.data.size > 1
+            val notTheFirstBatch = this.statement.data.size > 1
             if (notTheFirstBatch) {
                 if (removeLastData) {
-                    removeLastBatch()
+                    statement.removeLastBatch()
                 }
                 execute(TransactionManager.current())
-                result += resultedValues.orEmpty()
+                result += statement.resultedValues.orEmpty()
             }
-            statement = newBatchStatement()
+            executable = newBatchStatement()
             if (removeLastData && notTheFirstBatch) {
-                statement.addBatch()
-                statement.body()
-                statement.validateLastBatch()
+                executable.statement.addBatch()
+                executable.statement.body()
+                executable.statement.validateLastBatch()
             }
         }
     }
 
     data.forEach { element ->
-        statement.handleBatchException { addBatch() }
-        statement.handleBatchException(true) { body(element) }
+        executable.handleBatchException { addBatch() }
+        executable.handleBatchException(true) { body(element) }
     }
-    if (statement.arguments().isNotEmpty()) {
-        statement.execute(TransactionManager.current())
-        result += statement.resultedValues.orEmpty()
+    if (executable.statement.arguments().isNotEmpty()) {
+        executable.execute(TransactionManager.current())
+        result += executable.statement.resultedValues.orEmpty()
     }
     return result
-}
-
-/**
- * Represents the SQL statement that inserts a new row into a table, while ignoring any possible errors that occur
- * during the process.
- *
- * For example, if the new row would violate a unique constraint, its insertion would be ignored.
- * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
- *
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetIdWithPredefinedId
- */
-inline fun <T : Table> T.insertIgnore(
-    crossinline body: T.(UpdateBuilder<*>) -> Unit
-): InsertStatement<Long> = InsertStatement<Long>(this, isIgnore = true).apply {
-    body(this)
-    execute(TransactionManager.current())
-}
-
-/**
- * Represents the SQL statement that inserts a new row into a table, while ignoring any possible errors that occur
- * during the process.
- *
- * For example, if the new row would violate a unique constraint, its insertion would be ignored.
- * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
- *
- * @return The generated ID for the new row, or `null` if none was retrieved after statement execution.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetId01
- */
-inline fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
-    crossinline body: T.(UpdateBuilder<*>) -> Unit
-): EntityID<Key>? =
-    InsertStatement<EntityID<Key>>(this, isIgnore = true).run {
-        body(this)
-        when (execute(TransactionManager.current())) {
-            null, 0 -> null
-            else -> getOrNull(id)
-        }
-    }
-
-/**
- * Represents the SQL statement that either inserts a new row into a table, or, if insertion would violate a unique constraint,
- * first deletes the existing row before inserting a new row.
- *
- * **Note:** This operation is not supported by all vendors, please check the documentation.
- *
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceWithExpression
- */
-inline fun <T : Table> T.replace(
-    crossinline body: T.(UpdateBuilder<*>) -> Unit
-): ReplaceStatement<Long> = ReplaceStatement<Long>(this).apply {
-    body(this)
-    execute(TransactionManager.current())
-}
-
-/**
- * Represents the SQL statement that uses data retrieved from a [selectQuery] to either insert a new row into a table,
- * or, if insertion would violate a unique constraint, first delete the existing row before inserting a new row.
- *
- * **Note:** This operation is not supported by all vendors, please check the documentation.
- *
- * @param selectQuery Source `SELECT` query that provides the values to insert.
- * @param columns Columns to either insert values into or delete values from then insert into. This defaults to all
- * columns in the table that are not auto-increment columns without a valid sequence to generate new values.
- * @return The number of inserted (and possibly deleted) rows, or `null` if nothing was retrieved after statement execution.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceSelect
- */
-fun <T : Table> T.replace(
-    selectQuery: AbstractQuery<*>,
-    columns: List<Column<*>> = this.columns.filter { it.isValidIfAutoIncrement() }
-): Int? = ReplaceSelectStatement(columns, selectQuery).execute(TransactionManager.current())
-
-/**
- * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table.
- *
- * @param selectQuery Source `SELECT` query that provides the values to insert.
- * @param columns Columns to insert the values into. This defaults to all columns in the table that are not
- * auto-increment columns without a valid sequence to generate new values.
- * @return The number of inserted rows, or `null` if nothing was retrieved after statement execution.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertSelectTests.testInsertSelect04
- */
-fun <T : Table> T.insert(
-    selectQuery: AbstractQuery<*>,
-    columns: List<Column<*>> = this.columns.filter { it.isValidIfAutoIncrement() }
-): Int? = InsertSelectStatement(columns, selectQuery).execute(TransactionManager.current())
-
-/**
- * Represents the SQL statement that uses data retrieved from a [selectQuery] to insert new rows into a table,
- * while ignoring any possible errors that occur during the process.
- *
- * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
- *
- * @param selectQuery Source `SELECT` query that provides the values to insert.
- * @param columns Columns to insert the values into. This defaults to all columns in the table that are not
- * auto-increment columns without a valid sequence to generate new values.
- * @return The number of inserted rows, or `null` if nothing was retrieved after statement execution.
- */
-fun <T : Table> T.insertIgnore(
-    selectQuery: AbstractQuery<*>,
-    columns: List<Column<*>> = this.columns.filter { it.isValidIfAutoIncrement() }
-): Int? = InsertSelectStatement(columns, selectQuery, true).execute(TransactionManager.current())
-
-private fun Column<*>.isValidIfAutoIncrement(): Boolean =
-    !columnType.isAutoInc || autoIncColumnType?.nextValExpression != null
-
-/**
- * Represents the SQL statement that inserts new rows into a table and returns specified data from the inserted rows.
- *
- * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
- * @param ignoreErrors Whether to ignore any possible errors that occur during the process.
- * Note `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
- * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
- * expressions mapped to their resulting data.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testInsertReturning
- */
-inline fun <T : Table> T.insertReturning(
-    returning: List<Expression<*>> = columns,
-    ignoreErrors: Boolean = false,
-    crossinline body: T.(InsertStatement<Number>) -> Unit
-): ReturningStatement {
-    val insert = InsertStatement<Number>(this, ignoreErrors)
-    body(insert)
-    return ReturningStatement(this, returning, insert)
 }
 
 @Deprecated(
@@ -592,17 +530,16 @@ fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
  * @return The number of updated rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdate01
  */
-inline fun <T : Table> T.update(
+fun <T : Table> T.update(
     where: SqlExpressionBuilder.() -> Op<Boolean>,
     limit: Int? = null,
-    crossinline body: T.(UpdateStatement) -> Unit
+    body: T.(UpdateStatement) -> Unit
 ): Int {
-    if (limit != null && !currentDialect.supportsLimitWithUpdateOrDelete()) {
+    if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
         throw UnsupportedByDialectException("LIMIT clause is not supported in UPDATE statement.", currentDialect)
     }
-    val query = UpdateStatement(this, limit, SqlExpressionBuilder.where())
-    body(query)
-    return query.execute(TransactionManager.current()) ?: 0
+    val stmt = StatementBuilder { update(where, limit, body) }
+    return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -612,16 +549,15 @@ inline fun <T : Table> T.update(
  * @return The number of updated rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdate01
  */
-inline fun <T : Table> T.update(
+fun <T : Table> T.update(
     limit: Int? = null,
-    crossinline body: T.(UpdateStatement) -> Unit
+    body: T.(UpdateStatement) -> Unit
 ): Int {
-    if (limit != null && !currentDialect.supportsLimitWithUpdateOrDelete()) {
+    if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
         throw UnsupportedByDialectException("LIMIT clause is not supported in UPDATE statement.", currentDialect)
     }
-    val query = UpdateStatement(this, limit, null)
-    body(query)
-    return query.execute(TransactionManager.current()) ?: 0
+    val stmt = StatementBuilder { update(null, limit, body) }
+    return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 @Deprecated(
@@ -644,14 +580,13 @@ fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null, limit: 
  * @return The number of updated rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
  */
-inline fun Join.update(
+fun Join.update(
     where: SqlExpressionBuilder.() -> Op<Boolean>,
     limit: Int? = null,
-    crossinline body: (UpdateStatement) -> Unit
+    body: (UpdateStatement) -> Unit
 ): Int {
-    val query = UpdateStatement(this, limit, SqlExpressionBuilder.where())
-    body(query)
-    return query.execute(TransactionManager.current()) ?: 0
+    val stmt = StatementBuilder { update(where, limit, body) }
+    return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -661,13 +596,12 @@ inline fun Join.update(
  * @return The number of updated rows.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
  */
-inline fun Join.update(
+fun Join.update(
     limit: Int? = null,
-    crossinline body: (UpdateStatement) -> Unit
+    body: (UpdateStatement) -> Unit
 ): Int {
-    val query = UpdateStatement(this, limit, null)
-    body(query)
-    return query.execute(TransactionManager.current()) ?: 0
+    val stmt = StatementBuilder { update(null, limit, body) }
+    return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 @Deprecated(
@@ -682,7 +616,7 @@ fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpdateStatement) -> Unit
-): ReturningStatement {
+): ReturningExecutable {
     return where?.let { updateReturning(returning, it, body) } ?: updateReturning(returning, body)
 }
 
@@ -695,14 +629,13 @@ fun <T : Table> T.updateReturning(
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpdateReturning
  */
-inline fun <T : Table> T.updateReturning(
+fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
     where: SqlExpressionBuilder.() -> Op<Boolean>,
-    crossinline body: T.(UpdateStatement) -> Unit
-): ReturningStatement {
-    val update = UpdateStatement(this, null, SqlExpressionBuilder.where())
-    body(update)
-    return ReturningStatement(this, returning, update)
+    body: T.(UpdateStatement) -> Unit
+): ReturningExecutable {
+    val stmt = StatementBuilder { updateReturning(returning, where, body) }
+    return ReturningExecutable(stmt)
 }
 
 /**
@@ -713,13 +646,12 @@ inline fun <T : Table> T.updateReturning(
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpdateReturning
  */
-inline fun <T : Table> T.updateReturning(
+fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
-    crossinline body: T.(UpdateStatement) -> Unit
-): ReturningStatement {
-    val update = UpdateStatement(this, null, null)
-    body(update)
-    return ReturningStatement(this, returning, update)
+    body: T.(UpdateStatement) -> Unit
+): ReturningExecutable {
+    val stmt = StatementBuilder { updateReturning(returning, null, body) }
+    return ReturningExecutable(stmt)
 }
 
 /**
@@ -748,29 +680,9 @@ fun <T : Table> T.upsert(
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
-) = UpsertStatement<Long>(this, keys = keys, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() }).apply {
-    onUpdate?.let { storeUpdateValues(it) }
-    body(this)
-    execute(TransactionManager.current())
-}
-
-@Deprecated(
-    "This `upsert()` with `onUpdate` parameter that accepts a List will be removed in future releases. " +
-        "Please use `upsert()` with `onUpdate` parameter that takes an `UpdateStatement` lambda block instead.",
-    level = DeprecationLevel.ERROR
-)
-fun <T : Table> T.upsert(
-    vararg keys: Column<*>,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>,
-    onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-    body: T.(UpsertStatement<Long>) -> Unit
 ): UpsertStatement<Long> {
-    val upsert = UpsertStatement<Long>(this, keys = keys, onUpdateExclude, where?.let { SqlExpressionBuilder.it() })
-    upsert.updateValues.putAll(onUpdate)
-    body(upsert)
-    upsert.execute(TransactionManager.current())
-    return upsert
+    val stmt = StatementBuilder { upsert(keys = keys, onUpdate, onUpdateExclude, where, body) }
+    return UpsertExecutable<Long>(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -798,30 +710,9 @@ fun <T : Table> T.upsertReturning(
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
-): ReturningStatement {
-    val upsert = UpsertStatement<Long>(this, keys = keys, onUpdateExclude, where?.let { SqlExpressionBuilder.it() })
-    onUpdate?.let { upsert.storeUpdateValues(it) }
-    body(upsert)
-    return ReturningStatement(this, returning, upsert)
-}
-
-@Deprecated(
-    "This `upsertReturning()` with `onUpdate` parameter that accepts a List will be removed in future releases. " +
-        "Please use `upsertReturning()` with `onUpdate` parameter that takes an `UpdateStatement` lambda block instead.",
-    level = DeprecationLevel.ERROR
-)
-fun <T : Table> T.upsertReturning(
-    vararg keys: Column<*>,
-    returning: List<Expression<*>> = columns,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>,
-    onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-    body: T.(UpsertStatement<Long>) -> Unit
-): ReturningStatement {
-    val upsert = UpsertStatement<Long>(this, keys = keys, onUpdateExclude = onUpdateExclude, where = where?.let { SqlExpressionBuilder.it() })
-    upsert.updateValues.putAll(onUpdate)
-    body(upsert)
-    return ReturningStatement(this, returning, upsert)
+): ReturningExecutable {
+    val stmt = StatementBuilder { upsertReturning(keys = keys, returning, onUpdate, onUpdateExclude, where, body) }
+    return ReturningExecutable(stmt)
 }
 
 /**
@@ -853,23 +744,6 @@ fun <T : Table, E : Any> T.batchUpsert(
     return batchUpsert(data.iterator(), null, onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body = body)
 }
 
-@Deprecated(
-    "This `batchUpsert()` with `onUpdate` parameter that accepts a List will be removed in future releases. " +
-        "Please use `batchUpsert()` with `onUpdate` parameter that takes an `UpdateStatement` lambda block instead.",
-    level = DeprecationLevel.ERROR
-)
-fun <T : Table, E : Any> T.batchUpsert(
-    data: Iterable<E>,
-    vararg keys: Column<*>,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>,
-    onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-    shouldReturnGeneratedValues: Boolean = true,
-    body: BatchUpsertStatement.(E) -> Unit
-): List<ResultRow> {
-    return batchUpsert(data.iterator(), onUpdate, null, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body = body)
-}
-
 /**
  * Represents the SQL statement that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
@@ -899,23 +773,6 @@ fun <T : Table, E : Any> T.batchUpsert(
     return batchUpsert(data.iterator(), null, onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body = body)
 }
 
-@Deprecated(
-    "This `batchUpsert()` with `onUpdate` parameter that accepts a List will be removed in future releases. " +
-        "Please use `batchUpsert()` with `onUpdate` parameter that takes an `UpdateStatement` lambda block instead.",
-    level = DeprecationLevel.ERROR
-)
-fun <T : Table, E : Any> T.batchUpsert(
-    data: Sequence<E>,
-    vararg keys: Column<*>,
-    onUpdate: List<Pair<Column<*>, Expression<*>>>,
-    onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
-    shouldReturnGeneratedValues: Boolean = true,
-    body: BatchUpsertStatement.(E) -> Unit
-): List<ResultRow> {
-    return batchUpsert(data.iterator(), onUpdate, null, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body = body)
-}
-
 @Suppress("LongParameterList")
 private fun <T : Table, E> T.batchUpsert(
     data: Iterator<E>,
@@ -927,24 +784,11 @@ private fun <T : Table, E> T.batchUpsert(
     vararg keys: Column<*>,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    BatchUpsertStatement(
-        this,
-        keys = keys,
-        onUpdateExclude = onUpdateExclude,
-        where = where?.let { SqlExpressionBuilder.it() },
-        shouldReturnGeneratedValues = shouldReturnGeneratedValues
-    ).apply {
-        onUpdate?.let { storeUpdateValues(it) }
-            ?: onUpdateList?.let { updateValues.putAll(it) }
+    val stmt = StatementBuilder {
+        batchUpsert(onUpdateList, onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body)
     }
+    BatchUpsertExecutable(stmt)
 }
-
-/**
- * Returns whether [this] table exists in the database.
- *
- * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.tableExists02
- */
-fun Table.exists(): Boolean = currentDialect.tableExists(this)
 
 @Deprecated(
     "This `mergeFrom()` with a nullable `on` parameter will be removed in future releases. Please leave a comment on " +
@@ -975,15 +819,13 @@ fun <D : Table, S : Table> D.mergeFrom(
  *             when records are matched or not matched.
  * @return A [MergeTableStatement] which represents the MERGE operation with the configured actions.
  */
-inline fun <D : Table, S : Table> D.mergeFrom(
+fun <D : Table, S : Table> D.mergeFrom(
     source: S,
     on: SqlExpressionBuilder.() -> Op<Boolean>,
-    crossinline body: MergeTableStatement.() -> Unit
+    body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
-    return MergeTableStatement(this, source, on = SqlExpressionBuilder.on()).apply {
-        body(this)
-        execute(TransactionManager.current())
-    }
+    val stmt = StatementBuilder { mergeFrom(source, on, body) }
+    return MergeTableExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -997,14 +839,12 @@ inline fun <D : Table, S : Table> D.mergeFrom(
  *             when records are matched or not matched.
  * @return A [MergeTableStatement] which represents the MERGE operation with the configured actions.
  */
-inline fun <D : Table, S : Table> D.mergeFrom(
+fun <D : Table, S : Table> D.mergeFrom(
     source: S,
-    crossinline body: MergeTableStatement.() -> Unit
+    body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
-    return MergeTableStatement(this, source, on = null).apply {
-        body(this)
-        execute(TransactionManager.current())
-    }
+    val stmt = StatementBuilder { mergeFrom(source, null, body) }
+    return MergeTableExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -1019,57 +859,11 @@ inline fun <D : Table, S : Table> D.mergeFrom(
  *             when records are matched or not matched.
  * @return A [MergeSelectStatement] which represents the MERGE operation with the configured actions.
  */
-inline fun <T : Table> T.mergeFrom(
+fun <T : Table> T.mergeFrom(
     selectQuery: QueryAlias,
     on: SqlExpressionBuilder.() -> Op<Boolean>,
-    crossinline body: MergeSelectStatement.() -> Unit
+    body: MergeSelectStatement.() -> Unit
 ): MergeSelectStatement {
-    return MergeSelectStatement(this, selectQuery, SqlExpressionBuilder.on()).apply {
-        body(this)
-        execute(TransactionManager.current())
-    }
-}
-
-private fun FieldSet.selectBatched(
-    batchSize: Int = 1000,
-    whereOp: Op<Boolean>
-): Iterable<Iterable<ResultRow>> {
-    require(batchSize > 0) { "Batch size should be greater than 0" }
-
-    val autoIncColumn = try {
-        source.columns.first { it.columnType.isAutoInc }
-    } catch (_: NoSuchElementException) {
-        throw UnsupportedOperationException("Batched select only works on tables with an autoincrementing column")
-    }
-
-    return object : Iterable<Iterable<ResultRow>> {
-        override fun iterator(): Iterator<Iterable<ResultRow>> {
-            return iterator {
-                var lastOffset = 0L
-                while (true) {
-                    val query =
-                        selectAll().where { whereOp and (autoIncColumn greater lastOffset) }
-                            .limit(batchSize)
-                            .orderBy(autoIncColumn, SortOrder.ASC)
-
-                    // query.iterator() executes the query
-                    val results = query.iterator().asSequence().toList()
-
-                    if (results.isNotEmpty()) {
-                        yield(results)
-                    }
-
-                    if (results.size < batchSize) break
-
-                    lastOffset = toLong(results.last()[autoIncColumn]!!)
-                }
-            }
-        }
-
-        private fun toLong(autoIncVal: Any): Long = when (autoIncVal) {
-            is EntityID<*> -> toLong(autoIncVal.value)
-            is Int -> autoIncVal.toLong()
-            else -> autoIncVal as Long
-        }
-    }
+    val stmt = StatementBuilder { mergeFrom(selectQuery, on, body) }
+    return MergeSelectExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }

@@ -646,7 +646,7 @@ class SelectTests : DatabaseTestsBase() {
             val commentedFrontSql = query.comment(text).prepareSQL(this, false)
             assertEquals("/*$text*/ $originalSql", commentedFrontSql)
 
-            val commentedTwiceSql = query.comment(text, Query.CommentPosition.BACK).prepareSQL(this, false)
+            val commentedTwiceSql = query.comment(text, AbstractQuery.CommentPosition.BACK).prepareSQL(this, false)
             assertEquals("/*$text*/ $originalSql /*$text*/", commentedTwiceSql)
 
             expectException<IllegalStateException> { // comment already exists at start of query
@@ -654,13 +654,13 @@ class SelectTests : DatabaseTestsBase() {
             }
 
             val commentedBackSql = query
-                .adjustComments(Query.CommentPosition.FRONT) // not setting new content removes comment at that position
-                .adjustComments(Query.CommentPosition.BACK, updatedText)
+                .adjustComments(AbstractQuery.CommentPosition.FRONT) // not setting new content removes comment at that position
+                .adjustComments(AbstractQuery.CommentPosition.BACK, updatedText)
                 .prepareSQL(this, false)
             assertEquals("$originalSql /*$updatedText*/", commentedBackSql)
 
             assertEquals(originalQuery.count(), originalQuery.comment(text).count())
-            assertEquals(originalQuery.count(), originalQuery.comment(text, Query.CommentPosition.BACK).count())
+            assertEquals(originalQuery.count(), originalQuery.comment(text, AbstractQuery.CommentPosition.BACK).count())
         }
     }
 

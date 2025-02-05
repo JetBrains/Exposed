@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.sql.tests
 
 import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.Key
 import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
@@ -58,7 +58,11 @@ abstract class DatabaseTestsBase {
     @Parameterized.Parameter(2)
     lateinit var testName: String
 
-    fun withDb(dbSettings: TestDB, configure: (DatabaseConfig.Builder.() -> Unit)? = null, statement: Transaction.(TestDB) -> Unit) {
+    fun withDb(
+        dbSettings: TestDB,
+        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+        statement: JdbcTransaction.(TestDB) -> Unit
+    ) {
         Assume.assumeTrue(dialect == dbSettings)
 
         val unregistered = dbSettings !in registeredOnShutdown
@@ -98,7 +102,7 @@ abstract class DatabaseTestsBase {
         db: Collection<TestDB>? = null,
         excludeSettings: Collection<TestDB> = emptyList(),
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-        statement: Transaction.(TestDB) -> Unit
+        statement: JdbcTransaction.(TestDB) -> Unit
     ) {
         if (db != null && dialect !in db) {
             Assume.assumeFalse(true)
@@ -122,7 +126,7 @@ abstract class DatabaseTestsBase {
         excludeSettings: Collection<TestDB>,
         vararg tables: Table,
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-        statement: Transaction.(TestDB) -> Unit
+        statement: JdbcTransaction.(TestDB) -> Unit
     ) {
         Assume.assumeFalse(dialect in excludeSettings)
 
@@ -155,7 +159,7 @@ abstract class DatabaseTestsBase {
         excludeSettings: List<TestDB>,
         vararg schemas: Schema,
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-        statement: Transaction.() -> Unit
+        statement: JdbcTransaction.() -> Unit
     ) {
         if (dialect !in TestDB.enabledDialects()) {
             Assume.assumeFalse(true)
@@ -182,11 +186,11 @@ abstract class DatabaseTestsBase {
         }
     }
 
-    fun withTables(vararg tables: Table, configure: (DatabaseConfig.Builder.() -> Unit)? = null, statement: Transaction.(TestDB) -> Unit) {
+    fun withTables(vararg tables: Table, configure: (DatabaseConfig.Builder.() -> Unit)? = null, statement: JdbcTransaction.(TestDB) -> Unit) {
         withTables(excludeSettings = emptyList(), tables = tables, configure = configure, statement = statement)
     }
 
-    fun withSchemas(vararg schemas: Schema, configure: (DatabaseConfig.Builder.() -> Unit)? = null, statement: Transaction.() -> Unit) {
+    fun withSchemas(vararg schemas: Schema, configure: (DatabaseConfig.Builder.() -> Unit)? = null, statement: JdbcTransaction.() -> Unit) {
         withSchemas(excludeSettings = emptyList(), schemas = schemas, configure = configure, statement = statement)
     }
 

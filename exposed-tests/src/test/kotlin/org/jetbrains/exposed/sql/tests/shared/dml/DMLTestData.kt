@@ -5,9 +5,9 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -55,7 +55,7 @@ object DMLTestsData {
 @Suppress("LongMethod")
 fun DatabaseTestsBase.withCitiesAndUsers(
     exclude: Collection<TestDB> = emptyList(),
-    statement: Transaction.(
+    statement: JdbcTransaction.(
         cities: DMLTestsData.Cities,
         users: DMLTestsData.Users,
         userData: DMLTestsData.UserData
@@ -143,7 +143,7 @@ fun DatabaseTestsBase.withCitiesAndUsers(
 
 fun DatabaseTestsBase.withSales(
     excludeSettings: Collection<TestDB> = emptyList(),
-    statement: Transaction.(testDb: TestDB, sales: DMLTestsData.Sales) -> Unit
+    statement: JdbcTransaction.(testDb: TestDB, sales: DMLTestsData.Sales) -> Unit
 ) {
     val sales = DMLTestsData.Sales
 
@@ -171,7 +171,7 @@ private fun insertSale(year: Int, month: Int, product: String?, amount: String) 
 }
 
 fun DatabaseTestsBase.withSomeAmounts(
-    statement: Transaction.(testDb: TestDB, someAmounts: DMLTestsData.SomeAmounts) -> Unit
+    statement: JdbcTransaction.(testDb: TestDB, someAmounts: DMLTestsData.SomeAmounts) -> Unit
 ) {
     val someAmounts = DMLTestsData.SomeAmounts
 
@@ -187,7 +187,11 @@ fun DatabaseTestsBase.withSomeAmounts(
 }
 
 fun DatabaseTestsBase.withSalesAndSomeAmounts(
-    statement: Transaction.(testDb: TestDB, sales: DMLTestsData.Sales, someAmounts: DMLTestsData.SomeAmounts) -> Unit
+    statement: JdbcTransaction.(
+        testDb: TestDB,
+        sales: DMLTestsData.Sales,
+        someAmounts: DMLTestsData.SomeAmounts
+    ) -> Unit
 ) =
     withSales { testDb, sales ->
         withSomeAmounts { _, someAmounts ->

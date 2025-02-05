@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.DatabaseMetaData
 
 internal class JdbcIdentifierManager(metadata: DatabaseMetaData) : IdentifierManagerApi() {
@@ -24,3 +25,6 @@ internal class JdbcIdentifierManager(metadata: DatabaseMetaData) : IdentifierMan
     }
     override val maxColumnNameLength: Int = metadata.maxColumnNameLength
 }
+
+internal fun String.inProperCase(): String =
+    TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

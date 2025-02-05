@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.sql.transactions
 
-import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadLocalRandom
  */
 class ThreadLocalTransactionManager(
     private val db: Database,
-    private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)? = null
+    private val setupTxConnection: ((ExposedConnection<*>, JdbcTransactionInterface) -> Unit)? = null
 ) : TransactionManager {
     @Volatile
     override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
@@ -30,33 +30,6 @@ class ThreadLocalTransactionManager(
 
     @Volatile
     override var defaultMaxRetryDelay: Long = db.config.defaultMaxRetryDelay
-
-    @Deprecated(
-        message = "This property will be removed in future releases",
-        replaceWith = ReplaceWith("defaultMaxAttempts"),
-        level = DeprecationLevel.HIDDEN
-    )
-    override var defaultRepetitionAttempts: Int
-        get() = defaultMaxAttempts
-        set(value) { defaultMaxAttempts = value }
-
-    @Deprecated(
-        message = "This property will be removed in future releases",
-        replaceWith = ReplaceWith("defaultMinRetryDelay"),
-        level = DeprecationLevel.HIDDEN
-    )
-    override var defaultMinRepetitionDelay: Long
-        get() = defaultMinRetryDelay
-        set(value) { defaultMinRetryDelay = value }
-
-    @Deprecated(
-        message = "This property will be removed in future releases",
-        replaceWith = ReplaceWith("defaultMaxRetryDelay"),
-        level = DeprecationLevel.HIDDEN
-    )
-    override var defaultMaxRepetitionDelay: Long
-        get() = defaultMaxRetryDelay
-        set(value) { defaultMaxRetryDelay = value }
 
     @Volatile
     override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
@@ -76,10 +49,6 @@ class ThreadLocalTransactionManager(
             return field
         }
 
-        @Deprecated("Use DatabaseConfig to define the defaultIsolationLevel", level = DeprecationLevel.HIDDEN)
-        @TestOnly
-        set
-
     /**
      * Whether the transaction isolation level of the underlying DataSource should be retrieved from the database.
      *
@@ -92,33 +61,34 @@ class ThreadLocalTransactionManager(
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
     /** A thread local variable storing the current transaction. */
-    val threadLocal = ThreadLocal<Transaction>()
+    val threadLocal = ThreadLocal<JdbcTransaction>()
 
     override fun toString(): String {
         return "ThreadLocalTransactionManager[${hashCode()}](db=$db)"
     }
 
-    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction {
-        val transaction = outerTransaction?.takeIf { !db.useNestedTransactions } ?: Transaction(
-            ThreadLocalTransaction(
-                db = db,
-                readOnly = outerTransaction?.readOnly ?: readOnly,
-                transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
-                setupTxConnection = setupTxConnection,
-                threadLocal = threadLocal,
-                outerTransaction = outerTransaction,
-                loadDataSourceIsolationLevel = loadDataSourceIsolationLevel,
+    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): JdbcTransaction {
+        val transaction = outerTransaction?.takeIf { !db.useNestedTransactions } as? JdbcTransaction
+            ?: JdbcTransaction(
+                ThreadLocalTransaction(
+                    db = db,
+                    readOnly = outerTransaction?.readOnly ?: readOnly,
+                    transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
+                    setupTxConnection = setupTxConnection,
+                    threadLocal = threadLocal,
+                    outerTransaction = outerTransaction as? JdbcTransaction,
+                    loadDataSourceIsolationLevel = loadDataSourceIsolationLevel,
+                ),
             )
-        )
 
         return transaction.apply { bindTransactionToThread(this) }
     }
 
-    override fun currentOrNull(): Transaction? = threadLocal.get()
+    override fun currentOrNull(): JdbcTransaction? = threadLocal.get()
 
     override fun bindTransactionToThread(transaction: Transaction?) {
         if (transaction != null) {
-            threadLocal.set(transaction)
+            threadLocal.set(transaction as JdbcTransaction)
         } else {
             threadLocal.remove()
         }
@@ -126,13 +96,13 @@ class ThreadLocalTransactionManager(
 
     private class ThreadLocalTransaction(
         override val db: Database,
-        private val setupTxConnection: ((ExposedConnection<*>, TransactionInterface) -> Unit)?,
+        private val setupTxConnection: ((ExposedConnection<*>, JdbcTransactionInterface) -> Unit)?,
         override val transactionIsolation: Int,
         override val readOnly: Boolean,
-        val threadLocal: ThreadLocal<Transaction>,
-        override val outerTransaction: Transaction?,
+        val threadLocal: ThreadLocal<JdbcTransaction>,
+        override val outerTransaction: JdbcTransaction?,
         private val loadDataSourceIsolationLevel: Boolean
-    ) : TransactionInterface {
+    ) : JdbcTransactionInterface {
 
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             outerTransaction?.connection ?: db.connector().apply {
@@ -233,7 +203,7 @@ class ThreadLocalTransactionManager(
  * @return The final result of the [statement] block.
  * @sample org.jetbrains.exposed.sql.tests.h2.MultiDatabaseTest.testTransactionWithDatabase
  */
-fun <T> transaction(db: Database? = null, statement: Transaction.() -> T): T =
+fun <T> transaction(db: Database? = null, statement: JdbcTransaction.() -> T): T =
     transaction(
         db.transactionManager.defaultIsolationLevel,
         db.transactionManager.defaultReadOnly,
@@ -255,14 +225,14 @@ fun <T> transaction(
     transactionIsolation: Int,
     readOnly: Boolean = false,
     db: Database? = null,
-    statement: Transaction.() -> T
+    statement: JdbcTransaction.() -> T
 ): T = keepAndRestoreTransactionRefAfterRun(db) {
-    val outer = TransactionManager.currentOrNull()
+    val outer = TransactionManager.currentOrNull() as? JdbcTransaction
 
     if (outer != null && (db == null || outer.db == db)) {
         val outerManager = outer.db.transactionManager
 
-        val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer)
+        val transaction = outerManager.newTransaction(transactionIsolation, readOnly, outer) as JdbcTransaction
         @Suppress("TooGenericExceptionCaught")
         try {
             transaction.statement().also {
@@ -299,7 +269,7 @@ fun <T> transaction(
             val currentManager = outer?.db.transactionManager
             try {
                 TransactionManager.resetCurrent(existingForDb)
-                transaction.statement().also {
+                (transaction as JdbcTransaction).statement().also {
                     if (db.useNestedTransactions) {
                         transaction.commit()
                     }
@@ -334,8 +304,8 @@ fun <T> inTopLevelTransaction(
     transactionIsolation: Int,
     readOnly: Boolean = false,
     db: Database? = null,
-    outerTransaction: Transaction? = null,
-    statement: Transaction.() -> T
+    outerTransaction: JdbcTransaction? = null,
+    statement: JdbcTransaction.() -> T
 ): T {
     fun run(): T {
         var attempts = 0
@@ -413,7 +383,7 @@ private fun <T> keepAndRestoreTransactionRefAfterRun(db: Database? = null, block
     }
 }
 
-internal fun handleSQLException(cause: SQLException, transaction: Transaction, attempts: Int) {
+internal fun handleSQLException(cause: SQLException, transaction: JdbcTransaction, attempts: Int) {
     val exposedSQLException = cause as? ExposedSQLException
     val queriesToLog = exposedSQLException?.causedByQueries()?.joinToString(";\n") ?: "${transaction.currentStatement}"
     val message = "Transaction attempt #$attempts failed: ${cause.message}. Statement(s): $queriesToLog"
@@ -428,7 +398,7 @@ internal fun handleSQLException(cause: SQLException, transaction: Transaction, a
     }
 }
 
-internal fun closeStatementsAndConnection(transaction: Transaction) {
+internal fun closeStatementsAndConnection(transaction: JdbcTransaction) {
     val currentStatement = transaction.currentStatement
     @Suppress("TooGenericExceptionCaught")
     try {

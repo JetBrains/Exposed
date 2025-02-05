@@ -92,7 +92,7 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
      * @sample org.jetbrains.exposed.sql.tests.shared.entities.EntityTests.testNewWithIdAndRefresh
      */
     open fun refresh(flush: Boolean = false) {
-        val transaction = TransactionManager.current()
+        val transaction = TransactionManager.current() as JdbcTransaction
         val cache = transaction.entityCache
         val isNewEntity = isNewEntity()
         when {

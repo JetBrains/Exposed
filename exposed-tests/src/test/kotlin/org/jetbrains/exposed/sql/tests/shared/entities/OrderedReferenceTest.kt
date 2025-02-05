@@ -4,8 +4,8 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.SortOrder.DESC
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -152,7 +152,7 @@ class OrderedReferenceTest : DatabaseTestsBase() {
 
     private val unsortedRatingValues = listOf(0, 3, 1, 2, 4, 4, 5, 4, 5, 6, 9, 8)
 
-    private fun withOrderedReferenceTestTables(statement: Transaction.(TestDB) -> Unit) {
+    private fun withOrderedReferenceTestTables(statement: JdbcTransaction.(TestDB) -> Unit) {
         withTables(Users, UserRatings, UserNullableRatings) { db ->
             val userId = Users.insertAndGetId { }
             unsortedRatingValues.forEach { value ->

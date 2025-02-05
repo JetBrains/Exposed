@@ -1,8 +1,12 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.statements.Statement
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.statements.Executable
+import org.jetbrains.exposed.sql.statements.StatementIterator
+import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
+import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.jdbc.JdbcResult
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
@@ -20,7 +24,15 @@ sealed class SetOperation(
     operationName: String,
     _firstStatement: AbstractQuery<*>,
     val secondStatement: AbstractQuery<*>
-) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()) {
+) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()),
+    Executable<ResultApi, SetOperation>,
+    SizedIterable<ResultRow> {
+
+    override val statement: SetOperation = this
+
+    protected val transaction: JdbcTransaction
+        get() = TransactionManager.current() as JdbcTransaction
+
     /** The SQL statement on the left-hand side of the set operator. */
     val firstStatement: AbstractQuery<*> = when (_firstStatement) {
         is Query -> {
@@ -36,6 +48,7 @@ sealed class SetOperation(
         is SetOperation -> _firstStatement
         else -> error("Unsupported statement type ${_firstStatement::class.simpleName} in $operationName")
     }
+
     private val rawStatements: List<AbstractQuery<*>> = listOf(firstStatement, secondStatement)
 
     init {
@@ -53,8 +66,6 @@ sealed class SetOperation(
 
     override val set: FieldSet = firstStatement.set
 
-    override val queryToExecute: Statement<ResultSet> get() = this
-
     /** The SQL keyword representing the set operation. */
     open val operationName = operationName
 
@@ -64,7 +75,7 @@ sealed class SetOperation(
             count = true
             return transaction.exec(this) { rs ->
                 rs.next()
-                rs.getLong(1).also {
+                (rs.getObject(1) as? Number)?.toLong().also {
                     rs.close()
                 }
             }!!
@@ -85,7 +96,9 @@ sealed class SetOperation(
         }
     }
 
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): ResultSet = executeQuery()
+    override fun JdbcPreparedStatementApi.executeInternal(
+        transaction: JdbcTransaction
+    ): JdbcResult = executeQuery()
 
     override fun prepareSQL(builder: QueryBuilder): String {
         builder {
@@ -123,6 +136,55 @@ sealed class SetOperation(
                     is SetOperation -> it.prepareSQL(this)
                 }
             }
+        }
+    }
+
+    override fun limit(count: Int): SetOperation = apply { limit = count }
+
+    override fun offset(start: Long): SetOperation = apply { offset = start }
+
+    fun orderBy(column: Expression<*>, order: SortOrder = SortOrder.ASC): SetOperation = orderBy(column to order)
+
+    override fun orderBy(vararg order: Pair<Expression<*>, SortOrder>): SetOperation = apply {
+        (orderByExpressions as MutableList).addAll(order)
+    }
+
+    private val queryToExecute: Executable<ResultApi, SetOperation>
+        get() = this
+
+    override fun iterator(): Iterator<ResultRow> {
+        val rs = transaction.exec(queryToExecute)!! as JdbcResult
+        val resultIterator = ResultIterator(rs.result)
+        return if (transaction.db.supportsMultipleResultSets) {
+            resultIterator
+        } else {
+            Iterable { resultIterator }.toList().iterator()
+        }
+    }
+
+    private inner class ResultIterator(rs: ResultSet) : StatementIterator<Expression<*>, ResultRow>(rs) {
+        override val fieldIndex = set.realFields.toSet()
+            .mapIndexed { index, expression -> expression to index }
+            .toMap()
+
+        init {
+            hasNext = result.next()
+            if (hasNext) trackResultSet(transaction)
+        }
+
+        override fun createResultRow(): ResultRow = ResultRow.create(JdbcResult(result), fieldIndex)
+    }
+
+    companion object {
+        private fun trackResultSet(transaction: JdbcTransaction) {
+            val threshold = transaction.db.config.logTooMuchResultSetsThreshold
+            if (threshold > 0 && threshold < transaction.openResultSetsCount) {
+                val message = "Current opened result sets size ${transaction.openResultSetsCount} " +
+                    "exceeds $threshold threshold for transaction ${transaction.id} "
+                val stackTrace = Exception(message).stackTraceToString()
+                exposedLogger.error(stackTrace)
+            }
+            transaction.openResultSetsCount++
         }
     }
 }

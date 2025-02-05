@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.AbstractQuery
 import org.jetbrains.exposed.sql.Key
-import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
@@ -38,7 +38,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
 
     private fun beforeExecution(transaction: Transaction, context: StatementContext, childStatement: Statement<*>?) {
         when (val statement = childStatement ?: context.statement) {
-            is Query -> transaction.flushEntities(statement)
+            is AbstractQuery<*> -> transaction.flushEntities(statement)
 
             is ReturningStatement -> {
                 beforeExecution(transaction = transaction, context = context, childStatement = statement.mainStatement)
@@ -108,7 +108,7 @@ class EntityLifecycleInterceptor : GlobalStatementInterceptor {
         entityCache.inserts.clear()
     }
 
-    private fun Transaction.flushEntities(query: Query) {
+    private fun Transaction.flushEntities(query: AbstractQuery<*>) {
         // Flush data before executing query or results may be unpredictable
         val tables = query.targets.filterIsInstance(IdTable::class.java).toSet()
         entityCache.flush(tables)

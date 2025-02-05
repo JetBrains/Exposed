@@ -680,7 +680,7 @@ class EntityTests : DatabaseTestsBase() {
         }
     }
 
-    private fun <T> newTransaction(statement: Transaction.() -> T) =
+    private fun <T> newTransaction(statement: JdbcTransaction.() -> T) =
         inTopLevelTransaction(TransactionManager.manager.defaultIsolationLevel, false, null, null, statement)
 
     @Test

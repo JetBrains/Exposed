@@ -10,6 +10,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -238,7 +239,7 @@ class SequencesTests : DatabaseTestsBase() {
                 try {
                     SchemaUtils.create(tableWithExplicitSequenceName)
 
-                    val sequences = currentDialectTest.sequences()
+                    val sequences = currentDialectMetadataTest.sequences()
 
                     assertTrue(sequences.isNotEmpty())
                     assertTrue(sequences.any { it == myseq.name.inProperCase() })
@@ -261,7 +262,7 @@ class SequencesTests : DatabaseTestsBase() {
                 try {
                     SchemaUtils.create(tableWithExplicitSequenceName)
 
-                    val sequences = currentDialectTest.sequences()
+                    val sequences = currentDialectMetadataTest.sequences()
 
                     assertTrue(sequences.isNotEmpty())
                     assertTrue(sequences.any { it == sequenceName.inProperCase() })
@@ -283,7 +284,7 @@ class SequencesTests : DatabaseTestsBase() {
                 try {
                     SchemaUtils.create(tableWithoutExplicitSequenceName)
 
-                    val sequences = currentDialectTest.sequences()
+                    val sequences = currentDialectMetadataTest.sequences()
 
                     assertTrue(sequences.isNotEmpty())
 
@@ -327,7 +328,7 @@ class SequencesTests : DatabaseTestsBase() {
             try {
                 SchemaUtils.create(identityTable)
 
-                val foundSequence = currentDialectTest.existingSequences(identityTable)[identityTable]?.single()
+                val foundSequence = currentDialectMetadataTest.existingSequences(identityTable)[identityTable]?.single()
                 assertNotNull(foundSequence)
                 assertEquals(identityTable.sequences.single().identifier, foundSequence.identifier)
             } finally {

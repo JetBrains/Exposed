@@ -1,10 +1,13 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.vendors.MysqlFunctionProvider
 import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
 
 /**
  * Represents the SQL statement that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
@@ -65,14 +68,5 @@ open class BatchUpsertStatement(
         return super.arguments().map {
             it + additionalArgs
         }
-    }
-
-    override fun prepared(transaction: Transaction, sql: String): PreparedStatementApi {
-        // We must return values from upsert because returned id could be different depending on insert or upsert happened
-        if (!currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
-            return transaction.connection.prepareStatement(sql, shouldReturnGeneratedValues)
-        }
-
-        return super.prepared(transaction, sql)
     }
 }

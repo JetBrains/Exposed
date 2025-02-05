@@ -110,6 +110,7 @@ data class ForeignKeyConstraint(
 
     /** Name of this foreign key constraint. */
     val fkName: String
+        @OptIn(InternalApi::class)
         get() = tx.db.identifierManager.cutIfNecessaryAndQuote(
             name ?: (
                 "fk_${fromTable.tableNameWithoutSchemeSanitized.replace('.', '_')}_${from.joinToString("_") { it.name }}__" +

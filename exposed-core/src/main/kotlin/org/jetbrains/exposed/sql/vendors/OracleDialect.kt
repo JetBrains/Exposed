@@ -261,11 +261,14 @@ internal object OracleFunctionProvider : FunctionProvider() {
             expression to ((expression as? ExpressionWithColumnType<*>)?.alias("c$index") ?: expression.alias("c$index"))
         }.toMap()
 
-        val subQuery = targets.select(columnsToSelect.values.toList())
+        +"SELECT "
+        columnsToSelect.values.appendTo { +it }
+        +" FROM "
+        targets.describe(TransactionManager.current(), this)
         where?.let {
-            subQuery.adjustWhere { it }
+            +" WHERE "
+            +it
         }
-        subQuery.prepareSQL(this)
         +") x"
 
         columnsAndValues.appendTo(this, prefix = " SET ") { (col, value) ->
@@ -344,12 +347,14 @@ internal object OracleFunctionProvider : FunctionProvider() {
         targets.checkJoinTypes(StatementType.DELETE)
 
         return with(QueryBuilder(true)) {
-            +"DELETE ("
-            val subQuery = targets.select(tableToDelete.columns)
+            +"DELETE (SELECT "
+            tableToDelete.columns.appendTo { +it }
+            +" FROM "
+            targets.describe(TransactionManager.current(), this)
             where?.let {
-                subQuery.adjustWhere { it }
+                +" WHERE "
+                +it
             }
-            subQuery.prepareSQL(this)
             +") x"
             limit?.let {
                 +" WHERE ROWNUM <= $it"

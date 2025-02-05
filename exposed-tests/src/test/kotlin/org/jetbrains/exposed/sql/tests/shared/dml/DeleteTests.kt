@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
@@ -69,7 +70,7 @@ class DeleteTests : DatabaseTestsBase() {
     @Test
     fun testDeleteWithLimit() {
         withCitiesAndUsers { _, _, userData ->
-            if (!currentDialectTest.supportsLimitWithUpdateOrDelete()) {
+            if (!currentDialectMetadataTest.supportsLimitWithUpdateOrDelete()) {
                 expectException<UnsupportedByDialectException> {
                     userData.deleteWhere(limit = 1) { userData.value eq 20 }
                 }

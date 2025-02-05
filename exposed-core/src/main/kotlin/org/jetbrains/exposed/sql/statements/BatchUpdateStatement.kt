@@ -7,8 +7,8 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.IColumnType
+import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 
 /**
  * Represents the SQL statement that batch updates rows of a table.
@@ -36,11 +36,13 @@ open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, 
             throw BatchDataInconsistentException("Some values missing for batch update. Different columns: $different")
         }
 
+        @OptIn(InternalApi::class)
         if (data.isNotEmpty()) {
             data[data.size - 1] = lastBatch!!.copy(second = values.toMap())
             values.clear()
             hasBatchedValues = true
         }
+        @OptIn(InternalApi::class)
         data.add(id to values)
     }
 
@@ -55,8 +57,6 @@ open class BatchUpdateStatement(val table: IdTable<*>) : UpdateStatement(table, 
         }
         return "$updateSql WHERE $idEqCondition"
     }
-
-    override fun PreparedStatementApi.executeInternal(transaction: Transaction): Int = if (data.size == 1) executeUpdate() else executeBatch().sum()
 
     override fun arguments(): Iterable<Iterable<Pair<IColumnType<*>, Any?>>> = data.map { (id, row) ->
         val idArgs = (id.value as? CompositeID)?.values?.map {

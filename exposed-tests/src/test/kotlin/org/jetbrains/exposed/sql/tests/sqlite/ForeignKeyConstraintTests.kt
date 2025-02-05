@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.Category
 import org.jetbrains.exposed.sql.tests.shared.DEFAULT_CATEGORY_ID
@@ -42,7 +43,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
         }
     }
 
-    private fun Transaction.testOnDeleteSetDefault() {
+    private fun JdbcTransaction.testOnDeleteSetDefault() {
         SchemaUtils.create(Category, Item)
 
         Category.insert {
@@ -288,7 +289,7 @@ class ForeignKeyConstraintTests : DatabaseTestsBase() {
 
         // EXPOSED-711 https://youtrack.jetbrains.com/issue/EXPOSED-711/Oracle-tableConstraints-columnContraints-dont-return-foreign-keys
         withTables(excludeSettings = listOf(TestDB.ORACLE), child, parent) {
-            val constraints = currentDialectTest.columnConstraints(child)
+            val constraints = currentDialectMetadataTest.columnConstraints(child)
             // columnConstraints() only return entry for table that has column with FK
             assertEquals(1, constraints.keys.size)
             assertEquals(child.scale.foreignKey?.fkName, constraints.entries.single().value.single().fkName)

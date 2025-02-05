@@ -82,7 +82,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         TransactionManager.closeAndUnregister(db)
     }
 
-    private fun Transaction.testInsertAndSelectInSingleExec(testDb: TestDB) {
+    private fun JdbcTransaction.testInsertAndSelectInSingleExec(testDb: TestDB) {
         ExecTable.insert {
             it[amount] = 99
         }

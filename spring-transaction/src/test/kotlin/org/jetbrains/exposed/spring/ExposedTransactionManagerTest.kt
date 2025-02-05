@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.spring
 
 import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
@@ -313,7 +314,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
         transactionManager.execute(timeout = 1) {
             try {
                 // H2 database doesn't support sql sleep function so use recursive query to simulate long running query
-                TransactionManager.current().exec(
+                (TransactionManager.current() as JdbcTransaction).exec(
                     """
                WITH RECURSIVE T(N) AS (
                SELECT 1
@@ -339,7 +340,7 @@ open class ExposedTransactionManagerTest : SpringTransactionTestBase() {
     }
 
     private fun assertTransactionIsolationLevel(expected: Int) {
-        val connection = TransactionManager.current().connection
+        val connection = (TransactionManager.current() as JdbcTransaction).connection
         assertEquals(expected, connection.transactionIsolation)
     }
 }

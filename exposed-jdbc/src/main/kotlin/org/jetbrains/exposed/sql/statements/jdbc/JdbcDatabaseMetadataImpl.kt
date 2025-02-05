@@ -2,8 +2,8 @@ package org.jetbrains.exposed.sql.statements.jdbc
 
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.sql.statements.api.JdbcExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Class responsible for retrieving and storing information about the JDBC driver and underlying DBMS, using [metadata].
  */
-class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
+class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : JdbcExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
 
     override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion") }
@@ -63,7 +63,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
         @Language("H2")
         val modeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
-        TransactionManager.current().exec(modeQuery) { rs ->
+        (TransactionManager.current() as JdbcTransaction).exec(modeQuery) { rs ->
             rs.iterate { getString(settingValueField) }
         }?.firstOrNull()
     }
@@ -84,7 +84,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return when (currentDialect) {
             is SQLiteDialect -> {
                 try {
-                    val transaction = TransactionManager.current()
+                    val transaction = TransactionManager.current() as JdbcTransaction
                     transaction.exec("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""") { rs ->
                         rs.next()
                         rs.getBoolean(1)
@@ -124,28 +124,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         currentSchema = null
     }
 
-    private inner class CachableMapWithDefault<K, V>(
-        private val map: MutableMap<K, V> = mutableMapOf(),
-        val default: (K) -> V
-    ) : Map<K, V> by map {
-        override fun get(key: K): V? = map.getOrPut(key) { default(key) }
-        override fun containsKey(key: K): Boolean = true
-        override fun isEmpty(): Boolean = false
-
-        override val entries: Set<Map.Entry<K, V>>
-            get() = throw UnsupportedOperationException(
-                "The entries field should not be used on CachableMapWithDefault because the lazy population of the collection for missing keys " +
-                    "and entries may lead to inconsistencies between calls."
-            )
-
-        override val keys: Set<K>
-            get() = throw UnsupportedOperationException(
-                "The keys field should not be used on CachableMapWithDefault because the lazy population of the collection for missing keys " +
-                    "and keys may lead to inconsistencies between calls."
-            )
-    }
-
     override val tableNames: Map<String, List<String>>
+        @OptIn(InternalApi::class)
         get() = CachableMapWithDefault(default = { schemeName ->
             tableNamesFor(schemeName)
         })
@@ -215,6 +195,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     private fun ResultSet.asColumnMetadata(): ColumnMetadata {
+        @OptIn(InternalApi::class)
         val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
         val autoIncrement = getString("IS_AUTOINCREMENT") == "YES"
         val type = getInt("DATA_TYPE")
@@ -224,66 +205,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val scale = getInt("DECIMAL_DIGITS").takeIf { it != 0 }
 
         return ColumnMetadata(name, type, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
-    }
-
-    /**
-     * Here is the table of default values which are returned from the column `"COLUMN_DEF"` depending on how it was configured:
-     *
-     * - Not set: `varchar("any", 128).nullable()`
-     * - Set null: `varchar("any", 128).nullable().default(null)`
-     * - Set "NULL": `varchar("any", 128).nullable().default("NULL")`
-     * ```
-     * DB                  Not set    Set null                    Set "NULL"
-     * SqlServer           null       "(NULL)"                    "('NULL')"
-     * SQLite              null       "NULL"                      "'NULL'"
-     * Postgres            null       "NULL::character varying"   "'NULL'::character varying"
-     * PostgresNG          null       "NULL::character varying"   "'NULL'::character varying"
-     * Oracle              null       "NULL "                     "'NULL' "
-     * MySql5              null       null                        "NULL"
-     * MySql8              null       null                        "NULL"
-     * MariaDB3            "NULL"     "NULL"                      "'NULL'"
-     * MariaDB2            "NULL"     "NULL"                      "'NULL'"
-     * H2V1                null       "NULL"                      "'NULL'"
-     * H2V1 (MySql)        null       "NULL"                      "'NULL'"
-     * H2V2                null       "NULL"                      "'NULL'"
-     * H2V2 (MySql)        null       "NULL"                      "'NULL'"
-     * H2V2 (MariaDB)      null       "NULL"                      "'NULL'"
-     * H2V2 (PSQL)         null       "NULL"                      "'NULL'"
-     * H2V2 (Oracle)       null       "NULL"                      "'NULL'"
-     * H2V2 (SqlServer)    null       "NULL"                      "'NULL'"
-     * ```
-     * According to this table there is no simple rule of what is the default value. It should be checked
-     * for each DB (or groups of DBs) specifically.
-     * In the case of MySql and MariaDB it's also not possible to say whether was default value skipped or
-     * explicitly set to `null`.
-     *
-     * @return `null` - if the value was set to `null` or not configured. `defaultValue` in other case.
-     */
-    private fun sanitizedDefault(defaultValue: String): String? {
-        val dialect = currentDialect
-        val h2Mode = dialect.h2Mode
-        return when {
-            // Check for MariaDB must be before MySql because MariaDBDialect as a class inherits MysqlDialect
-            dialect is MariaDBDialect || h2Mode == H2CompatibilityMode.MariaDB -> when {
-                defaultValue.startsWith("b'") -> defaultValue.substringAfter("b'").trim('\'')
-                else -> defaultValue.extractNullAndStringFromDefaultValue()
-            }
-            // It's the special case, because MySql returns default string "NULL" as string "NULL", but other DBs return it as "'NULL'"
-            dialect is MysqlDialect && defaultValue == "NULL" -> defaultValue
-            dialect is MysqlDialect || h2Mode == H2CompatibilityMode.MySQL -> when {
-                defaultValue.startsWith("b'") -> defaultValue.substringAfter("b'").trim('\'')
-                else -> defaultValue.extractNullAndStringFromDefaultValue()
-            }
-            dialect is SQLServerDialect -> defaultValue.trim('(', ')').extractNullAndStringFromDefaultValue()
-            dialect is OracleDialect -> defaultValue.trim().extractNullAndStringFromDefaultValue()
-            else -> defaultValue.extractNullAndStringFromDefaultValue()
-        }
-    }
-
-    private fun String.extractNullAndStringFromDefaultValue() = when {
-        this.startsWith("NULL") -> null
-        this.startsWith('\'') && this.endsWith('\'') -> this.trim('\'')
-        else -> this
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()
@@ -374,7 +295,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> {
         if (currentDialect !is PostgreSQLDialect) return emptyMap()
 
-        val transaction = TransactionManager.current()
+        val transaction = TransactionManager.current() as JdbcTransaction
         return tables.associateWith { table ->
             val (_, tableSchema) = tableCatalogAndSchema(table)
             transaction.exec(
@@ -431,7 +352,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     @Suppress("MagicNumber")
     override fun sequences(): List<String> {
         val dialect = currentDialect
-        val transaction = TransactionManager.current()
+        val transaction = TransactionManager.current() as JdbcTransaction
         val fieldName = "SEQUENCE_NAME"
         return when (dialect) {
             is OracleDialect -> transaction.exec("SELECT $fieldName FROM USER_SEQUENCES") { rs ->
@@ -468,7 +389,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val dialect = currentDialect
 
         return if (dialect is MysqlDialect) {
-            val transaction = TransactionManager.current()
+            val transaction = TransactionManager.current() as JdbcTransaction
             val inTableList = allTables.keys.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
             val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: currentSchema}'"
             val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()

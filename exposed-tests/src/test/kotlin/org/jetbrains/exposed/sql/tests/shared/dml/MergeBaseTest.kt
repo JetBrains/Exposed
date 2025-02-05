@@ -14,13 +14,19 @@ abstract class MergeBaseTest : DatabaseTestsBase() {
 
     protected val defaultExcludeSettings = TestDB.ALL_MARIADB + TestDB.ALL_MYSQL + TestDB.SQLITE + TestDB.ALL_H2_V1
 
-    protected fun withMergeTestTables(excludeSettings: Collection<TestDB> = emptyList(), statement: Transaction.(dest: Dest, source: Source) -> Unit) = withTables(
+    protected fun withMergeTestTables(
+        excludeSettings: Collection<TestDB> = emptyList(),
+        statement: JdbcTransaction.(dest: Dest, source: Source) -> Unit
+    ) = withTables(
         excludeSettings = defaultExcludeSettings + excludeSettings, Source, Dest
     ) {
         statement(Dest, Source)
     }
 
-    protected fun withMergeTestTablesAndDefaultData(excludeSettings: Collection<TestDB> = emptyList(), statement: Transaction.(dest: Dest, source: Source) -> Unit) {
+    protected fun withMergeTestTablesAndDefaultData(
+        excludeSettings: Collection<TestDB> = emptyList(),
+        statement: JdbcTransaction.(dest: Dest, source: Source) -> Unit
+    ) {
         withMergeTestTables(excludeSettings) { dest, source ->
             source.insert(key = "only-in-source-1", value = 1)
             source.insert(key = "only-in-source-2", value = 2)

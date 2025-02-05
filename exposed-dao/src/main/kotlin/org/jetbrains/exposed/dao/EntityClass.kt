@@ -344,7 +344,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * [EntityCache], creates a new instance using the data in [row].
      */
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
-        val transaction = TransactionManager.current()
+        val transaction = TransactionManager.current() as JdbcTransaction
         return transaction.entityCache.find(this, id) ?: createInstance(id, row).also { new ->
             new.klass = this
             new.db = transaction.db
@@ -378,7 +378,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         val entityCache = warmCache()
         val prototype: T = createInstance(entityId, null)
         prototype.klass = this
-        prototype.db = TransactionManager.current().db
+        prototype.db = (TransactionManager.current() as JdbcTransaction).db
         prototype._readValues = ResultRow.createAndFillDefaults(dependsOnColumns)
         if (entityId._value != null) {
             prototype.writeIdColumnValue(table, entityId)
@@ -1130,7 +1130,7 @@ abstract class ImmutableCachedEntityClass<ID : Any, out T : Entity<ID>>(
     }
 
     final override fun warmCache(): EntityCache {
-        val tr = TransactionManager.current()
+        val tr = TransactionManager.current() as JdbcTransaction
         val db = tr.db
         val transactionCache = super.warmCache()
         if (_cachedValues[db] == null) {

@@ -15,6 +15,7 @@ kotlin {
 
 dependencies {
     api(project(":exposed-core"))
+    testCompileOnly(project(":exposed-jdbc"))
     api(libs.joda.time)
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))

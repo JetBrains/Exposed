@@ -78,9 +78,4 @@ class Sequence(
 
         return listOf(dropSequenceDDL)
     }
-
-    /**
-     * Returns whether this sequence exists in the database.
-     */
-    fun exists(): Boolean = currentDialect.sequenceExists(this)
 }

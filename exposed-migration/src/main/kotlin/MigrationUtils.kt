@@ -1,23 +1,15 @@
-import org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.SchemaUtils.addMissingColumnsStatements
-import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveForeignKeyConstraints
-import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveIndices
-import org.jetbrains.exposed.sql.SchemaUtils.checkMappingConsistence
-import org.jetbrains.exposed.sql.SchemaUtils.createStatements
-import org.jetbrains.exposed.sql.Sequence
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.sql.vendors.currentDialectMetadata
 import java.io.File
 
-object MigrationUtils {
+/**
+ * Utility functions that assist with generating the necessary SQL statements to migrate database schema objects.
+ */
+object MigrationUtils : MigrationUtilityApi() {
     /**
      * This function simply generates the migration script without applying the migration. Its purpose is to show what
      * the migration script will look like before applying the migration. If a migration script with the same name
@@ -34,26 +26,18 @@ object MigrationUtils {
      * @throws IllegalArgumentException if no argument is passed for the [tables] parameter.
      */
     @ExperimentalDatabaseMigrationApi
-    fun generateMigrationScript(vararg tables: Table, scriptDirectory: String, scriptName: String, withLogs: Boolean = true): File {
+    fun generateMigrationScript(
+        vararg tables: Table,
+        scriptDirectory: String,
+        scriptName: String,
+        withLogs: Boolean = true
+    ): File {
         require(tables.isNotEmpty()) { "Tables argument must not be empty" }
 
         val allStatements = statementsRequiredForDatabaseMigration(*tables, withLogs = withLogs)
 
-        val migrationScript = File("$scriptDirectory/$scriptName.sql")
-        migrationScript.createNewFile()
-
-        // Clear existing content
-        migrationScript.writeText("")
-
-        // Append statements
-        allStatements.forEach { statement ->
-            // Add semicolon only if it's not already there
-            val conditionalSemicolon = if (statement.last() == ';') "" else ";"
-
-            migrationScript.appendText("$statement$conditionalSemicolon\n")
-        }
-
-        return migrationScript
+        @OptIn(InternalApi::class)
+        return allStatements.writeMigrationScriptTo("$scriptDirectory/$scriptName.sql")
     }
 
     /**
@@ -79,18 +63,24 @@ object MigrationUtils {
      */
     fun statementsRequiredForDatabaseMigration(vararg tables: Table, withLogs: Boolean = true): List<String> {
         val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() }
-        val createStatements = logTimeSpent("Preparing create tables statements", withLogs) {
-            createStatements(tables = tablesToCreate.toTypedArray())
-        }
-        val createSequencesStatements = logTimeSpent("Preparing create sequences statements", withLogs) {
-            checkMissingSequences(tables = tables, withLogs).flatMap { it.createStatement() }
-        }
-        val alterStatements = logTimeSpent("Preparing alter table statements", withLogs) {
-            addMissingColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs) +
-                dropUnmappedColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs)
+
+        @OptIn(InternalApi::class)
+        val createStatements = logTimeSpent(createTablesLogMessage, withLogs) {
+            createTableStatements(tables = tablesToCreate.toTypedArray())
         }
 
-        val modifyTablesStatements = logTimeSpent("Checking mapping consistence", withLogs) {
+        @OptIn(InternalApi::class)
+        val createSequencesStatements = logTimeSpent(createSequencesLogMessage, withLogs) {
+            checkMissingSequences(tables = tables, withLogs).flatMap { it.createStatement() }
+        }
+
+        @OptIn(InternalApi::class)
+        val alterStatements = logTimeSpent(alterTablesLogMessage, withLogs) {
+            addMissingAndDropUnmappedColumns(tables = tablesToAlter.toTypedArray(), withLogs)
+        }
+
+        @OptIn(InternalApi::class)
+        val modifyTablesStatements = logTimeSpent(mappingConsistenceLogMessage, withLogs) {
             mappingConsistenceRequiredStatements(
                 tables = tablesToAlter.toTypedArray(),
                 withLogs
@@ -99,6 +89,60 @@ object MigrationUtils {
 
         val allStatements = createStatements + createSequencesStatements + alterStatements + modifyTablesStatements
         return allStatements
+    }
+
+    private fun createTableStatements(vararg tables: Table): List<String> {
+        if (tables.isEmpty()) return emptyList()
+        @OptIn(InternalApi::class)
+        val toCreate = tables.toList().sortByReferences().filterNot { it.exists() }
+        val alters = arrayListOf<String>()
+        @OptIn(InternalApi::class)
+        return toCreate.flatMap { table ->
+            val existingAutoIncSeq = table.autoIncColumn?.autoIncColumnType?.sequence?.takeIf {
+                currentDialectMetadata.sequenceExists(it)
+            }
+            val (create, alter) = tableDdlWithoutExistingSequence(table, existingAutoIncSeq)
+            alters += alter
+            create
+        } + alters
+    }
+
+    private fun addMissingAndDropUnmappedColumns(vararg tables: Table, withLogs: Boolean = true): List<String> {
+        if (tables.isEmpty()) return emptyList()
+        val statements = ArrayList<String>()
+
+        @OptIn(InternalApi::class)
+        val existingTablesColumns = logTimeSpent(columnsLogMessage, withLogs) {
+            currentDialectMetadata.tableColumns(*tables)
+        }
+
+        @OptIn(InternalApi::class)
+        val existingPrimaryKeys = logTimeSpent(primaryKeysLogMessage, withLogs) {
+            currentDialectMetadata.existingPrimaryKeys(*tables)
+        }
+        val tr = TransactionManager.current()
+        val dbSupportsAlterTableWithAddColumn = tr.db.supportsAlterTableWithAddColumn
+        val dbSupportsAlterTableWithDropColumn = tr.db.supportsAlterTableWithDropColumn
+        @OptIn(InternalApi::class)
+        for (table in tables) {
+            table.mapMissingColumnStatementsTo(
+                statements, existingTablesColumns[table].orEmpty(), existingPrimaryKeys[table], dbSupportsAlterTableWithAddColumn
+            )
+        }
+        @OptIn(InternalApi::class)
+        if (dbSupportsAlterTableWithAddColumn) {
+            val existingColumnConstraints = logTimeSpent(constraintsLogMessage, withLogs) {
+                currentDialectMetadata.columnConstraints(*tables)
+            }
+            mapMissingConstraintsTo(statements, existingColumnConstraints, tables = tables)
+        }
+        @OptIn(InternalApi::class)
+        if (dbSupportsAlterTableWithDropColumn) {
+            for (table in tables) {
+                table.mapUnmappedColumnStatementsTo(statements, existingTablesColumns[table].orEmpty())
+            }
+        }
+        return statements
     }
 
     /**
@@ -119,26 +163,14 @@ object MigrationUtils {
 
         val dbSupportsAlterTableWithDropColumn = TransactionManager.current().db.supportsAlterTableWithDropColumn
 
+        @OptIn(InternalApi::class)
         if (dbSupportsAlterTableWithDropColumn) {
-            val existingTablesColumns = logTimeSpent("Extracting table columns", withLogs) {
-                currentDialect.tableColumns(*tables)
+            val existingTablesColumns = logTimeSpent(columnsLogMessage, withLogs) {
+                currentDialectMetadata.tableColumns(*tables)
             }
 
-            val tr = TransactionManager.current()
-
             tables.forEach { table ->
-                val existingColumns = existingTablesColumns[table].orEmpty().toSet()
-                val tableColumns = table.columns.toSet()
-                val mappedColumns = existingColumns.mapNotNull { columnMetadata ->
-                    val mappedCol = tableColumns.find { column -> columnMetadata.name.equals(column.nameUnquoted(), ignoreCase = true) }
-                    if (mappedCol != null) columnMetadata else null
-                }.toSet()
-                val unmappedColumns = existingColumns.subtract(mappedColumns)
-                unmappedColumns.forEach {
-                    statements.add(
-                        "ALTER TABLE ${tr.identity(table)} DROP COLUMN ${tr.db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.name)}"
-                    )
-                }
+                table.mapUnmappedColumnStatementsTo(statements, existingTablesColumns[table].orEmpty())
             }
         }
 
@@ -155,132 +187,21 @@ object MigrationUtils {
      * or unrelated to [tables].
      */
     private fun mappingConsistenceRequiredStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
-        return checkMissingIndices(tables = tables, withLogs).flatMap { it.createStatement() } +
-            checkUnmappedIndices(tables = tables, withLogs).flatMap { it.dropStatement() } +
-            checkExcessiveForeignKeyConstraints(tables = tables, withLogs).flatMap { it.dropStatement() } +
-            checkExcessiveIndices(tables = tables, withLogs).flatMap { it.dropStatement() } +
+        val foreignKeyConstraints = currentDialectMetadata.columnConstraints(*tables)
+        val existingIndices = currentDialectMetadata.existingIndices(*tables)
+
+        @OptIn(InternalApi::class)
+        val filteredIndices = existingIndices.filterAndLogMissingAndUnmappedIndices(
+            foreignKeyConstraints.keys, withDropIndices = true, withLogs, tables = tables
+        )
+        val (createMissing, dropUnmapped) = filteredIndices
+
+        @OptIn(InternalApi::class)
+        return createMissing.flatMap { it.createStatement() } +
+            dropUnmapped.flatMap { it.dropStatement() } +
+            foreignKeyConstraints.filterAndLogExcessConstraints(withLogs).flatMap { it.dropStatement() } +
+            existingIndices.filterAndLogExcessIndices(withLogs).flatMap { it.dropStatement() } +
             checkUnmappedSequences(tables = tables, withLogs).flatMap { it.dropStatement() }
-    }
-
-    /**
-     * Checks all [tables] for any that have indices that are missing in the database but are defined in the code. If
-     * found, this function also logs the SQL statements that can be used to create these indices.
-     *
-     * @return List of indices that are missing and can be created.
-     */
-    private fun checkMissingIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
-        fun Collection<Index>.log(mainMessage: String) {
-            if (withLogs && isNotEmpty()) {
-                exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
-            }
-        }
-
-        val fKeyConstraints = currentDialect.columnConstraints(*tables).keys
-        val existingIndices = currentDialect.existingIndices(*tables)
-
-        fun List<Index>.filterForeignKeys() = if (currentDialect is MysqlDialect) {
-            filterNot { it.table to LinkedHashSet(it.columns) in fKeyConstraints }
-        } else {
-            this
-        }
-
-        // SQLite: indices whose names start with "sqlite_" are meant for internal use
-        fun List<Index>.filterInternalIndices() = if (currentDialect is SQLiteDialect) {
-            filter { !it.indexName.startsWith("sqlite_") }
-        } else {
-            this
-        }
-
-        fun Table.existingIndices() = existingIndices[this].orEmpty().filterForeignKeys().filterInternalIndices()
-
-        fun Table.mappedIndices() = this.indices.filterForeignKeys().filterInternalIndices()
-
-        val missingIndices = HashSet<Index>()
-        val nameDiffers = HashSet<Index>()
-
-        tables.forEach { table ->
-            val existingTableIndices = table.existingIndices()
-            val mappedIndices = table.mappedIndices()
-
-            for (index in existingTableIndices) {
-                val mappedIndex = mappedIndices.firstOrNull { it.onlyNameDiffer(index) } ?: continue
-                if (withLogs) {
-                    exposedLogger.info(
-                        "Index on table '${table.tableName}' differs only in name: in db ${index.indexName} -> in mapping ${mappedIndex.indexName}"
-                    )
-                }
-                nameDiffers.add(index)
-                nameDiffers.add(mappedIndex)
-            }
-
-            missingIndices.addAll(mappedIndices.subtract(existingTableIndices))
-        }
-
-        val toCreate = missingIndices.subtract(nameDiffers)
-        toCreate.log("Indices missed from database (will be created):")
-        return toCreate.toList()
-    }
-
-    /**
-     * Checks all [tables] for any that have indices that exist in the database but are not mapped in the code. If
-     * found, this function also logs the SQL statements that can be used to drop these indices.
-     *
-     * @return List of indices that are unmapped and can be dropped.
-     */
-    private fun checkUnmappedIndices(vararg tables: Table, withLogs: Boolean): List<Index> {
-        fun Collection<Index>.log(mainMessage: String) {
-            if (withLogs && isNotEmpty()) {
-                exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
-            }
-        }
-
-        val foreignKeyConstraints = currentDialect.columnConstraints(*tables).keys
-        val existingIndices = currentDialect.existingIndices(*tables)
-
-        fun List<Index>.filterForeignKeys() = if (currentDialect is MysqlDialect) {
-            filterNot { it.table to LinkedHashSet(it.columns) in foreignKeyConstraints }
-        } else {
-            this
-        }
-
-        // SQLite: indices whose names start with "sqlite_" are meant for internal use
-        fun List<Index>.filterInternalIndices() = if (currentDialect is SQLiteDialect) {
-            filter { !it.indexName.startsWith("sqlite_") }
-        } else {
-            this
-        }
-
-        fun Table.existingIndices() = existingIndices[this].orEmpty().filterForeignKeys().filterInternalIndices()
-
-        fun Table.mappedIndices() = this.indices.filterForeignKeys().filterInternalIndices()
-
-        val unmappedIndices = HashMap<String, MutableSet<Index>>()
-        val nameDiffers = HashSet<Index>()
-
-        tables.forEach { table ->
-            val existingTableIndices = table.existingIndices()
-            val mappedIndices = table.mappedIndices()
-
-            for (index in existingTableIndices) {
-                val mappedIndex = mappedIndices.firstOrNull { it.onlyNameDiffer(index) } ?: continue
-                nameDiffers.add(index)
-                nameDiffers.add(mappedIndex)
-            }
-
-            unmappedIndices.getOrPut(table.nameInDatabaseCase()) {
-                hashSetOf()
-            }.addAll(existingTableIndices.subtract(mappedIndices))
-        }
-
-        val toDrop = mutableSetOf<Index>()
-        unmappedIndices.forEach { (name, indices) ->
-            toDrop.addAll(
-                indices.subtract(nameDiffers).also {
-                    it.log("Indices exist in database and not mapped in code on class '$name':")
-                }
-            )
-        }
-        return toDrop.toList()
     }
 
     /**
@@ -290,27 +211,15 @@ object MigrationUtils {
      * @return List of sequences that are missing and can be created.
      */
     private fun checkMissingSequences(vararg tables: Table, withLogs: Boolean): List<Sequence> {
-        if (!currentDialect.supportsCreateSequence) {
-            return emptyList()
-        }
-
-        fun Collection<Sequence>.log(mainMessage: String) {
-            if (withLogs && isNotEmpty()) {
-                exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
-            }
-        }
+        if (!currentDialect.supportsCreateSequence) return emptyList()
 
         // all possible sequences checked, as 'mappedSequences' is the limiting factor, not 'existingSequencesNames'
-        val existingSequencesNames: Set<String> = currentDialect.sequences().toSet()
+        val existingSequencesNames: Set<String> = currentDialectMetadata.sequences().toSet()
 
-        val missingSequences = mutableSetOf<Sequence>()
-
-        val mappedSequences: Set<Sequence> = tables.flatMap { table -> table.sequences }.toSet()
-
-        missingSequences.addAll(mappedSequences.filterNot { it.identifier.inProperCase() in existingSequencesNames })
-
-        missingSequences.log("Sequences missed from database (will be created):")
-        return missingSequences.toList()
+        @OptIn(InternalApi::class)
+        return existingSequencesNames.filterMissingSequences(tables = tables).also {
+            it.log("Sequences missed from database (will be created):", withLogs)
+        }
     }
 
     /**
@@ -336,33 +245,14 @@ object MigrationUtils {
 
         val existingSequencesNames: Set<String> = if (currentDialect is PostgreSQLDialect) {
             // only sequences with related links to [tables] are checked, to avoid dropping every unmapped sequence
-            currentDialect.existingSequences(*tables).values.flatMap { it.map { it.name } }
+            currentDialectMetadata.existingSequences(*tables).values.flatMap { it.map { it.name } }
         } else {
-            currentDialect.sequences()
+            currentDialectMetadata.sequences()
         }.toSet()
 
-        val unmappedSequences = mutableSetOf<Sequence>()
-
-        val mappedSequencesNames: Set<String> = tables.flatMap { table -> table.sequences.map { it.identifier.inProperCase() } }.toSet()
-
-        unmappedSequences.addAll(existingSequencesNames.subtract(mappedSequencesNames).map { Sequence(it) })
-
-        unmappedSequences.log("Sequences exist in database and not mapped in code:")
-
-        return unmappedSequences.toList()
-    }
-
-    private inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
-        return if (withLogs) {
-            val start = System.currentTimeMillis()
-            val answer = block()
-            exposedLogger.info(message + " took " + (System.currentTimeMillis() - start) + "ms")
-            answer
-        } else {
-            block()
+        @OptIn(InternalApi::class)
+        return existingSequencesNames.filterUnmappedSequences(tables = tables).also {
+            it.log("Sequences exist in database and not mapped in code:", withLogs)
         }
     }
 }
-
-internal fun String.inProperCase(): String =
-    TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

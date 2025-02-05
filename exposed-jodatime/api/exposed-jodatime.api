@@ -26,7 +26,7 @@ public final class org/jetbrains/exposed/sql/jodatime/DateColumnType : org/jetbr
 	public fun nonNullValueToString (Lorg/joda/time/DateTime;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Lorg/joda/time/DateTime;)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lorg/joda/time/DateTime;
@@ -71,7 +71,7 @@ public final class org/jetbrains/exposed/sql/jodatime/DateTimeWithTimeZoneColumn
 	public fun nonNullValueToString (Lorg/joda/time/DateTime;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Lorg/joda/time/DateTime;)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lorg/joda/time/DateTime;
