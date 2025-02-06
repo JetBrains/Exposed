@@ -372,9 +372,13 @@ open class ColumnWithTransform<Unwrapped, Wrapped>(
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         return delegate.setParameter(stmt, index, value)
     }
+
+    override fun parameterMarker(value: Wrapped?): String {
+        return delegate.parameterMarker(value?.let { transformer.unwrap(it) })
+    }
 }
 
-internal fun <T : Expression<*>>unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
+internal fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
     if (col !is ExpressionWithColumnType<*>) return@mapValues value
 
     value?.let { (col.columnType as? ColumnWithTransform<Any, Any>)?.unwrapRecursive(it) } ?: value
@@ -1351,6 +1355,28 @@ class ArrayColumnType<T, R : List<Any?>>(
             currentDialect is H2Dialect -> "ARRAY "
             else -> "ARRAY"
         }
+    }
+
+    private fun castH2ParameterMarker(columnType: IColumnType<*>): String? {
+        return when (columnType) {
+            // Here is the list of types that could be resolved by `resolveColumnType()`.
+            // In the common case it must not work for all the possible types. It also does not work with BigDecimal.
+            // This cast is needed for array types inside upsert(merge statement), otherwise statement causes "Data conversion error converting" error.
+            is ByteColumnType, is UByteColumnType, is BooleanColumnType, is ShortColumnType, is UShortColumnType,
+            is IntegerColumnType, is UIntegerColumnType, is LongColumnType, is ULongColumnType, is FloatColumnType,
+            is DoubleColumnType, is StringColumnType, is CharacterColumnType, is BasicBinaryColumnType, is UUIDColumnType ->
+                "cast(? as ${columnType.sqlType()} array)"
+            else -> null
+        }
+    }
+
+    override fun parameterMarker(value: R?): String {
+        if (currentDialect is H2Dialect) {
+            val columnType = if (delegate is ColumnWithTransform<*, *>) delegate.originalColumnType else delegate
+            return castH2ParameterMarker(columnType) ?: super.parameterMarker(value)
+        }
+
+        return super.parameterMarker(value)
     }
 }
 

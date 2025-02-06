@@ -16,10 +16,12 @@ import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.statements.UpsertBuilder
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
+import java.lang.Integer.parseInt
 import java.util.*
 import kotlin.properties.Delegates
 import kotlin.test.assertNotEquals
@@ -809,6 +811,71 @@ class UpsertTests : DatabaseTestsBase() {
                 assertEquals("nullableDefaultNotNull", it[testerWithFakeDefaults.nullableDefaultNotNull])
                 assertEquals(1, it[testerWithFakeDefaults.databaseGenerated])
             }
+        }
+    }
+
+    @Test
+    fun testUpsertWithArrayValue() {
+        val tester = object : IntIdTable("tester") {
+            val key = text("key").uniqueIndex()
+            val stringArray = array<String>("stringArray")
+            val integerArray = array<Int>("integerArray")
+            val booleanArray = array<Boolean>("booleanArray")
+            val transformedArray = array<Int>("transformedArray")
+                .transform(
+                    wrap = { array -> array.map { it.toString() } },
+                    unwrap = { array -> array.map { parseInt(it) } }
+                )
+            val byteArray = array<Byte>("byteArray")
+            val uByteArray = array<UByte>("uByteArray")
+            val shortArray = array<Short>("shortArray")
+            val uShortArray = array<UShort>("uShortArray")
+            val uIntArray = array<UInt>("uIntArray")
+            val longArray = array<Long>("longArray")
+            val uLongArray = array<ULong>("uLongArray")
+            val floatArray = array<Float>("floatArray")
+            val doubleArray = array<Double>("doubleArray")
+            val charArray = array<Char>("charArray")
+            val uuidArray = array<UUID>("uuidArray")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.H2_V2, tester) {
+            val uuidList = listOf(UUID.randomUUID(), UUID.randomUUID())
+            tester.upsert(tester.key) {
+                it[tester.key] = "key1"
+                it[tester.stringArray] = listOf("a", "b", "c")
+                it[tester.integerArray] = listOf(1, 2, 3)
+                it[tester.booleanArray] = listOf(true, true, false)
+                it[tester.transformedArray] = listOf("4", "5", "6")
+                it[tester.byteArray] = listOf(1.toByte(), 2.toByte())
+                it[tester.uByteArray] = listOf(1.toUByte(), 2.toUByte())
+                it[tester.shortArray] = listOf(1.toShort(), 2.toShort())
+                it[tester.uShortArray] = listOf(1.toUShort(), 2.toUShort())
+                it[tester.uIntArray] = listOf(1u, 2u)
+                it[tester.longArray] = listOf(1L, 2L)
+                it[tester.uLongArray] = listOf(1UL, 2UL)
+                it[tester.floatArray] = listOf(1.1f, 2.2f)
+                it[tester.doubleArray] = listOf(1.1, 2.2)
+                it[tester.charArray] = listOf('a', 'b')
+                it[tester.uuidArray] = uuidList
+            }
+
+            val value = tester.selectAll().first()
+            assertEqualLists(listOf("a", "b", "c"), value[tester.stringArray])
+            assertEqualLists(listOf(1, 2, 3), value[tester.integerArray])
+            assertEqualLists(listOf(true, true, false), value[tester.booleanArray])
+            assertEqualLists(listOf("4", "5", "6"), value[tester.transformedArray])
+            assertEqualLists(listOf(1.toByte(), 2.toByte()), value[tester.byteArray])
+            assertEqualLists(listOf(1.toUByte(), 2.toUByte()), value[tester.uByteArray])
+            assertEqualLists(listOf(1.toShort(), 2.toShort()), value[tester.shortArray])
+            assertEqualLists(listOf(1.toUShort(), 2.toUShort()), value[tester.uShortArray])
+            assertEqualLists(listOf(1u, 2u), value[tester.uIntArray])
+            assertEqualLists(listOf(1L, 2L), value[tester.longArray])
+            assertEqualLists(listOf(1UL, 2UL), value[tester.uLongArray])
+            assertEqualLists(listOf(1.1f, 2.2f), value[tester.floatArray])
+            assertEqualLists(listOf(1.1, 2.2), value[tester.doubleArray])
+            assertEqualLists(listOf('a', 'b'), value[tester.charArray])
+            assertEqualLists(uuidList, value[tester.uuidArray])
         }
     }
 }
