@@ -51,7 +51,7 @@ class R2dbcConnectionImpl(
         try { metadataProvider.setSchema(value) } catch (_: Exception) {}
     }
 
-    override suspend fun getAutoCommit(): Boolean  = withConnection { it.isAutoCommit }
+    override suspend fun getAutoCommit(): Boolean = withConnection { it.isAutoCommit }
 
     override suspend fun setAutoCommit(value: Boolean) {
         withConnection { it.setAutoCommit(value).awaitFirstOrNull() }
@@ -61,7 +61,7 @@ class R2dbcConnectionImpl(
         metadataProvider.setReadOnlyMode(value)
     }
 
-    override suspend fun getTransactionIsolation(): Int  = withConnection { it.transactionIsolationLevel.asInt() }
+    override suspend fun getTransactionIsolation(): Int = withConnection { it.transactionIsolationLevel.asInt() }
 
     override suspend fun setTransactionIsolation(value: Int) {
         withConnection { it.setTransactionIsolationLevel(value.asIsolationLevel()).awaitFirstOrNull() }

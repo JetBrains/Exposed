@@ -87,7 +87,7 @@ class R2dbcDatabase private constructor(
     override val identifierManager: IdentifierManagerApi = TODO() // metadata { identifierManager }
 
     companion object {
-        private val r2dbcDialectMapping  = mutableMapOf(
+        private val r2dbcDialectMapping = mutableMapOf(
             "r2dbc:h2" to H2Dialect.dialectName,
             "r2dbc:postgresql" to PostgreSQLDialect.dialectName,
             "r2dbc:mysql" to MysqlDialect.dialectName,

@@ -97,8 +97,6 @@ class R2dbcTransactionManager(
             }
         }
 
-
-
         override val connection: R2dbcExposedConnection<*>
             get() = connectionLazy.value
 
@@ -332,16 +330,6 @@ private suspend fun <T> TransactionScope.suspendedTransactionAsyncInternal(
         }
     }
     answer
-}
-
-private fun <T> keepAndRestoreTransactionRefAfterRun(db: R2dbcDatabase? = null, block: () -> T): T {
-    val manager = db.transactionManager
-    val currentTransaction = manager.currentOrNull()
-    return try {
-        block()
-    } finally {
-        manager.bindTransactionToThread(currentTransaction)
-    }
 }
 
 internal suspend fun handleSQLException(cause: SQLException, transaction: R2dbcTransaction, attempts: Int) {

@@ -78,19 +78,19 @@ open class InsertExecutable<Key : Any, S : InsertStatement<Key>>(
 //            .map { ResultRow.createAndFillValues(it as Map<Expression<*>, Any?>) }
 //    }
 
-    private fun defaultAndNullableValues(exceptColumns: Collection<Column<*>>): Map<Column<*>, Any?> {
-        return statement.table.columns
-            .filter { column -> !exceptColumns.contains(column) }
-            .mapNotNull { column ->
-                val defaultFn = column.defaultValueFun
-                when {
-                    defaultFn != null -> column to defaultFn()
-                    column.columnType.nullable -> column to null
-                    else -> null
-                }
-            }
-            .toMap()
-    }
+//    private fun defaultAndNullableValues(exceptColumns: Collection<Column<*>>): Map<Column<*>, Any?> {
+//        return statement.table.columns
+//            .filter { column -> !exceptColumns.contains(column) }
+//            .mapNotNull { column ->
+//                val defaultFn = column.defaultValueFun
+//                when {
+//                    defaultFn != null -> column to defaultFn()
+//                    column.columnType.nullable -> column to null
+//                    else -> null
+//                }
+//            }
+//            .toMap()
+//    }
 
     @Suppress("NestedBlockDepth", "TooGenericExceptionCaught")
 //    private suspend fun Result.returnedValues(inserted: Int): ArrayList<MutableMap<Column<*>, Any?>> {
@@ -186,9 +186,9 @@ open class InsertExecutable<Key : Any, S : InsertStatement<Key>>(
     @OptIn(InternalApi::class)
     private fun columnsGeneratedOnDB(): Collection<Column<*>> = (autoIncColumns + statement.columnsWithDatabaseDefaults()).toSet()
 
-    private fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
-        if (col !is ExpressionWithColumnType<*>) return@mapValues value
-
-        value?.let { (col.columnType as? ColumnWithTransform<Any, Any>)?.unwrapRecursive(it) } ?: value
-    }
+//    private fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
+//        if (col !is ExpressionWithColumnType<*>) return@mapValues value
+//
+//        value?.let { (col.columnType as? ColumnWithTransform<Any, Any>)?.unwrapRecursive(it) } ?: value
+//    }
 }

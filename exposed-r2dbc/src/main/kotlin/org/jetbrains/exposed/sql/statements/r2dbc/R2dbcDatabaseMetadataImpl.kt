@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Base class responsible for retrieving and storing information about the R2DBC driver and underlying database.
  */
+@Suppress("UnusedPrivateMember", "UnusedParameter")
 class R2dbcDatabaseMetadataImpl(
     database: String,
     val metadata: MetadataProvider,
@@ -32,7 +33,8 @@ class R2dbcDatabaseMetadataImpl(
 
     override suspend fun getVersion(): BigDecimal = connectionData.databaseVersion
         .split('.', ' ')
-        .let { BigDecimal("${it[0]}.${it[1]}")
+        .let {
+            BigDecimal("${it[0]}.${it[1]}")
         }
 
     override suspend fun getMajorVersion(): Int {
@@ -171,7 +173,7 @@ class R2dbcDatabaseMetadataImpl(
         return with(metadata) {
             fetchMetadata(
                 """SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");"""
-            ) { r, _  ->
+            ) { r, _ ->
                 r.getBoolean(1)
             }.single() == true
         }
@@ -187,18 +189,18 @@ class R2dbcDatabaseMetadataImpl(
         TODO("Not yet implemented")
     }
 
-    private fun Row.asColumnMetadata(): ColumnMetadata {
-        @OptIn(InternalApi::class)
-        val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
-        val autoIncrement = getString("IS_AUTOINCREMENT") == "YES"
-        val type = getInt("DATA_TYPE")!!
-        val name = getString("COLUMN_NAME")!!
-        val nullable = getBoolean("NULLABLE")
-        val size = getInt("COLUMN_SIZE").takeIf { it != 0 }
-        val scale = getInt("DECIMAL_DIGITS").takeIf { it != 0 }
-
-        return ColumnMetadata(name, type, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
-    }
+//    private fun Row.asColumnMetadata(): ColumnMetadata {
+//        @OptIn(InternalApi::class)
+//        val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
+//        val autoIncrement = getString("IS_AUTOINCREMENT") == "YES"
+//        val type = getInt("DATA_TYPE")!!
+//        val name = getString("COLUMN_NAME")!!
+//        val nullable = getBoolean("NULLABLE")
+//        val size = getInt("COLUMN_SIZE").takeIf { it != 0 }
+//        val scale = getInt("DECIMAL_DIGITS").takeIf { it != 0 }
+//
+//        return ColumnMetadata(name, type, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
+//    }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()
 
@@ -222,67 +224,49 @@ class R2dbcDatabaseMetadataImpl(
         TODO("Not yet implemented")
     }
 
-    private fun Row.parseConstraint(
-        allTables: Map<String, Table>,
-        isMysqlDialect: Boolean
-    ): Pair<String, ForeignKeyConstraint>? {
-        val fromTableName = getString("FKTABLE_NAME")!!
-        if (isMysqlDialect && fromTableName !in allTables.keys) return null
-        val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
-            getString("FKCOLUMN_NAME")!!
-        )
-        val fromColumn = allTables[fromTableName]?.columns?.firstOrNull {
-            val identifier = if (isMysqlDialect) it.nameInDatabaseCase() else it.name
-            identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(identifier) == fromColumnName
-        } ?: return null // Do not crash if there are missing fields in the Exposed tables
-        val constraintName = getString("FK_NAME")!!
-        val targetTableName = getString("PKTABLE_NAME")!!
-        val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
-            if (isMysqlDialect) {
-                getString("PKCOLUMN_NAME")!!
-            } else {
-                identifierManager.inProperCase(getString("PKCOLUMN_NAME")!!)
-            }
-        )
-        val targetColumn = allTables[targetTableName]?.columns?.firstOrNull {
-            identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
-        } ?: return null // Do not crash if there are missing fields in the Exposed tables
-        val constraintUpdateRule = get("UPDATE_RULE")?.toString()?.let {
-            resolveReferenceOption(it)
-        }
-        val constraintDeleteRule = get("DELETE_RULE")?.toString()?.let {
-            resolveReferenceOption(it)
-        }
-        return fromTableName to ForeignKeyConstraint(
-            target = targetColumn,
-            from = fromColumn,
-            onUpdate = constraintUpdateRule,
-            onDelete = constraintDeleteRule,
-            name = constraintName
-        )
-    }
+//    private fun Row.parseConstraint(
+//        allTables: Map<String, Table>,
+//        isMysqlDialect: Boolean
+//    ): Pair<String, ForeignKeyConstraint>? {
+//        val fromTableName = getString("FKTABLE_NAME")!!
+//        if (isMysqlDialect && fromTableName !in allTables.keys) return null
+//        val fromColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+//            getString("FKCOLUMN_NAME")!!
+//        )
+//        val fromColumn = allTables[fromTableName]?.columns?.firstOrNull {
+//            val identifier = if (isMysqlDialect) it.nameInDatabaseCase() else it.name
+//            identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(identifier) == fromColumnName
+//        } ?: return null // Do not crash if there are missing fields in the Exposed tables
+//        val constraintName = getString("FK_NAME")!!
+//        val targetTableName = getString("PKTABLE_NAME")!!
+//        val targetColumnName = identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(
+//            if (isMysqlDialect) {
+//                getString("PKCOLUMN_NAME")!!
+//            } else {
+//                identifierManager.inProperCase(getString("PKCOLUMN_NAME")!!)
+//            }
+//        )
+//        val targetColumn = allTables[targetTableName]?.columns?.firstOrNull {
+//            identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(it.nameInDatabaseCase()) == targetColumnName
+//        } ?: return null // Do not crash if there are missing fields in the Exposed tables
+//        val constraintUpdateRule = get("UPDATE_RULE")?.toString()?.let {
+//            resolveReferenceOption(it)
+//        }
+//        val constraintDeleteRule = get("DELETE_RULE")?.toString()?.let {
+//            resolveReferenceOption(it)
+//        }
+//        return fromTableName to ForeignKeyConstraint(
+//            target = targetColumn,
+//            from = fromColumn,
+//            onUpdate = constraintUpdateRule,
+//            onDelete = constraintDeleteRule,
+//            name = constraintName
+//        )
+//    }
 
     @OptIn(InternalApi::class)
     override fun resolveReferenceOption(refOption: String): ReferenceOption? {
         TODO("Not yet implemented")
-    }
-
-    /**
-     * Returns the name of the database in which a [table] is found, as well as it's schema name.
-     *
-     * If the table name does not include a schema prefix, the metadata value `currentScheme` is used instead.
-     *
-     * MySQL/MariaDB are special cases in that a schema definition is treated like a separate database. This means that
-     * a connection to 'testDb' with a table defined as 'my_schema.my_table' will only successfully find the table's
-     * metadata if 'my_schema' is used as the database name.
-     */
-    private fun tableCatalogAndSchema(table: Table): Pair<String, String> {
-        val tableSchema = identifierManager.inProperCase(table.schemaName ?: currentSchema!!)
-        return if (currentDialect is MysqlDialect && tableSchema != currentSchema!!) {
-            tableSchema to tableSchema
-        } else {
-            databaseName to tableSchema
-        }
     }
 
     override fun cleanCache() {

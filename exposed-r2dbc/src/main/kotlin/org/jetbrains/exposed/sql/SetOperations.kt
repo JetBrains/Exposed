@@ -156,9 +156,10 @@ sealed class SetOperation(
         val fieldIndex = set.realFields.toSet()
             .mapIndexed { index, expression -> expression to index }
             .toMap()
-        val rs = (TransactionManager.current() as R2dbcTransaction).exec(queryToExecute)!! as R2dbcResult
+        val tx = (TransactionManager.current() as R2dbcTransaction)
+        val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
-        collector.emit(ResultRow.create(rs, fieldIndex))
+        collector.emit(ResultRow.create(rs, fieldIndex).also { trackResultSet(tx) })
     }
 
     companion object {
