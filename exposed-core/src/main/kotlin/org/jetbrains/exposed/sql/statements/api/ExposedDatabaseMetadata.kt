@@ -11,7 +11,8 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 
 /**
- * Base class responsible for retrieving and storing information about the JDBC driver and underlying [database].
+ * Base class responsible for shared utility methods needed for retrieving and storing information about
+ * the underlying driver and associated [database].
  */
 abstract class ExposedDatabaseMetadata(val database: String) {
     /** Clears and resets any stored information about the database's current schema to default values. */

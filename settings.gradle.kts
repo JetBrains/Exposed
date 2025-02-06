@@ -16,6 +16,7 @@ include("exposed-kotlin-datetime")
 include("exposed-crypt")
 include("exposed-json")
 include("exposed-migration")
+include("exposed-r2dbc")
 
 pluginManagement {
     repositories {

@@ -1,20 +1,9 @@
-@file:Suppress("Filename", "MatchingDeclarationName")
-
 package org.jetbrains.exposed.sql.statements.api
 
 /** Represents a wrapper for a database connection. */
 interface ExposedConnection<OriginalConnection : Any> {
     /** Whether the connection has been closed. */
     val isClosed: Boolean
-
-    /** Saves all changes since the last commit or rollback operation. */
-    fun commit()
-
-    /** Reverts all changes since the last commit or rollback operation. */
-    fun rollback()
-
-    /** Closes the connection and releases any of its database and/or driver resources. */
-    fun close()
 
     /** Whether the connection is in auto-commit mode. */
     var autoCommit: Boolean
@@ -27,6 +16,21 @@ interface ExposedConnection<OriginalConnection : Any> {
 
     /** The underlying database connection object contained by this wrapper. */
     val connection: OriginalConnection
+
+    /** The name of the connection's catalog. */
+    var catalog: String
+
+    /** The name of the connection's schema. */
+    var schema: String
+
+    /** Saves all changes since the last commit or rollback operation. */
+    fun commit()
+
+    /** Reverts all changes since the last commit or rollback operation. */
+    fun rollback()
+
+    /** Closes the connection and releases any of its database and/or driver resources. */
+    fun close()
 
     /**
      * Returns a precompiled [sql] statement stored as a [PreparedStatementApi] implementation.
@@ -45,12 +49,6 @@ interface ExposedConnection<OriginalConnection : Any> {
 
     /** Sends a collection of SQL strings to the database for execution as a batch statement. */
     fun executeInBatch(sqls: List<String>)
-
-    /** The name of the connection's catalog. */
-    var catalog: String
-
-    /** The name of the connection's schema. */
-    var schema: String
 
     /**
      * Calls the specified function [body] with an [ExposedDatabaseMetadata] implementation as its receiver and
