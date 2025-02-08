@@ -363,6 +363,14 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         return super.createIndex(index)
     }
 
+    override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String {
+        return if (isUnique) {
+            "ALTER TABLE IF EXISTS ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
+        } else {
+            "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
+        }
+    }
+
     override fun createDatabase(name: String): String {
         @OptIn(InternalApi::class)
         return "CREATE SCHEMA IF NOT EXISTS ${name.inProperCase()}"
