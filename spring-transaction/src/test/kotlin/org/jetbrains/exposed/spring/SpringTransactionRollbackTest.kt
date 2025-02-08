@@ -3,6 +3,7 @@ package org.jetbrains.exposed.spring
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.junit.Test
@@ -15,6 +16,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.transaction.annotation.Transactional
 import javax.sql.DataSource
+import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -72,6 +74,11 @@ class SpringTransactionRollbackTest {
 
         assertEquals(1, testRollback.entireTableSize())
     }
+
+    @AfterTest
+    fun afterTest() {
+        container.close()
+    }
 }
 
 @Configuration
@@ -98,6 +105,7 @@ open class TestRollback {
 
     open fun init() {
         SchemaUtils.create(RollbackTable)
+        RollbackTable.deleteAll()
     }
 
     open fun transaction(block: TestRollback.() -> Unit) {

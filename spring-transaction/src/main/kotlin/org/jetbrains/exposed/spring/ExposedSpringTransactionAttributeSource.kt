@@ -24,11 +24,9 @@ class ExposedSpringTransactionAttributeSource(
         if (attr is RuleBasedTransactionAttribute) {
             val rules = attr.rollbackRules.toMutableList()
             rollbackExceptions.forEach { exception ->
-                val exceptionName = exception.name
                 val containsException = rules.any {
-                    it is RollbackRuleAttribute && it.exceptionName == exceptionName
+                    it is RollbackRuleAttribute && it.exceptionName == exception.name
                 }
-
                 if (!containsException) {
                     rules.add(RollbackRuleAttribute(exception))
                 }
