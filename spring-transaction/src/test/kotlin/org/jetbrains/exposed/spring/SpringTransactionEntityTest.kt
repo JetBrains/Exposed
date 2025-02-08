@@ -15,7 +15,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-private object CustomerTable : UUIDTable(name = "customer") {
+object CustomerTable : UUIDTable(name = "customer") {
     val name = varchar(name = "name", length = 255).uniqueIndex()
 }
 
