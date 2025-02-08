@@ -22,7 +22,7 @@ import kotlin.test.assertFailsWith
 /**
  * @author ivan@daangn.com
  */
-class ExposedSpringTransactionManagerAttributeSourceTest {
+class SpringTransactionRollbackTest {
 
     val container = AnnotationConfigApplicationContext(TransactionManagerAttributeSourceTestConfig::class.java)
 
