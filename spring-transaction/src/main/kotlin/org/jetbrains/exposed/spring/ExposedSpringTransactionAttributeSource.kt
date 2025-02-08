@@ -15,20 +15,27 @@ import java.lang.reflect.Method
  * If you use a custom [TransactionAttributeSource], you can pass it here.
  */
 class ExposedSpringTransactionAttributeSource(
-    private val delegate: TransactionAttributeSource = AnnotationTransactionAttributeSource()
+    private val delegate: TransactionAttributeSource = AnnotationTransactionAttributeSource(),
+    private val rollbackExceptions: List<Class<ExposedSQLException>> = listOf(ExposedSQLException::class.java)
 ) : TransactionAttributeSource {
-
-    private val rollbackExceptions = listOf(ExposedSQLException::class.java)
 
     override fun getTransactionAttribute(method: Method, targetClass: Class<*>?): TransactionAttribute? {
         val attr = delegate.getTransactionAttribute(method, targetClass)
         if (attr is RuleBasedTransactionAttribute) {
             val rules = attr.rollbackRules.toMutableList()
-            val containsExposed = rules.any { it is RollbackRuleAttribute && it.exceptionName in rollbackExceptions.map(Class<*>::getName) }
-            if (!containsExposed) {
-                rules.add(RollbackRuleAttribute(ExposedSQLException::class.java))
-                attr.rollbackRules = rules
+
+            rollbackExceptions.forEach { exception ->
+                val exceptionName = exception.name
+                val containsException = rules.any {
+                    it is RollbackRuleAttribute && it.exceptionName == exceptionName
+                }
+
+                if (!containsException) {
+                    rules.add(RollbackRuleAttribute(exception))
+                }
             }
+
+            attr.rollbackRules = rules
         }
         return attr
     }
