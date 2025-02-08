@@ -7,6 +7,7 @@ import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute
 import org.springframework.transaction.interceptor.TransactionAttribute
 import org.springframework.transaction.interceptor.TransactionAttributeSource
 import java.lang.reflect.Method
+import java.sql.SQLException
 
 /**
  * A [TransactionAttributeSource] that adds [ExposedSQLException] to the rollback rules of the delegate.
@@ -16,7 +17,7 @@ import java.lang.reflect.Method
  */
 class ExposedSpringTransactionAttributeSource(
     private val delegate: TransactionAttributeSource = AnnotationTransactionAttributeSource(),
-    private val rollbackExceptions: List<Class<out Throwable>> = listOf(ExposedSQLException::class.java)
+    private val rollbackExceptions: List<Class<out Throwable>> = listOf(SQLException::class.java)
 ) : TransactionAttributeSource {
 
     override fun getTransactionAttribute(method: Method, targetClass: Class<*>?): TransactionAttribute? {
