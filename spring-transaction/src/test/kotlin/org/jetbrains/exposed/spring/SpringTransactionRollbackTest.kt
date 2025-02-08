@@ -33,7 +33,7 @@ class SpringTransactionRollbackTest {
     }
 
     @Test
-    fun `test rollback`() {
+    fun `test ExposedSQLException rollback`() {
         val testRollback = container.getBean(TestRollback::class.java)
         assertFailsWith<ExposedSQLException> {
             testRollback.transaction {
@@ -43,6 +43,34 @@ class SpringTransactionRollbackTest {
         }
 
         assertEquals(0, testRollback.entireTableSize())
+    }
+
+    @Test
+    fun `test RuntimeException rollback`() {
+        val testRollback = container.getBean(TestRollback::class.java)
+        assertFailsWith<RuntimeException> {
+            testRollback.transaction {
+                insertOriginTable()
+                @Suppress("TooGenericExceptionThrown")
+                throw RuntimeException()
+            }
+        }
+
+        assertEquals(0, testRollback.entireTableSize())
+    }
+
+    @Test
+    fun `test check exception commit`() {
+        val testRollback = container.getBean(TestRollback::class.java)
+        assertFailsWith<Exception> {
+            testRollback.transaction {
+                insertOriginTable()
+                @Suppress("TooGenericExceptionThrown")
+                throw Exception()
+            }
+        }
+
+        assertEquals(1, testRollback.entireTableSize())
     }
 }
 
