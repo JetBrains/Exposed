@@ -16,14 +16,13 @@ import java.lang.reflect.Method
  */
 class ExposedSpringTransactionAttributeSource(
     private val delegate: TransactionAttributeSource = AnnotationTransactionAttributeSource(),
-    private val rollbackExceptions: List<Class<ExposedSQLException>> = listOf(ExposedSQLException::class.java)
+    private val rollbackExceptions: List<Class<out Throwable>> = listOf(ExposedSQLException::class.java)
 ) : TransactionAttributeSource {
 
     override fun getTransactionAttribute(method: Method, targetClass: Class<*>?): TransactionAttribute? {
         val attr = delegate.getTransactionAttribute(method, targetClass)
         if (attr is RuleBasedTransactionAttribute) {
             val rules = attr.rollbackRules.toMutableList()
-
             rollbackExceptions.forEach { exception ->
                 val exceptionName = exception.name
                 val containsException = rules.any {
@@ -34,7 +33,6 @@ class ExposedSpringTransactionAttributeSource(
                     rules.add(RollbackRuleAttribute(exception))
                 }
             }
-
             attr.rollbackRules = rules
         }
         return attr
