@@ -4286,6 +4286,7 @@ public class org/jetbrains/exposed/v1/core/vendors/H2Dialect : org/jetbrains/exp
 	public fun createDatabase (Ljava/lang/String;)Ljava/lang/String;
 	public fun createIndex (Lorg/jetbrains/exposed/v1/core/Index;)Ljava/lang/String;
 	public fun dropDatabase (Ljava/lang/String;)Ljava/lang/String;
+	public fun dropIndex (Ljava/lang/String;Ljava/lang/String;ZZ)Ljava/lang/String;
 	public fun getDataTypeProvider ()Lorg/jetbrains/exposed/v1/core/vendors/DataTypeProvider;
 	public fun getDefaultReferenceOption ()Lorg/jetbrains/exposed/v1/core/ReferenceOption;
 	public final fun getDelegatedDialectNameProvider ()Lorg/jetbrains/exposed/v1/core/vendors/VendorDialect$DialectNameProvider;
