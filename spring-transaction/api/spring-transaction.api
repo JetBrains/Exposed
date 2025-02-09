@@ -1,7 +1,7 @@
 public final class org/jetbrains/exposed/spring/ExposedSpringTransactionAttributeSource : org/springframework/transaction/interceptor/TransactionAttributeSource {
 	public fun <init> ()V
-	public fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;)V
-	public synthetic fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getTransactionAttribute (Ljava/lang/reflect/Method;Ljava/lang/Class;)Lorg/springframework/transaction/interceptor/TransactionAttribute;
 }
 
