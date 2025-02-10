@@ -28,7 +28,7 @@ jobs:
       - name: Validate commit messages
         run: |
           # Regex for Conventional Commits specification
-          COMMIT_REGEX="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^\)]*\))?:\s?(EXPOSED-[0-9]+\s?)?.+$"
+          COMMIT_REGEX="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(!)?(\([^\)]*\))?:\s?(EXPOSED-[0-9]+\s?)?.+$"
           
           # Get all commits in the pull request (from base to head)
           COMMITS=$(git log --format=%s --no-merges origin/main..${{ github.sha }})

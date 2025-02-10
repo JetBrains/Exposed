@@ -10,8 +10,12 @@ internal object H2DataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String = "VARBINARY"
 
     override fun uuidType(): String = "UUID"
+
     override fun uuidToDB(value: UUID): Any = value.toString()
+
     override fun dateTimeType(): String = "DATETIME(9)"
+
+    override fun timestampType(): String = "TIMESTAMP(9)"
 
     override fun timestampWithTimeZoneType(): String = "TIMESTAMP(9) WITH TIME ZONE"
 

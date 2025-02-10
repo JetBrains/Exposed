@@ -1,5 +1,8 @@
 # Breaking Changes
 
+## 0.60.0
+* In H2, the `timestamp()` column now maps to data type `TIMESTAMP(9)` instead of `DATETIME(9)`.
+
 ## 0.59.0
 * [PostgreSQL] `MigrationUtils.statementsRequiredForDatabaseMigration(*tables)` used to potentially return `DROP` statements for any database sequence not
   mapped to an Exposed table object. Now it only checks against database sequences that have a relational dependency on any of the specified tables
@@ -28,6 +31,7 @@ val long = long("long_column").nullable().check { column ->
     column.isNull() or typeCondition
 }
 ```
+* In MariaDB, the `timestamp()` column now maps to data type `TIMESTAMP` instead of `DATETIME`.
 
 ## 0.57.0
 * Insert, Upsert, and Replace statements will no longer implicitly send all default values (except for client-side default values) in every SQL request. 
