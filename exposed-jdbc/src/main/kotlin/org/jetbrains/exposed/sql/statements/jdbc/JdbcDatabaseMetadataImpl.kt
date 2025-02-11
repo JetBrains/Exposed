@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -17,8 +18,11 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData) : ExposedDatabaseMetadata(database) {
     override val url: String by lazyMetadata { url }
+
     override val version: BigDecimal by lazyMetadata { BigDecimal("$databaseMajorVersion.$databaseMinorVersion") }
+
     override val majorVersion: Int by lazyMetadata { databaseMajorVersion }
+
     override val minorVersion: Int by lazyMetadata { databaseMinorVersion }
 
     override val databaseDialectName: String by lazyMetadata {
@@ -69,9 +73,30 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override val defaultIsolationLevel: Int by lazyMetadata { defaultTransactionIsolation }
 
     override val supportsAlterTableWithAddColumn by lazyMetadata { supportsAlterTableWithAddColumn() }
+
     override val supportsAlterTableWithDropColumn by lazyMetadata { supportsAlterTableWithDropColumn() }
+
     override val supportsMultipleResultSets by lazyMetadata { supportsMultipleResultSets() }
+
     override val supportsSelectForUpdate: Boolean by lazyMetadata { supportsSelectForUpdate() }
+
+    override fun supportsLimitWithUpdateOrDelete(): Boolean {
+        return when (currentDialect) {
+            is SQLiteDialect -> {
+                try {
+                    val transaction = TransactionManager.current()
+                    transaction.exec("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""") { rs ->
+                        rs.next()
+                        rs.getBoolean(1)
+                    } == true
+                } catch (_: SQLException) {
+                    false
+                }
+            }
+            is PostgreSQLDialect -> false
+            else -> true
+        }
+    }
 
     override val identifierManager: IdentifierManagerApi by lazyMetadata {
         identityManagerCache.getOrPut(url) {

@@ -3627,6 +3627,7 @@ public abstract class org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMe
 	public abstract fun resetCurrentScheme ()V
 	public abstract fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public abstract fun sequences ()Ljava/util/List;
+	public abstract fun supportsLimitWithUpdateOrDelete ()Z
 	public abstract fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
 	public abstract fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/sql/vendors/SchemaMetadata;
 }
@@ -3922,6 +3923,7 @@ public abstract interface class org/jetbrains/exposed/sql/vendors/DatabaseDialec
 	public abstract fun sequenceExists (Lorg/jetbrains/exposed/sql/Sequence;)Z
 	public abstract fun sequences ()Ljava/util/List;
 	public abstract fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
+	public abstract fun supportsLimitWithUpdateOrDelete ()Z
 	public abstract fun supportsSelectForUpdate ()Z
 	public abstract fun tableColumns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun tableExists (Lorg/jetbrains/exposed/sql/Table;)Z
@@ -4289,6 +4291,7 @@ public class org/jetbrains/exposed/sql/vendors/PostgreSQLDialect : org/jetbrains
 	public fun listDatabases ()Ljava/lang/String;
 	public fun modifyColumn (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/ColumnDiff;)Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
+	public fun supportsLimitWithUpdateOrDelete ()Z
 }
 
 public final class org/jetbrains/exposed/sql/vendors/PostgreSQLDialect$Companion : org/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider {
@@ -4355,6 +4358,7 @@ public class org/jetbrains/exposed/sql/vendors/SQLiteDialect : org/jetbrains/exp
 	public fun getSupportsWindowFrameGroupsMode ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/sql/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
+	public fun supportsLimitWithUpdateOrDelete ()Z
 }
 
 public final class org/jetbrains/exposed/sql/vendors/SQLiteDialect$Companion : org/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider {
@@ -4434,6 +4438,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/VendorDialect : org/jetb
 	public fun sequenceExists (Lorg/jetbrains/exposed/sql/Sequence;)Z
 	public fun sequences ()Ljava/util/List;
 	public fun setSchema (Lorg/jetbrains/exposed/sql/Schema;)Ljava/lang/String;
+	public fun supportsLimitWithUpdateOrDelete ()Z
 	public fun supportsSelectForUpdate ()Z
 	public fun tableColumns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun tableExists (Lorg/jetbrains/exposed/sql/Table;)Z

@@ -51,6 +51,9 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** Whether the database supports `SELECT FOR UPDATE` statements. */
     abstract val supportsSelectForUpdate: Boolean
 
+    /** Whether the database supports the `LIMIT` clause with update and delete statements. */
+    abstract fun supportsLimitWithUpdateOrDelete(): Boolean
+
     /** Clears and resets any stored information about the database's current schema to default values. */
     abstract fun resetCurrentScheme()
 

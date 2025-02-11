@@ -2,10 +2,26 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import kotlin.collections.ArrayList
+import kotlin.collections.Iterable
+import kotlin.collections.Iterator
+import kotlin.collections.List
+import kotlin.collections.emptyList
+import kotlin.collections.filter
+import kotlin.collections.first
+import kotlin.collections.forEach
+import kotlin.collections.isNotEmpty
+import kotlin.collections.last
+import kotlin.collections.listOf
+import kotlin.collections.orEmpty
+import kotlin.collections.plus
+import kotlin.collections.plusAssign
+import kotlin.collections.putAll
 import kotlin.sequences.Sequence
 
 @Deprecated(
@@ -121,8 +137,12 @@ fun <T : Table> T.deleteWhere(limit: Int? = null, offset: Long? = null, op: T.(I
 inline fun <T : Table> T.deleteWhere(
     limit: Int? = null,
     op: T.(ISqlExpressionBuilder) -> Op<Boolean>
-): Int =
-    DeleteStatement.where(TransactionManager.current(), this@deleteWhere, op(SqlExpressionBuilder), false, limit)
+): Int {
+    if (limit != null && !currentDialect.supportsLimitWithUpdateOrDelete()) {
+        throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
+    }
+    return DeleteStatement.where(TransactionManager.current(), this@deleteWhere, op(SqlExpressionBuilder), false, limit)
+}
 
 @Deprecated(
     "This `offset` parameter is not being used and will be removed in future releases. Please leave a comment on " +
@@ -148,8 +168,12 @@ fun <T : Table> T.deleteIgnoreWhere(limit: Int? = null, offset: Long? = null, op
 inline fun <T : Table> T.deleteIgnoreWhere(
     limit: Int? = null,
     op: T.(ISqlExpressionBuilder) -> Op<Boolean>
-): Int =
-    DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, op(SqlExpressionBuilder), true, limit)
+): Int {
+    if (limit != null && !currentDialect.supportsLimitWithUpdateOrDelete()) {
+        throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
+    }
+    return DeleteStatement.where(TransactionManager.current(), this@deleteIgnoreWhere, op(SqlExpressionBuilder), true, limit)
+}
 
 /**
  * Represents the SQL statement that deletes all rows in a table.
@@ -588,6 +612,9 @@ inline fun <T : Table> T.update(
     limit: Int? = null,
     crossinline body: T.(UpdateStatement) -> Unit
 ): Int {
+    if (limit != null && !currentDialect.supportsLimitWithUpdateOrDelete()) {
+        throw UnsupportedByDialectException("LIMIT clause is not supported in UPDATE statement.", currentDialect)
+    }
     val query = UpdateStatement(this, limit, SqlExpressionBuilder.where())
     body(query)
     return query.execute(TransactionManager.current()) ?: 0
@@ -604,6 +631,9 @@ inline fun <T : Table> T.update(
     limit: Int? = null,
     crossinline body: T.(UpdateStatement) -> Unit
 ): Int {
+    if (limit != null && !currentDialect.supportsLimitWithUpdateOrDelete()) {
+        throw UnsupportedByDialectException("LIMIT clause is not supported in UPDATE statement.", currentDialect)
+    }
     val query = UpdateStatement(this, limit, null)
     body(query)
     return query.execute(TransactionManager.current()) ?: 0

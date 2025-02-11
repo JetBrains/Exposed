@@ -77,6 +77,9 @@ interface DatabaseDialect {
     /** Returns the allowed maximum sequence value for a dialect, as a [Long]. */
     val sequenceMaxValue: Long get() = Long.MAX_VALUE
 
+    /** Returns `true` if the database supports the `LIMIT` clause with update and delete statements. */
+    fun supportsLimitWithUpdateOrDelete(): Boolean
+
     /** Returns the name of the current database. */
     fun getDatabase(): String
 

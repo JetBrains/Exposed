@@ -47,6 +47,8 @@ abstract class VendorDialect(
 
     override val supportsMultipleGeneratedKeys: Boolean = true
 
+    override fun supportsLimitWithUpdateOrDelete(): Boolean = true
+
     override fun getDatabase(): String = catalog(TransactionManager.current())
 
     /**

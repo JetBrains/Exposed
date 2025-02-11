@@ -6,19 +6,14 @@ import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.currentTestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import kotlin.test.assertTrue
 
 class UpdateTests : DatabaseTestsBase() {
-    private val limitNotSupported by lazy {
-        val extra = setOf(TestDB.SQLITE).takeUnless { SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT }.orEmpty()
-        TestDB.ALL_POSTGRES_LIKE + extra
-    }
-
     @Test
     fun testUpdate01() {
         withCitiesAndUsers { _, users, _ ->
@@ -39,7 +34,7 @@ class UpdateTests : DatabaseTestsBase() {
     @Test
     fun testUpdateWithLimit() {
         withCitiesAndUsers { _, users, _ ->
-            if (currentTestDB in limitNotSupported) {
+            if (!currentDialectTest.supportsLimitWithUpdateOrDelete()) {
                 expectException<UnsupportedByDialectException> {
                     users.update({ users.id like "a%" }, limit = 1) {
                         it[users.id] = "NewName"
