@@ -25,12 +25,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           # Regex for Conventional Commits specification
-          PR_TITLE_REGEX="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^\)]*\))?:\s?(EXPOSED-[0-9]+\s?)?.+$"
-
-          # Get the PR title
-          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_TITLE_REGEX="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(!)?(\([^\)]*\))?:\s?(EXPOSED-[0-9]+\s?)?.+$"
 
           # Check if PR title matches the regex
           if [[ ! "$PR_TITLE" =~ $PR_TITLE_REGEX ]]; then
