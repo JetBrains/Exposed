@@ -22,7 +22,7 @@ import kotlin.test.expect
 class DeleteTests : DatabaseTestsBase() {
     private val limitNotSupported by lazy {
         val extra = setOf(TestDB.SQLITE).takeUnless { SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT }.orEmpty()
-        TestDB.ALL_POSTGRES_LIKE + TestDB.ALL_ORACLE_LIKE + extra
+        TestDB.ALL_POSTGRES_LIKE + extra
     }
 
     @Test
