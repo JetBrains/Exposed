@@ -241,11 +241,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         transaction: Transaction
     ): String {
         val def = super.update(target, columnsAndValues, null, where, transaction)
-        return when {
-            limit != null && where != null -> "$def AND ROWNUM <= $limit"
-            limit != null -> "$def WHERE ROWNUM <= $limit"
-            else -> def
-        }
+        return def.appendLimitClause(limit, endsWithWhere = where != null)
     }
 
     override fun update(
@@ -318,10 +314,16 @@ internal object OracleFunctionProvider : FunctionProvider() {
         limit: Int?,
         transaction: Transaction
     ): String {
-        if (limit != null) {
-            transaction.throwUnsupportedException("Oracle doesn't support LIMIT in DELETE clause.")
+        val def = super.delete(ignore, table, where, null, transaction)
+        return def.appendLimitClause(limit, endsWithWhere = where != null)
+    }
+
+    private fun String.appendLimitClause(limit: Int?, endsWithWhere: Boolean): String {
+        return when {
+            limit != null && endsWithWhere -> "$this AND ROWNUM <= $limit"
+            limit != null -> "$this WHERE ROWNUM <= $limit"
+            else -> this
         }
-        return super.delete(ignore, table, where, null, transaction)
     }
 
     override fun delete(
