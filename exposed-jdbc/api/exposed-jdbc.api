@@ -790,6 +790,28 @@ public final class org/jetbrains/exposed/sql/transactions/JdbcTransactionInterfa
 	public static final fun getTransactionManager (Lorg/jetbrains/exposed/sql/Database;)Lorg/jetbrains/exposed/sql/transactions/TransactionManager;
 }
 
+public final class org/jetbrains/exposed/sql/transactions/ThreadLocalTransactionManager : org/jetbrains/exposed/sql/transactions/TransactionManagerApi {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function2;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun bindTransactionToThread (Lorg/jetbrains/exposed/sql/Transaction;)V
+	public fun currentOrNull ()Lorg/jetbrains/exposed/sql/JdbcTransaction;
+	public synthetic fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
+	public fun getDefaultIsolationLevel ()I
+	public fun getDefaultMaxAttempts ()I
+	public fun getDefaultMaxRetryDelay ()J
+	public fun getDefaultMinRetryDelay ()J
+	public fun getDefaultReadOnly ()Z
+	public final fun getThreadLocal ()Ljava/lang/ThreadLocal;
+	public fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/JdbcTransaction;
+	public synthetic fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/Transaction;
+	public synthetic fun setDefaultIsolationLevel (I)V
+	public fun setDefaultMaxAttempts (I)V
+	public fun setDefaultMaxRetryDelay (J)V
+	public fun setDefaultMinRetryDelay (J)V
+	public fun setDefaultReadOnly (Z)V
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/jetbrains/exposed/sql/transactions/TransactionManager : org/jetbrains/exposed/sql/transactions/TransactionManagerApi {
 	public static final field Companion Lorg/jetbrains/exposed/sql/transactions/TransactionManager$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Lkotlin/jvm/functions/Function2;)V

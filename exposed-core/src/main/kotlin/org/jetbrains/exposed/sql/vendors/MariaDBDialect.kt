@@ -4,17 +4,6 @@ import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.transactions.CoreManager
-import kotlin.Any
-import kotlin.Boolean
-import kotlin.Int
-import kotlin.Long
-import kotlin.Pair
-import kotlin.String
-import kotlin.Suppress
-import kotlin.Unit
-import kotlin.getValue
-import kotlin.lazy
-import kotlin.with
 
 internal object MariaDBDataTypeProvider : MysqlDataTypeProvider() {
     override fun timestampType(): String = if ((currentDialect as? MariaDBDialect)?.isFractionDateTimeSupported() == true) "TIMESTAMP(6)" else "TIMESTAMP"

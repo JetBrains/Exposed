@@ -3,11 +3,6 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.transactions.CoreManager
-import kotlin.Boolean
-import kotlin.String
-import kotlin.Suppress
-import kotlin.let
-import kotlin.toString
 
 /**
  * Base implementation of a vendor dialect
