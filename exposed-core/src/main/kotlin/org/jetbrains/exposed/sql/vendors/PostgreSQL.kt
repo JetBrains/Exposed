@@ -225,19 +225,6 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun update(
-        target: Table,
-        columnsAndValues: List<Pair<Column<*>, Any?>>,
-        limit: Int?,
-        where: Op<Boolean>?,
-        transaction: Transaction
-    ): String {
-        if (limit != null) {
-            transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in UPDATE clause.")
-        }
-        return super.update(target, columnsAndValues, null, where, transaction)
-    }
-
-    override fun update(
         targets: Join,
         columnsAndValues: List<Pair<Column<*>, Any?>>,
         limit: Int?,
@@ -303,19 +290,6 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun insertValue(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"EXCLUDED.$columnName" } }
-
-    override fun delete(
-        ignore: Boolean,
-        table: Table,
-        where: String?,
-        limit: Int?,
-        transaction: Transaction
-    ): String {
-        if (limit != null) {
-            transaction.throwUnsupportedException("PostgreSQL doesn't support LIMIT in DELETE clause.")
-        }
-        return super.delete(ignore, table, where, null, transaction)
-    }
 
     override fun delete(
         ignore: Boolean,
@@ -389,6 +363,8 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
     override val requiresAutoCommitOnCreateDrop: Boolean = true
 
     override val supportsWindowFrameGroupsMode: Boolean = true
+
+    override fun supportsLimitWithUpdateOrDelete(): Boolean = false
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 

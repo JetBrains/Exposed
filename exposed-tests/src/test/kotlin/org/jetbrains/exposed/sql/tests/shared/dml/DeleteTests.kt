@@ -9,22 +9,15 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
-import org.jetbrains.exposed.sql.tests.currentTestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import kotlin.test.assertTrue
 import kotlin.test.expect
 
 class DeleteTests : DatabaseTestsBase() {
-    private val limitNotSupported by lazy {
-        val extra = setOf(TestDB.SQLITE).takeUnless { SQLiteDialect.ENABLE_UPDATE_DELETE_LIMIT }.orEmpty()
-        TestDB.ALL_POSTGRES_LIKE + extra
-    }
-
     @Test
     fun testDelete01() {
         withCitiesAndUsers { cities, users, userData ->
@@ -76,7 +69,7 @@ class DeleteTests : DatabaseTestsBase() {
     @Test
     fun testDeleteWithLimit() {
         withCitiesAndUsers { _, _, userData ->
-            if (currentTestDB in limitNotSupported) {
+            if (!currentDialectTest.supportsLimitWithUpdateOrDelete()) {
                 expectException<UnsupportedByDialectException> {
                     userData.deleteWhere(limit = 1) { userData.value eq 20 }
                 }

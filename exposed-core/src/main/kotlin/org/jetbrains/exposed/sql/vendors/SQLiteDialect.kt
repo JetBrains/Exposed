@@ -3,11 +3,6 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect.Companion.ENABLE_UPDATE_DELETE_LIMIT
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.ResultSet
-import java.sql.Statement
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
@@ -201,19 +196,6 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         return if (ignore) def.replaceFirst("INSERT", "INSERT OR IGNORE") else def
     }
 
-    override fun update(
-        target: Table,
-        columnsAndValues: List<Pair<Column<*>, Any?>>,
-        limit: Int?,
-        where: Op<Boolean>?,
-        transaction: Transaction
-    ): String {
-        if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
-            transaction.throwUnsupportedException("SQLite doesn't support LIMIT in UPDATE clause.")
-        }
-        return super.update(target, columnsAndValues, limit, where, transaction)
-    }
-
     override fun replace(
         table: Table,
         columns: List<Column<*>>,
@@ -258,19 +240,6 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
     override fun insertValue(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"EXCLUDED.$columnName" } }
 
-    override fun delete(
-        ignore: Boolean,
-        table: Table,
-        where: String?,
-        limit: Int?,
-        transaction: Transaction
-    ): String {
-        if (!ENABLE_UPDATE_DELETE_LIMIT && limit != null) {
-            transaction.throwUnsupportedException("SQLite doesn't support LIMIT in DELETE clause.")
-        }
-        return super.delete(ignore, table, where, limit, transaction)
-    }
-
     override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String {
         if (size == null && offset > 0) {
             TransactionManager.current().throwUnsupportedException("SQLite doesn't support OFFSET clause without LIMIT")
@@ -309,9 +278,16 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
  */
 open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQLiteFunctionProvider) {
     override val supportsCreateSequence: Boolean = false
+
     override val supportsMultipleGeneratedKeys: Boolean = false
+
     override val supportsCreateSchema: Boolean = false
+
     override val supportsWindowFrameGroupsMode: Boolean = true
+
+    override fun supportsLimitWithUpdateOrDelete(): Boolean {
+        return TransactionManager.current().db.metadata { supportsLimitWithUpdateOrDelete() }
+    }
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
@@ -341,27 +317,13 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
     override fun dropDatabase(name: String) = "DETACH DATABASE ${name.inProperCase()}"
 
     companion object : DialectNameProvider("SQLite") {
-        val ENABLE_UPDATE_DELETE_LIMIT by lazy {
-            var conn: Connection? = null
-            var stmt: Statement? = null
-            var rs: ResultSet? = null
-            @Suppress("SwallowedException", "TooGenericExceptionCaught")
-            try {
-                conn = DriverManager.getConnection("jdbc:sqlite::memory:")
-                stmt = conn!!.createStatement()
-                rs = stmt!!.executeQuery("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""")
-                if (rs!!.next()) {
-                    rs!!.getBoolean(1)
-                } else {
-                    false
-                }
-            } catch (e: Exception) {
-                false
-            } finally {
-                rs?.close()
-                stmt?.close()
-                conn?.close()
-            }
+        @Deprecated(
+            message = "This property will be removed in future releases.",
+            replaceWith = ReplaceWith("currentDialect.supportsLimitWithUpdateOrDelete()"),
+            level = DeprecationLevel.WARNING
+        )
+        val ENABLE_UPDATE_DELETE_LIMIT: Boolean by lazy {
+            TransactionManager.current().db.metadata { supportsLimitWithUpdateOrDelete() }
         }
     }
 }
