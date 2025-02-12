@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.transactions.TransactionInterface
-import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.vendors.inProperCase
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -50,25 +49,6 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
 
     /** Whether tracked values like [statementCount] and [duration] should be stored in [statementStats] for debugging. */
     var debug = false
-
-    /**
-     * The maximum amount of attempts that will be made to perform this `transaction` block.
-     *
-     * If this value is set to 1 and an SQLException happens, the exception will be thrown without performing a retry.
-     *
-     * @throws IllegalArgumentException If the amount of attempts is set to a value less than 1.
-     */
-    var maxAttempts: Int = db.transactionManager.defaultMaxAttempts
-        set(value) {
-            require(value > 0) { "maxAttempts must be set to perform at least 1 attempt." }
-            field = value
-        }
-
-    /** The minimum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
-    var minRetryDelay: Long = db.transactionManager.defaultMinRetryDelay
-
-    /** The maximum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
-    var maxRetryDelay: Long = db.transactionManager.defaultMaxRetryDelay
 
     /**
      * The number of seconds the JDBC driver should wait for a statement to execute in [Transaction] transaction before timing out.

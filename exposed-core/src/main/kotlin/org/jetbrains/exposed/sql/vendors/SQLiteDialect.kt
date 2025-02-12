@@ -2,7 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreManager
 
 internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun integerAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
@@ -42,7 +42,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
         if (expr.distinct) {
-            TransactionManager.current().throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function")
+            CoreManager.currentTransaction().throwUnsupportedException("SQLite doesn't support DISTINCT in GROUP_CONCAT function")
         }
         queryBuilder {
             +"GROUP_CONCAT("
@@ -76,7 +76,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         pattern: Expression<String>,
         caseSensitive: Boolean,
         queryBuilder: QueryBuilder
-    ): Unit = TransactionManager.current().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression, use LIKE instead.")
+    ): Unit = CoreManager.currentTransaction().throwUnsupportedException("SQLite doesn't provide built in REGEXP expression, use LIKE instead.")
 
     override fun <T> time(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
         append(
@@ -135,22 +135,22 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
     override fun <T> stdDevPop(
         expression: Expression<T>,
         queryBuilder: QueryBuilder
-    ): Unit = TransactionManager.current().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_POP")
+    ): Unit = CoreManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_POP")
 
     override fun <T> stdDevSamp(
         expression: Expression<T>,
         queryBuilder: QueryBuilder
-    ): Unit = TransactionManager.current().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_SAMP")
+    ): Unit = CoreManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE STDDEV_SAMP")
 
     override fun <T> varPop(
         expression: Expression<T>,
         queryBuilder: QueryBuilder
-    ): Unit = TransactionManager.current().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_POP")
+    ): Unit = CoreManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_POP")
 
     override fun <T> varSamp(
         expression: Expression<T>,
         queryBuilder: QueryBuilder
-    ): Unit = TransactionManager.current().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_SAMP")
+    ): Unit = CoreManager.currentTransaction().throwUnsupportedException("$UNSUPPORTED_AGGREGATE VAR_SAMP")
 
     override fun <T> jsonExtract(
         expression: Expression<T>,
@@ -171,7 +171,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
-        val transaction = TransactionManager.current()
+        val transaction = CoreManager.currentTransaction()
         if (path.size > 1) {
             transaction.throwUnsupportedException("SQLite does not support multiple JSON path arguments")
         }
@@ -242,7 +242,7 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
 
     override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String {
         if (size == null && offset > 0) {
-            TransactionManager.current().throwUnsupportedException("SQLite doesn't support OFFSET clause without LIMIT")
+            CoreManager.currentTransaction().throwUnsupportedException("SQLite doesn't support OFFSET clause without LIMIT")
         }
         return super.queryLimitAndOffset(size, offset, alreadyOrdered)
     }

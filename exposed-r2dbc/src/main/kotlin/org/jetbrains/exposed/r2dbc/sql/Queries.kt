@@ -22,9 +22,9 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectMetadata
+import kotlin.collections.ArrayList
 import kotlin.collections.Iterable
 import kotlin.collections.Iterator
 import kotlin.collections.List
@@ -79,7 +79,9 @@ suspend fun <T : Table> T.deleteWhere(
     limit: Int? = null,
     op: T.(ISqlExpressionBuilder) -> Op<Boolean>
 ): Int {
-    limit?.let { checkUpdateDeleteLimitEnabled() }
+    if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
+        throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
+    }
     val stmt = StatementBuilder { deleteWhere(limit, op) }
     return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
@@ -98,7 +100,9 @@ suspend fun <T : Table> T.deleteIgnoreWhere(
     limit: Int? = null,
     op: T.(ISqlExpressionBuilder) -> Op<Boolean>
 ): Int {
-    limit?.let { checkUpdateDeleteLimitEnabled() }
+    if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
+        throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
+    }
     val stmt = StatementBuilder { deleteIgnoreWhere(limit, op) }
     return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
@@ -546,7 +550,9 @@ suspend fun <T : Table> T.update(
     limit: Int? = null,
     body: T.(UpdateStatement) -> Unit
 ): Int {
-    limit?.let { checkUpdateDeleteLimitEnabled() }
+    if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
+        throw UnsupportedByDialectException("LIMIT clause is not supported in UPDATE statement.", currentDialect)
+    }
     val stmt = StatementBuilder { update(where, limit, body) }
     return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
@@ -562,7 +568,9 @@ suspend fun <T : Table> T.update(
     limit: Int? = null,
     body: T.(UpdateStatement) -> Unit
 ): Int {
-    limit?.let { checkUpdateDeleteLimitEnabled() }
+    if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
+        throw UnsupportedByDialectException("LIMIT clause is not supported in UPDATE statement.", currentDialect)
+    }
     val stmt = StatementBuilder { update(null, limit, body) }
     return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
@@ -592,7 +600,6 @@ suspend fun Join.update(
     limit: Int? = null,
     body: (UpdateStatement) -> Unit
 ): Int {
-    limit?.let { checkUpdateDeleteLimitEnabled() }
     val stmt = StatementBuilder { update(where, limit, body) }
     return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
@@ -608,15 +615,8 @@ suspend fun Join.update(
     limit: Int? = null,
     body: (UpdateStatement) -> Unit
 ): Int {
-    limit?.let { checkUpdateDeleteLimitEnabled() }
     val stmt = StatementBuilder { update(null, limit, body) }
     return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
-}
-
-private suspend fun checkUpdateDeleteLimitEnabled() {
-    if (currentDialect is SQLiteDialect && !currentDialectMetadata.updateDeleteLimitEnabled()) {
-        throw UnsupportedByDialectException("SQLite doesn't support LIMIT in UPDATE or DELETE operations.", currentDialect)
-    }
 }
 
 @Deprecated(

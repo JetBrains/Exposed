@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.statements
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreManager
 import org.jetbrains.exposed.sql.vendors.*
 
 /**
@@ -94,7 +94,7 @@ sealed interface UpsertBuilder {
         override val columnType: IColumnType<T & Any>
     ) : ExpressionWithColumnType<T>() {
         override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-            val transaction = TransactionManager.current()
+            val transaction = CoreManager.currentTransaction()
             val functionProvider = getFunctionProvider(transaction.db.dialect)
             functionProvider.insertValue(transaction.identity(column), queryBuilder)
         }

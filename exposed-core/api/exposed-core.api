@@ -2410,9 +2410,6 @@ public abstract class org/jetbrains/exposed/sql/Transaction : org/jetbrains/expo
 	public final fun getDebug ()Z
 	public final fun getDuration ()J
 	public final fun getId ()Ljava/lang/String;
-	public final fun getMaxAttempts ()I
-	public final fun getMaxRetryDelay ()J
-	public final fun getMinRetryDelay ()J
 	public final fun getQueryTimeout ()Ljava/lang/Integer;
 	public final fun getStatementCount ()I
 	public final fun getStatementStats ()Ljava/util/HashMap;
@@ -2422,9 +2419,6 @@ public abstract class org/jetbrains/exposed/sql/Transaction : org/jetbrains/expo
 	public final fun identity (Lorg/jetbrains/exposed/sql/Table;)Ljava/lang/String;
 	public final fun setDebug (Z)V
 	public final fun setDuration (J)V
-	public final fun setMaxAttempts (I)V
-	public final fun setMaxRetryDelay (J)V
-	public final fun setMinRetryDelay (J)V
 	public final fun setQueryTimeout (Ljava/lang/Integer;)V
 	public final fun setStatementCount (I)V
 	public final fun setWarnLongQueriesDuration (Ljava/lang/Long;)V
@@ -3365,6 +3359,20 @@ public abstract interface class org/jetbrains/exposed/sql/statements/api/ResultA
 	public abstract fun releaseResult ()V
 }
 
+public final class org/jetbrains/exposed/sql/transactions/CoreManager {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/transactions/CoreManager;
+	public final fun closeAndUnregisterDatabase (Lorg/jetbrains/exposed/sql/DatabaseApi;)V
+	public final fun currentTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
+	public final fun currentTransactionOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
+	public final fun getCurrentThreadManager ()Lorg/jetbrains/exposed/sql/transactions/TransactionManagerApi;
+	public final fun getDatabaseManager (Lorg/jetbrains/exposed/sql/DatabaseApi;)Lorg/jetbrains/exposed/sql/transactions/TransactionManagerApi;
+	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/sql/DatabaseApi;
+	public final fun getDefaultDatabaseOrFirst ()Lorg/jetbrains/exposed/sql/DatabaseApi;
+	public final fun registerDatabaseManager (Lorg/jetbrains/exposed/sql/DatabaseApi;Lorg/jetbrains/exposed/sql/transactions/TransactionManagerApi;)V
+	public final fun resetCurrentThreadManager (Lorg/jetbrains/exposed/sql/transactions/TransactionManagerApi;)V
+	public final fun setDefaultDatabase (Lorg/jetbrains/exposed/sql/DatabaseApi;)V
+}
+
 public abstract interface class org/jetbrains/exposed/sql/transactions/TransactionInterface {
 	public abstract fun getDb ()Lorg/jetbrains/exposed/sql/DatabaseApi;
 	public abstract fun getOuterTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
@@ -3372,8 +3380,7 @@ public abstract interface class org/jetbrains/exposed/sql/transactions/Transacti
 	public abstract fun getTransactionIsolation ()I
 }
 
-public abstract interface class org/jetbrains/exposed/sql/transactions/TransactionManager {
-	public static final field Companion Lorg/jetbrains/exposed/sql/transactions/TransactionManager$Companion;
+public abstract interface class org/jetbrains/exposed/sql/transactions/TransactionManagerApi {
 	public abstract fun bindTransactionToThread (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public abstract fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
 	public abstract fun getDefaultIsolationLevel ()I
@@ -3389,23 +3396,8 @@ public abstract interface class org/jetbrains/exposed/sql/transactions/Transacti
 	public abstract fun setDefaultReadOnly (Z)V
 }
 
-public final class org/jetbrains/exposed/sql/transactions/TransactionManager$Companion {
-	public final fun closeAndUnregister (Lorg/jetbrains/exposed/sql/DatabaseApi;)V
-	public final fun current ()Lorg/jetbrains/exposed/sql/Transaction;
-	public final fun currentOrNew (I)Lorg/jetbrains/exposed/sql/Transaction;
-	public final fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
-	public final fun getCurrentDefaultDatabase ()Ljava/util/concurrent/atomic/AtomicReference;
-	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/sql/DatabaseApi;
-	public final fun getManager ()Lorg/jetbrains/exposed/sql/transactions/TransactionManager;
-	public final fun isInitialized ()Z
-	public final fun managerFor (Lorg/jetbrains/exposed/sql/DatabaseApi;)Lorg/jetbrains/exposed/sql/transactions/TransactionManager;
-	public final fun registerManager (Lorg/jetbrains/exposed/sql/DatabaseApi;Lorg/jetbrains/exposed/sql/transactions/TransactionManager;)V
-	public final fun resetCurrent (Lorg/jetbrains/exposed/sql/transactions/TransactionManager;)V
-	public final fun setDefaultDatabase (Lorg/jetbrains/exposed/sql/DatabaseApi;)V
-}
-
-public final class org/jetbrains/exposed/sql/transactions/TransactionManager$DefaultImpls {
-	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/sql/transactions/TransactionManager;IZLorg/jetbrains/exposed/sql/Transaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Transaction;
+public final class org/jetbrains/exposed/sql/transactions/TransactionManagerApi$DefaultImpls {
+	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/sql/transactions/TransactionManagerApi;IZLorg/jetbrains/exposed/sql/Transaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Transaction;
 }
 
 public final class org/jetbrains/exposed/sql/transactions/TransactionScopeKt {

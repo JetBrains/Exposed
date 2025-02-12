@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.tests.h2
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
@@ -46,7 +45,7 @@ class MultiDatabaseEntityTest {
     fun before() {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
         if (TransactionManager.isInitialized()) {
-            currentDB = (TransactionManager.currentOrNull() as? JdbcTransaction)?.db
+            currentDB = TransactionManager.currentOrNull()?.db
         }
         transaction(db1) {
             SchemaUtils.create(EntityTestsData.XTable, EntityTestsData.YTable)

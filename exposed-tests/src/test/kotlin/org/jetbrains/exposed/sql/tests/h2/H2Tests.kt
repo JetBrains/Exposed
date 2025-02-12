@@ -8,7 +8,9 @@ import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.sql.transactions.CoreManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.TransactionManagerApi
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -69,10 +71,8 @@ class H2Tests : DatabaseTestsBase() {
             val originalManager = TransactionManager.manager
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
-                TransactionManager.registerManager(
-                    db,
-                    WrappedTransactionManager(db.transactionManager)
-                )
+                @OptIn(InternalApi::class)
+                CoreManager.registerDatabaseManager(db, WrappedTransactionManager(db.transactionManager))
                 Executors.newSingleThreadExecutor().apply {
                     submit { TransactionManager.closeAndUnregister(db) }
                         .get(1, TimeUnit.SECONDS)
@@ -128,8 +128,8 @@ class H2Tests : DatabaseTestsBase() {
         }
     }
 
-    class WrappedTransactionManager(val transactionManager: TransactionManager) :
-        TransactionManager by transactionManager
+    class WrappedTransactionManager(val transactionManager: TransactionManagerApi) :
+        TransactionManagerApi by transactionManager
 
     object Testing : Table("H2_TESTING") {
         val id = integer("id").autoIncrement() // Column<Int>

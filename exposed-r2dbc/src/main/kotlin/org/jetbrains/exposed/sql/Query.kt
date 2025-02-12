@@ -26,7 +26,7 @@ open class Query(
     }
 
     protected val transaction: R2dbcTransaction
-        get() = TransactionManager.current() as R2dbcTransaction
+        get() = TransactionManager.current()
 
     /** Creates a new [Query] instance using all stored properties of this `SELECT` query. */
     override fun copy(): Query = Query(set, where).also { copy ->
@@ -297,7 +297,7 @@ open class Query(
         val fieldIndex = set.realFields.toSet()
             .mapIndexed { index, expression -> expression to index }
             .toMap()
-        val tx = (TransactionManager.current() as R2dbcTransaction)
+        val tx = TransactionManager.current()
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
         collector.emit(ResultRow.create(rs, fieldIndex).also { trackResultSet(tx) })

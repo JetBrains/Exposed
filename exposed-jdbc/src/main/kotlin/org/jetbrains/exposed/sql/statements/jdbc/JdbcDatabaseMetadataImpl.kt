@@ -63,7 +63,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
 
         @Language("H2")
         val modeQuery = "SELECT $settingValueField FROM INFORMATION_SCHEMA.SETTINGS WHERE $settingNameField = 'MODE'"
-        (TransactionManager.current() as JdbcTransaction).exec(modeQuery) { rs ->
+        TransactionManager.current().exec(modeQuery) { rs ->
             rs.iterate { getString(settingValueField) }
         }?.firstOrNull()
     }
@@ -84,7 +84,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return when (currentDialect) {
             is SQLiteDialect -> {
                 try {
-                    val transaction = TransactionManager.current() as JdbcTransaction
+                    val transaction = TransactionManager.current()
                     transaction.exec("""SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");""") { rs ->
                         rs.next()
                         rs.getBoolean(1)
@@ -295,7 +295,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     override fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> {
         if (currentDialect !is PostgreSQLDialect) return emptyMap()
 
-        val transaction = TransactionManager.current() as JdbcTransaction
+        val transaction = TransactionManager.current()
         return tables.associateWith { table ->
             val (_, tableSchema) = tableCatalogAndSchema(table)
             transaction.exec(
@@ -352,7 +352,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     @Suppress("MagicNumber")
     override fun sequences(): List<String> {
         val dialect = currentDialect
-        val transaction = TransactionManager.current() as JdbcTransaction
+        val transaction = TransactionManager.current()
         val fieldName = "SEQUENCE_NAME"
         return when (dialect) {
             is OracleDialect -> transaction.exec("SELECT $fieldName FROM USER_SEQUENCES") { rs ->
@@ -389,7 +389,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val dialect = currentDialect
 
         return if (dialect is MysqlDialect) {
-            val transaction = TransactionManager.current() as JdbcTransaction
+            val transaction = TransactionManager.current()
             val inTableList = allTables.keys.joinToString("','", prefix = " ku.TABLE_NAME IN ('", postfix = "')")
             val tableSchema = "'${tables.mapNotNull { it.schemaName }.toSet().singleOrNull() ?: currentSchema}'"
             val constraintsToLoad = HashMap<String, MutableMap<String, ForeignKeyConstraint>>()

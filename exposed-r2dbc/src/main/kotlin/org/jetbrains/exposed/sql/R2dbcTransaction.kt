@@ -17,6 +17,7 @@ import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.executeIn
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult
 import org.jetbrains.exposed.sql.transactions.R2dbcTransactionInterface
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -24,6 +25,25 @@ open class R2dbcTransaction(
     private val transactionImpl: R2dbcTransactionInterface
 ) : Transaction(), R2dbcTransactionInterface by transactionImpl {
     final override val db: R2dbcDatabase = transactionImpl.db
+
+    /**
+     * The maximum amount of attempts that will be made to perform this `transaction` block.
+     *
+     * If this value is set to 1 and an SQLException happens, the exception will be thrown without performing a retry.
+     *
+     * @throws IllegalArgumentException If the amount of attempts is set to a value less than 1.
+     */
+    var maxAttempts: Int = db.transactionManager.defaultMaxAttempts
+        set(value) {
+            require(value > 0) { "maxAttempts must be set to perform at least 1 attempt." }
+            field = value
+        }
+
+    /** The minimum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
+    var minRetryDelay: Long = db.transactionManager.defaultMinRetryDelay
+
+    /** The maximum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
+    var maxRetryDelay: Long = db.transactionManager.defaultMaxRetryDelay
 
     /** The currently executing statement. */
     var currentStatement: R2dbcPreparedStatementApi? = null

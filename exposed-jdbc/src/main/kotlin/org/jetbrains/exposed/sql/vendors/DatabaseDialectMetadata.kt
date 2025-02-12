@@ -18,28 +18,26 @@ abstract class DatabaseDialectMetadata {
     /** Returns a list with the names of all the defined tables in the current schema. */
     val allTablesNames: List<String>
         get() {
-            val connection = (TransactionManager.current() as JdbcTransaction).connection
+            val connection = TransactionManager.current().connection
             return connection.metadata { tableNamesByCurrentSchema(getAllTableNamesCache()).tableNames }
         }
 
     protected fun getAllTableNamesCache(): Map<String, List<String>> {
         if (_allTableNames == null) {
-            val tx = TransactionManager.current() as JdbcTransaction
-            _allTableNames = tx.connection.metadata { tableNames }
+            _allTableNames = TransactionManager.current().connection.metadata { tableNames }
         }
         return _allTableNames!!
     }
 
     private fun getAllSchemaNamesCache(): List<String> {
         if (_allSchemaNames == null) {
-            val tx = TransactionManager.current() as JdbcTransaction
-            _allSchemaNames = tx.connection.metadata { schemaNames }
+            _allSchemaNames = TransactionManager.current().connection.metadata { schemaNames }
         }
         return _allSchemaNames!!
     }
 
     /** Returns the name of the current database. */
-    fun getDatabase(): String = catalog(TransactionManager.current() as JdbcTransaction)
+    fun getDatabase(): String = catalog(TransactionManager.current())
 
     /** Returns the catalog name of the connection of the specified [transaction]. */
     fun catalog(transaction: JdbcTransaction): String = transaction.connection.catalog
@@ -49,8 +47,7 @@ abstract class DatabaseDialectMetadata {
      * The names will be returned with schema prefixes if the database supports it.
      */
     fun allTablesNames(): List<String> {
-        val tx = TransactionManager.current() as JdbcTransaction
-        return tx.connection.metadata {
+        return TransactionManager.current().connection.metadata {
             tableNamesByCurrentSchema(null).tableNames
         }
     }
@@ -73,8 +70,7 @@ abstract class DatabaseDialectMetadata {
                 it == table.nameInDatabaseCase()
             }
         } ?: run {
-            val tx = TransactionManager.current() as JdbcTransaction
-            val (schema, allTables) = tx.connection.metadata {
+            val (schema, allTables) = TransactionManager.current().connection.metadata {
                 tableNamesByCurrentSchema(getAllTableNamesCache())
             }
             allTables.any {
@@ -108,14 +104,13 @@ abstract class DatabaseDialectMetadata {
 
     /** Returns a map with the column metadata of all the defined columns in each of the specified [tables]. */
     fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val tx = TransactionManager.current() as JdbcTransaction
-        return tx.connection.metadata { columns(*tables) }
+        return TransactionManager.current().connection.metadata { columns(*tables) }
     }
 
     protected val columnConstraintsCache: MutableMap<String, Collection<ForeignKeyConstraint>> = ConcurrentHashMap()
 
     protected open fun fillConstraintCacheForTables(tables: List<Table>) {
-        val tx = TransactionManager.current() as JdbcTransaction
+        val tx = TransactionManager.current()
         columnConstraintsCache.putAll(tx.db.metadata { tableConstraints(tables) })
     }
 
@@ -138,14 +133,12 @@ abstract class DatabaseDialectMetadata {
 
     /** Returns a map with all the defined indices in each of the specified [tables]. */
     open fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
-        val tx = TransactionManager.current() as JdbcTransaction
-        return tx.db.metadata { existingIndices(*tables) }
+        return TransactionManager.current().db.metadata { existingIndices(*tables) }
     }
 
     /** Returns a map with the primary key metadata in each of the specified [tables]. */
     fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
-        val tx = TransactionManager.current() as JdbcTransaction
-        return tx.db.metadata { existingPrimaryKeys(*tables) }
+        return TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
     }
 
     /**
@@ -159,21 +152,19 @@ abstract class DatabaseDialectMetadata {
      * not be returned.
      */
     fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> {
-        val tx = TransactionManager.current() as JdbcTransaction
-        return tx.db.metadata { existingSequences(*tables) }
+        return TransactionManager.current().db.metadata { existingSequences(*tables) }
     }
 
     /** Returns a list of the names of all sequences in the database. */
     fun sequences(): List<String> {
-        val tx = TransactionManager.current() as JdbcTransaction
-        return tx.db.metadata { sequences() }
+        return TransactionManager.current().db.metadata { sequences() }
     }
 
     /** Clears any cached values. */
     fun resetCaches() {
         _allTableNames = null
         columnConstraintsCache.clear()
-        (TransactionManager.current() as JdbcTransaction).db.metadata { cleanCache() }
+        TransactionManager.current().db.metadata { cleanCache() }
     }
 
     /** Clears any cached values including schema names. */
@@ -187,7 +178,7 @@ private val explicitDialect = ThreadLocal<DatabaseDialectMetadata?>()
 
 /** Returns the dialect used in the current transaction, may throw an exception if there is no current transaction. */
 val currentDialectMetadata: DatabaseDialectMetadata
-    get() = explicitDialect.get() ?: (TransactionManager.current() as JdbcTransaction).db.dialectMetadata
+    get() = explicitDialect.get() ?: TransactionManager.current().db.dialectMetadata
 
 internal fun String.inProperCase(): String =
     TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

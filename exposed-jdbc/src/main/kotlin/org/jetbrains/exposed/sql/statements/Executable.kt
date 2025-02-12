@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.statements
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.JdbcTransaction
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import java.sql.SQLException
@@ -38,8 +37,7 @@ interface Executable<out T, S : Statement<T>> {
      * Executes the SQL statement directly in the provided [transaction] and returns the generated result,
      * or `null` if either no result was retrieved or if the transaction blocked statement execution.
      */
-    fun execute(transaction: Transaction): T? {
-        transaction as JdbcTransaction
+    fun execute(transaction: JdbcTransaction): T? {
         return if (transaction.blockStatementExecution) {
             transaction.explainStatement = statement
             null

@@ -12,7 +12,6 @@ import org.jetbrains.exposed.sql.statements.api.R2dbcExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcConnectionImpl
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcScope
 import org.jetbrains.exposed.sql.statements.r2dbc.asInt
-import org.jetbrains.exposed.sql.transactions.R2dbcTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import org.reactivestreams.Publisher
@@ -28,7 +27,7 @@ class R2dbcDatabase private constructor(
     val connector: () -> R2dbcExposedConnection<*>
 ) : DatabaseApi(resolvedVendor, config) {
     internal suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T {
-        val transaction = TransactionManager.currentOrNull() as? R2dbcTransaction
+        val transaction = TransactionManager.currentOrNull()
         return if (transaction == null) {
             val connection = connector()
             try {
@@ -134,7 +133,7 @@ class R2dbcDatabase private constructor(
             config: DatabaseConfig?,
             getNewConnection: () -> Publisher<out Connection>,
             dispatcher: CoroutineDispatcher?,
-            manager: (R2dbcDatabase) -> TransactionManager = { R2dbcTransactionManager(it) }
+            manager: (R2dbcDatabase) -> TransactionManager = { TransactionManager(it) }
         ): R2dbcDatabase {
             return R2dbcDatabase(url, config ?: DatabaseConfig.invoke()) {
                 R2dbcConnectionImpl(explicitVendor, getNewConnection(), R2dbcScope(dispatcher))
@@ -161,7 +160,7 @@ class R2dbcDatabase private constructor(
             connectionOptions: ConnectionFactoryOptions,
             databaseConfig: DatabaseConfig? = null,
             dispatcher: CoroutineDispatcher? = null,
-            manager: (R2dbcDatabase) -> TransactionManager = { R2dbcTransactionManager(it) }
+            manager: (R2dbcDatabase) -> TransactionManager = { TransactionManager(it) }
         ): R2dbcDatabase {
             val url = "r2dbc:${connectionOptions.getValue(ConnectionFactoryOptions.DRIVER)}"
             val dialectName = getR2dbcDialectName(url) ?: error("Can't resolve dialect for connection: $url")
@@ -194,7 +193,7 @@ class R2dbcDatabase private constructor(
             databaseConfig: DatabaseConfig? = null,
             databaseDialect: DatabaseDialect = databaseConfig?.explicitDialect ?: error("Can't resolve dialect for connection"),
             dispatcher: CoroutineDispatcher? = null,
-            manager: (R2dbcDatabase) -> TransactionManager = { R2dbcTransactionManager(it) }
+            manager: (R2dbcDatabase) -> TransactionManager = { TransactionManager(it) }
         ): R2dbcDatabase {
             return doConnect(
                 url = "",
@@ -222,7 +221,7 @@ class R2dbcDatabase private constructor(
             url: String,
             databaseConfig: DatabaseConfig? = null,
             dispatcher: CoroutineDispatcher? = null,
-            manager: (R2dbcDatabase) -> TransactionManager = { R2dbcTransactionManager(it) }
+            manager: (R2dbcDatabase) -> TransactionManager = { TransactionManager(it) }
         ): R2dbcDatabase {
             val dialectName = getR2dbcDialectName(url) ?: error("Can't resolve dialect for connection: $url")
             return doConnect(

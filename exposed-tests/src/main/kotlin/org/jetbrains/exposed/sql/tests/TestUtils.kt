@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.sql.tests
 
 import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -15,7 +14,7 @@ fun String.inProperCase(): String = TransactionManager.currentOrNull()?.db?.iden
 val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
 
 val currentDialectMetadataTest: DatabaseDialectMetadata
-    get() = (TransactionManager.current() as JdbcTransaction).db.dialectMetadata
+    get() = TransactionManager.current().db.dialectMetadata
 
 val currentDialectIfAvailableTest: DatabaseDialect?
     get() =
@@ -34,6 +33,6 @@ fun <T> Column<T>.constraintNamePart() = (currentDialectTest as? SQLServerDialec
 
 fun Table.insertAndWait(duration: Long) {
     this.insert { }
-    (TransactionManager.current() as JdbcTransaction).commit()
+    TransactionManager.current().commit()
     Thread.sleep(duration)
 }

@@ -12,24 +12,25 @@ abstract class DatabaseDialectMetadata {
 
     private var _allSchemaNames: List<String>? = null
 
+    /** Returns `true` if the database supports the `LIMIT` clause with update and delete statements. */
+    open suspend fun supportsLimitWithUpdateOrDelete(): Boolean = true
+
     protected suspend fun getAllTableNamesCache(): Map<String, List<String>> {
         if (_allTableNames == null) {
-            val tx = TransactionManager.current() as R2dbcTransaction
-            _allTableNames = tx.connection.metadata { tableNames() }
+            _allTableNames = TransactionManager.current().connection.metadata { tableNames() }
         }
         return _allTableNames!!
     }
 
     private suspend fun getAllSchemaNamesCache(): List<String> {
         if (_allSchemaNames == null) {
-            val tx = TransactionManager.current() as R2dbcTransaction
-            _allSchemaNames = tx.connection.metadata { schemaNames() }
+            _allSchemaNames = TransactionManager.current().connection.metadata { schemaNames() }
         }
         return _allSchemaNames!!
     }
 
     /** Returns the name of the current database. */
-    suspend fun getDatabase(): String = catalog(TransactionManager.current() as R2dbcTransaction)
+    suspend fun getDatabase(): String = catalog(TransactionManager.current())
 
     /** Returns the catalog name of the connection of the specified [transaction]. */
     suspend fun catalog(transaction: R2dbcTransaction): String = transaction.connection.getCatalog()
@@ -39,8 +40,7 @@ abstract class DatabaseDialectMetadata {
      * The names will be returned with schema prefixes if the database supports it.
      */
     suspend fun allTablesNames(): List<String> {
-        val tx = TransactionManager.current() as R2dbcTransaction
-        return tx.connection.metadata {
+        return TransactionManager.current().connection.metadata {
             tableNamesByCurrentSchema(null).tableNames
         }
     }
@@ -63,8 +63,7 @@ abstract class DatabaseDialectMetadata {
                 it == table.nameInDatabaseCase()
             }
         } ?: run {
-            val tx = TransactionManager.current() as R2dbcTransaction
-            val (schema, allTables) = tx.connection.metadata {
+            val (schema, allTables) = TransactionManager.current().connection.metadata {
                 tableNamesByCurrentSchema(getAllTableNamesCache())
             }
             allTables.any {
@@ -98,14 +97,13 @@ abstract class DatabaseDialectMetadata {
 
     /** Returns a map with the column metadata of all the defined columns in each of the specified [tables]. */
     suspend fun tableColumns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
-        val tx = TransactionManager.current() as R2dbcTransaction
-        return tx.connection.metadata { columns(*tables) }
+        return TransactionManager.current().connection.metadata { columns(*tables) }
     }
 
     protected val columnConstraintsCache: MutableMap<String, Collection<ForeignKeyConstraint>> = ConcurrentHashMap()
 
     protected open suspend fun fillConstraintCacheForTables(tables: List<Table>) {
-        val tx = TransactionManager.current() as R2dbcTransaction
+        val tx = TransactionManager.current()
         columnConstraintsCache.putAll(tx.db.metadata { tableConstraints(tables) })
     }
 
@@ -128,14 +126,12 @@ abstract class DatabaseDialectMetadata {
 
     /** Returns a map with all the defined indices in each of the specified [tables]. */
     open suspend fun existingIndices(vararg tables: Table): Map<Table, List<Index>> {
-        val tx = TransactionManager.current() as R2dbcTransaction
-        return tx.db.metadata { existingIndices(*tables) }
+        return TransactionManager.current().db.metadata { existingIndices(*tables) }
     }
 
     /** Returns a map with the primary key metadata in each of the specified [tables]. */
     suspend fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
-        val tx = TransactionManager.current() as R2dbcTransaction
-        return tx.db.metadata { existingPrimaryKeys(*tables) }
+        return TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
     }
 
     /**
@@ -149,21 +145,19 @@ abstract class DatabaseDialectMetadata {
      * not be returned.
      */
     suspend fun existingSequences(vararg tables: Table): Map<Table, List<Sequence>> {
-        val tx = TransactionManager.current() as R2dbcTransaction
-        return tx.db.metadata { existingSequences(*tables) }
+        return TransactionManager.current().db.metadata { existingSequences(*tables) }
     }
 
     /** Returns a list of the names of all sequences in the database. */
     suspend fun sequences(): List<String> {
-        val tx = TransactionManager.current() as R2dbcTransaction
-        return tx.db.metadata { sequences() }
+        return TransactionManager.current().db.metadata { sequences() }
     }
 
     /** Clears any cached values. */
     suspend fun resetCaches() {
         _allTableNames = null
         columnConstraintsCache.clear()
-        (TransactionManager.current() as R2dbcTransaction).db.metadata { cleanCache() }
+        TransactionManager.current().db.metadata { cleanCache() }
     }
 
     /** Clears any cached values including schema names. */
@@ -171,22 +165,13 @@ abstract class DatabaseDialectMetadata {
         _allSchemaNames = null
         resetCaches()
     }
-
-    /**
-     * Checks whether the database has been set up to allow `LIMIT` clause with update and delete statements.
-     *
-     * This will return `true` for all databases that are not SQLite, which can only be enabled by setting a compiler option.
-     */
-    suspend fun updateDeleteLimitEnabled(): Boolean = (TransactionManager.current() as R2dbcTransaction).connection.metadata {
-        updateDeleteLimitEnabled()
-    }
 }
 
 private val explicitDialect = ThreadLocal<DatabaseDialectMetadata?>()
 
 /** Returns the dialect used in the current transaction, may throw an exception if there is no current transaction. */
 val currentDialectMetadata: DatabaseDialectMetadata
-    get() = explicitDialect.get() ?: (TransactionManager.current() as R2dbcTransaction).db.dialectMetadata
+    get() = explicitDialect.get() ?: TransactionManager.current().db.dialectMetadata
 
 internal fun String.inProperCase(): String =
     TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

@@ -9,11 +9,49 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.HashMap
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.MutableMap
+import kotlin.collections.all
+import kotlin.collections.any
+import kotlin.collections.asSequence
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.contains
+import kotlin.collections.distinct
+import kotlin.collections.emptyList
+import kotlin.collections.emptyMap
+import kotlin.collections.filter
+import kotlin.collections.filterKeys
+import kotlin.collections.first
+import kotlin.collections.firstOrNull
+import kotlin.collections.flatMap
+import kotlin.collections.forEach
+import kotlin.collections.getOrPut
+import kotlin.collections.getValue
+import kotlin.collections.groupBy
+import kotlin.collections.isNotEmpty
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.mapNotNull
+import kotlin.collections.mapValues
+import kotlin.collections.minus
+import kotlin.collections.mutableMapOf
+import kotlin.collections.orEmpty
+import kotlin.collections.plus
+import kotlin.collections.set
+import kotlin.collections.single
+import kotlin.collections.singleOrNull
+import kotlin.collections.toList
+import kotlin.collections.toMap
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
 import kotlin.sequences.Sequence
+import kotlin.sequences.any
+import kotlin.sequences.filter
 
 /**
  * Base class responsible for the management of [Entity] instances and the maintenance of their relation
@@ -344,7 +382,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * [EntityCache], creates a new instance using the data in [row].
      */
     fun wrap(id: EntityID<ID>, row: ResultRow?): T {
-        val transaction = TransactionManager.current() as JdbcTransaction
+        val transaction = TransactionManager.current()
         return transaction.entityCache.find(this, id) ?: createInstance(id, row).also { new ->
             new.klass = this
             new.db = transaction.db
@@ -378,7 +416,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         val entityCache = warmCache()
         val prototype: T = createInstance(entityId, null)
         prototype.klass = this
-        prototype.db = (TransactionManager.current() as JdbcTransaction).db
+        prototype.db = TransactionManager.current().db
         prototype._readValues = ResultRow.createAndFillDefaults(dependsOnColumns)
         if (entityId._value != null) {
             prototype.writeIdColumnValue(table, entityId)
@@ -1130,7 +1168,7 @@ abstract class ImmutableCachedEntityClass<ID : Any, out T : Entity<ID>>(
     }
 
     final override fun warmCache(): EntityCache {
-        val tr = TransactionManager.current() as JdbcTransaction
+        val tr = TransactionManager.current()
         val db = tr.db
         val transactionCache = super.warmCache()
         if (_cachedValues[db] == null) {

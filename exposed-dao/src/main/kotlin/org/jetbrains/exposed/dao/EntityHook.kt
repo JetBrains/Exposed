@@ -1,11 +1,10 @@
 package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionScope
-import java.util.Deque
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -121,7 +120,7 @@ fun <T> withHook(action: (EntityChange) -> Unit, body: () -> T): T {
     EntityHook.subscribe(action)
     try {
         return body().apply {
-            (TransactionManager.current() as JdbcTransaction).commit()
+            TransactionManager.current().commit()
         }
     } finally {
         EntityHook.unsubscribe(action)

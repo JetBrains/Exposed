@@ -17,7 +17,7 @@ open class ExplainExecutable(
     override fun JdbcPreparedStatementApi.executeInternal(transaction: JdbcTransaction): JdbcResult = executeQuery()
 
     override fun iterator(): Iterator<ExplainResultRow> {
-        val rs = (TransactionManager.current() as JdbcTransaction).exec(this)!! as JdbcResult
+        val rs = TransactionManager.current().exec(this)!! as JdbcResult
         val resultIterator = ResultIterator(rs.result)
         return Iterable { resultIterator }.iterator()
     }

@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreManager
 import org.jetbrains.exposed.sql.vendors.*
 
 private val comparator: Comparator<Column<*>> = compareBy({ it.table.tableName }, { it.name })
@@ -43,7 +43,7 @@ class Column<T>(
     internal var extraDefinitions = mutableListOf<Any>()
 
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = TransactionManager.current().fullIdentity(this@Column, queryBuilder)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = CoreManager.currentTransaction().fullIdentity(this@Column, queryBuilder)
 
     /** Returns the column name in proper case. */
     fun nameInDatabaseCase(): String = name.inProperCase()
@@ -68,7 +68,7 @@ class Column<T>(
         }
 
     override fun createStatement(): List<String> {
-        val alterTablePrefix = "ALTER TABLE ${TransactionManager.current().identity(table)} ADD"
+        val alterTablePrefix = "ALTER TABLE ${CoreManager.currentTransaction().identity(table)} ADD"
         val isH2withCustomPKConstraint = currentDialect is H2Dialect && isLastColumnInPK
         val isOracle = currentDialect is OracleDialect
         val columnDefinition = when {
@@ -93,7 +93,7 @@ class Column<T>(
     override fun modifyStatement(): List<String> = currentDialect.modifyColumn(this, ColumnDiff.AllChanged)
 
     override fun dropStatement(): List<String> {
-        val tr = TransactionManager.current()
+        val tr = CoreManager.currentTransaction()
         return listOf("ALTER TABLE ${tr.identity(table)} DROP COLUMN ${tr.identity(this)}")
     }
 
@@ -102,7 +102,7 @@ class Column<T>(
     /** Returns the SQL representation of this column. */
     @Suppress("ComplexMethod")
     fun descriptionDdl(modify: Boolean = false): String = buildString {
-        val tr = TransactionManager.current()
+        val tr = CoreManager.currentTransaction()
         val column = this@Column
         append(tr.identity(column))
         append(" ")

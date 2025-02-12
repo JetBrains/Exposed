@@ -31,7 +31,7 @@ sealed class SetOperation(
     override val statement: SetOperation = this
 
     protected val transaction: R2dbcTransaction
-        get() = TransactionManager.current() as R2dbcTransaction
+        get() = TransactionManager.current()
 
     /** The SQL statement on the left-hand side of the set operator. */
     val firstStatement: AbstractQuery<*> = when (_firstStatement) {
@@ -156,7 +156,7 @@ sealed class SetOperation(
         val fieldIndex = set.realFields.toSet()
             .mapIndexed { index, expression -> expression to index }
             .toMap()
-        val tx = (TransactionManager.current() as R2dbcTransaction)
+        val tx = TransactionManager.current()
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
         collector.emit(ResultRow.create(rs, fieldIndex).also { trackResultSet(tx) })

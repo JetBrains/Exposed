@@ -9,7 +9,7 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.util.*
@@ -1661,7 +1661,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     internal fun primaryKeyConstraint(): String? {
         return primaryKey?.let { primaryKey ->
-            val tr = TransactionManager.current()
+            val tr = CoreManager.currentTransaction()
             val constraint = tr.db.identifierManager.cutIfNecessaryAndQuote(primaryKey.name)
             return primaryKey.columns
                 .joinToString(prefix = "CONSTRAINT $constraint PRIMARY KEY (", postfix = ")", transform = tr::identity)
@@ -1679,7 +1679,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF NOT EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table))
+            append(CoreManager.currentTransaction().identity(this@Table))
 
             if (columns.isNotEmpty()) {
                 columns.joinTo(this, prefix = " (") { column ->
@@ -1769,7 +1769,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             if (currentDialect.supportsIfNotExists) {
                 append("IF EXISTS ")
             }
-            append(TransactionManager.current().identity(this@Table))
+            append(CoreManager.currentTransaction().identity(this@Table))
             if (currentDialectIfAvailable is OracleDialect) {
                 append(" CASCADE CONSTRAINTS")
             } else if (currentDialectIfAvailable is PostgreSQLDialect && TableUtils.checkCycle(this@Table)) {

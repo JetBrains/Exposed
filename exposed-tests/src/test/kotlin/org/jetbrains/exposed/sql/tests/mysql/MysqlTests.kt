@@ -22,7 +22,7 @@ class MysqlTests : DatabaseTestsBase() {
     fun testEmbeddedConnection() {
         withDb(TestDB.MYSQL_V5) {
             assertFalse(
-                (TransactionManager.current() as JdbcTransaction).exec("SELECT VERSION();") {
+                TransactionManager.current().exec("SELECT VERSION();") {
                     it.next()
                     it.getString(1)
                 }.isNullOrEmpty()

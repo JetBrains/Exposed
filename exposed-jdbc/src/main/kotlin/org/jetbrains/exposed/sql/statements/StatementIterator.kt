@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
 
@@ -18,7 +17,7 @@ internal abstract class StatementIterator<T, RR>(
                 val statement = result.statement
                 result.close()
                 statement?.close()
-                (TransactionManager.current() as JdbcTransaction).openResultSetsCount--
+                TransactionManager.current().openResultSetsCount--
             }
         }
 

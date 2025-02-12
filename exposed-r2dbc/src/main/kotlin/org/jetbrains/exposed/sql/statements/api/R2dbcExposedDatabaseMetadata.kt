@@ -22,8 +22,8 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
     /** Whether the database supports `SELECT FOR UPDATE` statements. */
     abstract val supportsSelectForUpdate: Boolean
 
-    /** Whether the database has been set up to allow `LIMIT` clause with update and delete statements. */
-    abstract suspend fun updateDeleteLimitEnabled(): Boolean
+    /** Whether the database supports the `LIMIT` clause with update and delete statements. */
+    abstract suspend fun supportsLimitWithUpdateOrDelete(): Boolean
 
     /** The connection URL for the database. */
     abstract suspend fun getUrl(): String
