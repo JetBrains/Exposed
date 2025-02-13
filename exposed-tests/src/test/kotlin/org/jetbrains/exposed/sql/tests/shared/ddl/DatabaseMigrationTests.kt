@@ -1,10 +1,18 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
-import MigrationUtils
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.dao.id.UIntIdTable
+import org.jetbrains.exposed.dao.id.ULongIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.json.json
+import org.jetbrains.exposed.sql.json.jsonb
+import org.jetbrains.exposed.sql.kotlin.datetime.*
+import org.jetbrains.exposed.sql.money.CurrencyColumnType
+import org.jetbrains.exposed.sql.money.currency
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -14,17 +22,25 @@ import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.sql.tests.shared.ddl.EnumerationTests.Foo
+import org.jetbrains.exposed.sql.tests.shared.ddl.EnumerationTests.PGEnum
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import java.util.*
 import kotlin.properties.Delegates
 import kotlin.test.assertNull
 
 @OptIn(ExperimentalDatabaseMigrationApi::class)
+@Suppress("LargeClass")
 class DatabaseMigrationTests : DatabaseTestsBase() {
+
+    private val columnTypeChangeUnsupportedDb = TestDB.ALL - TestDB.ALL_H2_V2
 
     private lateinit var sequence: Sequence
 
@@ -775,6 +791,246 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testNoColumnTypeChangeStatementsGenerated() {
+        withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
+            try {
+                SchemaUtils.create(columnTypesTester)
+
+                val columns = columnTypesTester.columns.sortedBy { it.name.uppercase() }
+                val columnsMetadata = connection.metadata {
+                    requireNotNull(columns(columnTypesTester)[columnTypesTester])
+                }.toSet().sortedBy { it.name.uppercase() }
+                columnsMetadata.forEachIndexed { index, columnMetadataItem ->
+                    val columnType = columns[index].columnType.sqlType()
+                    val columnMetadataSqlType = columnMetadataItem.sqlType
+                    assertTrue(currentDialectTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
+                }
+
+                val statements = MigrationUtils.statementsRequiredForDatabaseMigration(columnTypesTester, withLogs = false)
+                assertTrue(statements.isEmpty())
+            } finally {
+                SchemaUtils.drop(columnTypesTester)
+            }
+        }
+    }
+
+    @Test
+    fun testCorrectColumnTypeChangeStatementsGenerated() {
+        withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
+            val columns = columnTypesTester.columns.sortedBy { it.name.uppercase() }
+
+            columns.forEach { oldColumn ->
+                val oldColumnWithModifiedName = Column(table = oldColumn.table, name = "tester_col", columnType = oldColumn.columnType as IColumnType<Any>)
+                val oldTable = object : Table("tester") {
+                    override val columns: List<Column<*>>
+                        get() = listOf(oldColumnWithModifiedName)
+                }
+
+                withTables(oldTable) {
+                    val columnsMetadata = connection.metadata {
+                        requireNotNull(columns(oldTable)[oldTable])
+                    }.toSet()
+                    val oldColumnMetadataItem = columnsMetadata.single()
+
+                    for (newColumn in columns) {
+                        if (currentDialectTest.areEquivalentColumnTypes(
+                                oldColumnMetadataItem.sqlType,
+                                oldColumnMetadataItem.jdbcType,
+                                newColumn.columnType.sqlType()
+                            )
+                        ) {
+                            continue
+                        }
+
+                        val newColumnWithModifiedName = Column(table = newColumn.table, name = "tester_col", columnType = newColumn.columnType as IColumnType<Any>)
+                        val newTable = object : Table("tester") {
+                            override val columns: List<Column<*>>
+                                get() = listOf(newColumnWithModifiedName)
+                        }
+
+                        val statements = MigrationUtils.statementsRequiredForDatabaseMigration(newTable, withLogs = false)
+                        assertEquals(1, statements.size)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testNoColumnTypeChangeStatementsGeneratedForArrayColumnType() {
+        withTables(TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL), arraysTester) {
+            val columnMetadata = connection.metadata {
+                requireNotNull(columns(arraysTester)[arraysTester])
+            }.toSet().sortedBy { it.name.uppercase() }
+            val columns = arraysTester.columns.sortedBy { it.name.uppercase() }
+            columnMetadata.forEachIndexed { index, columnMetadataItem ->
+                val columnType = columns[index].columnType.sqlType()
+                val columnMetadataSqlType = columnMetadataItem.sqlType
+                assertTrue(currentDialectTest.areEquivalentColumnTypes(columnMetadataSqlType, columnMetadataItem.jdbcType, columnType))
+            }
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(arraysTester, withLogs = false)
+            assertTrue(statements.isEmpty())
+        }
+    }
+
+    @Test
+    fun testCorrectColumnTypeChangeStatementsGeneratedForArrayColumnType() {
+        withDb(excludeSettings = TestDB.ALL - setOf(TestDB.H2_V2, TestDB.H2_V2_PSQL)) {
+            val columns = arraysTester.columns.sortedBy { it.name.uppercase() }
+
+            columns.forEach { oldColumn ->
+                val oldColumnWithModifiedName = Column(table = oldColumn.table, name = "tester_col", columnType = oldColumn.columnType as IColumnType<Any>)
+                val oldTable = object : Table("tester") {
+                    override val columns: List<Column<*>>
+                        get() = listOf(oldColumnWithModifiedName)
+                }
+
+                withTables(oldTable) {
+                    val columnsMetadata = connection.metadata {
+                        requireNotNull(columns(oldTable)[oldTable])
+                    }.toSet()
+                    val oldColumnMetadataItem = columnsMetadata.single()
+
+                    for (newColumn in columns) {
+                        if (currentDialectTest.areEquivalentColumnTypes(
+                                oldColumnMetadataItem.sqlType,
+                                oldColumnMetadataItem.jdbcType,
+                                newColumn.columnType.sqlType()
+                            )
+                        ) {
+                            continue
+                        }
+
+                        val newColumnWithModifiedName = Column(table = newColumn.table, name = "tester_col", columnType = newColumn.columnType as IColumnType<Any>)
+                        val newTable = object : Table("tester") {
+                            override val columns: List<Column<*>>
+                                get() = listOf(newColumnWithModifiedName)
+                        }
+
+                        val statements = MigrationUtils.statementsRequiredForDatabaseMigration(newTable, withLogs = false)
+                        assertEquals(1, statements.size)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testDifferentCheckConstraintForSameUnderlyingColumnType() {
+        val oldTable = object : Table("tester") {
+            val tester_col = byte("tester_col")
+        }
+        val newTable = object : Table("tester") {
+            val tester_col = ubyte("tester_col")
+        }
+
+        // For H2 PostgreSQL, both `byte` and `ubyte` have the same column type of SMALLINT
+        withTables(excludeSettings = TestDB.ALL - TestDB.H2_V2_PSQL, oldTable) {
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(newTable, withLogs = false)
+            assertEquals(2, statements.size)
+            assertEquals(
+                newTable.checkConstraints().single().createStatement().single(),
+                statements[0]
+            )
+            assertEquals(
+                oldTable.checkConstraints().single().dropStatement().single(),
+                statements[1]
+            )
+            statements.forEach(::exec)
+            newTable.insert {
+                it[tester_col] = UByte.MAX_VALUE
+            }
+        }
+    }
+
+    @Test
+    fun testAddMissingCheckConstraint() {
+        val oldTable = object : Table("tester") {
+            val tester_col = text("tester_col")
+        }
+        val newTable = object : Table("tester") {
+            val tester_col = byte("tester_col")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.H2_V2_PSQL, oldTable) {
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(newTable, withLogs = false)
+            assertEquals(2, statements.size)
+            assertEquals(
+                newTable.checkConstraints().single().createStatement().single(),
+                statements[1]
+            )
+            statements.forEach(::exec)
+            newTable.insert {
+                it[tester_col] = Byte.MAX_VALUE
+            }
+        }
+    }
+
+    @Test
+    fun testDropUnmappedCheckConstraint() {
+        val oldTable = object : Table("tester") {
+            val tester_col = byte("tester_col")
+        }
+        val newTable = object : Table("tester") {
+            val tester_col = text("tester_col")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.H2_V2_PSQL, oldTable) {
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(newTable, withLogs = false)
+            assertEquals(2, statements.size)
+            assertEquals(
+                oldTable.checkConstraints().single().dropStatement().single(),
+                statements[1]
+            )
+            statements.forEach(::exec)
+            newTable.insert {
+                it[tester_col] = "Testing text"
+            }
+        }
+    }
+
+    @Test
+    fun testChangingIdTableType() {
+        val intIdTable = object : IntIdTable("tester") {}
+        val uintIdTable = object : UIntIdTable("tester") {}
+        val longIdTable = object : LongIdTable("tester") {}
+        val ulongIdTable = object : ULongIdTable("tester") {}
+
+        val tables = listOf<IdTable<*>>(intIdTable, uintIdTable, longIdTable, ulongIdTable)
+
+        withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
+            tables.forEach { oldTable ->
+                for (newTable in tables) {
+                    val oldIdColumn = (oldTable.id.columnType as EntityIDColumnType<*>).idColumn
+                    val newIdColumn = (newTable.id.columnType as EntityIDColumnType<*>).idColumn
+
+                    if (oldIdColumn.columnType == newIdColumn.columnType) {
+                        continue
+                    }
+
+                    withTables(oldTable) {
+                        assertTrue(MigrationUtils.statementsRequiredForDatabaseMigration(oldTable, withLogs = false).isEmpty())
+
+                        val statements = MigrationUtils.statementsRequiredForDatabaseMigration(newTable, withLogs = false)
+
+                        var expectedSize = 0
+                        if (oldTable.ddl.any { it.contains("CHECK") } || newTable.ddl.any { it.contains("CHECK") }) {
+                            expectedSize++ // Statement for adding or dropping the CHECK constraint
+                        }
+                        if (oldIdColumn.columnType.sqlType() != newIdColumn.columnType.sqlType()) {
+                            expectedSize++ // Statement for changing the column type
+                        }
+                        assertEquals(expectedSize, statements.size)
+
+                        statements.forEach(::exec)
+                        newTable.insert {}
+                    }
+                }
+            }
+        }
+    }
+
     private fun expectedCreateSequenceStatement(sequenceName: String) =
         "CREATE SEQUENCE${" IF NOT EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} " +
             "$sequenceName START WITH 1 MINVALUE 1 MAXVALUE ${currentDialectTest.sequenceMaxValue}"
@@ -805,6 +1061,106 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     private val tableWithAutoIncrementSequenceName by lazy {
         object : IdTable<Long>("test_table") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
+        }
+    }
+
+    private enum class TestEnum { A, B, C }
+
+    private val sqlType by lazy {
+        when (currentDialectTest) {
+            is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
+            is PostgreSQLDialect -> "RefEnum"
+            else -> error("Unsupported case")
+        }
+    }
+
+    private val columnTypesTester by lazy {
+        object : Table("tester") {
+            val byte = byte("byte_col")
+            val ubyte = ubyte("ubyte_col")
+            val short = short("short_col")
+            val ushort = ushort("ushort_col")
+            val integer = integer("integer_col")
+            val uinteger = uinteger("uinteger_col")
+            val long = long("long_col")
+            val ulong = ulong("ulong_col")
+            val float = float("float_col")
+            val double = double("double_col")
+            val decimal = decimal("decimal_col", 6, 2)
+            val decimal2 = decimal("decimal_col_2", 3, 2)
+            val char = char("char_col")
+            val letter = char("letter_col", 1)
+            val char2 = char("char_col_2", 2)
+            val varchar = varchar("varchar_col", 14)
+            val varchar2 = varchar("varchar_col_2", 28)
+            val text = text("text_col")
+            val mediumText = mediumText("mediumText_col")
+            val largeText = largeText("largeText_col")
+
+            val binary = binary("binary_col", 123)
+            val binary2 = binary("binary_col_2", 456)
+            val blob = blob("blob_col")
+            val uuid = uuid("uuid_col")
+            val bool = bool("boolean_col")
+            val enum1 = enumeration("enum_col_1", TestEnum::class)
+            val enum2 = enumeration<TestEnum>("enum_col_2")
+            val enum3 = enumerationByName("enum_col_3", 25, TestEnum::class)
+            val enum4 = enumerationByName("enum_col_4", 64, TestEnum::class)
+            val enum5 = enumerationByName<TestEnum>("enum_col_5", 16)
+            val enum6 = enumerationByName<TestEnum>("enum_col_6", 32)
+            val customEnum = customEnumeration(
+                "custom_enum_col",
+                sqlType,
+                { value -> Foo.valueOf(value as String) },
+                { value ->
+                    when (currentDialectTest) {
+                        is PostgreSQLDialect -> PGEnum(sqlType, value)
+                        else -> value.name
+                    }
+                }
+            )
+            val currency = currency("currency_col")
+            val date = date("date_col")
+            val datetime = datetime("datetime_col")
+            val time = time("time_col")
+            val timestamp = timestamp("timestamp_col")
+            val timestampWithTimeZone = timestampWithTimeZone("timestampWithTimeZone_col")
+            val duration = duration("duration_col")
+            val intArrayJson = json<IntArray>("json_col", Json.Default)
+            val intArrayJsonb = jsonb<IntArray>("jsonb_col", Json.Default)
+        }
+    }
+
+    private val arraysTester by lazy {
+        object : Table("tester") {
+            val byteArray = array("byteArray", ByteColumnType())
+            val ubyteArray = array("ubyteArray", UByteColumnType())
+            val shortArray = array("shortArray", ShortColumnType(), 10)
+            val ushortArray = array("ushortArray", UShortColumnType(), 10)
+            val intArray = array<Int>("intArray", 20)
+            val uintArray = array<UInt>("uintArray", 20)
+            val longArray = array<Long>("longArray", 30)
+            val ulongArray = array<ULong>("ulongArray", 30)
+            val floatArray = array<Float>("floatArray", 40)
+            val doubleArray = array<Double>("doubleArray", 50)
+            val decimalArray = array("decimalArray", DecimalColumnType(6, 3), 60)
+            val charArray = array("charArray", CharacterColumnType(), 70)
+            val initialsArray = array("initialsArray", CharColumnType(2), 45)
+            val varcharArray = array("varcharArray", VarCharColumnType(), 80)
+            val textArray = array("textArray", TextColumnType(), 90)
+            val mediumTextArray = array("mediumTextArray", MediumTextColumnType(), 100)
+            val largeTextArray = array("largeTextArray", LargeTextColumnType(), 110)
+            val binaryArray = array("binaryArray", BinaryColumnType(123), 120)
+            val blobArray = array("blobArray", BlobColumnType(), 130)
+            val uuidArray = array<UUID>("uuidArray", 140)
+            val booleanArray = array<Boolean>("booleanArray", 150)
+            val currencyArray = array("currencyArray", CurrencyColumnType(), 25)
+            val dateArray = array("dateArray", KotlinLocalDateColumnType(), 366)
+            val datetimeArray = array("datetimeArray", KotlinLocalDateTimeColumnType(), 10)
+            val timeArray = array("timeArray", KotlinLocalTimeColumnType(), 14)
+            val timestampArray = array("timestampArray", KotlinInstantColumnType(), 10)
+            val timestampWithTimeZoneArray = array("timestampWithTimeZoneArray", KotlinOffsetDateTimeColumnType(), 10)
+            val durationArray = array("durationArray", KotlinDurationColumnType(), 7)
         }
     }
 }
