@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 
 internal object MariaDBDataTypeProvider : MysqlDataTypeProvider() {
     override fun timestampType(): String = if ((currentDialect as? MariaDBDialect)?.isFractionDateTimeSupported() == true) "TIMESTAMP(6)" else "TIMESTAMP"
@@ -91,7 +91,7 @@ open class MariaDBDialect : MysqlDialect() {
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
     override val supportsSetDefaultReferenceOption: Boolean = false
     override val supportsCreateSequence: Boolean by lazy {
-        TransactionManager.current().db.isVersionCovers(SEQUENCE_MIN_MAJOR_VERSION, SEQUENCE_MIN_MINOR_VERSION)
+        CoreTransactionManager.currentTransaction().db.isVersionCovers(SEQUENCE_MIN_MAJOR_VERSION, SEQUENCE_MIN_MINOR_VERSION)
     }
 
     // actually MariaDb supports it but jdbc driver prepares statement without RETURNING clause
@@ -99,7 +99,7 @@ open class MariaDBDialect : MysqlDialect() {
 
     @Suppress("MagicNumber")
     override val sequenceMaxValue: Long by lazy {
-        if (TransactionManager.current().db.isVersionCovers(11, 5)) {
+        if (CoreTransactionManager.currentTransaction().db.isVersionCovers(11, 5)) {
             super.sequenceMaxValue
         } else {
             Long.MAX_VALUE - 1
@@ -108,7 +108,7 @@ open class MariaDBDialect : MysqlDialect() {
 
     /** Returns `true` if the MariaDB database version is greater than or equal to 5.3. */
     @Suppress("MagicNumber")
-    override fun isFractionDateTimeSupported(): Boolean = TransactionManager.current().db.isVersionCovers(5, 3)
+    override fun isFractionDateTimeSupported(): Boolean = CoreTransactionManager.currentTransaction().db.isVersionCovers(5, 3)
 
     override fun isTimeZoneOffsetSupported(): Boolean = false
 

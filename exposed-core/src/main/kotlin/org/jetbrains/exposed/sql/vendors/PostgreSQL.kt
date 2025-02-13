@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementType
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import java.util.*
 
 internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
@@ -54,7 +54,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
-        val tr = TransactionManager.current()
+        val tr = CoreTransactionManager.currentTransaction()
         return when (expr.separator) {
             null -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG function.")
             else -> queryBuilder {
@@ -174,7 +174,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         path?.let {
-            TransactionManager.current().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
+            CoreTransactionManager.currentTransaction().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
         val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
@@ -193,7 +193,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         if (path.size > 1) {
-            TransactionManager.current().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
+            CoreTransactionManager.currentTransaction().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
         }
         val isNotJsonB = !(jsonType as JsonColumnMarker).usesBinaryFormat
         queryBuilder {
@@ -369,7 +369,7 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
         val list = mutableListOf(
             buildString {
-                val tr = TransactionManager.current()
+                val tr = CoreTransactionManager.currentTransaction()
                 append("ALTER TABLE ${tr.identity(column.table)} ")
                 val colName = tr.identity(column)
 

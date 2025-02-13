@@ -57,7 +57,7 @@ class SpringTransactionManager(
 
     override fun doGetTransaction(): Any {
         val outerManager = TransactionManager.manager
-        val outer = threadLocalTransactionManager.currentOrNull() as? JdbcTransaction
+        val outer = threadLocalTransactionManager.currentOrNull()
 
         return ExposedTransactionObject(
             manager = threadLocalTransactionManager,
@@ -107,7 +107,6 @@ class SpringTransactionManager(
             readOnly = definition.isReadOnly,
             outerTransaction = currentTransactionManager.currentOrNull()
         ).apply {
-            this as JdbcTransaction
             if (definition.timeout != TransactionDefinition.TIMEOUT_DEFAULT) {
                 queryTimeout = definition.timeout
             }
@@ -189,7 +188,7 @@ class SpringTransactionManager(
         @Suppress("TooGenericExceptionCaught")
         fun commit() {
             try {
-                (manager.currentOrNull() as? JdbcTransaction)?.commit()
+                manager.currentOrNull()?.commit()
             } catch (error: Exception) {
                 throw TransactionSystemException(error.message.orEmpty(), error)
             }
@@ -198,13 +197,13 @@ class SpringTransactionManager(
         @Suppress("TooGenericExceptionCaught")
         fun rollback() {
             try {
-                (manager.currentOrNull() as? JdbcTransaction)?.rollback()
+                manager.currentOrNull()?.rollback()
             } catch (error: Exception) {
                 throw TransactionSystemException(error.message.orEmpty(), error)
             }
         }
 
-        fun getCurrentTransaction(): JdbcTransaction? = manager.currentOrNull() as? JdbcTransaction
+        fun getCurrentTransaction(): JdbcTransaction? = manager.currentOrNull()
 
         fun setRollbackOnly() {
             isRollback = true

@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.vendors.*
 import org.jetbrains.exposed.sql.vendors.H2Dialect.H2MajorVersion
 import org.jetbrains.exposed.sql.vendors.metadata.MetadataProvider
 import java.math.BigDecimal
+import java.sql.SQLException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -103,6 +104,24 @@ class R2dbcDatabaseMetadataImpl(
 
     override val supportsSelectForUpdate: Boolean by lazy { metadata.propertyProvider.supportsSelectForUpdate }
 
+    override suspend fun supportsLimitWithUpdateOrDelete(): Boolean {
+        return when (currentDialect) {
+            is SQLiteDialect -> with(metadata) {
+                try {
+                    fetchMetadata(
+                        """SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");"""
+                    ) { r, _ ->
+                        r.getBoolean(1)
+                    }.single() == true
+                } catch (_: SQLException) {
+                    false
+                }
+            }
+            is PostgreSQLDialect -> false
+            else -> true
+        }
+    }
+
     override val identifierManager: IdentifierManagerApi by lazy {
         // db URL as KEY causes issues with multi-tenancy!
         identityManagerCache.getOrPut(database) { R2dbcIdentifierManager(metadata, connectionData) }
@@ -166,18 +185,6 @@ class R2dbcDatabaseMetadataImpl(
             row.getString("TABLE_SCHEM")
         }
     }.mapNotNull { name -> name?.let { identifierManager.inProperCase(it) } }
-
-    override suspend fun updateDeleteLimitEnabled(): Boolean {
-        if (currentDialect !is SQLiteDialect) return true
-
-        return with(metadata) {
-            fetchMetadata(
-                """SELECT sqlite_compileoption_used("ENABLE_UPDATE_DELETE_LIMIT");"""
-            ) { r, _ ->
-                r.getBoolean(1)
-            }.single() == true
-        }
-    }
 
     override suspend fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata {
         // since properties are not used, should this be cached

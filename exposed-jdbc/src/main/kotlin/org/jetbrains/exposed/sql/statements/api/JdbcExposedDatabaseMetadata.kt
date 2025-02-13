@@ -12,6 +12,7 @@ import java.math.BigDecimal
 /**
  * Base class responsible for retrieving and storing information about the JDBC driver and underlying database.
  */
+
 abstract class JdbcExposedDatabaseMetadata(database: String) : ExposedDatabaseMetadata(database) {
     /** The connection URL for the database. */
     abstract val url: String

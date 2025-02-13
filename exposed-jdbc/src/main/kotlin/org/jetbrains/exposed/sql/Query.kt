@@ -28,7 +28,7 @@ open class Query(
     }
 
     protected val transaction: JdbcTransaction
-        get() = TransactionManager.current() as JdbcTransaction
+        get() = TransactionManager.current()
 
     /** Creates a new [Query] instance using all stored properties of this `SELECT` query. */
     override fun copy(): Query = Query(set, where).also { copy ->

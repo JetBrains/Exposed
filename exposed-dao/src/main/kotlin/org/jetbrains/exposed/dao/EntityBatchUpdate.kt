@@ -2,6 +2,7 @@ package org.jetbrains.exposed.dao
 
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.BatchUpdateExecutable
 import org.jetbrains.exposed.sql.statements.BatchUpdateStatement
@@ -54,7 +55,7 @@ class EntityBatchUpdate(private val klass: EntityClass<*, Entity<*>>) {
         return updateSets.values.fold(0) { acc, set ->
             acc + BatchUpdateExecutable(BatchUpdateStatement(klass.table)).let {
                 it.statement.data.addAll(set)
-                it.execute(transaction)!!
+                it.execute(transaction as JdbcTransaction)!!
             }
         }
     }

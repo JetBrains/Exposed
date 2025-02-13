@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.closeStatementsAndConnection
 import org.jetbrains.exposed.sql.transactions.handleSQLException
@@ -41,7 +42,7 @@ internal class TransactionCoroutineElement(
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
-        val currentTransaction = TransactionManager.currentOrNull() as? JdbcTransaction
+        val currentTransaction = TransactionManager.currentOrNull()
         val currentManager = currentTransaction?.db?.transactionManager
         manager.bindTransactionToThread(newTransaction.value)
         TransactionManager.resetCurrent(manager)
@@ -107,14 +108,14 @@ suspend fun <T> suspendedTransactionAsync(
     readOnly: Boolean? = null,
     statement: suspend JdbcTransaction.() -> T
 ): Deferred<T> {
-    val currentTransaction = TransactionManager.currentOrNull() as? JdbcTransaction
+    val currentTransaction = TransactionManager.currentOrNull()
     return withTransactionScope(context, null, db, transactionIsolation, readOnly) {
         suspendedTransactionAsyncInternal(!holdsSameTransaction(currentTransaction), statement)
     }
 }
 
 private fun JdbcTransaction.closeAsync() {
-    val currentTransaction = TransactionManager.currentOrNull() as? JdbcTransaction
+    val currentTransaction = TransactionManager.currentOrNull()
     try {
         val temporaryManager = this.db.transactionManager
         temporaryManager.bindTransactionToThread(this)
@@ -141,14 +142,14 @@ private suspend fun <T> withTransactionScope(
     suspend fun newScope(currentTransaction: JdbcTransaction?): T {
         val currentDatabase: Database? = currentTransaction?.db
             ?: db
-            ?: TransactionManager.currentDefaultDatabase.get() as? Database
+            ?: CoreTransactionManager.getDefaultDatabase() as? Database
         val manager = currentDatabase?.transactionManager ?: TransactionManager.manager
 
         val tx = lazy(LazyThreadSafetyMode.NONE) {
             currentTransaction ?: manager.newTransaction(
                 isolation = transactionIsolation ?: manager.defaultIsolationLevel,
                 readOnly = readOnly ?: manager.defaultReadOnly
-            ) as JdbcTransaction
+            )
         }
 
         val element = TransactionCoroutineElement(tx, manager)

@@ -28,8 +28,8 @@ interface R2dbcTransactionInterface : TransactionInterface {
  * @throws [RuntimeException] If a manager has not been registered for the database.
  */
 @Suppress("TooGenericExceptionThrown")
-val R2dbcDatabase?.transactionManager: R2dbcTransactionManager
-    get() = TransactionManager.managerFor(this) as R2dbcTransactionManager
+val R2dbcDatabase?.transactionManager: TransactionManager
+    get() = TransactionManager.managerFor(this)
         ?: throw RuntimeException("Database $this does not have any transaction manager")
 
 @Suppress("TooGenericExceptionCaught")

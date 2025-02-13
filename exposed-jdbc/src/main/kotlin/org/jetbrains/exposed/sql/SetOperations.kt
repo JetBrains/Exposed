@@ -31,7 +31,7 @@ sealed class SetOperation(
     override val statement: SetOperation = this
 
     protected val transaction: JdbcTransaction
-        get() = TransactionManager.current() as JdbcTransaction
+        get() = TransactionManager.current()
 
     /** The SQL statement on the left-hand side of the set operator. */
     val firstStatement: AbstractQuery<*> = when (_firstStatement) {

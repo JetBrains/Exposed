@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.statements.api.ResultApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
@@ -230,7 +230,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
             }
             if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
                 append(" FROM ")
-                set.source.describe(TransactionManager.current(), this)
+                set.source.describe(CoreTransactionManager.currentTransaction(), this)
             }
 
             where?.let {

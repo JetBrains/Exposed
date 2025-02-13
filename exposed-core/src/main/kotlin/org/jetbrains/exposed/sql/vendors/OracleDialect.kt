@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.DELETE
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.INSERT
 import org.jetbrains.exposed.sql.statements.MergeStatement.ClauseAction.UPDATE
 import org.jetbrains.exposed.sql.statements.StatementType
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import java.util.*
 
 @Suppress("TooManyFunctions")
@@ -127,7 +127,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expr: GroupConcat<T>,
         queryBuilder: QueryBuilder
     ): Unit = queryBuilder {
-        val tr = TransactionManager.current()
+        val tr = CoreTransactionManager.currentTransaction()
         if (expr.distinct) tr.throwUnsupportedException("Oracle doesn't support DISTINCT in LISTAGG")
         if (expr.orderBy.size > 1) {
             tr.throwUnsupportedException("Oracle supports only single column in ORDER BY clause in LISTAGG")
@@ -203,7 +203,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         if (path.size > 1) {
-            TransactionManager.current().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+            CoreTransactionManager.currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
         queryBuilder {
             append(if (toScalar) "JSON_VALUE" else "JSON_QUERY")
@@ -221,7 +221,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         if (path.size > 1) {
-            TransactionManager.current().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
+            CoreTransactionManager.currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
         queryBuilder {
             append("JSON_EXISTS(", expression, ", ")
@@ -264,7 +264,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         +"SELECT "
         columnsToSelect.values.appendTo { +it }
         +" FROM "
-        targets.describe(TransactionManager.current(), this)
+        targets.describe(CoreTransactionManager.currentTransaction(), this)
         where?.let {
             +" WHERE "
             +it
@@ -350,7 +350,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
             +"DELETE (SELECT "
             tableToDelete.columns.appendTo { +it }
             +" FROM "
-            targets.describe(TransactionManager.current(), this)
+            targets.describe(CoreTransactionManager.currentTransaction(), this)
             where?.let {
                 +" WHERE "
                 +it

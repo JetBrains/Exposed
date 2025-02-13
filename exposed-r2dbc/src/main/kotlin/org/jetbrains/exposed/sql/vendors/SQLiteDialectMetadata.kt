@@ -1,3 +1,9 @@
 package org.jetbrains.exposed.sql.vendors
 
-open class SQLiteDialectMetadata : DatabaseDialectMetadata()
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+
+open class SQLiteDialectMetadata : DatabaseDialectMetadata() {
+    override suspend fun supportsLimitWithUpdateOrDelete(): Boolean {
+        return TransactionManager.current().db.metadata { supportsLimitWithUpdateOrDelete() }
+    }
+}

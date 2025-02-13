@@ -17,7 +17,7 @@ open class ExplainExecutable(
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): R2dbcResult = executeQuery()
 
     override suspend fun collect(collector: FlowCollector<ExplainResultRow>) {
-        val rs = ((TransactionManager.current() as R2dbcTransaction).exec(this)!! as R2dbcResult)
+        val rs = TransactionManager.current().exec(this)!! as R2dbcResult
         // how to iterate over fields in a Row/RowMetadata?
 //        val fieldIndex: Map<String, Int> = List(rs.result.columnCount) { i ->
 //            rs.metaData.getColumnName(i + 1) to i

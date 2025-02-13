@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.statements
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.R2dbcTransaction
-import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import java.sql.SQLException
 
@@ -37,8 +36,7 @@ interface Executable<out T, S : Statement<T>> {
      * Executes the SQL statement directly in the provided [transaction] and returns the generated result,
      * or `null` if either no result was retrieved or if the transaction blocked statement execution.
      */
-    suspend fun execute(transaction: Transaction): T? {
-        transaction as R2dbcTransaction
+    suspend fun execute(transaction: R2dbcTransaction): T? {
         return if (transaction.blockStatementExecution) {
             transaction.explainStatement = statement
             null

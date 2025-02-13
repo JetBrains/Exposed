@@ -5,7 +5,7 @@ import kotlinx.coroutines.ThreadContextElement
 import org.jetbrains.exposed.sql.R2dbcTransaction
 import kotlin.coroutines.CoroutineContext
 
-internal class TransactionContext(val manager: R2dbcTransactionManager?, val transaction: R2dbcTransaction?)
+internal class TransactionContext(val manager: TransactionManager?, val transaction: R2dbcTransaction?)
 
 internal class TransactionScope(
     val tx: Lazy<R2dbcTransaction>,
@@ -22,13 +22,13 @@ internal class TransactionScope(
 
 internal class TransactionCoroutineElement(
     private val newTransaction: Lazy<R2dbcTransaction>,
-    val manager: R2dbcTransactionManager
+    val manager: TransactionManager
 ) : ThreadContextElement<TransactionContext> {
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
-        val currentTransaction = TransactionManager.currentOrNull() as? R2dbcTransaction
-        val currentManager = currentTransaction?.db?.transactionManager as? R2dbcTransactionManager
+        val currentTransaction = TransactionManager.currentOrNull()
+        val currentManager = currentTransaction?.db?.transactionManager
         manager.bindTransactionToThread(newTransaction.value)
         TransactionManager.resetCurrent(manager)
         return TransactionContext(currentManager, currentTransaction)

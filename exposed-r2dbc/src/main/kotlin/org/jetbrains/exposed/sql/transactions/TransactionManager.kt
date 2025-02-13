@@ -23,10 +23,10 @@ import kotlin.coroutines.coroutineContext
  * [setupTxConnection] can be provided to override the default configuration of transaction settings when a
  * connection is retrieved from the database.
  */
-class R2dbcTransactionManager(
+class TransactionManager(
     private val db: R2dbcDatabase,
     private val setupTxConnection: ((R2dbcExposedConnection<*>, R2dbcTransactionInterface) -> Unit)? = null
-) : TransactionManager {
+) : TransactionManagerApi {
     override var defaultMaxAttempts: Int = db.config.defaultMaxAttempts
 
     override var defaultMinRetryDelay: Long = db.config.defaultMinRetryDelay
@@ -68,6 +68,83 @@ class R2dbcTransactionManager(
             threadLocal.set(transaction as R2dbcTransaction)
         } else {
             threadLocal.remove()
+        }
+    }
+
+    companion object {
+        /**
+         * The database to use by default in all transactions.
+         *
+         * **Note** If this value is not set, the last [R2dbcDatabase] instance created will be used.
+         */
+        var defaultDatabase: R2dbcDatabase?
+            @Synchronized
+            @OptIn(InternalApi::class)
+            get() = CoreTransactionManager.getDefaultDatabaseOrFirst() as? R2dbcDatabase
+
+            @Synchronized
+            @OptIn(InternalApi::class)
+            set(value) { CoreTransactionManager.setDefaultDatabase(value) }
+
+        /** Associates the provided [database] with a specific [manager]. */
+        @Synchronized
+        fun registerManager(database: R2dbcDatabase, manager: TransactionManager) {
+            @OptIn(InternalApi::class)
+            CoreTransactionManager.registerDatabaseManager(database, manager)
+        }
+
+        /**
+         * Clears any association between the provided [database] and its [TransactionManager],
+         * and ensures that the [database] instance will not be available for use in future transactions.
+         */
+        @Synchronized
+        fun closeAndUnregister(database: R2dbcDatabase) {
+            @OptIn(InternalApi::class)
+            CoreTransactionManager.closeAndUnregisterDatabase(database)
+        }
+
+        /**
+         * Returns the [TransactionManager] instance that is associated with the provided [database],
+         * or `null` if  a manager has not been registered for the [database].
+         *
+         * **Note** If the provided [database] is `null`, this will return the current thread's [TransactionManager]
+         * instance, which may not be initialized if `Database.connect()` was not called at some point previously.
+         */
+        fun managerFor(database: R2dbcDatabase?): TransactionManager? = if (database != null) {
+            @OptIn(InternalApi::class)
+            CoreTransactionManager.getDatabaseManager(database) as? TransactionManager
+        } else {
+            manager
+        }
+
+        /** The current thread's [TransactionManager] instance. */
+        val manager: TransactionManager
+            @OptIn(InternalApi::class)
+            get() = CoreTransactionManager.getCurrentThreadManager() as TransactionManager
+
+        /** Sets the current thread's copy of the [TransactionManager] instance to the specified [manager]. */
+        fun resetCurrent(manager: TransactionManager?) {
+            @OptIn(InternalApi::class)
+            CoreTransactionManager.resetCurrentThreadManager(manager)
+        }
+
+        /** Returns the current [Transaction], or creates a new transaction with the provided [isolation] level. */
+        fun currentOrNew(isolation: Int): R2dbcTransaction = currentOrNull() ?: manager.newTransaction(isolation)
+
+        /** Returns the current [Transaction], or `null` if none exists. */
+        fun currentOrNull(): R2dbcTransaction? = manager.currentOrNull()
+
+        /**
+         * Returns the current [Transaction].
+         *
+         * @throws [IllegalStateException] If no transaction exists.
+         */
+        fun current(): R2dbcTransaction = currentOrNull() ?: error("No transaction in context.")
+
+        /** Whether any [TransactionManager] instance has been initialized by a database. */
+        fun isInitialized(): Boolean {
+            @OptIn(InternalApi::class)
+            return CoreTransactionManager.getDefaultDatabaseOrFirst() != null
         }
     }
 
@@ -200,14 +277,14 @@ suspend fun <T> suspendTransactionAsync(
     transactionIsolation: Int? = null,
     statement: suspend R2dbcTransaction.() -> T
 ): Deferred<T> {
-    val currentTransaction = TransactionManager.currentOrNull() as? R2dbcTransaction
+    val currentTransaction = TransactionManager.currentOrNull()
     return withTransactionScope(context, null, db, transactionIsolation) {
         suspendedTransactionAsyncInternal(!holdsSameTransaction(currentTransaction), statement)
     }
 }
 
 private suspend fun R2dbcTransaction.closeAsync() {
-    val currentTransaction = TransactionManager.currentOrNull() as? R2dbcTransaction
+    val currentTransaction = TransactionManager.currentOrNull()
     try {
         val temporaryManager = this.db.transactionManager
         temporaryManager.bindTransactionToThread(this)
@@ -231,15 +308,10 @@ private suspend fun <T> withTransactionScope(
 
     @OptIn(InternalApi::class)
     suspend fun newScope(currentTransaction: R2dbcTransaction?): T {
-        val currentDatabase: R2dbcDatabase? = (
-            currentTransaction?.db
-                ?: db
-                ?: TransactionManager.currentDefaultDatabase.get()
-            ) as? R2dbcDatabase
-        val manager = (
-            currentDatabase?.transactionManager
-                ?: TransactionManager.manager
-            ) as R2dbcTransactionManager
+        val currentDatabase: R2dbcDatabase? = currentTransaction?.db
+            ?: db
+            ?: CoreTransactionManager.getDefaultDatabase() as? R2dbcDatabase
+        val manager = currentDatabase?.transactionManager ?: TransactionManager.manager
 
         val tx = lazy(LazyThreadSafetyMode.NONE) {
             currentTransaction ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel)
@@ -265,7 +337,7 @@ private suspend fun R2dbcTransaction.resetIfClosed(): R2dbcTransaction {
     return if (connection.isClosed()) {
         // Repetition attempts will throw org.h2.jdbc.JdbcSQLException: The object is already closed
         // unless the transaction is reset before every attempt (after the 1st failed attempt)
-        val currentManager = db.transactionManager as R2dbcTransactionManager
+        val currentManager = db.transactionManager
         currentManager.bindTransactionToThread(this)
         TransactionManager.resetCurrent(currentManager)
         currentManager.newTransaction(transactionIsolation, readOnly, outerTransaction)

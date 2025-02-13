@@ -29,7 +29,7 @@ class TransactionStore<T : Any>(val init: (Transaction.() -> T)? = null) : ReadW
     private val key = Key<T>()
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): T? {
-        val currentOrNullTransaction = TransactionManager.currentOrNull()
+        val currentOrNullTransaction = CoreTransactionManager.currentTransactionOrNull()
         return currentOrNullTransaction?.getUserData(key)
             ?: init?.let {
                 val value = currentOrNullTransaction?.it() ?: error("Can't init value outside the transaction")
@@ -39,7 +39,7 @@ class TransactionStore<T : Any>(val init: (Transaction.() -> T)? = null) : ReadW
     }
 
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T?) {
-        TransactionManager.currentOrNull()?.let {
+        CoreTransactionManager.currentTransactionOrNull()?.let {
             if (value == null) {
                 it.removeUserData(key)
             } else {
