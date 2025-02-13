@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicReference
 
-private object NotInitializedManager : TransactionManagerApi {
+private object NotInitializedTransactionManager : TransactionManagerApi {
     override var defaultIsolationLevel: Int = -1
 
     override var defaultReadOnly: Boolean = false
@@ -72,7 +72,7 @@ interface TransactionManagerApi {
  * and its transaction manager.
  */
 @InternalApi
-object CoreManager {
+object CoreTransactionManager {
     private val databases = ConcurrentLinkedDeque<DatabaseApi>()
 
     private val currentDefaultDatabase = AtomicReference<DatabaseApi>()
@@ -131,7 +131,7 @@ object CoreManager {
 
         override fun initialValue(): TransactionManagerApi {
             isInitialized = true
-            return getDefaultDatabaseOrFirst()?.let { registeredDatabases.getValue(it) } ?: NotInitializedManager
+            return getDefaultDatabaseOrFirst()?.let { registeredDatabases.getValue(it) } ?: NotInitializedTransactionManager
         }
 
         override fun set(value: TransactionManagerApi?) {

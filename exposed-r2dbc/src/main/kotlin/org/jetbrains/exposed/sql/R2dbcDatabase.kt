@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.statements.api.R2dbcExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcConnectionImpl
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcScope
 import org.jetbrains.exposed.sql.statements.r2dbc.asInt
-import org.jetbrains.exposed.sql.transactions.CoreManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManagerApi
 import org.jetbrains.exposed.sql.vendors.*
@@ -141,7 +141,7 @@ class R2dbcDatabase private constructor(
             return R2dbcDatabase(url, config ?: DatabaseConfig.invoke()) {
                 R2dbcConnectionImpl(explicitVendor, getNewConnection(), R2dbcScope(dispatcher))
             }.apply {
-                CoreManager.registerDatabaseManager(this, manager(this))
+                CoreTransactionManager.registerDatabaseManager(this, manager(this))
                 // ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
                 // TransactionManager.registerManager(this, manager(this))
             }

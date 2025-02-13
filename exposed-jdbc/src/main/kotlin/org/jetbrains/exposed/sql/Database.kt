@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.statements.api.JdbcExposedDatabaseMetadata
-import org.jetbrains.exposed.sql.transactions.CoreManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManagerApi
 import org.jetbrains.exposed.sql.vendors.*
@@ -178,7 +178,7 @@ class Database private constructor(
             return Database(explicitVendor, config ?: DatabaseConfig.invoke()) {
                 connectionAutoRegistration(getNewConnection().apply { setupConnection(this) })
             }.apply {
-                CoreManager.registerDatabaseManager(this, manager(this))
+                CoreTransactionManager.registerDatabaseManager(this, manager(this))
                 // ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
                 // TransactionManager.registerManager(this, manager(this))
             }

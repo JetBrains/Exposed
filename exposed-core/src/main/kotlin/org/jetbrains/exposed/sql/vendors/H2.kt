@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementType
-import org.jetbrains.exposed.sql.transactions.CoreManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import java.util.*
 
 internal object H2DataTypeProvider : DataTypeProvider() {
@@ -29,7 +29,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         get() = h2Mode == H2Dialect.H2CompatibilityMode.Oracle
 
     override fun nextVal(seq: Sequence, builder: QueryBuilder) =
-        when ((CoreManager.currentTransaction().db.dialect as H2Dialect).majorVersion) {
+        when ((CoreTransactionManager.currentTransaction().db.dialect as H2Dialect).majorVersion) {
             H2Dialect.H2MajorVersion.One -> super.nextVal(seq, builder)
             H2Dialect.H2MajorVersion.Two -> builder {
                 append("NEXT VALUE FOR ${seq.identifier}")
@@ -203,7 +203,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     }
 
     internal val version by lazy {
-        exactH2Version(CoreManager.currentTransaction())
+        exactH2Version(CoreTransactionManager.currentTransaction())
     }
 
     val majorVersion: H2MajorVersion by lazy {
@@ -263,7 +263,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     /** The H2 database compatibility mode retrieved from metadata. */
     val h2Mode: H2CompatibilityMode? by lazy {
-        val modeValue = CoreManager.currentTransaction().db.dialectMode
+        val modeValue = CoreTransactionManager.currentTransaction().db.dialectMode
         when {
             modeValue == null -> null
             modeValue.equals("MySQL", ignoreCase = true) -> H2CompatibilityMode.MySQL

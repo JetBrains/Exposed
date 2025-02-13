@@ -98,17 +98,17 @@ class TransactionManager(
         var defaultDatabase: Database?
             @Synchronized
             @OptIn(InternalApi::class)
-            get() = CoreManager.getDefaultDatabaseOrFirst() as? Database
+            get() = CoreTransactionManager.getDefaultDatabaseOrFirst() as? Database
 
             @Synchronized
             @OptIn(InternalApi::class)
-            set(value) { CoreManager.setDefaultDatabase(value) }
+            set(value) { CoreTransactionManager.setDefaultDatabase(value) }
 
         /** Associates the provided [database] with a specific [manager]. */
         @Synchronized
         fun registerManager(database: Database, manager: TransactionManager) {
             @OptIn(InternalApi::class)
-            CoreManager.registerDatabaseManager(database, manager)
+            CoreTransactionManager.registerDatabaseManager(database, manager)
         }
 
         /**
@@ -118,7 +118,7 @@ class TransactionManager(
         @Synchronized
         fun closeAndUnregister(database: Database) {
             @OptIn(InternalApi::class)
-            CoreManager.closeAndUnregisterDatabase(database)
+            CoreTransactionManager.closeAndUnregisterDatabase(database)
         }
 
         /**
@@ -130,7 +130,7 @@ class TransactionManager(
          */
         fun managerFor(database: Database?): TransactionManager? = if (database != null) {
             @OptIn(InternalApi::class)
-            CoreManager.getDatabaseManager(database) as? TransactionManager
+            CoreTransactionManager.getDatabaseManager(database) as? TransactionManager
         } else {
             manager
         }
@@ -138,12 +138,12 @@ class TransactionManager(
         /** The current thread's [TransactionManager] instance. */
         val manager: TransactionManager
             @OptIn(InternalApi::class)
-            get() = CoreManager.getCurrentThreadManager() as TransactionManager
+            get() = CoreTransactionManager.getCurrentThreadManager() as TransactionManager
 
         /** Sets the current thread's copy of the [TransactionManager] instance to the specified [manager]. */
         fun resetCurrent(manager: TransactionManager?) {
             @OptIn(InternalApi::class)
-            CoreManager.resetCurrentThreadManager(manager)
+            CoreTransactionManager.resetCurrentThreadManager(manager)
         }
 
         /** Returns the current [Transaction], or creates a new transaction with the provided [isolation] level. */
@@ -162,7 +162,7 @@ class TransactionManager(
         /** Whether any [TransactionManager] instance has been initialized by a database. */
         fun isInitialized(): Boolean {
             @OptIn(InternalApi::class)
-            return CoreManager.getDefaultDatabaseOrFirst() != null
+            return CoreTransactionManager.getDefaultDatabaseOrFirst() != null
         }
     }
 

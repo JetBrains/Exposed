@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.CoreManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import java.math.BigDecimal
 
 internal open class MysqlDataTypeProvider : DataTypeProvider() {
@@ -166,7 +166,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     ) {
         val oneOrAll = optional?.lowercase()
         if (oneOrAll != "one" && oneOrAll != "all") {
-            CoreManager.currentTransaction().throwUnsupportedException("MySQL requires a single optional argument: 'one' or 'all'")
+            CoreTransactionManager.currentTransaction().throwUnsupportedException("MySQL requires a single optional argument: 'one' or 'all'")
         }
         queryBuilder {
             append("JSON_CONTAINS_PATH(", expression, ", ")
@@ -320,7 +320,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 
     override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String {
         if (size == null && offset > 0) {
-            CoreManager.currentTransaction().throwUnsupportedException(
+            CoreTransactionManager.currentTransaction().throwUnsupportedException(
                 "${currentDialect.name} doesn't support OFFSET clause without LIMIT"
             )
         }
@@ -338,11 +338,11 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTANCE, MysqlFunctionProvider.INSTANCE) {
 
     internal val isMysql8: Boolean by lazy {
-        CoreManager.currentTransaction().db.isVersionCovers(BigDecimal("8.0"))
+        CoreTransactionManager.currentTransaction().db.isVersionCovers(BigDecimal("8.0"))
     }
 
     internal val fullVersion: String by lazy {
-        CoreManager.currentTransaction().db.fullVersion
+        CoreTransactionManager.currentTransaction().db.fullVersion
     }
 
     override val supportsCreateSequence: Boolean = false
@@ -357,7 +357,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
 
     /** Returns `true` if the MySQL database version is greater than or equal to 5.6. */
     @Suppress("MagicNumber")
-    open fun isFractionDateTimeSupported(): Boolean = CoreManager.currentTransaction().db.isVersionCovers(5, 6)
+    open fun isFractionDateTimeSupported(): Boolean = CoreTransactionManager.currentTransaction().db.isVersionCovers(5, 6)
 
     /** Returns `true` if a MySQL database is being used and its version is greater than or equal to 8.0. */
     open fun isTimeZoneOffsetSupported(): Boolean = isMysql8

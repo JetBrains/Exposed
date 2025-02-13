@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.exposedLogger
-import org.jetbrains.exposed.sql.transactions.CoreManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.closeStatementsAndConnection
 import org.jetbrains.exposed.sql.transactions.handleSQLException
@@ -142,7 +142,7 @@ private suspend fun <T> withTransactionScope(
     suspend fun newScope(currentTransaction: JdbcTransaction?): T {
         val currentDatabase: Database? = currentTransaction?.db
             ?: db
-            ?: CoreManager.getDefaultDatabase() as? Database
+            ?: CoreTransactionManager.getDefaultDatabase() as? Database
         val manager = currentDatabase?.transactionManager ?: TransactionManager.manager
 
         val tx = lazy(LazyThreadSafetyMode.NONE) {

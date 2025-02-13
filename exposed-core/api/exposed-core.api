@@ -3359,8 +3359,8 @@ public abstract interface class org/jetbrains/exposed/sql/statements/api/ResultA
 	public abstract fun releaseResult ()V
 }
 
-public final class org/jetbrains/exposed/sql/transactions/CoreManager {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/transactions/CoreManager;
+public final class org/jetbrains/exposed/sql/transactions/CoreTransactionManager {
+	public static final field INSTANCE Lorg/jetbrains/exposed/sql/transactions/CoreTransactionManager;
 	public final fun closeAndUnregisterDatabase (Lorg/jetbrains/exposed/sql/DatabaseApi;)V
 	public final fun currentTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
 	public final fun currentTransactionOrNull ()Lorg/jetbrains/exposed/sql/Transaction;

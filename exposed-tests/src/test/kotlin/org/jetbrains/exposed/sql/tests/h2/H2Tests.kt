@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.sql.transactions.CoreManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManagerApi
 import org.jetbrains.exposed.sql.transactions.transactionManager
@@ -72,7 +72,7 @@ class H2Tests : DatabaseTestsBase() {
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
                 @OptIn(InternalApi::class)
-                CoreManager.registerDatabaseManager(db, WrappedTransactionManager(db.transactionManager))
+                CoreTransactionManager.registerDatabaseManager(db, WrappedTransactionManager(db.transactionManager))
                 Executors.newSingleThreadExecutor().apply {
                     submit { TransactionManager.closeAndUnregister(db) }
                         .get(1, TimeUnit.SECONDS)

@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.sql.statements.api
 
-import org.jetbrains.exposed.sql.transactions.CoreManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.ANSI_SQL_2003_KEYWORDS
 import org.jetbrains.exposed.sql.vendors.VENDORS_KEYWORDS
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -76,7 +76,7 @@ abstract class IdentifierManagerApi {
         level = DeprecationLevel.WARNING
     )
     private val shouldPreserveKeywordCasing by lazy {
-        CoreManager.currentTransactionOrNull()?.db?.config?.preserveKeywordCasing == true
+        CoreTransactionManager.currentTransactionOrNull()?.db?.config?.preserveKeywordCasing == true
     }
 
     /** Returns whether an SQL token should be wrapped in quotations and caches the returned value. */

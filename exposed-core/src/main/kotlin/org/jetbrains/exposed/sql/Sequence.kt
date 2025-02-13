@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.transactions.CoreManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 /**
@@ -27,7 +27,7 @@ class Sequence(
 ) {
     /** This name of this sequence in proper database casing. */
     val identifier: String
-        get() = CoreManager.currentTransaction().db.identifierManager.cutIfNecessaryAndQuote(name)
+        get() = CoreTransactionManager.currentTransaction().db.identifierManager.cutIfNecessaryAndQuote(name)
 
     override fun toString(): String = "Sequence(identifier=$identifier)"
 

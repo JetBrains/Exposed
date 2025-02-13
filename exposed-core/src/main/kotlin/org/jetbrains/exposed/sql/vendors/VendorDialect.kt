@@ -2,7 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.transactions.CoreManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 
 /**
  * Base implementation of a vendor dialect
@@ -14,7 +14,7 @@ abstract class VendorDialect(
 ) : DatabaseDialect {
 
     protected val identifierManager
-        get() = CoreManager.currentTransaction().db.identifierManager
+        get() = CoreTransactionManager.currentTransaction().db.identifierManager
 
     @Suppress("UnnecessaryAbstractClass")
     abstract class DialectNameProvider(val dialectName: String)
@@ -56,7 +56,7 @@ abstract class VendorDialect(
      * Unique indexes can be partial
      */
     override fun createIndex(index: Index): String {
-        val t = CoreManager.currentTransaction()
+        val t = CoreTransactionManager.currentTransaction()
         val quotedTableName = t.identity(index.table)
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
         val keyFields = index.columns.plus(index.functions ?: emptyList())
@@ -107,10 +107,10 @@ abstract class VendorDialect(
     }
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
-        listOf("ALTER TABLE ${CoreManager.currentTransaction().identity(column.table)} MODIFY COLUMN ${column.descriptionDdl(true)}")
+        listOf("ALTER TABLE ${CoreTransactionManager.currentTransaction().identity(column.table)} MODIFY COLUMN ${column.descriptionDdl(true)}")
 
     override fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String {
-        val transaction = CoreManager.currentTransaction()
+        val transaction = CoreTransactionManager.currentTransaction()
         val columns = pkColumns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) }
         val constraint = pkName?.let { " CONSTRAINT ${identifierManager.quoteIfNecessary(it)} " } ?: " "
         return "ALTER TABLE ${transaction.identity(table)} ADD${constraint}PRIMARY KEY $columns"

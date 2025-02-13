@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.transactions.CoreManager
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 /**
@@ -26,7 +26,7 @@ data class Schema(
 ) {
     /** This schema's name in proper database casing. */
     val identifier
-        get() = CoreManager.currentTransaction().db.identifierManager.cutIfNecessaryAndQuote(name)
+        get() = CoreTransactionManager.currentTransaction().db.identifierManager.cutIfNecessaryAndQuote(name)
 
     /** The SQL statements that create this schema. */
     val ddl: List<String>
