@@ -7,11 +7,13 @@ data class ColumnMetadata(
     /** Name of the column. */
     val name: String,
     /**
-     * Type of the column.
+     * JDBC type of the column.
      *
      * @see java.sql.Types
      */
-    val type: Int,
+    val jdbcType: Int,
+    /** SQL type of the column. */
+    val sqlType: String,
     /** Whether the column is nullable or not. */
     val nullable: Boolean,
     /** Optional size of the column. */

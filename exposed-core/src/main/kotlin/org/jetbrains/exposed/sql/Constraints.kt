@@ -219,7 +219,7 @@ data class CheckConstraint(
     }
 
     companion object {
-        internal fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
+        fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank()) { "Check constraint name cannot be blank" }
             val tr = TransactionManager.current()
             val identifierManager = tr.db.identifierManager

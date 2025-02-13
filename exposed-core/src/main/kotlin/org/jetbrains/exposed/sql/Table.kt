@@ -529,6 +529,57 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     private val generatedSignedCheckPrefix
         get() = "chk_${tableNameWithSchemaSanitized}_signed_"
 
+    private fun filteredCheckConstraints(): List<CheckConstraint> {
+        val filteredChecks = when (val dialect = currentDialect) {
+            is MysqlDialect -> checkConstraints.filterNot { (name, _) ->
+                name.startsWith(generatedUnsignedCheckPrefix) ||
+                    name.startsWith(generatedSignedCheckPrefix)
+            }
+            is SQLServerDialect -> checkConstraints.filterNot { (name, _) ->
+                name.startsWith("${generatedUnsignedCheckPrefix}byte_") ||
+                    name.startsWith("${generatedSignedCheckPrefix}short")
+            }
+            is PostgreSQLDialect -> checkConstraints.filterNot { (name, _) ->
+                name.startsWith("${generatedSignedCheckPrefix}short")
+            }
+            is H2Dialect -> {
+                when (dialect.h2Mode) {
+                    H2Dialect.H2CompatibilityMode.PostgreSQL -> checkConstraints.filterNot { (name, _) ->
+                        name.startsWith("${generatedSignedCheckPrefix}short")
+                    }
+
+                    else -> checkConstraints.filterNot { (name, _) ->
+                        name.startsWith(generatedSignedCheckPrefix)
+                    }
+                }
+            }
+            else -> checkConstraints
+        }.let {
+            if (currentDialect !is SQLiteDialect && currentDialect !is OracleDialect) {
+                it.filterNot { (name, _) ->
+                    name.startsWith("${generatedSignedCheckPrefix}integer")
+                }
+            } else {
+                it
+            }
+        }.let {
+            if (currentDialect !is OracleDialect) {
+                it.filterNot { (name, _) ->
+                    name.startsWith("${generatedSignedCheckPrefix}long")
+                }
+            } else {
+                it
+            }
+        }
+        return filteredChecks.mapIndexed { index, (name, op) ->
+            val resolvedName = name.ifBlank { "check_${tableNameWithSchemaSanitized}_$index" }
+            CheckConstraint.from(this@Table, resolvedName, op)
+        }
+    }
+
+    /** Returns the list of CHECK constraints in this table. */
+    fun checkConstraints(): List<CheckConstraint> = filteredCheckConstraints()
+
     /**
      * Returns the table name in proper case.
      * Should be called within transaction or default [tableName] will be returned.
@@ -1723,51 +1774,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
                 }
 
                 if (checkConstraints.isNotEmpty()) {
-                    val filteredChecks = when (val dialect = currentDialect) {
-                        is MysqlDialect -> checkConstraints.filterNot { (name, _) ->
-                            name.startsWith(generatedUnsignedCheckPrefix) ||
-                                name.startsWith(generatedSignedCheckPrefix)
-                        }
-                        is SQLServerDialect -> checkConstraints.filterNot { (name, _) ->
-                            name.startsWith("${generatedUnsignedCheckPrefix}byte_") ||
-                                name.startsWith("${generatedSignedCheckPrefix}short")
-                        }
-                        is PostgreSQLDialect -> checkConstraints.filterNot { (name, _) ->
-                            name.startsWith("${generatedSignedCheckPrefix}short")
-                        }
-                        is H2Dialect -> {
-                            when (dialect.h2Mode) {
-                                H2Dialect.H2CompatibilityMode.PostgreSQL -> checkConstraints.filterNot { (name, _) ->
-                                    name.startsWith("${generatedSignedCheckPrefix}short")
-                                }
-
-                                else -> checkConstraints.filterNot { (name, _) ->
-                                    name.startsWith(generatedSignedCheckPrefix)
-                                }
-                            }
-                        }
-                        else -> checkConstraints
-                    }.let {
-                        if (currentDialect !is SQLiteDialect && currentDialect !is OracleDialect) {
-                            it.filterNot { (name, _) ->
-                                name.startsWith("${generatedSignedCheckPrefix}integer")
-                            }
-                        } else {
-                            it
-                        }
-                    }.let {
-                        if (currentDialect !is OracleDialect) {
-                            it.filterNot { (name, _) ->
-                                name.startsWith("${generatedSignedCheckPrefix}long")
-                            }
-                        } else {
-                            it
-                        }
-                    }.ifEmpty { null }
-                    filteredChecks?.mapIndexed { index, (name, op) ->
-                        val resolvedName = name.ifBlank { "check_${tableNameWithSchemaSanitized}_$index" }
-                        CheckConstraint.from(this@Table, resolvedName, op).checkPart
-                    }?.joinTo(this, prefix = ", ")
+                    filteredCheckConstraints().map { it.checkPart }.ifEmpty { null }?.joinTo(this, prefix = ", ")
                 }
 
                 append(")")
