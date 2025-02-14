@@ -17,7 +17,6 @@ import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.AbstractPlatformTransactionManager
 import org.springframework.transaction.support.DefaultTransactionStatus
 import org.springframework.transaction.support.TransactionSynchronizationManager
-import org.springframework.transaction.support.TransactionSynchronizationUtils
 import java.sql.Connection
 import javax.sql.DataSource
 
@@ -257,7 +256,7 @@ class SpringTransactionManager(
         override fun isRollbackOnly() = isRollback
 
         override fun flush() {
-            TransactionSynchronizationUtils.triggerFlush()
+            // Do nothing
         }
     }
 
