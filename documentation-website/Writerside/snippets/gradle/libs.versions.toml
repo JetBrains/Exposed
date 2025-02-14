@@ -6,7 +6,11 @@ guava = "33.0.0-jre"
 junit-jupiter-engine = "5.10.2"
 exposed = "0.58.0"
 h2 = "2.2.224"
+mysql ="8.0.33"
+postgres = "42.7.3"
 slf4j = "2.0.16"
+jackson = "2.18.+"
+kotlin = "2.1.0"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
@@ -15,8 +19,13 @@ exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "e
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
-h2 = { module = "com.h2database:h2", version.ref = "h2"}
-slf4j = {module = "org.slf4j:slf4j-nop", version.ref = "slf4j"}
+exposed-json = { module= "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+mysql = { module = "mysql:mysql-connector-java", version.ref = "mysql"}
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres"}
+slf4j = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
+jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 
 [plugins]
 jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.1.0" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Basic data types" id="Basic-data-types">
+     <p>Basic data types include numeric, boolean, string and text types.</p>
+    <deflist type="medium">
+        <def id="integer-type">
+            <title><code>integer</code></title>
+            <code>INT</code>
+        </def>
+        <def id="short-type">
+            <title><code>short</code></title>
+            <code>SMALLINT</code>
+        </def>
+        <def id="long-type">
+            <title><code>long</code></title>
+            <code>BIGINT</code>
+        </def>
+        <def id="float-type">
+            <title><code>float</code></title>
+            <code>FLOAT</code>
+        </def>
+        <def id="decimal-type">
+            <title><code>decimal</code></title>
+            <code>DECIMAL</code> with scale and precision
+        </def>
+        <def id="bool-type">
+            <title><code>bool</code></title>
+            <code>BOOLEAN</code>
+        </def>
+        <def id="char-type">
+            <title><code>char</code></title>
+            <code>CHAR</code>
+        </def>
+        <def id="varchar-type">
+            <title><code>varchar</code></title>
+            <code>VARCHAR</code> with length
+        </def>
+        <def id="text-type">
+            <title><code>text</code></title>
+            <code>TEXT</code>
+        </def>
+    </deflist>
+</topic>

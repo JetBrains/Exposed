@@ -1,7 +1,7 @@
 # Exposed data types examples
 
 A Gradle application that shows what data types are available in Exposed and how they are used.
-The files are referenced in the Schema's [Data types](../../topics/Data-Types.topic) topic.
+The files are referenced in the Schema's Data types topics.
 
 ## Build
 

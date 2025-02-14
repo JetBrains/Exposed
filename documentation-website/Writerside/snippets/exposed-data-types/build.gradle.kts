@@ -1,6 +1,7 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     alias(libs.plugins.jvm)
+    alias(libs.plugins.kotlin.serialization)
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application
@@ -25,8 +26,12 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.kotlin.datetime)
+    implementation(libs.exposed.json)
     implementation(libs.h2)
     implementation(libs.slf4j)
+    implementation(libs.jackson.kotlin)
+    implementation(libs.mysql)
+    implementation(libs.postgresql)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

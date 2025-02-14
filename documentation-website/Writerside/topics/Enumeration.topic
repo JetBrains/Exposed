@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Enumeration" id="Enumeration">
+    <show-structure for="chapter" depth="2" />
+    <p>
+        Use the
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/enumeration.html">
+            <code>enumeration()</code>
+        </a>
+        or
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/enumeration-by-name.html">
+            <code>
+                enumerationByName()
+            </code>
+        </a>
+        functions to create an enumeration column with a specified name.
+    </p>
+    <chapter title="Custom enumeration" id="custom-enum">
+        <p>
+            Some databases, such as MySQL, PostgreSQL, and H2, support explicit enumeration types. Because keeping such
+            columns in sync with Kotlin enumerations using only JDBC metadata could be a challenge, Exposed doesn't
+            provide a possibility to manage such columns in an automatic way, but that doesn't mean that you can't
+            use such column types.
+        </p>
+        <p>
+            To work with enum database types, use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/custom-enumeration.html">
+                <code>.customEnumeration()</code>
+            </a>
+            function in one of the following ways:
+        </p>
+        <list type="decimal">
+            <li>
+                <a anchor="use-existing-col">Use an existing enum column.</a>
+            </li>
+            <li>
+                <a anchor="create-new-col">Create a new ENUM column.</a>
+            </li>
+        </list>
+        <chapter title="Use an existing column" id="use-existing-col">
+            <p>
+                When using an existing enum column from your table, the <code>sql</code> parameter in
+                <code>.customEnumeration()</code> can be left as <code>null</code>.
+            </p>
+            <p>
+                As a JDBC driver can provide/expect specific classes for enum types, you must also provide from/to
+                transformation functions for them when defining a custom enumeration:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
+                        include-symbol="Foo, ExistingEnumTable"
+            />
+        </chapter>
+        <chapter title="Create a new ENUM column" id="create-new-col">
+            <p>
+                With Exposed, you can also create a new ENUM column by providing the raw definition SQL to
+                the <code>sql</code> parameter in <code>.customEnumeration()</code>:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
+                        include-symbol="Foo, NewEnumTable"
+            />
+        </chapter>
+        <chapter title="PostgreSQL" id="postgresql">
+            <p>
+                PostgreSQL requires that an enum is defined as a separate type, so you have to create it before creating
+                your table. This differs from some other databases where enums can be defined inline within a
+                table definition.
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
+                        include-symbol="PGEnum"
+            />
+            <p>
+                Additionally, the PostgreSQL JDBC driver returns <code>PGobject</code> instances for such
+                values. So a <code>PGobject</code> with its type manually set to the ENUM type needs to be used for the <code>toDb</code> parameter.
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
+                        include-symbol="Foo, EnumTable"
+            />
+        </chapter>
+    </chapter>
+</topic>
