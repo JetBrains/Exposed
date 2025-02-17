@@ -435,11 +435,16 @@ object SchemaUtils {
         // ColumnMetadata.scale can only be non-null if ColumnMetadata.size is non-null
         if (columnMeta.size == null) return false
 
+        val dialect = currentDialect
         return when (columnType) {
             is DecimalColumnType -> columnType.precision != columnMeta.size || columnType.scale != columnMeta.scale
             is CharColumnType -> columnType.colLength != columnMeta.size
             is VarCharColumnType -> columnType.colLength != columnMeta.size
-            is BinaryColumnType -> columnType.length != columnMeta.size
+            is BinaryColumnType -> if (dialect is PostgreSQLDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL) {
+                false
+            } else {
+                columnType.length != columnMeta.size
+            }
             else -> false
         }
     }

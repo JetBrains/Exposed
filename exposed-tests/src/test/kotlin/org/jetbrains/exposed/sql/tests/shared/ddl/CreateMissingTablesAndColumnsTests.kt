@@ -833,7 +833,9 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         val provinceValue = "CC"
 
         // SQLite doesn't support alter table with add column, so it doesn't generate alter statements
-        withTables(excludeSettings = listOf(TestDB.SQLITE), originalTable) {
+        withTables(excludeSettings = listOf(TestDB.SQLITE), originalTable) { testDb ->
+            assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(originalTable, withLogs = false).isEmpty())
+
             expectException<IllegalArgumentException> {
                 originalTable.insert {
                     it[tax] = taxValue
@@ -843,8 +845,13 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                 }
             }
 
-            val alterStatements = SchemaUtils.statementsRequiredToActualizeScheme(newTable)
-            assertEquals(4, alterStatements.size)
+            val alterStatements = SchemaUtils.statementsRequiredToActualizeScheme(newTable, withLogs = false)
+            val expectedSize = if (testDb in TestDB.ALL_POSTGRES_LIKE) {
+                3
+            } else {
+                4
+            }
+            assertEquals(expectedSize, alterStatements.size)
             alterStatements.forEach { exec(it) }
 
             newTable.insert {
