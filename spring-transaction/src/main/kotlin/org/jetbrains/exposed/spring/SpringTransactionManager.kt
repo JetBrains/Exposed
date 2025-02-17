@@ -10,12 +10,12 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.springframework.jdbc.datasource.ConnectionHandle
 import org.springframework.jdbc.datasource.ConnectionHolder
-import org.springframework.jdbc.datasource.JdbcTransactionObjectSupport
 import org.springframework.transaction.CannotCreateTransactionException
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.AbstractPlatformTransactionManager
 import org.springframework.transaction.support.DefaultTransactionStatus
+import org.springframework.transaction.support.SmartTransactionObject
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.sql.Connection
 import javax.sql.DataSource
@@ -68,9 +68,8 @@ class SpringTransactionManager(
             outerManager = outerManager,
             outerTransaction = outer,
         ).apply {
-            setConnectionHolder(
-                TransactionSynchronizationManager.getResource(dataSource) as? ConnectionHolder
-            )
+            // hold on to existing Spring JDBC connection holders
+            connectionHolder = TransactionSynchronizationManager.getResource(dataSource) as? ConnectionHolder
         }
     }
 
@@ -78,23 +77,25 @@ class SpringTransactionManager(
         val trxObject = transaction as ExposedTransactionObject
         val currentManager = trxObject.manager
 
-        trxObject.setConnectionHolder(null)
-
         return SuspendedObject(
             transaction = currentManager.currentOrNull() as Transaction,
             manager = currentManager,
+            // unbind Spring JDBC connection reference
             connectionHolder = TransactionSynchronizationManager.unbindResource(dataSource) as ConnectionHolder,
         ).apply {
             currentManager.bindTransactionToThread(null)
             TransactionManager.resetCurrent(null)
+            trxObject.connectionHolder = null
         }
     }
 
     override fun doResume(transaction: Any?, suspendedResources: Any) {
         val suspendedObject = suspendedResources as SuspendedObject
 
+        // resume exposed transaction
         TransactionManager.resetCurrent(suspendedObject.manager)
         threadLocalTransactionManager.bindTransactionToThread(suspendedObject.transaction)
+        // resume Spring JDBC transaction
         TransactionSynchronizationManager.bindResource(dataSource, suspendedObject.connectionHolder)
     }
 
@@ -112,6 +113,7 @@ class SpringTransactionManager(
     override fun doBegin(transaction: Any, definition: TransactionDefinition) {
         val trxObject = transaction as ExposedTransactionObject
 
+        // Exposed transaction
         val currentTransactionManager = trxObject.manager
         TransactionManager.resetCurrent(threadLocalTransactionManager)
 
@@ -129,21 +131,22 @@ class SpringTransactionManager(
             }
         }
 
+        // Spring JDBC transaction
         @Suppress("TooGenericExceptionCaught")
         try {
-            if (!trxObject.hasConnectionHolder()) {
+            if (trxObject.connectionHolder == null) {
                 trxObject.connectionHolder = ConnectionHolder(ExposedConnectionHandle(transaction))
                 trxObject.isNewConnectionHolder = true
             }
 
-            trxObject.getConnectionHolder().isSynchronizedWithTransaction = true
+            trxObject.connectionHolder?.isSynchronizedWithTransaction = true
 
             // Bind the connection holder to the thread.
             if (trxObject.isNewConnectionHolder) {
-                TransactionSynchronizationManager.bindResource(dataSource, trxObject.getConnectionHolder())
+                TransactionSynchronizationManager.bindResource(dataSource, trxObject.connectionHolder!!)
             }
         } catch (ex: Throwable) {
-            trxObject.setConnectionHolder(null)
+            trxObject.connectionHolder = null
             throw CannotCreateTransactionException("Could not open JDBC Connection for transaction", ex)
         }
     }
@@ -152,27 +155,31 @@ class SpringTransactionManager(
         val trxObject = status.transaction as ExposedTransactionObject
         TransactionManager.resetCurrent(trxObject.manager)
         trxObject.commit()
+        // Spring JDBC implicitly committed since they share connection
     }
 
     override fun doRollback(status: DefaultTransactionStatus) {
         val trxObject = status.transaction as ExposedTransactionObject
         TransactionManager.resetCurrent(trxObject.manager)
         trxObject.rollback()
+        // Spring JDBC implicitly rolled back since they share connection
     }
 
     override fun doCleanupAfterCompletion(transaction: Any) {
         val trxObject = transaction as ExposedTransactionObject
 
+        // Clean up Exposed
         trxObject.cleanUpTransactionIfIsPossible {
             closeStatementsAndConnections(it)
         }
         trxObject.setCurrentToOuter()
 
+        // Clean up Spring JDBC
         if (trxObject.isNewConnectionHolder) {
             TransactionSynchronizationManager.unbindResource(dataSource)
-            trxObject.getConnectionHolder().released()
+            trxObject.connectionHolder?.released()
         }
-        trxObject.getConnectionHolder().clear()
+        trxObject.connectionHolder?.clear()
     }
 
     private fun closeStatementsAndConnections(transaction: Transaction) {
@@ -205,17 +212,11 @@ class SpringTransactionManager(
         val manager: TransactionManager,
         val outerManager: TransactionManager,
         private val outerTransaction: Transaction?,
-    ) : JdbcTransactionObjectSupport() {
+    ) : SmartTransactionObject {
 
         private var isRollback: Boolean = false
         var isNewConnectionHolder: Boolean = false
-
-        // the Java base class has asymmetric nullability for its connectionHolder getters
-        // and setters - which confuses the Kotlin compiler and makes it produce warnings/suggestions
-        // regardless of which style you choose. To avoid it we override this.
-        override fun setConnectionHolder(connectionHolder: ConnectionHolder?) {
-            super.setConnectionHolder(connectionHolder)
-        }
+        var connectionHolder: ConnectionHolder? = null
 
         fun cleanUpTransactionIfIsPossible(block: (transaction: Transaction) -> Unit) {
             val currentTransaction = getCurrentTransaction()
@@ -260,6 +261,14 @@ class SpringTransactionManager(
         }
     }
 
+    /**
+     * This can be inserted into a Spring JDBC [ConnectionHolder], which makes Spring JDBC see the same
+     * connection as is currently held and managed by the exposed [Transaction].
+     *
+     * When installed using [TransactionSynchronizationManager.bindResource], Spring JDBC constructs like
+     * JdbcTemplate and JdbcClient will see the same connection as Exposed and partake
+     * in the same transaction with the same underlying autocommit-disabled connection.
+     */
     private class ExposedConnectionHandle(
         val transaction: Transaction
     ) : ConnectionHandle {
