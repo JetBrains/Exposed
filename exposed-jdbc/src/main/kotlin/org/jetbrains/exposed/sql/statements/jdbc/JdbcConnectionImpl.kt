@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.statements.jdbc
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.Executable
+import org.jetbrains.exposed.sql.statements.BlockingExecutable
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
@@ -98,7 +98,7 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
         }
 
         val type = types.distinct().singleOrNull() ?: StatementType.OTHER
-        val prepStatement = object : Statement<Unit>(type, emptyList()), Executable<Unit, Statement<Unit>> {
+        val prepStatement = object : Statement<Unit>(type, emptyList()), BlockingExecutable<Unit, Statement<Unit>> {
 
             override fun prepared(transaction: JdbcTransaction, sql: String): JdbcPreparedStatementApi {
                 val originalStatement = super.prepared(transaction, sql.substringBefore('\n'))

@@ -9,9 +9,9 @@ import org.jetbrains.exposed.sql.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
 
-open class ReturningExecutable(
+open class ReturningBlockingExecutable(
     override val statement: ReturningStatement
-) : Executable<ResultApi, ReturningStatement>, Iterable<ResultRow> {
+) : BlockingExecutable<ResultApi, ReturningStatement>, Iterable<ResultRow> {
     override fun JdbcPreparedStatementApi.executeInternal(transaction: JdbcTransaction): JdbcResult = executeQuery()
 
     override fun iterator(): Iterator<ResultRow> {

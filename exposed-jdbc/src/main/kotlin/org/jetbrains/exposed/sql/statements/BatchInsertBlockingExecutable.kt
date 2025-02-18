@@ -6,9 +6,9 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import java.sql.ResultSet
 
-abstract class BaseBatchInsertExecutable<S : BaseBatchInsertStatement>(
+open class BatchInsertBlockingExecutable<S : BaseBatchInsertStatement>(
     override val statement: S
-) : InsertExecutable<List<ResultRow>, S>(statement) {
+) : InsertBlockingExecutable<List<ResultRow>, S>(statement) {
     override val isAlwaysBatch = true
 
     override fun prepared(transaction: JdbcTransaction, sql: String): JdbcPreparedStatementApi {
@@ -20,13 +20,9 @@ abstract class BaseBatchInsertExecutable<S : BaseBatchInsertStatement>(
     }
 }
 
-open class BatchInsertExecutable(
-    override val statement: BatchInsertStatement
-) : BaseBatchInsertExecutable<BatchInsertStatement>(statement)
-
-open class SQLServerBatchInsertExecutable(
+open class SQLServerBatchInsertBlockingExecutable(
     override val statement: SQLServerBatchInsertStatement
-) : BaseBatchInsertExecutable<SQLServerBatchInsertStatement>(statement) {
+) : BatchInsertBlockingExecutable<SQLServerBatchInsertStatement>(statement) {
     override val isAlwaysBatch: Boolean = false
 
     override fun JdbcPreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
@@ -42,9 +38,9 @@ open class SQLServerBatchInsertExecutable(
 }
 
 @Suppress("Unchecked_Cast")
-internal fun <S : BatchInsertStatement> S.executable(): BaseBatchInsertExecutable<S> {
+internal fun <S : BatchInsertStatement> S.executable(): BatchInsertBlockingExecutable<S> {
     return when (this) {
-        is SQLServerBatchInsertStatement -> SQLServerBatchInsertExecutable(this)
-        else -> BatchInsertExecutable(this)
-    } as BaseBatchInsertExecutable<S>
+        is SQLServerBatchInsertStatement -> SQLServerBatchInsertBlockingExecutable(this)
+        else -> BatchInsertBlockingExecutable(this)
+    } as BatchInsertBlockingExecutable<S>
 }

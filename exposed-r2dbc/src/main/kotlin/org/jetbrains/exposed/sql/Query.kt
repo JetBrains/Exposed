@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql
 import kotlinx.coroutines.flow.FlowCollector
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.r2dbc.sql.selectAll
-import org.jetbrains.exposed.sql.statements.Executable
+import org.jetbrains.exposed.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult
@@ -16,7 +16,7 @@ open class Query(
     override var set: FieldSet,
     where: Op<Boolean>?
 ) : AbstractQuery<Query>(set.source.targetTables()),
-    Executable<ResultApi, Query>,
+    SuspendExecutable<ResultApi, Query>,
     SizedIterable<ResultRow> {
 
     override val statement: Query = this
@@ -283,7 +283,7 @@ open class Query(
         return executeQuery()
     }
 
-    private val queryToExecute: Executable<ResultApi, Query>
+    private val queryToExecute: SuspendExecutable<ResultApi, Query>
         get() {
             val distinctExpressions = set.fields.distinct()
             return if (distinctExpressions.size < set.fields.size) {

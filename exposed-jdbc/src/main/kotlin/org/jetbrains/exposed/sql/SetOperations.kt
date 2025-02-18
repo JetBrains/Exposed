@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.statements.Executable
+import org.jetbrains.exposed.sql.statements.BlockingExecutable
 import org.jetbrains.exposed.sql.statements.StatementIterator
 import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.api.ResultApi
@@ -25,7 +25,7 @@ sealed class SetOperation(
     _firstStatement: AbstractQuery<*>,
     val secondStatement: AbstractQuery<*>
 ) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()),
-    Executable<ResultApi, SetOperation>,
+    BlockingExecutable<ResultApi, SetOperation>,
     SizedIterable<ResultRow> {
 
     override val statement: SetOperation = this
@@ -149,7 +149,7 @@ sealed class SetOperation(
         (orderByExpressions as MutableList).addAll(order)
     }
 
-    private val queryToExecute: Executable<ResultApi, SetOperation>
+    private val queryToExecute: BlockingExecutable<ResultApi, SetOperation>
         get() = this
 
     override fun iterator(): Iterator<ResultRow> {

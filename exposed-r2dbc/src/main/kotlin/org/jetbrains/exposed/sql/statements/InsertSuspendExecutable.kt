@@ -7,9 +7,9 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
 
-open class InsertExecutable<Key : Any, S : InsertStatement<Key>>(
+open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
-) : Executable<Int, S> {
+) : SuspendExecutable<Int, S> {
     protected open suspend fun R2dbcPreparedStatementApi.execInsertFunction(): Pair<Int, R2dbcResult?> {
         val inserted = if (statement.arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
         // According to the `processResults()` method when supportsOnlyIdentifiersInGeneratedKeys is false

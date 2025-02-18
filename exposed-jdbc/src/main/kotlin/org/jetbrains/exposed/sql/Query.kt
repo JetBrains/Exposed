@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
-import org.jetbrains.exposed.sql.statements.Executable
+import org.jetbrains.exposed.sql.statements.BlockingExecutable
 import org.jetbrains.exposed.sql.statements.StatementIterator
 import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.api.ResultApi
@@ -18,7 +18,7 @@ open class Query(
     override var set: FieldSet,
     where: Op<Boolean>?
 ) : AbstractQuery<Query>(set.source.targetTables()),
-    Executable<ResultApi, Query>,
+    BlockingExecutable<ResultApi, Query>,
     SizedIterable<ResultRow> {
 
     override val statement: Query = this
@@ -284,7 +284,7 @@ open class Query(
         return executeQuery()
     }
 
-    private val queryToExecute: Executable<ResultApi, Query>
+    private val queryToExecute: BlockingExecutable<ResultApi, Query>
         get() {
             val distinctExpressions = set.fields.distinct()
             return if (distinctExpressions.size < set.fields.size) {
