@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.sql.ResultSet
 import java.time.*
@@ -377,12 +378,13 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
         return rs.getTimestamp(index)
     }
 
+    @Suppress("MagicNumber")
     override fun notNullValueToDB(value: Instant): Any {
         val dialect = currentDialect
         return when {
             dialect is SQLiteDialect ->
                 SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value)
-            dialect is MysqlDialect && dialect !is MariaDBDialect -> {
+            dialect is MysqlDialect && dialect !is MariaDBDialect && !TransactionManager.current().db.isVersionCovers(8, 0) -> {
                 val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER else MYSQL_TIMESTAMP_STRING_FORMATTER
                 formatter.format(value)
             }
