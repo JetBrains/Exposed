@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.kotlin.datetime.CurrentTimestamp
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
-import org.jetbrains.exposed.sql.statements.BatchInsertExecutable
+import org.jetbrains.exposed.sql.statements.BatchInsertBlockingExecutable
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -623,10 +623,6 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    class BatchInsertOnConflictDoNothingExecutable(
-        override val statement: BatchInsertOnConflictDoNothing
-    ) : BatchInsertExecutable(statement)
-
     @Test
     fun testBatchInsertNumberOfInsertedRows() {
         val tab = object : Table("tab") {
@@ -636,7 +632,7 @@ class InsertTests : DatabaseTestsBase() {
         withTables(excludeSettings = insertIgnoreUnsupportedDB, tab) {
             tab.insert { it[id] = "foo" }
 
-            val executable = BatchInsertOnConflictDoNothingExecutable(
+            val executable = BatchInsertBlockingExecutable(
                 BatchInsertOnConflictDoNothing(tab)
             )
             val numInserted = executable.run {

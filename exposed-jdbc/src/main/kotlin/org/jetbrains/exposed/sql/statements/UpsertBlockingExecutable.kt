@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.sql.statements
 
-import org.jetbrains.exposed.sql.R2dbcTransaction
-import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
+import org.jetbrains.exposed.sql.JdbcTransaction
+import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
-open class UpsertExecutable<Key : Any>(
+open class UpsertBlockingExecutable<Key : Any>(
     override val statement: UpsertStatement<Key>
-) : InsertExecutable<Key, UpsertStatement<Key>>(statement) {
-    override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi {
+) : InsertBlockingExecutable<Key, UpsertStatement<Key>>(statement) {
+    override fun prepared(transaction: JdbcTransaction, sql: String): JdbcPreparedStatementApi {
         // We must return values from upsert because returned id could be different depending on insert or upsert happened
         if (!currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
             return transaction.connection.prepareStatement(sql, true)

@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql
 import kotlinx.coroutines.flow.FlowCollector
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.r2dbc.sql.select
-import org.jetbrains.exposed.sql.statements.Executable
+import org.jetbrains.exposed.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult
@@ -25,7 +25,7 @@ sealed class SetOperation(
     _firstStatement: AbstractQuery<*>,
     val secondStatement: AbstractQuery<*>
 ) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()),
-    Executable<ResultApi, SetOperation>,
+    SuspendExecutable<ResultApi, SetOperation>,
     SizedIterable<ResultRow> {
 
     override val statement: SetOperation = this
@@ -149,7 +149,7 @@ sealed class SetOperation(
         (orderByExpressions as MutableList).addAll(order)
     }
 
-    private val queryToExecute: Executable<ResultApi, SetOperation>
+    private val queryToExecute: SuspendExecutable<ResultApi, SetOperation>
         get() = this
 
     override suspend fun collect(collector: FlowCollector<ResultRow>) {

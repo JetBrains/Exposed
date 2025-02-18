@@ -9,7 +9,6 @@ import org.jetbrains.exposed.sql.statements.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectMetadata
-import kotlin.collections.ArrayList
 import kotlin.collections.Iterable
 import kotlin.collections.Iterator
 import kotlin.collections.List
@@ -68,7 +67,7 @@ fun <T : Table> T.deleteWhere(
         throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
     }
     val stmt = StatementBuilder { deleteWhere(limit, op) }
-    return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
+    return DeleteBlockingExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -89,7 +88,7 @@ fun <T : Table> T.deleteIgnoreWhere(
         throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
     }
     val stmt = StatementBuilder { deleteIgnoreWhere(limit, op) }
-    return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
+    return DeleteBlockingExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -100,7 +99,7 @@ fun <T : Table> T.deleteIgnoreWhere(
  */
 fun Table.deleteAll(): Int {
     val stmt = StatementBuilder { deleteAll() }
-    return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
+    return DeleteBlockingExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 @Deprecated(
@@ -114,7 +113,7 @@ fun Table.deleteAll(): Int {
 fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
-): ReturningExecutable {
+): ReturningBlockingExecutable {
     return where?.let { deleteReturning(returning, it) } ?: deleteReturning(returning)
 }
 
@@ -130,9 +129,9 @@ fun <T : Table> T.deleteReturning(
 fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
     where: SqlExpressionBuilder.() -> Op<Boolean>
-): ReturningExecutable {
+): ReturningBlockingExecutable {
     val stmt = StatementBuilder { deleteReturning(returning, where) }
-    return ReturningExecutable(stmt)
+    return ReturningBlockingExecutable(stmt)
 }
 
 /**
@@ -145,9 +144,9 @@ fun <T : Table> T.deleteReturning(
  */
 fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns
-): ReturningExecutable {
+): ReturningBlockingExecutable {
     val stmt = StatementBuilder { deleteReturning(returning) }
-    return ReturningExecutable(stmt)
+    return ReturningBlockingExecutable(stmt)
 }
 
 @Deprecated(
@@ -192,7 +191,7 @@ fun Join.delete(
     where: SqlExpressionBuilder.() -> Op<Boolean>
 ): Int {
     val stmt = StatementBuilder { delete(targetTable, targetTables = targetTables, ignore, limit, where) }
-    return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
+    return DeleteBlockingExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -215,7 +214,7 @@ fun Join.delete(
     limit: Int? = null
 ): Int {
     val stmt = StatementBuilder { delete(targetTable, targetTables = targetTables, ignore, limit, null) }
-    return DeleteExecutable(stmt).execute(TransactionManager.current()) ?: 0
+    return DeleteBlockingExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -227,7 +226,7 @@ fun <T : Table> T.insert(
     body: T.(UpdateBuilder<*>) -> Unit
 ): InsertStatement<Number> {
     val stmt = StatementBuilder { insert(body) }
-    return InsertExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return InsertBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -240,7 +239,7 @@ fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
     body: T.(UpdateBuilder<*>) -> Unit
 ): EntityID<Key> {
     val stmt = StatementBuilder { insert(body) }
-    return InsertExecutable(stmt).run {
+    return InsertBlockingExecutable(stmt).run {
         execute(TransactionManager.current())
         statement[id]
     }
@@ -259,7 +258,7 @@ fun <T : Table> T.insertIgnore(
     body: T.(UpdateBuilder<*>) -> Unit
 ): InsertStatement<Long> {
     val stmt = StatementBuilder { insertIgnore(body) }
-    return InsertExecutable<Long, InsertStatement<Long>>(stmt).apply { execute(TransactionManager.current()) }.statement
+    return InsertBlockingExecutable<Long, InsertStatement<Long>>(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -276,7 +275,7 @@ fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
     body: T.(UpdateBuilder<*>) -> Unit
 ): EntityID<Key>? {
     val stmt = StatementBuilder { insertIgnore(body) }
-    return InsertExecutable<Long, InsertStatement<Long>>(stmt).run {
+    return InsertBlockingExecutable<Long, InsertStatement<Long>>(stmt).run {
         when (execute(TransactionManager.current())) {
             null, 0 -> null
             else -> statement.getOrNull(id)
@@ -298,7 +297,7 @@ fun <T : Table> T.insert(
     columns: List<Column<*>>? = null
 ): Int? {
     val stmt = StatementBuilder { insert(selectQuery, columns) }
-    return InsertSelectExecutable(stmt).execute(TransactionManager.current())
+    return InsertSelectBlockingExecutable(stmt).execute(TransactionManager.current())
 }
 
 /**
@@ -317,7 +316,7 @@ fun <T : Table> T.insertIgnore(
     columns: List<Column<*>>? = null
 ): Int? {
     val stmt = StatementBuilder { insertIgnore(selectQuery, columns) }
-    return InsertSelectExecutable(stmt).execute(TransactionManager.current())
+    return InsertSelectBlockingExecutable(stmt).execute(TransactionManager.current())
 }
 
 /**
@@ -334,9 +333,9 @@ fun <T : Table> T.insertReturning(
     returning: List<Expression<*>> = columns,
     ignoreErrors: Boolean = false,
     body: T.(InsertStatement<Number>) -> Unit
-): ReturningExecutable {
+): ReturningBlockingExecutable {
     val stmt = StatementBuilder { insertReturning(returning, ignoreErrors, body) }
-    return ReturningExecutable(stmt)
+    return ReturningBlockingExecutable(stmt)
 }
 
 /**
@@ -397,7 +396,7 @@ fun <T : Table> T.replace(
     body: T.(UpdateBuilder<*>) -> Unit
 ): ReplaceStatement<Long> {
     val stmt = StatementBuilder { replace(body) }
-    return ReplaceExecutable<Long>(stmt).apply { execute(TransactionManager.current()) }.statement
+    return InsertBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -417,7 +416,7 @@ fun <T : Table> T.replace(
     columns: List<Column<*>>? = null
 ): Int? {
     val stmt = StatementBuilder { replace(selectQuery, columns) }
-    return ReplaceSelectExecutable(stmt).execute(TransactionManager.current())
+    return InsertSelectBlockingExecutable(stmt).execute(TransactionManager.current())
 }
 
 /**
@@ -460,11 +459,11 @@ private fun <T : Table, E> T.batchReplace(
     body: BatchReplaceStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
     val stmt = StatementBuilder { batchReplace(shouldReturnGeneratedValues, body) }
-    BatchReplaceExecutable(stmt)
+    BatchInsertBlockingExecutable(stmt)
 }
 
 @OptIn(InternalApi::class)
-private fun <E, S1 : BaseBatchInsertStatement, S2 : BaseBatchInsertExecutable<S1>> executeBatch(
+private fun <E, S1 : BaseBatchInsertStatement, S2 : BatchInsertBlockingExecutable<S1>> executeBatch(
     data: Iterator<E>,
     body: S1.(E) -> Unit,
     newBatchStatement: () -> S2
@@ -539,7 +538,7 @@ fun <T : Table> T.update(
         throw UnsupportedByDialectException("LIMIT clause is not supported in UPDATE statement.", currentDialect)
     }
     val stmt = StatementBuilder { update(where, limit, body) }
-    return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
+    return UpdateBlockingExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -557,7 +556,7 @@ fun <T : Table> T.update(
         throw UnsupportedByDialectException("LIMIT clause is not supported in UPDATE statement.", currentDialect)
     }
     val stmt = StatementBuilder { update(null, limit, body) }
-    return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
+    return UpdateBlockingExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 @Deprecated(
@@ -586,7 +585,7 @@ fun Join.update(
     body: (UpdateStatement) -> Unit
 ): Int {
     val stmt = StatementBuilder { update(where, limit, body) }
-    return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
+    return UpdateBlockingExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 /**
@@ -601,7 +600,7 @@ fun Join.update(
     body: (UpdateStatement) -> Unit
 ): Int {
     val stmt = StatementBuilder { update(null, limit, body) }
-    return UpdateExecutable(stmt).execute(TransactionManager.current()) ?: 0
+    return UpdateBlockingExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
 @Deprecated(
@@ -616,7 +615,7 @@ fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpdateStatement) -> Unit
-): ReturningExecutable {
+): ReturningBlockingExecutable {
     return where?.let { updateReturning(returning, it, body) } ?: updateReturning(returning, body)
 }
 
@@ -633,9 +632,9 @@ fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
     where: SqlExpressionBuilder.() -> Op<Boolean>,
     body: T.(UpdateStatement) -> Unit
-): ReturningExecutable {
+): ReturningBlockingExecutable {
     val stmt = StatementBuilder { updateReturning(returning, where, body) }
-    return ReturningExecutable(stmt)
+    return ReturningBlockingExecutable(stmt)
 }
 
 /**
@@ -649,9 +648,9 @@ fun <T : Table> T.updateReturning(
 fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
     body: T.(UpdateStatement) -> Unit
-): ReturningExecutable {
+): ReturningBlockingExecutable {
     val stmt = StatementBuilder { updateReturning(returning, null, body) }
-    return ReturningExecutable(stmt)
+    return ReturningBlockingExecutable(stmt)
 }
 
 /**
@@ -682,7 +681,7 @@ fun <T : Table> T.upsert(
     body: T.(UpsertStatement<Long>) -> Unit
 ): UpsertStatement<Long> {
     val stmt = StatementBuilder { upsert(keys = keys, onUpdate, onUpdateExclude, where, body) }
-    return UpsertExecutable<Long>(stmt).apply { execute(TransactionManager.current()) }.statement
+    return UpsertBlockingExecutable<Long>(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -710,9 +709,9 @@ fun <T : Table> T.upsertReturning(
     onUpdateExclude: List<Column<*>>? = null,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
-): ReturningExecutable {
+): ReturningBlockingExecutable {
     val stmt = StatementBuilder { upsertReturning(keys = keys, returning, onUpdate, onUpdateExclude, where, body) }
-    return ReturningExecutable(stmt)
+    return ReturningBlockingExecutable(stmt)
 }
 
 /**
@@ -787,7 +786,7 @@ private fun <T : Table, E> T.batchUpsert(
     val stmt = StatementBuilder {
         batchUpsert(onUpdateList, onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body)
     }
-    BatchUpsertExecutable(stmt)
+    BatchUpsertBlockingExecutable(stmt)
 }
 
 @Deprecated(
@@ -825,7 +824,7 @@ fun <D : Table, S : Table> D.mergeFrom(
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
     val stmt = StatementBuilder { mergeFrom(source, on, body) }
-    return MergeTableExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return MergeBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -844,7 +843,7 @@ fun <D : Table, S : Table> D.mergeFrom(
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
     val stmt = StatementBuilder { mergeFrom(source, null, body) }
-    return MergeTableExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return MergeBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
 /**
@@ -865,5 +864,5 @@ fun <T : Table> T.mergeFrom(
     body: MergeSelectStatement.() -> Unit
 ): MergeSelectStatement {
     val stmt = StatementBuilder { mergeFrom(selectQuery, on, body) }
-    return MergeSelectExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
+    return MergeBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }

@@ -6,9 +6,9 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult
 
-abstract class BaseBatchInsertExecutable<S : BaseBatchInsertStatement>(
+open class BatchInsertSuspendExecutable<S : BaseBatchInsertStatement>(
     override val statement: S
-) : InsertExecutable<List<ResultRow>, S>(statement) {
+) : InsertSuspendExecutable<List<ResultRow>, S>(statement) {
     override val isAlwaysBatch = true
 
     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi {
@@ -20,13 +20,9 @@ abstract class BaseBatchInsertExecutable<S : BaseBatchInsertStatement>(
     }
 }
 
-open class BatchInsertExecutable(
-    override val statement: BatchInsertStatement
-) : BaseBatchInsertExecutable<BatchInsertStatement>(statement)
-
-open class SQLServerBatchInsertExecutable(
+open class SQLServerBatchInsertSuspendExecutable(
     override val statement: SQLServerBatchInsertStatement
-) : BaseBatchInsertExecutable<SQLServerBatchInsertStatement>(statement) {
+) : BatchInsertSuspendExecutable<SQLServerBatchInsertStatement>(statement) {
     override val isAlwaysBatch: Boolean = false
 
     override suspend fun R2dbcPreparedStatementApi.execInsertFunction(): Pair<Int, R2dbcResult?> {
@@ -42,9 +38,9 @@ open class SQLServerBatchInsertExecutable(
 }
 
 @Suppress("Unchecked_Cast")
-internal fun <S : BatchInsertStatement> S.executable(): BaseBatchInsertExecutable<S> {
+internal fun <S : BatchInsertStatement> S.executable(): BatchInsertSuspendExecutable<S> {
     return when (this) {
-        is SQLServerBatchInsertStatement -> SQLServerBatchInsertExecutable(this)
-        else -> BatchInsertExecutable(this)
-    } as BaseBatchInsertExecutable<S>
+        is SQLServerBatchInsertStatement -> SQLServerBatchInsertSuspendExecutable(this)
+        else -> BatchInsertSuspendExecutable(this)
+    } as BatchInsertSuspendExecutable<S>
 }

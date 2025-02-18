@@ -132,7 +132,7 @@ open class JdbcTransaction(
             ?: StatementType.entries.find { stmt.trim().startsWith(it.name, true) }
             ?: StatementType.OTHER
 
-        return exec(object : Statement<T>(type, emptyList()), Executable<T, Statement<T>> {
+        return exec(object : Statement<T>(type, emptyList()), BlockingExecutable<T, Statement<T>> {
             override val statement: Statement<T>
                 get() = this
 
@@ -171,7 +171,7 @@ open class JdbcTransaction(
      * `DatabaseConfig.warnLongQueriesDuration`. If [Transaction.debug] is set to `true`, these tracked values
      * are stored for each call in [Transaction.statementStats].
      */
-    fun <T> exec(stmt: Executable<T, *>): T? = exec(stmt) { it }
+    fun <T> exec(stmt: BlockingExecutable<T, *>): T? = exec(stmt) { it }
 
     /**
      * Provided statements will be executed in a batch.
@@ -190,7 +190,7 @@ open class JdbcTransaction(
      * `DatabaseConfig.warnLongQueriesDuration`. If [Transaction.debug] is set to `true`, these tracked values
      * are stored for each call in [Transaction.statementStats].
      */
-    fun <T, R> exec(stmt: Executable<T, *>, body: Statement<T>.(T) -> R): R? {
+    fun <T, R> exec(stmt: BlockingExecutable<T, *>, body: Statement<T>.(T) -> R): R? {
         statementCount++
 
         val start = System.nanoTime()

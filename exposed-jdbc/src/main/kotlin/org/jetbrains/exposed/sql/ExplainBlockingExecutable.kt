@@ -1,29 +1,37 @@
 package org.jetbrains.exposed.sql
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
-import org.jetbrains.exposed.sql.statements.Executable
+import org.jetbrains.exposed.sql.statements.BlockingExecutable
 import org.jetbrains.exposed.sql.statements.IStatementBuilder
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementBuilder
-import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
+import org.jetbrains.exposed.sql.statements.StatementIterator
+import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.api.ResultApi
-import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult
+import org.jetbrains.exposed.sql.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.sql.ResultSet
 
-open class ExplainExecutable(
+open class ExplainBlockingExecutable(
     override val statement: ExplainQuery
-) : Executable<ResultApi, ExplainQuery>, Flow<ExplainResultRow> {
-    override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): R2dbcResult = executeQuery()
+) : BlockingExecutable<ResultApi, ExplainQuery>, Iterable<ExplainResultRow> {
+    override fun JdbcPreparedStatementApi.executeInternal(transaction: JdbcTransaction): JdbcResult = executeQuery()
 
-    override suspend fun collect(collector: FlowCollector<ExplainResultRow>) {
-        val rs = TransactionManager.current().exec(this)!! as R2dbcResult
-        // how to iterate over fields in a Row/RowMetadata?
-//        val fieldIndex: Map<String, Int> = List(rs.result.columnCount) { i ->
-//            rs.metaData.getColumnName(i + 1) to i
-//        }.toMap()
+    override fun iterator(): Iterator<ExplainResultRow> {
+        val rs = TransactionManager.current().exec(this)!! as JdbcResult
+        val resultIterator = ResultIterator(rs.result)
+        return Iterable { resultIterator }.iterator()
+    }
 
-        collector.emit(ExplainResultRow.create(rs, emptyMap()))
+    private inner class ResultIterator(rs: ResultSet) : StatementIterator<String, ExplainResultRow>(rs) {
+        override val fieldIndex: Map<String, Int> = List(result.metaData.columnCount) { i ->
+            result.metaData.getColumnName(i + 1) to i
+        }.toMap()
+
+        init {
+            hasNext = result.next()
+        }
+
+        override fun createResultRow(): ExplainResultRow = ExplainResultRow.create(JdbcResult(result), fieldIndex)
     }
 }
 
@@ -40,11 +48,11 @@ open class ExplainExecutable(
  * `REPLACE`, `UPDATE` or `DELETE` statement.
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.ExplainTests.testExplainWithStatementsNotExecuted
  */
-fun R2dbcTransaction.explain(
+fun JdbcTransaction.explain(
     analyze: Boolean = false,
     options: String? = null,
     body: IStatementBuilder.() -> Statement<*>
-): ExplainExecutable {
+): ExplainBlockingExecutable {
     val stmt = ExplainQuery(analyze, options, StatementBuilder.body())
-    return ExplainExecutable(stmt)
+    return ExplainBlockingExecutable(stmt)
 }
