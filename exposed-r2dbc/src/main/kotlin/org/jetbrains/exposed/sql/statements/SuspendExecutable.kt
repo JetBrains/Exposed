@@ -10,6 +10,36 @@ internal object DefaultValueMarker {
     override fun toString(): String = "DEFAULT"
 }
 
+/**
+ * Executable provides a customizable execution mechanism for SQL statements within a transaction.
+ *
+ * This interface allows implementing classes to define specific execution logic specific to R2DBC
+ * and customize how the return value is handled.
+ * It is primarily used when fine-grained control over statement execution is required.
+ *
+ * For the blocking JDBC alternative of this interface, see [BlockingExecutable].
+ *
+ * ## Usage Example:
+ * ```kotlin
+ * open class BatchUpsertSuspendExecutable(
+ *     override val statement: BatchUpsertStatement
+ * ) : BatchInsertSuspendExecutable<BatchUpsertStatement>(statement) {
+ *     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi {
+ *         // We must return values from upsert because returned id could be different depending on insert or upsert happened
+ *         if (!currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
+ *             return transaction.connection.prepareStatement(sql, statement.shouldReturnGeneratedValues)
+ *         }
+ *
+ *         return super.prepared(transaction, sql)
+ *     }
+ * }
+ * ```
+ *
+ * The implemented Executable can be later used in the utility functions like [Table.batchUpsert].
+ *
+ * @param T The return type of the SQL execution result.
+ * @param S The type of SQL statement that is executed.
+ */
 interface SuspendExecutable<out T, S : Statement<T>> {
     val statement: S
 

@@ -11,6 +11,36 @@ internal object DefaultValueMarker {
     override fun toString(): String = "DEFAULT"
 }
 
+/**
+ * Executable provides a customizable execution mechanism for SQL statements within a transaction.
+ *
+ * This interface allows implementing classes to define specific execution logic specific to JDBC
+ * and customize how the return value is handled.
+ * It is primarily used when fine-grained control over statement execution is required.
+ *
+ * For the suspend alternative of this interface, see [SuspendExecutable].
+ *
+ * ## Usage Example:
+ * ```kotlin
+ * open class BatchUpsertBlockingExecutable(
+ *     override val statement: BatchUpsertStatement
+ * ) : BatchInsertBlockingExecutable<BatchUpsertStatement>(statement) {
+ *     override fun prepared(transaction: JdbcTransaction, sql: String): JdbcPreparedStatementApi {
+ *         // We must return values from upsert because returned id could be different depending on insert or upsert happened
+ *         if (!currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
+ *             return transaction.connection.prepareStatement(sql, statement.shouldReturnGeneratedValues)
+ *         }
+ *
+ *         return super.prepared(transaction, sql)
+ *     }
+ * }
+ * ```
+ *
+ * The implemented Executable can be later used in the utility functions like [Table.batchUpsert].
+ *
+ * @param T The return type of the SQL execution result.
+ * @param S The type of SQL statement that is executed.
+ */
 interface BlockingExecutable<out T, S : Statement<T>> {
     val statement: S
 
