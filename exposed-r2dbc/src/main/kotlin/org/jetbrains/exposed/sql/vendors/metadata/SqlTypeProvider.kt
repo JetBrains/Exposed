@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 
 /** Base class responsible for providing details and string builders for all supported SQL types in a database. */
 @Suppress("MagicNumber")
-abstract class SqlTypeProvider {
+internal abstract class SqlTypeProvider {
     /** A mapping of available [ReferenceOption]s to the matching database constant. */
     abstract val referenceOptions: Map<ReferenceOption, Int>
 
@@ -190,7 +190,7 @@ abstract class SqlTypeProvider {
             referenceOptions.forEach { (option, value) ->
                 append("WHEN '$option' THEN $value ")
             }
-            append("ELSE NULL END $alias")
+            append("ELSE NULL END AS $alias")
         }
     }
 
@@ -204,7 +204,7 @@ abstract class SqlTypeProvider {
             allDataTypes.forEach {
                 append("WHEN '${it.name}' THEN ${it.code} ")
             }
-            append("ELSE 0 END $alias")
+            append("ELSE 0 END AS $alias")
         }
     }
 
@@ -218,7 +218,7 @@ abstract class SqlTypeProvider {
             allDataTypes.forEach {
                 append("WHEN '${it.name}' THEN ${it.precision} ")
             }
-            append("ELSE NULL END $alias")
+            append("ELSE NULL END AS $alias")
         }
     }
 

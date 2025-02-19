@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
  * and on which transaction tasks are performed.
  */
 abstract class DatabaseApi protected constructor(
-    private val resolvedVendor: String? = null,
+    protected val resolvedVendor: String? = null,
     val config: DatabaseConfig
 ) {
     /** Whether nested transaction blocks are configured to act like top-level transactions. */
@@ -18,6 +18,12 @@ abstract class DatabaseApi protected constructor(
 
     override fun toString(): String =
         "ExposedDatabase[${hashCode()}]($resolvedVendor${config.explicitDialect?.let { ", dialect=$it" } ?: ""})"
+
+    /** The connection URL for the database. */
+    abstract val url: String
+
+    /** The name of the database based on the name of the underlying JDBC driver. */
+    abstract val vendor: String
 
     /** The name of the database as a [DatabaseDialect]. */
     abstract val dialect: DatabaseDialect
@@ -30,12 +36,6 @@ abstract class DatabaseApi protected constructor(
 
     /** Whether the version number of the database is equal to or greater than the provided [version]. */
     abstract fun isVersionCovers(version: BigDecimal): Boolean
-
-    /** The major version number of the database as a [Int]. */
-    abstract val majorVersion: Int
-
-    /** The minor version number of the database as a [Int]. */
-    abstract val minorVersion: Int
 
     /** Whether the version number of the database is equal to or greater than the provided [majorVersion] and [minorVersion]. */
     abstract fun isVersionCovers(majorVersion: Int, minorVersion: Int): Boolean

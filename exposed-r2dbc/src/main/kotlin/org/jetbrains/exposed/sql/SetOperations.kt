@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql
 
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.sql.statements.Executable
@@ -159,7 +160,14 @@ sealed class SetOperation(
         val tx = TransactionManager.current()
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
-        collector.emit(ResultRow.create(rs, fieldIndex).also { trackResultSet(tx) })
+        rs.result.collect { result ->
+            result.map { row, rm ->
+                rs.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
+                ResultRow.create(rs, fieldIndex)
+            }.collect {
+                collector.emit(it).also { trackResultSet(tx) }
+            }
+        }
     }
 
     companion object {

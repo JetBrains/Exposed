@@ -6,6 +6,7 @@ import io.r2dbc.spi.R2dbcType
 import io.r2dbc.spi.Statement
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
@@ -22,17 +23,13 @@ import java.util.*
  */
 class R2dbcPreparedStatementImpl(
     val statement: Statement,
+    // the property below is only here for setTimeout() --> should this logic be in R2dbcConnectionImpl instead
     val connection: Connection,
     val wasGeneratedKeysRequested: Boolean
 ) : R2dbcPreparedStatementApi {
-    override suspend fun getResultRow(): R2dbcResult? {
-        val rs = if (wasGeneratedKeysRequested) {
-            statement.returnGeneratedValues().execute()
-        } else {
-            statement.execute()
-        }
-        return rs?.let { R2dbcResult(it) }
-    }
+    private var resultRow: R2dbcResult? = null
+
+    override suspend fun getResultRow(): R2dbcResult? = resultRow
 
     override suspend fun setFetchSize(value: Int?) {
         value?.let { statement.fetchSize(value) }
@@ -43,20 +40,20 @@ class R2dbcPreparedStatementImpl(
     }
 
     override suspend fun addBatch() {
+        // unlike JDBC, a differentiation may need to be made between Statement and Batch objects
         statement.add() // REVIEW potential preceding operation, bind()
     }
 
     override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute())
 
-    override suspend fun executeUpdate(): Int = flow {
-        statement
-            .execute()
-            .collect { result ->
-                result.rowsUpdated.collect { count ->
-                    emit(count.toInt())
-                }
+    override suspend fun executeUpdate(): Int {
+        resultRow = R2dbcResult(statement.execute())
+        return flow {
+            resultRow!!.result.collect {
+                emit(it.rowsUpdated.awaitFirstOrNull()?.toInt() ?: 0)
             }
-    }.single()
+        }.single()
+    }
 
     override fun set(index: Int, value: Any) {
         statement.bind(index - 1, value)
@@ -76,7 +73,7 @@ class R2dbcPreparedStatementImpl(
             is UByteColumnType -> UByte::class.java
             is ShortColumnType -> Short::class.java
             is UShortColumnType -> UShort::class.java
-            is IntegerColumnType -> Int::class.java
+            is IntegerColumnType -> Integer::class.java
             is UIntegerColumnType -> UInt::class.java
             is LongColumnType -> Long::class.java
             is ULongColumnType -> ULong::class.java
@@ -110,7 +107,7 @@ class R2dbcPreparedStatementImpl(
     }
 
     override suspend fun executeBatch(): List<Int> {
-        // same as simple execute? what to actually return?
+        // unlike JDBC, a differentiation may need to be made between Statement and Batch objects
         return emptyList()
     }
 
