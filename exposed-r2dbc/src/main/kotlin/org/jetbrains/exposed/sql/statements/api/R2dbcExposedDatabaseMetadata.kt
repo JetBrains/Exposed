@@ -23,19 +23,16 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
     abstract val supportsSelectForUpdate: Boolean
 
     /** Whether the database supports the `LIMIT` clause with update and delete statements. */
-    abstract suspend fun supportsLimitWithUpdateOrDelete(): Boolean
-
-    /** The connection URL for the database. */
-    abstract suspend fun getUrl(): String
+    abstract val supportsLimitWithUpdateOrDelete: Boolean
 
     /** The version number of the database as a `BigDecimal`. */
-    abstract suspend fun getVersion(): BigDecimal
+    abstract fun getVersion(): BigDecimal
 
     /**  The major version number of the database. */
-    abstract suspend fun getMajorVersion(): Int
+    abstract fun getMajorVersion(): Int
 
     /**  The minor version number of the database. */
-    abstract suspend fun getMinorVersion(): Int
+    abstract fun getMinorVersion(): Int
 
     /** The name of the database based on the name of the underlying JDBC driver. */
     abstract fun getDatabaseDialectName(): String
@@ -44,7 +41,7 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
     abstract suspend fun getDatabaseDialectMode(): String?
 
     /** The version number of the database product as a `String`. */
-    abstract suspend fun getDatabaseProductVersion(): String
+    abstract fun getDatabaseProductVersion(): String
 
     /** The default transaction isolation level for the database. */
     abstract suspend fun getDefaultIsolationLevel(): Int

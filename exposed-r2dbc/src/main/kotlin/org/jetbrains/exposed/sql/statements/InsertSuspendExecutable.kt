@@ -1,11 +1,18 @@
 package org.jetbrains.exposed.sql.statements
 
+import io.r2dbc.spi.RowMetadata
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.inProperCase
+import java.sql.SQLException
 
 open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
@@ -27,8 +34,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         @OptIn(InternalApi::class)
         return inserted.apply {
             statement.insertedCount = this
-//            statement.resultedValues = processResults(rs, this)
-            statement.resultedValues = null
+            statement.resultedValues = processResults(rs, this)
         }
     }
 
@@ -59,124 +65,135 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-    // need to rework this to work for Result/Row
-//    private suspend fun processResults(rs: Publisher<out Result>?, inserted: Int): List<ResultRow> {
-//        val allResultSetsValues = rs?.returnedValues(inserted)
-//
-//        @Suppress("UNCHECKED_CAST")
-//        return statement.arguments!!
-//            // Join the values from ResultSet with arguments
-//            .mapIndexed { index, columnValues ->
-//                val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
-//                val argumentValues = columnValues.toMap()
-//                    .filterValues { it != DefaultValueMarker }
-//                    .let { unwrapColumnValues(it) }
-//
-//                argumentValues + resultSetValues
-//            }
-//            .map { unwrapColumnValues(defaultAndNullableValues(exceptColumns = it.keys)) + it }
-//            .map { ResultRow.createAndFillValues(it as Map<Expression<*>, Any?>) }
-//    }
+    private suspend fun processResults(rs: R2dbcResult?, inserted: Int): List<ResultRow> {
+        val allResultSetsValues = rs?.returnedValues(inserted)
 
-//    private fun defaultAndNullableValues(exceptColumns: Collection<Column<*>>): Map<Column<*>, Any?> {
-//        return statement.table.columns
-//            .filter { column -> !exceptColumns.contains(column) }
-//            .mapNotNull { column ->
-//                val defaultFn = column.defaultValueFun
-//                when {
-//                    defaultFn != null -> column to defaultFn()
-//                    column.columnType.nullable -> column to null
-//                    else -> null
-//                }
-//            }
-//            .toMap()
-//    }
+        @Suppress("UNCHECKED_CAST")
+        return statement.arguments!!
+            .mapIndexed { index, columnValues ->
+                val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
+                val argumentValues = columnValues.toMap()
+                    .filterValues { it != DefaultValueMarker }
+                    .let { unwrapColumnValues(it) }
+
+                argumentValues + resultSetValues
+            }
+            .map { unwrapColumnValues(defaultAndNullableValues(exceptColumns = it.keys)) + it }
+            .map { ResultRow.createAndFillValues(it as Map<Expression<*>, Any?>) }
+    }
+
+    private fun defaultAndNullableValues(exceptColumns: Collection<Column<*>>): Map<Column<*>, Any?> {
+        return statement.table.columns
+            .filter { column -> !exceptColumns.contains(column) }
+            .mapNotNull { column ->
+                val defaultFn = column.defaultValueFun
+                when {
+                    defaultFn != null -> column to defaultFn()
+                    column.columnType.nullable -> column to null
+                    else -> null
+                }
+            }
+            .toMap()
+    }
 
     @Suppress("NestedBlockDepth", "TooGenericExceptionCaught")
-//    private suspend fun Result.returnedValues(inserted: Int): ArrayList<MutableMap<Column<*>, Any?>> {
-//        if (inserted == 0) return arrayListOf()
-//
-//        val resultSetsValues = arrayListOf<MutableMap<Column<*>, Any?>>()
-//
-//        val columnIndexesInResultSet = returnedColumns()
-//
-//        val firstAutoIncColumn = autoIncColumns.firstOrNull()
-//        if (firstAutoIncColumn != null || columnIndexesInResultSet.isNotEmpty()) {
-//            while (next()) {
-//                try {
-//                    val returnedValues = columnIndexesInResultSet.associateTo(mutableMapOf()) {
-//                        it.first to it.first.columnType.readObject(JdbcResult(this), it.second)
-//                    }
-//                    if (returnedValues.isEmpty() && firstAutoIncColumn != null) {
-//                        returnedValues[firstAutoIncColumn] = getObject(1)
-//                    }
-//                    resultSetsValues.add(returnedValues)
-//                } catch (cause: ArrayIndexOutOfBoundsException) {
-//                    // EXPOSED-191 Flaky Oracle test on TC build
-//                    // this try/catch should help to get information about the flaky test.
-//                    // try/catch can be safely removed after the fixing the issue.
-//                    // TooGenericExceptionCaught suppress also can be removed
-//
-//                    val preparedSql = this@InsertExecutable.statement.prepareSQL(TransactionManager.current(), prepared = true)
-//
-//                    val returnedColumnsString = columnIndexesInResultSet
-//                        .mapIndexed { index, pair -> "column: ${pair.first.name}, index: ${pair.second} (columns-list-index: $index)" }
-//                        .joinToString(prefix = "[", postfix = "]", separator = ", ")
-//
-//                    exposedLogger.error(
-//                        "ArrayIndexOutOfBoundsException on processResults. " +
-//                            "Table: ${this@InsertExecutable.statement.table.tableName}, " +
-//                            "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
-//                            "inserted: $inserted, returnedColumnsString: $returnedColumnsString. " +
-//                            "Failed SQL: $preparedSql",
-//                        cause
-//                    )
-//                    throw cause
-//                }
-//            }
-//
-//            if (inserted > 1 && firstAutoIncColumn != null && resultSetsValues.isNotEmpty() && !currentDialect.supportsMultipleGeneratedKeys) {
-//                // H2/SQLite only returns one last generated key...
-//                (resultSetsValues[0][firstAutoIncColumn] as? Number)?.toLong()?.let {
-//                    var id = it
-//
-//                    while (resultSetsValues.size < inserted) {
-//                        id -= 1
-//                        resultSetsValues.add(0, mutableMapOf(firstAutoIncColumn to id))
-//                    }
-//                }
-//            }
-//
-//            assert(
-//                this@InsertExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == inserted ||
-//                    currentDialect.supportsTernaryAffectedRowValues
-//            ) {
-//                "Number of autoincs (${resultSetsValues.size}) doesn't match number of batch entries ($inserted)"
-//            }
-//        }
-//
-//        return resultSetsValues
-//    }
+    private suspend fun R2dbcResult.returnedValues(inserted: Int): ArrayList<MutableMap<Column<*>, Any?>> {
+        if (inserted == 0) return arrayListOf()
 
-    // not sure how to get column indexes from Row/RowMetadata
-    /**
-     * Returns indexes of the table columns in [ResultSet]
-     */
-//    private suspend fun RowMetadata?.returnedColumns(): List<Pair<Column<*>, Int>> {
-//        val columns = if (currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
-//            autoIncColumns
-//        } else {
-//            this@InsertExecutable.statement.table.columns
-//        }
-//        return columns.mapNotNull { col ->
-//            @Suppress("SwallowedException")
-//            try {
-//                this?.metadata?.getColumnMetadata(col.name)?.let { col to it }
-//            } catch (e: SQLException) {
-//                null
-//            }
-//        }
-//    }
+        val resultSetsValues = arrayListOf<MutableMap<Column<*>, Any?>>()
+        var columnIndexesInResultSet: List<Pair<Column<*>, Int>>? = null
+        val firstAutoIncColumn = autoIncColumns.firstOrNull()
+
+        flow {
+            this@returnedValues.result.collect { rs ->
+                rs.map { row, rm ->
+                    this@returnedValues.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
+
+                    if (columnIndexesInResultSet == null) {
+                        columnIndexesInResultSet = rm.returnedColumns()
+                    }
+
+                    if (firstAutoIncColumn != null || columnIndexesInResultSet.isNotEmpty()) {
+                        try {
+                            val returnedValues: MutableMap<Column<*>, Any?> = columnIndexesInResultSet.associateTo(mutableMapOf()) {
+                                it.first to it.first.columnType.readObject(this@returnedValues, it.second)
+                            }
+                            if (returnedValues.isEmpty() && firstAutoIncColumn != null) {
+                                returnedValues[firstAutoIncColumn] = this@returnedValues.getObject(1)
+                            }
+                            returnedValues
+                        } catch (cause: ArrayIndexOutOfBoundsException) {
+                            // EXPOSED-191 Flaky Oracle test on TC build
+                            // this try/catch should help to get information about the flaky test.
+                            // try/catch can be safely removed after the fixing the issue.
+                            // TooGenericExceptionCaught suppress also can be removed
+
+                            val preparedSql = this@InsertExecutable.statement.prepareSQL(TransactionManager.current(), prepared = true)
+
+                            val returnedColumnsString = columnIndexesInResultSet
+                                .mapIndexed { index, pair ->
+                                    "column: ${pair.first.name}, index: ${pair.second} (columns-list-index: $index)"
+                                }
+                                .joinToString(prefix = "[", postfix = "]", separator = ", ")
+
+                            exposedLogger.error(
+                                "ArrayIndexOutOfBoundsException on processResults. " +
+                                    "Table: ${this@InsertExecutable.statement.table.tableName}, " +
+                                    "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
+                                    "inserted: $inserted, returnedColumnsString: $returnedColumnsString. " +
+                                    "Failed SQL: $preparedSql",
+                                cause
+                            )
+                            throw cause
+                        }
+                    } else {
+                        null
+                    }
+                }.collect { emit(it) }
+            }
+        }.filterNotNull().toList(resultSetsValues)
+
+        if (firstAutoIncColumn != null || columnIndexesInResultSet?.isNotEmpty() == true) {
+            if (inserted > 1 && firstAutoIncColumn != null && resultSetsValues.isNotEmpty() && !currentDialect.supportsMultipleGeneratedKeys) {
+                // H2 only returns one last generated key...
+                (resultSetsValues[0][firstAutoIncColumn] as? Number)?.toLong()?.let {
+                    var id = it
+
+                    while (resultSetsValues.size < inserted) {
+                        id -= 1
+                        resultSetsValues.add(0, mutableMapOf(firstAutoIncColumn to id))
+                    }
+                }
+            }
+
+            assert(
+                this@InsertExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == inserted ||
+                    currentDialect.supportsTernaryAffectedRowValues
+            ) {
+                "Number of autoincs (${resultSetsValues.size}) doesn't match number of batch entries ($inserted)"
+            }
+        }
+
+        return resultSetsValues
+    }
+
+    private fun RowMetadata?.returnedColumns(): List<Pair<Column<*>, Int>> {
+        val columns = if (currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
+            autoIncColumns
+        } else {
+            this@InsertExecutable.statement.table.columns
+        }
+        return columns.mapNotNull { col ->
+            @Suppress("SwallowedException")
+            try {
+                this?.columnMetadatas?.withIndex()?.firstOrNull { it.value.name == col.name }?.let {
+                    col to it.index
+                }
+            } catch (e: SQLException) {
+                null
+            }
+        }
+    }
 
     /**
      * Returns all the columns for which value can not be derived without actual request.
@@ -186,9 +203,9 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     @OptIn(InternalApi::class)
     private fun columnsGeneratedOnDB(): Collection<Column<*>> = (autoIncColumns + statement.columnsWithDatabaseDefaults()).toSet()
 
-//    private fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
-//        if (col !is ExpressionWithColumnType<*>) return@mapValues value
-//
-//        value?.let { (col.columnType as? ColumnWithTransform<Any, Any>)?.unwrapRecursive(it) } ?: value
-//    }
+    private fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
+        if (col !is ExpressionWithColumnType<*>) return@mapValues value
+
+        value?.let { (col.columnType as? ColumnWithTransform<Any, Any>)?.unwrapRecursive(it) } ?: value
+    }
 }

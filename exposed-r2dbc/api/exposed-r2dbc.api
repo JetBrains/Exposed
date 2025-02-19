@@ -211,13 +211,13 @@ public final class org/jetbrains/exposed/sql/R2dbcDatabase : org/jetbrains/expos
 	public fun getDialectMode ()Ljava/lang/String;
 	public fun getFullVersion ()Ljava/lang/String;
 	public fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
-	public fun getMajorVersion ()I
-	public fun getMinorVersion ()I
+	public final fun getMajorVersion ()I
+	public final fun getMinorVersion ()I
 	public fun getSupportsAlterTableWithAddColumn ()Z
 	public fun getSupportsAlterTableWithDropColumn ()Z
 	public fun getSupportsMultipleResultSets ()Z
-	public final fun getUrl ()Ljava/lang/String;
-	public final fun getVendor ()Ljava/lang/String;
+	public fun getUrl ()Ljava/lang/String;
+	public fun getVendor ()Ljava/lang/String;
 	public fun getVersion ()Ljava/math/BigDecimal;
 	public fun isVersionCovers (II)Z
 	public fun isVersionCovers (Ljava/math/BigDecimal;)Z
@@ -577,6 +577,7 @@ public abstract interface class org/jetbrains/exposed/sql/statements/api/R2dbcEx
 	public abstract fun getAutoCommit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getCatalog (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getConnection ()Ljava/lang/Object;
+	public abstract fun getReadOnly (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getTransactionIsolation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun isClosed (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -590,7 +591,6 @@ public abstract interface class org/jetbrains/exposed/sql/statements/api/R2dbcEx
 	public abstract fun setCatalog (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setReadOnly (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setSavepoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun setSchema (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun setTransactionIsolation (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -602,19 +602,18 @@ public abstract class org/jetbrains/exposed/sql/statements/api/R2dbcExposedDatab
 	public abstract fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getDatabaseDialectMode (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getDatabaseDialectName ()Ljava/lang/String;
-	public abstract fun getDatabaseProductVersion (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getDatabaseProductVersion ()Ljava/lang/String;
 	public abstract fun getDefaultIsolationLevel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun getMajorVersion (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun getMinorVersion (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getMajorVersion ()I
+	public abstract fun getMinorVersion ()I
 	public abstract fun getSupportsAlterTableWithAddColumn ()Z
 	public abstract fun getSupportsAlterTableWithDropColumn ()Z
+	public abstract fun getSupportsLimitWithUpdateOrDelete ()Z
 	public abstract fun getSupportsMultipleResultSets ()Z
 	public abstract fun getSupportsSelectForUpdate ()Z
-	public abstract fun getUrl (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun getVersion (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getVersion ()Ljava/math/BigDecimal;
 	public abstract fun schemaNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun supportsLimitWithUpdateOrDelete (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun tableNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun tableNamesByCurrentSchema (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -637,7 +636,7 @@ public final class org/jetbrains/exposed/sql/statements/api/R2dbcPreparedStateme
 }
 
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcConnectionImpl : org/jetbrains/exposed/sql/statements/api/R2dbcExposedConnection {
-	public fun <init> (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcScope;)V
+	public fun <init> (Lorg/reactivestreams/Publisher;Ljava/lang/String;Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcScope;)V
 	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeInBatch (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -645,6 +644,7 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcConnectionImp
 	public fun getCatalog (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public synthetic fun getConnection ()Ljava/lang/Object;
 	public fun getConnection ()Lorg/reactivestreams/Publisher;
+	public fun getReadOnly (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getTransactionIsolation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun isClosed (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -658,40 +658,34 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcConnectionImp
 	public fun setCatalog (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setReadOnly (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setSavepoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun setSchema (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setTransactionIsolation (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcDatabaseMetadataImpl : org/jetbrains/exposed/sql/statements/api/R2dbcExposedDatabaseMetadata {
 	public static final field Companion Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcDatabaseMetadataImpl$Companion;
-	public fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/metadata/MetadataProvider;Lio/r2dbc/spi/Connection;Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcScope;)V
-	public final fun catalogs (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun <init> (Ljava/lang/String;Lio/r2dbc/spi/Connection;Ljava/lang/String;Lorg/jetbrains/exposed/sql/statements/r2dbc/R2dbcScope;)V
 	public fun cleanCache ()V
 	public fun columns ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun getCatalog (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getDatabaseDialectMode (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getDatabaseDialectName ()Ljava/lang/String;
-	public fun getDatabaseProductVersion (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getDatabaseProductVersion ()Ljava/lang/String;
 	public fun getDefaultIsolationLevel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
-	public fun getMajorVersion (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun getMetadata ()Lorg/jetbrains/exposed/sql/vendors/metadata/MetadataProvider;
-	public fun getMinorVersion (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun getSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getMajorVersion ()I
+	public fun getMinorVersion ()I
 	public fun getSupportsAlterTableWithAddColumn ()Z
 	public fun getSupportsAlterTableWithDropColumn ()Z
+	public fun getSupportsLimitWithUpdateOrDelete ()Z
 	public fun getSupportsMultipleResultSets ()Z
 	public fun getSupportsSelectForUpdate ()Z
-	public fun getUrl (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun getVersion (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getVersion ()Ljava/math/BigDecimal;
 	public fun resetCurrentScheme ()V
 	public fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/ReferenceOption;
 	public fun schemaNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun supportsLimitWithUpdateOrDelete (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun tableNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun tableNamesByCurrentSchema (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -877,215 +871,5 @@ public class org/jetbrains/exposed/sql/vendors/SQLServerDialectMetadata : org/je
 public class org/jetbrains/exposed/sql/vendors/SQLiteDialectMetadata : org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata {
 	public fun <init> ()V
 	public fun supportsLimitWithUpdateOrDelete (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
-public final class org/jetbrains/exposed/sql/vendors/metadata/H2Metadata : org/jetbrains/exposed/sql/vendors/metadata/MetadataProvider {
-	public fun <init> ()V
-	public fun getCatalog ()Ljava/lang/String;
-	public fun getCatalogs ()Ljava/lang/String;
-	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getReadOnlyMode ()Ljava/lang/String;
-	public fun getSchema ()Ljava/lang/String;
-	public fun getSchemas ()Ljava/lang/String;
-	public fun getSequences ()Ljava/lang/String;
-	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getUsername ()Ljava/lang/String;
-	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
-	public fun setReadOnlyMode (Z)Ljava/lang/String;
-	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-}
-
-public final class org/jetbrains/exposed/sql/vendors/metadata/MariaDBMetadata : org/jetbrains/exposed/sql/vendors/metadata/MySQLMetadata {
-	public fun <init> ()V
-	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getPropertyProvider ()Lorg/jetbrains/exposed/sql/vendors/metadata/PropertyProvider;
-	public fun getTypeProvider ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider;
-}
-
-public abstract class org/jetbrains/exposed/sql/vendors/metadata/MetadataProvider : org/jetbrains/exposed/sql/vendors/metadata/QueryProvider {
-	public fun <init> (Lorg/jetbrains/exposed/sql/vendors/metadata/PropertyProvider;Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider;)V
-	public fun getPropertyProvider ()Lorg/jetbrains/exposed/sql/vendors/metadata/PropertyProvider;
-	public fun getTypeProvider ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider;
-}
-
-public class org/jetbrains/exposed/sql/vendors/metadata/MySQLMetadata : org/jetbrains/exposed/sql/vendors/metadata/MetadataProvider {
-	public fun <init> ()V
-	public fun getCatalog ()Ljava/lang/String;
-	public fun getCatalogs ()Ljava/lang/String;
-	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getReadOnlyMode ()Ljava/lang/String;
-	public fun getSchema ()Ljava/lang/String;
-	public fun getSchemas ()Ljava/lang/String;
-	public fun getSequences ()Ljava/lang/String;
-	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getUsername ()Ljava/lang/String;
-	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
-	public fun setReadOnlyMode (Z)Ljava/lang/String;
-	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-}
-
-public final class org/jetbrains/exposed/sql/vendors/metadata/OracleMetadata : org/jetbrains/exposed/sql/vendors/metadata/MetadataProvider {
-	public fun <init> ()V
-	public fun getCatalog ()Ljava/lang/String;
-	public fun getCatalogs ()Ljava/lang/String;
-	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getReadOnlyMode ()Ljava/lang/String;
-	public fun getSchema ()Ljava/lang/String;
-	public fun getSchemas ()Ljava/lang/String;
-	public fun getSequences ()Ljava/lang/String;
-	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getUsername ()Ljava/lang/String;
-	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
-	public fun setReadOnlyMode (Z)Ljava/lang/String;
-	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-}
-
-public final class org/jetbrains/exposed/sql/vendors/metadata/PostgreSQLMetadata : org/jetbrains/exposed/sql/vendors/metadata/MetadataProvider {
-	public fun <init> ()V
-	public fun getCatalog ()Ljava/lang/String;
-	public fun getCatalogs ()Ljava/lang/String;
-	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getReadOnlyMode ()Ljava/lang/String;
-	public fun getSchema ()Ljava/lang/String;
-	public fun getSchemas ()Ljava/lang/String;
-	public fun getSequences ()Ljava/lang/String;
-	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getUsername ()Ljava/lang/String;
-	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
-	public fun setReadOnlyMode (Z)Ljava/lang/String;
-	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-}
-
-public abstract class org/jetbrains/exposed/sql/vendors/metadata/PropertyProvider {
-	public fun <init> ()V
-	public fun getDefaultTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
-	public fun getExtraNameCharacters ()Ljava/lang/String;
-	public fun getIdentifierQuoteString ()Ljava/lang/String;
-	public fun getMaxColumnNameLength ()I
-	public fun getStoresLowerCaseIdentifiers ()Z
-	public fun getStoresLowerCaseQuotedIdentifiers ()Z
-	public fun getStoresUpperCaseIdentifiers ()Z
-	public fun getStoresUpperCaseQuotedIdentifiers ()Z
-	public fun getSupportsAlterTableWithAddColumn ()Z
-	public fun getSupportsAlterTableWithDropColumn ()Z
-	public fun getSupportsMixedCaseIdentifiers ()Z
-	public fun getSupportsMixedCaseQuotedIdentifiers ()Z
-	public fun getSupportsMultipleResultSets ()Z
-	public fun getSupportsSelectForUpdate ()Z
-	public abstract fun sqlKeywords ()Ljava/lang/String;
-}
-
-public abstract interface class org/jetbrains/exposed/sql/vendors/metadata/QueryProvider {
-	public abstract fun getCatalog ()Ljava/lang/String;
-	public abstract fun getCatalogs ()Ljava/lang/String;
-	public abstract fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun getPropertyProvider ()Lorg/jetbrains/exposed/sql/vendors/metadata/PropertyProvider;
-	public abstract fun getReadOnlyMode ()Ljava/lang/String;
-	public abstract fun getSchema ()Ljava/lang/String;
-	public abstract fun getSchemas ()Ljava/lang/String;
-	public abstract fun getSequences ()Ljava/lang/String;
-	public abstract fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun getTypeProvider ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider;
-	public abstract fun getUsername ()Ljava/lang/String;
-	public abstract fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun setReadOnlyMode (Z)Ljava/lang/String;
-	public abstract fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-}
-
-public final class org/jetbrains/exposed/sql/vendors/metadata/SQLServerMetadata : org/jetbrains/exposed/sql/vendors/metadata/MetadataProvider {
-	public fun <init> ()V
-	public fun getCatalog ()Ljava/lang/String;
-	public fun getCatalogs ()Ljava/lang/String;
-	public fun getColumns (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getImportedKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getIndexInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getPrimaryKeys (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getReadOnlyMode ()Ljava/lang/String;
-	public fun getSchema ()Ljava/lang/String;
-	public fun getSchemas ()Ljava/lang/String;
-	public fun getSequences ()Ljava/lang/String;
-	public fun getTables (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-	public fun getUsername ()Ljava/lang/String;
-	public fun setCatalog (Ljava/lang/String;)Ljava/lang/String;
-	public fun setReadOnlyMode (Z)Ljava/lang/String;
-	public fun setSchema (Ljava/lang/String;)Ljava/lang/String;
-}
-
-public abstract class org/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider {
-	public fun <init> ()V
-	public fun getAdditionalTypes ()Ljava/util/Set;
-	public fun getArrayType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getBigIntType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getBinaryType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getBitType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getBlobType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getBooleanType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getCharType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getCharacterPrecision ()Ljava/lang/String;
-	public fun getClobType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getDataLinkType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getDateType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getDecimalType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getDistinctType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getDoubleType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getFloatType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getIntegerType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getJavaObjectType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getLongNVarcharType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getLongVarbinaryType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getLongVarcharType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getMaxPrecision ()Ljava/lang/String;
-	public fun getNCharType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getNClobType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getNVarcharType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getNullType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getNumericPrecision ()Ljava/lang/String;
-	public fun getNumericType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getOtherType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getRealType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getRefCursorType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getRefType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public abstract fun getReferenceOptions ()Ljava/util/Map;
-	public fun getRowIdType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getSmallIntType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getSqlXmlType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getStructType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getTimeType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getTimeWithTimezoneType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getTimestampType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getTimestampWithTimezoneType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getTinyIntType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getVarbinaryType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun getVarcharType ()Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-}
-
-public final class org/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType {
-	public fun <init> (Ljava/lang/String;ILjava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()I
-	public final fun component3 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;ILjava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public static synthetic fun copy$default (Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;Ljava/lang/String;ILjava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/vendors/metadata/SqlTypeProvider$DataType;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCode ()I
-	public final fun getName ()Ljava/lang/String;
-	public final fun getPrecision ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 

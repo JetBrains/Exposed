@@ -51,12 +51,12 @@ internal open class MySQLTypeProvider : SqlTypeProvider() {
             ReferenceOption.SET_NULL to 2
         )
         if (isMySQL6Plus) {
-            options[ReferenceOption.SET_DEFAULT] = 1
             options[ReferenceOption.RESTRICT] = 1
+            options[ReferenceOption.SET_DEFAULT] = 1
             options[ReferenceOption.NO_ACTION] = 1
         } else {
-            options[ReferenceOption.SET_DEFAULT] = 3
             options[ReferenceOption.RESTRICT] = 3
+            options[ReferenceOption.SET_DEFAULT] = 3
             options[ReferenceOption.NO_ACTION] = 3
         }
         options
@@ -90,127 +90,122 @@ internal open class MySQLTypeProvider : SqlTypeProvider() {
         )
 }
 
-open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), MySQLTypeProvider()) {
+internal open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), MySQLTypeProvider()) {
+    // REVIEW potential mismatch: MariaDB R2DBC returns User@Host, but MariaDB JDBC returns just User
     override fun getUsername(): String {
-        TODO("Not yet implemented")
+        return "SELECT USER() AS USER_NAME"
     }
 
     override fun getReadOnlyMode(): String {
-        return "SHOW VARIABLES LIKE 'read_only'"
+        return "SELECT @@transaction_read_only AS READ_ONLY"
     }
 
     override fun setReadOnlyMode(value: Boolean): String {
-        TODO("Not yet implemented")
+        return if (value) {
+            "SET @@transaction_read_only = ON"
+        } else {
+            "SET @@transaction_read_only = OFF"
+        }
     }
 
+    override fun getDatabaseMode(): String = ""
+
     override fun getCatalog(): String {
-        return "SELECT DATABASE() TABLE_CAT"
+        return "SELECT DATABASE() AS TABLE_CAT"
     }
 
     override fun setCatalog(value: String): String {
         return "USE $value"
     }
 
-    override fun getSchema(): String {
-        return "SELECT NULL TABLE_SCHEM"
-    }
-
-    override fun setSchema(value: String): String {
-        return "USE $value"
-    }
+    override fun getSchema(): String = ""
 
     override fun getCatalogs(): String {
         return buildString {
-            append("SELECT DISTINCT SCHEMA_NAME TABLE_CAT ")
+            append("SELECT DISTINCT SCHEMA_NAME AS TABLE_CAT ")
             append("FROM INFORMATION_SCHEMA.SCHEMATA ")
             append("ORDER BY TABLE_CAT")
         }
     }
 
-    // what should be done to simulate retrieving an empty result set without pinging database?
-    // this should never be used with MySQL/MariaDB
-    override fun getSchemas(): String {
-        return "SELECT 1 TABLE_SCHEM FROM DUAL WHERE FALSE"
-    }
+    override fun getSchemas(): String = ""
 
-    override fun getTables(catalog: String?, schemaPattern: String?, tableNamePattern: String): String {
+    override fun getTables(catalog: String, schemaPattern: String): String {
         return buildString {
-            append("SELECT TABLE_SCHEMA TABLE_CAT, NULL TABLE_SCHEM, TABLE_NAME ")
+            append("SELECT TABLE_SCHEMA AS TABLE_CAT, NULL AS TABLE_SCHEM, TABLE_NAME ")
             append("FROM INFORMATION_SCHEMA.TABLES ")
-            append("WHERE TABLE_NAME LIKE '$tableNamePattern' ")
-            if (!catalog.isNullOrEmpty()) {
-                append("AND TABLE_SCHEMA LIKE '$catalog' ")
-            }
+            append("WHERE TABLE_SCHEMA = '$catalog' ")
             append("AND TABLE_TYPE = 'BASE TABLE' ")
             append("ORDER BY TABLE_CAT, TABLE_NAME")
         }
     }
 
-    // what should be done to simulate retrieving an empty result set without pinging database?
-    // this should never be used with MySQL/MariaDB
-    override fun getSequences(): String {
-        return "SELECT 1 SEQUENCE_NAME FROM DUAL WHERE FALSE"
-    }
+    override fun getAllSequences(): String = ""
 
-    override fun getColumns(catalog: String, schemaPattern: String, tableNamePattern: String): String {
+    override fun getSequences(catalog: String, schemaPattern: String, table: String): String = ""
+
+    override fun getColumns(catalog: String, schemaPattern: String, table: String): String {
         return buildString {
-            append("SELECT TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, COLUMN_DEFAULT COLUMN_DEF, ")
-            append("CASE WHEN EXTRA = 'auto_increment' THEN 'YES' ELSE 'NO' END IS_AUTOINCREMENT, ")
-            append("NUMERIC_SCALE DECIMAL_DIGITS, ")
-            append("CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END NULLABLE, ")
+            append("SELECT COLUMN_NAME, ")
+            typeProvider.appendDataTypes("DATA_TYPE", "DATA_TYPE", this)
+            append(", ")
             typeProvider.appendDataPrecisions("DATA_TYPE", "COLUMN_SIZE", this)
             append(", ")
-            typeProvider.appendDataTypes("DATA_TYPE", "DATA_TYPE", this)
-            append(" ")
+            append("NUMERIC_SCALE AS DECIMAL_DIGITS, ")
+            append("CASE WHEN IS_NULLABLE = 'YES' THEN 'TRUE' ELSE 'FALSE' END AS NULLABLE, ")
+            append("COLUMN_DEFAULT AS COLUMN_DEF, ORDINAL_POSITION, ")
+            append("CASE WHEN EXTRA = 'auto_increment' THEN 'YES' ELSE 'NO' END AS IS_AUTOINCREMENT ")
             append("FROM INFORMATION_SCHEMA.COLUMNS ")
             append("WHERE TABLE_SCHEMA LIKE '$schemaPattern' ")
-            append("AND TABLE_NAME LIKE '$tableNamePattern' AND COLUMN_NAME LIKE '%' ")
-            append("ORDER BY TABLE_NAME, ORDINAL_POSITION")
+            append("AND TABLE_NAME = '$table' ")
+            append("ORDER BY ORDINAL_POSITION")
         }
     }
 
-    override fun getPrimaryKeys(catalog: String, schema: String, table: String): String {
+    override fun getPrimaryKeys(catalog: String, schemaPattern: String, table: String): String {
         return buildString {
-            append("SELECT COLUMN_NAME, INDEX_NAME PK_NAME ")
+            append("SELECT COLUMN_NAME, INDEX_NAME AS PK_NAME ")
             append("FROM INFORMATION_SCHEMA.STATISTICS ")
-            append("WHERE TABLE_SCHEMA LIKE '$schema' AND TABLE_NAME LIKE '$table' ")
+            append("WHERE TABLE_SCHEMA LIKE '$schemaPattern' ")
+            append("AND TABLE_NAME = '$table' ")
             append("AND INDEX_NAME = 'PRIMARY' ")
             append("ORDER BY COLUMN_NAME")
         }
     }
 
-    override fun getIndexInfo(catalog: String, schema: String, table: String): String {
+    override fun getIndexInfo(catalog: String, schemaPattern: String, table: String): String {
+        // EXPRESSION AS FILTER_CONDITION <-- this actually returns the correct functional index string
+        // but this goes against JDBC metadata query, which always returns null for this result field
+        // Todo: Assess current impact of this mismatch in JDBC migration & consider switching both to use EXPRESSION
         return buildString {
-            append("SELECT INDEX_NAME, COLUMN_NAME, NON_UNIQUE, ")
-            if (isMySQL6Plus) {
-                append("EXPRESSION FILTER_CONDITION ")
-            } else {
-                append("NULL FILTER_CONDITION ")
-            }
+            append("SELECT CASE WHEN NON_UNIQUE = 0 THEN 'FALSE' ELSE 'TRUE' END AS NON_UNIQUE, ")
+            append("INDEX_NAME, SEQ_IN_INDEX AS ORDINAL_POSITION, ")
+            append("COLUMN_NAME, NULL AS FILTER_CONDITION ")
             append("FROM INFORMATION_SCHEMA.STATISTICS ")
-            append("WHERE TABLE_SCHEMA = '$schema' AND TABLE_NAME = '$table' ")
-            append("ORDER BY NON_UNIQUE, INDEX_NAME")
+            append("WHERE TABLE_SCHEMA LIKE '$schemaPattern' ")
+            append("AND TABLE_NAME = '$table' ")
+            append("ORDER BY NON_UNIQUE, INDEX_NAME, ORDINAL_POSITION")
         }
     }
 
-    override fun getImportedKeys(catalog: String, schema: String, table: String): String {
-        // SWAP to use SQL in JDBC tableConstraints()
+    override fun getImportedKeys(catalog: String, schemaPattern: String, table: String): String {
         return buildString {
-            append("SELECT tc.TABLE_NAME FKTABLE_NAME, tc.CONSTRAINT_NAME FK_NAME, ")
+            append("SELECT kcu.REFERENCED_TABLE_NAME AS PKTABLE_NAME, kcu.REFERENCED_COLUMN_NAME AS PKCOLUMN_NAME, ")
+            append("kcu.TABLE_NAME AS FKTABLE_NAME, kcu.COLUMN_NAME AS FKCOLUMN_NAME, ")
+            append("kcu.ORDINAL_POSITION AS KEY_SEQ, ")
             typeProvider.appendReferenceOptions("rc.UPDATE_RULE", "UPDATE_RULE", this)
             append(", ")
             typeProvider.appendReferenceOptions("rc.DELETE_RULE", "DELETE_RULE", this)
             append(", ")
-            append("kcu.ORDINAL_POSITION, kcu.COLUMN_NAME FKCOLUMN_NAME, kcu.REFERENCED_TABLE_SCHEMA PKTABLE_SCHEM, ")
-            append("kcu.REFERENCED_TABLE_NAME PKTABLE_NAME, kcu.REFERENCED_COLUMN_NAME PKCOLUMN_NAME ")
-            append("FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc ")
-            append("JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc ")
-            append("ON tc.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME ")
-            append("JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu ")
-            append("ON tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME ")
-            append("WHERE tc.TABLE_SCHEMA LIKE '$schema' AND tc.TABLE_NAME LIKE '$table' ")
-            append("AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY' ")
-            append("ORDER BY PKTABLE_SCHEM, PKTABLE_NAME, FK_NAME, ORDINAL_POSITION")
+            append("rc.CONSTRAINT_NAME AS FK_NAME ")
+            append("FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc ")
+            append("INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu ")
+            append("ON rc.CONSTRAINT_SCHEMA = kcu.TABLE_SCHEMA AND rc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME ")
+            append("WHERE kcu.TABLE_SCHEMA LIKE '$schemaPattern' ")
+            append("AND kcu.CONSTRAINT_SCHEMA LIKE '$schemaPattern' ")
+            append("AND rc.CONSTRAINT_SCHEMA LIKE '$schemaPattern' ")
+            append("AND kcu.TABLE_NAME = '$table' ")
+            append("ORDER BY PKTABLE_NAME, KEY_SEQ")
         }
     }
 }

@@ -10,8 +10,6 @@ import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.selectAll
 import org.jetbrains.exposed.sql.SchemaUtils.withDataBaseLock
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectMetadata
 
@@ -180,7 +178,7 @@ object SchemaUtils : SchemaUtilityApi() {
         val transaction = TransactionManager.current()
         return with(transaction) {
             exec(currentDialect.listDatabases()) { row ->
-                row.get(1, String::class.java)
+                row.get(0, String::class.java)?.lowercase()
             }?.filterNotNull()?.toList() ?: emptyList()
         }
     }
@@ -443,16 +441,10 @@ object SchemaUtils : SchemaUtilityApi() {
      */
     suspend fun setSchema(schema: Schema, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
-            val createStatements = schema.setSchemaStatement()
+            val setStatements = schema.setSchemaStatement()
 
-            execStatements(inBatch, createStatements)
+            execStatements(inBatch, setStatements)
 
-            when (currentDialect) {
-                /** Sets manually the database name in connection.catalog for Mysql.
-                 * Mysql doesn't change catalog after executing "Use db" statement*/
-                is MysqlDialect -> connection.setCatalog(schema.identifier)
-                is H2Dialect -> connection.setSchema(schema.identifier)
-            }
             currentDialectMetadata.resetCaches()
             connection.metadata { resetCurrentScheme() }
         }
