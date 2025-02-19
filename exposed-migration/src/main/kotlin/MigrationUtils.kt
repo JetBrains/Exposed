@@ -1,15 +1,10 @@
-import org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.SchemaUtils.addMissingColumnsStatements
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveForeignKeyConstraints
 import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveIndices
 import org.jetbrains.exposed.sql.SchemaUtils.checkMappingConsistence
 import org.jetbrains.exposed.sql.SchemaUtils.createStatements
-import org.jetbrains.exposed.sql.Sequence
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.ColumnMetadata
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
@@ -17,7 +12,8 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.io.File
 
-object MigrationUtils {
+/** Utility functions that assist with performing database migrations. */
+object MigrationUtils : BaseSchemaUtils() {
     /**
      * This function simply generates the migration script without applying the migration. Its purpose is to show what
      * the migration script will look like before applying the migration. If a migration script with the same name
@@ -85,9 +81,16 @@ object MigrationUtils {
         val createSequencesStatements = logTimeSpent("Preparing create sequences statements", withLogs) {
             checkMissingSequences(tables = tables, withLogs).flatMap { it.createStatement() }
         }
-        val alterStatements = logTimeSpent("Preparing alter table statements", withLogs) {
-            addMissingColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs) +
-                dropUnmappedColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs)
+        val alterStatements = if (tablesToAlter.isEmpty()) {
+            emptyList()
+        } else {
+            logTimeSpent("Preparing alter table statements", withLogs) {
+                val existingTablesColumns = logTimeSpent("Extracting table columns", withLogs) {
+                    currentDialect.tableColumns(tables = tablesToAlter.toTypedArray())
+                }
+                addMissingColumnsStatements(tables = tablesToAlter.toTypedArray(), existingTablesColumns, withLogs) +
+                    dropUnmappedColumnsStatements(tables = tablesToAlter.toTypedArray(), existingTablesColumns)
+            }
         }
 
         val modifyTablesStatements = logTimeSpent("Checking mapping consistence", withLogs) {
@@ -114,16 +117,21 @@ object MigrationUtils {
      */
     fun dropUnmappedColumnsStatements(vararg tables: Table, withLogs: Boolean = true): List<String> {
         if (tables.isEmpty()) return emptyList()
+        val existingTablesColumns = logTimeSpent("Extracting table columns", withLogs) {
+            currentDialect.tableColumns(*tables)
+        }
+        return dropUnmappedColumnsStatements(tables = tables, existingTablesColumns = existingTablesColumns)
+    }
 
+    private fun dropUnmappedColumnsStatements(
+        vararg tables: Table,
+        existingTablesColumns: Map<Table, List<ColumnMetadata>>
+    ): List<String> {
         val statements = mutableListOf<String>()
 
         val dbSupportsAlterTableWithDropColumn = TransactionManager.current().db.supportsAlterTableWithDropColumn
 
         if (dbSupportsAlterTableWithDropColumn) {
-            val existingTablesColumns = logTimeSpent("Extracting table columns", withLogs) {
-                currentDialect.tableColumns(*tables)
-            }
-
             val tr = TransactionManager.current()
 
             tables.forEach { table ->
@@ -350,17 +358,6 @@ object MigrationUtils {
         unmappedSequences.log("Sequences exist in database and not mapped in code:")
 
         return unmappedSequences.toList()
-    }
-
-    private inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
-        return if (withLogs) {
-            val start = System.currentTimeMillis()
-            val answer = block()
-            exposedLogger.info(message + " took " + (System.currentTimeMillis() - start) + "ms")
-            answer
-        } else {
-            block()
-        }
     }
 }
 

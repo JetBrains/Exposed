@@ -255,6 +255,13 @@ public final class org/jetbrains/exposed/sql/Avg : org/jetbrains/exposed/sql/Fun
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
+public abstract class org/jetbrains/exposed/sql/BaseSchemaUtils {
+	public fun <init> ()V
+	protected final fun addMissingColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;Ljava/util/Map;Z)Ljava/util/List;
+	public static synthetic fun addMissingColumnsStatements$default (Lorg/jetbrains/exposed/sql/BaseSchemaUtils;[Lorg/jetbrains/exposed/sql/Table;Ljava/util/Map;ZILjava/lang/Object;)Ljava/util/List;
+	protected final fun logTimeSpent (Ljava/lang/String;ZLkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+}
+
 public class org/jetbrains/exposed/sql/BasicBinaryColumnType : org/jetbrains/exposed/sql/ColumnType {
 	public fun <init> ()V
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
@@ -2206,7 +2213,7 @@ public final class org/jetbrains/exposed/sql/Schema {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/jetbrains/exposed/sql/SchemaUtils {
+public final class org/jetbrains/exposed/sql/SchemaUtils : org/jetbrains/exposed/sql/BaseSchemaUtils {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/SchemaUtils;
 	public final fun addMissingColumnsStatements ([Lorg/jetbrains/exposed/sql/Table;Z)Ljava/util/List;
 	public static synthetic fun addMissingColumnsStatements$default (Lorg/jetbrains/exposed/sql/SchemaUtils;[Lorg/jetbrains/exposed/sql/Table;ZILjava/lang/Object;)Ljava/util/List;
