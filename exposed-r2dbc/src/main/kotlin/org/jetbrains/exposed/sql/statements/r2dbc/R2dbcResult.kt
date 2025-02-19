@@ -14,13 +14,13 @@ import org.reactivestreams.Publisher
 class R2dbcResult(
     val result: Publisher<out Result>
 ) : ResultApi {
-    private var currentRecord: R2dbcRecord? = null
+    internal var currentRecord: R2dbcRecord? = null
 
     override fun toString(): String = "R2dbcResult(result = $result)"
 
-    override fun getObject(index: Int): Any? = currentRecord?.row?.get(index)
+    override fun getObject(index: Int): Any? = currentRecord?.row?.get(index - 1)
 
-    override fun <T> getObject(index: Int, type: Class<T>): T? = currentRecord?.row?.get(index, type)
+    override fun <T> getObject(index: Int, type: Class<T>): T? = currentRecord?.row?.get(index - 1, type)
 
     override fun getObject(name: String): Any? = currentRecord?.row?.get(name)
 

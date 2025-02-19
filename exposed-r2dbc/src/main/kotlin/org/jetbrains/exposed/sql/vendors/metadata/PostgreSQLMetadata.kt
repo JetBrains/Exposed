@@ -7,6 +7,9 @@ internal object PostgreSQLPropertyProvider : PropertyProvider() {
     override val storesLowerCaseIdentifiers: Boolean
         get() = true
 
+    override val supportsLimitWithUpdateOrDelete: Boolean
+        get() = false
+
     override val maxColumnNameLength: Int
         get() = 63
 
@@ -104,44 +107,36 @@ internal object PostgreSQLTypeProvider : SqlTypeProvider() {
 }
 
 @Suppress("MagicNumber")
-class PostgreSQLMetadata : MetadataProvider(PostgreSQLPropertyProvider, PostgreSQLTypeProvider) {
+internal class PostgreSQLMetadata : MetadataProvider(PostgreSQLPropertyProvider, PostgreSQLTypeProvider) {
     override fun getUsername(): String {
-        TODO("Not yet implemented")
+        return "SELECT current_user AS USER_NAME"
     }
 
     override fun getReadOnlyMode(): String {
-        TODO("Not yet implemented")
+        return "SELECT current_setting('transaction_read_only') AS READ_ONLY"
     }
 
     override fun setReadOnlyMode(value: Boolean): String {
-        TODO("Not yet implemented")
+        return if (value) {
+            "SET transaction_read_only TO on"
+        } else {
+            "SET transaction_read_only TO off"
+        }
     }
+
+    override fun getDatabaseMode(): String = ""
 
     override fun getCatalog(): String {
         return "SELECT current_database() AS TABLE_CAT"
     }
 
-    // how to simulate doing nothing?
-    override fun setCatalog(value: String): String {
-        return ""
-    }
+    override fun setCatalog(value: String): String = ""
 
     override fun getSchema(): String {
         return "SELECT current_schema() AS TABLE_SCHEM"
     }
 
-    override fun setSchema(value: String): String {
-        return "SET SESSION search_path TO '$value'"
-    }
-
-    override fun getCatalogs(): String {
-        return buildString {
-            append("SELECT datname AS TABLE_CAT ")
-            append("FROM pg_catalog.pg_database ")
-            append("WHERE datallowconn = true ")
-            append("ORDER BY TABLE_CAT")
-        }
-    }
+    override fun getCatalogs(): String = ""
 
     override fun getSchemas(): String {
         return buildString {
@@ -155,114 +150,135 @@ class PostgreSQLMetadata : MetadataProvider(PostgreSQLPropertyProvider, PostgreS
         }
     }
 
-    override fun getTables(catalog: String?, schemaPattern: String?, tableNamePattern: String): String {
+    override fun getTables(catalog: String, schemaPattern: String): String {
         return buildString {
-            append("SELECT NULL AS TABLE_CAT, n.nspname AS TABLE_SCHEM, c.relname AS TABLE_NAME ")
-            append("FROM pg_catalog.pg_namespace n, pg_catalog.pg_class c ")
+            append("SELECT current_database() AS TABLE_CAT, n.nspname AS TABLE_SCHEM, c.relname AS TABLE_NAME ")
+            append("FROM pg_catalog.pg_namespace AS n, pg_catalog.pg_class AS c ")
             append("WHERE c.relnamespace = n.oid ")
-            if (!schemaPattern.isNullOrEmpty()) {
-                append("AND n.nspname LIKE '$schemaPattern' ")
-            }
-            append("AND c.relname LIKE '$tableNamePattern' ")
-            append("AND (false ")
-            append("OR (c.relkind = 'r' AND n.nspname !~ '^pg_' AND n.nspname <> 'information_schema')) ")
-            append("ORDER BY TABLE_SCHEM, TABLE_NAME")
+            append("AND current_database() = '$catalog'")
+            append("AND n.nspname LIKE '$schemaPattern' ")
+            append("AND c.relkind = 'r' AND n.nspname !~ '^pg_' AND n.nspname <> 'information_schema' ")
+            append("ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME")
         }
     }
 
-    override fun getSequences(): String {
+    override fun getAllSequences(): String {
         return buildString {
             append("SELECT c.relname AS SEQUENCE_NAME ")
-            append("FROM pg_catalog.pg_namespace n, pg_catalog.pg_class c ")
+            append("FROM pg_catalog.pg_namespace AS n, pg_catalog.pg_class AS c ")
             append("WHERE c.relnamespace = n.oid ")
             append("AND c.relkind = 'S' ")
             append("ORDER BY SEQUENCE_NAME")
         }
     }
 
-    override fun getColumns(catalog: String, schemaPattern: String, tableNamePattern: String): String {
+    override fun getSequences(catalog: String, schemaPattern: String, table: String): String {
+        val sub = buildString {
+            append("SELECT ci.relname AS SEQUENCE_NAME, seq.seqstart AS SEQUENCE_START, seq.seqincrement AS SEQUENCE_INCREMENT, ")
+            append("seq.seqmax AS SEQUENCE_MAX, seq.seqmin AS SEQUENCE_MIN, seq.seqcache AS SEQUENCE_CACHE, ")
+            append("seq.seqcycle AS SEQUENCE_CYCLE, ci.oid AS SEQUENCE_ID ")
+            append("FROM pg_catalog.pg_sequence AS seq ")
+            append("JOIN pg_catalog.pg_class AS ci ON (ci.oid = seq.seqrelid AND ci.relkind = 'S') ")
+            append("JOIN pg_catalog.pg_namespace AS ni ON (ci.relnamespace = ni.oid) ")
+            append("WHERE ni.nspname LIKE '$schemaPattern'")
+        }
         return buildString {
-            append("SELECT TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, COLUMN_DEFAULT AS COLUMN_DEF, ")
-            append("CASE WHEN IS_IDENTITY = 'YES' OR COLUMN_DEFAULT LIKE 'nextval(%' THEN 'YES' ELSE 'NO' END AS IS_AUTOINCREMENT, ")
-            append("NUMERIC_SCALE AS DECIMAL_DIGITS, ")
-            append("CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END AS NULLABLE, ")
-            typeProvider.appendDataPrecisions("DATA_TYPE", "COLUMN_SIZE", this)
-            append(", ")
-            typeProvider.appendDataTypes("DATA_TYPE", "DATA_TYPE", this)
-            append(" ")
-            append("FROM INFORMATION_SCHEMA.COLUMNS WHERE ")
-            append("TABLE_NAME LIKE '$tableNamePattern' ")
-            if (catalog.isNotEmpty()) {
-                append("AND TABLE_CATALOG LIKE '$catalog' ")
-            }
-            if (schemaPattern.isNotEmpty()) {
-                append("AND TABLE_SCHEMA LIKE '$schemaPattern' ")
-            }
-            append("AND COLUMN_NAME LIKE '%' ")
-            append("ORDER BY TABLE_NAME, ORDINAL_POSITION")
+            append("SELECT sd.SEQUENCE_NAME, sd.SEQUENCE_START, sd.SEQUENCE_INCREMENT, ")
+            append("sd.SEQUENCE_MAX, sd.SEQUENCE_MIN, sd.SEQUENCE_CACHE, sd.SEQUENCE_CYCLE ")
+            append("FROM pg_catalog.pg_namespace AS nt ")
+            append("INNER JOIN pg_catalog.pg_class AS ct ON (nt.oid = ct.relnamespace AND ct.relkind IN ('p', 'r')) ")
+            append("INNER JOIN pg_catalog.pg_depend AS d ON (ct.oid = d.refobjid) ")
+            append("LEFT OUTER JOIN ($sub) AS sd ON (sd.SEQUENCE_ID = d.objid) ")
+            append("WHERE nt.nspname LIKE '$schemaPattern' ")
+            append("AND ct.relname = '$table' ")
+            append("ORDER BY sd.SEQUENCE_NAME")
         }
     }
 
-    override fun getPrimaryKeys(catalog: String, schema: String, table: String): String {
+    override fun getColumns(catalog: String, schemaPattern: String, table: String): String {
+        return buildString {
+            append("SELECT COLUMN_NAME, ")
+            typeProvider.appendDataTypes("DATA_TYPE", "DATA_TYPE", this)
+            append(", ")
+            typeProvider.appendDataPrecisions("DATA_TYPE", "COLUMN_SIZE", this)
+            append(", ")
+            append("NUMERIC_SCALE AS DECIMAL_DIGITS, ")
+            append("CASE WHEN IS_NULLABLE = 'YES' THEN 'TRUE' ELSE 'FALSE' END AS NULLABLE, ")
+            append("COLUMN_DEFAULT AS COLUMN_DEF, ORDINAL_POSITION, ")
+            append("CASE WHEN IS_IDENTITY = 'YES' OR COLUMN_DEFAULT LIKE 'nextval(%' THEN 'YES' ELSE 'NO' END AS IS_AUTOINCREMENT ")
+            append("FROM INFORMATION_SCHEMA.COLUMNS ")
+            append("WHERE TABLE_CATALOG = '$catalog' ")
+            append("AND TABLE_SCHEMA LIKE '$schemaPattern' ")
+            append("AND TABLE_NAME = '$table' ")
+            append("ORDER BY ORDINAL_POSITION")
+        }
+    }
+
+    override fun getPrimaryKeys(catalog: String, schemaPattern: String, table: String): String {
         val sub = buildString {
             append("SELECT ct.relname AS TABLE_NAME, a.attname AS COLUMN_NAME, ci.relname AS PK_NAME, ")
             append("information_schema._pg_expandarray(i.indkey) AS KEYS, a.attnum AS A_ATTNUM ")
-            append("FROM pg_catalog.pg_class ct ")
-            append("JOIN pg_catalog.pg_attribute a ON (ct.oid = a.attrelid) ")
-            append("JOIN pg_catalog.pg_namespace n ON (ct.relnamespace = n.oid) ")
-            append("JOIN pg_catalog.pg_index i ON ( a.attrelid = i.indrelid) ")
-            append("JOIN pg_catalog.pg_class ci ON (ci.oid = i.indexrelid) ")
-            append("WHERE n.nspname = '$schema' ")
-            append("AND ct.relname LIKE '$table' ")
+            append("FROM pg_catalog.pg_class AS ct ")
+            append("JOIN pg_catalog.pg_attribute AS a ON (ct.oid = a.attrelid) ")
+            append("JOIN pg_catalog.pg_namespace AS n ON (ct.relnamespace = n.oid) ")
+            append("JOIN pg_catalog.pg_index AS i ON (a.attrelid = i.indrelid) ")
+            append("JOIN pg_catalog.pg_class AS ci ON (ci.oid = i.indexrelid) ")
+            append("WHERE current_database() = '$catalog'")
+            append("AND n.nspname LIKE '$schemaPattern' ")
+            append("AND ct.relname = '$table' ")
             append("AND i.indisprimary")
         }
         return buildString {
             append("SELECT result.COLUMN_NAME, result.PK_NAME ")
-            append("FROM ($sub) result ")
+            append("FROM ($sub) AS result ")
             append("WHERE result.A_ATTNUM = (result.KEYS).x ")
             append("ORDER BY result.COLUMN_NAME")
         }
     }
 
-    override fun getIndexInfo(catalog: String, schema: String, table: String): String {
+    override fun getIndexInfo(catalog: String, schemaPattern: String, table: String): String {
         val sub = buildString {
-            append("SELECT NOT i.indisunique AS NON_UNIQUE, ci.relname AS INDEX_NAME, ci.oid AS CI_OID, ")
+            append("SELECT NOT i.indisunique AS NON_UNIQUE, ci.relname AS INDEX_NAME, ")
             append("(information_schema._pg_expandarray(i.indkey)).n AS ORDINAL_POSITION, ")
-            append("pg_catalog.pg_get_expr(i.indpred, i.indrelid) AS FILTER_CONDITION ")
-            append("FROM pg_catalog.pg_class ct ")
-            append("JOIN pg_catalog.pg_namespace n ON (ct.relnamespace = n.oid) ")
-            append("JOIN pg_catalog.pg_index i ON (ct.oid = i.indrelid) ")
-            append("JOIN pg_catalog.pg_class ci ON (ci.oid = i.indexrelid) ")
-            append("WHERE n.nspname = '$schema' ")
-            append("AND ct.relname LIKE '$table'")
+            append("pg_catalog.pg_get_expr(i.indpred, i.indrelid) AS FILTER_CONDITION, ")
+            append("ci.oid AS CI_OID ")
+            append("FROM pg_catalog.pg_class AS ct ")
+            append("JOIN pg_catalog.pg_namespace AS n ON (ct.relnamespace = n.oid) ")
+            append("JOIN pg_catalog.pg_index AS i ON (ct.oid = i.indrelid) ")
+            append("JOIN pg_catalog.pg_class AS ci ON (ci.oid = i.indexrelid) ")
+            append("WHERE current_database() = '$catalog' ")
+            append("AND n.nspname LIKE '$schemaPattern' ")
+            append("AND ct.relname = '$table'")
         }
         return buildString {
-            append("SELECT tmp.NON_UNIQUE, tmp.INDEX_NAME, tmp.FILTER_CONDITION, ")
-            append("trim(both '\"' from pg_catalog.pg_get_indexdef(tmp.CI_OID, tmp.ORDINAL_POSITION, false)) AS COLUMN_NAME ")
-            append("FROM ($sub) tmp ")
+            append("SELECT result.NON_UNIQUE, result.INDEX_NAME, result.ORDINAL_POSITION, ")
+            append("trim(both '\"' from pg_catalog.pg_get_indexdef(result.CI_OID, result.ORDINAL_POSITION, false)) AS COLUMN_NAME, ")
+            append("result.FILTER_CONDITION ")
+            append("FROM ($sub) AS result ")
             append("ORDER BY NON_UNIQUE, INDEX_NAME, ORDINAL_POSITION")
         }
     }
 
-    override fun getImportedKeys(catalog: String, schema: String, table: String): String {
+    override fun getImportedKeys(catalog: String, schemaPattern: String, table: String): String {
         return buildString {
-            append("SELECT pkn.nspname AS PKTABLE_SCHEM, pkc.relname AS PKTABLE_NAME, pka.attname AS PKCOLUMN_NAME, ")
-            append("fkc.relname AS FKTABLE_NAME, fka.attname AS FKCOLUMN_NAME, con.conname AS FK_NAME, ")
+            append("SELECT pkc.relname AS PKTABLE_NAME, pka.attname AS PKCOLUMN_NAME, ")
+            append("fkc.relname AS FKTABLE_NAME, fka.attname AS FKCOLUMN_NAME, ")
             append("pos.n AS KEY_SEQ, ")
             typeProvider.appendReferenceOptions("con.confupdtype", "UPDATE_RULE", this)
             append(", ")
             typeProvider.appendReferenceOptions("con.confdeltype", "DELETE_RULE", this)
-            append(" ")
-            append("FROM pg_catalog.pg_namespace pkn, pg_catalog.pg_class pkc, pg_catalog.pg_attribute pka, ")
-            append("pg_catalog.pg_namespace fkn, pg_catalog.pg_class fkc, pg_catalog.pg_attribute fka, ")
-            append("pg_catalog.pg_constraint con, pg_catalog.generate_series(1, 10) pos(n), pg_catalog.pg_class pkic ")
+            append(", ")
+            append("con.conname AS FK_NAME ")
+            append("FROM pg_catalog.pg_namespace AS pkn, pg_catalog.pg_class AS pkc, pg_catalog.pg_attribute AS pka, ")
+            append("pg_catalog.pg_namespace AS fkn, pg_catalog.pg_class AS fkc, pg_catalog.pg_attribute AS fka, ")
+            append("pg_catalog.pg_constraint AS con, pg_catalog.generate_series(1, 10) AS pos(n), pg_catalog.pg_class AS pkic ")
             append("WHERE pkn.oid = pkc.relnamespace AND pkc.oid = pka.attrelid AND pka.attnum = con.confkey[pos.n] ")
             append("AND con.confrelid = pkc.oid AND fkn.oid = fkc.relnamespace AND fkc.oid = fka.attrelid ")
             append("AND fka.attnum = con.conkey[pos.n] AND con.conrelid = fkc.oid AND con.contype = 'f' ")
             append("AND pkic.relkind = 'i' AND pkic.oid = con.conindid ")
-            append("AND fkn.nspname = '$schema' ")
+            append("AND fkn.nspname LIKE '$schemaPattern' ")
             append("AND fkc.relname = '$table' ")
-            append("ORDER BY PKTABLE_SCHEM, PKTABLE_NAME, FK_NAME, KEY_SEQ")
+            append("ORDER BY PKTABLE_NAME, KEY_SEQ")
         }
     }
 }

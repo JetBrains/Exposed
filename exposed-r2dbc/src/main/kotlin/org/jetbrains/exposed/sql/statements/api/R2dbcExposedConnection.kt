@@ -8,23 +8,23 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
     /** The underlying database connection object contained by this wrapper. */
     val connection: OriginalConnection
 
-    /** Retrieve the name of the connection's catalog. */
+    /** Retrieves the name of the connection's catalog. */
     suspend fun getCatalog(): String
 
-    /** Set the name of the connection's catalog. */
+    /** Sets the name of the connection's catalog. */
     suspend fun setCatalog(value: String)
 
-    /** Retrieve the name of the connection's schema. */
+    /** Retrieves the name of the connection's schema. */
     suspend fun getSchema(): String
 
-    /** Set the name of the connection's schema. */
-    suspend fun setSchema(value: String)
-
-    /** Retrieve whether the connection is in auto-commit mode. */
+    /** Retrieves whether the connection is in auto-commit mode. */
     suspend fun getAutoCommit(): Boolean
 
-    /** Set whether the connection is in auto-commit mode or not. */
+    /** Sets whether the connection is in auto-commit mode or not. */
     suspend fun setAutoCommit(value: Boolean)
+
+    /** Retrieves whether the connection is in read-only mode. */
+    suspend fun getReadOnly(): Boolean
 
     /** Set whether the connection is in read-only mode. */
     suspend fun setReadOnly(value: Boolean)

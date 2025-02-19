@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.statements.Executable
 import org.jetbrains.exposed.sql.statements.IStatementBuilder
 import org.jetbrains.exposed.sql.statements.Statement
@@ -18,12 +19,21 @@ open class ExplainExecutable(
 
     override suspend fun collect(collector: FlowCollector<ExplainResultRow>) {
         val rs = TransactionManager.current().exec(this)!! as R2dbcResult
-        // how to iterate over fields in a Row/RowMetadata?
-//        val fieldIndex: Map<String, Int> = List(rs.result.columnCount) { i ->
-//            rs.metaData.getColumnName(i + 1) to i
-//        }.toMap()
+        val fieldIndex = mutableMapOf<String, Int>()
 
-        collector.emit(ExplainResultRow.create(rs, emptyMap()))
+        rs.result.collect { result ->
+            result.map { row, rm ->
+                if (rs.currentRecord == null) {
+                    repeat(rm.columnMetadatas.size) {
+                        fieldIndex[rm.getColumnMetadata(it).name] = it
+                    }
+                }
+                rs.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
+                ExplainResultRow.create(rs, fieldIndex)
+            }.collect {
+                collector.emit(it)
+            }
+        }
     }
 }
 

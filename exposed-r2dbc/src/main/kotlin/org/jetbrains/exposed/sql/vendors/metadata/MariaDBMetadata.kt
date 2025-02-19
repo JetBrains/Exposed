@@ -39,17 +39,17 @@ internal object MariaDBTypeProvider : MySQLTypeProvider() {
         get() = super.tinyIntType.copy(code = -7, precision = numericPrecision)
 }
 
-class MariaDBMetadata : MySQLMetadata() {
+internal class MariaDBMetadata : MySQLMetadata() {
     override val propertyProvider: PropertyProvider = MariaDBPropertyProvider
 
     override val typeProvider: SqlTypeProvider = MariaDBTypeProvider
 
-    override fun getIndexInfo(catalog: String, schema: String, table: String): String {
+    override fun getAllSequences(): String {
         return buildString {
-            append("SELECT INDEX_NAME, COLUMN_NAME, NULL FILTER_CONDITION, NON_UNIQUE ")
-            append("FROM INFORMATION_SCHEMA.STATISTICS ")
-            append("WHERE TABLE_SCHEMA = '$schema' AND TABLE_NAME = '$table' ")
-            append("ORDER BY NON_UNIQUE, INDEX_NAME")
+            append("SELECT TABLE_NAME AS SEQUENCE_NAME ")
+            append("FROM INFORMATION_SCHEMA.TABLES ")
+            append("WHERE TABLE_TYPE = 'SEQUENCE' ")
+            append("ORDER BY SEQUENCE_NAME")
         }
     }
 }

@@ -672,12 +672,13 @@ public abstract class org/jetbrains/exposed/sql/DatabaseApi {
 	public abstract fun getDialectMode ()Ljava/lang/String;
 	public abstract fun getFullVersion ()Ljava/lang/String;
 	public abstract fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
-	public abstract fun getMajorVersion ()I
-	public abstract fun getMinorVersion ()I
+	protected final fun getResolvedVendor ()Ljava/lang/String;
 	public abstract fun getSupportsAlterTableWithAddColumn ()Z
 	public abstract fun getSupportsAlterTableWithDropColumn ()Z
 	public abstract fun getSupportsMultipleResultSets ()Z
+	public abstract fun getUrl ()Ljava/lang/String;
 	public final fun getUseNestedTransactions ()Z
+	public abstract fun getVendor ()Ljava/lang/String;
 	public abstract fun getVersion ()Ljava/math/BigDecimal;
 	public abstract fun isVersionCovers (II)Z
 	public abstract fun isVersionCovers (Ljava/math/BigDecimal;)Z

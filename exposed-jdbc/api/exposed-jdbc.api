@@ -13,13 +13,13 @@ public final class org/jetbrains/exposed/sql/Database : org/jetbrains/exposed/sq
 	public fun getDialectMode ()Ljava/lang/String;
 	public fun getFullVersion ()Ljava/lang/String;
 	public fun getIdentifierManager ()Lorg/jetbrains/exposed/sql/statements/api/IdentifierManagerApi;
-	public fun getMajorVersion ()I
-	public fun getMinorVersion ()I
+	public final fun getMajorVersion ()I
+	public final fun getMinorVersion ()I
 	public fun getSupportsAlterTableWithAddColumn ()Z
 	public fun getSupportsAlterTableWithDropColumn ()Z
 	public fun getSupportsMultipleResultSets ()Z
-	public final fun getUrl ()Ljava/lang/String;
-	public final fun getVendor ()Ljava/lang/String;
+	public fun getUrl ()Ljava/lang/String;
+	public fun getVendor ()Ljava/lang/String;
 	public fun getVersion ()Ljava/math/BigDecimal;
 	public fun isVersionCovers (II)Z
 	public fun isVersionCovers (Ljava/math/BigDecimal;)Z

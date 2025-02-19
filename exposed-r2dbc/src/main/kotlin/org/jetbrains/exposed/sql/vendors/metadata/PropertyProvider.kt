@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql.vendors.metadata
 import io.r2dbc.spi.IsolationLevel
 
 /** Base class responsible for providing values for all supported metadata properties in a database. */
-abstract class PropertyProvider {
+internal abstract class PropertyProvider {
     /** Returns the string used to quote SQL identifiers. */
     open val identifierQuoteString: String
         get() = "\""
@@ -50,6 +50,10 @@ abstract class PropertyProvider {
 
     /** Returns whether the statement SELECT FOR UPDATE is supported. */
     open val supportsSelectForUpdate: Boolean
+        get() = true
+
+    /** Returns whether the database supports the `LIMIT` clause with update and delete statements. */
+    open val supportsLimitWithUpdateOrDelete: Boolean
         get() = true
 
     /** Returns the default transaction [IsolationLevel]. */

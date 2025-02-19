@@ -6,6 +6,7 @@ import io.r2dbc.spi.ConnectionFactory
 import io.r2dbc.spi.ConnectionFactoryOptions
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.sql.statements.api.R2dbcExposedDatabaseMetadata
@@ -42,13 +43,15 @@ class R2dbcDatabase private constructor(
         }
     }
 
-    // must all properties be suspend functions to retrieve metadata
-    // should there be properties that call private functions?
-    /** The connection URL for the database. */
-    val url: String = "" // metadata { getUrl() }
+    private var connectionUrl: String = ""
 
-    /** The name of the database based on the name of the underlying JDBC driver. */
-    val vendor: String = "" // resolvedVendor ?: metadata { getDatabaseDialectName() } }
+    override val url: String
+        get() = connectionUrl
+
+    override val vendor: String by lazy {
+        // cleanup -> getDatabaseDialectName() does not actually need suspend; relocate or refactor?
+        resolvedVendor ?: runBlocking { metadata { getDatabaseDialectName() } }
+    }
 
     override val dialect: DatabaseDialect by lazy {
         config.explicitDialect
@@ -59,33 +62,43 @@ class R2dbcDatabase private constructor(
             ?: error("No dialect registered for $name. URL=$url")
     }
 
+    /** The name of the database as a [DatabaseDialectMetadata]. */
     val dialectMetadata: DatabaseDialectMetadata by lazy {
         dialectsMetadata[vendor.lowercase()]?.invoke()
             ?: error("No dialect metadata registered for $name. URL=$url")
     }
 
-    override val dialectMode: String? = null // metadata { getDatabaseDialectMode() }
+    // REVIEW: usage in core H2Dialect
+    override val dialectMode: String? by lazy { runBlocking { metadata { getDatabaseDialectMode() } } }
 
-    override val version: BigDecimal = 1.toBigDecimal() // metadata { getVersion() }
+    // cleanup -> getVersion() does not actually need suspend; relocate or refactor?
+    override val version: BigDecimal by lazy { runBlocking { metadata { getVersion() } } }
 
     override fun isVersionCovers(version: BigDecimal): Boolean = this.version >= version
 
-    override val majorVersion: Int = 1 // metadata { getMajorVersion() }
+    /** The major version number of the database as a [Int]. */
+    // cleanup -> getMajorVersion() does not actually need suspend; relocate or refactor?
+    val majorVersion: Int by lazy { runBlocking { metadata { getMajorVersion() } } }
 
-    override val minorVersion: Int = 1 // metadata { getMinorVersion() }
+    /** The minor version number of the database as a [Int]. */
+    // cleanup -> getMinorVersion() does not actually need suspend; relocate or refactor?
+    val minorVersion: Int by lazy { runBlocking { metadata { getMinorVersion() } } }
 
     override fun isVersionCovers(majorVersion: Int, minorVersion: Int): Boolean =
         this.majorVersion > majorVersion || (this.majorVersion == majorVersion && this.minorVersion >= minorVersion)
 
-    override val fullVersion: String = "" // metadata { getDatabaseProductVersion() }
+    // cleanup -> getDatabaseProductVersion() does not actually need suspend; relocate or refactor?
+    override val fullVersion: String by lazy { runBlocking { metadata { getDatabaseProductVersion() } } }
 
-    override val supportsAlterTableWithAddColumn: Boolean = true // metadata { supportsAlterTableWithAddColumn }
+    // cleanup -> none of these properties need suspend; better to call MetadataProvider directly?
+    override val supportsAlterTableWithAddColumn: Boolean by lazy { runBlocking { metadata { supportsAlterTableWithAddColumn } } }
 
-    override val supportsAlterTableWithDropColumn: Boolean = true // metadata { supportsAlterTableWithDropColumn }
+    override val supportsAlterTableWithDropColumn: Boolean by lazy { runBlocking { metadata { supportsAlterTableWithDropColumn } } }
 
-    override val supportsMultipleResultSets: Boolean = true // metadata { supportsMultipleResultSets }
+    override val supportsMultipleResultSets: Boolean by lazy { runBlocking { metadata { supportsMultipleResultSets } } }
 
-    override val identifierManager: IdentifierManagerApi = TODO() // metadata { identifierManager }
+    // cleanup -> definitely does not actually need suspend; relocate or refactor?
+    override val identifierManager: IdentifierManagerApi by lazy { runBlocking { metadata { identifierManager } } }
 
     companion object {
         private val r2dbcDialectMapping = mutableMapOf(
@@ -138,9 +151,10 @@ class R2dbcDatabase private constructor(
             dispatcher: CoroutineDispatcher?,
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) }
         ): R2dbcDatabase {
-            return R2dbcDatabase(url, config ?: DatabaseConfig.invoke()) {
-                R2dbcConnectionImpl(explicitVendor, getNewConnection(), R2dbcScope(dispatcher))
+            return R2dbcDatabase(explicitVendor, config ?: DatabaseConfig.invoke()) {
+                R2dbcConnectionImpl(getNewConnection(), explicitVendor, R2dbcScope(dispatcher))
             }.apply {
+                connectionUrl = url
                 CoreTransactionManager.registerDatabaseManager(this, manager(this))
                 // ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
                 // TransactionManager.registerManager(this, manager(this))

@@ -31,8 +31,8 @@ internal object OracleTypeProvider : SqlTypeProvider() {
     override val referenceOptions: Map<ReferenceOption, Int> by lazy {
         mapOf(
             ReferenceOption.CASCADE to 0,
-            ReferenceOption.RESTRICT to 1,
             ReferenceOption.NO_ACTION to 1,
+            ReferenceOption.RESTRICT to 1,
             ReferenceOption.SET_NULL to 2,
             ReferenceOption.SET_DEFAULT to 1
         )
@@ -63,40 +63,38 @@ internal object OracleTypeProvider : SqlTypeProvider() {
         )
 }
 
-class OracleMetadata : MetadataProvider(OraclePropertyProvider, OracleTypeProvider) {
+internal class OracleMetadata : MetadataProvider(OraclePropertyProvider, OracleTypeProvider) {
     override fun getUsername(): String {
-        TODO("Not yet implemented")
+        return buildString {
+            append("SELECT SYS_CONTEXT('userenv','current_user') AS USER_NAME ")
+            append("FROM DUAL")
+        }
     }
 
-    override fun getReadOnlyMode(): String {
-        TODO("Not yet implemented")
-    }
+    override fun getReadOnlyMode(): String = ""
 
     override fun setReadOnlyMode(value: Boolean): String {
-        TODO("Not yet implemented")
+        return if (value) {
+            "SET TRANSACTION READ WRITE"
+        } else {
+            "SET TRANSACTION READ ONLY"
+        }
     }
 
-    // what should be done to simulate retrieving an empty result set without pinging database?
-    override fun getCatalog(): String {
-        return "SELECT 1 AS TABLE_CAT FROM DUAL WHERE 1 = 0"
-    }
+    override fun getDatabaseMode(): String = ""
 
-    override fun setCatalog(value: String): String {
-        TODO("Not yet implemented")
-    }
+    override fun getCatalog(): String = ""
+
+    override fun setCatalog(value: String): String = ""
 
     override fun getSchema(): String {
-        return "SELECT SYS_CONTEXT('userenv','current_schema') AS TABLE_SCHEM FROM DUAL"
+        return buildString {
+            append("SELECT SYS_CONTEXT('userenv','current_schema') AS TABLE_SCHEM ")
+            append("FROM DUAL")
+        }
     }
 
-    override fun setSchema(value: String): String {
-        return "ALTER SESSION SET CURRENT_SCHEMA = $value"
-    }
-
-    // what should be done to simulate retrieving an empty result set without pinging database?
-    override fun getCatalogs(): String {
-        return "SELECT 1 AS TABLE_CAT FROM DUAL WHERE 1 = 0"
-    }
+    override fun getCatalogs(): String = ""
 
     override fun getSchemas(): String {
         return buildString {
@@ -106,19 +104,16 @@ class OracleMetadata : MetadataProvider(OraclePropertyProvider, OracleTypeProvid
         }
     }
 
-    override fun getTables(catalog: String?, schemaPattern: String?, tableNamePattern: String): String {
+    override fun getTables(catalog: String, schemaPattern: String): String {
         return buildString {
             append("SELECT NULL AS TABLE_CAT, OWNER AS TABLE_SCHEM, TABLE_NAME ")
             append("FROM ALL_TABLES ")
-            append("WHERE TABLE_NAME LIKE '$tableNamePattern' ")
-            if (!schemaPattern.isNullOrEmpty()) {
-                append("AND OWNER LIKE '$schemaPattern' ")
-            }
+            append("WHERE OWNER LIKE '$schemaPattern' ")
             append("ORDER BY TABLE_SCHEM, TABLE_NAME")
         }
     }
 
-    override fun getSequences(): String {
+    override fun getAllSequences(): String {
         return buildString {
             append("SELECT SEQUENCE_NAME ")
             append("FROM USER_SEQUENCES ")
@@ -126,63 +121,70 @@ class OracleMetadata : MetadataProvider(OraclePropertyProvider, OracleTypeProvid
         }
     }
 
-    override fun getColumns(catalog: String, schemaPattern: String, tableNamePattern: String): String {
+    override fun getSequences(catalog: String, schemaPattern: String, table: String): String = ""
+
+    override fun getColumns(catalog: String, schemaPattern: String, table: String): String {
         return buildString {
-            append("SELECT TABLE_NAME, COLUMN_NAME, COLUMN_ID, DATA_DEFAULT AS COLUMN_DEF, ")
-            append("CASE WHEN IDENTITY_COLUMN = 'YES' THEN 1 ELSE 0 END AS IS_AUTOINCREMENT, ")
-            append("DATA_SCALE AS DECIMAL_DIGITS, ")
-            append("CASE WHEN NULLABLE = 'Y' THEN 1 ELSE 0 END AS NULLABLE, ")
+            append("SELECT COLUMN_NAME, ")
+            typeProvider.appendDataTypes("DATA_TYPE", "DATA_TYPE", this)
+            append(", ")
             typeProvider.appendDataPrecisions("DATA_TYPE", "COLUMN_SIZE", this)
             append(", ")
-            typeProvider.appendDataTypes("DATA_TYPE", "DATA_TYPE", this)
-            append(" ")
+            append("DATA_SCALE AS DECIMAL_DIGITS, ")
+            append("CASE WHEN NULLABLE = 'Y' THEN 'TRUE' ELSE 'FALSE' END AS NULLABLE, ")
+            append("DATA_DEFAULT AS COLUMN_DEF, COLUMN_ID AS ORDINAL_POSITION, ")
+            append("CASE WHEN IDENTITY_COLUMN = 'YES' THEN 'TRUE' ELSE 'FALSE' END AS IS_AUTOINCREMENT ")
             append("FROM ALL_TAB_COLUMNS ")
             append("WHERE OWNER LIKE '$schemaPattern' ")
-            append("AND TABLE_NAME LIKE '$tableNamePattern' AND COLUMN_NAME LIKE '%' ")
-            append("ORDER BY TABLE_NAME, COLUMN_ID")
+            append("AND TABLE_NAME = '$table' ")
+            append("ORDER BY ORDINAL_POSITION")
         }
     }
 
-    override fun getPrimaryKeys(catalog: String, schema: String, table: String): String {
+    override fun getPrimaryKeys(catalog: String, schemaPattern: String, table: String): String {
         return buildString {
             append("SELECT acc.COLUMN_NAME AS COLUMN_NAME, ac.CONSTRAINT_NAME AS PK_NAME ")
             append("FROM ALL_CONSTRAINTS ac ")
             append("INNER JOIN ALL_CONS_COLUMNS acc ")
-            append("ON ac.CONSTRAINT_NAME = acc.CONSTRAINT_NAME AND ac.OWNER = acc.OWNER ")
-            append("WHERE ac.OWNER LIKE '$schema' AND ac.TABLE_NAME LIKE '$table' ")
+            append("ON ac.CONSTRAINT_NAME = acc.CONSTRAINT_NAME AND ac.OWNER = acc.OWNER AND ac.TABLE_NAME = acc.TABLE_NAME ")
+            append("WHERE ac.OWNER LIKE '$schemaPattern' ")
+            append("AND ac.TABLE_NAME = '$table' ")
             append("AND ac.CONSTRAINT_TYPE = 'P' ")
             append("ORDER BY COLUMN_NAME")
         }
     }
 
-    override fun getIndexInfo(catalog: String, schema: String, table: String): String {
+    override fun getIndexInfo(catalog: String, schemaPattern: String, table: String): String {
         return buildString {
-            append("SELECT ai.INDEX_NAME AS INDEX_NAME, aic.COLUMN_NAME AS COLUMN_NAME, ")
-            append("NULL AS FILTER_CONDITION, aic.COLUMN_POSITION AS ORDINAL_POSITION, ")
-            append("CASE WHEN ai.UNIQUENESS = 'NONUNIQUE' THEN 1 ELSE 0 END AS NON_UNIQUE ")
+            append("SELECT CASE WHEN ai.UNIQUENESS = 'NONUNIQUE' THEN 'TRUE' ELSE 'FALSE' END AS NON_UNIQUE, ")
+            append("ai.INDEX_NAME AS INDEX_NAME, aic.COLUMN_POSITION AS ORDINAL_POSITION, ")
+            append("aic.COLUMN_NAME AS COLUMN_NAME, NULL AS FILTER_CONDITION ")
             append("FROM ALL_INDEXES ai ")
             append("INNER JOIN ALL_IND_COLUMNS aic ")
-            append("ON ai.INDEX_NAME = aic.INDEX_NAME AND ai.OWNER = aic.INDEX_OWNER ")
-            append("WHERE ai.OWNER LIKE '$schema' AND ai.TABLE_NAME LIKE '$table' ")
+            append("ON ai.INDEX_NAME = aic.INDEX_NAME AND ai.OWNER = aic.INDEX_OWNER AND ai.TABLE_NAME = aic.TABLE_NAME ")
+            append("WHERE ai.OWNER LIKE '$schemaPattern' ")
+            append("AND ai.TABLE_NAME = '$table' ")
             append("ORDER BY NON_UNIQUE, INDEX_NAME, ORDINAL_POSITION")
         }
     }
 
-    override fun getImportedKeys(catalog: String, schema: String, table: String): String {
+    override fun getImportedKeys(catalog: String, schemaPattern: String, table: String): String {
         return buildString {
-            append("SELECT ac.TABLE_NAME AS FKTABLE_NAME, ac.CONSTRAINT_NAME AS FK_NAME, NULL AS UPDATE_RULE, ")
+            append("SELECT acc_pk.TABLE_NAME AS PKTABLE_NAME, acc_pk.COLUMN_NAME AS PKCOLUMN_NAME, ")
+            append("ac.TABLE_NAME AS FKTABLE_NAME, acc.COLUMN_NAME AS FKCOLUMN_NAME, ")
+            append("acc.POSITION AS KEY_SEQ, NULL AS UPDATE_RULE, ")
             typeProvider.appendReferenceOptions("ac.DELETE_RULE", "DELETE_RULE", this)
             append(", ")
-            append("acc.POSITION AS ORDINAL_POSITION, acc.COLUMN_NAME AS FKCOLUMN_NAME, ")
-            append("ac.R_OWNER AS PKTABLE_SCHEM, acc_pk.TABLE_NAME AS PKTABLE_NAME, acc_pk.COLUMN_NAME AS PKCOLUMN_NAME ")
+            append("ac.CONSTRAINT_NAME AS FK_NAME ")
             append("FROM ALL_CONSTRAINTS ac ")
             append("JOIN ALL_CONS_COLUMNS acc ")
             append("ON ac.CONSTRAINT_NAME = acc.CONSTRAINT_NAME AND ac.OWNER = acc.OWNER ")
             append("JOIN ALL_CONS_COLUMNS acc_pk ")
             append("ON ac.R_CONSTRAINT_NAME = acc_pk.CONSTRAINT_NAME AND ac.R_OWNER = acc_pk.OWNER ")
-            append("WHERE ac.OWNER LIKE '$schema' AND ac.TABLE_NAME LIKE '$table' ")
+            append("WHERE ac.OWNER LIKE '$schemaPattern' ")
+            append("AND ac.TABLE_NAME = '$table' ")
             append("AND ac.CONSTRAINT_TYPE = 'R' ")
-            append("ORDER BY PKTABLE_SCHEM, PKTABLE_NAME, FK_NAME, ORDINAL_POSITION")
+            append("ORDER BY PKTABLE_NAME, KEY_SEQ")
         }
     }
 }

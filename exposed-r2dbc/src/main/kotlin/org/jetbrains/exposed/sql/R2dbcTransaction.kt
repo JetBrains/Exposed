@@ -110,7 +110,7 @@ open class R2dbcTransaction(
         @Language("sql") stmt: String,
         args: Iterable<Pair<IColumnType<*>, Any?>> = emptyList(),
         explicitStatementType: StatementType? = null
-    ) = exec(stmt, args, explicitStatementType) { }?.collect()
+    ) = exec(stmt, args, explicitStatementType) { }
 
     /**
      * Executes the provided statement exactly, using the supplied [args] to set values to question mark
