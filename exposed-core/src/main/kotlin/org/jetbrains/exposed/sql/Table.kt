@@ -850,7 +850,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /**
      * Creates a binary column, with the specified [name], for storing byte arrays of arbitrary size.
      *
-     * **Note:** This function is only supported by Oracle, PostgeSQL, and H2 dialects. For the rest, please specify a length.
+     * **Note:** This function is only supported by SQLite, PostgreSQL, and H2 dialects.
+     * For the rest, please specify a length.
      * For H2 dialects, the maximum size is 1,000,000,000 bytes.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testBinaryWithoutLength
@@ -859,6 +860,8 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /**
      * Creates a binary column, with the specified [name], for storing byte arrays with the specified maximum [length].
+     *
+     * **Note:** The length of the binary column is not required in PostgreSQL and will be ignored.
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.testBinary
      */
