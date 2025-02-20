@@ -2,8 +2,8 @@ package org.example
 
 import org.example.examples.EnumerationExamples
 import org.example.examples.JSONandJSONBExamples
-import org.example.examples.TeamsTable
 import org.example.examples.TeamProjectsTable
+import org.example.examples.TeamsTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -36,7 +36,6 @@ fun runMySQLExamples() {
         jsonExamples.useContains()
         jsonExamples.useContainsWithPath()
         jsonArraysExamples()
-        enumExamples.createTableWithExistingEnumColumn()
     }
 }
 
@@ -53,6 +52,8 @@ fun runH2Examples() {
         jsonExamples.example()
         jsonExamples.useExtract()
         jsonExamples.useExists()
+        enumExamples.createTableWithExistingEnumColumn()
+        enumExamples.insertEnumIntoTableWithExistingEnumColumn()
     }
 }
 
@@ -79,4 +80,3 @@ fun jsonArraysExamples() {
     SchemaUtils.create(TeamProjectsTable)
     jsonExamples.insertJSONArrays()
 }
-
