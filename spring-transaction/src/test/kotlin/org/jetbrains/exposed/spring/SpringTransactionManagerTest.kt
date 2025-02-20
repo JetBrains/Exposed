@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.spring
 
 import junit.framework.TestCase.assertEquals
+import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.junit.Test
@@ -24,17 +25,30 @@ class SpringTransactionManagerTest {
     private val ds2 = DataSourceSpy(::ConnectionSpy)
     private val con2 = ds2.con as ConnectionSpy
 
+    /**
+     * This test has a teardown that unregisters databases. The intention
+     * is to only tear down databases registered by this test - but
+     * an earlier implementation accidentally unregistered the main
+     * database registered by the [SpringTransactionTestBase].
+     *
+     * To avoid doing such, we try to only unregister until we hit the
+     * one that was there before the start of this test.
+     */
+    private var databaseBeforeTestStart: Database? = null
+
     @BeforeTest
     fun beforeTest() {
+        databaseBeforeTestStart = TransactionManager.defaultDatabase
         con1.clearMock()
         con2.clearMock()
     }
 
     @AfterTest
     fun afterTest() {
-        while (TransactionManager.defaultDatabase != null) {
+        while (TransactionManager.defaultDatabase != databaseBeforeTestStart) {
             TransactionManager.defaultDatabase?.let { TransactionManager.closeAndUnregister(it) }
         }
+        databaseBeforeTestStart = null
     }
 
     @Test
