@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests.shared.ddl
+package org.jetbrains.exposed.sql.exposed.r2dbc.tests.shared.ddl
 
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -176,7 +176,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
             }
         }
 
-        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
         withTables(excludeSettings = functionsNotSupported, tester) {
             SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())

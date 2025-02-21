@@ -292,6 +292,7 @@ suspend fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
 ): EntityID<Key>? {
     val stmt = StatementBuilder { insertIgnore(body) }
     return InsertExecutable<Long, InsertStatement<Long>>(stmt).run {
+        // TODO TransactionManager.current() fails here
         when (execute(TransactionManager.current())) {
             null, 0 -> null
             else -> statement.getOrNull(id)

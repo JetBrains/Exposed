@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests.demo
+package org.jetbrains.exposed.sql.exposed.r2dbc.tests.demo
 
 import io.r2dbc.spi.ConnectionFactoryOptions
 import kotlinx.coroutines.flow.single
@@ -70,38 +70,38 @@ fun main() {
             Users.insert {
                 it[id] = "andrey"
                 it[name] = "Andrey"
-                it[Users.cityId] = saintPetersburgId
+                it[cityId] = saintPetersburgId
             }
 
             Users.insert {
                 it[id] = "sergey"
                 it[name] = "Sergey"
-                it[Users.cityId] = munichId
+                it[cityId] = munichId
             }
 
             Users.insert {
                 it[id] = "eugene"
                 it[name] = "Eugene"
-                it[Users.cityId] = munichId
+                it[cityId] = munichId
             }
 
             Users.insert {
                 it[id] = "alex"
                 it[name] = "Alex"
-                it[Users.cityId] = null
+                it[cityId] = null
             }
 
             Users.insert {
                 it[id] = "smth"
                 it[name] = "Something"
-                it[Users.cityId] = null
+                it[cityId] = null
             }
 
             Users.update({ Users.id eq "alex" }) {
                 it[name] = "Alexey"
             }
 
-            Users.deleteWhere { Users.name like "%thing" }
+            Users.deleteWhere { name like "%thing" }
 
             println("All cities:")
 

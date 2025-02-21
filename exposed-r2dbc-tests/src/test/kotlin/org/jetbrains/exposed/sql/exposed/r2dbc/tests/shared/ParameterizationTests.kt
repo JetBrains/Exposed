@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests.shared
+package org.jetbrains.exposed.sql.exposed.r2dbc.tests.shared
 
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.test.runTest
@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.VarCharColumnType
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import kotlin.test.assertNull
 

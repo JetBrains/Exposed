@@ -105,7 +105,8 @@ enum class TestDB(
     }
 
     companion object {
-        val ALL_H2 = setOf(H2_V2, H2_V2_MYSQL, H2_V2_PSQL, H2_V2_MARIADB, H2_V2_ORACLE, H2_V2_SQLSERVER)
+        val ALL_H2_V2 = setOf(H2_V2, H2_V2_MYSQL, H2_V2_PSQL, H2_V2_MARIADB, H2_V2_ORACLE, H2_V2_SQLSERVER)
+        val ALL_H2 = ALL_H2_V2
         val ALL_MYSQL = setOf(MYSQL_V5, MYSQL_V8)
         val ALL_MARIADB = setOf(MARIADB)
         val ALL_MYSQL_MARIADB = ALL_MYSQL + ALL_MARIADB
