@@ -3985,6 +3985,15 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdate :
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract class org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateBase : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
+	public fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateOrShareMode;[Lorg/jetbrains/exposed/sql/Table;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateOrShareMode;[Lorg/jetbrains/exposed/sql/Table;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getQuerySuffix ()Ljava/lang/String;
+}
+
+public abstract interface class org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateOrShareMode {
+}
+
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MariaDB {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MariaDB;
 }
@@ -4000,11 +4009,18 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL;
 }
 
-public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
+public class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare : org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateBase {
+	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare$Companion;
+	public fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;[Lorg/jetbrains/exposed/sql/Table;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;[Lorg/jetbrains/exposed/sql/Table;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare$Companion : org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare {
+}
+
+public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForUpdate : org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateBase {
+	public fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;[Lorg/jetbrains/exposed/sql/Table;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;[Lorg/jetbrains/exposed/sql/Table;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$LockInShareMode : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
@@ -4012,6 +4028,15 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$LockI
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE : java/lang/Enum, org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateOrShareMode {
+	public static final field NO_WAIT Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
+	public static final field SKIP_LOCKED Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getStatement ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
+	public static fun values ()[Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$Oracle {
@@ -4033,7 +4058,7 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL 
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL;
 }
 
-public class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForKeyShare : org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForUpdateBase {
+public class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForKeyShare : org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateBase {
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForKeyShare$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;[Lorg/jetbrains/exposed/sql/Table;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;[Lorg/jetbrains/exposed/sql/Table;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -4042,7 +4067,7 @@ public class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForKey
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForKeyShare$Companion : org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForKeyShare {
 }
 
-public class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForNoKeyUpdate : org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForUpdateBase {
+public class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForNoKeyUpdate : org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateBase {
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForNoKeyUpdate$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;[Lorg/jetbrains/exposed/sql/Table;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;[Lorg/jetbrains/exposed/sql/Table;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -4051,7 +4076,7 @@ public class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForNoK
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForNoKeyUpdate$Companion : org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForNoKeyUpdate {
 }
 
-public class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForShare : org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForUpdateBase {
+public class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForShare : org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateBase {
 	public static final field Companion Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForShare$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;[Lorg/jetbrains/exposed/sql/Table;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;[Lorg/jetbrains/exposed/sql/Table;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -4060,18 +4085,12 @@ public class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForSha
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForShare$Companion : org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForShare {
 }
 
-public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForUpdate : org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForUpdateBase {
+public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForUpdate : org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateBase {
 	public fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;[Lorg/jetbrains/exposed/sql/Table;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;[Lorg/jetbrains/exposed/sql/Table;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public abstract class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$ForUpdateBase : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
-	public fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;[Lorg/jetbrains/exposed/sql/Table;)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;[Lorg/jetbrains/exposed/sql/Table;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getQuerySuffix ()Ljava/lang/String;
-}
-
-public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE : java/lang/Enum {
+public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE : java/lang/Enum, org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateOrShareMode {
 	public static final field NO_WAIT Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;
 	public static final field SKIP_LOCKED Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;

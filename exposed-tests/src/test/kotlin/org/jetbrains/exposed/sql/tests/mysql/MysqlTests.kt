@@ -146,6 +146,17 @@ class MysqlTests : DatabaseTestsBase() {
             val name = varchar("name", 50)
         }
 
+        fun Transaction.withTable(statement: Transaction.() -> Unit) {
+            SchemaUtils.create(table)
+            try {
+                statement()
+                commit() // Need commit to persist data before drop tables
+            } finally {
+                SchemaUtils.drop(table)
+                commit()
+            }
+        }
+
         val id = 1
 
         fun Query.city() = map { it[table.name] }.single()
@@ -154,8 +165,8 @@ class MysqlTests : DatabaseTestsBase() {
             return table.selectAll().where { table.id eq id }.forUpdate(option).city()
         }
 
-        withDb(TestDB.ALL_MYSQL) {
-            withTables {
+        withDb(TestDB.MYSQL_V8) {
+            withTable {
                 val name = "name"
                 table.insert {
                     it[table.id] = id
