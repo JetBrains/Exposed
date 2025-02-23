@@ -13,13 +13,60 @@ sealed class ForUpdateOption(open val querySuffix: String) {
         override val querySuffix: String get() = error("querySuffix should not be called for NoForUpdateOption object")
     }
 
+    /** Interface that can be implemented in each database if they support modes **/
+    sealed interface ForUpdateOrShareMode
+
+    /** Common class since this is being used by at least two DBs **/
+    abstract class ForUpdateBase(
+        querySuffix: String,
+        private val mode: ForUpdateOrShareMode? = null,
+        private vararg val ofTables: Table
+    ) : ForUpdateOption("") {
+        private val preparedQuerySuffix = buildString {
+            append(querySuffix)
+            ofTables.takeIf { it.isNotEmpty() }?.let { tables ->
+                append(" OF ")
+                tables.joinTo(this, separator = ",") { it.tableName }
+            }
+            mode?.let {
+                val statement = when (it) {
+                    is PostgreSQL.MODE -> it.statement
+                    is MySQL.MODE -> it.statement
+                }
+                append(" $statement")
+            }
+        }
+        final override val querySuffix: String = preparedQuerySuffix
+    }
+
     /** Common clause that locks the rows retrieved by a SELECT statement against concurrent updates. */
     data object ForUpdate : ForUpdateOption("FOR UPDATE")
 
     // https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html for clarification
     object MySQL {
+        /** Optional modes that determine what should happen if the retrieved rows are not immediately available. */
+        // https://dev.mysql.com/doc/refman/8.4/en/select.html
+        enum class MODE(val statement: String) : ForUpdateOrShareMode {
+            /** Indicates that an error should be reported. */
+            NO_WAIT("NOWAIT"),
+
+            /** Indicates that the unavailable rows should be skipped. */
+            SKIP_LOCKED("SKIP LOCKED")
+        }
+
+        /** MySQL clause that locks the rows retrieved as though for update. */
+        class ForUpdate(
+            mode: MODE? = null,
+            vararg ofTables: Table
+        ) : ForUpdateBase("FOR UPDATE", mode, ofTables = ofTables)
+
         /** MySQL clause that acquires a shared lock for each row retrieved. */
-        data object ForShare : ForUpdateOption("FOR SHARE")
+        open class ForShare(
+            mode: MODE? = null,
+            vararg ofTables: Table
+        ) : ForUpdateBase("FOR SHARE", mode, ofTables = ofTables) {
+            companion object : ForShare()
+        }
 
         /** This MySQL clause is equivalent to [ForShare] but exists for backward compatibility. */
         data object LockInShareMode : ForUpdateOption("LOCK IN SHARE MODE")
@@ -35,30 +82,12 @@ sealed class ForUpdateOption(open val querySuffix: String) {
     // https://www.postgresql.org/docs/12/explicit-locking.html#LOCKING-ROWS for clarification
     object PostgreSQL {
         /** Optional modes that determine what should happen if the retrieved rows are not immediately available. */
-        enum class MODE(val statement: String) {
+        enum class MODE(val statement: String) : ForUpdateOrShareMode {
             /** Indicates that an error should be reported. */
             NO_WAIT("NOWAIT"),
 
             /** Indicates that the unavailable rows should be skipped. */
             SKIP_LOCKED("SKIP LOCKED")
-        }
-
-        abstract class ForUpdateBase(
-            querySuffix: String,
-            private val mode: MODE? = null,
-            private vararg val ofTables: Table
-        ) : ForUpdateOption("") {
-            private val preparedQuerySuffix = buildString {
-                append(querySuffix)
-                ofTables.takeIf { it.isNotEmpty() }?.let { tables ->
-                    append(" OF ")
-                    tables.joinTo(this, separator = ",") { it.tableName }
-                }
-                mode?.let {
-                    append(" ${it.statement}")
-                }
-            }
-            final override val querySuffix: String = preparedQuerySuffix
         }
 
         /** PostgreSQL clause that locks the rows retrieved as though for update. */
