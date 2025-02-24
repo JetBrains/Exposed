@@ -2,7 +2,7 @@
 
 ### Q: [Squash](https://github.com/orangy/squash) is same as Exposed. Where is the difference?
 A: [Ilya Ryzhenkov](https://github.com/orangy/) (Squash maintainer) answers:
-> Squash is an attempt to refactor Exposed (long time ago) to fix DSL issues, extensibility on dialect side, support graph fetching and avoid TLS-stored transactions. Unfortunately, I didn’t have enough time to finish the work, but I still hope to return to it some day. We are talking with Exposed maintainer [@tapac](https://github.com/orangy/) about coordinating efforts and eventually joining forces. Note, that none of these libs are “official” JetBrains Kotlin SQL libs, they are both side projects of their respective authors.
+> Squash is an attempt to refactor Exposed (long time ago) to fix DSL issues, extensibility on dialect side, support graph fetching and avoid TLS-stored transactions. Unfortunately, I didn’t have enough time to finish the work, but I still hope to return to it some day. We are talking with Exposed maintainer [@tapac](https://github.com/tapac/) about coordinating efforts and eventually joining forces. Note, that none of these libs are “official” JetBrains Kotlin SQL libs, they are both side projects of their respective authors.
 
 ### Q: Can I use multiple Database Connections?
 
