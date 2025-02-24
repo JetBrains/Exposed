@@ -10,9 +10,9 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.sql.SQLException
 
-open class InsertExecutable<Key : Any, S : InsertStatement<Key>>(
+open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
-) : Executable<Int, S> {
+) : BlockingExecutable<Int, S> {
     protected open fun JdbcPreparedStatementApi.execInsertFunction(): Pair<Int, ResultSet?> {
         val inserted = if (statement.arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
         // According to the `processResults()` method when supportsOnlyIdentifiersInGeneratedKeys is false
@@ -119,7 +119,7 @@ open class InsertExecutable<Key : Any, S : InsertStatement<Key>>(
                     // try/catch can be safely removed after the fixing the issue.
                     // TooGenericExceptionCaught suppress also can be removed
 
-                    val preparedSql = this@InsertExecutable.statement.prepareSQL(TransactionManager.current(), prepared = true)
+                    val preparedSql = this@InsertBlockingExecutable.statement.prepareSQL(TransactionManager.current(), prepared = true)
 
                     val returnedColumnsString = columnIndexesInResultSet
                         .mapIndexed { index, pair -> "column: ${pair.first.name}, index: ${pair.second} (columns-list-index: $index)" }
@@ -127,7 +127,7 @@ open class InsertExecutable<Key : Any, S : InsertStatement<Key>>(
 
                     exposedLogger.error(
                         "ArrayIndexOutOfBoundsException on processResults. " +
-                            "Table: ${this@InsertExecutable.statement.table.tableName}, " +
+                            "Table: ${this@InsertBlockingExecutable.statement.table.tableName}, " +
                             "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
                             "inserted: $inserted, returnedColumnsString: $returnedColumnsString. " +
                             "Failed SQL: $preparedSql",
@@ -150,7 +150,7 @@ open class InsertExecutable<Key : Any, S : InsertStatement<Key>>(
             }
 
             assert(
-                this@InsertExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == inserted ||
+                this@InsertBlockingExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == inserted ||
                     currentDialect.supportsTernaryAffectedRowValues
             ) {
                 "Number of autoincs (${resultSetsValues.size}) doesn't match number of batch entries ($inserted)"
@@ -167,7 +167,7 @@ open class InsertExecutable<Key : Any, S : InsertStatement<Key>>(
         val columns = if (currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
             autoIncColumns
         } else {
-            this@InsertExecutable.statement.table.columns
+            this@InsertBlockingExecutable.statement.table.columns
         }
         return columns.mapNotNull { col ->
             @Suppress("SwallowedException")

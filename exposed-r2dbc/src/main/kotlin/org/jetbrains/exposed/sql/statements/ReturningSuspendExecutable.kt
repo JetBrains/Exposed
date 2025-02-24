@@ -9,9 +9,9 @@ import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
-open class ReturningExecutable(
+open class ReturningSuspendExecutable(
     override val statement: ReturningStatement
-) : Executable<ResultApi, ReturningStatement>, Flow<ResultRow> {
+) : SuspendExecutable<ResultApi, ReturningStatement>, Flow<ResultRow> {
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): R2dbcResult = executeQuery()
 
     override suspend fun collect(collector: FlowCollector<ResultRow>) {
