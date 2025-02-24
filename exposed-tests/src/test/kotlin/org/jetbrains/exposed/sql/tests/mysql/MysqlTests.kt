@@ -11,6 +11,8 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption.MySQL
 import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -133,6 +135,50 @@ class MysqlTests : DatabaseTestsBase() {
                     queryWithHint.single()[sleepNSeconds]
                 }
             }
+        }
+    }
+
+    @Test
+    fun testForUpdateOptionsSyntax() {
+        val id = 1
+
+        val forUpdateTestTable = object : IntIdTable("for_update_test") {
+            val name = varchar("name", 50)
+        }
+
+        fun Query.city() = map { it[forUpdateTestTable.name] }.single()
+
+        fun select(option: ForUpdateOption): String {
+            return forUpdateTestTable.selectAll().where { forUpdateTestTable.id eq id }.forUpdate(option).city()
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.MYSQL_V8, forUpdateTestTable) {
+            val name = "test_city"
+            forUpdateTestTable.insert {
+                it[forUpdateTestTable.id] = id
+                it[forUpdateTestTable.name] = name
+            }
+            commit()
+
+            val defaultForUpdateRes = forUpdateTestTable.selectAll().where { forUpdateTestTable.id eq id }.city()
+            val forUpdateRes = select(ForUpdateOption.ForUpdate)
+            val forUpdateNoWaitRes = select(MySQL.ForUpdate(MySQL.MODE.NO_WAIT))
+            val forUpdateSkipLockedRes = select(MySQL.ForUpdate(MySQL.MODE.SKIP_LOCKED))
+            val forShareRes = select(MySQL.ForShare())
+            val forShareNoWaitRes = select(MySQL.ForShare(MySQL.MODE.NO_WAIT))
+            val forShareSkipLockedRes = select(MySQL.ForShare(MySQL.MODE.SKIP_LOCKED))
+            val lockInShareModeRes = select(MySQL.LockInShareMode)
+            val notForUpdateRes = forUpdateTestTable.selectAll().where { forUpdateTestTable.id eq id }.notForUpdate().city()
+
+            assertEquals(name, defaultForUpdateRes)
+            assertEquals(name, forUpdateRes)
+            assertEquals(name, forUpdateNoWaitRes)
+            assertEquals(name, forUpdateSkipLockedRes)
+            assertEquals(name, forShareRes)
+            assertEquals(name, forShareNoWaitRes)
+            assertEquals(name, forShareSkipLockedRes)
+            assertEquals(name, lockInShareModeRes)
+            assertEquals(name, notForUpdateRes)
         }
     }
 }

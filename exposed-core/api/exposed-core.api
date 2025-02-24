@@ -4000,11 +4000,30 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL {
 	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL;
 }
 
-public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
+public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare : org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForUpdateBase {
+	public static final field Default Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare$Default;
+	public fun <init> ()V
+	public fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForShare$Default : org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForUpdateBase {
+}
+
+public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForUpdate : org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForUpdateBase {
+	public static final field Default Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForUpdate$Default;
+	public fun <init> ()V
+	public fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForUpdate$Default : org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForUpdateBase {
+}
+
+public abstract class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$ForUpdateBase : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
+	public fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getQuerySuffix ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$LockInShareMode : org/jetbrains/exposed/sql/vendors/ForUpdateOption {
@@ -4012,6 +4031,15 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$LockI
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE : java/lang/Enum {
+	public static final field NO_WAIT Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
+	public static final field SKIP_LOCKED Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getStatement ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
+	public static fun values ()[Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$Oracle {

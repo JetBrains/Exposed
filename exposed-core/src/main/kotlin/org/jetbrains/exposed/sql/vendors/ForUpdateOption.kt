@@ -18,8 +18,37 @@ sealed class ForUpdateOption(open val querySuffix: String) {
 
     // https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html for clarification
     object MySQL {
+        /** Optional modes that determine what should happen if the retrieved rows are not immediately available. */
+        enum class MODE(val statement: String) {
+            /** Indicates that an error should be reported. */
+            NO_WAIT("NOWAIT"),
+
+            /** Indicates that the unavailable rows should be skipped. */
+            SKIP_LOCKED("SKIP LOCKED")
+        }
+
+        abstract class ForUpdateBase(
+            querySuffix: String,
+            private val mode: MODE? = null
+        ) : ForUpdateOption("") {
+            private val preparedQuerySuffix = buildString {
+                append(querySuffix)
+                mode?.let {
+                    append(" ${it.statement}")
+                }
+            }
+            final override val querySuffix: String = preparedQuerySuffix
+        }
+
+        /** MySQL clause that locks the rows retrieved against concurrent updates. */
+        class ForUpdate(mode: MODE? = null) : ForUpdateBase("FOR UPDATE", mode) {
+            companion object Default : ForUpdateBase("FOR UPDATE")
+        }
+
         /** MySQL clause that acquires a shared lock for each row retrieved. */
-        data object ForShare : ForUpdateOption("FOR SHARE")
+        class ForShare(mode: MODE? = null) : ForUpdateBase("FOR SHARE", mode) {
+            companion object Default : ForUpdateBase("FOR SHARE")
+        }
 
         /** This MySQL clause is equivalent to [ForShare] but exists for backward compatibility. */
         data object LockInShareMode : ForUpdateOption("LOCK IN SHARE MODE")
