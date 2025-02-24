@@ -2,6 +2,7 @@ package org.jetbrains.exposed.spring.autoconfigure
 
 import org.jetbrains.exposed.spring.Application
 import org.jetbrains.exposed.spring.DatabaseInitializer
+import org.jetbrains.exposed.spring.ExposedSpringTransactionAttributeSource
 import org.jetbrains.exposed.spring.SpringTransactionManager
 import org.jetbrains.exposed.spring.tables.TestTable
 import org.jetbrains.exposed.sql.DatabaseConfig
@@ -21,6 +22,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.interceptor.TransactionAttributeSource
 import java.util.concurrent.CompletableFuture
 
 @SpringBootTest(
@@ -37,6 +39,9 @@ open class ExposedAutoConfigurationTest {
 
     @Autowired
     private var databaseConfig: DatabaseConfig? = null
+
+    @Autowired
+    private var transactionAttributeSource: TransactionAttributeSource? = null
 
     @Test
     fun `should initialize the database connection`() {
@@ -68,6 +73,13 @@ open class ExposedAutoConfigurationTest {
                 context.getBean(DataSourceTransactionManagerAutoConfiguration::class.java)
             }
         }
+    }
+
+    @Test
+    fun `load ExposedSpringTransactionAttributeSource`() {
+        transactionAttributeSource?.let {
+            assertEquals(ExposedSpringTransactionAttributeSource::class.java, it.javaClass)
+        } ?: fail("TransactionAttributeSource bean not found")
     }
 
     @TestConfiguration
