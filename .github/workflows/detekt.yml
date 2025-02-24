@@ -34,7 +34,7 @@ jobs:
       - name: "set-up-detekt"
         uses: peter-murray/setup-detekt@v2
         with:
-          detekt_version: 1.23.7
+          detekt_version: 1.23.8
       # Runs detekt on changed files
       - name: "run-detekt"
         run: |
@@ -45,7 +45,7 @@ jobs:
           fi
           
           echo "Running detekt check..."
-          DETEKT_ISSUES=$(detekt-cli --build-upon-default-config --config detekt/detekt-config.yml --plugins detekt/detekt-formatting-1.23.7.jar --input $CHANGED_FILES)
+          DETEKT_ISSUES=$(detekt-cli --build-upon-default-config --config detekt/detekt-config.yml --plugins detekt/detekt-formatting-1.23.8.jar --input $CHANGED_FILES)
           if [ -n "$DETEKT_ISSUES" ]; then
             echo "***********************************************"
             echo "$DETEKT_ISSUES"
