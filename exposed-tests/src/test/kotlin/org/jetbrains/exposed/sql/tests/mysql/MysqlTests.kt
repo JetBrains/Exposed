@@ -146,17 +146,6 @@ class MysqlTests : DatabaseTestsBase() {
             val name = varchar("name", 50)
         }
 
-        fun Transaction.withTable(statement: Transaction.() -> Unit) {
-            SchemaUtils.create(table)
-            try {
-                statement()
-                commit() // Need commit to persist data before drop tables
-            } finally {
-                SchemaUtils.drop(table)
-                commit()
-            }
-        }
-
         val id = 1
 
         fun Query.city() = map { it[table.name] }.single()
@@ -165,29 +154,27 @@ class MysqlTests : DatabaseTestsBase() {
             return table.selectAll().where { table.id eq id }.forUpdate(option).city()
         }
 
-        withDb(TestDB.MYSQL_V8) {
-            withTable {
-                val name = "name"
-                table.insert {
-                    it[table.id] = id
-                    it[table.name] = name
-                }
-                commit()
-
-                val defaultForUpdateRes = table.selectAll().where { table.id eq id }.city()
-                val forUpdateRes = select(option = ForUpdateOption.ForUpdate)
-                val forUpdateOfTableRes = select(ForUpdate(ofTables = arrayOf(table)))
-                val forShareRes = select(MySQL.ForShare)
-                val forShareNoWaitOfTableRes = select(MySQL.ForShare(MODE.NO_WAIT, table))
-                val notForUpdateRes = table.selectAll().where { table.id eq id }.notForUpdate().city()
-
-                kotlin.test.assertEquals(name, defaultForUpdateRes)
-                kotlin.test.assertEquals(name, forUpdateRes)
-                kotlin.test.assertEquals(name, forUpdateOfTableRes)
-                kotlin.test.assertEquals(name, forShareRes)
-                kotlin.test.assertEquals(name, forShareNoWaitOfTableRes)
-                kotlin.test.assertEquals(name, notForUpdateRes)
+        withTables(excludeSettings = TestDB.ALL - TestDB.MYSQL_V8, table) {
+            val name = "name"
+            table.insert {
+                it[table.id] = id
+                it[table.name] = name
             }
+            commit()
+
+            val defaultForUpdateRes = table.selectAll().where { table.id eq id }.city()
+            val forUpdateRes = select(option = ForUpdateOption.ForUpdate)
+            val forUpdateOfTableRes = select(ForUpdate(ofTables = arrayOf(table)))
+            val forShareRes = select(MySQL.ForShare)
+            val forShareNoWaitOfTableRes = select(MySQL.ForShare(MODE.NO_WAIT, table))
+            val notForUpdateRes = table.selectAll().where { table.id eq id }.notForUpdate().city()
+
+            assertEquals(name, defaultForUpdateRes)
+            assertEquals(name, forUpdateRes)
+            assertEquals(name, forUpdateOfTableRes)
+            assertEquals(name, forShareRes)
+            assertEquals(name, forShareNoWaitOfTableRes)
+            assertEquals(name, notForUpdateRes)
         }
     }
 }

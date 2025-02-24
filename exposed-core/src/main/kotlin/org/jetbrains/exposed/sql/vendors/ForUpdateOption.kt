@@ -14,7 +14,9 @@ sealed class ForUpdateOption(open val querySuffix: String) {
     }
 
     /** Interface that can be implemented in each database if they support modes **/
-    sealed interface ForUpdateOrShareMode
+    interface ForUpdateOrShareMode {
+        val statement: String
+    }
 
     /** Common class since this is being used by at least two DBs **/
     abstract class ForUpdateBase(
@@ -29,11 +31,7 @@ sealed class ForUpdateOption(open val querySuffix: String) {
                 tables.joinTo(this, separator = ",") { it.tableName }
             }
             mode?.let {
-                val statement = when (it) {
-                    is PostgreSQL.MODE -> it.statement
-                    is MySQL.MODE -> it.statement
-                }
-                append(" $statement")
+                append(" ${it.statement}")
             }
         }
         final override val querySuffix: String = preparedQuerySuffix
@@ -46,7 +44,7 @@ sealed class ForUpdateOption(open val querySuffix: String) {
     object MySQL {
         /** Optional modes that determine what should happen if the retrieved rows are not immediately available. */
         // https://dev.mysql.com/doc/refman/8.4/en/select.html
-        enum class MODE(val statement: String) : ForUpdateOrShareMode {
+        enum class MODE(override val statement: String) : ForUpdateOrShareMode {
             /** Indicates that an error should be reported. */
             NO_WAIT("NOWAIT"),
 
@@ -82,7 +80,7 @@ sealed class ForUpdateOption(open val querySuffix: String) {
     // https://www.postgresql.org/docs/12/explicit-locking.html#LOCKING-ROWS for clarification
     object PostgreSQL {
         /** Optional modes that determine what should happen if the retrieved rows are not immediately available. */
-        enum class MODE(val statement: String) : ForUpdateOrShareMode {
+        enum class MODE(override val statement: String) : ForUpdateOrShareMode {
             /** Indicates that an error should be reported. */
             NO_WAIT("NOWAIT"),
 

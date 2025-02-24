@@ -3992,6 +3992,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdat
 }
 
 public abstract interface class org/jetbrains/exposed/sql/vendors/ForUpdateOption$ForUpdateOrShareMode {
+	public abstract fun getStatement ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MariaDB {
@@ -4034,7 +4035,7 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE 
 	public static final field NO_WAIT Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
 	public static final field SKIP_LOCKED Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun getStatement ()Ljava/lang/String;
+	public fun getStatement ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$MySQL$MODE;
 }
@@ -4094,7 +4095,7 @@ public final class org/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$
 	public static final field NO_WAIT Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;
 	public static final field SKIP_LOCKED Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun getStatement ()Ljava/lang/String;
+	public fun getStatement ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;
 	public static fun values ()[Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption$PostgreSQL$MODE;
 }
