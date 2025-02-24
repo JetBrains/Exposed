@@ -2633,7 +2633,8 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public final fun largeText (Ljava/lang/String;Ljava/lang/String;Z)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun largeText$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public fun leftJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
-	public final fun long (Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
+	public final fun long (Ljava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
+	public static synthetic fun long$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public final fun mediumText (Ljava/lang/String;Ljava/lang/String;Z)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun mediumText$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public fun modifyStatement ()Ljava/util/List;

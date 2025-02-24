@@ -205,6 +205,7 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
             val ushort = ushort("ushort_column", checkConstraintName = "custom_ushort_check")
             val integer = integer("integer_column", checkConstraintName = "custom_integer_check")
             val uinteger = uinteger("uinteger_column", checkConstraintName = "custom_uinteger_check")
+            val long = long("long_column", checkConstraintName = "custom_long_check")
         }
 
         withTables(tester) {
@@ -216,12 +217,14 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
                     "${tester.ushort.nameInDatabaseCase()} ${tester.ushort.columnType} NOT NULL, " +
                     "${tester.integer.nameInDatabaseCase()} ${tester.integer.columnType} NOT NULL, " +
                     "${tester.uinteger.nameInDatabaseCase()} ${tester.uinteger.columnType} NOT NULL, " +
+                    "${tester.long.nameInDatabaseCase()} ${tester.long.columnType} NOT NULL, " +
                     "CONSTRAINT custom_byte_check CHECK (${tester.byte.nameInDatabaseCase()} BETWEEN ${Byte.MIN_VALUE} AND ${Byte.MAX_VALUE}), " +
                     "CONSTRAINT custom_ubyte_check CHECK (${tester.ubyte.nameInDatabaseCase()} BETWEEN 0 AND ${UByte.MAX_VALUE}), " +
                     "CONSTRAINT custom_short_check CHECK (${tester.short.nameInDatabaseCase()} BETWEEN ${Short.MIN_VALUE} AND ${Short.MAX_VALUE}), " +
                     "CONSTRAINT custom_ushort_check CHECK (${tester.ushort.nameInDatabaseCase()} BETWEEN 0 AND ${UShort.MAX_VALUE}), " +
                     "CONSTRAINT custom_integer_check CHECK (${tester.integer.nameInDatabaseCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE}), " +
-                    "CONSTRAINT custom_uinteger_check CHECK (${tester.uinteger.nameInDatabaseCase()} BETWEEN 0 AND ${UInt.MAX_VALUE}))",
+                    "CONSTRAINT custom_uinteger_check CHECK (${tester.uinteger.nameInDatabaseCase()} BETWEEN 0 AND ${UInt.MAX_VALUE}), " +
+                    "CONSTRAINT custom_long_check CHECK (${tester.long.nameInDatabaseCase()} BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE}))",
                 tester.ddl
             )
         }
