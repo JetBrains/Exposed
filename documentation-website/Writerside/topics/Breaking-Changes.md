@@ -2,6 +2,8 @@
 
 ## 0.60.0
 * In H2, the `timestamp()` column now maps to data type `TIMESTAMP(9)` instead of `DATETIME(9)`.
+* The names of the CHECK constraints created for the `ushort()` and `uinteger()` columns have been modified for consistency.
+  Check this [pull request](https://github.com/JetBrains/Exposed/pull/2426) for details regarding this change.
 
 ## 0.59.0
 * [PostgreSQL] `MigrationUtils.statementsRequiredForDatabaseMigration(*tables)` used to potentially return `DROP` statements for any database sequence not
