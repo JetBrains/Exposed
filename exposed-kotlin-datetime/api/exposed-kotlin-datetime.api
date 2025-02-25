@@ -3,39 +3,65 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentDate : org/j
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime;
+public class org/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
+	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Byte;)V
+	public synthetic fun <init> (Ljava/lang/Byte;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp;
+public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime$Companion : org/jetbrains/exposed/sql/kotlin/datetime/CurrentDateTime {
+}
+
+public class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
+	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Byte;)V
+	public synthetic fun <init> (Ljava/lang/Byte;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp$Companion : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestamp {
 }
 
 public abstract class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase : org/jetbrains/exposed/sql/Function {
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/IColumnType;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/Byte;Lorg/jetbrains/exposed/sql/IColumnType;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/sql/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampWithTimeZone : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
-	public static final field INSTANCE Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampWithTimeZone;
+public class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampWithTimeZone : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampBase {
+	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampWithTimeZone$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Byte;)V
+	public synthetic fun <init> (Ljava/lang/Byte;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampWithTimeZone$Companion : org/jetbrains/exposed/sql/kotlin/datetime/CurrentTimestampWithTimeZone {
 }
 
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateColumnTypeKt {
 	public static final fun date (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
-	public static final fun datetime (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
+	public static final fun datetime (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Column;
+	public static synthetic fun datetime$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public static final fun duration (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
-	public static final fun time (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
-	public static final fun timestamp (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
-	public static final fun timestampWithTimeZone (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
+	public static final fun time (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Column;
+	public static synthetic fun time$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
+	public static final fun timestamp (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Column;
+	public static synthetic fun timestamp$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
+	public static final fun timestampWithTimeZone (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Column;
+	public static synthetic fun timestampWithTimeZone$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 }
 
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateFunctionsKt {
 	public static final fun CustomDateFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
-	public static final fun CustomDateTimeFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
+	public static final fun CustomDateTimeFunction (Ljava/lang/String;Ljava/lang/Byte;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
+	public static synthetic fun CustomDateTimeFunction$default (Ljava/lang/String;Ljava/lang/Byte;[Lorg/jetbrains/exposed/sql/Expression;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/CustomFunction;
 	public static final fun CustomDurationFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
-	public static final fun CustomTimeFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
-	public static final fun CustomTimeStampFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
-	public static final fun CustomTimestampWithTimeZoneFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
+	public static final fun CustomTimeFunction (Ljava/lang/String;Ljava/lang/Byte;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
+	public static synthetic fun CustomTimeFunction$default (Ljava/lang/String;Ljava/lang/Byte;[Lorg/jetbrains/exposed/sql/Expression;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/CustomFunction;
+	public static final fun CustomTimeStampFunction (Ljava/lang/String;Ljava/lang/Byte;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
+	public static synthetic fun CustomTimeStampFunction$default (Ljava/lang/String;Ljava/lang/Byte;[Lorg/jetbrains/exposed/sql/Expression;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/CustomFunction;
+	public static final fun CustomTimestampWithTimeZoneFunction (Ljava/lang/String;Ljava/lang/Byte;[Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/CustomFunction;
+	public static synthetic fun CustomTimestampWithTimeZoneFunction$default (Ljava/lang/String;Ljava/lang/Byte;[Lorg/jetbrains/exposed/sql/Expression;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/CustomFunction;
 	public static final fun InstantDateExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantDateFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantDayExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
@@ -48,8 +74,10 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateFunctions
 	public static final fun InstantMonthFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantSecondExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantSecondFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
-	public static final fun InstantTimeExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
-	public static final fun InstantTimeFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun InstantTimeExt (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Function;
+	public static synthetic fun InstantTimeExt$default (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun InstantTimeFunction (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Function;
+	public static synthetic fun InstantTimeFunction$default (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantYearExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun InstantYearFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateDateExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
@@ -78,8 +106,10 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateFunctions
 	public static final fun LocalDateTimeMonthFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeSecondExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeSecondFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
-	public static final fun LocalDateTimeTimeExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
-	public static final fun LocalDateTimeTimeFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun LocalDateTimeTimeExt (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Function;
+	public static synthetic fun LocalDateTimeTimeExt$default (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun LocalDateTimeTimeFunction (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Function;
+	public static synthetic fun LocalDateTimeTimeFunction$default (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeYearExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateTimeYearFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun LocalDateYearExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
@@ -96,22 +126,32 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDateFunctions
 	public static final fun OffsetDateTimeMonthFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun OffsetDateTimeSecondExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun OffsetDateTimeSecondFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
-	public static final fun OffsetDateTimeTimeExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
-	public static final fun OffsetDateTimeTimeFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeTimeExt (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Function;
+	public static synthetic fun OffsetDateTimeTimeExt$default (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Function;
+	public static final fun OffsetDateTimeTimeFunction (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Function;
+	public static synthetic fun OffsetDateTimeTimeFunction$default (Lorg/jetbrains/exposed/sql/Expression;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun OffsetDateTimeYearExt (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun OffsetDateTimeYearFunction (Lorg/jetbrains/exposed/sql/Expression;)Lorg/jetbrains/exposed/sql/Function;
 	public static final fun dateLiteral (Lkotlinx/datetime/LocalDate;)Lorg/jetbrains/exposed/sql/LiteralOp;
 	public static final fun dateParam (Lkotlinx/datetime/LocalDate;)Lorg/jetbrains/exposed/sql/Expression;
-	public static final fun dateTimeLiteral (Lkotlinx/datetime/LocalDateTime;)Lorg/jetbrains/exposed/sql/LiteralOp;
-	public static final fun dateTimeParam (Lkotlinx/datetime/LocalDateTime;)Lorg/jetbrains/exposed/sql/Expression;
+	public static final fun dateTimeLiteral (Lkotlinx/datetime/LocalDateTime;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public static synthetic fun dateTimeLiteral$default (Lkotlinx/datetime/LocalDateTime;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public static final fun dateTimeParam (Lkotlinx/datetime/LocalDateTime;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Expression;
+	public static synthetic fun dateTimeParam$default (Lkotlinx/datetime/LocalDateTime;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Expression;
 	public static final fun durationLiteral-LRDsOJo (J)Lorg/jetbrains/exposed/sql/LiteralOp;
 	public static final fun durationParam-LRDsOJo (J)Lorg/jetbrains/exposed/sql/Expression;
-	public static final fun timeLiteral (Lkotlinx/datetime/LocalTime;)Lorg/jetbrains/exposed/sql/LiteralOp;
-	public static final fun timeParam (Lkotlinx/datetime/LocalTime;)Lorg/jetbrains/exposed/sql/Expression;
-	public static final fun timestampLiteral (Lkotlinx/datetime/Instant;)Lorg/jetbrains/exposed/sql/LiteralOp;
-	public static final fun timestampParam (Lkotlinx/datetime/Instant;)Lorg/jetbrains/exposed/sql/Expression;
-	public static final fun timestampWithTimeZoneLiteral (Ljava/time/OffsetDateTime;)Lorg/jetbrains/exposed/sql/LiteralOp;
-	public static final fun timestampWithTimeZoneParam (Ljava/time/OffsetDateTime;)Lorg/jetbrains/exposed/sql/Expression;
+	public static final fun timeLiteral (Lkotlinx/datetime/LocalTime;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public static synthetic fun timeLiteral$default (Lkotlinx/datetime/LocalTime;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public static final fun timeParam (Lkotlinx/datetime/LocalTime;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Expression;
+	public static synthetic fun timeParam$default (Lkotlinx/datetime/LocalTime;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Expression;
+	public static final fun timestampLiteral (Lkotlinx/datetime/Instant;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public static synthetic fun timestampLiteral$default (Lkotlinx/datetime/Instant;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public static final fun timestampParam (Lkotlinx/datetime/Instant;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Expression;
+	public static synthetic fun timestampParam$default (Lkotlinx/datetime/Instant;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Expression;
+	public static final fun timestampWithTimeZoneLiteral (Ljava/time/OffsetDateTime;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public static synthetic fun timestampWithTimeZoneLiteral$default (Ljava/time/OffsetDateTime;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/LiteralOp;
+	public static final fun timestampWithTimeZoneParam (Ljava/time/OffsetDateTime;Ljava/lang/Byte;)Lorg/jetbrains/exposed/sql/Expression;
+	public static synthetic fun timestampWithTimeZoneParam$default (Ljava/time/OffsetDateTime;Ljava/lang/Byte;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Expression;
 }
 
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDurationColumnType : org/jetbrains/exposed/sql/ColumnType {
@@ -133,7 +173,10 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinDurationColum
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinInstantColumnType : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/IDateColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinInstantColumnType$Companion;
 	public fun <init> ()V
+	public fun <init> (Ljava/lang/Byte;)V
+	public synthetic fun <init> (Ljava/lang/Byte;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getHasTimePart ()Z
+	public final fun getPrecision ()Ljava/lang/Byte;
 	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueAsDefaultString (Lkotlinx/datetime/Instant;)Ljava/lang/String;
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
@@ -170,7 +213,10 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateColu
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateTimeColumnType : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/IDateColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateTimeColumnType$Companion;
 	public fun <init> ()V
+	public fun <init> (Ljava/lang/Byte;)V
+	public synthetic fun <init> (Ljava/lang/Byte;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getHasTimePart ()Z
+	public final fun getPrecision ()Ljava/lang/Byte;
 	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueAsDefaultString (Lkotlinx/datetime/LocalDateTime;)Ljava/lang/String;
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
@@ -189,13 +235,17 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalDateTime
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalTimeColumnType : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/IDateColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalTimeColumnType$Companion;
 	public fun <init> ()V
+	public fun <init> (Ljava/lang/Byte;)V
+	public synthetic fun <init> (Ljava/lang/Byte;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getHasTimePart ()Z
+	public final fun getPrecision ()Ljava/lang/Byte;
 	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueAsDefaultString (Lkotlinx/datetime/LocalTime;)Ljava/lang/String;
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString (Lkotlinx/datetime/LocalTime;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Lkotlinx/datetime/LocalTime;)Ljava/lang/Object;
+	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Lkotlinx/datetime/LocalTime;
@@ -207,7 +257,10 @@ public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinLocalTimeColu
 public final class org/jetbrains/exposed/sql/kotlin/datetime/KotlinOffsetDateTimeColumnType : org/jetbrains/exposed/sql/ColumnType, org/jetbrains/exposed/sql/IDateColumnType {
 	public static final field Companion Lorg/jetbrains/exposed/sql/kotlin/datetime/KotlinOffsetDateTimeColumnType$Companion;
 	public fun <init> ()V
+	public fun <init> (Ljava/lang/Byte;)V
+	public synthetic fun <init> (Ljava/lang/Byte;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getHasTimePart ()Z
+	public final fun getPrecision ()Ljava/lang/Byte;
 	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueAsDefaultString (Ljava/time/OffsetDateTime;)Ljava/lang/String;
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;

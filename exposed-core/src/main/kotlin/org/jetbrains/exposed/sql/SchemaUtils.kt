@@ -294,7 +294,8 @@ object SchemaUtils {
                     if (processed.startsWith("CURRENT_TIMESTAMP") || processed == "GETDATE()") {
                         when (currentDialect) {
                             is SQLServerDialect -> processed = "getdate"
-                            is MariaDBDialect -> processed = processed.lowercase()
+                            is MariaDBDialect ->
+                                processed = "${processed.lowercase()}${"()".takeIf { processed.equals("CURRENT_TIMESTAMP", ignoreCase = true) }.orEmpty()}"
                         }
                     }
                     if (processed.trim('(').startsWith("CURRENT_DATE")) {

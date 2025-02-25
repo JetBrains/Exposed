@@ -8,12 +8,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.h2Mode
+import org.jetbrains.exposed.sql.vendors.*
 import java.time.OffsetDateTime
 import kotlin.time.Duration
 
@@ -39,12 +34,13 @@ fun <T : Instant?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal
 @JvmName("OffsetDateTimeDateFunction")
 fun <T : OffsetDateTime?> Date(expr: Expression<T>): Function<LocalDate> = DateInternal(expr)
 
-internal class TimeInternal(val expr: Expression<*>) : Function<LocalTime>(KotlinLocalTimeColumnType.INSTANCE) {
+internal class TimeInternal(val expr: Expression<*>, precision: Byte? = null) : Function<LocalTime>(KotlinLocalTimeColumnType(precision)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
         val functionProvider = when (dialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.SQLServer, H2Dialect.H2CompatibilityMode.PostgreSQL ->
-                (dialect as H2Dialect).originalFunctionProvider
+            H2Dialect.H2CompatibilityMode.SQLServer,
+            H2Dialect.H2CompatibilityMode.PostgreSQL,
+            H2Dialect.H2CompatibilityMode.Oracle -> (dialect as H2Dialect).originalFunctionProvider
             else -> dialect.functionProvider
         }
         functionProvider.time(expr, queryBuilder)
@@ -55,50 +51,58 @@ internal class TimeInternal(val expr: Expression<*>) : Function<LocalTime>(Kotli
 @JvmName("LocalDateTimeFunction")
 fun <T : LocalDate?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal(expr)
 
-/** Represents an SQL function that extracts the time part from a given datetime [expr]. */
+/** Represents an SQL function that extracts the time part from a given datetime [expr], with fractional seconds [precision]. */
 @JvmName("LocalDateTimeTimeFunction")
-fun <T : LocalDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal(expr)
+fun <T : LocalDateTime?> Time(expr: Expression<T>, precision: Byte? = null): Function<LocalTime> = TimeInternal(expr, precision)
 
-/** Represents an SQL function that extracts the time part from a given timestamp [expr]. */
+/** Represents an SQL function that extracts the time part from a given timestamp [expr], with fractional seconds [precision]. */
 @JvmName("InstantTimeFunction")
-fun <T : Instant?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal(expr)
+fun <T : Instant?> Time(expr: Expression<T>, precision: Byte? = null): Function<LocalTime> = TimeInternal(expr, precision)
 
-/** Represents an SQL function that extracts the time part from a given timestampWithTimeZone [expr]. */
+/** Represents an SQL function that extracts the time part from a given timestampWithTimeZone [expr], with fractional seconds [precision]. */
 @JvmName("OffsetDateTimeTimeFunction")
-fun <T : OffsetDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal(expr)
+fun <T : OffsetDateTime?> Time(expr: Expression<T>, precision: Byte? = null): Function<LocalTime> = TimeInternal(expr, precision)
 
 /**
- * Represents the base SQL function that returns the current date and time, as determined by the specified [columnType].
+ * Represents the base SQL function that returns the current date and time, as determined by the specified [columnType]
+ * and fractional seconds [precision].
  */
-sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Function<T>(columnType) {
+sealed class CurrentTimestampBase<T>(private val precision: Byte?, columnType: IColumnType<T & Any>) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
-            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
+            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ||
+                (currentDialect !is SQLiteDialect && currentDialect !is SQLServerDialect) -> "CURRENT_TIMESTAMP${precision?.let { "($it)" }.orEmpty()}"
             else -> "CURRENT_TIMESTAMP"
         }
     }
 }
 
 /**
- * Represents an SQL function that returns the current date and time, as [LocalDateTime].
+ * Represents an SQL function that returns the current date and time, as [LocalDateTime] with the specified fractional seconds [precision].
  *
  * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
-object CurrentDateTime : CurrentTimestampBase<LocalDateTime>(KotlinLocalDateTimeColumnType.INSTANCE)
+open class CurrentDateTime(precision: Byte? = null) : CurrentTimestampBase<LocalDateTime>(precision, KotlinLocalDateTimeColumnType(precision)) {
+    companion object : CurrentDateTime()
+}
 
 /**
- * Represents an SQL function that returns the current date and time, as [Instant].
+ * Represents an SQL function that returns the current date and time, as [Instant] with the specified fractional seconds [precision].
  *
  * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
-object CurrentTimestamp : CurrentTimestampBase<Instant>(KotlinInstantColumnType.INSTANCE)
+open class CurrentTimestamp(precision: Byte? = null) : CurrentTimestampBase<Instant>(precision, KotlinInstantColumnType(precision)) {
+    companion object : CurrentTimestamp()
+}
 
 /**
- * Represents an SQL function that returns the current date and time with time zone, as [OffsetDateTime].
+ * Represents an SQL function that returns the current date and time with time zone, as [OffsetDateTime] with the specified fractional seconds [precision].
  *
  * @sample org.jetbrains.exposed.DefaultsTest.testTimestampWithTimeZoneDefaults
  */
-object CurrentTimestampWithTimeZone : CurrentTimestampBase<OffsetDateTime>(KotlinOffsetDateTimeColumnType.INSTANCE)
+open class CurrentTimestampWithTimeZone(precision: Byte? = null) : CurrentTimestampBase<OffsetDateTime>(precision, KotlinOffsetDateTimeColumnType(precision)) {
+    companion object : CurrentTimestampWithTimeZone()
+}
 
 /**
  * Represents an SQL function that returns the current date, as [LocalDate].
@@ -300,17 +304,17 @@ fun <T : OffsetDateTime?> Expression<T>.date() = Date(this)
 @JvmName("LocalDateTimeExt")
 fun <T : LocalDate?> Expression<T>.time() = Time(this)
 
-/** Returns the time from this datetime expression. */
+/** Returns the time, with fractional seconds [precision], from this datetime expression . */
 @JvmName("LocalDateTimeTimeExt")
-fun <T : LocalDateTime?> Expression<T>.time() = Time(this)
+fun <T : LocalDateTime?> Expression<T>.time(precision: Byte? = null) = Time(this, precision)
 
-/** Returns the time from this timestamp expression. */
+/** Returns the time, with fractional seconds [precision], from this timestamp expression. */
 @JvmName("InstantTimeExt")
-fun <T : Instant?> Expression<T>.time() = Time(this)
+fun <T : Instant?> Expression<T>.time(precision: Byte? = null) = Time(this, precision)
 
-/** Returns the time from this timestampWithTimeZone expression. */
+/** Returns the time, with fractional seconds [precision], from this timestampWithTimeZone expression. */
 @JvmName("OffsetDateTimeTimeExt")
-fun <T : OffsetDateTime?> Expression<T>.time() = Time(this)
+fun <T : OffsetDateTime?> Expression<T>.time(precision: Byte? = null) = Time(this, precision)
 
 /** Returns the year from this date expression, as an integer. */
 @JvmName("LocalDateYearExt")
@@ -411,18 +415,18 @@ fun <T : OffsetDateTime?> Expression<T>.second() = Second(this)
 /** Returns the specified [value] as a date query parameter. */
 fun dateParam(value: LocalDate): Expression<LocalDate> = QueryParameter(value, KotlinLocalDateColumnType.INSTANCE)
 
-/** Returns the specified [value] as a time query parameter. */
-fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, KotlinLocalTimeColumnType.INSTANCE)
+/** Returns the specified [value] as a time query parameter with fractional seconds [precision]. */
+fun timeParam(value: LocalTime, precision: Byte? = null): Expression<LocalTime> = QueryParameter(value, KotlinLocalTimeColumnType(precision))
 
-/** Returns the specified [value] as a date with time query parameter. */
-fun dateTimeParam(value: LocalDateTime): Expression<LocalDateTime> = QueryParameter(value, KotlinLocalDateTimeColumnType.INSTANCE)
+/** Returns the specified [value] as a date with time query parameter with fractional seconds [precision]. */
+fun dateTimeParam(value: LocalDateTime, precision: Byte? = null): Expression<LocalDateTime> = QueryParameter(value, KotlinLocalDateTimeColumnType(precision))
 
-/** Returns the specified [value] as a timestamp query parameter. */
-fun timestampParam(value: Instant): Expression<Instant> = QueryParameter(value, KotlinInstantColumnType.INSTANCE)
+/** Returns the specified [value] as a timestamp query parameter with fractional seconds [precision]. */
+fun timestampParam(value: Instant, precision: Byte? = null): Expression<Instant> = QueryParameter(value, KotlinInstantColumnType(precision))
 
-/** Returns the specified [value] as a date with time and time zone query parameter. */
-fun timestampWithTimeZoneParam(value: OffsetDateTime): Expression<OffsetDateTime> =
-    QueryParameter(value, KotlinOffsetDateTimeColumnType.INSTANCE)
+/** Returns the specified [value] as a date with time and time zone query parameter with fractional seconds [precision]. */
+fun timestampWithTimeZoneParam(value: OffsetDateTime, precision: Byte? = null): Expression<OffsetDateTime> =
+    QueryParameter(value, KotlinOffsetDateTimeColumnType(precision))
 
 /** Returns the specified [value] as a duration query parameter. */
 fun durationParam(value: Duration): Expression<Duration> = QueryParameter(value, KotlinDurationColumnType.INSTANCE)
@@ -430,18 +434,18 @@ fun durationParam(value: Duration): Expression<Duration> = QueryParameter(value,
 /** Returns the specified [value] as a date literal. */
 fun dateLiteral(value: LocalDate): LiteralOp<LocalDate> = LiteralOp(KotlinLocalDateColumnType.INSTANCE, value)
 
-/** Returns the specified [value] as a time literal. */
-fun timeLiteral(value: LocalTime): LiteralOp<LocalTime> = LiteralOp(KotlinLocalTimeColumnType.INSTANCE, value)
+/** Returns the specified [value] as a time literal with fractional seconds [precision]. */
+fun timeLiteral(value: LocalTime, precision: Byte? = null): LiteralOp<LocalTime> = LiteralOp(KotlinLocalTimeColumnType(precision), value)
 
-/** Returns the specified [value] as a date with time literal. */
-fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> = LiteralOp(KotlinLocalDateTimeColumnType.INSTANCE, value)
+/** Returns the specified [value] as a date with time literal with fractional seconds [precision]. */
+fun dateTimeLiteral(value: LocalDateTime, precision: Byte? = null): LiteralOp<LocalDateTime> = LiteralOp(KotlinLocalDateTimeColumnType(precision), value)
 
-/** Returns the specified [value] as a timestamp literal. */
-fun timestampLiteral(value: Instant): LiteralOp<Instant> = LiteralOp(KotlinInstantColumnType.INSTANCE, value)
+/** Returns the specified [value] as a timestamp literal with fractional seconds [precision]. */
+fun timestampLiteral(value: Instant, precision: Byte? = null): LiteralOp<Instant> = LiteralOp(KotlinInstantColumnType(precision), value)
 
-/** Returns the specified [value] as a date with time and time zone literal. */
-fun timestampWithTimeZoneLiteral(value: OffsetDateTime): LiteralOp<OffsetDateTime> =
-    LiteralOp(KotlinOffsetDateTimeColumnType.INSTANCE, value)
+/** Returns the specified [value] as a date with time and time zone literal with fractional seconds [precision]. */
+fun timestampWithTimeZoneLiteral(value: OffsetDateTime, precision: Byte? = null): LiteralOp<OffsetDateTime> =
+    LiteralOp(KotlinOffsetDateTimeColumnType(precision), value)
 
 /** Returns the specified [value] as a duration literal. */
 fun durationLiteral(value: Duration): LiteralOp<Duration> = LiteralOp(KotlinDurationColumnType.INSTANCE, value)
@@ -454,35 +458,36 @@ fun CustomDateFunction(functionName: String, vararg params: Expression<*>): Cust
     CustomFunction(functionName, KotlinLocalDateColumnType.INSTANCE, *params)
 
 /**
- * Calls a custom SQL function with the specified [functionName], that returns a time only,
- * and passing [params] as its arguments.
+ * Calls a custom SQL function with the specified [functionName], that returns a time only, with fractional seconds
+ * [precision], and passing [params] as its arguments.
  */
-fun CustomTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalTime?> =
-    CustomFunction(functionName, KotlinLocalTimeColumnType.INSTANCE, *params)
+fun CustomTimeFunction(functionName: String, precision: Byte? = null, vararg params: Expression<*>): CustomFunction<LocalTime?> =
+    CustomFunction(functionName, KotlinLocalTimeColumnType(precision), *params)
 
 /**
- * Calls a custom SQL function with the specified [functionName], that returns both a date and a time,
- * and passing [params] as its arguments.
+ * Calls a custom SQL function with the specified [functionName], that returns both a date and a time with fractional
+ * seconds [precision], and passing [params] as its arguments.
  */
-fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalDateTime?> =
-    CustomFunction(functionName, KotlinLocalDateTimeColumnType.INSTANCE, *params)
+fun CustomDateTimeFunction(functionName: String, precision: Byte? = null, vararg params: Expression<*>): CustomFunction<LocalDateTime?> =
+    CustomFunction(functionName, KotlinLocalDateTimeColumnType(precision), *params)
 
 /**
- * Calls a custom SQL function with the specified [functionName], that returns a timestamp,
- * and passing [params] as its arguments.
+ * Calls a custom SQL function with the specified [functionName], that returns a timestamp with fractional seconds
+ * [precision], and passing [params] as its arguments.
  */
-fun CustomTimeStampFunction(functionName: String, vararg params: Expression<*>): CustomFunction<Instant?> =
-    CustomFunction(functionName, KotlinInstantColumnType.INSTANCE, *params)
+fun CustomTimeStampFunction(functionName: String, precision: Byte? = null, vararg params: Expression<*>): CustomFunction<Instant?> =
+    CustomFunction(functionName, KotlinInstantColumnType(precision), *params)
 
 /**
- * Calls a custom SQL function with the specified [functionName], that returns both a date and a time with time zone,
- * and passing [params] as its arguments.
+ * Calls a custom SQL function with the specified [functionName], that returns both a date and a time with time zone
+ * with fractional seconds [precision], and passing [params] as its arguments.
  */
 @Suppress("FunctionName")
 fun CustomTimestampWithTimeZoneFunction(
     functionName: String,
+    precision: Byte? = null,
     vararg params: Expression<*>
-): CustomFunction<OffsetDateTime?> = CustomFunction(functionName, KotlinOffsetDateTimeColumnType.INSTANCE, *params)
+): CustomFunction<OffsetDateTime?> = CustomFunction(functionName, KotlinOffsetDateTimeColumnType(precision), *params)
 
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a duration,

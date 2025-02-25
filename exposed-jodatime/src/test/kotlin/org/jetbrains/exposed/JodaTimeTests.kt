@@ -9,6 +9,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.between
@@ -40,27 +41,34 @@ class JodaTimeTests : DatabaseTestsBase() {
 
     @Test
     fun jodaTimeFunctions() {
-        withTables(CitiesTime) {
+        withTables(CitiesTime) { testDb ->
             val now = DateTime.now()
 
             val cityID = CitiesTime.insertAndGetId {
                 it[name] = "St. Petersburg"
-                it[local_time] = now.toDateTime()
+                it[datetime] = now
             }
 
-            val insertedYear = CitiesTime.select(CitiesTime.local_time.year()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.year()]
-            val insertedMonth = CitiesTime.select(CitiesTime.local_time.month()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.month()]
-            val insertedDay = CitiesTime.select(CitiesTime.local_time.day()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.day()]
-            val insertedHour = CitiesTime.select(CitiesTime.local_time.hour()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.hour()]
-            val insertedMinute = CitiesTime.select(CitiesTime.local_time.minute()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.minute()]
-            val insertedSecond = CitiesTime.select(CitiesTime.local_time.second()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.second()]
+            val insertedYear = CitiesTime.select(CitiesTime.datetime.year()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.datetime.year()]
+            val insertedMonth = CitiesTime.select(CitiesTime.datetime.month()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.datetime.month()]
+            val insertedDay = CitiesTime.select(CitiesTime.datetime.day()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.datetime.day()]
+            val insertedHour = CitiesTime.select(CitiesTime.datetime.hour()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.datetime.hour()]
+            val insertedMinute = CitiesTime.select(CitiesTime.datetime.minute()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.datetime.minute()]
+            val insertedSecond = CitiesTime.select(CitiesTime.datetime.second()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.datetime.second()]
 
             assertEquals(now.year, insertedYear)
             assertEquals(now.monthOfYear, insertedMonth)
             assertEquals(now.dayOfMonth, insertedDay)
             assertEquals(now.hourOfDay, insertedHour)
             assertEquals(now.minuteOfHour, insertedMinute)
-            assertEquals(now.secondOfMinute, insertedSecond)
+            assertEquals(
+                if (now.millisOfSecond >= 500 && testDb in TestDB.ALL_MYSQL) {
+                    now.secondOfMinute + 1 // MySQL default precision is 0 and it rounds up the seconds
+                } else {
+                    now.secondOfMinute
+                },
+                insertedSecond
+            )
         }
     }
 
@@ -200,8 +208,8 @@ class JodaTimeTests : DatabaseTestsBase() {
     @Test
     fun testLocalDateTimeComparison() {
         val testTableDT = object : IntIdTable("test_table_dt") {
-            val created = datetime("created")
-            val modified = datetime("modified")
+            val created = datetime("created", 6)
+            val modified = datetime("modified", 6)
         }
 
         withTables(testTableDT) {
@@ -322,20 +330,20 @@ class JodaTimeTests : DatabaseTestsBase() {
             val isOriginalTimeZonePreserved = testDB !in (TestDB.ALL_POSTGRES + TestDB.ALL_MYSQL)
             if (isOriginalTimeZonePreserved) {
                 // Assert that time zone is preserved when the same value is inserted in different time zones
-                assertEqualDateTime(cairoNow, cairoNowInsertedInCairoTimeZone)
-                assertEqualDateTime(cairoNow, cairoNowInsertedInUTCTimeZone)
-                assertEqualDateTime(cairoNow, cairoNowInsertedInTokyoTimeZone)
+                assertEqualDateTimeWithTimeZone(cairoNow, cairoNowInsertedInCairoTimeZone)
+                assertEqualDateTimeWithTimeZone(cairoNow, cairoNowInsertedInUTCTimeZone)
+                assertEqualDateTimeWithTimeZone(cairoNow, cairoNowInsertedInTokyoTimeZone)
 
                 // Assert that time zone is preserved when the same record is retrieved in different time zones
-                assertEqualDateTime(cairoNow, cairoNowRetrievedInUTCTimeZone)
-                assertEqualDateTime(cairoNow, cairoNowRetrievedInTokyoTimeZone)
+                assertEqualDateTimeWithTimeZone(cairoNow, cairoNowRetrievedInUTCTimeZone)
+                assertEqualDateTimeWithTimeZone(cairoNow, cairoNowRetrievedInTokyoTimeZone)
             } else {
                 // Assert equivalence in UTC when the same value is inserted in different time zones
-                assertEqualDateTime(cairoNowInsertedInCairoTimeZone, cairoNowInsertedInUTCTimeZone)
-                assertEqualDateTime(cairoNowInsertedInUTCTimeZone, cairoNowInsertedInTokyoTimeZone)
+                assertEqualDateTimeWithTimeZone(cairoNowInsertedInCairoTimeZone, cairoNowInsertedInUTCTimeZone)
+                assertEqualDateTimeWithTimeZone(cairoNowInsertedInUTCTimeZone, cairoNowInsertedInTokyoTimeZone)
 
                 // Assert equivalence in UTC when the same record is retrieved in different time zones
-                assertEqualDateTime(cairoNowRetrievedInUTCTimeZone, cairoNowRetrievedInTokyoTimeZone)
+                assertEqualDateTimeWithTimeZone(cairoNowRetrievedInUTCTimeZone, cairoNowRetrievedInTokyoTimeZone)
             }
         }
     }
@@ -359,7 +367,7 @@ class JodaTimeTests : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1, testTable) {
+        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1, testTable) { testDb ->
             // UTC time zone
             DateTimeZone.setDefault(DateTimeZone.UTC)
             assertEquals("UTC", DateTimeZone.getDefault().id)
@@ -375,8 +383,14 @@ class JodaTimeTests : DatabaseTestsBase() {
                     .single()[testTable.timestampWithTimeZone.date()]
             )
 
+            val expectedTime =
+                when (testDb) {
+                    TestDB.MYSQL_V8 -> DateTime.parse("2023-05-04T05:04:01+00:00") // MySQL default precision is 0
+                    else -> DateTime.parse("2023-05-04T05:04:01.123+00:00") // JodaTime only stores down to the millisecond
+                }.toLocalTime()
+
             assertEquals(
-                now.toLocalTime(),
+                expectedTime,
                 testTable.select(testTable.timestampWithTimeZone.time()).where { testTable.id eq nowId }
                     .single()[testTable.timestampWithTimeZone.time()]
             )
@@ -425,7 +439,7 @@ class JodaTimeTests : DatabaseTestsBase() {
             val result2 = tester.select(lastDate, firstTwoDatetimes).where {
                 tester.dates[1].year() eq 2020
             }.single()
-            assertEqualDateTime(datesInput.last(), result2[lastDate])
+            assertEquals(datesInput.last(), result2[lastDate])
             assertEqualLists(result2[firstTwoDatetimes], datetimeInput.take(2))
         }
     }
@@ -455,29 +469,270 @@ class JodaTimeTests : DatabaseTestsBase() {
             )
         }
     }
+
+    @Test
+    fun testCurrentDateAsDefaultExpression() {
+        val testTable = object : LongIdTable("test_table") {
+            val date: Column<DateTime> = date("date").index().defaultExpression(CurrentDate)
+        }
+        withTables(testTable) {
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
+            assertTrue(statements.isEmpty())
+        }
+    }
+
+    @Test
+    fun testDateTimeWithCustomPrecision() {
+        val localDateTime3 = DateTime.parse("2025-02-26T11:21:00.838")
+        val localDateTime9 = DateTime.parse("2025-02-26T11:21:00.838123456")
+
+        withDb { testDb ->
+            val maxPrecisionAllowed: Byte = when (testDb) {
+                in TestDB.ALL_MYSQL_MARIADB -> 6
+                TestDB.SQLSERVER -> 7
+                else -> 9
+            }
+
+            val tester = object : Table("tester") {
+                val datetimeWithDefaultPrecision = datetime("datetimeWithDefaultPrecision")
+                val datetimeWithPrecision3 = datetime("datetimeWithPrecision3", 3)
+                val datetimeWithMaxPrecision = datetime("datetimeWithMaxPrecision", maxPrecisionAllowed)
+            }
+
+            try {
+                SchemaUtils.create(tester)
+
+                tester.insert {
+                    it[datetimeWithDefaultPrecision] = localDateTime9
+                    it[datetimeWithPrecision3] = localDateTime9
+                    it[datetimeWithMaxPrecision] = localDateTime9
+                }
+
+                assertEquals(
+                    when (testDb) {
+                        TestDB.MARIADB -> DateTime.parse("2025-02-26T11:21:00") // MariaDB default precision is 0
+                        in TestDB.ALL_MYSQL -> DateTime.parse("2025-02-26T11:21:01") // MySQL default precision is 0 and it rounds up
+                        else -> DateTime.parse("2025-02-26T11:21:00.838") // JodaTime only stores down to the millisecond
+                    },
+                    tester.selectAll().single()[tester.datetimeWithDefaultPrecision]
+                )
+
+                assertEquals(
+                    localDateTime3,
+                    tester.selectAll().single()[tester.datetimeWithPrecision3]
+                )
+
+                assertEquals(
+                    DateTime.parse("2025-02-26T11:21:00.838"), // JodaTime only stores down to the millisecond
+                    tester.selectAll().single()[tester.datetimeWithMaxPrecision]
+                )
+
+                tester.deleteWhere { tester.datetimeWithPrecision3 eq localDateTime9 }
+
+                tester.insert {
+                    it[datetimeWithDefaultPrecision] = localDateTime3
+                    it[datetimeWithPrecision3] = localDateTime3
+                    it[datetimeWithMaxPrecision] = localDateTime3
+                }
+
+                assertEquals(
+                    when (testDb) {
+                        TestDB.MARIADB -> DateTime.parse("2025-02-26T11:21:00") // MariaDB default precision is 0
+                        in TestDB.ALL_MYSQL -> DateTime.parse("2025-02-26T11:21:01") // MySQL default precision is 0 and it rounds up
+                        else -> localDateTime3
+                    },
+                    tester.selectAll().single()[tester.datetimeWithDefaultPrecision]
+                )
+
+                assertEquals(
+                    localDateTime3,
+                    tester.selectAll().single()[tester.datetimeWithPrecision3]
+                )
+
+                assertEquals(
+                    localDateTime3,
+                    tester.selectAll().single()[tester.datetimeWithMaxPrecision]
+                )
+            } finally {
+                SchemaUtils.drop(tester)
+            }
+        }
+    }
+
+    @Test
+    fun testTimeWithCustomPrecision() {
+        val localTime2 = LocalTime.parse("01:23:45.670")
+        val localTime9 = LocalTime.parse("01:23:45.678123456")
+
+        withDb { testDb ->
+            val maxPrecisionAllowed: Byte = when (testDb) {
+                in TestDB.ALL_MYSQL_MARIADB -> 6
+                TestDB.SQLSERVER -> 7
+                else -> 9
+            }
+
+            val tester = object : Table("tester") {
+                val timeWithDefaultPrecision = time("timeWithDefaultPrecision")
+                val timeWithPrecision3 = time("timeWithPrecision3", 3)
+                val timeWithMaxPrecision = time("timeWithMaxPrecision", maxPrecisionAllowed)
+            }
+
+            try {
+                SchemaUtils.create(tester)
+
+                tester.insert {
+                    it[timeWithDefaultPrecision] = localTime9
+                    it[timeWithPrecision3] = localTime9
+                    it[timeWithMaxPrecision] = localTime9
+                }
+
+                assertEquals(
+                    when (testDb) {
+                        TestDB.MARIADB -> LocalTime.parse("01:23:45") // MariaDB default precision is 0
+                        in TestDB.ALL_MYSQL, in TestDB.ALL_H2 -> LocalTime.parse("01:23:46") // MySQL and H2 default precision is 0 and they round up
+                        else -> LocalTime.parse("01:23:45.678") // JodaTime only stores down to the millisecond
+                    },
+                    tester.selectAll().single()[tester.timeWithDefaultPrecision]
+                )
+
+                assertEquals(
+                    LocalTime.parse("01:23:45.678"),
+                    tester.selectAll().single()[tester.timeWithPrecision3]
+                )
+
+                assertEquals(
+                    LocalTime.parse("01:23:45.678"), // JodaTime only stores down to the millisecond
+                    tester.selectAll().single()[tester.timeWithMaxPrecision]
+                )
+
+                tester.deleteWhere { tester.timeWithPrecision3 eq localTime9 }
+
+                tester.insert {
+                    it[timeWithDefaultPrecision] = localTime2
+                    it[timeWithPrecision3] = localTime2
+                    it[timeWithMaxPrecision] = localTime2
+                }
+
+                assertEquals(
+                    when (testDb) {
+                        TestDB.MARIADB -> LocalTime.parse("01:23:45") // MariaDB default precision is 0
+                        in TestDB.ALL_MYSQL, in TestDB.ALL_H2 -> LocalTime.parse("01:23:46") // MySQL and H2 default precision is 0 and they round up
+                        else -> localTime2
+                    },
+                    tester.selectAll().single()[tester.timeWithDefaultPrecision]
+                )
+
+                assertEquals(
+                    localTime2,
+                    tester.selectAll().single()[tester.timeWithPrecision3]
+                )
+
+                assertEquals(
+                    localTime2,
+                    tester.selectAll().single()[tester.timeWithMaxPrecision]
+                )
+            } finally {
+                SchemaUtils.drop(tester)
+            }
+        }
+    }
+
+    @Test
+    fun testTimestampWithTimeZoneWithCustomPrecision() {
+        val offsetDateTime2 = DateTime.parse("2025-02-26T01:23:45.670Z")
+        val offsetDateTime9 = DateTime.parse("2025-02-26T01:23:45.678123456Z")
+
+        withDb(excludeSettings = timestampWithTimeZoneUnsupportedDB) { testDb ->
+            val maxPrecisionAllowed: Byte = when (testDb) {
+                in TestDB.ALL_MYSQL_MARIADB -> 6
+                TestDB.SQLSERVER -> 7
+                else -> 9
+            }
+
+            val tester = object : Table("tester") {
+                val timestampWithTimeZoneDefaultPrecision = timestampWithTimeZone("timestampWithTimeZoneDefaultPrecision")
+                val timestampWithTimeZone3 = timestampWithTimeZone("timestampWithTimeZone3", 3)
+                val timestampWithTimeZoneMaxPrecision = timestampWithTimeZone("timestampWithTimeZoneMaxPrecision", maxPrecisionAllowed)
+            }
+
+            try {
+                SchemaUtils.create(tester)
+
+                tester.insert {
+                    it[timestampWithTimeZoneDefaultPrecision] = offsetDateTime9
+                    it[timestampWithTimeZone3] = offsetDateTime9
+                    it[timestampWithTimeZoneMaxPrecision] = offsetDateTime9
+                }
+
+                assertEquals(
+                    when (testDb) {
+                        TestDB.MARIADB -> DateTime.parse("2025-02-26T01:23:45Z") // MariaDB default precision is 0
+                        in TestDB.ALL_MYSQL -> DateTime.parse("2025-02-26T01:23:46Z") // MySQL default precision is 0 and it rounds up
+                        else -> DateTime.parse("2025-02-26T01:23:45.678Z") // JodaTime only stores down to the millisecond
+                    },
+                    tester.selectAll().single()[tester.timestampWithTimeZoneDefaultPrecision]
+                )
+
+                assertEquals(
+                    DateTime.parse("2025-02-26T01:23:45.678Z"),
+                    tester.selectAll().single()[tester.timestampWithTimeZone3]
+                )
+
+                assertEquals(
+                    DateTime.parse("2025-02-26T01:23:45.678Z"), // JodaTime only stores down to the millisecond
+                    tester.selectAll().single()[tester.timestampWithTimeZoneMaxPrecision]
+                )
+
+                tester.deleteWhere { tester.timestampWithTimeZone3 eq offsetDateTime9 }
+
+                tester.insert {
+                    it[timestampWithTimeZoneDefaultPrecision] = offsetDateTime2
+                    it[timestampWithTimeZone3] = offsetDateTime2
+                    it[timestampWithTimeZoneMaxPrecision] = offsetDateTime2
+                }
+
+                assertEquals(
+                    when (testDb) {
+                        TestDB.MARIADB -> DateTime.parse("2025-02-26T01:23:45Z") // MariaDB default precision is 0
+                        in TestDB.ALL_MYSQL -> DateTime.parse("2025-02-26T01:23:46Z") // MySQL default precision is 0 and it rounds up
+                        else -> offsetDateTime2
+                    },
+                    tester.selectAll().single()[tester.timestampWithTimeZoneDefaultPrecision]
+                )
+
+                assertEquals(
+                    offsetDateTime2,
+                    tester.selectAll().single()[tester.timestampWithTimeZone3]
+                )
+
+                assertEquals(
+                    offsetDateTime2,
+                    tester.selectAll().single()[tester.timestampWithTimeZoneMaxPrecision]
+                )
+            } finally {
+                SchemaUtils.drop(tester)
+            }
+        }
+    }
 }
 
-fun assertEqualDateTime(d1: DateTime?, d2: DateTime?) {
+fun assertEqualDateTimeWithTimeZone(d1: DateTime?, d2: DateTime?) {
     when {
         d1 == null && d2 == null -> return
         d1 == null -> error("d1 is null while d2 is not on ${currentDialectTest.name}")
         d2 == null -> error("d1 is not null while d2 is null on ${currentDialectTest.name}")
-        else -> assertEquals(d1.millis, d2.millis, "Failed on ${currentDialectTest.name}")
+        else -> {
+            assertEquals(d1.millis, d2.millis, "Failed on ${currentDialectTest.name}")
+            assertEquals(d1.zone.toTimeZone().rawOffset, d2.zone.toTimeZone().rawOffset, "Failed on ${currentDialectTest.name}")
+        }
     }
-}
-
-fun equalDateTime(d1: DateTime?, d2: DateTime?) = try {
-    assertEqualDateTime(d1, d2)
-    true
-} catch (_: Exception) {
-    false
 }
 
 val today: DateTime = DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay()
 
 object CitiesTime : IntIdTable("CitiesTime") {
-    val name = varchar("name", 50) // Column<String>
-    val local_time = datetime("local_time").nullable() // Column<datetime>
+    val name = varchar("name", 50)
+    val datetime = datetime("datetime").nullable()
 }
 
 @Serializable

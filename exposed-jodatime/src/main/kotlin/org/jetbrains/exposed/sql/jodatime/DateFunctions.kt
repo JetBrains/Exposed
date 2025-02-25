@@ -2,12 +2,7 @@ package org.jetbrains.exposed.sql.jodatime
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.h2Mode
+import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import org.joda.time.LocalTime
 
@@ -18,12 +13,14 @@ class Date<T : DateTime?>(val expr: Expression<T>) : Function<DateTime>(DateColu
     }
 }
 
-/** Represents an SQL function that extracts the time part from a given datetime [expr]. */
-class Time<T : DateTime?>(val expr: Expression<T>) : Function<LocalTime>(LocalTimeColumnType()) {
+/** Represents an SQL function that extracts the time part from a given datetime [expr], with fractional seconds [precision]. */
+class Time<T : DateTime?>(val expr: Expression<T>, precision: Byte? = null) : Function<LocalTime>(LocalTimeColumnType(precision)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
         val functionProvider = when (dialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.SQLServer, H2Dialect.H2CompatibilityMode.PostgreSQL ->
+            H2Dialect.H2CompatibilityMode.SQLServer,
+            H2Dialect.H2CompatibilityMode.PostgreSQL,
+            H2Dialect.H2CompatibilityMode.Oracle ->
                 (dialect as H2Dialect).originalFunctionProvider
             else -> dialect.functionProvider
         }
@@ -32,17 +29,20 @@ class Time<T : DateTime?>(val expr: Expression<T>) : Function<LocalTime>(LocalTi
 }
 
 /**
- * Represents an SQL function that returns the current date and time, as [DateTime]
+ * Represents an SQL function that returns the current date and time, as [DateTime] with the specified fractional seconds [precision].
  *
  * @sample org.jetbrains.exposed.JodaTimeDefaultsTest.testDefaultExpressions02
  */
-object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
+open class CurrentDateTime(private val precision: Byte? = null) : Function<DateTime>(DateColumnType(true, precision)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
-            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
+            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ||
+                (currentDialect !is SQLiteDialect && currentDialect !is SQLServerDialect) -> "CURRENT_TIMESTAMP${precision?.let { "($it)" }.orEmpty()}"
             else -> "CURRENT_TIMESTAMP"
         }
     }
+
+    companion object : CurrentDateTime()
 }
 
 /**
@@ -136,8 +136,8 @@ class Second<T : DateTime?>(val expr: Expression<T>) : Function<Int>(IntegerColu
 /** Returns the date from this datetime expression. */
 fun <T : DateTime?> Expression<T>.date() = Date(this)
 
-/** Returns the time from this datetime expression. */
-fun <T : DateTime?> Expression<T>.time() = Time(this)
+/** Returns the time, with fractional seconds [precision], from this datetime expression. */
+fun <T : DateTime?> Expression<T>.time(precision: Byte? = null) = Time(this, precision)
 
 /** Returns the year from this datetime expression, as an integer. */
 fun <T : DateTime?> Expression<T>.year() = Year(this)
@@ -160,36 +160,36 @@ fun <T : DateTime?> Expression<T>.second() = Second(this)
 /** Returns the specified [value] as a date query parameter. */
 fun dateParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(false))
 
-/** Returns the specified [value] as a date with time query parameter. */
-fun dateTimeParam(value: DateTime): Expression<DateTime> = QueryParameter(value, DateColumnType(true))
+/** Returns the specified [value] as a date with time query parameter with fractional seconds [precision]. */
+fun dateTimeParam(value: DateTime, precision: Byte? = null): Expression<DateTime> = QueryParameter(value, DateColumnType(true, precision))
 
-/** Returns the specified [value] as a time query parameter. */
-fun timeParam(value: LocalTime): Expression<LocalTime> = QueryParameter(value, LocalTimeColumnType())
+/** Returns the specified [value] as a time query parameter with fractional seconds [precision]. */
+fun timeParam(value: LocalTime, precision: Byte? = null): Expression<LocalTime> = QueryParameter(value, LocalTimeColumnType(precision))
 
-/** Returns the specified [value] as a date with time and time zone query parameter. */
-fun timestampWithTimeZoneParam(value: DateTime): Expression<DateTime> =
-    QueryParameter(value, DateTimeWithTimeZoneColumnType())
+/** Returns the specified [value] as a date with time and time zone query parameter with fractional seconds [precision]. */
+fun timestampWithTimeZoneParam(value: DateTime, precision: Byte? = null): Expression<DateTime> =
+    QueryParameter(value, DateTimeWithTimeZoneColumnType(precision))
 
 /** Returns the specified [value] as a date literal. */
 fun dateLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(false), value)
 
-/** Returns the specified [value] as a date with time literal. */
-fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
+/** Returns the specified [value] as a date with time literal with fractional seconds [precision]. */
+fun dateTimeLiteral(value: DateTime, precision: Byte? = null): LiteralOp<DateTime> = LiteralOp(DateColumnType(true, precision), value)
 
-/** Returns the specified [value] as a time literal. */
-fun timeLiteral(value: LocalTime): LiteralOp<LocalTime> = LiteralOp(LocalTimeColumnType(), value)
+/** Returns the specified [value] as a time literal with fractional seconds [precision]. */
+fun timeLiteral(value: LocalTime, precision: Byte? = null): LiteralOp<LocalTime> = LiteralOp(LocalTimeColumnType(precision), value)
 
-/** Returns the specified [value] as a date with time and time zone literal. */
-fun timestampWithTimeZoneLiteral(value: DateTime): LiteralOp<DateTime> =
-    LiteralOp(DateTimeWithTimeZoneColumnType(), value)
+/** Returns the specified [value] as a date with time and time zone literal with fractional seconds [precision]. */
+fun timestampWithTimeZoneLiteral(value: DateTime, precision: Byte? = null): LiteralOp<DateTime> =
+    LiteralOp(DateTimeWithTimeZoneColumnType(precision), value)
 
 /**
- * Calls a custom SQL function with the specified [functionName], that returns both a date and a time,
- * and passing [params] as its arguments.
+ * Calls a custom SQL function with the specified [functionName], that returns both a date and a time with fractional
+ * seconds [precision], and passing [params] as its arguments.
  */
 @Suppress("FunctionNaming")
-fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>) =
-    CustomFunction<DateTime?>(functionName, DateColumnType(true), *params)
+fun CustomDateTimeFunction(functionName: String, precision: Byte? = null, vararg params: Expression<*>) =
+    CustomFunction<DateTime?>(functionName, DateColumnType(true, precision), *params)
 
 /**
  * Calls a custom SQL function with the specified [functionName], that returns a date only,
@@ -200,17 +200,17 @@ fun CustomDateFunction(functionName: String, vararg params: Expression<*>) =
     CustomFunction<DateTime?>(functionName, DateColumnType(false), *params)
 
 /**
- * Calls a custom SQL function with the specified [functionName], that returns a time only,
- * and passing [params] as its arguments.
+ * Calls a custom SQL function with the specified [functionName], that returns a time only, with fractional seconds
+ * [precision] and passing [params] as its arguments.
  */
 @Suppress("FunctionNaming")
-fun CustomTimeFunction(functionName: String, vararg params: Expression<*>): CustomFunction<LocalTime?> =
-    CustomFunction(functionName, LocalTimeColumnType(), *params)
+fun CustomTimeFunction(functionName: String, precision: Byte? = null, vararg params: Expression<*>): CustomFunction<LocalTime?> =
+    CustomFunction(functionName, LocalTimeColumnType(precision), *params)
 
 /**
- * Calls a custom SQL function with the specified [functionName], that returns both a date and a time with time zone,
- * and passing [params] as its arguments.
+ * Calls a custom SQL function with the specified [functionName], that returns both a date and a time with time zone
+ * with fractional seconds [precision], and passing [params] as its arguments.
  */
 @Suppress("FunctionNaming")
-fun CustomTimestampWithTimeZoneFunction(functionName: String, vararg params: Expression<*>) =
-    CustomFunction<DateTime?>(functionName, DateTimeWithTimeZoneColumnType(), *params)
+fun CustomTimestampWithTimeZoneFunction(functionName: String, precision: Byte? = null, vararg params: Expression<*>) =
+    CustomFunction<DateTime?>(functionName, DateTimeWithTimeZoneColumnType(precision), *params)

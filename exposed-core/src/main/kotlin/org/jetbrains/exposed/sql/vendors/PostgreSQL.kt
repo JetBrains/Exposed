@@ -21,7 +21,7 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     }
     override fun blobType(): String = "bytea"
     override fun uuidToDB(value: UUID): Any = value
-    override fun dateTimeType(): String = "TIMESTAMP"
+    override fun dateTimeType(precision: Byte?): String = "TIMESTAMP${precision?.let { "($it)" }.orEmpty()}"
     override fun jsonBType(): String = "JSONB"
 
     override fun processForDefaultValue(e: Expression<*>): String = when {

@@ -44,7 +44,11 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     override fun textType(): String = "CLOB"
     override fun mediumTextType(): String = textType()
     override fun largeTextType(): String = textType()
-    override fun timeType(): String = dateTimeType()
+    override fun timeType(precision: Byte?): String = if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+        super.timeType(precision)
+    } else {
+        dateTimeType(precision)
+    }
     override fun binaryType(): String {
         exposedLogger.error("Binary type is unsupported for Oracle. Please use blob column type instead.")
         error("Binary type is unsupported for Oracle. Please use blob column type instead.")
@@ -71,7 +75,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
         }
     }
 
-    override fun dateTimeType(): String = "TIMESTAMP"
+    override fun dateTimeType(precision: Byte?): String = "TIMESTAMP${precision?.let { "($it)" }.orEmpty()}"
     override fun booleanType(): String = "CHAR(1)"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun booleanFromStringToBoolean(value: String): Boolean = try {

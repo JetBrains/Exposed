@@ -19,31 +19,14 @@ import java.time.LocalTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-object Misc : MiscTable() {
-    val d = date("d")
-    val dn = date("dn").nullable()
-
-    val t = time("t")
-    val tn = time("tn").nullable()
-
-    val dt = datetime("dt")
-    val dtn = datetime("dtn").nullable()
-
-    val ts = timestamp("ts")
-    val tsn = timestamp("tsn").nullable()
-
-    val dr = duration("dr")
-    val drn = duration("drn").nullable()
-}
-
 @Suppress("LargeClass")
 class MiscTableTest : DatabaseTestsBase() {
     @Test
     fun testInsert01() {
         val tbl = Misc
         val date = today
-        val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
+        val time = dateTime.toLocalTime()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
 
@@ -79,8 +62,8 @@ class MiscTableTest : DatabaseTestsBase() {
     fun testInsert02() {
         val tbl = Misc
         val date = today
-        val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
+        val time = dateTime.toLocalTime()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
 
@@ -128,8 +111,8 @@ class MiscTableTest : DatabaseTestsBase() {
     fun testInsert03() {
         val tbl = Misc
         val date = today
-        val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
+        val time = dateTime.toLocalTime()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
 
@@ -180,8 +163,8 @@ class MiscTableTest : DatabaseTestsBase() {
         val stringThatNeedsEscaping = "A'braham Barakhyahu"
         val tbl = Misc
         val date = today
-        val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
+        val time = dateTime.toLocalTime()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
 
@@ -216,8 +199,8 @@ class MiscTableTest : DatabaseTestsBase() {
     fun testInsertGet01() {
         val tbl = Misc
         val date = today
-        val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
+        val time = dateTime.toLocalTime()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
 
@@ -248,17 +231,13 @@ class MiscTableTest : DatabaseTestsBase() {
         }
     }
 
-    // these DB take the datetime nanosecond value and round up to default precision
-    // which causes flaky comparison failures if not cast to TIMESTAMP first
-    private val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_V2_ORACLE, TestDB.H2_V2_PSQL, TestDB.H2_V2_SQLSERVER)
-
     @Test
     fun testSelect01() {
         val tbl = Misc
-        withTables(tbl) { testDb ->
+        withTables(tbl) {
             val date = today
-            val time = LocalTime.now()
             val dateTime = LocalDateTime.now()
+            val time = dateTime.toLocalTime()
             val timestamp = Instant.now()
             val duration = Duration.ofMinutes(1)
             val sTest = "test"
@@ -436,12 +415,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
 
-            val dtValue = when (testDb) {
-                in requiresExplicitDTCast -> Cast(dateTimeParam(dateTime), JavaLocalDateTimeColumnType())
-                else -> dateTimeParam(dateTime)
-            }
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dt.eq(dtValue) }.single(),
+                tbl.selectAll().where { tbl.dt eq dateTimeParam(dateTime) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -696,10 +671,10 @@ class MiscTableTest : DatabaseTestsBase() {
     @Test
     fun testSelect02() {
         val tbl = Misc
-        withTables(tbl) { testDb ->
+        withTables(tbl) {
             val date = today
-            val time = LocalTime.now()
             val dateTime = LocalDateTime.now()
+            val time = dateTime.toLocalTime()
             val timestamp = Instant.now()
             val duration = Duration.ofMinutes(1)
             val sTest = "test"
@@ -862,12 +837,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = 567.89
             )
 
-            val dtValue = when (testDb) {
-                in requiresExplicitDTCast -> Cast(dateTimeParam(dateTime), JavaLocalDateTimeColumnType())
-                else -> dateTimeParam(dateTime)
-            }
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dt.eq(dtValue) }.single(),
+                tbl.selectAll().where { tbl.dt eq dateTimeParam(dateTime) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -1062,8 +1033,8 @@ class MiscTableTest : DatabaseTestsBase() {
         val tbl = Misc
         withTables(tbl) {
             val date = today
-            val time = LocalTime.now()
             val dateTime = LocalDateTime.now()
+            val time = dateTime.toLocalTime()
             val eOne = MiscTable.E.ONE
             val sTest = "test"
             val dec = BigDecimal("239.42")
@@ -1154,8 +1125,8 @@ class MiscTableTest : DatabaseTestsBase() {
     fun testUpdate03() {
         val tbl = Misc
         val date = today
-        val time = LocalTime.now()
         val dateTime = LocalDateTime.now()
+        val time = dateTime.toLocalTime()
         val timestamp = Instant.now()
         val duration = Duration.ofMinutes(1)
         val eOne = MiscTable.E.ONE
@@ -1230,6 +1201,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
         override val primaryKey = PrimaryKey(id)
     }
+
     private val zeroDateTimeTableDdl = """
         CREATE TABLE `zerodatetimetable` (
         `id` INT NOT NULL AUTO_INCREMENT,
@@ -1261,6 +1233,23 @@ class MiscTableTest : DatabaseTestsBase() {
             }
         }
     }
+}
+
+object Misc : MiscTable() {
+    val d = date("d")
+    val dn = date("dn").nullable()
+
+    val t = time("t", 6)
+    val tn = time("tn", 6).nullable()
+
+    val dt = datetime("dt", 6)
+    val dtn = datetime("dtn", 6).nullable()
+
+    val ts = timestamp("ts", 6)
+    val tsn = timestamp("tsn", 6).nullable()
+
+    val dr = duration("dr")
+    val drn = duration("drn").nullable()
 }
 
 @Suppress("LongParameterList")
@@ -1313,14 +1302,14 @@ fun Misc.checkRowDates(
     dr: Duration,
     drn: Duration? = null
 ) {
-    assertEqualDateTime(d, row[this.d])
-    assertEqualDateTime(dn, row[this.dn])
-    assertEqualDateTime(t, row[this.t])
-    assertEqualDateTime(tn, row[this.tn])
-    assertEqualDateTime(dt, row[this.dt])
-    assertEqualDateTime(dtn, row[this.dtn])
-    assertEqualDateTime(ts, row[this.ts])
-    assertEqualDateTime(tsn, row[this.tsn])
+    assertEquals(d, row[this.d])
+    assertEquals(dn, row[this.dn])
+    assertEquals(t, row[this.t])
+    assertEquals(tn, row[this.tn])
+    assertEquals(dt, row[this.dt])
+    assertEquals(dtn, row[this.dtn])
+    assertEquals(ts, row[this.ts])
+    assertEquals(tsn, row[this.tsn])
     assertEquals(dr, row[this.dr])
     assertEquals(drn, row[this.drn])
 }

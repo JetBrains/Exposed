@@ -36,12 +36,12 @@ internal object SQLServerDataTypeProvider : DataTypeProvider() {
     override fun blobType(): String = "VARBINARY(MAX)"
     override fun uuidType(): String = "uniqueidentifier"
     override fun uuidToDB(value: UUID): Any = value.toString()
-    override fun dateTimeType(): String = "DATETIME2"
-    override fun timestampWithTimeZoneType(): String =
+    override fun dateTimeType(precision: Byte?): String = "DATETIME2${precision?.let { "($it)" }.orEmpty()}"
+    override fun timestampWithTimeZoneType(precision: Byte?): String =
         if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.SQLServer) {
-            "TIMESTAMP(9) WITH TIME ZONE"
+            super.timestampWithTimeZoneType(precision)
         } else {
-            "DATETIMEOFFSET"
+            "DATETIMEOFFSET${precision?.let { "($it)" }.orEmpty()}"
         }
 
     override fun booleanType(): String = "BIT"

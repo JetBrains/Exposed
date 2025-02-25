@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import kotlin.test.assertNotNull
@@ -57,13 +58,20 @@ class DateTimeLiteralTest : DatabaseTestsBase() {
 
     @Test
     fun testSelectByDatetimeLiteralEquality() {
-        withTables(TableWithDatetime) {
+        withTables(TableWithDatetime) { testDb ->
             TableWithDatetime.insert {
                 it[datetime] = defaultDatetime
             }
 
-            val query = TableWithDatetime.select(TableWithDatetime.datetime).where { TableWithDatetime.datetime eq dateTimeLiteral(defaultDatetime) }
-            assertEquals(defaultDatetime, query.single()[TableWithDatetime.datetime])
+            val expectedDefaultDatetime = if (testDb in TestDB.ALL_MYSQL_MARIADB) {
+                // MySQL default precision is 0
+                LocalDateTime(2000, 1, 1, 8, 0, 0)
+            } else {
+                defaultDatetime
+            }
+
+            val query = TableWithDatetime.select(TableWithDatetime.datetime).where { TableWithDatetime.datetime eq dateTimeLiteral(expectedDefaultDatetime) }
+            assertEquals(expectedDefaultDatetime, query.single()[TableWithDatetime.datetime])
         }
     }
 
