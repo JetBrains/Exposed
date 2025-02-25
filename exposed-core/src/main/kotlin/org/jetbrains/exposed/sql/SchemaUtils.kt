@@ -365,6 +365,9 @@ object SchemaUtils {
                     } else {
                         columnType.nullable
                     }
+
+                    val incorrectType = if (currentDialect.supportsColumnTypeChange) isIncorrectType(existingCol, col) else false
+
                     val incorrectNullability = existingCol.nullable != colNullable
 
                     val incorrectAutoInc = isIncorrectAutoInc(existingCol, col)
@@ -373,9 +376,9 @@ object SchemaUtils {
 
                     val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameUnquoted().inProperCase()
 
-                    val incorrectSizeOrScale = isIncorrectSizeOrScale(existingCol, columnType)
+                    val incorrectSizeOrScale = if (incorrectType) false else isIncorrectSizeOrScale(existingCol, columnType)
 
-                    ColumnDiff(incorrectNullability, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName, incorrectSizeOrScale)
+                    ColumnDiff(incorrectNullability, incorrectType, incorrectAutoInc, incorrectDefaults, incorrectCaseSensitiveName, incorrectSizeOrScale)
                 }.filterValues { it.hasDifferences() }
 
                 redoColumns.flatMapTo(statements) { (col, changedState) -> col.modifyStatements(changedState) }
@@ -396,6 +399,10 @@ object SchemaUtils {
         }
 
         return statements
+    }
+
+    private fun isIncorrectType(columnMetadata: ColumnMetadata, column: Column<*>): Boolean {
+        return !currentDialect.areEquivalentColumnTypes(columnMetadata.sqlType, columnMetadata.jdbcType, column.columnType.sqlType())
     }
 
     private fun isIncorrectAutoInc(columnMetadata: ColumnMetadata, column: Column<*>): Boolean = when {
