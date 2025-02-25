@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.sql
 
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.r2dbc.sql.select
@@ -75,11 +77,8 @@ sealed class SetOperation(
         try {
             count = true
             return transaction.exec(this) { rs ->
-                rs.next()
-                (rs.getObject(1) as? Number)?.toLong().also {
-                    rs.close()
-                }
-            }!!
+                (rs.rows().single().getObject(1) as? Number)?.toLong()
+            } ?: error("Count query didn't return any results")
         } finally {
             count = false
         }
@@ -91,7 +90,7 @@ sealed class SetOperation(
         try {
             limit = 1
             val rs = transaction.exec(this)!!
-            return !rs.next().also { rs.close() }
+            return rs.rows().count() == 0
         } finally {
             limit = oldLimit
         }
@@ -160,13 +159,10 @@ sealed class SetOperation(
         val tx = TransactionManager.current()
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
-        rs.result.collect { result ->
-            result.map { row, rm ->
-                rs.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
-                ResultRow.create(rs, fieldIndex)
-            }.collect {
-                collector.emit(it).also { trackResultSet(tx) }
-            }
+        rs.rows().collect { row ->
+            val value = ResultRow.create(row, fieldIndex)
+            trackResultSet(tx)
+            collector.emit(value)
         }
     }
 

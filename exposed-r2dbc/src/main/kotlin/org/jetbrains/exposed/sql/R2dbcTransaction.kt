@@ -3,8 +3,7 @@ package org.jetbrains.exposed.sql
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.reactive.collect
+import kotlinx.coroutines.flow.mapNotNull
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.LongQueryException
 import org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
@@ -137,7 +136,7 @@ open class R2dbcTransaction(
                 get() = this
 
             override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): Flow<T?>? {
-                val result: R2dbcResult? = when (type) {
+                val result: R2dbcResult = when (type) {
                     StatementType.SELECT, StatementType.EXEC, StatementType.SHOW, StatementType.PRAGMA -> {
                         executeQuery()
                     }
@@ -146,12 +145,9 @@ open class R2dbcTransaction(
                         executeUpdate()
                         getResultRow()
                     }
-                }
-                return flow {
-                    result?.result?.collect { r ->
-                        r.map { row, _ -> transform(row) }.collect { emit(it) }
-                    }
-                }
+                } ?: return null
+
+                return result.rows().mapNotNull { transform(it.row) }
             }
 
             override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = stmt
@@ -191,7 +187,7 @@ open class R2dbcTransaction(
      * `DatabaseConfig.warnLongQueriesDuration`. If [Transaction.debug] is set to `true`, these tracked values
      * are stored for each call in [Transaction.statementStats].
      */
-    suspend fun <T, R> exec(stmt: SuspendExecutable<T, *>, body: Statement<T>.(T) -> R): R? {
+    suspend fun <T, R> exec(stmt: SuspendExecutable<T, *>, body: suspend Statement<T>.(T) -> R): R? {
         statementCount++
 
         val start = System.nanoTime()

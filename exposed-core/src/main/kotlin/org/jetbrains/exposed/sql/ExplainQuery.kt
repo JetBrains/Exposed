@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.api.RowApi
 
 /**
  * Represents the SQL query that obtains information about a statement execution plan.
@@ -36,7 +37,7 @@ class ExplainResultRow(
 
     companion object {
         /** Creates an [ExplainResultRow] storing all fields in [fieldIndex] with their values retrieved from a [ResultSet]. */
-        fun create(rs: ResultApi, fieldIndex: Map<String, Int>): ExplainResultRow {
+        fun create(rs: RowApi, fieldIndex: Map<String, Int>): ExplainResultRow {
             val fieldValues = arrayOfNulls<Any?>(fieldIndex.size)
             fieldIndex.values.forEach { index ->
                 fieldValues[index] = rs.getObject(index + 1)
