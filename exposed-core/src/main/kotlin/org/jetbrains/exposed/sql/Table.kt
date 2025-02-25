@@ -757,9 +757,11 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
         check(checkConstraintName ?: "${generatedUnsignedCheckPrefix}integer_${this.unquotedName()}") { it.between(0u, UInt.MAX_VALUE) }
     }
 
-    /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
-    fun long(name: String): Column<Long> = registerColumn(name, LongColumnType()).apply {
-        check("${generatedSignedCheckPrefix}long_${this.unquotedName()}") { it.between(Long.MIN_VALUE, Long.MAX_VALUE) }
+    /** Creates a numeric column, with the specified [name], for storing 8-byte integers.
+     * An optional [checkConstraintName] can be passed to allow customizing the check constraint name when needed.
+     */
+    fun long(name: String, checkConstraintName: String? = null): Column<Long> = registerColumn(name, LongColumnType()).apply {
+        check(checkConstraintName ?: "${generatedSignedCheckPrefix}long_${this.unquotedName()}") { it.between(Long.MIN_VALUE, Long.MAX_VALUE) }
     }
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte unsigned integers.
