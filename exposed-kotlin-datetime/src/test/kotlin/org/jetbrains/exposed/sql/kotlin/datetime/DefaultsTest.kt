@@ -23,7 +23,6 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
@@ -37,11 +36,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
-
-fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-
-private val dbTimestampNow: CustomFunction<OffsetDateTime>
-    get() = object : CustomFunction<OffsetDateTime>("now", KotlinOffsetDateTimeColumnType()) {}
 
 class DefaultsTest : DatabaseTestsBase() {
 
@@ -200,10 +194,9 @@ class DefaultsTest : DatabaseTestsBase() {
         val currentDT = CurrentDateTime
         val nowExpression = object : Expression<LocalDateTime>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-                +when (val dialect = currentDialectTest) {
+                +when (currentDialectTest) {
                     is OracleDialect -> "SYSDATE"
                     is SQLServerDialect -> "GETDATE()"
-                    is MysqlDialect -> if (dialect.isFractionDateTimeSupported()) "NOW(6)" else "NOW()"
                     is SQLiteDialect -> "CURRENT_TIMESTAMP"
                     else -> "NOW()"
                 }
@@ -340,22 +333,25 @@ class DefaultsTest : DatabaseTestsBase() {
         val foo = object : IntIdTable("foo") {
             val name = text("name")
             val defaultDateTime = datetime("defaultDateTime").defaultExpression(CurrentDateTime)
+            val defaultDate = date("defaultDate").defaultExpression(CurrentDate)
         }
 
         val nonDefaultDate = LocalDate(2000, 1, 1)
-            .atStartOfDayIn(TimeZone.currentSystemDefault())
+        val nonDefaultDateTime = nonDefaultDate.atStartOfDayIn(TimeZone.currentSystemDefault())
             .toLocalDateTime(TimeZone.currentSystemDefault())
 
         withTables(foo) {
             val id = foo.insertAndGetId {
                 it[foo.name] = "bar"
-                it[foo.defaultDateTime] = nonDefaultDate
+                it[foo.defaultDateTime] = nonDefaultDateTime
+                it[foo.defaultDate] = nonDefaultDate
             }
 
             val result = foo.selectAll().where { foo.id eq id }.single()
 
             assertEquals("bar", result[foo.name])
-            assertEquals(nonDefaultDate, result[foo.defaultDateTime])
+            assertEquals(nonDefaultDateTime, result[foo.defaultDateTime])
+            assertEquals(nonDefaultDate, result[foo.defaultDate])
 
             foo.update({ foo.id eq id }) {
                 it[foo.name] = "baz"
@@ -363,7 +359,8 @@ class DefaultsTest : DatabaseTestsBase() {
 
             val result2 = foo.selectAll().where { foo.id eq id }.single()
             assertEquals("baz", result2[foo.name])
-            assertEquals(nonDefaultDate, result2[foo.defaultDateTime])
+            assertEquals(nonDefaultDateTime, result2[foo.defaultDateTime])
+            assertEquals(nonDefaultDate, result2[foo.defaultDate])
         }
     }
 
@@ -442,7 +439,7 @@ class DefaultsTest : DatabaseTestsBase() {
                 } +
                 ")"
 
-            val expected = if (currentDialectTest is OracleDialect ||
+            val expectedDdl = if (currentDialectTest is OracleDialect ||
                 currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             ) {
                 arrayListOf(
@@ -453,13 +450,18 @@ class DefaultsTest : DatabaseTestsBase() {
                 arrayListOf(baseExpression)
             }
 
-            assertEqualLists(expected, testTable.ddl)
+            assertEqualLists(expectedDdl, testTable.ddl)
 
             val id1 = testTable.insertAndGetId { }
 
             val row1 = testTable.selectAll().where { testTable.id eq id1 }.single()
-            assertEquals(nowWithTimeZone, row1[testTable.t1])
-            assertEquals(nowWithTimeZone, row1[testTable.t2])
+            val expectedValue = if (testDb == TestDB.MYSQL_V8) {
+                OffsetDateTime.parse("2024-07-18T13:19:44+00:00") // MySQL default precision is 0
+            } else {
+                nowWithTimeZone
+            }
+            assertEquals(expectedValue, row1[testTable.t1])
+            assertEquals(expectedValue, row1[testTable.t2])
             val dbDefault = row1[testTable.t3]
             assertEquals(dbDefault.offset, nowWithTimeZone.offset)
             assertTrue { dbDefault.toLocalDateTime().toKotlinLocalDateTime() >= nowWithTimeZone.toLocalDateTime().toKotlinLocalDateTime() }
@@ -469,7 +471,7 @@ class DefaultsTest : DatabaseTestsBase() {
     @Test
     fun testDefaultCurrentDateTime() {
         val testDate = object : IntIdTable("TestDate") {
-            val time = datetime("time").defaultExpression(CurrentDateTime)
+            val datetime = datetime("time").defaultExpression(CurrentDateTime)
         }
 
         fun LocalDateTime.millis(): Long = this.toJavaLocalDateTime().toEpochSecond(ZoneOffset.UTC) * 1000
@@ -487,7 +489,7 @@ class DefaultsTest : DatabaseTestsBase() {
                 testDate.insertAndWait(duration)
             }
 
-            val sortedEntries: List<LocalDateTime> = testDate.selectAll().map { it[testDate.time] }.sorted()
+            val sortedEntries: List<LocalDateTime> = testDate.selectAll().map { it[testDate.datetime] }.sorted()
 
             assertTrue(sortedEntries[1].millis() - sortedEntries[0].millis() >= 2000)
             assertTrue(sortedEntries[2].millis() - sortedEntries[0].millis() >= 6000)
@@ -497,17 +499,20 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testDatetimeDefaultDoesNotTriggerAlterStatement() {
-        val datetime = LocalDateTime.parse("2023-05-04T05:04:07.000")
+        listOf("2023-05-04T05:04:07.000", "2023-05-04T05:04:07.015", "2023-05-04T05:04:07.700", "2023-05-04T05:04:00.777").forEach { str ->
+            val datetime = LocalDateTime.parse(str)
 
-        val tester = object : Table("tester") {
-            val datetimeWithDefault = datetime("datetimeWithDefault").default(datetime)
-            val datetimeWithDefaultExpression = datetime("datetimeWithDefaultExpression").defaultExpression(CurrentDateTime)
-        }
+            val tester = object : Table("tester") {
+                val datetimeWithDefault = datetime("datetimeWithDefault").default(datetime)
+                val datetime2WithDefault = datetime("datetime2WithDefault", 2).default(datetime)
+                val datetimeWithDefaultExpression = datetime("datetimeWithDefaultExpression").defaultExpression(CurrentDateTime)
+            }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
-            assertEquals(0, statements.size)
+            // SQLite does not support ALTER TABLE on a column that has a default value
+            withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
+                val statements = SchemaUtils.addMissingColumnsStatements(tester)
+                assertEquals(0, statements.size)
+            }
         }
     }
 
@@ -528,49 +533,59 @@ class DefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testTimeDefaultDoesNotTriggerAlterStatement() {
-        val time = Clock.System.now().toLocalDateTime(TimeZone.of("Japan")).time
+        listOf("05:04:07.000", "05:04:07.015", "05:04:07.700", "05:04:00.777").forEach { str ->
+            val time = LocalTime.parse(str)
 
-        val tester = object : Table("tester") {
-            val timeWithDefault = time("timeWithDefault").default(time)
-        }
+            val tester = object : Table("tester") {
+                val timeWithDefault = time("timeWithDefault").default(time)
+                val time2WithDefault = time("time2WithDefault", 2).default(time)
+            }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
-            assertEquals(0, statements.size)
+            // SQLite does not support ALTER TABLE on a column that has a default value
+            withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
+                val statements = SchemaUtils.addMissingColumnsStatements(tester)
+                assertEquals(0, statements.size)
+            }
         }
     }
 
     @Test
     fun testTimestampDefaultDoesNotTriggerAlterStatement() {
-        val instant = Instant.parse("2023-05-04T05:04:00.700Z") // In UTC
+        listOf("2023-05-04T05:04:07.000Z", "2023-05-04T05:04:07.015Z", "2023-05-04T05:04:07.700Z", "2023-05-04T05:04:00.777Z").forEach { str ->
+            val instant = Instant.parse(str) // In UTC
 
-        val tester = object : Table("tester") {
-            val timestampWithDefault = timestamp("timestampWithDefault").default(instant)
-            val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp)
-        }
+            val tester = object : Table("tester") {
+                val timestampWithDefault = timestamp("timestampWithDefault").default(instant)
+                val timestamp2WithDefault = timestamp("timestamp2WithDefault", 2).default(instant)
+                val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp)
+                val timestamp2WithDefaultExpression = timestamp("timestamp2WithDefaultExpression", 2).defaultExpression(CurrentTimestamp(2))
+            }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
-            assertEquals(0, statements.size)
+            // SQLite does not support ALTER TABLE on a column that has a default value
+            withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
+                val statements = SchemaUtils.addMissingColumnsStatements(tester)
+                assertEquals(0, statements.size)
+            }
         }
     }
 
     @Test
     fun testTimestampWithTimeZoneDefaultDoesNotTriggerAlterStatement() {
-        val offsetDateTime = OffsetDateTime.parse("2023-05-04T05:04:01.700+09:00")
+        listOf("2023-05-04T05:04:01.000+09:00", "2023-05-04T05:04:01.015+09:00", "2023-05-04T05:04:01.700+09:00", "2023-05-04T05:04:01.777+09:00").forEach { str ->
+            val offsetDateTime = OffsetDateTime.parse(str)
 
-        val tester = object : Table("tester") {
-            val timestampWithTimeZoneWithDefault = timestampWithTimeZone("timestampWithTimeZoneWithDefault").default(offsetDateTime)
-        }
+            val tester = object : Table("tester") {
+                val timestampWithTimeZoneWithDefault = timestampWithTimeZone("timestampWithTimeZoneWithDefault").default(offsetDateTime)
+                val timestamp2WithTimeZoneWithDefault = timestampWithTimeZone("timestamp2WithTimeZoneWithDefault", 2).default(offsetDateTime)
+            }
 
-        // SQLite does not support ALTER TABLE on a column that has a default value
-        // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
-        val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5
-        withTables(excludeSettings = unsupportedDatabases, tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
-            assertEquals(0, statements.size)
+            // SQLite does not support ALTER TABLE on a column that has a default value
+            // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
+            val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5
+            withTables(excludeSettings = unsupportedDatabases, tester) {
+                val statements = SchemaUtils.addMissingColumnsStatements(tester)
+                assertEquals(0, statements.size)
+            }
         }
     }
 
@@ -634,3 +649,8 @@ class DefaultsTest : DatabaseTestsBase() {
         }
     }
 }
+
+fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+
+private val dbTimestampNow: CustomFunction<OffsetDateTime>
+    get() = object : CustomFunction<OffsetDateTime>("now", KotlinOffsetDateTimeColumnType()) {}

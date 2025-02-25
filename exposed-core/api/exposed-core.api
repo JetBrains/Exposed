@@ -3842,7 +3842,8 @@ public abstract class org/jetbrains/exposed/sql/vendors/DataTypeProvider {
 	public fun booleanToStatementString (Z)Ljava/lang/String;
 	public fun booleanType ()Ljava/lang/String;
 	public fun byteType ()Ljava/lang/String;
-	public fun dateTimeType ()Ljava/lang/String;
+	public fun dateTimeType (Ljava/lang/Byte;)Ljava/lang/String;
+	public static synthetic fun dateTimeType$default (Lorg/jetbrains/exposed/sql/vendors/DataTypeProvider;Ljava/lang/Byte;ILjava/lang/Object;)Ljava/lang/String;
 	public fun dateType ()Ljava/lang/String;
 	public fun doubleType ()Ljava/lang/String;
 	public fun floatType ()Ljava/lang/String;
@@ -3859,9 +3860,12 @@ public abstract class org/jetbrains/exposed/sql/vendors/DataTypeProvider {
 	public fun processForDefaultValue (Lorg/jetbrains/exposed/sql/Expression;)Ljava/lang/String;
 	public fun shortType ()Ljava/lang/String;
 	public fun textType ()Ljava/lang/String;
-	public fun timeType ()Ljava/lang/String;
-	public fun timestampType ()Ljava/lang/String;
-	public fun timestampWithTimeZoneType ()Ljava/lang/String;
+	public fun timeType (Ljava/lang/Byte;)Ljava/lang/String;
+	public static synthetic fun timeType$default (Lorg/jetbrains/exposed/sql/vendors/DataTypeProvider;Ljava/lang/Byte;ILjava/lang/Object;)Ljava/lang/String;
+	public fun timestampType (Ljava/lang/Byte;)Ljava/lang/String;
+	public static synthetic fun timestampType$default (Lorg/jetbrains/exposed/sql/vendors/DataTypeProvider;Ljava/lang/Byte;ILjava/lang/Object;)Ljava/lang/String;
+	public fun timestampWithTimeZoneType (Ljava/lang/Byte;)Ljava/lang/String;
+	public static synthetic fun timestampWithTimeZoneType$default (Lorg/jetbrains/exposed/sql/vendors/DataTypeProvider;Ljava/lang/Byte;ILjava/lang/Object;)Ljava/lang/String;
 	public fun ubyteType ()Ljava/lang/String;
 	public fun uintegerAutoincType ()Ljava/lang/String;
 	public fun uintegerType ()Ljava/lang/String;

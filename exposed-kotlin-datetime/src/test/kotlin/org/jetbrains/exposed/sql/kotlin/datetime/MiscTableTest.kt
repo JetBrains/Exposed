@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
 @file:Suppress("MaximumLineLength", "LongMethod")
 
 package org.jetbrains.exposed.sql.kotlin.datetime
@@ -11,7 +10,6 @@ import kotlinx.datetime.LocalTime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.MiscTable
 import org.jetbrains.exposed.sql.tests.shared.checkInsert
 import org.jetbrains.exposed.sql.tests.shared.checkRow
@@ -21,7 +19,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.ExperimentalTime
 
 @Suppress("LargeClass")
 class MiscTableTest : DatabaseTestsBase() {
@@ -235,14 +232,10 @@ class MiscTableTest : DatabaseTestsBase() {
         }
     }
 
-    // these DB take the datetime nanosecond value and round up to default precision
-    // which causes flaky comparison failures if not cast to TIMESTAMP first
-    private val requiresExplicitDTCast = listOf(TestDB.ORACLE, TestDB.H2_V2_ORACLE, TestDB.H2_V2_PSQL, TestDB.H2_V2_SQLSERVER)
-
     @Test
     fun testSelect01() {
         val tbl = Misc
-        withTables(tbl) { testDb ->
+        withTables(tbl) {
             val date = today
             val dateTime = now()
             val time = dateTime.time
@@ -423,12 +416,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = null
             )
 
-            val dtValue = when (testDb) {
-                in requiresExplicitDTCast -> Cast(dateTimeParam(dateTime), KotlinLocalDateTimeColumnType())
-                else -> dateTimeParam(dateTime)
-            }
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dt.eq(dtValue) }.single(),
+                tbl.selectAll().where { tbl.dt eq dateTimeParam(dateTime) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -683,7 +672,7 @@ class MiscTableTest : DatabaseTestsBase() {
     @Test
     fun testSelect02() {
         val tbl = Misc
-        withTables(tbl) { testDb ->
+        withTables(tbl) {
             val date = today
             val dateTime = now()
             val time = dateTime.time
@@ -849,12 +838,8 @@ class MiscTableTest : DatabaseTestsBase() {
                 dblcn = 567.89
             )
 
-            val dtValue = when (testDb) {
-                in requiresExplicitDTCast -> Cast(dateTimeParam(dateTime), KotlinLocalDateTimeColumnType())
-                else -> dateTimeParam(dateTime)
-            }
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dt.eq(dtValue) }.single(),
+                tbl.selectAll().where { tbl.dt eq dateTimeParam(dateTime) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -1255,14 +1240,14 @@ object Misc : MiscTable() {
     val d = date("d")
     val dn = date("dn").nullable()
 
-    val t = time("t")
-    val tn = time("tn").nullable()
+    val t = time("t", 6)
+    val tn = time("tn", 6).nullable()
 
-    val dt = datetime("dt")
-    val dtn = datetime("dtn").nullable()
+    val dt = datetime("dt", 6)
+    val dtn = datetime("dtn", 6).nullable()
 
-    val ts = timestamp("ts")
-    val tsn = timestamp("tsn").nullable()
+    val ts = timestamp("ts", 6)
+    val tsn = timestamp("tsn", 6).nullable()
 
     val dr = duration("dr")
     val drn = duration("drn").nullable()
@@ -1320,27 +1305,12 @@ fun Misc.checkRowDates(
 ) {
     assertEquals(d, row[this.d])
     assertEquals(dn, row[this.dn])
-    assertLocalTime(t, row[this.t])
-    assertLocalTime(tn, row[this.tn])
-    assertEqualDateTime(dt, row[this.dt])
-    assertEqualDateTime(dtn, row[this.dtn])
-    assertEqualDateTime(ts, row[this.ts])
-    assertEqualDateTime(tsn, row[this.tsn])
+    assertEquals(t, row[this.t])
+    assertEquals(tn, row[this.tn])
+    assertEquals(dt, row[this.dt])
+    assertEquals(dtn, row[this.dtn])
+    assertEquals(ts, row[this.ts])
+    assertEquals(tsn, row[this.tsn])
     assertEquals(dr, row[this.dr])
     assertEquals(drn, row[this.drn])
-}
-
-private fun assertLocalTime(d1: LocalTime?, d2: LocalTime?) {
-    when {
-        d1 == null && d2 == null -> return
-        d1 == null -> error("d1 is null while d2 is not on ${currentDialectTest.name}")
-        d2 == null -> error("d1 is not null while d2 is null on ${currentDialectTest.name}")
-        else -> {
-            if (d2.nanosecond != 0) {
-                assertEquals(d1, d2)
-            } else {
-                assertEquals(LocalTime(d1.hour, d1.minute, d1.second), LocalTime(d2.hour, d2.minute, d2.second))
-            }
-        }
-    }
 }

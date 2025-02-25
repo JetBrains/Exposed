@@ -2,12 +2,7 @@ package org.jetbrains.exposed.sql.jodatime
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.h2Mode
+import org.jetbrains.exposed.sql.vendors.*
 import org.joda.time.DateTime
 import org.joda.time.LocalTime
 
@@ -23,7 +18,9 @@ class Time<T : DateTime?>(val expr: Expression<T>) : Function<LocalTime>(LocalTi
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
         val functionProvider = when (dialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.SQLServer, H2Dialect.H2CompatibilityMode.PostgreSQL ->
+            H2Dialect.H2CompatibilityMode.SQLServer,
+            H2Dialect.H2CompatibilityMode.PostgreSQL,
+            H2Dialect.H2CompatibilityMode.Oracle ->
                 (dialect as H2Dialect).originalFunctionProvider
             else -> dialect.functionProvider
         }
@@ -32,17 +29,20 @@ class Time<T : DateTime?>(val expr: Expression<T>) : Function<LocalTime>(LocalTi
 }
 
 /**
- * Represents an SQL function that returns the current date and time, as [DateTime]
+ * Represents an SQL function that returns the current date and time, as [DateTime] with the specified fractional seconds [precision].
  *
  * @sample org.jetbrains.exposed.JodaTimeDefaultsTest.testDefaultExpressions02
  */
-object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
+open class CurrentDateTime(private val precision: Byte? = null) : Function<DateTime>(DateColumnType(true, precision)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
-            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
+            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ||
+                (currentDialect !is SQLiteDialect && currentDialect !is SQLServerDialect) -> "CURRENT_TIMESTAMP${precision?.let { "($it)" }.orEmpty()}"
             else -> "CURRENT_TIMESTAMP"
         }
     }
+
+    companion object : CurrentDateTime()
 }
 
 /**

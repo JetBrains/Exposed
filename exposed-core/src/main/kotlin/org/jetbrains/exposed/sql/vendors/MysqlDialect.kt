@@ -12,11 +12,15 @@ internal open class MysqlDataTypeProvider : DataTypeProvider() {
         error("The length of the Binary column is missing.")
     }
 
-    override fun dateTimeType(): String = if ((currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true) "DATETIME(6)" else "DATETIME"
+    override fun dateTimeType(precision: Byte?): String = if ((currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true) {
+        "DATETIME${precision?.let { "($it)" }.orEmpty()}"
+    } else {
+        "DATETIME"
+    }
 
-    override fun timestampWithTimeZoneType(): String =
+    override fun timestampWithTimeZoneType(precision: Byte?): String =
         if ((currentDialect as? MysqlDialect)?.isTimeZoneOffsetSupported() == true) {
-            "TIMESTAMP(6)"
+            "TIMESTAMP${precision?.let { "($it)" }.orEmpty()}"
         } else {
             throw UnsupportedByDialectException("This vendor does not support timestamp with time zone data type for this version", currentDialect)
         }

@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.tests.shared.ddl
 
-import MigrationUtils
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
