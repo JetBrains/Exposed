@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests.shared.ddl
+package org.jetbrains.exposed.sql.exposed.r2dbc.tests.shared.ddl
 
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.r2dbc.sql.exists

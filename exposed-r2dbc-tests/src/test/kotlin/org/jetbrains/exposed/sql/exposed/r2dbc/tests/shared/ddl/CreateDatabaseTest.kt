@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests.shared.ddl
+package org.jetbrains.exposed.sql.exposed.r2dbc.tests.shared.ddl
 
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -13,7 +13,7 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
     @Test
     @Suppress("SwallowedException")
     fun testCreateAndDropDatabase() = runTest {
-        withDb(TestDB.ALL_H2 + TestDB.ALL_MYSQL_MARIADB) {
+        withDb(TestDB.ALL_H2_V2 + TestDB.ALL_MYSQL_MARIADB) {
             val dbName = "jetbrains"
             try {
                 SchemaUtils.dropDatabase(dbName)

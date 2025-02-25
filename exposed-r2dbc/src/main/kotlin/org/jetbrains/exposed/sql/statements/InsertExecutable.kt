@@ -138,10 +138,10 @@ open class InsertExecutable<Key : Any, S : InsertStatement<Key>>(
 
                             exposedLogger.error(
                                 "ArrayIndexOutOfBoundsException on processResults. " +
-                                    "Table: ${this@InsertExecutable.statement.table.tableName}, " +
-                                    "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
-                                    "inserted: $inserted, returnedColumnsString: $returnedColumnsString. " +
-                                    "Failed SQL: $preparedSql",
+                                        "Table: ${this@InsertExecutable.statement.table.tableName}, " +
+                                        "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
+                                        "inserted: $inserted, returnedColumnsString: $returnedColumnsString. " +
+                                        "Failed SQL: $preparedSql",
                                 cause
                             )
                             throw cause
@@ -168,7 +168,7 @@ open class InsertExecutable<Key : Any, S : InsertStatement<Key>>(
 
             assert(
                 this@InsertExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == inserted ||
-                    currentDialect.supportsTernaryAffectedRowValues
+                        currentDialect.supportsTernaryAffectedRowValues
             ) {
                 "Number of autoincs (${resultSetsValues.size}) doesn't match number of batch entries ($inserted)"
             }

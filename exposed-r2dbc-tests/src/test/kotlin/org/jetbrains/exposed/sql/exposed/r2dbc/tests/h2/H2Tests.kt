@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests.h2
+package org.jetbrains.exposed.sql.exposed.r2dbc.tests.h2
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -27,7 +27,7 @@ class H2Tests : R2dbcDatabaseTestsBase() {
     @Test
     fun testH2VersionIsCorrect() = runTest {
         val systemTestName = System.getProperty("exposed.test.name")
-        withDb(TestDB.ALL_H2) {
+        withDb(TestDB.ALL_H2_V2) {
             val dialect = currentDialect
             if (dialect is H2Dialect) {
                 val version = exec("SELECT H2VERSION();") {
