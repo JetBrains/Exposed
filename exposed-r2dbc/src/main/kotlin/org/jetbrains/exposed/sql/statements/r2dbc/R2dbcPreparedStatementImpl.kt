@@ -40,19 +40,17 @@ class R2dbcPreparedStatementImpl(
     }
 
     override suspend fun addBatch() {
-        // unlike JDBC, a differentiation may need to be made between Statement and Batch objects
+        // unlike JDBC, differentiation may need to be made between Statement and Batch objects
         statement.add() // REVIEW potential preceding operation, bind()
     }
 
     override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute())
 
     override suspend fun executeUpdate(): Int {
-        resultRow = R2dbcResult(statement.execute())
-        return flow {
-            resultRow!!.result.collect {
-                emit(it.rowsUpdated.awaitFirstOrNull()?.toInt() ?: 0)
-            }
-        }.single()
+        val result = statement.execute()
+        val r2dbcResult = R2dbcResult(result)
+        resultRow = r2dbcResult
+        return r2dbcResult.result().rowsUpdated.awaitFirstOrNull()?.toInt() ?: 0
     }
 
     override fun set(index: Int, value: Any) {

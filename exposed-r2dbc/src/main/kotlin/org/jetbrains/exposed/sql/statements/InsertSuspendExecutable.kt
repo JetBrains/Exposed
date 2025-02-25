@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.statements
 import io.r2dbc.spi.RowMetadata
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.*
@@ -104,54 +105,48 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         var columnIndexesInResultSet: List<Pair<Column<*>, Int>>? = null
         val firstAutoIncColumn = autoIncColumns.firstOrNull()
 
-        flow {
-            this@returnedValues.result.collect { rs ->
-                rs.map { row, rm ->
-                    this@returnedValues.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
-
-                    if (columnIndexesInResultSet == null) {
-                        columnIndexesInResultSet = rm.returnedColumns()
-                    }
-
-                    if (firstAutoIncColumn != null || columnIndexesInResultSet.isNotEmpty()) {
-                        try {
-                            val returnedValues: MutableMap<Column<*>, Any?> = columnIndexesInResultSet.associateTo(mutableMapOf()) {
-                                it.first to it.first.columnType.readObject(this@returnedValues, it.second)
-                            }
-                            if (returnedValues.isEmpty() && firstAutoIncColumn != null) {
-                                returnedValues[firstAutoIncColumn] = this@returnedValues.getObject(1)
-                            }
-                            returnedValues
-                        } catch (cause: ArrayIndexOutOfBoundsException) {
-                            // EXPOSED-191 Flaky Oracle test on TC build
-                            // this try/catch should help to get information about the flaky test.
-                            // try/catch can be safely removed after the fixing the issue.
-                            // TooGenericExceptionCaught suppress also can be removed
-
-                            val preparedSql = this@InsertSuspendExecutable.statement.prepareSQL(TransactionManager.current(), prepared = true)
-
-                            val returnedColumnsString = columnIndexesInResultSet
-                                .mapIndexed { index, pair ->
-                                    "column: ${pair.first.name}, index: ${pair.second} (columns-list-index: $index)"
-                                }
-                                .joinToString(prefix = "[", postfix = "]", separator = ", ")
-
-                            exposedLogger.error(
-                                "ArrayIndexOutOfBoundsException on processResults. " +
-                                    "Table: ${this@InsertSuspendExecutable.statement.table.tableName}, " +
-                                    "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
-                                    "inserted: $inserted, returnedColumnsString: $returnedColumnsString. " +
-                                    "Failed SQL: $preparedSql",
-                                cause
-                            )
-                            throw cause
-                        }
-                    } else {
-                        null
-                    }
-                }.collect { emit(it) }
+        rows().mapNotNull { row ->
+            if (columnIndexesInResultSet == null) {
+                columnIndexesInResultSet = row.metadata.returnedColumns()
             }
-        }.filterNotNull().toList(resultSetsValues)
+
+            if (firstAutoIncColumn == null && !columnIndexesInResultSet.isNotEmpty()) {
+                return@mapNotNull null
+            }
+
+            try {
+                val returnedValues: MutableMap<Column<*>, Any?> = columnIndexesInResultSet.associateTo(mutableMapOf()) {
+                    it.first to it.first.columnType.readObject(row, it.second)
+                }
+                if (returnedValues.isEmpty() && firstAutoIncColumn != null) {
+                    returnedValues[firstAutoIncColumn] = row.getObject(1)
+                }
+                returnedValues
+            } catch (cause: ArrayIndexOutOfBoundsException) {
+                // EXPOSED-191 Flaky Oracle test on TC build
+                // this try/catch should help to get information about the flaky test.
+                // try/catch can be safely removed after the fixing the issue.
+                // TooGenericExceptionCaught suppress also can be removed
+
+                val preparedSql = this@InsertSuspendExecutable.statement.prepareSQL(TransactionManager.current(), prepared = true)
+
+                val returnedColumnsString = columnIndexesInResultSet
+                    .mapIndexed { index, pair ->
+                        "column: ${pair.first.name}, index: ${pair.second} (columns-list-index: $index)"
+                    }
+                    .joinToString(prefix = "[", postfix = "]", separator = ", ")
+
+                exposedLogger.error(
+                    "ArrayIndexOutOfBoundsException on processResults. " +
+                        "Table: ${this@InsertSuspendExecutable.statement.table.tableName}, " +
+                        "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
+                        "inserted: $inserted, returnedColumnsString: $returnedColumnsString. " +
+                        "Failed SQL: $preparedSql",
+                    cause
+                )
+                throw cause
+            }
+        }.toList(resultSetsValues)
 
         if (firstAutoIncColumn != null || columnIndexesInResultSet?.isNotEmpty() == true) {
             if (inserted > 1 && firstAutoIncColumn != null && resultSetsValues.isNotEmpty() && !currentDialect.supportsMultipleGeneratedKeys) {

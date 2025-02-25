@@ -1,7 +1,8 @@
 package org.jetbrains.exposed.sql
 
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.collect
@@ -252,13 +253,8 @@ open class Query(
             try {
                 count = true
                 val rs = transaction.exec(this) as R2dbcResult
-                flow {
-                    rs.result.collect { result ->
-                        result.map { row, rm ->
-                            rs.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
-                            (rs.getObject(1) as? Number)?.toLong()
-                        }.collect { emit(it) }
-                    }
+                rs.rows().map {
+                    (it.getObject(1) as? Number)?.toLong()
                 }.single() ?: error("The query did not return a single count result. Please check the SQL logs.")
             } finally {
                 count = false
@@ -276,7 +272,7 @@ open class Query(
         try {
             if (!isForUpdate()) limit = 1
             val rs = transaction.exec(this) as R2dbcResult
-            return rs.result.awaitFirstOrNull() != null
+            return rs.rows().count() == 0
         } finally {
             limit = oldLimit
         }
@@ -307,13 +303,10 @@ open class Query(
         val tx = TransactionManager.current()
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
-        rs.result.collect { result ->
-            result.map { row, rm ->
-                rs.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
-                ResultRow.create(rs, fieldIndex)
-            }.collect {
-                collector.emit(it).also { trackResultSet(tx) }
-            }
+        rs.rows().collect {
+            val resultRow = ResultRow.create(it, fieldIndex)
+            trackResultSet(tx)
+            collector.emit(resultRow)
         }
     }
 
