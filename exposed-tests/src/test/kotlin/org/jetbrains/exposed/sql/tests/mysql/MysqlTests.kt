@@ -11,6 +11,10 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption.MySQL
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption.MySQL.ForUpdate
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption.MySQL.MODE
 import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -133,6 +137,44 @@ class MysqlTests : DatabaseTestsBase() {
                     queryWithHint.single()[sleepNSeconds]
                 }
             }
+        }
+    }
+
+    @Test
+    fun testForUpdateOptionsSyntax() {
+        val table = object : IntIdTable() {
+            val name = varchar("name", 50)
+        }
+
+        val id = 1
+
+        fun Query.city() = map { it[table.name] }.single()
+
+        fun select(option: ForUpdateOption): String {
+            return table.selectAll().where { table.id eq id }.forUpdate(option).city()
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.MYSQL_V8, table) {
+            val name = "name"
+            table.insert {
+                it[table.id] = id
+                it[table.name] = name
+            }
+            commit()
+
+            val defaultForUpdateRes = table.selectAll().where { table.id eq id }.city()
+            val forUpdateRes = select(option = ForUpdateOption.ForUpdate)
+            val forUpdateOfTableRes = select(ForUpdate(ofTables = arrayOf(table)))
+            val forShareRes = select(MySQL.ForShare)
+            val forShareNoWaitOfTableRes = select(MySQL.ForShare(MODE.NO_WAIT, table))
+            val notForUpdateRes = table.selectAll().where { table.id eq id }.notForUpdate().city()
+
+            assertEquals(name, defaultForUpdateRes)
+            assertEquals(name, forUpdateRes)
+            assertEquals(name, forUpdateOfTableRes)
+            assertEquals(name, forShareRes)
+            assertEquals(name, forShareNoWaitOfTableRes)
+            assertEquals(name, notForUpdateRes)
         }
     }
 }

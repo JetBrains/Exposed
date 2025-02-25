@@ -33,35 +33,33 @@ class PostgresqlTests : DatabaseTestsBase() {
             return table.selectAll().where { table.id eq id }.forUpdate(option).city()
         }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
-            withTable {
-                val name = "name"
-                table.insert {
-                    it[table.id] = id
-                    it[table.name] = name
-                }
-                commit()
-
-                val defaultForUpdateRes = table.selectAll().where { table.id eq id }.city()
-                val forUpdateRes = select(ForUpdateOption.ForUpdate)
-                val forUpdateOfTableRes = select(PostgreSQL.ForUpdate(ofTables = arrayOf(table)))
-                val forShareRes = select(PostgreSQL.ForShare)
-                val forShareNoWaitOfTableRes = select(PostgreSQL.ForShare(PostgreSQL.MODE.NO_WAIT, table))
-                val forKeyShareRes = select(PostgreSQL.ForKeyShare)
-                val forKeyShareSkipLockedRes = select(PostgreSQL.ForKeyShare(PostgreSQL.MODE.SKIP_LOCKED))
-                val forNoKeyUpdateRes = select(PostgreSQL.ForNoKeyUpdate)
-                val notForUpdateRes = table.selectAll().where { table.id eq id }.notForUpdate().city()
-
-                assertEquals(name, defaultForUpdateRes)
-                assertEquals(name, forUpdateRes)
-                assertEquals(name, forUpdateOfTableRes)
-                assertEquals(name, forShareRes)
-                assertEquals(name, forShareNoWaitOfTableRes)
-                assertEquals(name, forKeyShareRes)
-                assertEquals(name, forKeyShareSkipLockedRes)
-                assertEquals(name, forNoKeyUpdateRes)
-                assertEquals(name, notForUpdateRes)
+        withTables(excludeSettings = TestDB.ALL - listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG), table) {
+            val name = "name"
+            table.insert {
+                it[table.id] = id
+                it[table.name] = name
             }
+            commit()
+
+            val defaultForUpdateRes = table.selectAll().where { table.id eq id }.city()
+            val forUpdateRes = select(ForUpdateOption.ForUpdate)
+            val forUpdateOfTableRes = select(PostgreSQL.ForUpdate(ofTables = arrayOf(table)))
+            val forShareRes = select(PostgreSQL.ForShare)
+            val forShareNoWaitOfTableRes = select(PostgreSQL.ForShare(PostgreSQL.MODE.NO_WAIT, table))
+            val forKeyShareRes = select(PostgreSQL.ForKeyShare)
+            val forKeyShareSkipLockedRes = select(PostgreSQL.ForKeyShare(PostgreSQL.MODE.SKIP_LOCKED))
+            val forNoKeyUpdateRes = select(PostgreSQL.ForNoKeyUpdate)
+            val notForUpdateRes = table.selectAll().where { table.id eq id }.notForUpdate().city()
+
+            assertEquals(name, defaultForUpdateRes)
+            assertEquals(name, forUpdateRes)
+            assertEquals(name, forUpdateOfTableRes)
+            assertEquals(name, forShareRes)
+            assertEquals(name, forShareNoWaitOfTableRes)
+            assertEquals(name, forKeyShareRes)
+            assertEquals(name, forKeyShareSkipLockedRes)
+            assertEquals(name, forNoKeyUpdateRes)
+            assertEquals(name, notForUpdateRes)
         }
     }
 
@@ -113,17 +111,6 @@ class PostgresqlTests : DatabaseTestsBase() {
             }
 
             SchemaUtils.drop(tester1)
-        }
-    }
-
-    private fun Transaction.withTable(statement: Transaction.() -> Unit) {
-        SchemaUtils.create(table)
-        try {
-            statement()
-            commit() // Need commit to persist data before drop tables
-        } finally {
-            SchemaUtils.drop(table)
-            commit()
         }
     }
 }
