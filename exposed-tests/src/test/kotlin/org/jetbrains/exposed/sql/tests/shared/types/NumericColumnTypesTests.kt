@@ -15,23 +15,23 @@ import java.math.BigDecimal
 class NumericColumnTypesTests : DatabaseTestsBase() {
     @Test
     fun testShortAcceptsOnlyAllowedRange() {
-        val testTable = object : Table("test_table") {
-            val short = short("short")
+        val tester = object : Table("tester") {
+            val short = short("short_column")
         }
 
-        withTables(testTable) { testDb ->
-            val columnName = testTable.short.nameInDatabaseCase()
+        withTables(tester) { testDb ->
+            val columnName = tester.short.nameInDatabaseCase()
             val ddlEnding = when (testDb) {
                 TestDB.SQLITE, TestDB.ORACLE -> "CHECK ($columnName BETWEEN ${Short.MIN_VALUE} and ${Short.MAX_VALUE}))"
-                else -> "($columnName ${testTable.short.columnType} NOT NULL)"
+                else -> "($columnName ${tester.short.columnType} NOT NULL)"
             }
-            assertTrue(testTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+            assertTrue(tester.ddl.single().endsWith(ddlEnding, ignoreCase = true))
 
-            testTable.insert { it[short] = Short.MIN_VALUE }
-            testTable.insert { it[short] = Short.MAX_VALUE }
-            assertEquals(2, testTable.select(testTable.short).count())
+            tester.insert { it[short] = Short.MIN_VALUE }
+            tester.insert { it[short] = Short.MAX_VALUE }
+            assertEquals(2, tester.select(tester.short).count())
 
-            val tableName = testTable.nameInDatabaseCase()
+            val tableName = tester.nameInDatabaseCase()
             assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
                 val outOfRangeValue = Short.MIN_VALUE - 1
                 exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
@@ -45,24 +45,24 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
 
     @Test
     fun testByteAcceptsOnlyAllowedRange() {
-        val testTable = object : Table("test_table") {
-            val byte = byte("byte")
+        val tester = object : Table("tester") {
+            val byte = byte("byte_column")
         }
 
-        withTables(testTable) { testDb ->
-            val columnName = testTable.byte.nameInDatabaseCase()
+        withTables(tester) { testDb ->
+            val columnName = tester.byte.nameInDatabaseCase()
             val ddlEnding = when (testDb) {
                 in TestDB.ALL_POSTGRES_LIKE, TestDB.ORACLE, TestDB.SQLITE, TestDB.SQLSERVER ->
                     "CHECK ($columnName BETWEEN ${Byte.MIN_VALUE} and ${Byte.MAX_VALUE}))"
-                else -> "($columnName ${testTable.byte.columnType} NOT NULL)"
+                else -> "($columnName ${tester.byte.columnType} NOT NULL)"
             }
-            assertTrue(testTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+            assertTrue(tester.ddl.single().endsWith(ddlEnding, ignoreCase = true))
 
-            testTable.insert { it[byte] = Byte.MIN_VALUE }
-            testTable.insert { it[byte] = Byte.MAX_VALUE }
-            assertEquals(2, testTable.select(testTable.byte).count())
+            tester.insert { it[byte] = Byte.MIN_VALUE }
+            tester.insert { it[byte] = Byte.MAX_VALUE }
+            assertEquals(2, tester.select(tester.byte).count())
 
-            val tableName = testTable.nameInDatabaseCase()
+            val tableName = tester.nameInDatabaseCase()
             assertFailAndRollback(
                 message = "CHECK constraint violation or out-of-range error for MySQL, MariaDB, and H2 (except for H2_V2_PSQL)"
             ) {
@@ -80,23 +80,23 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
 
     @Test
     fun testIntegerAcceptsOnlyAllowedRange() {
-        val testTable = object : Table("test_table") {
+        val tester = object : Table("tester") {
             val integer = integer("integer_column")
         }
 
-        withTables(testTable) { testDb ->
-            val columnName = testTable.integer.nameInDatabaseCase()
+        withTables(tester) { testDb ->
+            val columnName = tester.integer.nameInDatabaseCase()
             val ddlEnding = when (testDb) {
                 TestDB.SQLITE, TestDB.ORACLE -> "CHECK ($columnName BETWEEN ${Int.MIN_VALUE} and ${Int.MAX_VALUE}))"
-                else -> "($columnName ${testTable.integer.columnType} NOT NULL)"
+                else -> "($columnName ${tester.integer.columnType} NOT NULL)"
             }
-            assertTrue(testTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+            assertTrue(tester.ddl.single().endsWith(ddlEnding, ignoreCase = true))
 
-            testTable.insert { it[integer] = Int.MIN_VALUE }
-            testTable.insert { it[integer] = Int.MAX_VALUE }
-            assertEquals(2, testTable.select(testTable.integer).count())
+            tester.insert { it[integer] = Int.MIN_VALUE }
+            tester.insert { it[integer] = Int.MAX_VALUE }
+            assertEquals(2, tester.select(tester.integer).count())
 
-            val tableName = testTable.nameInDatabaseCase()
+            val tableName = tester.nameInDatabaseCase()
             assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
                 val outOfRangeValue = Int.MIN_VALUE.toLong() - 1
                 exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
@@ -110,34 +110,129 @@ class NumericColumnTypesTests : DatabaseTestsBase() {
 
     @Test
     fun testLongAcceptsOnlyAllowedRange() {
-        val testTable = object : Table("test_table") {
+        val tester = object : Table("tester") {
             val long = long("long_column")
         }
 
-        withTables(testTable) { testDb ->
-            val columnName = testTable.long.nameInDatabaseCase()
+        withTables(tester) { testDb ->
+            val columnName = tester.long.nameInDatabaseCase()
             val ddlEnding = when (testDb) {
                 TestDB.ORACLE -> "CHECK ($columnName BETWEEN ${Long.MIN_VALUE} and ${Long.MAX_VALUE}))"
-                else -> "($columnName ${testTable.long.columnType} NOT NULL)"
+                else -> "($columnName ${tester.long.columnType} NOT NULL)"
             }
-            assertTrue(testTable.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+            assertTrue(tester.ddl.single().endsWith(ddlEnding, ignoreCase = true))
 
-            testTable.insert { it[long] = Long.MIN_VALUE }
-            testTable.insert { it[long] = Long.MAX_VALUE }
-            assertEquals(2, testTable.select(testTable.long).count())
+            tester.insert { it[long] = Long.MIN_VALUE }
+            tester.insert { it[long] = Long.MAX_VALUE }
+            assertEquals(2, tester.select(tester.long).count())
 
             // SQLite is excluded because it is not possible to enforce the range without a special CHECK constraint
             // that the user can implement if they want to
             if (testDb != TestDB.SQLITE) {
-                val tableName = testTable.nameInDatabaseCase()
-                assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
+                val tableName = tester.nameInDatabaseCase()
+                assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for Oracle)") {
                     val outOfRangeValue = Long.MIN_VALUE.toBigDecimal() - 1.toBigDecimal()
                     exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
                 }
-                assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
+                assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for Oracle)") {
                     val outOfRangeValue = Long.MAX_VALUE.toBigDecimal() + 1.toBigDecimal()
                     exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testUByteAcceptsOnlyAllowedRange() {
+        val tester = object : Table("tester") {
+            val ubyte = ubyte("ubyte_column")
+        }
+
+        withTables(tester) { testDb ->
+            val columnName = tester.ubyte.nameInDatabaseCase()
+            val ddlEnding = when (testDb) {
+                in TestDB.ALL_MYSQL_MARIADB, TestDB.SQLSERVER ->
+                    "($columnName ${tester.ubyte.columnType} NOT NULL)"
+                else -> "CHECK ($columnName BETWEEN ${UByte.MIN_VALUE} and ${UByte.MAX_VALUE}))"
+            }
+            assertTrue(tester.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+
+            tester.insert { it[ubyte] = UByte.MIN_VALUE }
+            tester.insert { it[ubyte] = UByte.MAX_VALUE }
+            assertEquals(2, tester.select(tester.ubyte).count())
+
+            val tableName = tester.nameInDatabaseCase()
+            assertFailAndRollback(
+                message = "CHECK constraint violation (or out-of-range error for MySQL, MariaDB, and SQL Server)"
+            ) {
+                val outOfRangeValue = UByte.MIN_VALUE.toShort() - 1
+                exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
+            }
+            assertFailAndRollback(
+                message = "CHECK constraint violation (or out-of-range error for MySQL, MariaDB, and SQL Server)"
+            ) {
+                val outOfRangeValue = UByte.MAX_VALUE.toShort() + 1
+                exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
+            }
+        }
+    }
+
+    @Test
+    fun testUShortAcceptsOnlyAllowedRange() {
+        val tester = object : Table("tester") {
+            val ushort = ushort("ushort_column")
+        }
+
+        withTables(tester) { testDb ->
+            val columnName = tester.ushort.nameInDatabaseCase()
+            val ddlEnding = when (testDb) {
+                in TestDB.ALL_MYSQL_MARIADB -> "($columnName ${tester.ushort.columnType} NOT NULL)"
+                else -> "CHECK ($columnName BETWEEN ${UShort.MIN_VALUE} and ${UShort.MAX_VALUE}))"
+            }
+            assertTrue(tester.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+
+            tester.insert { it[ushort] = UShort.MIN_VALUE }
+            tester.insert { it[ushort] = UShort.MAX_VALUE }
+            assertEquals(2, tester.select(tester.ushort).count())
+
+            val tableName = tester.nameInDatabaseCase()
+            assertFailAndRollback(message = "CHECK constraint violation (or out-of-range error for MySQL and MariaDB)") {
+                val outOfRangeValue = UShort.MIN_VALUE.toInt() - 1
+                exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
+            }
+            assertFailAndRollback(message = "CHECK constraint violation (or out-of-range error for MySQL and MariaDB)") {
+                val outOfRangeValue = UShort.MAX_VALUE.toInt() + 1
+                exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
+            }
+        }
+    }
+
+    @Test
+    fun testUIntegerAcceptsOnlyAllowedRange() {
+        val tester = object : Table("tester") {
+            val uinteger = uinteger("uinteger_column")
+        }
+
+        withTables(tester) { testDb ->
+            val columnName = tester.uinteger.nameInDatabaseCase()
+            val ddlEnding = when (testDb) {
+                in TestDB.ALL_MYSQL_MARIADB -> "($columnName ${tester.uinteger.columnType} NOT NULL)"
+                else -> "CHECK ($columnName BETWEEN ${UInt.MIN_VALUE} and ${UInt.MAX_VALUE}))"
+            }
+            assertTrue(tester.ddl.single().endsWith(ddlEnding, ignoreCase = true))
+
+            tester.insert { it[uinteger] = UInt.MIN_VALUE }
+            tester.insert { it[uinteger] = UInt.MAX_VALUE }
+            assertEquals(2, tester.select(tester.uinteger).count())
+
+            val tableName = tester.nameInDatabaseCase()
+            assertFailAndRollback(message = "CHECK constraint violation (or out-of-range error for MySQL and MariaDB)") {
+                val outOfRangeValue = UInt.MIN_VALUE.toLong() - 1
+                exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
+            }
+            assertFailAndRollback(message = "CHECK constraint violation (or out-of-range error for MySQL and MariaDB)") {
+                val outOfRangeValue = UInt.MAX_VALUE.toLong() + 1
+                exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
             }
         }
     }

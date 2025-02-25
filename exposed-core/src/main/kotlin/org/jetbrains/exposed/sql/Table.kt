@@ -736,7 +736,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * integer type with a check constraint that ensures storage of only values between 0 and [UShort.MAX_VALUE] inclusive.
      */
     fun ushort(name: String, checkConstraintName: String? = null): Column<UShort> = registerColumn(name, UShortColumnType()).apply {
-        check(checkConstraintName ?: "$generatedUnsignedCheckPrefix${this.unquotedName()}") { it.between(0u, UShort.MAX_VALUE) }
+        check(checkConstraintName ?: "${generatedUnsignedCheckPrefix}short_${this.unquotedName()}") { it.between(0u, UShort.MAX_VALUE) }
     }
 
     /** Creates a numeric column, with the specified [name], for storing 4-byte integers.
@@ -754,7 +754,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * between 0 and [UInt.MAX_VALUE] inclusive.
      */
     fun uinteger(name: String, checkConstraintName: String? = null): Column<UInt> = registerColumn(name, UIntegerColumnType()).apply {
-        check(checkConstraintName ?: "$generatedUnsignedCheckPrefix${this.unquotedName()}") { it.between(0u, UInt.MAX_VALUE) }
+        check(checkConstraintName ?: "${generatedUnsignedCheckPrefix}integer_${this.unquotedName()}") { it.between(0u, UInt.MAX_VALUE) }
     }
 
     /** Creates a numeric column, with the specified [name], for storing 8-byte integers. */
