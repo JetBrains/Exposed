@@ -3,10 +3,10 @@ package org.jetbrains.exposed.sql
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.reactive.collect
-import org.jetbrains.exposed.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.sql.statements.IStatementBuilder
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementBuilder
+import org.jetbrains.exposed.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult

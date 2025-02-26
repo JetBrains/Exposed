@@ -128,7 +128,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
                             // try/catch can be safely removed after the fixing the issue.
                             // TooGenericExceptionCaught suppress also can be removed
 
-                            val preparedSql = this@InsertExecutable.statement.prepareSQL(TransactionManager.current(), prepared = true)
+                            val preparedSql = this@InsertSuspendExecutable.statement.prepareSQL(TransactionManager.current(), prepared = true)
 
                             val returnedColumnsString = columnIndexesInResultSet
                                 .mapIndexed { index, pair ->
@@ -138,7 +138,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
 
                             exposedLogger.error(
                                 "ArrayIndexOutOfBoundsException on processResults. " +
-                                    "Table: ${this@InsertExecutable.statement.table.tableName}, " +
+                                    "Table: ${this@InsertSuspendExecutable.statement.table.tableName}, " +
                                     "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
                                     "inserted: $inserted, returnedColumnsString: $returnedColumnsString. " +
                                     "Failed SQL: $preparedSql",
@@ -167,7 +167,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
 
             check(
-                this@InsertExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == inserted ||
+                this@InsertSuspendExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == inserted ||
                     currentDialect.supportsTernaryAffectedRowValues
             ) {
                 "Number of autoincs (${resultSetsValues.size}) doesn't match number of batch entries ($inserted)"
@@ -181,7 +181,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         val columns = if (currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
             autoIncColumns
         } else {
-            this@InsertExecutable.statement.table.columns
+            this@InsertSuspendExecutable.statement.table.columns
         }
         return columns.mapNotNull { col ->
             @Suppress("SwallowedException")

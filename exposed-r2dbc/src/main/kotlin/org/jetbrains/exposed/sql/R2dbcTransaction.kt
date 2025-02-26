@@ -2,17 +2,16 @@ package org.jetbrains.exposed.sql
 
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactive.collect
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.LongQueryException
-import org.jetbrains.exposed.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.executeIn
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult

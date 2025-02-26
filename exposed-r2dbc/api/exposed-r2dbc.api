@@ -26,10 +26,10 @@ public final class org/jetbrains/exposed/r2dbc/sql/QueriesKt {
 	public static synthetic fun deleteIgnoreWhere$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun deleteJoinNullableParam (Lorg/jetbrains/exposed/sql/Join;Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun deleteJoinNullableParam$default (Lorg/jetbrains/exposed/sql/Join;Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun deleteReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
-	public static final fun deleteReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
-	public static synthetic fun deleteReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
-	public static synthetic fun deleteReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
+	public static final fun deleteReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
+	public static final fun deleteReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
+	public static synthetic fun deleteReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
+	public static synthetic fun deleteReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
 	public static final fun deleteReturningNullableParam (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun deleteReturningNullableParam$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun deleteWhere (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -67,16 +67,16 @@ public final class org/jetbrains/exposed/r2dbc/sql/QueriesKt {
 	public static synthetic fun updateJoinNullableParam$default (Lorg/jetbrains/exposed/sql/Join;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun updateNullableParam (Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun updateNullableParam$default (Lorg/jetbrains/exposed/sql/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun updateReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
-	public static final fun updateReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
-	public static synthetic fun updateReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
-	public static synthetic fun updateReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
-	public static final fun updateReturningNullableParam (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
-	public static synthetic fun updateReturningNullableParam$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
+	public static final fun updateReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
+	public static final fun updateReturning (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
+	public static synthetic fun updateReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
+	public static synthetic fun updateReturning$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
+	public static final fun updateReturningNullableParam (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
+	public static synthetic fun updateReturningNullableParam$default (Lorg/jetbrains/exposed/sql/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
 	public static final fun upsert (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun upsert$default (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun upsertReturning (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
-	public static synthetic fun upsertReturning$default (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningExecutable;
+	public static final fun upsertReturning (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
+	public static synthetic fun upsertReturning$default (Lorg/jetbrains/exposed/sql/Table;[Lorg/jetbrains/exposed/sql/Column;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/statements/ReturningSuspendExecutable;
 }
 
 public final class org/jetbrains/exposed/sql/EmptySizedIterable : org/jetbrains/exposed/sql/SizedIterable {
@@ -101,7 +101,7 @@ public final class org/jetbrains/exposed/sql/Except : org/jetbrains/exposed/sql/
 	public fun withDistinct (Z)Lorg/jetbrains/exposed/sql/SetOperation;
 }
 
-public class org/jetbrains/exposed/sql/ExplainExecutable : kotlinx/coroutines/flow/Flow, org/jetbrains/exposed/sql/statements/Executable {
+public class org/jetbrains/exposed/sql/ExplainSuspendExecutable : kotlinx/coroutines/flow/Flow, org/jetbrains/exposed/sql/statements/SuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/ExplainQuery;)V
 	public fun collect (Lkotlinx/coroutines/flow/FlowCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun execute (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -112,9 +112,9 @@ public class org/jetbrains/exposed/sql/ExplainExecutable : kotlinx/coroutines/fl
 	public fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class org/jetbrains/exposed/sql/ExplainExecutableKt {
-	public static final fun explain (Lorg/jetbrains/exposed/sql/R2dbcTransaction;ZLjava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/ExplainExecutable;
-	public static synthetic fun explain$default (Lorg/jetbrains/exposed/sql/R2dbcTransaction;ZLjava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/ExplainExecutable;
+public final class org/jetbrains/exposed/sql/ExplainSuspendExecutableKt {
+	public static final fun explain (Lorg/jetbrains/exposed/sql/R2dbcTransaction;ZLjava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/ExplainSuspendExecutable;
+	public static synthetic fun explain$default (Lorg/jetbrains/exposed/sql/R2dbcTransaction;ZLjava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/ExplainSuspendExecutable;
 }
 
 public final class org/jetbrains/exposed/sql/Intersect : org/jetbrains/exposed/sql/SetOperation {
@@ -155,7 +155,7 @@ public final class org/jetbrains/exposed/sql/LazySizedIterable$DefaultImpls {
 	public static fun notForUpdate (Lorg/jetbrains/exposed/sql/LazySizedIterable;)Lorg/jetbrains/exposed/sql/SizedIterable;
 }
 
-public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/AbstractQuery, org/jetbrains/exposed/sql/SizedIterable, org/jetbrains/exposed/sql/statements/Executable {
+public class org/jetbrains/exposed/sql/Query : org/jetbrains/exposed/sql/AbstractQuery, org/jetbrains/exposed/sql/SizedIterable, org/jetbrains/exposed/sql/statements/SuspendExecutable {
 	public static final field Companion Lorg/jetbrains/exposed/sql/Query$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/sql/FieldSet;Lorg/jetbrains/exposed/sql/Op;)V
 	public final fun adjustColumnSet (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Query;
@@ -247,8 +247,8 @@ public class org/jetbrains/exposed/sql/R2dbcTransaction : org/jetbrains/exposed/
 	public fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun exec (Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/sql/statements/StatementType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun exec (Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/sql/statements/StatementType;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun exec (Lorg/jetbrains/exposed/sql/statements/Executable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun exec (Lorg/jetbrains/exposed/sql/statements/Executable;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun exec (Lorg/jetbrains/exposed/sql/statements/SuspendExecutable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun exec (Lorg/jetbrains/exposed/sql/statements/SuspendExecutable;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun exec$default (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/sql/statements/StatementType;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun exec$default (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/sql/statements/StatementType;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun execInBatch (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -322,7 +322,7 @@ public final class org/jetbrains/exposed/sql/SchemaUtils : org/jetbrains/exposed
 	public final fun withDataBaseLock (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/jvm/functions/Function0;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public abstract class org/jetbrains/exposed/sql/SetOperation : org/jetbrains/exposed/sql/AbstractQuery, org/jetbrains/exposed/sql/SizedIterable, org/jetbrains/exposed/sql/statements/Executable {
+public abstract class org/jetbrains/exposed/sql/SetOperation : org/jetbrains/exposed/sql/AbstractQuery, org/jetbrains/exposed/sql/SizedIterable, org/jetbrains/exposed/sql/statements/SuspendExecutable {
 	public static final field Companion Lorg/jetbrains/exposed/sql/SetOperation$Companion;
 	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/sql/AbstractQuery;Lorg/jetbrains/exposed/sql/AbstractQuery;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun collect (Lkotlinx/coroutines/flow/FlowCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -411,7 +411,7 @@ public final class org/jetbrains/exposed/sql/UnionAll : org/jetbrains/exposed/sq
 	public fun withDistinct (Z)Lorg/jetbrains/exposed/sql/SetOperation;
 }
 
-public abstract class org/jetbrains/exposed/sql/statements/BaseBatchInsertExecutable : org/jetbrains/exposed/sql/statements/InsertExecutable {
+public class org/jetbrains/exposed/sql/statements/BatchInsertSuspendExecutable : org/jetbrains/exposed/sql/statements/InsertSuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/BaseBatchInsertStatement;)V
 	public fun getStatement ()Lorg/jetbrains/exposed/sql/statements/BaseBatchInsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/InsertStatement;
@@ -420,23 +420,7 @@ public abstract class org/jetbrains/exposed/sql/statements/BaseBatchInsertExecut
 	public fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public class org/jetbrains/exposed/sql/statements/BatchInsertExecutable : org/jetbrains/exposed/sql/statements/BaseBatchInsertExecutable {
-	public fun <init> (Lorg/jetbrains/exposed/sql/statements/BatchInsertStatement;)V
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/BaseBatchInsertStatement;
-	public fun getStatement ()Lorg/jetbrains/exposed/sql/statements/BatchInsertStatement;
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/InsertStatement;
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
-}
-
-public class org/jetbrains/exposed/sql/statements/BatchReplaceExecutable : org/jetbrains/exposed/sql/statements/BaseBatchInsertExecutable {
-	public fun <init> (Lorg/jetbrains/exposed/sql/statements/BatchReplaceStatement;)V
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/BaseBatchInsertStatement;
-	public fun getStatement ()Lorg/jetbrains/exposed/sql/statements/BatchReplaceStatement;
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/InsertStatement;
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
-}
-
-public class org/jetbrains/exposed/sql/statements/BatchUpdateExecutable : org/jetbrains/exposed/sql/statements/UpdateExecutable {
+public class org/jetbrains/exposed/sql/statements/BatchUpdateSuspendExecutable : org/jetbrains/exposed/sql/statements/UpdateSuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/BatchUpdateStatement;)V
 	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getStatement ()Lorg/jetbrains/exposed/sql/statements/BatchUpdateStatement;
@@ -444,7 +428,7 @@ public class org/jetbrains/exposed/sql/statements/BatchUpdateExecutable : org/je
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/UpdateStatement;
 }
 
-public class org/jetbrains/exposed/sql/statements/BatchUpsertExecutable : org/jetbrains/exposed/sql/statements/BaseBatchInsertExecutable {
+public class org/jetbrains/exposed/sql/statements/BatchUpsertSuspendExecutable : org/jetbrains/exposed/sql/statements/BatchInsertSuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/BatchUpsertStatement;)V
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/BaseBatchInsertStatement;
 	public fun getStatement ()Lorg/jetbrains/exposed/sql/statements/BatchUpsertStatement;
@@ -453,7 +437,7 @@ public class org/jetbrains/exposed/sql/statements/BatchUpsertExecutable : org/je
 	public fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public class org/jetbrains/exposed/sql/statements/DeleteExecutable : org/jetbrains/exposed/sql/statements/Executable {
+public class org/jetbrains/exposed/sql/statements/DeleteSuspendExecutable : org/jetbrains/exposed/sql/statements/SuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/DeleteStatement;)V
 	public fun execute (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -463,21 +447,17 @@ public class org/jetbrains/exposed/sql/statements/DeleteExecutable : org/jetbrai
 	public fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public abstract interface class org/jetbrains/exposed/sql/statements/Executable {
-	public abstract fun execute (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun getStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
-	public abstract fun isAlwaysBatch ()Z
-	public abstract fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+public class org/jetbrains/exposed/sql/statements/InsertSelectSuspendExecutable : org/jetbrains/exposed/sql/statements/SuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/sql/statements/InsertSelectStatement;)V
+	public fun execute (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getStatement ()Lorg/jetbrains/exposed/sql/statements/InsertSelectStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class org/jetbrains/exposed/sql/statements/Executable$DefaultImpls {
-	public static fun execute (Lorg/jetbrains/exposed/sql/statements/Executable;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static fun isAlwaysBatch (Lorg/jetbrains/exposed/sql/statements/Executable;)Z
-	public static fun prepared (Lorg/jetbrains/exposed/sql/statements/Executable;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
-public class org/jetbrains/exposed/sql/statements/InsertExecutable : org/jetbrains/exposed/sql/statements/Executable {
+public class org/jetbrains/exposed/sql/statements/InsertSuspendExecutable : org/jetbrains/exposed/sql/statements/SuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/InsertStatement;)V
 	protected fun execInsertFunction (Lorg/jetbrains/exposed/sql/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun execute (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -489,17 +469,7 @@ public class org/jetbrains/exposed/sql/statements/InsertExecutable : org/jetbrai
 	public fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public class org/jetbrains/exposed/sql/statements/InsertSelectExecutable : org/jetbrains/exposed/sql/statements/Executable {
-	public fun <init> (Lorg/jetbrains/exposed/sql/statements/InsertSelectStatement;)V
-	public fun execute (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun getStatement ()Lorg/jetbrains/exposed/sql/statements/InsertSelectStatement;
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
-	public fun isAlwaysBatch ()Z
-	public fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
-public abstract class org/jetbrains/exposed/sql/statements/MergeExecutable : org/jetbrains/exposed/sql/statements/Executable {
+public class org/jetbrains/exposed/sql/statements/MergeSuspendExecutable : org/jetbrains/exposed/sql/statements/SuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/MergeStatement;)V
 	public fun execute (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -509,29 +479,7 @@ public abstract class org/jetbrains/exposed/sql/statements/MergeExecutable : org
 	public fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public class org/jetbrains/exposed/sql/statements/MergeSelectExecutable : org/jetbrains/exposed/sql/statements/MergeExecutable {
-	public fun <init> (Lorg/jetbrains/exposed/sql/statements/MergeSelectStatement;)V
-}
-
-public class org/jetbrains/exposed/sql/statements/MergeTableExecutable : org/jetbrains/exposed/sql/statements/MergeExecutable {
-	public fun <init> (Lorg/jetbrains/exposed/sql/statements/MergeTableStatement;)V
-}
-
-public class org/jetbrains/exposed/sql/statements/ReplaceExecutable : org/jetbrains/exposed/sql/statements/InsertExecutable {
-	public fun <init> (Lorg/jetbrains/exposed/sql/statements/ReplaceStatement;)V
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/InsertStatement;
-	public fun getStatement ()Lorg/jetbrains/exposed/sql/statements/ReplaceStatement;
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
-}
-
-public class org/jetbrains/exposed/sql/statements/ReplaceSelectExecutable : org/jetbrains/exposed/sql/statements/InsertSelectExecutable {
-	public fun <init> (Lorg/jetbrains/exposed/sql/statements/ReplaceSelectStatement;)V
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/InsertSelectStatement;
-	public fun getStatement ()Lorg/jetbrains/exposed/sql/statements/ReplaceSelectStatement;
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
-}
-
-public class org/jetbrains/exposed/sql/statements/ReturningExecutable : kotlinx/coroutines/flow/Flow, org/jetbrains/exposed/sql/statements/Executable {
+public class org/jetbrains/exposed/sql/statements/ReturningSuspendExecutable : kotlinx/coroutines/flow/Flow, org/jetbrains/exposed/sql/statements/SuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/ReturningStatement;)V
 	public fun collect (Lkotlinx/coroutines/flow/FlowCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun execute (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -542,7 +490,7 @@ public class org/jetbrains/exposed/sql/statements/ReturningExecutable : kotlinx/
 	public fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public class org/jetbrains/exposed/sql/statements/SQLServerBatchInsertExecutable : org/jetbrains/exposed/sql/statements/BaseBatchInsertExecutable {
+public class org/jetbrains/exposed/sql/statements/SQLServerBatchInsertSuspendExecutable : org/jetbrains/exposed/sql/statements/BatchInsertSuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/SQLServerBatchInsertStatement;)V
 	protected fun execInsertFunction (Lorg/jetbrains/exposed/sql/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/BaseBatchInsertStatement;
@@ -552,7 +500,21 @@ public class org/jetbrains/exposed/sql/statements/SQLServerBatchInsertExecutable
 	public fun isAlwaysBatch ()Z
 }
 
-public class org/jetbrains/exposed/sql/statements/UpdateExecutable : org/jetbrains/exposed/sql/statements/Executable {
+public abstract interface class org/jetbrains/exposed/sql/statements/SuspendExecutable {
+	public abstract fun execute (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
+	public abstract fun isAlwaysBatch ()Z
+	public abstract fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/sql/statements/SuspendExecutable$DefaultImpls {
+	public static fun execute (Lorg/jetbrains/exposed/sql/statements/SuspendExecutable;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun isAlwaysBatch (Lorg/jetbrains/exposed/sql/statements/SuspendExecutable;)Z
+	public static fun prepared (Lorg/jetbrains/exposed/sql/statements/SuspendExecutable;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/sql/statements/UpdateSuspendExecutable : org/jetbrains/exposed/sql/statements/SuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/UpdateStatement;)V
 	public fun execute (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeInternal (Lorg/jetbrains/exposed/sql/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -562,7 +524,7 @@ public class org/jetbrains/exposed/sql/statements/UpdateExecutable : org/jetbrai
 	public fun prepared (Lorg/jetbrains/exposed/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public class org/jetbrains/exposed/sql/statements/UpsertExecutable : org/jetbrains/exposed/sql/statements/InsertExecutable {
+public class org/jetbrains/exposed/sql/statements/UpsertSuspendExecutable : org/jetbrains/exposed/sql/statements/InsertSuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/UpsertStatement;)V
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/InsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/sql/statements/Statement;
