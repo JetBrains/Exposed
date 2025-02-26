@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests.demo
+package org.jetbrains.exposed.sql.tests.demo.sql
 
 import io.r2dbc.spi.ConnectionFactoryOptions
 import kotlinx.coroutines.flow.single

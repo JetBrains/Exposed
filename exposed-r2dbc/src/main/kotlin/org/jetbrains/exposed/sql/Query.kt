@@ -259,7 +259,7 @@ open class Query(
                             (rs.getObject(1) as? Number)?.toLong()
                         }.collect { emit(it) }
                     }
-                }.single()!!
+                }.single() ?: error("The query did not return a single count result. Please check the SQL logs.")
             } finally {
                 count = false
             }

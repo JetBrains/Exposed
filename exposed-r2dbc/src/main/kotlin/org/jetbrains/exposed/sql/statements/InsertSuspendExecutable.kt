@@ -166,7 +166,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
                 }
             }
 
-            assert(
+            check(
                 this@InsertExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == inserted ||
                     currentDialect.supportsTernaryAffectedRowValues
             ) {

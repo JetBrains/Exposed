@@ -1,6 +1,11 @@
 package org.jetbrains.exposed.sql.tests
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.Key
+import org.jetbrains.exposed.sql.R2dbcTransaction
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
 import org.jetbrains.exposed.sql.transactions.suspendTransaction
@@ -12,7 +17,7 @@ import org.junit.runners.Parameterized.Parameters
 import java.util.*
 import kotlin.concurrent.thread
 
-val TEST_DIALECTS: java.util.HashSet<String> = System.getProperty(
+val TEST_DIALECTS: HashSet<String> = System.getProperty(
     "exposed.test.dialects",
     ""
 ).split(",").mapTo(HashSet()) { it.trim().uppercase() }
@@ -125,7 +130,6 @@ abstract class R2dbcDatabaseTestsBase {
         Assume.assumeFalse(dialect in excludeSettings)
 
         withDb(dialect, configure = configure) {
-            addLogger(StdOutSqlLogger)
             try {
                 SchemaUtils.drop(*tables)
             } catch (_: Throwable) {

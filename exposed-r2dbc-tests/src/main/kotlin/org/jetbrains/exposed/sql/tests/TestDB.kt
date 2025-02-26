@@ -91,7 +91,7 @@ enum class TestDB(
     SQLSERVER(
         { "r2dbc:mssql://${SQLSERVER.user}:${SQLSERVER.pass}@127.0.0.1:3005" },
         "com.microsoft.sqlserver.jdbc.SQLServerDriver",
-        "SA",
+        user = "SA",
     );
 
     var db: R2dbcDatabase? = null

@@ -116,7 +116,7 @@ class R2dbcDatabaseMetadataImpl(
                 ""
             }
         }
-        return currentSchema!!
+        return currentSchema ?: error("A non-null value could not be found for the current database schema.")
     }
 
     override fun resetCurrentScheme() {
