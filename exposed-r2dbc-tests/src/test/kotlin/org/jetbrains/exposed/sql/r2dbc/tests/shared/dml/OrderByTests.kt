@@ -1,7 +1,16 @@
-package org.jetbrains.exposed.sql.tests.shared.dml
+package org.jetbrains.exposed.sql.r2dbc.tests.shared.dml
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.r2dbc.sql.insert
+import org.jetbrains.exposed.r2dbc.sql.select
+import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.substring
+import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -10,9 +19,10 @@ import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
+import org.jetbrains.exposed.sql.wrapAsExpression
 import org.junit.Test
 
-class OrderByTests : DatabaseTestsBase() {
+class OrderByTests : R2dbcDatabaseTestsBase() {
     @Test
     fun orderBy01() {
         withCitiesAndUsers { _, users, _ ->

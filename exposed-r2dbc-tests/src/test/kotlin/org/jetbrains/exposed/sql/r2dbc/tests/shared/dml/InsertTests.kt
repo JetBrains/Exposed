@@ -1,40 +1,37 @@
-package org.jetbrains.exposed.sql.tests.shared.dml
+package org.jetbrains.exposed.sql.r2dbc.tests.shared.dml
 
-import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
+import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.flow.*
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.kotlin.datetime.CurrentTimestamp
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
-import org.jetbrains.exposed.sql.statements.BatchInsertBlockingExecutable
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.statements.BatchInsertSuspendExecutable
+import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentTestDB
 import org.jetbrains.exposed.sql.tests.inProperCase
-import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.junit.Assume
 import org.junit.Test
 import java.sql.SQLException
 import java.util.*
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
 
-class InsertTests : DatabaseTestsBase() {
+class InsertTests : R2dbcDatabaseTestsBase() {
+
     @Test
     fun testInsertAndGetId01() {
         val idTable = object : IntIdTable("tmp") {
@@ -62,8 +59,8 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    private val insertIgnoreUnsupportedDB = TestDB.entries -
-        listOf(TestDB.SQLITE, TestDB.MYSQL_V5, TestDB.H2_V2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_V2_PSQL)
+    private val insertIgnoreUnsupportedDB =
+        TestDB.ALL - listOf(TestDB.MYSQL_V5, TestDB.H2_V2_MYSQL, TestDB.POSTGRESQL, TestDB.H2_V2_PSQL)
 
     @Test
     fun testInsertIgnoreAndGetId01() {
@@ -312,7 +309,7 @@ class InsertTests : DatabaseTestsBase() {
 
         fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
 
-        fun verify(value: String) {
+        suspend fun verify(value: String) {
             val row = tbl.selectAll().where { tbl.string eq value }.single()
             assertEquals(row[tbl.string], value)
         }
@@ -349,7 +346,7 @@ class InsertTests : DatabaseTestsBase() {
             val string2 = varchar("stringCol", 20).nullable()
         }
 
-        fun verify(value: String) {
+        suspend fun verify(value: String) {
             val row = tbl2.selectAll().where { tbl2.string2 eq value }.single()
             assertEquals(row[tbl2.string2], value)
         }
@@ -368,43 +365,15 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    private object OrderedDataTable : IntIdTable() {
-        val name = text("name")
-        val order = integer("order")
-    }
-
-    class OrderedData(id: EntityID<Int>) : IntEntity(id) {
-        companion object : IntEntityClass<OrderedData>(OrderedDataTable)
-
-        var name by OrderedDataTable.name
-        var order by OrderedDataTable.order
-    }
-
-    // https://github.com/JetBrains/Exposed/issues/192
-    @Test
-    fun testInsertWithColumnNamedWithKeyword() {
-        withTables(OrderedDataTable) {
-            val foo = OrderedData.new {
-                name = "foo"
-                order = 20
-            }
-            val bar = OrderedData.new {
-                name = "bar"
-                order = 10
-            }
-
-            assertEqualLists(listOf(bar, foo), OrderedData.all().orderBy(OrderedDataTable.order to SortOrder.ASC).toList())
-        }
-    }
-
     @Test
     fun testInsertEmojis() {
         val table = object : Table("tmp") {
             val emoji = varchar("emoji", 16)
         }
-        val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
+        val emojis =
+            "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLSERVER, table) { testDb ->
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLSERVER, table) { testDb ->
             if (testDb == TestDB.MYSQL_V5) {
                 exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
             }
@@ -421,9 +390,15 @@ class InsertTests : DatabaseTestsBase() {
         val table = object : Table("tmp") {
             val emoji = varchar("emoji", 10)
         }
-        val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
+        val emojis =
+            "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(listOf(TestDB.SQLITE, TestDB.H2_V2, TestDB.H2_V2_MYSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_V2_PSQL), table) {
+        withTables(
+            listOf(
+                TestDB.H2_V2, TestDB.H2_V2_MYSQL, TestDB.POSTGRESQL, TestDB.H2_V2_PSQL
+            ),
+            table
+        ) {
             expectException<IllegalArgumentException> {
                 table.insert {
                     it[table.emoji] = emojis
@@ -502,7 +477,6 @@ class InsertTests : DatabaseTestsBase() {
             val foo = integer("foo").check { it greater 0 }
         }
         val dbToTest = TestDB.enabledDialects() - setOfNotNull(
-            TestDB.SQLITE,
             TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
         )
         Assume.assumeTrue(dbToTest.isNotEmpty())
@@ -529,81 +503,6 @@ class InsertTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    fun testRollbackOnConstraintExceptionWithSuspendTransactions() {
-        val testTable = object : IntIdTable("TestRollback") {
-            val foo = integer("foo").check { it greater 0 }
-        }
-        val dbToTest = TestDB.enabledDialects() - setOfNotNull(
-            TestDB.SQLITE,
-            TestDB.MYSQL_V5.takeIf { System.getProperty("exposed.test.mysql8.port") == null }
-        )
-        Assume.assumeTrue(dbToTest.isNotEmpty())
-        dbToTest.forEach { db ->
-            try {
-                try {
-                    withDb(db) {
-                        SchemaUtils.create(testTable)
-                    }
-                    runBlocking {
-                        newSuspendedTransaction(db = db.db) {
-                            testTable.insert { it[foo] = 1 }
-                            testTable.insert { it[foo] = 0 }
-                        }
-                    }
-                    fail("Should fail on constraint > 0")
-                } catch (_: SQLException) {
-                    // expected
-                }
-
-                withDb(db) {
-                    assertTrue(testTable.selectAll().empty())
-                }
-            } finally {
-                withDb(db) {
-                    SchemaUtils.drop(testTable)
-                }
-            }
-        }
-    }
-
-    @Test
-    fun testOptReferenceAllowsNullValues() {
-        withTables(EntityTests.Posts) {
-            val id1 = EntityTests.Posts.insertAndGetId {
-                it[board] = null
-                it[category] = null
-            }
-
-            val inserted1 = EntityTests.Posts.selectAll().where { EntityTests.Posts.id eq id1 }.single()
-            assertNull(inserted1[EntityTests.Posts.board])
-            assertNull(inserted1[EntityTests.Posts.category])
-
-            val boardId = EntityTests.Boards.insertAndGetId {
-                it[name] = UUID.randomUUID().toString()
-            }
-            val categoryId = EntityTests.Categories.insert {
-                it[title] = "Category"
-            }[EntityTests.Categories.uniqueId]
-
-            val id2 = EntityTests.Posts.insertAndGetId {
-                it[board] = Op.nullOp()
-                it[category] = categoryId
-                it[board] = boardId.value
-            }
-
-            EntityTests.Posts.deleteWhere { EntityTests.Posts.id eq id2 }
-
-            val nullableCategoryID: UUID? = categoryId
-            val nullableBoardId: Int? = boardId.value
-            EntityTests.Posts.insertAndGetId {
-                it[board] = Op.nullOp()
-                it[category] = nullableCategoryID
-                it[board] = nullableBoardId
-            }
-        }
-    }
-
     class BatchInsertOnConflictDoNothing(
         table: Table,
     ) : BatchInsertStatement(table) {
@@ -614,6 +513,7 @@ class InsertTests : DatabaseTestsBase() {
                     append("INSERT IGNORE ")
                     append(insertStatement.substringAfter("INSERT "))
                 }
+
                 else -> {
                     append(insertStatement)
                     val identifier = if (db == TestDB.H2_V2_PSQL) "" else "(id) "
@@ -622,6 +522,10 @@ class InsertTests : DatabaseTestsBase() {
             }
         }
     }
+
+    class BatchInsertOnConflictDoNothingExecutable(
+        override val statement: BatchInsertOnConflictDoNothing
+    ) : BatchInsertSuspendExecutable<BatchInsertOnConflictDoNothing>(statement)
 
     @Test
     fun testBatchInsertNumberOfInsertedRows() {
@@ -632,7 +536,7 @@ class InsertTests : DatabaseTestsBase() {
         withTables(excludeSettings = insertIgnoreUnsupportedDB, tab) {
             tab.insert { it[id] = "foo" }
 
-            val executable = BatchInsertBlockingExecutable(
+            val executable = BatchInsertOnConflictDoNothingExecutable(
                 BatchInsertOnConflictDoNothing(tab)
             )
             val numInserted = executable.run {
@@ -651,7 +555,7 @@ class InsertTests : DatabaseTestsBase() {
 
     @Test
     fun testInsertIntoNullableGeneratedColumn() {
-        withDb(excludeSettings = TestDB.ALL_H2_V1) { testDb ->
+        withDb { testDb ->
             val generatedTable = object : IntIdTable("generated_table") {
                 val amount = integer("amount").nullable()
                 val computedAmount = integer("computed_amount").nullable().databaseGenerated().apply {
@@ -668,10 +572,11 @@ class InsertTests : DatabaseTestsBase() {
                 val computedType = generatedTable.computedAmount.columnType.sqlType()
                 val computation = "${generatedTable.amount.name.inProperCase()} + 1"
 
-                val createStatement = """CREATE TABLE ${addIfNotExistsIfSupported()}${generatedTable.tableName.inProperCase()} (
+                val createStatement =
+                    """CREATE TABLE ${addIfNotExistsIfSupported()}${generatedTable.tableName.inProperCase()} (
                         ${generatedTable.id.descriptionDdl()},
                         ${generatedTable.amount.descriptionDdl()},
-                """.trimIndent()
+                    """.trimIndent()
 
                 when (testDb) {
                     // MariaDB does not support GENERATED ALWAYS AS with any null constraint definition
@@ -682,6 +587,7 @@ class InsertTests : DatabaseTestsBase() {
                     TestDB.SQLSERVER -> {
                         exec("${createStatement.trimIndent()} $computedName AS ($computation))")
                     }
+
                     else -> SchemaUtils.create(generatedTable)
                 }
 
@@ -762,20 +668,24 @@ class InsertTests : DatabaseTestsBase() {
         val tester = object : IntIdTable("test_batch_insert_defaults") {
             val number = integer("number")
             val default = varchar("default", 128).default("default")
-            val defaultExpression = varchar("defaultExpression", 128).defaultExpression(stringLiteral("defaultExpression"))
+            val defaultExpression =
+                varchar("defaultExpression", 128).defaultExpression(stringLiteral("defaultExpression"))
             val nullable = varchar("nullable", 128).nullable()
             val nullableDefaultNull = varchar("nullableDefaultNull", 128).nullable().default(null)
-            val nullableDefaultNotNull = varchar("nullableDefaultNotNull", 128).nullable().default("nullableDefaultNotNull")
+            val nullableDefaultNotNull =
+                varchar("nullableDefaultNotNull", 128).nullable().default("nullableDefaultNotNull")
             val databaseGenerated = integer("databaseGenerated").withDefinition("DEFAULT 1").databaseGenerated()
         }
 
         val testerWithFakeDefaults = object : IntIdTable("test_batch_insert_defaults") {
             val number = integer("number")
             val default = varchar("default", 128).default("default-fake")
-            val defaultExpression = varchar("defaultExpression", 128).defaultExpression(stringLiteral("defaultExpression-fake"))
+            val defaultExpression =
+                varchar("defaultExpression", 128).defaultExpression(stringLiteral("defaultExpression-fake"))
             val nullable = varchar("nullable", 128).nullable().default("null-fake")
             val nullableDefaultNull = varchar("nullableDefaultNull", 128).nullable().default("null-fake")
-            val nullableDefaultNotNull = varchar("nullableDefaultNotNull", 128).nullable().default("nullableDefaultNotNull-fake")
+            val nullableDefaultNotNull =
+                varchar("nullableDefaultNotNull", 128).nullable().default("nullableDefaultNotNull-fake")
             val databaseGenerated = integer("databaseGenerated").default(-1)
         }
 
@@ -784,7 +694,7 @@ class InsertTests : DatabaseTestsBase() {
                 this[testerWithFakeDefaults.number] = 10
             }
 
-            testerWithFakeDefaults.selectAll().forEach {
+            testerWithFakeDefaults.selectAll().collect {
                 assertEquals("default", it[testerWithFakeDefaults.default])
                 assertEquals("defaultExpression", it[testerWithFakeDefaults.defaultExpression])
                 assertEquals(null, it[testerWithFakeDefaults.nullable])

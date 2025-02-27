@@ -1,8 +1,12 @@
 package org.jetbrains.exposed.sql.tests
 
 import io.r2dbc.spi.Row
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
@@ -39,3 +43,22 @@ suspend fun Table.insertAndWait(duration: Long) {
 }
 
 internal fun Row.getString(index: Int): String? = get(index, java.lang.String::class.java)?.toString()
+
+suspend fun Query.forEach(block: (ResultRow) -> Unit) {
+    this.collect { block(it) }
+}
+
+suspend fun Query.forEachIndexed(block: (Int, ResultRow) -> Unit) {
+    var index = 0
+    forEach { block(index++, it) }
+}
+
+@Suppress("SwallowedException")
+suspend fun <T> Flow<T>.any(): Boolean {
+    return try {
+        this.first()
+        true
+    } catch (e: NoSuchElementException) {
+        false
+    }
+}

@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.sql.R2dbcTransaction
 import org.jetbrains.exposed.sql.tests.currentDialectIfAvailableTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
@@ -42,9 +44,13 @@ fun <T> assertEqualLists(actual: List<T>, expected: List<T>) {
     }
 }
 
-fun <T> assertEqualLists(actual: List<T>, vararg expected: T) {
-    assertEqualLists(actual, expected.toList())
-}
+suspend fun <T> assertEqualLists(actual: Flow<T>, expected: List<T>) = assertEqualLists(actual.toList(), expected)
+
+suspend fun <T> assertEqualLists(actual: Flow<T>, expected: Flow<T>) = assertEqualLists(actual.toList(), expected)
+
+fun <T> assertEqualLists(actual: List<T>, vararg expected: T) = assertEqualLists(actual, expected.toList())
+
+suspend fun <T> assertEqualLists(actual: Flow<T>, vararg expected: T) = assertEqualLists(actual.toList(), expected.toList())
 
 private val R2dbcTransaction.failedOn: String get() = currentTestDB?.name ?: currentDialectTest.name
 

@@ -1,22 +1,26 @@
-package org.jetbrains.exposed.sql.tests.shared.dml
+package org.jetbrains.exposed.sql.r2dbc.tests.shared.dml
 
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.sql.R2dbcTransaction
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.statements.StatementBuilder.insert
+import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 
 val TEST_DEFAULT_DATE_TIME = LocalDateTime(2000, 1, 1, 0, 0, 0, 0)
 
-abstract class MergeBaseTest : DatabaseTestsBase() {
+abstract class MergeBaseTest : R2dbcDatabaseTestsBase() {
     protected fun allDbExcept(includeSettings: Collection<TestDB>) = TestDB.ALL - includeSettings.toSet()
 
-    protected val defaultExcludeSettings = TestDB.ALL_MARIADB + TestDB.ALL_MYSQL + TestDB.SQLITE + TestDB.ALL_H2_V1
+    protected val defaultExcludeSettings = TestDB.ALL_MARIADB + TestDB.ALL_MYSQL + TestDB.ALL_H2_V1
 
     protected fun withMergeTestTables(
         excludeSettings: Collection<TestDB> = emptyList(),
-        statement: JdbcTransaction.(dest: Dest, source: Source) -> Unit
+        statement: suspend R2dbcTransaction.(dest: Dest, source: Source) -> Unit
     ) = withTables(
         excludeSettings = defaultExcludeSettings + excludeSettings, Source, Dest
     ) {
@@ -25,7 +29,7 @@ abstract class MergeBaseTest : DatabaseTestsBase() {
 
     protected fun withMergeTestTablesAndDefaultData(
         excludeSettings: Collection<TestDB> = emptyList(),
-        statement: JdbcTransaction.(dest: Dest, source: Source) -> Unit
+        statement: suspend R2dbcTransaction.(dest: Dest, source: Source) -> Unit
     ) {
         withMergeTestTables(excludeSettings) { dest, source ->
             source.insertSource(key = "only-in-source-1", value = 1)
@@ -82,7 +86,7 @@ abstract class MergeBaseTest : DatabaseTestsBase() {
             }
         }
 
-        fun getByKey(key: String) = Dest.selectAll().where { Dest.key eq key }.single()
-        fun getByKeyOrNull(key: String) = Dest.selectAll().where { Dest.key eq key }.singleOrNull()
+        suspend fun getByKey(key: String) = Dest.selectAll().where { Dest.key eq key }.single()
+        suspend fun getByKeyOrNull(key: String) = Dest.selectAll().where { Dest.key eq key }.singleOrNull()
     }
 }
