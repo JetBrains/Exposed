@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.statements
 
+import io.r2dbc.spi.Result
 import io.r2dbc.spi.RowMetadata
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
@@ -17,16 +18,24 @@ import java.sql.SQLException
 open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
 ) : SuspendExecutable<Int, S> {
+    private var affectedRowCount: Int = -1
+
     protected open suspend fun R2dbcPreparedStatementApi.execInsertFunction(): Pair<Int, R2dbcResult?> {
-        val inserted = if (statement.arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
-        // According to the `processResults()` method when supportsOnlyIdentifiersInGeneratedKeys is false
-        // all the columns could be taken from result set
-        val rs = if (columnsGeneratedOnDB().isNotEmpty() || !currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
-            getResultRow()
+        if (statement.arguments().count() > 1 || isAlwaysBatch) {
+            val rowCount = executeBatch().sum()
+            affectedRowCount = rowCount
+            return if (columnsGeneratedOnDB().isNotEmpty() || !currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
+                rowCount to getResultRow()
+            } else {
+                rowCount to null
+            }
         } else {
-            null
+            return if (columnsGeneratedOnDB().isNotEmpty() || !currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
+                -1 to executeQuery()
+            } else {
+                executeUpdate() to null
+            }
         }
-        return inserted to rs
     }
 
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): Int {
@@ -34,7 +43,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         @OptIn(InternalApi::class)
         return inserted.apply {
             statement.insertedCount = this
-            statement.resultedValues = processResults(rs, this)
+            statement.resultedValues = processResults(rs)
         }
     }
 
@@ -65,8 +74,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-    private suspend fun processResults(rs: R2dbcResult?, inserted: Int): List<ResultRow> {
-        val allResultSetsValues = rs?.returnedValues(inserted)
+    private suspend fun processResults(rs: R2dbcResult?): List<ResultRow> {
+        val allResultSetsValues = rs?.returnedValues()
 
         @Suppress("UNCHECKED_CAST")
         return statement.arguments!!
@@ -97,8 +106,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     }
 
     @Suppress("NestedBlockDepth", "TooGenericExceptionCaught")
-    private suspend fun R2dbcResult.returnedValues(inserted: Int): ArrayList<MutableMap<Column<*>, Any?>> {
-        if (inserted == 0) return arrayListOf()
+    private suspend fun R2dbcResult.returnedValues(): ArrayList<MutableMap<Column<*>, Any?>> {
+        if (affectedRowCount == 0) return arrayListOf()
 
         val resultSetsValues = arrayListOf<MutableMap<Column<*>, Any?>>()
         var columnIndexesInResultSet: List<Pair<Column<*>, Int>>? = null
@@ -106,7 +115,11 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
 
         flow {
             this@returnedValues.result.collect { rs ->
-                rs.map { row, rm ->
+//                if (affectedRowCount == -1) {
+//                    rs.filter { it is Result.UpdateCount }.rowsUpdated.collect { affectedRowCount = it.toInt() }
+//                }
+
+                rs.filter { it is Result.RowSegment }.map { row, rm ->
                     this@returnedValues.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
 
                     if (columnIndexesInResultSet == null) {
@@ -140,7 +153,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
                                 "ArrayIndexOutOfBoundsException on processResults. " +
                                     "Table: ${this@InsertSuspendExecutable.statement.table.tableName}, " +
                                     "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
-                                    "inserted: $inserted, returnedColumnsString: $returnedColumnsString. " +
+                                    "inserted: $affectedRowCount, returnedColumnsString: $returnedColumnsString. " +
                                     "Failed SQL: $preparedSql",
                                 cause
                             )
@@ -154,12 +167,12 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         }.filterNotNull().toList(resultSetsValues)
 
         if (firstAutoIncColumn != null || columnIndexesInResultSet?.isNotEmpty() == true) {
-            if (inserted > 1 && firstAutoIncColumn != null && resultSetsValues.isNotEmpty() && !currentDialect.supportsMultipleGeneratedKeys) {
+            if (affectedRowCount > 1 && firstAutoIncColumn != null && resultSetsValues.isNotEmpty() && !currentDialect.supportsMultipleGeneratedKeys) {
                 // H2 only returns one last generated key...
                 (resultSetsValues[0][firstAutoIncColumn] as? Number)?.toLong()?.let {
                     var id = it
 
-                    while (resultSetsValues.size < inserted) {
+                    while (resultSetsValues.size < affectedRowCount) {
                         id -= 1
                         resultSetsValues.add(0, mutableMapOf(firstAutoIncColumn to id))
                     }
@@ -167,10 +180,10 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
 
             check(
-                this@InsertSuspendExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == inserted ||
+                this@InsertSuspendExecutable.statement.isIgnore || resultSetsValues.isEmpty() || resultSetsValues.size == affectedRowCount ||
                     currentDialect.supportsTernaryAffectedRowValues
             ) {
-                "Number of autoincs (${resultSetsValues.size}) doesn't match number of batch entries ($inserted)"
+                "Number of autoincs (${resultSetsValues.size}) doesn't match number of batch entries ($affectedRowCount)"
             }
         }
 
@@ -187,7 +200,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             @Suppress("SwallowedException")
             try {
                 this?.columnMetadatas?.withIndex()?.firstOrNull { it.value.name == col.name }?.let {
-                    col to it.index
+                    col to (it.index + 1)
                 }
             } catch (e: SQLException) {
                 null
