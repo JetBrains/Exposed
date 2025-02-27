@@ -1,6 +1,10 @@
 package org.jetbrains.exposed.sql
 
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.r2dbc.sql.selectAll
 import org.jetbrains.exposed.sql.statements.SuspendExecutable
@@ -247,12 +251,15 @@ open class Query(
         } else {
             try {
                 count = true
-                transaction.exec(this) { rs ->
-                    rs.next()
-                    (rs.getObject(1) as? Number)?.toLong().also {
-                        rs.close()
+                val rs = transaction.exec(this) as R2dbcResult
+                flow {
+                    rs.result.collect { result ->
+                        result.map { row, rm ->
+                            rs.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
+                            (rs.getObject(1) as? Number)?.toLong()
+                        }.collect { emit(it) }
                     }
-                }!!
+                }.single() ?: error("The query did not return a single count result. Please check the SQL logs.")
             } finally {
                 count = false
             }
@@ -268,8 +275,8 @@ open class Query(
         val oldLimit = limit
         try {
             if (!isForUpdate()) limit = 1
-            val resultSet = transaction.exec(this)!!
-            return !resultSet.next().also { resultSet.close() }
+            val rs = transaction.exec(this) as R2dbcResult
+            return rs.result.awaitFirstOrNull() != null
         } finally {
             limit = oldLimit
         }
@@ -300,7 +307,14 @@ open class Query(
         val tx = TransactionManager.current()
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
-        collector.emit(ResultRow.create(rs, fieldIndex).also { trackResultSet(tx) })
+        rs.result.collect { result ->
+            result.map { row, rm ->
+                rs.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
+                ResultRow.create(rs, fieldIndex)
+            }.collect {
+                collector.emit(it).also { trackResultSet(tx) }
+            }
+        }
     }
 
     companion object {

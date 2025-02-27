@@ -2,19 +2,26 @@ package org.jetbrains.exposed.sql.statements.r2dbc
 
 import io.r2dbc.spi.Connection
 import io.r2dbc.spi.IsolationLevel
+import io.r2dbc.spi.Row
+import io.r2dbc.spi.RowMetadata
 import io.r2dbc.spi.Statement
 import io.r2dbc.spi.ValidationDepth
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.sql.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.sql.statements.api.R2dbcExposedDatabaseMetadata
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.OracleDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.metadata.*
+import org.jetbrains.exposed.sql.vendors.metadata.MetadataProvider
 import org.reactivestreams.Publisher
 
 /**
@@ -22,65 +29,64 @@ import org.reactivestreams.Publisher
  */
 @Suppress("UnusedPrivateMember", "SpreadOperator")
 class R2dbcConnectionImpl(
-    vendorDialect: String,
     override val connection: Publisher<out Connection>,
+    private val vendorDialect: String,
     private val scope: R2dbcScope
 ) : R2dbcExposedConnection<Publisher<out Connection>> {
-    private val metadataProvider: MetadataProvider = when (vendorDialect) {
-        "Postgresql" -> PostgreSQLMetadata()
-        "Mysql" -> MySQLMetadata()
-        "Mariadb" -> MariaDBMetadata()
-        "Oracle" -> OracleMetadata()
-        "Mssql" -> SQLServerMetadata()
-        else -> H2Metadata()
-    }
+    private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
 
-    override suspend fun getCatalog(): String {
-        return try { metadataProvider.getCatalog() } catch (_: Exception) { null } ?: metadataProvider.getUsername() ?: ""
+    override suspend fun getCatalog(): String = withConnection {
+        getCurrentCatalog(metadataProvider)
+            ?: executeSQL(metadataProvider.getUsername()) { row, _ ->
+                row.getString("USER_NAME")
+            }?.singleOrNull()
+            ?: ""
     }
 
     override suspend fun setCatalog(value: String) {
-        try { metadataProvider.setCatalog(value) } catch (_: Exception) {}
+        withConnection { executeSQL(metadataProvider.getCatalog()) }
     }
 
-    override suspend fun getSchema(): String {
-        return try { metadataProvider.getSchema() } catch (_: Exception) { "" }
+    override suspend fun getSchema(): String = withConnection {
+        getCurrentSchema(metadataProvider) ?: ""
     }
 
-    override suspend fun setSchema(value: String) {
-        try { metadataProvider.setSchema(value) } catch (_: Exception) {}
-    }
-
-    override suspend fun getAutoCommit(): Boolean = withConnection { it.isAutoCommit }
+    override suspend fun getAutoCommit(): Boolean = withConnection { isAutoCommit }
 
     override suspend fun setAutoCommit(value: Boolean) {
-        withConnection { it.setAutoCommit(value).awaitFirstOrNull() }
+        withConnection { setAutoCommit(value).awaitFirstOrNull() }
+    }
+
+    override suspend fun getReadOnly(): Boolean = withConnection {
+        executeSQL(metadataProvider.getReadOnlyMode()) { row, _ ->
+            row.getBoolean("READ_ONLY")
+        }?.singleOrNull() == true
     }
 
     override suspend fun setReadOnly(value: Boolean) {
-        metadataProvider.setReadOnlyMode(value)
+        withConnection { executeSQL(metadataProvider.setReadOnlyMode(value)) }
     }
 
-    override suspend fun getTransactionIsolation(): Int = withConnection { it.transactionIsolationLevel.asInt() }
+    override suspend fun getTransactionIsolation(): Int = withConnection { transactionIsolationLevel.asInt() }
 
     override suspend fun setTransactionIsolation(value: Int) {
-        withConnection { it.setTransactionIsolationLevel(value.asIsolationLevel()).awaitFirstOrNull() }
+        withConnection { setTransactionIsolationLevel(value.asIsolationLevel()).awaitFirstOrNull() }
     }
 
     override suspend fun commit() {
-        withConnection { it.commitTransaction().awaitFirstOrNull() }
+        withConnection { commitTransaction().awaitFirstOrNull() }
     }
 
     override suspend fun rollback() {
-        withConnection { it.rollbackTransaction().awaitFirstOrNull() }
+        withConnection { rollbackTransaction().awaitFirstOrNull() }
     }
 
     override suspend fun isClosed(): Boolean = withConnection {
-        !it.validate(ValidationDepth.LOCAL).awaitSingle() || !it.validate(ValidationDepth.REMOTE).awaitSingle()
+        !validate(ValidationDepth.LOCAL).awaitSingle() || !validate(ValidationDepth.REMOTE).awaitSingle()
     }
 
     override suspend fun close() {
-        withConnection { it.close().awaitFirstOrNull() }
+        withConnection { close().awaitFirstOrNull() }
     }
 
     override suspend fun prepareStatement(
@@ -89,11 +95,11 @@ class R2dbcConnectionImpl(
     ): R2dbcPreparedStatementImpl = withConnection {
         val preparedSql = r2dbcPreparedSql(sql)
         val r2dbcStatement: Statement = if (returnKeys) {
-            it.createStatement(preparedSql).returnGeneratedValues()
+            createStatement(preparedSql).returnGeneratedValues()
         } else {
-            it.createStatement(preparedSql)
+            createStatement(preparedSql)
         }
-        R2dbcPreparedStatementImpl(r2dbcStatement, it, returnKeys)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys)
     }
 
     override suspend fun prepareStatement(
@@ -101,18 +107,23 @@ class R2dbcConnectionImpl(
         columns: Array<String>
     ): R2dbcPreparedStatementImpl = withConnection {
         val preparedSql = r2dbcPreparedSql(sql)
-        val r2dbcStatement = it.createStatement(preparedSql).returnGeneratedValues(*columns)
-        R2dbcPreparedStatementImpl(r2dbcStatement, it, true)
+        val r2dbcStatement = createStatement(preparedSql).returnGeneratedValues(*columns)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, true)
     }
 
     private fun r2dbcPreparedSql(sql: String): String {
-        if (currentDialect is MysqlDialect) return sql
+        val dialect = currentDialect
+        val standardParametersSupported = dialect is MysqlDialect || dialect is OracleDialect
+        if (standardParametersSupported) return sql
 
         val paramCount = sql.count { it == '?' }
         if (paramCount == 0) return sql
+
+        val useCharParameter = currentDialect is SQLServerDialect
         var preparedSQL = sql
         for (i in 1..paramCount) {
-            preparedSQL = preparedSQL.replaceFirst("?", "\$$i")
+            val newValue = if (useCharParameter) "@${'@' + i}" else "$$i"
+            preparedSQL = preparedSQL.replaceFirst("?", newValue)
         }
         return preparedSQL
     }
@@ -128,50 +139,47 @@ class R2dbcConnectionImpl(
         }
 
         withConnection {
-            val batch = it.createBatch()
+            val batch = createBatch()
             sqls.forEach { sql -> batch.add(r2dbcPreparedSql(sql)) }
-            batch.execute().awaitSingle()
+            batch.execute().awaitFirstOrNull()
         }
     }
 
-    private val metadata: R2dbcDatabaseMetadataImpl by lazy {
-        // is it really necessary to pass in the database name; should this be stored from user-defined parameters
-//        R2dbcDatabaseMetadataImpl(getCatalog(), metadataProvider, it, scope)
-        R2dbcDatabaseMetadataImpl("", metadataProvider, localConnection!!, scope)
-    }
-
-    // COMPARE this to use & return value of HDBC connection.metadata
-    // if connection is provided here, is it needed in REDM constructor?
-    override suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T = withConnection {
-        metadata.body()
-    }
-
     override suspend fun setSavepoint(name: String): ExposedSavepoint = withConnection {
-        it.createSavepoint(name).awaitFirstOrNull()
+        createSavepoint(name).awaitFirstOrNull()
         R2dbcSavepoint(name)
     }
 
     override suspend fun releaseSavepoint(savepoint: ExposedSavepoint) {
         withConnection {
-            it.releaseSavepoint(savepoint.name).awaitFirstOrNull()
+            releaseSavepoint(savepoint.name).awaitFirstOrNull()
         }
     }
 
     override suspend fun rollback(savepoint: ExposedSavepoint) {
         withConnection {
-            it.rollbackTransactionToSavepoint(savepoint.name).awaitFirstOrNull()
+            rollbackTransactionToSavepoint(savepoint.name).awaitFirstOrNull()
         }
+    }
+
+    private var metadataImpl: R2dbcDatabaseMetadataImpl? = null
+
+    override suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T = withConnection {
+        if (metadataImpl == null) {
+            metadataImpl = R2dbcDatabaseMetadataImpl(getCatalog(), this, vendorDialect, scope)
+        }
+        metadataImpl!!.body()
     }
 
     private var localConnection: Connection? = null
 
-    private suspend fun <T> withConnection(body: suspend (Connection) -> T): T = withContext(scope.coroutineContext) {
+    private suspend fun <T> withConnection(body: suspend Connection.() -> T): T = withContext(scope.coroutineContext) {
         if (localConnection == null) {
             localConnection = connection.awaitFirst().also {
                 it.beginTransaction().awaitFirstOrNull()
             }
         }
-        body(localConnection!!)
+        localConnection!!.body()
     }
 }
 
@@ -192,3 +200,35 @@ internal fun IsolationLevel.asInt(): Int = isolationLevelMapping.getOrElse(this)
 internal fun Int.asIsolationLevel(): IsolationLevel = isolationLevelMapping.entries
     .firstOrNull { it.value == this }?.key
     ?: error("Unsupported Int as IsolationLevel: $this")
+
+internal suspend fun Connection.executeSQL(sqlQuery: String) {
+    if (sqlQuery.isEmpty()) return
+
+    createStatement(sqlQuery).execute().awaitFirstOrNull()
+}
+
+internal suspend fun <T> Connection.executeSQL(
+    sqlQuery: String,
+    transform: (Row, RowMetadata) -> T
+): List<T>? {
+    if (sqlQuery.isEmpty()) return null
+
+    return flow {
+        createStatement(sqlQuery)
+            .execute()
+            .collect { r ->
+                r.map { row, metadata ->
+                    transform(row, metadata)
+                }
+                    .collect { emit(it) }
+            }
+    }.toList()
+}
+
+internal suspend fun Connection.getCurrentCatalog(
+    provider: MetadataProvider
+): String? = executeSQL(provider.getCatalog()) { row, _ -> row.getString("TABLE_CAT") }?.singleOrNull()
+
+internal suspend fun Connection.getCurrentSchema(
+    provider: MetadataProvider
+): String? = executeSQL(provider.getSchema()) { row, _ -> row.getString("TABLE_SCHEM") }?.singleOrNull()

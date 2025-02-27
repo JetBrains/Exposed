@@ -36,11 +36,9 @@ class Database private constructor(
         }
     }
 
-    /** The connection URL for the database. */
-    val url: String by lazy { metadata { url } }
+    override val url: String by lazy { metadata { url } }
 
-    /** The name of the database based on the name of the underlying JDBC driver. */
-    val vendor: String by lazy {
+    override val vendor: String by lazy {
         resolvedVendor ?: metadata { databaseDialectName }
     }
 
@@ -53,6 +51,7 @@ class Database private constructor(
             ?: error("No dialect registered for $name. URL=$url")
     }
 
+    /** The name of the database as a [DatabaseDialectMetadata]. */
     val dialectMetadata: DatabaseDialectMetadata by lazy {
         dialectsMetadata[vendor.lowercase()]?.invoke()
             ?: error("No dialect metadata registered for $name. URL=$url")
@@ -64,9 +63,11 @@ class Database private constructor(
 
     override fun isVersionCovers(version: BigDecimal): Boolean = this.version >= version
 
-    override val majorVersion by lazy { metadata { majorVersion } }
+    /** The major version number of the database as a [Int]. */
+    val majorVersion by lazy { metadata { majorVersion } }
 
-    override val minorVersion by lazy { metadata { minorVersion } }
+    /** The minor version number of the database as a [Int]. */
+    val minorVersion by lazy { metadata { minorVersion } }
 
     override fun isVersionCovers(majorVersion: Int, minorVersion: Int): Boolean =
         this.majorVersion > majorVersion || (this.majorVersion == majorVersion && this.minorVersion >= minorVersion)
