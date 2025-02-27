@@ -75,8 +75,8 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
      *
      * To enable rollback when ExposedSQLException is Thrown
      *
-     * @Primary annotation is used to avoid conflict with default TransactionAttributeSource bean
-     * than enable when use @EnableTransactionManagement
+     * '@Primary' annotation is used to avoid conflict with default TransactionAttributeSource bean
+     * than enable when use '@EnableTransactionManagement'
      */
     @Bean
     @Primary
