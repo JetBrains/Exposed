@@ -84,7 +84,7 @@
                      target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/dao-table-types.html"/>
         <toc-element topic="DAO-Entity-definition.topic"
                      hidden="true"
-                     accepts-web-file-names="dao-field-transformations.html"
+                     accepts-web-file-names="dao-field-transformations.html, dao-entity-definition.html"
                      target-for-accept-web-file-names="https://www.jetbrains.com/help/exposed/dao-entity-definition.html"/>
         <toc-element topic="DAO-CRUD-Operations.topic"
                      hidden="true"
