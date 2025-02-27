@@ -31,7 +31,10 @@ dependencies {
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
 
-    testRuntimeOnly(libs.r2dbc.h2)
+    testRuntimeOnly(libs.r2dbc.h2) {
+        exclude(group = "com.h2database", module = "h2")
+    }
+    testRuntimeOnly(libs.h2)
     testRuntimeOnly(libs.r2dbc.mariadb)
     testRuntimeOnly(libs.r2dbc.mysql)
     testRuntimeOnly(libs.r2dbc.oracle)
