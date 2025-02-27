@@ -1,17 +1,28 @@
-package org.jetbrains.exposed.sql.tests.shared.dml
+package org.jetbrains.exposed.sql.r2dbc.tests.shared.dml
 
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.toSet
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.r2dbc.sql.batchInsert
+import org.jetbrains.exposed.r2dbc.sql.insert
+import org.jetbrains.exposed.r2dbc.sql.insertAndGetId
+import org.jetbrains.exposed.r2dbc.sql.select
+import org.jetbrains.exposed.r2dbc.sql.selectAll
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.forEach
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.sql.tests.shared.expectException
+import org.jetbrains.exposed.sql.tests.sorted
 import org.junit.Test
 import kotlin.test.assertNull
 
-class SelectTests : DatabaseTestsBase() {
+class SelectTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testSelect() {
         withCitiesAndUsers { _, users, _ ->
@@ -98,7 +109,7 @@ class SelectTests : DatabaseTestsBase() {
     @Test
     fun testInListWithSingleExpression02() {
         withCitiesAndUsers { cities, _, _ ->
-            val cityIds = cities.selectAll().map { it[cities.id] }.take(2)
+            val cityIds = cities.selectAll().map { it[cities.id] }.take(2).toList()
             val r = cities.selectAll().where { cities.id inList cityIds }
 
             assertEquals(2L, r.count())
@@ -210,38 +221,6 @@ class SelectTests : DatabaseTestsBase() {
 
             val result6 = tester.selectAll().where { tester.columns inList emptyList() }.toList()
             assertEquals(0, result6.size)
-        }
-    }
-
-    @Test
-    fun testInListWithEntityIDColumns() {
-        withTables(EntityTests.Posts, EntityTests.Boards, EntityTests.Categories) {
-            val board1 = EntityTests.Board.new {
-                this.name = "Board1"
-            }
-
-            val post1 = EntityTests.Post.new {
-                this.board = board1
-            }
-
-            EntityTests.Post.new {
-                category = EntityTests.Category.new { title = "Category1" }
-            }
-
-            val result1 = EntityTests.Posts.selectAll().where {
-                EntityTests.Posts.board inList listOf(board1.id)
-            }.singleOrNull()?.get(EntityTests.Posts.id)
-            assertEquals(post1.id, result1)
-
-            val result2 = EntityTests.Board.find {
-                EntityTests.Boards.id inList listOf(1, 2, 3, 4, 5)
-            }.singleOrNull()
-            assertEquals(board1, result2)
-
-            val result3 = EntityTests.Board.find {
-                EntityTests.Boards.id notInList listOf(1, 2, 3, 4, 5)
-            }.singleOrNull()
-            assertNull(result3)
         }
     }
 
@@ -360,7 +339,7 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    private val testDBsSupportingAnyAndAllFromSubQueries = TestDB.ALL - TestDB.SQLITE
+    private val testDBsSupportingAnyAndAllFromSubQueries = TestDB.ALL
     private val testDBsSupportingAnyAndAllFromArrays = TestDB.ALL_POSTGRES + TestDB.ALL_H2_V2
 
     @Test
@@ -468,7 +447,7 @@ class SelectTests : DatabaseTestsBase() {
                 val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
                 val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
                     .orderBy(sales.amount)
-                    .map { it[sales.product] }
+                    .map { it[sales.product] }.toList()
                 assertEquals(6, r.size)
                 r.subList(0, 3).forEach { assertEquals("tea", it) }
                 r.subList(3, 6).forEach { assertEquals("coffee", it) }
@@ -483,7 +462,7 @@ class SelectTests : DatabaseTestsBase() {
                 val amounts = listOf(100, 1000).map { it.toBigDecimal() }
                 val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
                     .orderBy(sales.amount)
-                    .map { it[sales.product] }
+                    .map { it[sales.product] }.toList()
                 assertEquals(6, r.size)
                 r.subList(0, 3).forEach { assertEquals("tea", it) }
                 r.subList(3, 6).forEach { assertEquals("coffee", it) }
@@ -518,7 +497,7 @@ class SelectTests : DatabaseTestsBase() {
                 val r = sales.selectAll().where {
                     sales.amount greaterEq allFrom(sales.select(sales.amount).where { sales.product eq "tea" })
                 }
-                    .orderBy(sales.amount).map { it[sales.product] }
+                    .orderBy(sales.amount).map { it[sales.product] }.toList()
                 assertEquals(4, r.size)
                 assertEquals("tea", r.first())
                 r.drop(1).forEach { assertEquals("coffee", it) }
@@ -685,7 +664,7 @@ class SelectTests : DatabaseTestsBase() {
             val limitOffsetResult = alphabet.selectAll().limit(amount).offset(start).map { it[alphabet.letter] }
             assertEqualLists(allLetters.drop(start.toInt()).take(amount), limitOffsetResult)
 
-            if (testDb != TestDB.SQLITE && testDb !in TestDB.ALL_MYSQL_MARIADB) {
+            if (testDb !in TestDB.ALL_MYSQL_MARIADB) {
                 val offsetResult = alphabet.selectAll().offset(start).map { it[alphabet.letter] }
                 assertEqualLists(allLetters.drop(start.toInt()), offsetResult)
             }

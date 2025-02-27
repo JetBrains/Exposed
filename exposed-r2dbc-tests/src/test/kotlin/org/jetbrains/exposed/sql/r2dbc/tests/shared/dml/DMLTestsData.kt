@@ -184,7 +184,7 @@ suspend fun R2dbcDatabaseTestsBase.withSomeAmounts(
 }
 
 suspend fun R2dbcDatabaseTestsBase.withSalesAndSomeAmounts(
-    statement: R2dbcTransaction.(
+    statement: suspend R2dbcTransaction.(
         testDb: TestDB,
         sales: DMLTestsData.Sales,
         someAmounts: DMLTestsData.SomeAmounts

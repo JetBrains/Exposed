@@ -3,6 +3,7 @@ package org.jetbrains.exposed.sql.tests
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Query
@@ -61,4 +62,8 @@ suspend fun <T> Flow<T>.any(): Boolean {
     } catch (e: NoSuchElementException) {
         false
     }
+}
+
+suspend fun <T : Comparable<T>> Flow<T>.sorted(): List<T> {
+    return toList().sorted()
 }
