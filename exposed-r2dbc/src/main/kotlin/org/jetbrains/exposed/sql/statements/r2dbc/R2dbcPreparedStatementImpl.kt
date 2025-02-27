@@ -4,10 +4,7 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.Parameters
 import io.r2dbc.spi.R2dbcType
 import io.r2dbc.spi.Statement
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import java.io.InputStream
@@ -47,12 +44,9 @@ class R2dbcPreparedStatementImpl(
     override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute())
 
     override suspend fun executeUpdate(): Int {
-        resultRow = R2dbcResult(statement.execute())
-        return flow {
-            resultRow!!.result.collect {
-                emit(it.rowsUpdated.awaitFirstOrNull()?.toInt() ?: 0)
-            }
-        }.single()
+        val result = statement.execute()
+        resultRow = R2dbcResult(result)
+        return result.awaitFirstOrNull()?.rowsUpdated?.awaitFirstOrNull()?.toInt() ?: 0
     }
 
     override fun set(index: Int, value: Any) {

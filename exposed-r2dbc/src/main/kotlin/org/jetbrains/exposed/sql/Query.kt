@@ -276,7 +276,9 @@ open class Query(
         try {
             if (!isForUpdate()) limit = 1
             val rs = transaction.exec(this) as R2dbcResult
-            return rs.result.awaitFirstOrNull() != null
+            return rs.result.awaitFirstOrNull()
+                ?.map { _, rm -> rm.columnMetadatas.firstOrNull() }
+                ?.awaitFirstOrNull() == null
         } finally {
             limit = oldLimit
         }
