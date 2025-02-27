@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
 import kotlinx.coroutines.flow.Flow
-import org.jetbrains.exposed.sql.statements.Statement
+import kotlinx.coroutines.flow.flow
 import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.statements.api.RowApi
 import java.sql.ResultSet
@@ -15,7 +15,11 @@ class JdbcResult(
     val result: ResultSet
 ) : ResultApi, RowApi {
 
-    override fun rows(): Flow<RowApi> = TODO("Not yet implemented")
+    override fun rows(): Flow<RowApi> = flow {
+        while (next()) {
+            emit(this@JdbcResult)
+        }
+    }
 
     override fun toString(): String = "JdbcResult(resultSet = $result)"
 
@@ -35,7 +39,6 @@ class JdbcResult(
 
     fun releaseResult() {
         val statement = result.statement
-        close()
         statement?.close()
     }
 }

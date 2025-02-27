@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.statements.r2dbc
 
-import io.r2dbc.spi.Readable
 import io.r2dbc.spi.Result
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
@@ -29,7 +28,7 @@ class R2dbcResult(
     override fun rows(): Flow<R2dbcRecord> = flow {
         // Extra flow is created to avoid suspending [rows] method.
         result().map { row, rm ->
-            R2dbcRecord(row, rm)
+            R2dbcRecord(row)
         }.collect { emit(it) }
     }
 
@@ -37,23 +36,14 @@ class R2dbcResult(
 
     override fun close() = Unit
 
-    class R2dbcRecord(val row: Row, val metadata: RowMetadata) : RowApi by row.toRowApi()
-}
+    class R2dbcRecord(val row: Row) : RowApi {
+        val metadata: RowMetadata get() = row.metadata
+        override fun getObject(index: Int): Any? = row.get(index)
 
-private fun Readable.toRowApi(): RowApi = object : RowApi {
-    override fun getObject(index: Int): Any? {
-        return this@toRowApi.get(index)
-    }
+        override fun getObject(name: String): Any? = row.get(name)
 
-    override fun getObject(name: String): Any? {
-        return this@toRowApi.get(name)
-    }
+        override fun <T> getObject(index: Int, type: Class<T>): T? = row.get(index, type)
 
-    override fun <T> getObject(index: Int, type: Class<T>): T? {
-        return this@toRowApi.get(index, type)
-    }
-
-    override fun <T> getObject(name: String, type: Class<T>): T? {
-        return this@toRowApi.get(name, type)
+        override fun <T> getObject(name: String, type: Class<T>): T? = row.get(name, type)
     }
 }

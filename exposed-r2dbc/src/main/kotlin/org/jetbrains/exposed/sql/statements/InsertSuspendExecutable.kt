@@ -1,11 +1,8 @@
 package org.jetbrains.exposed.sql.statements
 
 import io.r2dbc.spi.RowMetadata
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult
