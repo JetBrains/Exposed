@@ -22,6 +22,7 @@ public class org/jetbrains/exposed/spring/autoconfigure/ExposedAutoConfiguration
 	public fun <init> (Lorg/springframework/context/ApplicationContext;)V
 	public fun databaseConfig ()Lorg/jetbrains/exposed/sql/DatabaseConfig;
 	public fun databaseInitializer ()Lorg/jetbrains/exposed/spring/DatabaseInitializer;
+	public fun exposedSpringTransactionAttributeSource ()Lorg/jetbrains/exposed/spring/ExposedSpringTransactionAttributeSource;
 	public fun springTransactionManager (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;)Lorg/jetbrains/exposed/spring/SpringTransactionManager;
 }
 

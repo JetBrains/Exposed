@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.spring.autoconfigure
 
 import org.jetbrains.exposed.spring.DatabaseInitializer
+import org.jetbrains.exposed.spring.ExposedSpringTransactionAttributeSource
 import org.jetbrains.exposed.spring.SpringTransactionManager
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.springframework.beans.factory.annotation.Value
@@ -10,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Primary
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
 
@@ -67,4 +69,18 @@ open class ExposedAutoConfiguration(private val applicationContext: ApplicationC
     @Bean
     @ConditionalOnProperty("spring.exposed.generate-ddl", havingValue = "true", matchIfMissing = false)
     open fun databaseInitializer() = DatabaseInitializer(applicationContext, excludedPackages)
+
+    /**
+     * Returns an [ExposedSpringTransactionAttributeSource] instance.
+     *
+     * To enable rollback when ExposedSQLException is Thrown
+     *
+     * '@Primary' annotation is used to avoid conflict with default TransactionAttributeSource bean
+     * than enable when use '@EnableTransactionManagement'
+     */
+    @Bean
+    @Primary
+    open fun exposedSpringTransactionAttributeSource(): ExposedSpringTransactionAttributeSource {
+        return ExposedSpringTransactionAttributeSource()
+    }
 }
