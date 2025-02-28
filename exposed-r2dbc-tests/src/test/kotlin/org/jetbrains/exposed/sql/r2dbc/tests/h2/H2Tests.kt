@@ -4,14 +4,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.r2dbc.sql.batchInsert
+import org.jetbrains.exposed.r2dbc.sql.insert
+import org.jetbrains.exposed.r2dbc.sql.replace
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.r2dbc.sql.selectAll
 import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.avg
-import org.jetbrains.exposed.sql.statements.StatementBuilder.insert
-import org.jetbrains.exposed.sql.statements.StatementBuilder.replace
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest

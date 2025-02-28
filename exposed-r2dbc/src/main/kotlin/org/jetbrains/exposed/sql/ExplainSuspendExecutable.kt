@@ -4,10 +4,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import org.jetbrains.exposed.sql.statements.IStatementBuilder
 import org.jetbrains.exposed.sql.statements.Statement
-import org.jetbrains.exposed.sql.statements.StatementBuilder
 import org.jetbrains.exposed.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.buildStatement
 import org.jetbrains.exposed.sql.statements.r2dbc.R2dbcResult
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 
@@ -44,6 +44,6 @@ fun R2dbcTransaction.explain(
     options: String? = null,
     body: IStatementBuilder.() -> Statement<*>
 ): ExplainSuspendExecutable {
-    val stmt = ExplainQuery(analyze, options, StatementBuilder.body())
+    val stmt = ExplainQuery(analyze, options, buildStatement(body))
     return ExplainSuspendExecutable(stmt)
 }
