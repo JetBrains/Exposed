@@ -45,6 +45,10 @@ suspend fun Table.insertAndWait(duration: Long) {
 
 internal fun Row.getString(index: Int): String? = get(index, java.lang.String::class.java)?.toString()
 
+internal fun Row.getString(label: String): String? = get(label, java.lang.String::class.java)?.toString()
+
+internal fun Row.getBoolean(label: String): Boolean? = get(label, java.lang.Boolean::class.java)?.booleanValue()
+
 suspend fun Query.forEach(block: (ResultRow) -> Unit) {
     this.collect { block(it) }
 }

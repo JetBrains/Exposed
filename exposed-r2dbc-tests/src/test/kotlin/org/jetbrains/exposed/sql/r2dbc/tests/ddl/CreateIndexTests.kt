@@ -1,13 +1,15 @@
-package org.jetbrains.exposed.sql.tests.shared.ddl
+package org.jetbrains.exposed.sql.r2dbc.tests.ddl
 
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.r2dbc.sql.exists
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
+import org.jetbrains.exposed.sql.tests.getString
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
@@ -16,7 +18,7 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import kotlin.test.expect
 
-class CreateIndexTests : DatabaseTestsBase() {
+class CreateIndexTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun createStandardIndex() {
@@ -83,7 +85,7 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
         val schema1 = Schema("Schema1")
         val schema2 = Schema("Schema2")
-        withSchemas(listOf(TestDB.SQLITE, TestDB.SQLSERVER), schema1, schema2) {
+        withSchemas(listOf(TestDB.SQLSERVER), schema1, schema2) {
             SchemaUtils.setSchema(schema1)
             SchemaUtils.createMissingTablesAndColumns(testTable)
             assertEquals(true, testTable.exists())
@@ -126,18 +128,16 @@ class CreateIndexTests : DatabaseTestsBase() {
                 """.trimIndent()
             ) {
                 var totalIndexCount = 0
-                while (it.next()) {
-                    totalIndexCount += 1
-                    val filter = it.getString("FILTER_CONDITION")
+                totalIndexCount += 1
+                val filter = it.getString("FILTER_CONDITION")!!
 
-                    when (it.getString("INDEX_NAME")) {
-                        "partialindextabletest_value_name" -> assertEquals(
-                            filter,
-                            "(((name)::text = 'aaa'::text) AND (value >= 6))"
-                        )
-                        "flag_index" -> assertEquals(filter, "(flag = true)")
-                        "partialindextabletest_anothervalue_unique" -> assertTrue(filter.startsWith(" UNIQUE INDEX "))
-                    }
+                when (it.getString("INDEX_NAME")) {
+                    "partialindextabletest_value_name" -> assertEquals(
+                        filter,
+                        "(((name)::text = 'aaa'::text) AND (value >= 6))"
+                    )
+                    "flag_index" -> assertEquals(filter, "(flag = true)")
+                    "partialindextabletest_anothervalue_unique" -> assertTrue(filter.startsWith(" UNIQUE INDEX "))
                 }
                 kotlin.test.assertEquals(totalIndexCount, 3, "Indexes expected to be created")
             }
@@ -179,7 +179,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             }
         }
 
-        withDb(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.POSTGRESQLNG, TestDB.POSTGRESQL)) {
+        withDb(TestDB.ALL_POSTGRES + TestDB.SQLSERVER) {
             SchemaUtils.createMissingTablesAndColumns(tester)
             assertTrue(tester.exists())
 
@@ -285,8 +285,8 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
     }
 
-    private fun JdbcTransaction.getIndices(table: Table): List<Index> {
+    private suspend fun R2dbcTransaction.getIndices(table: Table): List<Index> {
         db.dialectMetadata.resetCaches()
-        return currentDialectMetadataTest.existingIndices(table)[table].orEmpty()
+        return org.jetbrains.exposed.sql.tests.currentDialectMetadataTest.existingIndices(table)[table].orEmpty()
     }
 }

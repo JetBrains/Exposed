@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.r2dbc.sql.deleteAll
+import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.r2dbc.sql.selectAll
 import org.jetbrains.exposed.sql.R2dbcTransaction
@@ -14,7 +15,6 @@ import org.jetbrains.exposed.sql.intParam
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.statements.IStatementBuilder
 import org.jetbrains.exposed.sql.statements.Statement
-import org.jetbrains.exposed.sql.statements.StatementBuilder.insert
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest

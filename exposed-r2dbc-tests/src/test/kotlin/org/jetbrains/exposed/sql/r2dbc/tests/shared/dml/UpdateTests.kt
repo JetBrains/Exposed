@@ -7,14 +7,10 @@ import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.r2dbc.sql.insertAndGetId
-import org.jetbrains.exposed.r2dbc.sql.select
-import org.jetbrains.exposed.r2dbc.sql.selectAll
-import org.jetbrains.exposed.r2dbc.sql.update
+import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.innerJoin
 import org.jetbrains.exposed.sql.joinQuery
-import org.jetbrains.exposed.sql.statements.StatementBuilder.insert
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
@@ -24,6 +20,7 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import kotlin.test.assertTrue
+import kotlin.text.insert
 
 class UpdateTests : R2dbcDatabaseTestsBase() {
     @Test
@@ -82,7 +79,8 @@ class UpdateTests : R2dbcDatabaseTestsBase() {
                 assertEquals(123, it[userData.value])
             }
 
-            val joinWithConstraint = users.innerJoin(userData, { users.id }, { userData.user_id }) { users.id eq "smth" }
+            val joinWithConstraint =
+                users.innerJoin(userData, { users.id }, { userData.user_id }) { users.id eq "smth" }
             joinWithConstraint.update {
                 it[userData.comment] = users.name
                 it[userData.value] = 0
@@ -161,7 +159,8 @@ class UpdateTests : R2dbcDatabaseTestsBase() {
                     assertEquals("baz", it[tableB.bar])
                 }
 
-                val joinWithConstraint = tableA.innerJoin(tableB, { tableA.id }, { tableB.tableAId }) { tableB.bar eq "foo" }
+                val joinWithConstraint =
+                    tableA.innerJoin(tableB, { tableA.id }, { tableB.tableAId }) { tableB.bar eq "foo" }
                 joinWithConstraint.update({ tableA.foo eq "foo" }) {
                     it[tableB.bar] = "baz"
                 }

@@ -4,18 +4,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.r2dbc.sql.batchInsert
-import org.jetbrains.exposed.r2dbc.sql.deleteReturning
-import org.jetbrains.exposed.r2dbc.sql.insertReturning
-import org.jetbrains.exposed.r2dbc.sql.selectAll
-import org.jetbrains.exposed.r2dbc.sql.updateReturning
-import org.jetbrains.exposed.r2dbc.sql.upsertReturning
+import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.statements.ReturningSuspendExecutable
-import org.jetbrains.exposed.sql.statements.StatementBuilder.insert
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
@@ -24,6 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.text.insert
 
 class ReturningTests : R2dbcDatabaseTestsBase() {
     private val updateReturningSupportedDb = TestDB.ALL_POSTGRES.toSet()

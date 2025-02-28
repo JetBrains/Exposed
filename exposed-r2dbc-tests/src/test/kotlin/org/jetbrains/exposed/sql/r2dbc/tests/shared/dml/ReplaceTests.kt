@@ -5,11 +5,11 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.batchReplace
 import org.jetbrains.exposed.r2dbc.sql.deleteAll
+import org.jetbrains.exposed.r2dbc.sql.replace
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.r2dbc.sql.selectAll
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.longLiteral
-import org.jetbrains.exposed.sql.statements.StatementBuilder.replace
 import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB

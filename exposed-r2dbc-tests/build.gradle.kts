@@ -41,6 +41,8 @@ dependencies {
     testRuntimeOnly(libs.r2dbc.postgresql)
     testRuntimeOnly(libs.r2dbc.sqlserver)
 
+    testCompileOnly(libs.postgre)
+
     testImplementation(libs.logcaptor)
 }
 

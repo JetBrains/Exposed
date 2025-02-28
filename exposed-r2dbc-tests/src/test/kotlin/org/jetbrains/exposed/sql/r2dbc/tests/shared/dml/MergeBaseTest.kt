@@ -4,10 +4,10 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.selectAll
 import org.jetbrains.exposed.sql.R2dbcTransaction
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
-import org.jetbrains.exposed.sql.statements.StatementBuilder.insert
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 
@@ -61,7 +61,7 @@ abstract class MergeBaseTest : R2dbcDatabaseTestsBase() {
         val optional = text("merge_test_optional_value").nullable()
         val at = datetime("merge_test_at").clientDefault { TEST_DEFAULT_DATE_TIME }
 
-        fun insertSource(key: String, value: Int, optional: String? = null, at: LocalDateTime? = null) {
+        suspend fun insertSource(key: String, value: Int, optional: String? = null, at: LocalDateTime? = null) {
             Source.insert {
                 it[Source.key] = key
                 it[Source.value] = value
@@ -77,7 +77,7 @@ abstract class MergeBaseTest : R2dbcDatabaseTestsBase() {
         val optional = text("merge_test_optional_value").nullable()
         val at = datetime("merge_test_at").clientDefault { TEST_DEFAULT_DATE_TIME }
 
-        fun insertDest(key: String, value: Int, optional: String? = null, at: LocalDateTime? = null) {
+        suspend fun insertDest(key: String, value: Int, optional: String? = null, at: LocalDateTime? = null) {
             Dest.insert {
                 it[Dest.key] = key
                 it[Dest.value] = value
