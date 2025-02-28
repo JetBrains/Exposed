@@ -17,18 +17,21 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     } else {
         "NUMBER(3)"
     }
+
     override fun ubyteType(): String = "NUMBER(3)"
     override fun shortType(): String = if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
         "SMALLINT"
     } else {
         "NUMBER(5)"
     }
+
     override fun ushortType(): String = "NUMBER(5)"
     override fun integerType(): String = if (currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
         "INTEGER"
     } else {
         "NUMBER(10)"
     }
+
     override fun integerAutoincType(): String = integerType()
     override fun uintegerType(): String = "NUMBER(10)"
     override fun uintegerAutoincType(): String = "NUMBER(10)"
@@ -37,6 +40,7 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
     } else {
         "NUMBER(19)"
     }
+
     override fun longAutoincType(): String = longType()
     override fun ulongType(): String = "NUMBER(20)"
     override fun ulongAutoincType(): String = "NUMBER(20)"
@@ -52,14 +56,14 @@ internal object OracleDataTypeProvider : DataTypeProvider() {
 
     override fun binaryType(length: Int): String {
         @Suppress("MagicNumber")
-        return if (length < 2000) "RAW ($length)" else binaryType()
+        return if (length < 2000) "RAW($length)" else binaryType()
     }
 
     override fun uuidType(): String {
         return if ((currentDialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
             "UUID"
         } else {
-            return "RAW(16)"
+            "RAW(16)"
         }
     }
 
