@@ -22,7 +22,10 @@ class R2dbcResult(
     private var awaitedResult: Result? = null
 
     suspend fun result(): Result {
-        return awaitedResult ?: resultPublisher.awaitFirstOrNull() ?: error("No result found")
+        if (awaitedResult == null) {
+            awaitedResult = resultPublisher.awaitFirstOrNull()
+        }
+        return awaitedResult!!
     }
 
     override fun rows(): Flow<R2dbcRecord> = flow {
