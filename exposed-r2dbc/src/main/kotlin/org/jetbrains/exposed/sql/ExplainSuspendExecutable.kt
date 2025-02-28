@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.statements.IStatementBuilder
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementBuilder
@@ -21,18 +20,8 @@ open class ExplainSuspendExecutable(
         val rs = TransactionManager.current().exec(this)!! as R2dbcResult
         val fieldIndex = mutableMapOf<String, Int>()
 
-        rs.result.collect { result ->
-            result.map { row, rm ->
-                if (rs.currentRecord == null) {
-                    repeat(rm.columnMetadatas.size) {
-                        fieldIndex[rm.getColumnMetadata(it).name] = it
-                    }
-                }
-                rs.currentRecord = R2dbcResult.R2dbcRecord(row, rm)
-                ExplainResultRow.create(rs, fieldIndex)
-            }.collect {
-                collector.emit(it)
-            }
+        rs.rows().collect {
+            collector.emit(ExplainResultRow.create(it, fieldIndex))
         }
     }
 }

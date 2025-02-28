@@ -5,7 +5,7 @@ import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.vendors.*
 import java.io.InputStream
 import java.math.BigDecimal
@@ -82,7 +82,7 @@ interface IColumnType<T> {
     fun nonNullValueAsDefaultString(value: T & Any): String = nonNullValueToString(value)
 
     /** Returns the object at the specified [index] in the [rs]. */
-    fun readObject(rs: ResultApi, index: Int): Any? = rs.getObject(index)
+    fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index)
 
     /** Sets the [value] at the specified [index] into the [stmt]. */
     fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
@@ -259,7 +259,7 @@ class EntityIDColumnType<T : Any>(
         idColumn.table as IdTable<T>
     )
 
-    override fun readObject(rs: ResultApi, index: Int): Any? = idColumn.columnType.readObject(rs, index)
+    override fun readObject(rs: RowApi, index: Int): Any? = idColumn.columnType.readObject(rs, index)
 
     override fun equals(other: Any?): Boolean {
         if (other !is EntityIDColumnType<*>) return false
@@ -914,7 +914,7 @@ open class TextColumnType(
         }
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? {
+    override fun readObject(rs: RowApi, index: Int): Any? {
         val value = super.readObject(rs, index)
         return if (eagerLoading && value != null) {
             valueFromDB(value)
@@ -1019,7 +1019,7 @@ class BlobColumnType(
             .hexToDb(value.hexString())
     }
 
-    override fun readObject(rs: ResultApi, index: Int) = when {
+    override fun readObject(rs: RowApi, index: Int) = when {
         currentDialect is PostgreSQLDialect && useObjectIdentifier -> {
             rs.getObject(index, java.sql.Blob::class.java)?.binaryStream?.let(::ExposedBlob)
         }
@@ -1303,7 +1303,7 @@ class ArrayColumnType<T, R : List<Any?>>(
         else -> (value as Array<Any?>).map { it?.let { delegate.valueFromDB(it) } }
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? = rs.getObject(index, java.sql.Array::class.java)
+    override fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index, java.sql.Array::class.java)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when {
