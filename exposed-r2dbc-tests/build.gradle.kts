@@ -16,6 +16,7 @@ repositories {
 dependencies {
     implementation(libs.kotlinx.coroutines.reactive)
     implementation(libs.kotlinx.coroutines.debug)
+    implementation(libs.kotlinx.coroutines.test)
     implementation(libs.r2dbc.spi)
 
     implementation(kotlin("test-junit"))
@@ -30,7 +31,10 @@ dependencies {
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
 
-    testRuntimeOnly(libs.r2dbc.h2)
+    testRuntimeOnly(libs.r2dbc.h2) {
+        exclude(group = "com.h2database", module = "h2")
+    }
+    testRuntimeOnly(libs.h2)
     testRuntimeOnly(libs.r2dbc.mariadb)
     testRuntimeOnly(libs.r2dbc.mysql)
     testRuntimeOnly(libs.r2dbc.oracle)
@@ -38,7 +42,6 @@ dependencies {
     testRuntimeOnly(libs.r2dbc.sqlserver)
 
     testImplementation(libs.logcaptor)
-    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 tasks.withType<Test>().configureEach {

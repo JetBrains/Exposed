@@ -4,11 +4,11 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertNull
 
 class SelectTests : DatabaseTestsBase() {
@@ -680,14 +680,14 @@ class SelectTests : DatabaseTestsBase() {
             }
 
             val limitResult = alphabet.selectAll().limit(amount).map { it[alphabet.letter] }
-            assertContentEquals(allLetters.take(amount), limitResult)
+            assertEqualLists(allLetters.take(amount), limitResult)
 
             val limitOffsetResult = alphabet.selectAll().limit(amount).offset(start).map { it[alphabet.letter] }
-            assertContentEquals(allLetters.drop(start.toInt()).take(amount), limitOffsetResult)
+            assertEqualLists(allLetters.drop(start.toInt()).take(amount), limitOffsetResult)
 
             if (testDb != TestDB.SQLITE && testDb !in TestDB.ALL_MYSQL_MARIADB) {
                 val offsetResult = alphabet.selectAll().offset(start).map { it[alphabet.letter] }
-                assertContentEquals(allLetters.drop(start.toInt()), offsetResult)
+                assertEqualLists(allLetters.drop(start.toInt()), offsetResult)
             }
         }
     }

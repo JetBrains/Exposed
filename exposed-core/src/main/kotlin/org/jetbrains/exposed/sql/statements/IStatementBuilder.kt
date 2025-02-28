@@ -429,7 +429,7 @@ interface IStatementBuilder {
         !columnType.isAutoInc || autoIncColumnType?.nextValExpression != null
 }
 
-/** Builder object for creating SQL statements. */
-object StatementBuilder : IStatementBuilder {
-    operator fun <S : Statement<*>> invoke(body: StatementBuilder.() -> S): S = body(this)
-}
+/** Builder object for creating SQL statements. Made it private to avoid imports clash */
+private object StatementBuilder : IStatementBuilder
+
+fun <S> buildStatement(body: IStatementBuilder.() -> S): S = body(StatementBuilder)

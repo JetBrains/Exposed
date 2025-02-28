@@ -81,7 +81,7 @@ suspend fun <T : Table> T.deleteWhere(
     if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
         throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
     }
-    val stmt = StatementBuilder { deleteWhere(limit, op) }
+    val stmt = buildStatement { deleteWhere(limit, op) }
     return DeleteSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
@@ -102,7 +102,7 @@ suspend fun <T : Table> T.deleteIgnoreWhere(
     if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
         throw UnsupportedByDialectException("LIMIT clause is not supported in DELETE statement.", currentDialect)
     }
-    val stmt = StatementBuilder { deleteIgnoreWhere(limit, op) }
+    val stmt = buildStatement { deleteIgnoreWhere(limit, op) }
     return DeleteSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
@@ -113,7 +113,7 @@ suspend fun <T : Table> T.deleteIgnoreWhere(
  * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
  */
 suspend fun Table.deleteAll(): Int {
-    val stmt = StatementBuilder { deleteAll() }
+    val stmt = buildStatement { deleteAll() }
     return DeleteSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
@@ -145,7 +145,7 @@ fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
     where: SqlExpressionBuilder.() -> Op<Boolean>
 ): ReturningSuspendExecutable {
-    val stmt = StatementBuilder { deleteReturning(returning, where) }
+    val stmt = buildStatement { deleteReturning(returning, where) }
     return ReturningSuspendExecutable(stmt)
 }
 
@@ -160,7 +160,7 @@ fun <T : Table> T.deleteReturning(
 fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns
 ): ReturningSuspendExecutable {
-    val stmt = StatementBuilder { deleteReturning(returning) }
+    val stmt = buildStatement { deleteReturning(returning) }
     return ReturningSuspendExecutable(stmt)
 }
 
@@ -205,7 +205,7 @@ suspend fun Join.delete(
     limit: Int? = null,
     where: SqlExpressionBuilder.() -> Op<Boolean>
 ): Int {
-    val stmt = StatementBuilder { delete(targetTable, targetTables = targetTables, ignore, limit, where) }
+    val stmt = buildStatement { delete(targetTable, targetTables = targetTables, ignore, limit, where) }
     return DeleteSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
@@ -228,7 +228,7 @@ suspend fun Join.delete(
     ignore: Boolean = false,
     limit: Int? = null
 ): Int {
-    val stmt = StatementBuilder { delete(targetTable, targetTables = targetTables, ignore, limit, null) }
+    val stmt = buildStatement { delete(targetTable, targetTables = targetTables, ignore, limit, null) }
     return DeleteSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
@@ -240,7 +240,7 @@ suspend fun Join.delete(
 suspend fun <T : Table> T.insert(
     body: T.(UpdateBuilder<*>) -> Unit
 ): InsertStatement<Number> {
-    val stmt = StatementBuilder { insert(body) }
+    val stmt = buildStatement { insert(body) }
     return InsertSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
@@ -253,7 +253,7 @@ suspend fun <T : Table> T.insert(
 suspend fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
     body: T.(UpdateBuilder<*>) -> Unit
 ): EntityID<Key> {
-    val stmt = StatementBuilder { insert(body) }
+    val stmt = buildStatement { insert(body) }
     return InsertSuspendExecutable(stmt).run {
         execute(TransactionManager.current())
         statement[id]
@@ -272,7 +272,7 @@ suspend fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
 suspend fun <T : Table> T.insertIgnore(
     body: T.(UpdateBuilder<*>) -> Unit
 ): InsertStatement<Long> {
-    val stmt = StatementBuilder { insertIgnore(body) }
+    val stmt = buildStatement { insertIgnore(body) }
     return InsertSuspendExecutable<Long, InsertStatement<Long>>(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
@@ -289,7 +289,7 @@ suspend fun <T : Table> T.insertIgnore(
 suspend fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
     body: T.(UpdateBuilder<*>) -> Unit
 ): EntityID<Key>? {
-    val stmt = StatementBuilder { insertIgnore(body) }
+    val stmt = buildStatement { insertIgnore(body) }
     return InsertSuspendExecutable<Long, InsertStatement<Long>>(stmt).run {
         when (execute(TransactionManager.current())) {
             null, 0 -> null
@@ -311,7 +311,7 @@ suspend fun <T : Table> T.insert(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>>? = null
 ): Int? {
-    val stmt = StatementBuilder { insert(selectQuery, columns) }
+    val stmt = buildStatement { insert(selectQuery, columns) }
     return InsertSelectSuspendExecutable(stmt).execute(TransactionManager.current())
 }
 
@@ -330,7 +330,7 @@ suspend fun <T : Table> T.insertIgnore(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>>? = null
 ): Int? {
-    val stmt = StatementBuilder { insertIgnore(selectQuery, columns) }
+    val stmt = buildStatement { insertIgnore(selectQuery, columns) }
     return InsertSelectSuspendExecutable(stmt).execute(TransactionManager.current())
 }
 
@@ -349,7 +349,7 @@ suspend fun <T : Table> T.insertReturning(
     ignoreErrors: Boolean = false,
     body: T.(InsertStatement<Number>) -> Unit
 ): ReturningSuspendExecutable {
-    val stmt = StatementBuilder { insertReturning(returning, ignoreErrors, body) }
+    val stmt = buildStatement { insertReturning(returning, ignoreErrors, body) }
     return ReturningSuspendExecutable(stmt)
 }
 
@@ -395,7 +395,7 @@ private suspend fun <T : Table, E> T.batchInsert(
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    val stmt = StatementBuilder { batchInsert(ignoreErrors, shouldReturnGeneratedValues, body) }
+    val stmt = buildStatement { batchInsert(ignoreErrors, shouldReturnGeneratedValues, body) }
     stmt.executable()
 }
 
@@ -410,7 +410,7 @@ private suspend fun <T : Table, E> T.batchInsert(
 suspend fun <T : Table> T.replace(
     body: T.(UpdateBuilder<*>) -> Unit
 ): ReplaceStatement<Long> {
-    val stmt = StatementBuilder { replace(body) }
+    val stmt = buildStatement { replace(body) }
     return InsertSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
@@ -430,7 +430,7 @@ suspend fun <T : Table> T.replace(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>>? = null
 ): Int? {
-    val stmt = StatementBuilder { replace(selectQuery, columns) }
+    val stmt = buildStatement { replace(selectQuery, columns) }
     return InsertSelectSuspendExecutable(stmt).execute(TransactionManager.current())
 }
 
@@ -473,7 +473,7 @@ private suspend fun <T : Table, E> T.batchReplace(
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchReplaceStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    val stmt = StatementBuilder { batchReplace(shouldReturnGeneratedValues, body) }
+    val stmt = buildStatement { batchReplace(shouldReturnGeneratedValues, body) }
     BatchInsertSuspendExecutable(stmt)
 }
 
@@ -552,7 +552,7 @@ suspend fun <T : Table> T.update(
     if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
         throw UnsupportedByDialectException("LIMIT clause is not supported in UPDATE statement.", currentDialect)
     }
-    val stmt = StatementBuilder { update(where, limit, body) }
+    val stmt = buildStatement { update(where, limit, body) }
     return UpdateSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
@@ -570,7 +570,7 @@ suspend fun <T : Table> T.update(
     if (limit != null && !currentDialectMetadata.supportsLimitWithUpdateOrDelete()) {
         throw UnsupportedByDialectException("LIMIT clause is not supported in UPDATE statement.", currentDialect)
     }
-    val stmt = StatementBuilder { update(null, limit, body) }
+    val stmt = buildStatement { update(null, limit, body) }
     return UpdateSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
@@ -599,7 +599,7 @@ suspend fun Join.update(
     limit: Int? = null,
     body: (UpdateStatement) -> Unit
 ): Int {
-    val stmt = StatementBuilder { update(where, limit, body) }
+    val stmt = buildStatement { update(where, limit, body) }
     return UpdateSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
@@ -614,7 +614,7 @@ suspend fun Join.update(
     limit: Int? = null,
     body: (UpdateStatement) -> Unit
 ): Int {
-    val stmt = StatementBuilder { update(null, limit, body) }
+    val stmt = buildStatement { update(null, limit, body) }
     return UpdateSuspendExecutable(stmt).execute(TransactionManager.current()) ?: 0
 }
 
@@ -648,7 +648,7 @@ fun <T : Table> T.updateReturning(
     where: SqlExpressionBuilder.() -> Op<Boolean>,
     body: T.(UpdateStatement) -> Unit
 ): ReturningSuspendExecutable {
-    val stmt = StatementBuilder { updateReturning(returning, where, body) }
+    val stmt = buildStatement { updateReturning(returning, where, body) }
     return ReturningSuspendExecutable(stmt)
 }
 
@@ -664,7 +664,7 @@ fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
     body: T.(UpdateStatement) -> Unit
 ): ReturningSuspendExecutable {
-    val stmt = StatementBuilder { updateReturning(returning, null, body) }
+    val stmt = buildStatement { updateReturning(returning, null, body) }
     return ReturningSuspendExecutable(stmt)
 }
 
@@ -695,7 +695,7 @@ suspend fun <T : Table> T.upsert(
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): UpsertStatement<Long> {
-    val stmt = StatementBuilder { upsert(keys = keys, onUpdate, onUpdateExclude, where, body) }
+    val stmt = buildStatement { upsert(keys = keys, onUpdate, onUpdateExclude, where, body) }
     return UpsertSuspendExecutable<Long>(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
@@ -725,7 +725,7 @@ fun <T : Table> T.upsertReturning(
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): ReturningSuspendExecutable {
-    val stmt = StatementBuilder { upsertReturning(keys = keys, returning, onUpdate, onUpdateExclude, where, body) }
+    val stmt = buildStatement { upsertReturning(keys = keys, returning, onUpdate, onUpdateExclude, where, body) }
     return ReturningSuspendExecutable(stmt)
 }
 
@@ -798,7 +798,7 @@ private suspend fun <T : Table, E> T.batchUpsert(
     vararg keys: Column<*>,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> = executeBatch(data, body) {
-    val stmt = StatementBuilder {
+    val stmt = buildStatement {
         batchUpsert(onUpdateList, onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body)
     }
     BatchUpsertSuspendExecutable(stmt)
@@ -838,7 +838,7 @@ suspend fun <D : Table, S : Table> D.mergeFrom(
     on: SqlExpressionBuilder.() -> Op<Boolean>,
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
-    val stmt = StatementBuilder { mergeFrom(source, on, body) }
+    val stmt = buildStatement { mergeFrom(source, on, body) }
     return MergeSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
@@ -857,7 +857,7 @@ suspend fun <D : Table, S : Table> D.mergeFrom(
     source: S,
     body: MergeTableStatement.() -> Unit
 ): MergeTableStatement {
-    val stmt = StatementBuilder { mergeFrom(source, null, body) }
+    val stmt = buildStatement { mergeFrom(source, null, body) }
     return MergeSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
 
@@ -878,6 +878,6 @@ suspend fun <T : Table> T.mergeFrom(
     on: SqlExpressionBuilder.() -> Op<Boolean>,
     body: MergeSelectStatement.() -> Unit
 ): MergeSelectStatement {
-    val stmt = StatementBuilder { mergeFrom(selectQuery, on, body) }
+    val stmt = buildStatement { mergeFrom(selectQuery, on, body) }
     return MergeSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
