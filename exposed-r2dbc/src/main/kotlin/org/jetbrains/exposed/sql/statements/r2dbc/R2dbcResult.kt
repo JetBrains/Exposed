@@ -38,11 +38,11 @@ class R2dbcResult(
 
     class R2dbcRecord(val row: Row) : RowApi {
         val metadata: RowMetadata get() = row.metadata
-        override fun getObject(index: Int): Any? = row.get(index)
+        override fun getObject(index: Int): Any? = row.get(index - 1)
 
         override fun getObject(name: String): Any? = row.get(name)
 
-        override fun <T> getObject(index: Int, type: Class<T>): T? = row.get(index, type)
+        override fun <T> getObject(index: Int, type: Class<T>): T? = row.get(index - 1, type)
 
         override fun <T> getObject(name: String, type: Class<T>): T? = row.get(name, type)
     }
