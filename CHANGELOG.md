@@ -1,3 +1,37 @@
+# 0.60.0
+Infrastructure:
+* Joda Time 2.13.1
+* SQLite driver 3.49.1.0
+* Kotlinx Datetime JVM 0.6.2
+* Spring Framework 6.2.3
+* Spring Boot 3.4.3
+* detekt 1.23.8
+* junit-bom 5.12.0
+
+Breaking changes:
+* chore!: EXPOSED-727 Change timestamp column type for H2 from "DATETIME(9)" to "TIMESTAMP(9)" by @joc-a in https://github.com/JetBrains/Exposed/pull/2401
+* chore!: EXPOSED-741 Fix inconsistent CHECK constraint names for UShort and UInt columns by @joc-a in https://github.com/JetBrains/Exposed/pull/2426
+* feat!: EXPOSED-740  Add support for modes (SKIP LOCKED or NOWAIT) with ForUpdate and ForShare Option for MySQL by @mfazalul in https://github.com/JetBrains/Exposed/pull/2421
+
+Features:
+* feat: EXPOSED-729 [Oracle] Allow setting limit with DELETE by @bog-walk in https://github.com/JetBrains/Exposed/pull/2403
+* feat: EXPOSED-742 Allow customizing the CHECK constraint name of `long()` column by @joc-a in https://github.com/JetBrains/Exposed/pull/2428
+
+Bug fixes:
+* fix: EXPOSED-723 Reading databaseGenerated value from entity fails and does not trigger flush cache by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2391
+* fix: EXPOSED-719 H2 upsert operation converts arrays to string by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2395
+* fix: EXPOSED-737 Timestamp column broken for MySQL 8.0 by @joc-a in https://github.com/JetBrains/Exposed/pull/2410
+* fix: EXPOSED-736 Unnecessary ALTER statement generated for binary column in PostgreSQL by @joc-a in https://github.com/JetBrains/Exposed/pull/2408
+* fix: EXPOSED-593 Rollback ExposedSQLException when use SpringTransactionManager by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/2398
+
+Docs:
+* docs: Change urls for site pages in Changelog and ReadMe by @bog-walk in https://github.com/JetBrains/Exposed/pull/2394
+* docs: Fix link in FAQ by @fatalistt in https://github.com/JetBrains/Exposed/pull/2427
+* EXPOSED-738 Update landing page link by @vnikolova in https://github.com/JetBrains/Exposed/pull/2433
+
+Refactors:
+* refactor: EXPOSED-728 [SQLite] Remove ENABLE_UPDATE_DELETE_LIMIT metadata check from core function provider by @bog-walk in https://github.com/JetBrains/Exposed/pull/2402
+
 # 0.59.0
 Infrastructure:
 * Spring Framework 6.2.2

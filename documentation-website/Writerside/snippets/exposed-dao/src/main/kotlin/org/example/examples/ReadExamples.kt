@@ -56,7 +56,7 @@ class ReadExamples {
         val query = UsersTable.innerJoin(UserRatingsTable).innerJoin(StarWarsFilmsTable)
             .select(UsersTable.columns)
             .where {
-                StarWarsFilmsTable.sequelId eq MOVIE_SEQUELID and (UserRatingsTable.value greater MIN_MOVIE_RATING)
+                StarWarsFilmsTable.sequelId eq MOVIE_SEQUELID and (UserRatingsTable.value greater MIN_MOVIE_RATING.toLong())
             }.withDistinct()
 
         val users = UserEntity.wrapRows(query).toList()
