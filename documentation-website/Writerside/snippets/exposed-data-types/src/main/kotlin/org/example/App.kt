@@ -1,9 +1,6 @@
 package org.example
 
-import org.example.examples.EnumerationExamples
-import org.example.examples.JSONandJSONBExamples
-import org.example.examples.TeamProjectsTable
-import org.example.examples.TeamsTable
+import org.example.examples.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -13,10 +10,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 val jsonExamples = JSONandJSONBExamples()
 val enumExamples = EnumerationExamples()
+val binaryExamples = BinaryExamples()
+val dateTimeExamples = DateTimeExamples()
 
 fun main() {
-    runMySQLExamples()
-//    runPostgreSQLExamples()
+//    runMySQLExamples()
+    runPostgreSQLExamples()
 //    runH2Examples()
 }
 
@@ -31,11 +30,18 @@ fun runMySQLExamples() {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(TeamsTable)
         SchemaUtils.create(TeamProjectsTable)
+        SchemaUtils.create(DateTimeExamples.Events)
         jsonExamples.example()
         jsonExamples.useExtract()
         jsonExamples.useContains()
         jsonExamples.useContainsWithPath()
         jsonArraysExamples()
+        binaryExamples.basicUsage()
+        binaryExamples.parameterBinding()
+        dateTimeExamples.dateExample()
+        dateTimeExamples.timeExample()
+        dateTimeExamples.datetimeExample()
+        dateTimeExamples.timestampExample()
     }
 }
 
@@ -49,11 +55,14 @@ fun runH2Examples() {
     transaction(h2Db) {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(TeamsTable)
+        SchemaUtils.create(DateTimeExamples.Events)
         jsonExamples.example()
-        jsonExamples.useExtract()
-        jsonExamples.useExists()
         enumExamples.createTableWithExistingEnumColumn()
         enumExamples.insertEnumIntoTableWithExistingEnumColumn()
+        dateTimeExamples.dateExample()
+        dateTimeExamples.timeExample()
+        dateTimeExamples.datetimeExample()
+        dateTimeExamples.timestampExample()
     }
 }
 
@@ -67,7 +76,16 @@ fun runPostgreSQLExamples() {
 
     transaction(postgreSQL) {
         addLogger(StdOutSqlLogger)
+        SchemaUtils.create(TeamsTable)
+        SchemaUtils.create(TeamProjectsTable)
+        SchemaUtils.create(DateTimeExamples.Events)
         enumExamples.createTableWithEnumColumn()
+        binaryExamples.basicUsage()
+        binaryExamples.parameterBinding()
+        dateTimeExamples.dateExample()
+        dateTimeExamples.timeExample()
+        dateTimeExamples.datetimeExample()
+        dateTimeExamples.timestampExample()
     }
 }
 

@@ -26,7 +26,7 @@
             object StarWarsFilms : Table() {}
         </code-block>
         <p>
-            Exposed supports a variety of <a href="Basic-data-types.topic">column types</a>, including <code>integer</code>,
+            Exposed supports a variety of <a href="Numeric-Boolean-String-Types.topic">column types</a>, including <code>integer</code>,
             <code>varchar</code>,
             <code>bool</code>, and more. Each column is defined by calling the appropriate
             method on the <code>Table</code> object.

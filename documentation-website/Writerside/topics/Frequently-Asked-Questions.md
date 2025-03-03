@@ -10,7 +10,7 @@ A: Yes. See [Transactions](Transactions.md#working-with-multiple-databases)
 
 ### Q: Is `Array` column type supported?
 
-A: Yes. See [Data Types](Arrays.topic).
+A: Yes. See [Data Types](Array-types.topic).
 
 ### Q: Is `upsert` supported?
 
@@ -18,7 +18,7 @@ A: Yes. See [Insert Or Update](DSL-CRUD-operations.topic#insert-or-update)
 
 ### Q: Is `json` type supported?
 
-A: Yes. See [JSON](JSON-and-JSONB.topic)
+A: Yes. See [JSON](JSON-And-JSONB-types.topic)
 
 ### Q: How to get a plain SQL query which will be executed?
 

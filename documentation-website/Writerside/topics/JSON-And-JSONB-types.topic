@@ -3,22 +3,16 @@
         SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
-       title="JSON and JSONB" id="JSON-and-JSONB">
+       title="JSON and JSONB" id="JSON-And-JSONB-types">
     <show-structure for="chapter" depth="2" />
     <tldr>
         <p>
-            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-json:%exposed_version%</code>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-json</code>
         </p>
     </tldr>
     <p>
-        The <code>exposed-json</code> extension provides the additional <code>json</code> and <code>jsonb</code>
-        types.
-    </p>
-
-    <p>
         Exposed works together with the JSON serialization/deserialization library of your choice by allowing column
-        definitions
-        that accept generic serializer and deserializer arguments through the
+        definitions that accept generic serializer and deserializer arguments through the
         <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/json.html">
             <code>json()</code>
         </a>
@@ -29,27 +23,56 @@
         functions.
     </p>
     <p>
-        The following example leverages
-        <a href="https://github.com/Kotlin/kotlinx.serialization">
-            <code>kotlinx.serialization</code>
-        </a>
-        to support
-        <code>@Serializable</code> classes. It uses a simpler form of <code>json()</code> that relies on the
-        library's <code>KSerializer</code> interface:</p>
-
-    <code-block lang="kotlin"
-                src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                include-symbol="Project,format,TeamsTable"
-    />
-    <p>
-        Here's how the same <code>Project</code> and <code>Teams</code> would be defined using <a
-        href="https://github.com/FasterXML/jackson">Jackson</a>
-        with the <code>jackson-module-kotlin</code> dependency and the full form of <code>json()</code>:
+        As databases store JSON values either in text or binary format, Exposed provides two types to
+        account for any potential differences, if they exist.
     </p>
-    <code-block lang="kotlin"
-                src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                include-symbol="Project,mapper,JacksonTeamsTable"
-    />
+    <chapter title="Basic usage" id="basic-usage">
+        <p>
+            The following example leverages
+            <a href="https://github.com/Kotlin/kotlinx.serialization">
+                <code>kotlinx.serialization</code>
+            </a>
+            to support
+            <code>@Serializable</code> classes. It uses a simpler form of <code>json()</code> that relies on the
+            library's <code>KSerializer</code> interface:</p>
+
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                    include-symbol="Project,format,TeamsTable"
+        />
+        <p>
+            Here's how the same <code>Project</code> and <code>Teams</code> would be defined using <a
+            href="https://github.com/FasterXML/jackson">Jackson</a>
+            with the <code>jackson-module-kotlin</code> dependency and the full form of <code>json()</code>:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                    include-symbol="Project,mapper,JacksonTeamsTable"
+        />
+    </chapter>
+    <chapter title="Supported types" id="supported-types">
+        <p>
+            The <code>exposed-json</code> extension provides the following additional types:
+        </p>
+        <deflist type="medium">
+            <def id="json-type">
+                <title><code>json</code></title>
+                <p>Maps to database <code>JSON</code>. Used for storing JSON data in text format.</p>
+                <list>
+                    <li>SQLite: Maps to <code>TEXT</code></li>
+                </list>
+            </def>
+            <def id="jsonb-type">
+                <title><code>jsonb</code></title>
+                <p>Maps to database <code>JSONB</code>. Used for storing JSON data in binary format (supported by
+                    PostgreSQL).</p>
+                <list>
+                    <li>SQLite: Not supported.</li>
+                    <li>MySQL and Oracle: Maps to <code>JSON</code></li>
+                </list>
+            </def>
+        </deflist>
+    </chapter>
     <chapter title="JSON functions" id="json-functions">
 
         <chapter title="Extract data">
@@ -144,45 +167,5 @@
                     src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
                     include-lines="109-110"
         />
-    </chapter>
-    <chapter title="Limitations" id="json-jsonb-limitations">
-        Databases store JSON values either in text or binary format, so Exposed provides two types to account for any
-        potential
-        differences, if they exist, for example:
-        <table>
-            <tr>
-                <td>Database</td>
-                <td><code>json()</code></td>
-                <td><code>jsonb()</code></td>
-            </tr>
-            <tr>
-                <td>PostgreSQL</td>
-                <td>JSON</td>
-                <td>JSONB</td>
-            </tr>
-            <tr>
-                <td>SQLite</td>
-                <td>TEXT</td>
-                <td>Throws an error.</td>
-            </tr>
-            <tr>
-                <td>MySQL</td>
-                <td>JSON</td>
-                <td>JSON</td>
-            </tr>
-            <tr>
-                <td>Oracle</td>
-                <td>JSON</td>
-                <td>JSON</td>
-            </tr>
-        </table>
-        <p>
-            As SQLite does not have a native JSON type, the <code>json()</code> function maps to <code>TEXT</code>,
-            while <code>jsonb()</code> throws an error.
-            In MySQL the JSON type only supports binary format, so <code>json()</code> and <code>jsonb()</code>
-            both map to JSON.
-            Exposed does not currently support the JSON binary format of Oracle 21c; only text format
-            <code>json()</code> can be used.
-        </p>
     </chapter>
 </topic>

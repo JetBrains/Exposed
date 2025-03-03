@@ -9,7 +9,7 @@
         <snippet id="dsl-core-table-class">
             In Exposed, the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/index.html"><code>Table</code></a>
             class is the core abstraction for defining database tables.
-            This class provides methods to define various <a href="Basic-data-types.topic">column types</a>,
+            This class provides methods to define various <a href="Numeric-Boolean-String-Types.topic">column types</a>,
             <a href="Working-with-Tables.topic" anchor="constraints">constraints</a>, and other table-specific properties.
         </snippet>
         <p>

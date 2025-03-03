@@ -5,12 +5,12 @@
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="Custom data types" id="Custom-data-types">
     <p>
-        If a database-specific data type is not immediately supported by Exposed, any existing and open column type
-        class can be extended, or a custom
+        If a database-specific data type is not supported by Exposed, you can extend any existing and open column type
+        or implement a custom
         <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-column-type/index.html">
             <code>ColumnType</code>
         </a>
-        class can be implemented to achieve the same functionality.
+        class to achieve the same functionality.
     </p>
     <p>The following examples describe different ways to customize a column type, register a column with the custom
         type,

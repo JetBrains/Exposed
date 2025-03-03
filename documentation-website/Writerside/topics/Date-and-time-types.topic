@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Date and time" id="Date-and-time-types">
+    <show-structure for="chapter" depth="2" />
+    <tldr>
+        <p>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-kotlin-datetime</code>
+        </p>
+    </tldr>
+
+    <p>
+        Exposed provides comprehensive support for date and time operations through the
+        <code>exposed-kotlin-datetime</code> module, which integrates with the <code>kotlinx.datetime</code>
+        library. This ensures type-safe and efficient handling of temporal data in your database operations.
+    </p>
+
+    <chapter title="Basic usage" id="basic-usage">
+        <p>Here's a simple example of using different date and time types in a table definition:</p>
+        <code-block lang="kotlin">
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDateTime
+import org.jetbrains.exposed.sql.kotlin.datetime.date
+import org.jetbrains.exposed.sql.kotlin.datetime.datetime
+import org.jetbrains.exposed.sql.kotlin.datetime.time
+import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
+
+object Events : Table() {
+    val id = integer("id").autoIncrement()
+    val name = varchar("name", 50)
+    val startDate = date("start_date")
+    val startTime = time("start_time")
+    val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
+    val updatedAt = timestamp("updated_at")
+
+    override val primaryKey = PrimaryKey(id)
+}</code-block>
+    </chapter>
+
+    <chapter title="Supported types" id="supported-types">
+        <p>
+            The <code>exposed-kotlin-datetime</code> extension provides the following additional types:
+        </p>
+        <deflist type="medium">
+            <def id="date-type">
+                <title><code>date</code></title>
+                <p>Maps to database <code>DATE</code>. Used for storing date values without time component.</p>
+                <code-block lang="kotlin">
+val birthDate = date("birth_date")
+// Usage example
+Events.insert {
+    it[birthDate] = LocalDate(1990, 1, 1)
+}</code-block>
+            </def>
+            <def id="datetime-type">
+                <title><code>datetime</code></title>
+                <p>Maps to database <code>DATETIME</code>. Used for storing both date and time values.</p>
+                <code-block lang="kotlin">
+val createdAt = datetime("created_at")
+    .defaultExpression(CurrentDateTime) // Automatically set current date/time
+// Usage example
+Events.insert {
+    it[createdAt] = Clock.System.now()
+        .toLocalDateTime(TimeZone.UTC)
+}</code-block>
+            </def>
+            <def id="time-type">
+                <title><code>time</code></title>
+                <p>Maps to database <code>TIME</code>. Used for storing time values without date component.</p>
+                <code-block lang="kotlin">
+val startTime = time("start_time")
+// Usage example
+Events.insert {
+    it[startTime] = LocalTime(9, 0) // 09:00
+}</code-block>
+            </def>
+            <def id="timestamp-type">
+                <title><code>timestamp</code></title>
+                <p>Maps to database <code>TIMESTAMP</code>. Used for storing both date and time values with timezone information.</p>
+                <code-block lang="kotlin">
+val lastModified = timestamp("last_modified")
+// Usage example
+Events.insert {
+    it[lastModified] = Clock.System.now()
+}</code-block>
+            </def>
+        </deflist>
+    <note>
+        <p>Some types may differ for specific database dialects. Refer to your database documentation for exact type mappings.</p>
+    </note>
+    <tip>
+        <p>Some databases provide specific interval types (like PostgreSQL's <code>INTERVAL</code>) for storing time intervals.
+           Refer to your database documentation for supported time interval types.</p>
+    </tip>
+    </chapter>
+</topic>
