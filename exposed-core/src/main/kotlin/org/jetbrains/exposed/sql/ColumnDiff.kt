@@ -6,6 +6,8 @@ package org.jetbrains.exposed.sql
 data class ColumnDiff(
     /** Whether there is a mismatch between nullability of the existing column and the defined column. */
     val nullability: Boolean,
+    /** Whether there is a mismatch between type of the existing column and the defined column. */
+    val type: Boolean,
     /** Whether there is a mismatch between auto-increment status of the existing column and the defined column. */
     val autoInc: Boolean,
     /** Whether the default value of the existing column matches that of the defined column. */
@@ -22,6 +24,7 @@ data class ColumnDiff(
         /** A [ColumnDiff] with no differences. */
         val NoneChanged = ColumnDiff(
             nullability = false,
+            type = false,
             autoInc = false,
             defaults = false,
             caseSensitiveName = false,
@@ -31,6 +34,7 @@ data class ColumnDiff(
         /** A [ColumnDiff] with differences for every matched property. */
         val AllChanged = ColumnDiff(
             nullability = true,
+            type = true,
             autoInc = true,
             defaults = true,
             caseSensitiveName = true,
