@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.innerJoin

@@ -38,7 +38,7 @@ dependencies {
     testRuntimeOnly(libs.r2dbc.mariadb)
     testRuntimeOnly(libs.r2dbc.mysql)
     testRuntimeOnly(libs.r2dbc.oracle)
-    testRuntimeOnly(libs.r2dbc.postgresql)
+    implementation(libs.r2dbc.postgresql)
     testRuntimeOnly(libs.r2dbc.sqlserver)
 
     testCompileOnly(libs.postgre)

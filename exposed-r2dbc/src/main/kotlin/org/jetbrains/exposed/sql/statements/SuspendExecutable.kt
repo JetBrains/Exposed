@@ -102,10 +102,13 @@ internal suspend fun <T, S : Statement<T>> SuspendExecutable<T, S>.executeIn(
     } catch (e: SQLException) {
         throw ExposedSQLException(e, contexts, transaction)
     }
-    contexts.forEachIndexed { _, context ->
+    contexts.forEachIndexed { index, context ->
         statement.fillParameters(context.args)
         // REVIEW
-        if (contexts.size > 1 || isAlwaysBatch) statement.addBatch()
+
+        // We don't need to add batch for the last item in the batch and if there is only one item in the batch
+        val isNotLastItemInTheBatch = index != contexts.size - 1
+        if (isNotLastItemInTheBatch && (contexts.size > 1 || isAlwaysBatch)) statement.addBatch()
     }
     if (!transaction.db.supportsMultipleResultSets) {
         transaction.closeExecutedStatements()

@@ -19,14 +19,23 @@ import java.util.*
  * [wasGeneratedKeysRequested].
  */
 class R2dbcPreparedStatementImpl(
-    val statement: Statement,
+    statement: Statement,
     // the property below is only here for setTimeout() --> should this logic be in R2dbcConnectionImpl instead
     val connection: Connection,
     val wasGeneratedKeysRequested: Boolean
 ) : R2dbcPreparedStatementApi {
     private var resultRow: R2dbcResult? = null
 
-    override suspend fun getResultRow(): R2dbcResult? = resultRow
+    private val statement: Statement = statement
+
+    override suspend fun getResultRow(): R2dbcResult? {
+        if (resultRow == null) {
+            val resultPublisher = statement.execute()
+            resultRow = R2dbcResult(resultPublisher)
+        }
+
+        return resultRow
+    }
 
     override suspend fun setFetchSize(value: Int?) {
         value?.let { statement.fetchSize(value) }
@@ -46,8 +55,10 @@ class R2dbcPreparedStatementImpl(
     override suspend fun executeUpdate(): Int {
         val result = statement.execute()
         val r2dbcResult = R2dbcResult(result)
+        val toInt = r2dbcResult.result().rowsUpdated.awaitFirstOrNull()?.toInt()
+        // TODO()
         resultRow = r2dbcResult
-        return r2dbcResult.result().rowsUpdated.awaitFirstOrNull()?.toInt() ?: 0
+        return toInt ?: 0
     }
 
     override fun set(index: Int, value: Any) {

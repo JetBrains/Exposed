@@ -113,7 +113,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
 
             try {
                 val returnedValues: MutableMap<Column<*>, Any?> = columnIndexesInResultSet.associateTo(mutableMapOf()) {
-                    it.first to it.first.columnType.readObject(row, it.second)
+                    it.first to it.first.columnType.readObject(row, it.second + 1)
                 }
                 if (returnedValues.isEmpty() && firstAutoIncColumn != null) {
                     returnedValues[firstAutoIncColumn] = row.getObject(1)
