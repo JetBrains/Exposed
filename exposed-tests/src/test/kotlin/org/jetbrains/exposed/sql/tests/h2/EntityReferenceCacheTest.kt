@@ -120,6 +120,28 @@ class EntityReferenceCacheTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun `test optionalBackReferencedOn and optionalReferencedOn work when value is missing`() {
+        var y1: EntityTestsData.YEntity by Delegates.notNull()
+        var b1: EntityTestsData.BEntity by Delegates.notNull()
+        executeOnH2(EntityTestsData.XTable, EntityTestsData.YTable) {
+            transaction(db) {
+                y1 = EntityTestsData.YEntity.new {}
+                b1 = EntityTestsData.BEntity.new {}
+            }
+
+            transaction(dbWithCache) {
+                y1.refresh()
+                b1.refresh()
+                y1.load(EntityTestsData.YEntity::bOpt)
+                b1.load(EntityTestsData.BEntity::y)
+            }
+
+            assertNull(y1.bOpt)
+            assertNull(b1.y)
+        }
+    }
+
+    @Test
     fun `test referenceOn works out of transaction via with`() {
         var b1: EntityTests.Board by Delegates.notNull()
         var p1: EntityTests.Post by Delegates.notNull()
