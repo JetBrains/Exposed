@@ -10,11 +10,14 @@ import org.jetbrains.exposed.sql.transactions.transaction
     line numbers in the `code-block` element of the referenced file.
 */
 
+const val NAME_LENGTH = 255
+const val THUMBNAIL_LENGTH = 1024
+
 object Files : Table() {
     val id = integer("id").autoIncrement()
-    val name = varchar("name", 255)
+    val name = varchar("name", NAME_LENGTH)
     val content = blob("content")
-    val thumbnail = binary("thumbnail", 1024) // fixed-size binary data
+    val thumbnail = binary("thumbnail", THUMBNAIL_LENGTH) // fixed-size binary data
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -38,6 +41,7 @@ class BinaryExamples {
             val text2 = content.inputStream.bufferedReader().readText() // for large files
 
             val thumbnailBytes = file[Files.thumbnail] // returns ByteArray
+            println(text, text2, thumbnailBytes)
         }
     }
 

@@ -1,19 +1,24 @@
 package org.example.examples
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.json.json
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.json.contains
 import org.jetbrains.exposed.sql.json.exists
 import org.jetbrains.exposed.sql.json.extract
+import org.jetbrains.exposed.sql.json.json
 import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
+
+const val GROUP_ID_LENGTH = 32
+const val INT_ARRAY_ITEM_1 = 1
+const val INT_ARRAY_ITEM_2 = 2
+const val INT_ARRAY_ITEM_3 = 3
 
 /*
     Important: The `movie.delete` statement is referenced by line number in `JSON-and-JSONB.topic`.
@@ -27,7 +32,7 @@ data class Project(val name: String, val language: String, val active: Boolean)
 val format = Json { prettyPrint = true }
 
 object TeamsTable : Table("team") {
-    val groupId = varchar("group_id", 32)
+    val groupId = varchar("group_id", GROUP_ID_LENGTH)
     val project = json<Project>("project", format) // equivalent to json("project", format, Project.serializer())
 }
 
@@ -36,7 +41,7 @@ object TeamsTable : Table("team") {
 val mapper = jacksonObjectMapper()
 
 object JacksonTeamsTable : Table("team") {
-    val groupId = varchar("group_id", 32)
+    val groupId = varchar("group_id", GROUP_ID_LENGTH)
     val project = json("project", { mapper.writeValueAsString(it) }, { mapper.readValue<Project>(it) })
 }
 
@@ -78,6 +83,7 @@ class JSONandJSONBExamples {
     fun useExists() {
         val hasActiveStatus = TeamsTable.project.exists(".active")
         val activeProjects = TeamsTable.selectAll().where { hasActiveStatus }.count()
+        println(activeProjects)
     }
 
     // Depending on the database, filter paths can be provided instead, as well as optional arguments
@@ -86,7 +92,7 @@ class JSONandJSONBExamples {
         val mainId = "Main"
         val hasMainProject = TeamsTable.project.exists(".name ? (@ == \$main)", optional = "{\"main\":\"$mainId\"}")
         val mainProjects = TeamsTable.selectAll().where { hasMainProject }.map { it[TeamsTable.groupId] }
-
+        println(mainProjects)
     }
 
     fun useContains() {
@@ -97,7 +103,7 @@ class JSONandJSONBExamples {
 
     // Depending on the database, an optional path can be provided too
     // MySQL example
-    fun useContainsWithPath(){
+    fun useContainsWithPath() {
         val usesKotlinWithPath = TeamsTable.project.contains("\"Kotlin\"", ".language")
         val kotlinTeams = TeamsTable.selectAll().where { usesKotlinWithPath }.count()
         println(kotlinTeams)
@@ -111,7 +117,7 @@ class JSONandJSONBExamples {
      */
     fun insertJSONArrays() {
         TeamProjectsTable.insert {
-            it[memberIds] = intArrayOf(1, 2, 3)
+            it[memberIds] = intArrayOf(INT_ARRAY_ITEM_1, INT_ARRAY_ITEM_2, INT_ARRAY_ITEM_3)
             it[projects] = arrayOf(
                 Project("A", "Kotlin", true),
                 Project("B", "Java", true)

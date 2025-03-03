@@ -10,9 +10,18 @@ import org.jetbrains.exposed.sql.kotlin.datetime.time
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 class DateTimeExamples {
+    companion object {
+        private const val NAME_LENGTH = 50
+        private const val SAMPLE_YEAR = 1990
+        private const val SAMPLE_MONTH = 1
+        private const val SAMPLE_DAY = 1
+        private const val STANDUP_HOUR = 9
+        private const val STANDUP_MINUTE = 0
+    }
+
     object Events : Table() {
         val id = integer("id").autoIncrement()
-        val name = varchar("name", 50)
+        val name = varchar("name", NAME_LENGTH)
         val startDate = date("start_date")
         val startTime = time("start_time")
         val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
@@ -24,7 +33,7 @@ class DateTimeExamples {
     fun dateExample() {
         Events.insert {
             it[name] = "Birthday Party"
-            it[startDate] = LocalDate(1990, 1, 1)
+            it[startDate] = LocalDate(SAMPLE_YEAR, SAMPLE_MONTH, SAMPLE_DAY)
         }
     }
 
@@ -39,7 +48,7 @@ class DateTimeExamples {
     fun timeExample() {
         Events.insert {
             it[name] = "Daily Standup"
-            it[startTime] = LocalTime(9, 0) // 09:00
+            it[startTime] = LocalTime(STANDUP_HOUR, STANDUP_MINUTE) // 09:00
         }
     }
 
