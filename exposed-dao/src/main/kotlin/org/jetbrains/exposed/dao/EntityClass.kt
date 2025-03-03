@@ -389,14 +389,12 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         } finally {
             entityCache.finishEntityInitialization(prototype)
         }
-        if (entityId._value == null) {
-            val readValues = prototype._readValues!!
-            val writeValues = prototype.writeValues
-            table.columns.filter { col ->
-                col.defaultValueFun != null && col !in writeValues && readValues.hasValue(col)
-            }.forEach { col ->
-                writeValues[col as Column<Any?>] = readValues[col]
-            }
+        val readValues = prototype._readValues!!
+        val writeValues = prototype.writeValues
+        table.columns.filter { col ->
+            col.defaultValueFun != null && col !in writeValues && readValues.hasValue(col)
+        }.forEach { col ->
+            writeValues[col as Column<Any?>] = readValues[col]
         }
         entityCache.scheduleInsert(this, prototype)
         return prototype
