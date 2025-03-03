@@ -15,12 +15,14 @@ import org.postgresql.util.PGobject
 
 enum class Foo { BAR, BAZ }
 
+private const val ENUM_NAME_COLUMN_LENGTH = 10
+
 object BasicEnumTable : Table() {
     val enumOrdinal = enumeration("enumOrdinal", Foo::class)
 }
 
 object NamedEnumTable : Table() {
-    val enumName = enumerationByName("enumName", 10, Foo::class)
+    val enumName = enumerationByName("enumName", ENUM_NAME_COLUMN_LENGTH, Foo::class)
 }
 
 class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {

@@ -60,12 +60,12 @@
         <p>Here's how to use enumeration types in a table definition:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
-                    include-lines="16-25"
+                    include-lines="16-27"
         />
         <p>To store enumeration data:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
-                    include-lines="65-68,76-80"
+                    include-lines="67-70,78-82"
         />
     </chapter>
     <chapter title="Custom enumeration" id="custom-enum">
