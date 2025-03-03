@@ -21,7 +21,7 @@ const val INT_ARRAY_ITEM_2 = 2
 const val INT_ARRAY_ITEM_3 = 3
 
 /*
-    Important: The `movie.delete` statement is referenced by line number in `JSON-and-JSONB.topic`.
+    Important: The code in this file is referenced by line number in `JSON-and-JSONB.topic`.
     If you add, remove, or modify any lines prior to this one, ensure you update the corresponding
     line numbers in the `code-block` element of the referenced file.
 */

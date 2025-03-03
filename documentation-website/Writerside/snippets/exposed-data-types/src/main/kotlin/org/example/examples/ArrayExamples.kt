@@ -5,6 +5,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDate
 import java.util.*
 
+/*
+    Important: The code in this file is referenced by line number in `Array-types.topic`.
+    If you add, remove, or modify any lines prior to this one, ensure you update the corresponding
+    line numbers in the `code-block` element of the referenced file.
+*/
+
 const val MEMBER_NAME_LENGTH = 32
 const val DEFAULT_BUDGET = 9999.0
 const val MIN_BUDGET = 1000.0
@@ -25,7 +31,7 @@ class ArrayExamples {
         val budgets = array<Double>("budgets")
     }
 
-    // Advanced array table definition
+    // Array with explicit column type table definition
     object AdvancedArrays : Table("teams") {
         val memberNames = array<String>("member_names", VarCharColumnType(colLength = MEMBER_NAME_LENGTH))
         val deadlines = array<LocalDate>("deadlines", KotlinLocalDateColumnType()).nullable()

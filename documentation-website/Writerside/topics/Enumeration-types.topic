@@ -10,6 +10,13 @@
             <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
         </p>
     </tldr>
+
+    <p>
+        Exposed provides several ways to work with enum values in your database tables. You can store enum values either by their ordinal values
+        or by their names, and there's also support for database-specific enum types. This flexibility allows you to choose the most
+        appropriate storage method for your use case.
+    </p>
+
     <chapter title="Supported types" id="supported-types">
         <p>
             To create an enumeration column, use one of the following functions:
@@ -22,6 +29,10 @@
                     </a>
                 </title>
                 <p>Maps to database <code>INT</code>. Stores enum values using their ordinal values.</p>
+                <code-block lang="kotlin"
+                            src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
+                            include-symbol="enumOrdinal"
+                />
             </def>
             <def id="enumerationByName-type">
                 <title>
@@ -30,6 +41,10 @@
                     </a>
                 </title>
                 <p>Maps to database <code>VARCHAR</code>. Stores enum values using their names.</p>
+                <code-block lang="kotlin"
+                            src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
+                            include-symbol="enumName"
+                />
             </def>
             <def id="customEnumeration-type">
                 <title>
@@ -40,6 +55,18 @@
                 <p>Used for working with database-specific enum types. Supported by MySQL, PostgreSQL, and H2 databases.</p>
             </def>
         </deflist>
+    </chapter>
+    <chapter title="Basic usage" id="basic-usage">
+        <p>Here's how to use enumeration types in a table definition:</p>
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
+                    include-lines="16-25"
+        />
+        <p>To store enumeration data:</p>
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/EnumerationExamples.kt"
+                    include-lines="65-68,76-80"
+        />
     </chapter>
     <chapter title="Custom enumeration" id="custom-enum">
         <p>

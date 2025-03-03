@@ -17,7 +17,8 @@ object Files : Table() {
     val id = integer("id").autoIncrement()
     val name = varchar("name", NAME_LENGTH)
     val content = blob("content")
-    val thumbnail = binary("thumbnail", THUMBNAIL_LENGTH) // fixed-size binary data
+    val simpleData = binary("simple_data") // simple version without length
+    val thumbnail = binary("thumbnail", THUMBNAIL_LENGTH) // length-specified version
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -30,7 +31,8 @@ class BinaryExamples {
             Files.insert {
                 it[name] = "example.txt"
                 it[content] = ExposedBlob("Hello, World!".toByteArray())
-                it[thumbnail] = "thumbnail data".toByteArray()
+                it[simpleData] = "simple binary data".toByteArray() // using simple binary version
+                it[thumbnail] = "thumbnail data".toByteArray() // using length-specified version
             }
 
             // Read binary data
@@ -40,8 +42,10 @@ class BinaryExamples {
             // or
             val text2 = content.inputStream.bufferedReader().readText() // for large files
 
-            val thumbnailBytes = file[Files.thumbnail] // returns ByteArray
-            println(text, text2, thumbnailBytes)
+            // Read both types of binary data
+            val simpleBytes = file[Files.simpleData] // returns ByteArray from simple binary
+            val thumbnailBytes = file[Files.thumbnail] // returns ByteArray from length-specified binary
+            println(text, text2, simpleBytes, thumbnailBytes)
         }
     }
 

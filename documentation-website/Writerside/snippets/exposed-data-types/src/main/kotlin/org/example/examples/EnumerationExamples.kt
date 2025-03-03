@@ -7,7 +7,21 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.postgresql.util.PGobject
 
+/*
+    Important: The code in this file is referenced by line number in `Enumeration-types.topic`.
+    If you add, remove, or modify any lines prior to this one, ensure you update the corresponding
+    line numbers in the `code-block` element of the referenced file.
+*/
+
 enum class Foo { BAR, BAZ }
+
+object BasicEnumTable : Table() {
+    val enumOrdinal = enumeration("enumOrdinal", Foo::class)
+}
+
+object NamedEnumTable : Table() {
+    val enumName = enumerationByName("enumName", 10, Foo::class)
+}
 
 class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
     init {
@@ -43,6 +57,30 @@ object ExistingEnumTable : Table() {
 }
 
 class EnumerationExamples {
+    fun basicEnumExample() {
+        transaction {
+            // Create table with enumeration column (stores ordinal values)
+            SchemaUtils.create(BasicEnumTable)
+
+            // Insert enum value
+            BasicEnumTable.insert {
+                it[enumOrdinal] = Foo.BAR
+            }
+        }
+    }
+
+    fun namedEnumExample() {
+        transaction {
+            // Create table with enumerationByName column (stores enum names)
+            SchemaUtils.create(NamedEnumTable)
+
+            // Insert enum value
+            NamedEnumTable.insert {
+                it[enumName] = Foo.BAZ
+            }
+        }
+    }
+
     fun createTableWithExistingEnumColumn() {
         transaction {
             exec("""CREATE TABLE IF NOT EXISTS EXISTINGENUM ("enumColumn" ENUM('BAR', 'BAZ') NOT NULL)""")

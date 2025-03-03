@@ -18,53 +18,60 @@
 
     <chapter title="Supported types" id="supported-types">
         <p>
-            The <code>exposed-core</code> module supports two main ways to define array columns:
+            The <code>exposed-core</code> module supports two main ways to define array columns using the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/array.html">
+                <code>.array()</code>
+            </a>
+            function:
         </p>
         <list>
-            <li><a anchor="simple-array"/></li>
-            <li><a anchor="custom-array"/></li>
-        </list>
-            <chapter title="Simple array" id="simple-array">
+            <li>
                 <p>Basic array definition using type inference for supported types:</p>
                 <code-block lang="kotlin"
-                           src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                           include-symbol="ArrayExamples, SimpleArrays"
+                            src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
+                            include-symbol="memberIds"
                 />
-            </chapter>
-
-            <chapter title="Array with explicit column type" id="custom-array">
+            </li>
+            <li>
                 <p>Array definition with explicit column type for more control or custom types:</p>
                 <code-block lang="kotlin"
-                           src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                           include-symbol="ArrayExamples, AdvancedArrays"
+                            src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
+                            include-symbol="deadlines"
                 />
-                <note>
-                    <p>Using explicit column types prevents exceptions when Exposed cannot automatically determine the appropriate mapping.</p>
-                </note>
-            </chapter>
+                Using explicit column types prevents exceptions when Exposed cannot automatically determine the
+                appropriate mapping.
+            </li>
+        </list>
     </chapter>
 
     <chapter title="Basic usage" id="basic-usage">
+        <p>
+            Array columns store and retrieve data as Kotlin <code>List</code> objects, providing a natural way to
+            work with array data in your code.
+        </p>
         <p>Here's an example of defining and using array columns:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-symbol="ArrayExamples, SimpleArrays, basicUsage"
+                    include-symbol="SimpleArrays, AdvancedArrays"
         />
-        <p>Array columns store and retrieve data as Kotlin <code>List</code> objects, providing a natural way to work with array data in your code.</p>
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
+                    include-lines="58-62"
+        />
     </chapter>
     <chapter title="Multidimensional arrays" id="multidimensional-arrays">
         <p>PostgreSQL supports multidimensional arrays, which can be defined using the <code>dimensions</code> parameter:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-symbol="ArrayExamples, MultiDimArrays"
+                    include-symbol="MultiDimArrays"
         />
     </chapter>
 
     <chapter title="Array indexing" id="array-indexing">
-        <p>Access individual elements using index operators:</p>
+        <p>To access individual elements, use index operators:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-symbol="ArrayExamples, SimpleArrays, arrayIndexing"
+                    include-lines="69-72"
         />
         <note>
             <p>Both PostgreSQL and H2 use one-based indexing, so the first element is at index 1.</p>
@@ -73,12 +80,15 @@
 
     <chapter title="Array slicing" id="array-slicing">
         <p>
-            Use <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/slice.html"><code>.slice()</code></a>
+            Use
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/slice.html">
+                <code>.slice()</code>
+            </a>
             to extract subarrays:
         </p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-symbol="ArrayExamples, SimpleArrays, arraySlicing"
+                    include-lines="79"
         />
         <p>Both lower and upper bounds are optional when using PostgreSQL.</p>
     </chapter>
@@ -87,7 +97,7 @@
         <p>Use array columns with SQL's <code>ANY</code> and <code>ALL</code> operators:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-symbol="ArrayExamples, SimpleArrays, arrayOperators"
+                    include-lines="86-92"
         />
     </chapter>
 </topic>

@@ -42,14 +42,26 @@
                         <code>binary</code>
                     </a>
                 </title>
-                <p>Maps to database <code>VARBINARY</code> with specified length. Used for storing fixed-size binary data.</p>
-                <code-block lang="kotlin"
-                            src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
-                            include-symbol="thumbnail"
-                />
-                <note>
-                    <p>Ensure that the binary data doesn't exceed the specified length, or it will be truncated.</p>
-                </note>
+                <p>Maps to database <code>VARBINARY</code>. Available in two forms:</p>
+                <list type="bullet">
+                    <li>
+                        Simple version: Takes only the column name parameter and maps to <code>VARBINARY</code> with
+                        database-specific default length.
+                        <code-block lang="kotlin"
+                                    src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
+                                    include-symbol="simpleData"
+                        />
+                    </li>
+                    <li>
+                        Length-specified version: Takes both name and length parameters, maps to <code>VARBINARY</code>
+                        with specified maximum length. Used for storing fixed-size binary data.
+                        <code-block lang="kotlin"
+                                    src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
+                                    include-symbol="thumbnail"
+                        />
+                    </li>
+                </list>
+
             </def>
         </deflist>
     </chapter>
@@ -57,42 +69,23 @@
         <p>Here's a simple example of using binary types in a table definition:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
-                    include-lines="3-4,12-20"
+                    include-lines="3-4,12-24"
         />
         <p>To store and retrieve binary data:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
-                    include-lines="26-40"
+                    include-lines="30-47"
         />
     </chapter>
-
-    <chapter title="Advanced features" id="advanced-features">
-        <chapter title="Default values">
-            <p>You can specify default values for BLOB columns:</p>
-            <code-block lang="kotlin">
-            val content = blob("content").default(ExposedBlob("default content".toByteArray()))
-            </code-block>
-            <warning>
-                <p>MySQL (versions 5 and 8) does not support default values for BLOB columns.</p>
-            </warning>
-        </chapter>
-
-        <chapter title="PostgreSQL Object Identifiers">
-            <p>PostgreSQL supports storing large objects using Object Identifiers (OIDs):</p>
-            <code-block lang="kotlin">
-            val content = blob("content", useObjectIdentifier = true)
-            </code-block>
-            <note>
-                <p>This feature is specific to PostgreSQL and will throw <code>IllegalStateException</code> if used with other databases.</p>
-            </note>
-        </chapter>
-
-        <chapter title="Parameter binding">
-            <p>For more efficient handling of binary data in queries:</p>
-            <code-block lang="kotlin"
-                        src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
-                        include-lines="48-52"
-            />
-        </chapter>
+    <chapter title="PostgreSQL Object Identifiers" id="object-identifiers">
+        <p>PostgreSQL supports storing large objects using Object Identifiers (OIDs):</p>
+        <code-block lang="kotlin">
+        val content = blob("content", useObjectIdentifier = true)
+        </code-block>
+        <note>
+            <p>
+                This feature is specific to PostgreSQL and will throw <code>IllegalStateException</code> if used with
+                other databases.</p>
+        </note>
     </chapter>
 </topic>
