@@ -4,10 +4,7 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.Parameters
 import io.r2dbc.spi.R2dbcType
 import io.r2dbc.spi.Statement
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.R2dbcPreparedStatementApi
 import java.io.InputStream
@@ -22,14 +19,23 @@ import java.util.*
  * [wasGeneratedKeysRequested].
  */
 class R2dbcPreparedStatementImpl(
-    val statement: Statement,
+    statement: Statement,
     // the property below is only here for setTimeout() --> should this logic be in R2dbcConnectionImpl instead
     val connection: Connection,
     val wasGeneratedKeysRequested: Boolean
 ) : R2dbcPreparedStatementApi {
     private var resultRow: R2dbcResult? = null
 
-    override suspend fun getResultRow(): R2dbcResult? = resultRow
+    private val statement: Statement = statement
+
+    override suspend fun getResultRow(): R2dbcResult? {
+        if (resultRow == null) {
+            val resultPublisher = statement.execute()
+            resultRow = R2dbcResult(resultPublisher)
+        }
+
+        return resultRow
+    }
 
     override suspend fun setFetchSize(value: Int?) {
         value?.let { statement.fetchSize(value) }
@@ -40,19 +46,19 @@ class R2dbcPreparedStatementImpl(
     }
 
     override suspend fun addBatch() {
-        // unlike JDBC, a differentiation may need to be made between Statement and Batch objects
+        // unlike JDBC, differentiation may need to be made between Statement and Batch objects
         statement.add() // REVIEW potential preceding operation, bind()
     }
 
     override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute())
 
     override suspend fun executeUpdate(): Int {
-        resultRow = R2dbcResult(statement.execute())
-        return flow {
-            resultRow!!.result.collect {
-                emit(it.rowsUpdated.awaitFirstOrNull()?.toInt() ?: 0)
-            }
-        }.single()
+        val result = statement.execute()
+        val r2dbcResult = R2dbcResult(result)
+        val toInt = r2dbcResult.result().rowsUpdated.awaitFirstOrNull()?.toInt()
+        // TODO()
+        resultRow = r2dbcResult
+        return toInt ?: 0
     }
 
     override fun set(index: Int, value: Any) {
