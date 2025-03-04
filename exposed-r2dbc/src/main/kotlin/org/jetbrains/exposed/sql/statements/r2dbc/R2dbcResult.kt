@@ -24,7 +24,6 @@ suspend fun R2dbcResult(resultPublisher: Publisher<out Result>): R2dbcResult {
 class R2dbcResult internal constructor(
     val result: Result
 ) : ResultApi {
-    private var awaitedResult: Result? = null
 
     fun result(): Result {
         return result
