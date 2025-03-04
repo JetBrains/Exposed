@@ -667,7 +667,6 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcPreparedState
 	public fun fillParameters (Ljava/lang/Iterable;)I
 	public final fun getConnection ()Lio/r2dbc/spi/Connection;
 	public fun getResultRow (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun getStatement ()Lio/r2dbc/spi/Statement;
 	public final fun getWasGeneratedKeysRequested ()Z
 	public fun set (ILjava/lang/Object;)V
 	public fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
@@ -678,9 +677,9 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcPreparedState
 }
 
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcResult : org/jetbrains/exposed/sql/statements/api/ResultApi {
-	public fun <init> (Lorg/reactivestreams/Publisher;)V
 	public fun close ()V
-	public final fun result (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getResult ()Lio/r2dbc/spi/Result;
+	public final fun result ()Lio/r2dbc/spi/Result;
 	public fun rows ()Lkotlinx/coroutines/flow/Flow;
 	public fun toString ()Ljava/lang/String;
 }
@@ -693,6 +692,10 @@ public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcResult$R2dbcR
 	public fun getObject (Ljava/lang/String;)Ljava/lang/Object;
 	public fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
 	public final fun getRow ()Lio/r2dbc/spi/Row;
+}
+
+public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcResultKt {
+	public static final fun R2dbcResult (Lorg/reactivestreams/Publisher;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/sql/statements/r2dbc/R2dbcSavepoint : org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {
