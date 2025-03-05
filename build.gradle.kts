@@ -47,6 +47,7 @@ dependencies {
 
 repositories {
     maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+    maven("https://packages.jetbrains.team/maven/p/kt/dev")
     mavenLocal()
     mavenCentral()
 }
