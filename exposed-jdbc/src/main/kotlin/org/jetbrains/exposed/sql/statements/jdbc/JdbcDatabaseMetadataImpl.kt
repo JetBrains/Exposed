@@ -187,10 +187,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return SchemaMetadata(currentSchema!!, tablesInSchema)
     }
 
-    private fun ResultSet.extractColumns(): List<ColumnMetadata> {
+    private fun ResultSet.extractColumns(tableName: String): List<ColumnMetadata> {
+        val prefetchedColumnTypes = currentDialect.fetchAllColumnTypes(tableName)
         val result = mutableListOf<ColumnMetadata>()
         while (next()) {
-            result.add(asColumnMetadata())
+            result.add(asColumnMetadata(prefetchedColumnTypes))
         }
         return result
     }
@@ -204,7 +205,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             for (table in schemaTables) {
                 val catalog = if (!useSchemaInsteadOfDatabase || schema == currentSchema!!) databaseName else schema
                 val rs = metadata.getColumns(catalog, schema, table.nameInDatabaseCaseUnquoted(), "%")
-                val columns = rs.extractColumns()
+                val columns = rs.extractColumns(tableName = table.nameInDatabaseCase())
                 check(columns.isNotEmpty())
                 result[table] = columns
                 rs.close()
@@ -214,7 +215,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return result
     }
 
-    private fun ResultSet.asColumnMetadata(): ColumnMetadata {
+    private fun ResultSet.asColumnMetadata(prefetchedColumnTypes: Map<String, String> = emptyMap()): ColumnMetadata {
         val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
         val autoIncrement = getString("IS_AUTOINCREMENT") == "YES"
         val type = getInt("DATA_TYPE")
@@ -222,8 +223,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val nullable = getBoolean("NULLABLE")
         val size = getInt("COLUMN_SIZE").takeIf { it != 0 }
         val scale = getInt("DECIMAL_DIGITS").takeIf { it != 0 }
+        val sqlType = currentDialect.getColumnType(this, prefetchedColumnTypes)
 
-        return ColumnMetadata(name, type, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
+        return ColumnMetadata(name, type, sqlType, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
     }
 
     /**
