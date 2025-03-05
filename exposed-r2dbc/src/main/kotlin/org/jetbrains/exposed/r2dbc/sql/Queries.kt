@@ -5,40 +5,17 @@ package org.jetbrains.exposed.r2dbc.sql
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.AbstractQuery
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ColumnSet
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.FieldSet
-import org.jetbrains.exposed.sql.ISqlExpressionBuilder
-import org.jetbrains.exposed.sql.InternalApi
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.Query
-import org.jetbrains.exposed.sql.QueryAlias
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Slice
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.r2dbc.sql.statements.*
+import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
+import org.jetbrains.exposed.r2dbc.sql.vendors.currentDialectMetadata
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.currentDialectMetadata
-import kotlin.collections.Iterable
-import kotlin.collections.Iterator
-import kotlin.collections.List
-import kotlin.collections.emptyList
-import kotlin.collections.forEach
-import kotlin.collections.isNotEmpty
-import kotlin.collections.listOf
-import kotlin.collections.orEmpty
-import kotlin.collections.plus
-import kotlin.collections.plusAssign
 import kotlin.internal.LowPriorityInOverloadResolution
 import kotlin.sequences.Sequence
 
 /**
- * Creates a `SELECT` [org.jetbrains.exposed.sql.Query] by selecting all columns from this [org.jetbrains.exposed.sql.ColumnSet].
+ * Creates a `SELECT` [Query] by selecting all columns from this [org.jetbrains.exposed.sql.ColumnSet].
  *
  * The column set selected from may be either a [org.jetbrains.exposed.sql.Table] or a [org.jetbrains.exposed.sql.Join].
  *

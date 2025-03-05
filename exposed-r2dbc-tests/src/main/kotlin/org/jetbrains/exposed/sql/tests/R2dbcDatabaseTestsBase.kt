@@ -1,16 +1,16 @@
 package org.jetbrains.exposed.sql.tests
 
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
+import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
+import org.jetbrains.exposed.r2dbc.sql.transactions.suspendTransaction
+import org.jetbrains.exposed.r2dbc.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.Key
-import org.jetbrains.exposed.sql.R2dbcTransaction
 import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
-import org.jetbrains.exposed.sql.transactions.suspendTransaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Assume
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized

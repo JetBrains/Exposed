@@ -2,7 +2,7 @@ package org.jetbrains.exposed.sql.tests.shared
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
-import org.jetbrains.exposed.sql.R2dbcTransaction
+import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.sql.tests.currentDialectIfAvailableTest
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.currentTestDB

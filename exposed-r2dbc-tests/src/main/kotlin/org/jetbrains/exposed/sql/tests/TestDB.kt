@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.sql.tests
 
+import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
+import org.jetbrains.exposed.r2dbc.sql.transactions.suspendTransaction
 import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.R2dbcDatabase
 import org.jetbrains.exposed.sql.exposedLogger
-import org.jetbrains.exposed.sql.transactions.suspendTransaction
 import java.sql.Connection
 import java.util.*
 
