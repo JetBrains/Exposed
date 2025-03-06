@@ -2,7 +2,6 @@ package org.jetbrains.exposed.r2dbc.sql.statements
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult

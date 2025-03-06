@@ -88,7 +88,7 @@ sealed class SetOperation(
             count = true
             return transaction.exec(this) { rs ->
                 rs.mapRows { (it.getObject(1) as? Number)?.toLong() }.single()
-            }?: error("Count query didn't return any results")
+            } ?: error("Count query didn't return any results")
         } finally {
             count = false
         }

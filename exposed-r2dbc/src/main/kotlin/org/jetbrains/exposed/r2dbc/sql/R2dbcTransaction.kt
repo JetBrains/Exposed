@@ -3,11 +3,9 @@ package org.jetbrains.exposed.r2dbc.sql
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.mapNotNull
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.LongQueryException
 import org.jetbrains.exposed.r2dbc.sql.statements.SuspendExecutable
-import org.jetbrains.exposed.r2dbc.sql.statements.api.R2DBCRow
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.r2dbc.sql.statements.api.origin

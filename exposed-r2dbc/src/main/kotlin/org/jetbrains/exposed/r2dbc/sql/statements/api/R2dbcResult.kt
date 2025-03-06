@@ -6,6 +6,8 @@ import io.r2dbc.spi.RowMetadata
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.asPublisher
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.statements.api.ResultApi
@@ -37,6 +39,11 @@ class R2dbcResult internal constructor(
             }.collect { emit(it) }
         }
     }
+
+    fun <T : Any> mapSegments(block: (Result.Segment) -> Flow<T>): Flow<T> = result.flatMap<T> {
+        val result = block(it)
+        result.asPublisher()
+    }.asFlow()
 
     override fun toString(): String = "R2dbcResult(result = $result)"
 
