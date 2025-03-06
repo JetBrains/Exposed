@@ -2,7 +2,6 @@ package org.jetbrains.exposed.r2dbc.sql.statements
 
 import io.r2dbc.spi.RowMetadata
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
@@ -31,13 +30,14 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         return inserted to rs
     }
 
+    @OptIn(InternalApi::class)
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): Int {
-        val (inserted, rs) = execInsertFunction()
-        @OptIn(InternalApi::class)
-        return inserted.apply {
-            statement.insertedCount = this
-            statement.resultedValues = processResults(rs, this)
-        }
+        val (_, rs) = execInsertFunction()
+//        statement.insertedCount = this
+        val processResults = processResults(rs)
+        statement.resultedValues = processResults
+        statement.insertedCount = processResults.size
+        return processResults.size
     }
 
     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi = when {
@@ -67,8 +67,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-    private suspend fun processResults(rs: R2dbcResult?, inserted: Int): List<ResultRow> {
-        val allResultSetsValues = rs?.returnedValues(inserted)
+    private suspend fun processResults(rs: R2dbcResult?): List<ResultRow> {
+        val allResultSetsValues = rs?.returnedValues()
 
         @Suppress("UNCHECKED_CAST")
         return statement.arguments!!
@@ -99,9 +99,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     }
 
     @Suppress("NestedBlockDepth", "TooGenericExceptionCaught")
-    private suspend fun R2dbcResult.returnedValues(inserted: Int): ArrayList<MutableMap<Column<*>, Any?>> {
-        if (inserted == 0) return arrayListOf()
-
+    private suspend fun R2dbcResult.returnedValues(): ArrayList<MutableMap<Column<*>, Any?>> {
         val resultSetsValues = arrayListOf<MutableMap<Column<*>, Any?>>()
         var columnIndexesInResultSet: List<Pair<Column<*>, Int>>? = null
         val firstAutoIncColumn = autoIncColumns.firstOrNull()
@@ -141,13 +139,15 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
                     "ArrayIndexOutOfBoundsException on processResults. " +
                         "Table: ${this@InsertSuspendExecutable.statement.table.tableName}, " +
                         "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
-                        "inserted: $inserted, returnedColumnsString: $returnedColumnsString. " +
+                        "returnedColumnsString: $returnedColumnsString. " +
                         "Failed SQL: $preparedSql",
                     cause
                 )
                 throw cause
             }
         }.filterNotNull().toList(resultSetsValues)
+
+        val inserted = resultSetsValues.size
 
         if (firstAutoIncColumn != null || columnIndexesInResultSet?.isNotEmpty() == true) {
             if (inserted > 1 && firstAutoIncColumn != null && resultSetsValues.isNotEmpty() && !currentDialect.supportsMultipleGeneratedKeys) {
