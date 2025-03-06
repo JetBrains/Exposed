@@ -8,17 +8,19 @@ import org.jetbrains.exposed.sql.*
     line numbers in the `code-block` element of the referenced file.
 */
 
-const val NAME_LENGTH = 50
-const val RATING_TOTAL_DIGITS = 5
-const val RATING_TOTAL_DIGITS = 2
-
 class BasicTypesExamples {
+    companion object {
+        private const val NAME_LENGTH = 50
+        private const val RATING_TOTAL_DIGITS = 5
+        private const val RATING_DECIMAL_DIGITS = 2
+    }
+
     object Users : Table() {
         val id = integer("id").autoIncrement()
         val name = varchar("name", NAME_LENGTH)
         val bio = text("bio")
         val age = short("age")
-        val rating = decimal("rating", RATING_TOTAL_DIGITS, RATING_TOTAL_DIGITS) // 5 total digits, 2 after decimal point
+        val rating = decimal("rating", RATING_TOTAL_DIGITS, RATING_DECIMAL_DIGITS) // 5 total digits, 2 after decimal point
         val isActive = bool("is_active")
 
         override val primaryKey = PrimaryKey(id)

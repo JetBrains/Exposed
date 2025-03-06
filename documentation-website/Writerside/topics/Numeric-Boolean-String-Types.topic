@@ -23,7 +23,7 @@
         <p>Here's a simple example of using different data types in a table definition:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/BasicTypesExamples.kt"
-                    include-lines="3,10-14,16-25"
+                    include-lines="3,10-28"
         />
     </chapter>
     <chapter title="Numeric types" id="numeric-types">

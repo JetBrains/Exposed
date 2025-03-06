@@ -16,7 +16,7 @@ val dateTimeExamples = DateTimeExamples()
 fun main() {
 //    runMySQLExamples()
     runPostgreSQLExamples()
-//    runH2Examples()
+    runH2Examples()
 }
 
 fun runMySQLExamples() {
@@ -36,12 +36,12 @@ fun runMySQLExamples() {
         jsonExamples.useContains()
         jsonExamples.useContainsWithPath()
         jsonArraysExamples()
+//        dateTimeExamples.dateExample()
+//        dateTimeExamples.timeExample()
+//        dateTimeExamples.datetimeExample()
+//        dateTimeExamples.timestampExample()
         binaryExamples.basicUsage()
-        binaryExamples.parameterBinding()
-        dateTimeExamples.dateExample()
-        dateTimeExamples.timeExample()
-        dateTimeExamples.datetimeExample()
-        dateTimeExamples.timestampExample()
+//        binaryExamples.parameterBinding()
     }
 }
 
@@ -63,6 +63,8 @@ fun runH2Examples() {
         dateTimeExamples.timeExample()
         dateTimeExamples.datetimeExample()
         dateTimeExamples.timestampExample()
+        binaryExamples.basicUsage()
+        binaryExamples.parameterBinding()
     }
 }
 
@@ -79,7 +81,7 @@ fun runPostgreSQLExamples() {
         SchemaUtils.create(TeamsTable)
         SchemaUtils.create(TeamProjectsTable)
         SchemaUtils.create(DateTimeExamples.Events)
-        enumExamples.createTableWithEnumColumn()
+//        enumExamples.createTableWithEnumColumn()
         binaryExamples.basicUsage()
         binaryExamples.parameterBinding()
         dateTimeExamples.dateExample()

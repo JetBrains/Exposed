@@ -10,20 +10,22 @@ import org.jetbrains.exposed.sql.transactions.transaction
     line numbers in the `code-block` element of the referenced file.
 */
 
-const val NAME_LENGTH = 255
-const val THUMBNAIL_LENGTH = 1024
-
-object Files : Table() {
-    val id = integer("id").autoIncrement()
-    val name = varchar("name", NAME_LENGTH)
-    val content = blob("content")
-    val simpleData = binary("simple_data") // simple version without length
-    val thumbnail = binary("thumbnail", THUMBNAIL_LENGTH) // length-specified version
-
-    override val primaryKey = PrimaryKey(id)
-}
-
 class BinaryExamples {
+    companion object {
+        const val NAME_LENGTH = 255
+        const val THUMBNAIL_LENGTH = 1024
+    }
+
+    object Files : Table() {
+        val id = integer("id").autoIncrement()
+        val name = varchar("name", NAME_LENGTH)
+        val content = blob("content")
+        val simpleData = binary("simple_data") // simple version without length
+        val thumbnail = binary("thumbnail", THUMBNAIL_LENGTH) // length-specified version
+
+        override val primaryKey = PrimaryKey(id)
+    }
+
     fun basicUsage() {
         transaction {
             SchemaUtils.create(Files)
@@ -45,7 +47,9 @@ class BinaryExamples {
             // Read both types of binary data
             val simpleBytes = file[Files.simpleData] // returns ByteArray from simple binary
             val thumbnailBytes = file[Files.thumbnail] // returns ByteArray from length-specified binary
-            println(text, text2, simpleBytes, thumbnailBytes)
+            println("$text, $text2")
+            println(simpleBytes)
+            println(thumbnailBytes)
         }
     }
 
@@ -55,6 +59,7 @@ class BinaryExamples {
             // Efficient handling of binary data in queries
             Files.insert {
                 it[name] = "example-param.txt"
+                it[simpleData] = "simple binary data".toByteArray() // using simple binary version
                 it[content] = blobParam(ExposedBlob("Some data".toByteArray()))
                 it[thumbnail] = "thumbnail".toByteArray()
             }

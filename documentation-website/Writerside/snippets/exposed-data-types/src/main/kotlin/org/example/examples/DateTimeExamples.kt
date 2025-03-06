@@ -4,6 +4,7 @@ import kotlinx.datetime.*
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDateTime
+import org.jetbrains.exposed.sql.kotlin.datetime.CurrentTimestamp
 import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 import org.jetbrains.exposed.sql.kotlin.datetime.time
@@ -23,9 +24,9 @@ class DateTimeExamples {
         val id = integer("id").autoIncrement()
         val name = varchar("name", NAME_LENGTH)
         val startDate = date("start_date")
-        val startTime = time("start_time")
+        val startTime = time("start_time").nullable()
         val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
-        val updatedAt = timestamp("updated_at")
+        val updatedAt = timestamp("updated_at").defaultExpression(CurrentTimestamp)
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -40,6 +41,7 @@ class DateTimeExamples {
     fun datetimeExample() {
         Events.insert {
             it[name] = "Team Meeting"
+            it[startDate] = LocalDate(SAMPLE_YEAR, SAMPLE_MONTH, SAMPLE_DAY)
             it[createdAt] = Clock.System.now()
                 .toLocalDateTime(TimeZone.UTC)
         }
@@ -48,6 +50,7 @@ class DateTimeExamples {
     fun timeExample() {
         Events.insert {
             it[name] = "Daily Standup"
+            it[startDate] = LocalDate(SAMPLE_YEAR, SAMPLE_MONTH, SAMPLE_DAY)
             it[startTime] = LocalTime(STANDUP_HOUR, STANDUP_MINUTE) // 09:00
         }
     }
@@ -55,6 +58,7 @@ class DateTimeExamples {
     fun timestampExample() {
         Events.insert {
             it[name] = "Project Deadline"
+            it[startDate] = LocalDate(SAMPLE_YEAR, SAMPLE_MONTH, SAMPLE_DAY)
             it[updatedAt] = Clock.System.now()
         }
     }

@@ -3,6 +3,19 @@
 A Gradle application that shows what data types are available in Exposed and how they are used.
 The files are referenced in the Schema's Data types topics.
 
+## Configure
+
+Navigate to the `App.kt` file and ensure that the Database connection credentials match your setup. For example:
+
+```Kotlin
+    val postgreSQL = Database.connect(
+        "jdbc:postgresql://localhost:5432/postgres",
+        driver = "org.postgresql.Driver",
+        user = "user",
+        password = "password"
+    )
+```
+
 ## Build
 
 To build the application, in a terminal window navigate to the `snippets` folder and run the following command:

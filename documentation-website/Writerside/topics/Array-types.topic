@@ -56,7 +56,7 @@
         />
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-lines="58-62"
+                    include-lines="59-63"
         />
     </chapter>
     <chapter title="Multidimensional arrays" id="multidimensional-arrays">
@@ -71,7 +71,7 @@
         <p>To access individual elements, use index operators:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-lines="69-72"
+                    include-lines="70-73"
         />
         <note>
             <p>Both PostgreSQL and H2 use one-based indexing, so the first element is at index 1.</p>
@@ -88,7 +88,7 @@
         </p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-lines="79"
+                    include-lines="80"
         />
         <p>Both lower and upper bounds are optional when using PostgreSQL.</p>
     </chapter>
@@ -97,7 +97,7 @@
         <p>Use array columns with SQL's <code>ANY</code> and <code>ALL</code> operators:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
-                    include-lines="86-92"
+                    include-lines="87-93"
         />
     </chapter>
 </topic>
