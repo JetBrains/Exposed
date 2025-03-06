@@ -730,9 +730,9 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcResult : org/je
 	public fun getObject (Ljava/lang/String;)Ljava/lang/Object;
 	public fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
 	public final fun getResult ()Ljava/sql/ResultSet;
+	public fun mapRows (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
 	public final fun next ()Z
 	public final fun releaseResult ()V
-	public fun rows ()Lkotlinx/coroutines/flow/Flow;
 	public fun toString ()Ljava/lang/String;
 }
 

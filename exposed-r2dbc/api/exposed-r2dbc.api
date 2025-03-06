@@ -583,6 +583,28 @@ public class org/jetbrains/exposed/r2dbc/sql/statements/UpsertSuspendExecutable 
 	public fun prepared (Lorg/jetbrains/exposed/r2dbc/sql/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2DBCRow : org/jetbrains/exposed/sql/statements/api/RowApi {
+	public static final synthetic fun box-impl (Lio/r2dbc/spi/Row;)Lorg/jetbrains/exposed/r2dbc/sql/statements/api/R2DBCRow;
+	public static fun constructor-impl (Lio/r2dbc/spi/Row;)Lio/r2dbc/spi/Row;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Lio/r2dbc/spi/Row;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Lio/r2dbc/spi/Row;Lio/r2dbc/spi/Row;)Z
+	public fun getObject (I)Ljava/lang/Object;
+	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
+	public fun getObject (Ljava/lang/String;)Ljava/lang/Object;
+	public fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+	public static fun getObject-impl (Lio/r2dbc/spi/Row;I)Ljava/lang/Object;
+	public static fun getObject-impl (Lio/r2dbc/spi/Row;ILjava/lang/Class;)Ljava/lang/Object;
+	public static fun getObject-impl (Lio/r2dbc/spi/Row;Ljava/lang/String;)Ljava/lang/Object;
+	public static fun getObject-impl (Lio/r2dbc/spi/Row;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+	public final fun getRow ()Lio/r2dbc/spi/Row;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Lio/r2dbc/spi/Row;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Lio/r2dbc/spi/Row;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Lio/r2dbc/spi/Row;
+}
+
 public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcDatabaseMetadataImpl : org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcExposedDatabaseMetadata {
 	public static final field Companion Lorg/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcDatabaseMetadataImpl$Companion;
 	public fun <init> (Ljava/lang/String;Lio/r2dbc/spi/Connection;Ljava/lang/String;Lorg/jetbrains/exposed/r2dbc/sql/R2dbcScope;)V
@@ -683,22 +705,16 @@ public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcPreparedS
 
 public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcResult : org/jetbrains/exposed/sql/statements/api/ResultApi {
 	public fun close ()V
-	public fun rows ()Lkotlinx/coroutines/flow/Flow;
+	public fun mapRows (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+	public final fun mapSegments (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
 	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcResult$R2dbcRecord : org/jetbrains/exposed/sql/statements/api/RowApi {
-	public fun <init> (Lio/r2dbc/spi/Row;)V
-	public final fun getMetadata ()Lio/r2dbc/spi/RowMetadata;
-	public fun getObject (I)Ljava/lang/Object;
-	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
-	public fun getObject (Ljava/lang/String;)Ljava/lang/Object;
-	public fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
-	public final fun getRow ()Lio/r2dbc/spi/Row;
 }
 
 public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcResultKt {
 	public static final fun R2dbcResult (Lorg/reactivestreams/Publisher;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun getMetadata (Lorg/jetbrains/exposed/sql/statements/api/RowApi;)Lio/r2dbc/spi/RowMetadata;
+	public static final fun getOrigin (Lorg/jetbrains/exposed/sql/statements/api/RowApi;)Lio/r2dbc/spi/Row;
+	public static final fun rowsCount (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcSavepoint : org/jetbrains/exposed/sql/statements/api/ExposedSavepoint {

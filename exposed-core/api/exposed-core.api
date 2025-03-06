@@ -3328,7 +3328,7 @@ public final class org/jetbrains/exposed/sql/statements/api/PreparedStatementApi
 }
 
 public abstract interface class org/jetbrains/exposed/sql/statements/api/ResultApi : java/lang/AutoCloseable {
-	public abstract fun rows ()Lkotlinx/coroutines/flow/Flow;
+	public abstract fun mapRows (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
 }
 
 public abstract interface class org/jetbrains/exposed/sql/statements/api/RowApi {
