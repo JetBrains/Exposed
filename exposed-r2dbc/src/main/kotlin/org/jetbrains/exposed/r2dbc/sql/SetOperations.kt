@@ -7,6 +7,7 @@ import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.r2dbc.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
+import org.jetbrains.exposed.r2dbc.sql.statements.api.rowsCount
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.AbstractQuery
 import org.jetbrains.exposed.sql.Column
@@ -86,8 +87,8 @@ sealed class SetOperation(
         try {
             count = true
             return transaction.exec(this) { rs ->
-                (rs.rows().single().getObject(1) as? Number)?.toLong()
-            } ?: error("Count query didn't return any results")
+                rs.mapRows { (it.getObject(1) as? Number)?.toLong() }.single()
+            }?: error("Count query didn't return any results")
         } finally {
             count = false
         }
@@ -99,7 +100,7 @@ sealed class SetOperation(
         try {
             limit = 1
             val rs = transaction.exec(this)!!
-            return rs.rows().count() == 0
+            return rs.rowsCount() == 0
         } finally {
             limit = oldLimit
         }
@@ -168,11 +169,11 @@ sealed class SetOperation(
         val tx = TransactionManager.current()
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
-        rs.rows().collect { row ->
+        rs.mapRows { row ->
             val value = ResultRow.Companion.create(row, fieldIndex)
             trackResultSet(tx)
-            collector.emit(value)
-        }
+            value
+        }.collect(collector)
     }
 
     companion object {

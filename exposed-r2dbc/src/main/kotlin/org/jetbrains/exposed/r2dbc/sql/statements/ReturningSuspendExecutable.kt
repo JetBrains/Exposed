@@ -19,9 +19,7 @@ open class ReturningSuspendExecutable(
     override suspend fun collect(collector: FlowCollector<ResultRow>) {
         val fieldIndex = statement.returningExpressions.withIndex()
             .associateBy({ it.value }, { it.index })
-        val rs = TransactionManager.current().exec(this)!! as R2dbcResult
-        rs.use {
-            collector.emit(ResultRow.create(it.rows().single(), fieldIndex))
-        }
+        val rs = TransactionManager.current().exec(this)!!
+        rs.mapRows { ResultRow.create(it, fieldIndex) }.collect(collector)
     }
 }

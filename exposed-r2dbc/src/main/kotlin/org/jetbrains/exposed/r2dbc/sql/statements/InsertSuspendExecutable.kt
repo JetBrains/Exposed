@@ -1,11 +1,13 @@
 package org.jetbrains.exposed.r2dbc.sql.statements
 
 import io.r2dbc.spi.RowMetadata
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
+import org.jetbrains.exposed.r2dbc.sql.statements.api.metadata
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.r2dbc.sql.vendors.inProperCase
 import org.jetbrains.exposed.sql.*
@@ -104,13 +106,13 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         var columnIndexesInResultSet: List<Pair<Column<*>, Int>>? = null
         val firstAutoIncColumn = autoIncColumns.firstOrNull()
 
-        rows().mapNotNull { row ->
+        mapRows<MutableMap<Column<*>, Any?>?> { row ->
             if (columnIndexesInResultSet == null) {
                 columnIndexesInResultSet = row.metadata.returnedColumns()
             }
 
             if (firstAutoIncColumn == null && !columnIndexesInResultSet.isNotEmpty()) {
-                return@mapNotNull null
+                return@mapRows null
             }
 
             try {
@@ -145,7 +147,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
                 )
                 throw cause
             }
-        }.toList(resultSetsValues)
+        }.filterNotNull().toList(resultSetsValues)
 
         if (firstAutoIncColumn != null || columnIndexesInResultSet?.isNotEmpty() == true) {
             if (inserted > 1 && firstAutoIncColumn != null && resultSetsValues.isNotEmpty() && !currentDialect.supportsMultipleGeneratedKeys) {

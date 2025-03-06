@@ -1,31 +1,14 @@
 package org.jetbrains.exposed.r2dbc.sql
 
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.count
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.r2dbc.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
+import org.jetbrains.exposed.r2dbc.sql.statements.api.rowsCount
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.AbstractQuery
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ColumnSet
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.ExpressionWithColumnType
-import org.jetbrains.exposed.sql.FieldSet
-import org.jetbrains.exposed.sql.IExpressionAlias
-import org.jetbrains.exposed.sql.InternalApi
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.exposedLogger
-import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ResultApi
-import org.jetbrains.exposed.sql.targetTables
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
@@ -266,9 +249,8 @@ open class Query(
             try {
                 count = true
                 val rs = transaction.exec(this) as R2dbcResult
-                rs.rows().map {
-                    (it.getObject(1) as? Number)?.toLong()
-                }.single() ?: error("The query did not return a single count result. Please check the SQL logs.")
+                rs.mapRows { (it.getObject(1) as? Number)?.toLong() }.single()
+                    ?: error("The query did not return a single count result. Please check the SQL logs.")
             } finally {
                 count = false
             }
@@ -285,7 +267,7 @@ open class Query(
         try {
             if (!isForUpdate()) limit = 1
             val rs = transaction.exec(this) as R2dbcResult
-            return rs.rows().count() == 0
+            return rs.rowsCount() == 0
         } finally {
             limit = oldLimit
         }
@@ -316,11 +298,11 @@ open class Query(
         val tx = TransactionManager.current()
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
-        rs.rows().collect {
+        rs.mapRows {
             val resultRow = ResultRow.Companion.create(it, fieldIndex)
             trackResultSet(tx)
-            collector.emit(resultRow)
-        }
+            resultRow
+        }.collect(collector)
     }
 
     companion object {

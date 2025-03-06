@@ -22,9 +22,8 @@ open class ExplainSuspendExecutable(
         val rs = TransactionManager.current().exec(this)!! as R2dbcResult
         val fieldIndex = mutableMapOf<String, Int>()
 
-        rs.rows().collect {
-            collector.emit(ExplainResultRow.Companion.create(it, fieldIndex))
-        }
+        rs.mapRows { ExplainResultRow.Companion.create(it, fieldIndex) }
+            .collect(collector)
     }
 }
 

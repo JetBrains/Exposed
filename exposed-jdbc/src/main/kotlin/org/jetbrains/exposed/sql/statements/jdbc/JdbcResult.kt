@@ -14,10 +14,16 @@ import java.sql.ResultSet
 class JdbcResult(
     val result: ResultSet
 ) : ResultApi, RowApi {
+    private var consumed = false
 
-    override fun rows(): Flow<RowApi> = flow {
-        while (next()) {
-            emit(this@JdbcResult)
+    override fun <T> mapRows(block: (RowApi) -> T): Flow<T> {
+        if (consumed) error("Result is already consumed")
+        consumed = true
+
+        return flow {
+            while (next()) {
+                emit(block(this@JdbcResult))
+            }
         }
     }
 

@@ -8,9 +8,13 @@ import org.jetbrains.exposed.r2dbc.sql.Query
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.selectAll
-import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.r2dbc.sql.statements.api.origin
+import org.jetbrains.exposed.sql.FieldSet
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.getBoolean
@@ -178,33 +182,28 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                 it[amount] = 999
             }
 
-            val result1 = (
-                tester
-                    .selectAll()
-                    .where { tester.amount greater 100 }
-                    .execute(this)
-                    ?.rows()
-                    ?.first() as R2dbcResult.R2dbcRecord
-                )
-                .row
+            tester
+                .selectAll()
+                .where { tester.amount greater 100 }
+                .execute(this)!!
+                .mapRows { row ->
+                    assertNotNull(row)
+                    assertEquals(999, row.origin.get(tester.amount.name))
+                    // On the JDBC test `false` expected here, but R2DBC returns `null`
+                    assertEquals(false, row.origin.getBoolean(tester.active.name))
+                }.single()
 
-            assertNotNull(result1)
-            assertEquals(999, result1.get(tester.amount.name))
-            // On the JDBC test `false` expected here, but R2DBC returns `null`
-            assertEquals(false, result1.getBoolean(tester.active.name))
-
-            val result2 = (
-                tester
-                    .selectImplicitAll()
-                    .where { tester.amount greater 100 }
-                    .execute(this)
-                    ?.rows()
-                    ?.first() as R2dbcResult.R2dbcRecord
-                ).row
-            assertNotNull(result2)
-            assertEquals(999, result2.get(tester.amount.name))
-            // R2DBC does not throw error here comparing to JDBC
-            expectException<SQLException> { result2.getBoolean(tester.active.name) }
+            tester
+                .selectImplicitAll()
+                .where { tester.amount greater 100 }
+                .execute(this)!!
+                .mapRows { row ->
+                    assertNotNull(row.origin)
+                    assertEquals(999, row.origin.get(tester.amount.name))
+                    // R2DBC does not throw error here comparing to JDBC
+                    expectException<SQLException> { row.origin.getBoolean(tester.active.name) }
+                }
+                .single()
         }
     }
 }

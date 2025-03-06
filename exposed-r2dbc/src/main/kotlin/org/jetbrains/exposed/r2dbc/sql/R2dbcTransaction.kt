@@ -7,8 +7,10 @@ import kotlinx.coroutines.flow.mapNotNull
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.LongQueryException
 import org.jetbrains.exposed.r2dbc.sql.statements.SuspendExecutable
+import org.jetbrains.exposed.r2dbc.sql.statements.api.R2DBCRow
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
+import org.jetbrains.exposed.r2dbc.sql.statements.api.origin
 import org.jetbrains.exposed.r2dbc.sql.statements.executeIn
 import org.jetbrains.exposed.r2dbc.sql.transactions.R2dbcTransactionInterface
 import org.jetbrains.exposed.r2dbc.sql.transactions.transactionManager
@@ -153,7 +155,7 @@ open class R2dbcTransaction(
                     }
                 } ?: return null
 
-                return result.rows().mapNotNull { transform(it.row) }
+                return result.mapRows { transform(it.origin) }
             }
 
             override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = stmt

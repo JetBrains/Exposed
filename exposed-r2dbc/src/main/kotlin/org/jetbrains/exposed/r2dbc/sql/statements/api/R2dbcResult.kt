@@ -4,6 +4,7 @@ import io.r2dbc.spi.Result
 import io.r2dbc.spi.Row
 import io.r2dbc.spi.RowMetadata
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.collect
@@ -26,13 +27,13 @@ class R2dbcResult internal constructor(
 ) : ResultApi {
     private var consumed = false
 
-    override fun rows(): Flow<R2dbcRecord> {
+    override fun <T> mapRows(block: (RowApi) -> T): Flow<T> {
         if (consumed) error("Result is already consumed")
         consumed = true
 
         return flow {
             result.map { row, rm ->
-                R2dbcRecord(row)
+                block(R2DBCRow(row))
             }.collect { emit(it) }
         }
     }
@@ -40,15 +41,21 @@ class R2dbcResult internal constructor(
     override fun toString(): String = "R2dbcResult(result = $result)"
 
     override fun close() = Unit
-
-    class R2dbcRecord(val row: Row) : RowApi {
-        val metadata: RowMetadata get() = row.metadata
-        override fun getObject(index: Int): Any? = row.get(index - 1)
-
-        override fun getObject(name: String): Any? = row.get(name)
-
-        override fun <T> getObject(index: Int, type: Class<T>): T? = row.get(index - 1, type)
-
-        override fun <T> getObject(name: String, type: Class<T>): T? = row.get(name, type)
-    }
 }
+
+@JvmInline
+value class R2DBCRow(val row: Row) : RowApi {
+    override fun getObject(index: Int): Any? = row.get(index - 1)
+
+    override fun getObject(name: String): Any? = row.get(name)
+
+    override fun <T> getObject(index: Int, type: Class<T>): T? = row.get(index - 1, type)
+
+    override fun <T> getObject(name: String, type: Class<T>): T? = row.get(name, type)
+}
+
+suspend fun ResultApi.rowsCount() = mapRows { }.count()
+
+val RowApi.origin: Row get() = (this as R2DBCRow).row
+
+val RowApi.metadata: RowMetadata get() = (this as R2DBCRow).row.metadata
