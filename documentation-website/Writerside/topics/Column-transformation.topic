@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Column transformation" id="Column-transformation">
+     <p>Column transformations allow to define custom transformations between database column types and application's
+            data types.
+            This can be particularly useful when you need to store data in one format but work with it in another format
+            within your application.
+     </p>
+    <p>Consider the following example, where we define a table to store meal times and transform these times into
+        meal types:</p>
+
+    <code-block lang="kotlin">
+        enum class Meal {
+            BREAKFAST,
+            LUNCH,
+            DINNER
+        }
+
+        object Meals : Table() {
+            val mealTime: Column&lt;Meal&gt; = time(&quot;meal_time&quot;)
+                .transform(
+                    wrap = {
+                        when {
+                            it.hour &lt; 10 -&gt; Meal.BREAKFAST
+                            it.hour &lt; 15 -&gt; Meal.LUNCH
+                            else -&gt; Meal.DINNER
+                        }
+                    },
+                    unwrap = {
+                        when (it) {
+                            Meal.BREAKFAST -&gt; LocalTime(8, 0)
+                            Meal.LUNCH -&gt; LocalTime(12, 0)
+                            Meal.DINNER -&gt; LocalTime(18, 0)
+                        }
+                    }
+                )
+        }
+    </code-block>
+    <p>
+        The
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/transform.html">
+            <code>.transform()</code>
+        </a>
+        function is used to apply custom transformations to the <code>mealTime</code>
+        column:
+    </p>
+    <list>
+        <li>The <code>wrap()</code> function transforms the stored <code>LocalTime</code> values into
+            <code>Meal</code> enums. It checks the hour of the stored time and returns the corresponding meal type.
+        </li>
+        <li>The <code>unwrap()</code> function transforms <code>Meal</code> enums back into <code>LocalTime</code>
+            values for storage in the database.
+        </li>
+    </list>
+    <p>Transformation could be also defined as an implementation of the
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-column-transformer/index.html">
+            <code>ColumnTransformer</code>
+        </a>
+        interface and reused across different tables:
+    </p>
+
+    <code-block lang="kotlin">
+        class MealTimeTransformer : ColumnTransformer&lt;LocalTime, Meal&gt; {
+            override fun wrap(value: LocalTime): Meal = when {
+                value.hour &lt; 10 -&gt; Meal.BREAKFAST
+                value.hour &lt; 15 -&gt; Meal.LUNCH
+                else -&gt; Meal.DINNER
+            }
+
+            override fun unwrap(value: Meal): LocalTime = when (value) {
+                Meal.BREAKFAST -&gt; LocalTime(8, 0)
+                Meal.LUNCH -&gt; LocalTime(12, 0)
+                Meal.DINNER -&gt; LocalTime(18, 0)
+            }
+        }
+
+        object Meals : Table() {
+            val mealTime: Column&lt;Meal&gt; = time(&quot;meal_time&quot;).transform(MealTimeTransformer())
+        }
+    </code-block>
+
+    <note>
+        Note that these transformations will occur with every access of the table column.
+        Therefore, to maintain performance efficiency, it is advisable to avoid heavy transformations
+        in this context.
+    </note>
+
+    <chapter title="Null transform" id="null-transform">
+        <p>
+            The
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/null-transform.html">
+                <code>.nullTransform()</code>
+            </a>
+            method applies a special transformation that allows a non-nullable database column
+            to accept and/or return values as <code>null</code> on the client side.
+        </p>
+
+        <p>
+            This transformation does not alter the column's definition in the database,
+            which will still be <code>NON NULL</code>. It enables reflecting non-null values
+            from the database as <code>null</code> in Kotlin (e.g., converting an empty string from a
+            non-nullable text column, empty lists, negative IDs, etc., to <code>null</code>).
+        </p>
+
+        <code-block lang="kotlin">
+        class MealTimeNullTransformer : ColumnTransformer&lt;LocalTime, Meal?&gt; {
+            override fun wrap(value: LocalTime): Meal? = when {
+                value.hour == 0 &amp;&amp; value.minute == 0 -&gt; null
+                value.hour &lt; 10 -&gt; Meal.BREAKFAST
+                value.hour &lt; 15 -&gt; Meal.LUNCH
+                else -&gt; Meal.DINNER
+            }
+
+            override fun unwrap(value: Meal?): LocalTime = when (value) {
+                Meal.BREAKFAST -&gt; LocalTime(8, 0)
+                Meal.LUNCH -&gt; LocalTime(12, 0)
+                Meal.DINNER -&gt; LocalTime(18, 0)
+                else -&gt; LocalTime(0, 0)
+            }
+        }
+
+        object Meals : Table() {
+            val mealTime: Column&lt;Meal?&gt; = time(&quot;meal_time&quot;).nullTransform(MealTimeNullTransformer())
+        }
+    </code-block>
+    </chapter>
+</topic>
