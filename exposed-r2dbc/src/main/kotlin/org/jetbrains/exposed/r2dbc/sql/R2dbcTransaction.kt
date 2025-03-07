@@ -2,6 +2,7 @@ package org.jetbrains.exposed.r2dbc.sql
 
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.emptyFlow
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.LongQueryException
@@ -114,7 +115,9 @@ open class R2dbcTransaction(
         @Language("sql") stmt: String,
         args: Iterable<Pair<IColumnType<*>, Any?>> = emptyList(),
         explicitStatementType: StatementType? = null
-    ) = exec(stmt, args, explicitStatementType) { }
+    ) {
+        exec(stmt, args, explicitStatementType) { }?.collect()
+    }
 
     /**
      * Executes the provided statement exactly, using the supplied [args] to set values to question mark

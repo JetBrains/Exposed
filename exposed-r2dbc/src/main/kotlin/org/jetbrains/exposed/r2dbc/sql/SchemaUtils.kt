@@ -7,14 +7,7 @@ import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils.withDataBaseLock
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.r2dbc.sql.vendors.currentDialectMetadata
-import org.jetbrains.exposed.sql.ForeignKeyConstraint
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.InternalApi
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtilityApi
-import org.jetbrains.exposed.sql.Sequence
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.autoIncColumnType
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 /** Utility functions that assist with creating, altering, and dropping database schema objects. */
