@@ -11,7 +11,6 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
-import kotlin.test.assertContentEquals
 
 class OrderByTests : DatabaseTestsBase() {
     @Test
@@ -190,7 +189,7 @@ class OrderByTests : DatabaseTestsBase() {
             }
             fun assertOrdered(expected: List<Int>, order: SortOrder) {
                 val ordered = NullableStrings.select(NullableStrings.id).orderBy(NullableStrings.name, order).map { it[NullableStrings.id] }
-                assertContentEquals(expected, ordered)
+                assertEqualLists(expected, ordered)
             }
             assertOrdered(listOf(4, 2, 1, 3), SortOrder.DESC_NULLS_LAST) // c, b, a, null
             assertOrdered(listOf(1, 2, 4, 3), SortOrder.ASC_NULLS_LAST) // a, b, c, null
