@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.sql.tests.shared.dml
 
-import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
@@ -230,46 +229,4 @@ class GroupByTests : DatabaseTestsBase() {
             }
         }
     }
-
-    @Test
-    fun testTest() {
-        val worker = object : IntIdTable("worker") {}
-
-        val workerStepExecution = object : IntIdTable("workerStepExecution") {
-            val worker = reference("worker", worker, ReferenceOption.CASCADE).index()
-        }
-
-        val workerInstanceTable = object : IntIdTable("workerInstanceTable") {
-            val worker = reference("worker", worker, ReferenceOption.CASCADE).uniqueIndex()
-        }
-
-        withTables(worker, workerStepExecution, workerInstanceTable) {
-            addLogger(StdOutSqlLogger)
-            val activeWorkers = workerStepExecution.id.count() // .alias("activeWorkersCount")
-
-            val alias = worker
-                .leftJoin(workerStepExecution)
-                .select(worker.id, activeWorkers)
-                .groupBy(worker.id)
-                .alias("activeWorkers")
-
-            workerInstanceTable
-                .join(otherTable = alias, joinType = JoinType.LEFT, onColumn = workerInstanceTable.worker, otherColumn = alias[worker.id])
-                .selectAll() // (workerInstanceTable.id, alias[activeWorkers])
-                .toList()
-        }
-    }
 }
-
-// SELECT workerinstancetable.id,
-//  workerinstancetable.worker,
-//  activeWorkers.id,
-//  COUNT(workerstepexecution.id)
-// FROM workerinstancetable
-//  LEFT JOIN (
-//      SELECT worker.id, COUNT(workerstepexecution.id)
-//      FROM worker LEFT JOIN workerstepexecution
-//      ON worker.id = workerstepexecution.worker
-//      GROUP BY worker.id
-//  ) activeWorkers
-//  ON workerinstancetable.worker = activeWorkers.id

@@ -6,6 +6,7 @@ import kotlinx.coroutines.delay
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
+import org.jetbrains.exposed.r2dbc.sql.mtc.MappedTransactionContext
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.SqlLogger
@@ -63,7 +64,9 @@ class TransactionManager(
         return transaction.apply { bindTransactionToThread(this) }
     }
 
-    override fun currentOrNull(): R2dbcTransaction? = threadLocal.get()
+    override fun currentOrNull(): R2dbcTransaction? {
+        return MappedTransactionContext.getTransactionOrNull()
+    }
 
     override fun bindTransactionToThread(transaction: Transaction?) {
         if (transaction != null) {
@@ -86,7 +89,9 @@ class TransactionManager(
 
             @Synchronized
             @OptIn(InternalApi::class)
-            set(value) { CoreTransactionManager.setDefaultDatabase(value) }
+            set(value) {
+                CoreTransactionManager.setDefaultDatabase(value)
+            }
 
         /** Associates the provided [database] with a specific [manager]. */
         @Synchronized
@@ -323,7 +328,12 @@ private suspend fun <T> withTransactionScope(
 
         val newContext = context ?: coroutineContext
 
-        return TransactionScope(tx, newContext + element).body()
+        return try {
+            TransactionScope(tx, newContext + element).body()
+        } finally {
+            // TODO Is it enough to clean the context? How to not forget to do that in new usages?
+            element.cleanCurrentTransaction()
+        }
     }
 
     val sameTransaction = currentScope?.holdsSameTransaction(currentTransaction) == true

@@ -416,6 +416,11 @@ public final class org/jetbrains/exposed/r2dbc/sql/UnionAll : org/jetbrains/expo
 	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/sql/AbstractQuery;
 }
 
+public final class org/jetbrains/exposed/r2dbc/sql/mtc/ThreadLocalMap : java/lang/InheritableThreadLocal {
+	public fun <init> ()V
+	public synthetic fun childValue (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
 public class org/jetbrains/exposed/r2dbc/sql/statements/BatchInsertSuspendExecutable : org/jetbrains/exposed/r2dbc/sql/statements/InsertSuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/sql/statements/BaseBatchInsertStatement;)V
 	public fun getStatement ()Lorg/jetbrains/exposed/sql/statements/BaseBatchInsertStatement;
