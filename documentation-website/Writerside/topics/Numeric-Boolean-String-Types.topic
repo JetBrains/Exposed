@@ -62,6 +62,9 @@
                     </a>
                 </title>
                 <p>Maps to database <code>FLOAT</code>. Used for storing approximate decimal numbers.</p>
+                <list>
+                    <li>PostgreSQL: Maps to <code>REAL</code></li>
+                </list>
             </def>
             <def id="decimal-type">
                 <title>
@@ -83,6 +86,11 @@
                     </a>
                 </title>
                 <p>Maps to database <code>BOOLEAN</code>. Used for storing true/false values.</p>
+                <p>Database-specific mappings:</p>
+                <list>
+                    <li>Oracle: Maps to <code>CHAR(1)</code></li>
+                    <li>SQLServer: Maps to <code>BIT</code></li>
+                </list>
             </def>
         </deflist>
     </chapter>

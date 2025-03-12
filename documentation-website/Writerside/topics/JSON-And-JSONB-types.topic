@@ -57,17 +57,21 @@
             <def id="json-type">
                 <title><code>json</code></title>
                 <p>Maps to database <code>JSON</code>. Used for storing JSON data in text format.</p>
+                <p>Database-specific mappings:</p>
                 <list>
                     <li>SQLite: Maps to <code>TEXT</code></li>
+                    <li>SQLServer: Maps to <code>NVARCHAR(MAX)</code></li>
+                    <li>Oracle: Maps to <code>VARCHAR2(4000)</code></li>
                 </list>
             </def>
             <def id="jsonb-type">
                 <title><code>jsonb</code></title>
                 <p>Maps to database <code>JSONB</code>. Used for storing JSON data in binary format (supported by
                     PostgreSQL).</p>
+                <p>Database-specific mappings:</p>
                 <list>
                     <li>MySQL and H2: Maps to <code>JSON</code></li>
-                    <li>SQLite and Oracle: Not supported.</li>
+                    <li>SQLite and Oracle: Not supported</li>
                 </list>
             </def>
         </deflist>

@@ -32,7 +32,6 @@
                 <list type="bullet">
                     <li>PostgreSQL: Maps to <code>bytea</code></li>
                     <li>SQLServer: Maps to <code>VARBINARY(MAX)</code></li>
-                    <li>Other databases: Maps to <code>BLOB</code></li>
                 </list>
             </def>
 
@@ -51,17 +50,28 @@
                                     src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
                                     include-symbol="simpleData"
                         />
+                        <p>Database-specific mappings:</p>
+                        <list type="bullet">
+                            <li>PostgreSQL: Maps to <code>bytea</code></li>
+                            <li>SQLite: Maps to <code>BLOB</code></li>
+                            <li>SQLServer, MySQL, and Oracle: Not supported</li>
+                        </list>
                     </li>
                     <li>
-                        Length-specified version: Takes both name and length parameters, maps to <code>VARBINARY</code>
-                        with specified maximum length. Used for storing fixed-size binary data.
+                        Length-specified version: Takes both name and length parameters, maps to <code>VARBINARY(MAX)</code>
+                        where <code>MAX</code> is the specified maximum length. Used for storing fixed-size binary data.
                         <code-block lang="kotlin"
                                     src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
                                     include-symbol="thumbnail"
                         />
+                        <p>Database-specific mappings:</p>
+                        <list type="bullet">
+                            <li>PostgreSQL: Maps to <code>bytea</code></li>
+                            <li>Oracle: Maps to <code>RAW</code> if the provided length is lower than 2000, otherwise not
+                                supported.</li>
+                        </list>
                     </li>
                 </list>
-
             </def>
         </deflist>
     </chapter>
@@ -69,7 +79,11 @@
         <p>Here's a simple example of using binary types in a table definition:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
-                    include-lines="13-54,68"
+                    include-symbol="Files"
+        />
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
+                    include-lines="25-44,48"
         />
     </chapter>
     <chapter title="PostgreSQL Object Identifiers" id="object-identifiers">

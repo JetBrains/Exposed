@@ -9,19 +9,14 @@ import org.jetbrains.exposed.sql.transactions.transaction
     If you add, remove, or modify any lines prior to this one, ensure you update the corresponding
     line numbers in the `code-block` element of the referenced file.
 */
-
+@Suppress("MagicNumber")
 class BinaryExamples {
-    companion object {
-        const val NAME_LENGTH = 255
-        const val THUMBNAIL_LENGTH = 1024
-    }
-
     object Files : Table() {
         val id = integer("id").autoIncrement()
-        val name = varchar("name", NAME_LENGTH)
+        val name = varchar("name", 255)
         val content = blob("content")
         val simpleData = binary("simple_data") // simple version without length
-        val thumbnail = binary("thumbnail", THUMBNAIL_LENGTH) // length-specified version
+        val thumbnail = binary("thumbnail", 1024) // length-specified version
 
         override val primaryKey = PrimaryKey(id)
     }
