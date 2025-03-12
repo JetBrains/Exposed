@@ -2,6 +2,7 @@ package org.jetbrains.exposed.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.selectAll
 import org.jetbrains.exposed.sql.LikePattern
@@ -9,6 +10,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
+import kotlin.test.assertContentEquals
 
 class LikeTests : R2dbcDatabaseTestsBase() {
 
@@ -68,7 +70,13 @@ class LikeTests : R2dbcDatabaseTestsBase() {
             assertEquals("_a", t.selectAll().where { t.char like LikePattern.ofLiteral("_a") }.firstOrNull()?.get(t.char))
             assertEquals("%a%", t.selectAll().where { t.char like LikePattern.ofLiteral("%a%") }.firstOrNull()?.get(t.char))
             assertEquals("\\a", t.selectAll().where { t.char like LikePattern.ofLiteral("\\a") }.firstOrNull()?.get(t.char))
-            assertEquals(listOf("_a", "_b"), t.selectAll().where { t.char like LikePattern.ofLiteral("_") + "%" }.map { it[t.char] } as Any)
+
+            val result = t.selectAll()
+                .where { t.char like LikePattern.ofLiteral("_") + "%" }
+                .map { it[t.char] }
+                .toList()
+
+            assertContentEquals(listOf("_a", "_b"), result)
         }
     }
 }

@@ -224,11 +224,10 @@ internal suspend fun <T> Connection.executeSQL(
     return flow {
         createStatement(sqlQuery)
             .execute()
-            .collect { r ->
-                r.map { row, metadata ->
+            .collect { row ->
+                row.map { row, metadata ->
                     transform(row, metadata)
-                }
-                    .collect { emit(it) }
+                }.collect { emit(it) }
             }
     }.toList()
 }
