@@ -234,18 +234,18 @@ class ConditionsTests : R2dbcDatabaseTestsBase() {
             assertEquals(2, table.selectAll().where { table.c1.greater(table.c2) }.single()[table.c1])
             assertEqualLists(
                 listOf(0, 2),
-                table.selectAll().where { table.c1.greaterEq(table.c2) }.orderBy(table.c1).map { it[table.c1] }
+                table.selectAll().where { table.c1.greaterEq(table.c2) }.orderBy(table.c1).map { it[table.c1] }.toList()
             )
 
             assertEquals(2, table.selectAll().where { table.c2.less(table.c1) }.single()[table.c1])
             assertEqualLists(
                 listOf(0, 2),
-                table.selectAll().where { table.c2.lessEq(table.c1) }.orderBy(table.c1).map { it[table.c1] }
+                table.selectAll().where { table.c2.lessEq(table.c1) }.orderBy(table.c1).map { it[table.c1] }.toList()
             )
             assertEquals(1, table.selectAll().where { table.c2.greater(table.c1) }.single()[table.c1])
             assertEqualLists(
                 listOf(0, 1),
-                table.selectAll().where { table.c2.greaterEq(table.c1) }.orderBy(table.c1).map { it[table.c1] }
+                table.selectAll().where { table.c2.greaterEq(table.c1) }.orderBy(table.c1).map { it[table.c1] }.toList()
             )
         }
     }

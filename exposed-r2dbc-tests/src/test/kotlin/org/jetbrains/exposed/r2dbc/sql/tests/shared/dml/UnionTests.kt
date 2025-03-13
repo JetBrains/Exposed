@@ -66,11 +66,11 @@ class UnionTests : R2dbcDatabaseTestsBase() {
             val union = andreyQuery.union(andreyQuery).orderBy(idAlias, SortOrder.DESC)
 
             union.map { it[idAlias] }.apply {
-                assertEqualLists(this, "sergey", "andrey")
+                assertEqualLists(listOf("sergey", "andrey"), this)
             }
 
             union.withDistinct(false).map { it[idAlias] }.apply {
-                assertEqualLists(this, listOf("sergey", "sergey", "andrey", "andrey"))
+                assertEqualLists(listOf("sergey", "sergey", "andrey", "andrey"), this)
             }
         }
     }
@@ -82,7 +82,7 @@ class UnionTests : R2dbcDatabaseTestsBase() {
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
             andreyQuery.union(sergeyQuery).map { it[users.id] }.toList().apply {
                 assertEquals(2, size)
-                assertEqualLists(this, "andrey", "sergey")
+                assertEqualLists(listOf("andrey", "sergey"), this)
             }
         }
     }
@@ -224,7 +224,7 @@ class UnionTests : R2dbcDatabaseTestsBase() {
         withCitiesAndUsers { _, users, _ ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             andreyQuery.union(andreyQuery).map { it[users.id] }.apply {
-                assertEqualLists(this, "andrey")
+                assertEqualLists(listOf("andrey"), this)
             }
         }
     }
@@ -234,7 +234,7 @@ class UnionTests : R2dbcDatabaseTestsBase() {
         withCitiesAndUsers { _, users, _ ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             andreyQuery.unionAll(andreyQuery).map { it[users.id] }.apply {
-                assertEqualLists(this, "andrey", "andrey")
+                assertEqualLists(listOf("andrey", "andrey"), this)
             }
         }
     }

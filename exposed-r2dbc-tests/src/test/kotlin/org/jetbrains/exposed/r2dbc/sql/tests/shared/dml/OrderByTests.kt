@@ -197,7 +197,7 @@ class OrderByTests : R2dbcDatabaseTestsBase() {
             NullableStrings.insert {
                 it[name] = "c"
             }
-            fun assertOrdered(expected: List<Int>, order: SortOrder) {
+            suspend fun assertOrdered(expected: List<Int>, order: SortOrder) {
                 val ordered = NullableStrings.select(NullableStrings.id).orderBy(NullableStrings.name, order).map { it[NullableStrings.id] }
                 assertEqualLists(expected, ordered)
             }
