@@ -25,7 +25,7 @@
             <def id="enumeration-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/enumeration.html">
-                        <code>enumeration</code>
+                        <code>enumeration()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>INT</code>. Stores enum values using their ordinal values.</p>
@@ -37,7 +37,7 @@
             <def id="enumerationByName-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/enumeration-by-name.html">
-                        <code>enumerationByName</code>
+                        <code>enumerationByName()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>VARCHAR</code>. Stores enum values using their names.</p>
@@ -49,7 +49,7 @@
             <def id="customEnumeration-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/custom-enumeration.html">
-                        <code>customEnumeration</code>
+                        <code>customEnumeration()</code>
                     </a>
                 </title>
                 <p>Used for working with database-specific enum types. Supported by MySQL, PostgreSQL, and H2 databases.</p>

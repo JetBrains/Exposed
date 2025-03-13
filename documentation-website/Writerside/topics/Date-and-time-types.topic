@@ -23,17 +23,29 @@
             <td>Use</td>
         </tr>
         <tr>
-            <td><code>exposed-kotlin-datetime</code></td>
+            <td>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.sql.kotlin.datetime/index.html">
+                    <code>exposed-kotlin-datetime</code>
+                </a>
+            </td>
             <td><a href="https://kotlinlang.org/api/kotlinx-datetime/"><code>kotlinx-datetime</code></a> library</td>
             <td>Modern Kotlin-first approach, recommended for new projects.</td>
         </tr>
         <tr>
-            <td><code>exposed-java-time</code></td>
+            <td>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.sql.javatime/index.html">
+                    <code>exposed-java-time</code>
+                </a>
+            </td>
             <td><a href="https://docs.oracle.com/javase/8/docs/api/java/time/package-summary.html">Java 8 Time API</a></td>
             <td>Good choice when integrating with Java code or when you need Java 8 Time API compatibility.</td>
         </tr>
         <tr>
-            <td><code>exposed-jodatime</code></td>
+            <td>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.sql.jodatime/index.html">
+                    <code>exposed-jodatime</code>
+                </a>
+            </td>
             <td><a href="https://www.joda.org/joda-time/">Joda-Time</a> library</td>
             <td>Legacy support, includes additional functions for extracting time parts (year, month, day, hour, minute, second). Consider using newer modules for new projects.</td>
         </tr>
@@ -74,7 +86,7 @@
 
         <deflist type="medium">
             <def id="date-type">
-                <title><code>date</code></title>
+                <title><code>date()</code></title>
                 <p>Maps to database <code>DATE</code>. Used for storing date values without time component.</p>
                 <code-block lang="kotlin">
                     val birthDate = date("birth_date")
@@ -96,7 +108,7 @@
                 </code-block>
             </def>
             <def id="datetime-type">
-                <title><code>datetime</code></title>
+                <title><code>datetime()</code></title>
                 <p>Maps to database <code>DATETIME</code>. Used for storing both date and time values.</p>
                 <code-block lang="kotlin">
                     val createdAt = datetime("created_at")
@@ -129,7 +141,7 @@
                 </note>
             </def>
             <def id="time-type">
-                <title><code>time</code></title>
+                <title><code>time()</code></title>
                 <p>Maps to database <code>TIME</code>. Used for storing time values without date component.</p>
                 <code-block lang="kotlin">
                     val startTime = time("start_time")
@@ -151,7 +163,7 @@
                 </code-block>
             </def>
             <def id="timestamp-type">
-                <title><code>timestamp</code></title>
+                <title><code>timestamp()</code></title>
                 <p>
                     Maps to database <code>TIMESTAMP</code>. Used for storing both date and time values. Not supported
                     by <code>exposed-jodatime</code>.
@@ -171,7 +183,7 @@
                 </code-block>
             </def>
             <def id="timestamp-with-timezone">
-                <title><code>timestampWithTimeZone</code></title>
+                <title><code>timestampWithTimeZone()</code></title>
                 <p>
                     Maps to database <code>TIMESTAMP WITH TIME ZONE</code>. Used for storing both date and time values
                     while preserving timezone information. Not supported by <code>exposed-jodatime</code>.

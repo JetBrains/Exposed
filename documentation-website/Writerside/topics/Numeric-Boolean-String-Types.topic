@@ -31,7 +31,7 @@
             <def id="integer-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/integer.html">
-                        <code>integer</code>
+                        <code>integer()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>INT</code>. Used for storing whole numbers within the range of -2^31 to
@@ -40,7 +40,7 @@
             <def id="short-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/short.html">
-                        <code>short</code>
+                        <code>short()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>SMALLINT</code>. Used for storing smaller whole numbers within the range of
@@ -49,7 +49,7 @@
             <def id="long-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/long.html">
-                        <code>long</code>
+                        <code>long()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>BIGINT</code>. Used for storing large whole numbers within the range of -2^63
@@ -58,7 +58,7 @@
             <def id="float-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/float.html">
-                        <code>float</code>
+                        <code>float()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>FLOAT</code>. Used for storing approximate decimal numbers.</p>
@@ -69,7 +69,7 @@
             <def id="decimal-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/decimal.html">
-                        <code>decimal</code>
+                        <code>decimal()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>DECIMAL</code> with specified scale and precision. Used for storing exact
@@ -82,7 +82,7 @@
             <def id="bool-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/bool.html">
-                        <code>bool</code>
+                        <code>bool()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>BOOLEAN</code>. Used for storing true/false values.</p>
@@ -99,7 +99,7 @@
             <def id="char-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/char.html">
-                        <code>char</code>
+                        <code>char()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>CHAR</code>. Used for storing fixed-length character strings.</p>
@@ -107,7 +107,7 @@
             <def id="varchar-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/varchar.html">
-                        <code>varchar</code>
+                        <code>varchar()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>VARCHAR</code> with specified length. Used for storing variable-length
@@ -116,7 +116,7 @@
             <def id="text-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/text.html">
-                        <code>text</code>
+                        <code>text()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>TEXT</code>. Used for storing large variable-length character strings without

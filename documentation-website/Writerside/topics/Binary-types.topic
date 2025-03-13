@@ -24,7 +24,7 @@
             <def id="blob-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/blob.html">
-                        <code>blob</code>
+                        <code>blob()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>BLOB</code> (or equivalent type depending on the database). Used for storing binary objects of any size.</p>
@@ -38,7 +38,7 @@
             <def id="binary-type">
                 <title>
                     <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/binary.html">
-                        <code>binary</code>
+                        <code>binary()</code>
                     </a>
                 </title>
                 <p>Maps to database <code>VARBINARY</code>. Available in two forms:</p>

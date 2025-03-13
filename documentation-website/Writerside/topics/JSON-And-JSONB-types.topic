@@ -55,7 +55,11 @@
         </p>
         <deflist type="medium">
             <def id="json-type">
-                <title><code>json</code></title>
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/json.html">
+                        <code>json()</code>
+                    </a>
+                </title>
                 <p>Maps to database <code>JSON</code>. Used for storing JSON data in text format.</p>
                 <p>Database-specific mappings:</p>
                 <list>
@@ -65,7 +69,11 @@
                 </list>
             </def>
             <def id="jsonb-type">
-                <title><code>jsonb</code></title>
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/jsonb.html">
+                        <code>jsonb()</code>
+                    </a>
+                </title>
                 <p>Maps to database <code>JSONB</code>. Used for storing JSON data in binary format (supported by
                     PostgreSQL).</p>
                 <p>Database-specific mappings:</p>
