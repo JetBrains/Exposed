@@ -16,7 +16,16 @@
     </toc-element>
     <toc-element toc-title="Schemas">
         <toc-element topic="Working-with-Tables.topic"/>
-        <toc-element topic="Data-Types.topic"/>
+        <toc-element toc-title="Data types">
+            <toc-element topic="Numeric-Boolean-String-Types.topic" accepts-web-file-names="data-types.html"/>
+            <toc-element topic="Array-types.topic"/>
+            <toc-element topic="Binary-types.topic"/>
+            <toc-element topic="Enumeration-types.topic"/>
+            <toc-element topic="Date-and-time-types.topic"/>
+            <toc-element topic="JSON-And-JSONB-types.topic"/>
+            <toc-element topic="Custom-data-types.topic"/>
+            <toc-element topic="Column-transformation.topic"/>
+        </toc-element>
         <toc-element topic="SQL-Functions.md"/>
         <toc-element topic="Working-with-Schema.topic"/>
     </toc-element>

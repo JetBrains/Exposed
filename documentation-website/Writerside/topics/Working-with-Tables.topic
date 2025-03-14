@@ -26,9 +26,17 @@
             object StarWarsFilms : Table() {}
         </code-block>
         <p>
-            Exposed supports a variety of <a href="Data-Types.topic">column types</a>, including <code>integer</code>,
-            <code>varchar</code>,
-            <code>bool</code>, and more. Each column is defined by calling the appropriate
+            Exposed supports a variety of column types, including
+            <a href="Numeric-Boolean-String-Types.topic">
+                basic types
+            </a>
+            ,
+            <a href="Date-and-time-types.topic">date and time</a>
+            ,
+            <a href="Array-types.topic">arrays</a>
+            ,
+            <a href="Binary-types.topic">binary data</a>
+            , and more. Each column is defined by calling the appropriate
             method on the <code>Table</code> object.
         </p>
         <p>The following example defines a table with an auto-incrementing integer <code>id</code> column and custom

@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Custom data types" id="Custom-data-types">
+    <p>
+        If a database-specific data type is not supported by Exposed, you can extend any existing and open column type
+        or implement a custom
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-column-type/index.html">
+            <code>ColumnType</code>
+        </a>
+        class to achieve the same functionality.
+    </p>
+    <p>The following examples describe different ways to customize a column type, register a column with the custom
+        type,
+        and then start using it in transactions.</p>
+    <chapter title="Hierarchical tree-like data" id="hierarchical-tree-like-data">
+        <p>PostgreSQL provides a data type, <a
+            href="https://www.postgresql.org/docs/current/ltree.html"><code>ltree</code></a>, to represent
+            hierarchical tree-like data.</p>
+        <p>The hierarchy labels are stored as strings, so the existing <code>StringColumnType</code> class can be
+            extended with a few overrides:</p>
+
+        <code-block lang="kotlin">
+            import org.postgresql.util.PGobject
+
+            class LTreeColumnType : StringColumnType() {
+                override fun sqlType(): String = &quot;LTREE&quot;
+
+                override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+                    val parameterValue: PGobject? = value?.let {
+                        PGobject().apply {
+                            type = sqlType()
+                            this.value = value as? String
+                        }
+                    }
+                    super.setParameter(stmt, index, parameterValue)
+                }
+            }
+        </code-block>
+        <note>
+            When setting an object in a prepared statement with JDBC, any unknown data type without
+            a JDBC mapping is set as a varying character string.
+            To avoid a casting exception due to PostgreSQL's stricter type system, the type of the set parameter
+            should be manually declared,
+            by using a <code>PGobject</code> in <code>setParamater()</code>, as shown in the example above.
+        </note>
+        <p>A table extension function can then be added to register a new column with this type:</p>
+        <code-block lang="kotlin"><![CDATA[
+            fun Table.ltree(name: String): Column<String> = registerColumn(name, LTreeColumnType())
+
+            object TestTable : Table("test_table") {
+                val path = ltree("path")
+
+                init {
+                    index(customIndexName = "path_gist_idx", indexType = "GIST", columns = arrayOf(path))
+                    index(customIndexName = "path_idx", indexType = "BTREE", columns = arrayOf(path))
+                }
+            }
+        ]]></code-block>
+        <note>
+            To use the <code>ltree</code> data type, the extension must first be enabled in the
+            database by running <code>exec(&quot;CREATE EXTENSION ltree;&quot;)</code>.
+        </note>
+        <p>String values representing hierarchy labels can then be inserted and queried from the <code>path</code>
+            column.
+            The following block shows an update of all records that have a stored <code>path</code> either equal to
+            or a descendant of the path <code>Top.Science</code>,
+            by setting a subpath of the first 2 labels as the updated value:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            transaction {
+                TestTable.update(
+                    where = { TestTable.path isDescendantOrEq "Top.Science" }
+                ) {
+                    it[path] = path.subltree(0, 2)
+                }
+            }
+
+            fun <T : String?> Expression<T>.subltree(start: Int, end: Int) =
+                CustomStringFunction("SUBLTREE", this, intParam(start), intParam(end))
+
+            infix fun <T : String?> ExpressionWithColumnType<T>.isDescendantOrEq(other: T) =
+                IsDescendantOrEqOp(this, wrap(other))
+
+            class IsDescendantOrEqOp<T : String?>(
+                left: Expression<T>,
+                right: Expression<T>
+            ) : ComparisonOp(left, right, "<@")
+        ]]></code-block>
+    </chapter>
+    <chapter title="Date and time data" id="date-and-time-data">
+        <p>MySQL and MariaDB provide a data type, <a href="https://dev.mysql.com/doc/refman/8.4/en/year.html"><code>YEAR</code></a>,
+            for 1-byte storage of year values in the range of 1901 to 2155.</p>
+        <p>This example assumes that the column accepts string input values, but a numerical format is also
+            possible, in which case
+            <code>IntegerColumnType</code> could be extended instead:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            class YearColumnType : StringColumnType(), IDateColumnType {
+                override fun sqlType(): String = "YEAR"
+
+                override val hasTimePart: Boolean = false
+
+                override fun valueFromDB(value: Any): String = when (value) {
+                    is java.sql.Date -> value.toString().substringBefore('-')
+                    else -> error("Retrieved unexpected value of type ${value::class.simpleName}")
+                }
+            }
+
+            fun Table.year(name: String): Column<String> = registerColumn(name, YearColumnType())
+        ]]></code-block>
+        <p>The <code>IDateColumnType</code> interface is implemented to ensure that any default expressions are
+            handled appropriately. For example,
+            a new object <code>CurrentYear</code> can be added as a default to avoid issues with the strict column
+            typing:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            object CurrentYear : Function<String>(YearColumnType()) {
+                override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+                    queryBuilder { +"CURRENT_DATE" }
+                }
+            }
+
+            object TestTable : Table("test_table") {
+                val established = year("established").defaultExpression(CurrentYear)
+            }
+        ]]></code-block>
+        <p>String values of different formats (depending on the enabled <code>sql_mode</code>) can then be inserted
+            and queried from the <code>year</code> column:</p>
+
+        <code-block lang="kotlin">
+            transaction {
+                // disable strict mode to allow truncation of full date strings
+                exec("SET sql_mode=''")
+
+                val yearData = listOf("1901", "2000", "2023-08-22", "2155")
+                TestTable.batchInsert(yearData) { year ->
+                    this[TestTable.established] = year
+                }
+
+                TestTable
+                    .selectAll()
+                    .where { TestTable.established less CurrentYear }
+                    .toList()
+            }
+        </code-block>
+    </chapter>
+    <chapter title="Ranges of data" id="ranges-of-data">
+        <p>PostgreSQL provides multiple <a href="https://www.postgresql.org/docs/16/rangetypes.html">range data
+            types</a> of different subtypes.</p>
+        <p>If more than one range subtype needs to be used, a base <code>RangeColumnType</code> class could be first
+            introduced with the minimum common logic:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            import org.postgresql.util.PGobject
+
+            abstract class RangeColumnType<T : Comparable<T>, R : ClosedRange<T>>(
+                val subType: ColumnType<T>,
+            ) : ColumnType<R>() {
+                abstract fun List<String>.toRange(): R
+
+                override fun nonNullValueToString(value: R): String {
+                    return "[${value.start},${value.endInclusive}]"
+                }
+
+                override fun nonNullValueAsDefaultString(value: R): String {
+                    return "'${nonNullValueToString(value)}'"
+                }
+
+                override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+                    val parameterValue: PGobject? = value?.let {
+                        PGobject().apply {
+                            type = sqlType()
+                            this.value = nonNullValueToString(it as R)
+                        }
+                    }
+                    super.setParameter(stmt, index, parameterValue)
+                }
+
+                override fun valueFromDB(value: Any): R? = when (value) {
+                    is PGobject -> value.value?.let {
+                        val components = it.trim('[', ')').split(',')
+                        components.toRange()
+                    }
+                    else -> error("Retrieved unexpected value of type ${value::class.simpleName}")
+                }
+            }
+        ]]></code-block>
+        <p>A class for the type <code>int4range</code> that accepts <code>IntRange</code> values could then be
+            implemented:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            class IntRangeColumnType : RangeColumnType<Int, IntRange>(IntegerColumnType()) {
+                override fun sqlType(): String = "INT4RANGE"
+
+                override fun List<String>.toRange(): IntRange {
+                    return IntRange(first().toInt(), last().toInt() - 1)
+                }
+            }
+
+            fun Table.intRange(name: String): Column<IntRange> = registerColumn(name, IntRangeColumnType())
+        ]]></code-block>
+        <p>If a custom Kotlin implementation for a <code>DateRange</code> is set up (using <code>Iterable</code> and
+            <code>ClosedRange</code>),
+            then a class for the type <code>daterange</code> can also be added. This implementation would require a
+            dependency on <code>exposed-kotlin-datetime</code>:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            class DateRangeColumnType : RangeColumnType<LocalDate, DateRange>(KotlinLocalDateColumnType()) {
+                override fun sqlType(): String = "DATERANGE"
+
+                override fun List<String>.toRange(): DateRange {
+                    val endInclusive = LocalDate.parse(last()).minus(1, DateTimeUnit.DAY)
+                    return DateRange(LocalDate.parse(first()), endInclusive)
+                }
+            }
+
+            fun Table.dateRange(name: String): Column<DateRange> = registerColumn(name, DateRangeColumnType())
+        ]]></code-block>
+        <p>These new column types can be used in a table definition:</p>
+
+        <code-block lang="kotlin">
+            object TestTable : Table("test_table") {
+                val amounts = intRange("amounts").default(1..10)
+                val holidays = dateRange("holidays")
+            }
+        </code-block>
+        <p>With the addition of some custom functions, the stored data can then be queried to return the upper bound
+            of the date range
+            for all records that have an integer range within the specified bounds:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            transaction {
+                val holidayEnd = TestTable.holidays.upperBound()
+                TestTable
+                    .select(holidayEnd)
+                    .where { TestTable.amounts isContainedBy 0..100 }
+                    .toList()
+            }
+
+            fun <T : Comparable<T>, CR : ClosedRange<T>, R : CR?> ExpressionWithColumnType<R>.upperBound() =
+                CustomFunction("UPPER", (columnType as RangeColumnType<T, CR>).subType, this)
+
+            infix fun <R : ClosedRange<*>?> ExpressionWithColumnType<R>.isContainedBy(other: R) =
+                RangeIsContainedOp(this, wrap(other))
+
+            class RangeIsContainedOp<R : ClosedRange<*>?>(
+                left: Expression<R>,
+                right: Expression<R>
+            ) : ComparisonOp(left, right, "<@")
+        ]]></code-block>
+    </chapter>
+    <chapter title="Predefined string data" id="predefined-string-data">
+        <p>MySQL and MariaDB provide a data type, <a href="https://dev.mysql.com/doc/refman/8.4/en/set.html"><code>SET</code></a>,
+            for strings that can have zero or more values from a defined list of permitted values.
+            This could be useful, for example, when storing a list of Kotlin enum constants.</p>
+        <p>To use this type, a new <code>ColumnType</code> could be implemented with all the necessary overrides.
+            This example instead takes advantage of
+            the existing logic in <code>StringColumnType</code> as the base for database storage, then uses a custom
+            <code>ColumnTransformer</code> to achieve the final
+            transformation between a set of enum constants and a string:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            class SetColumnType<T : Enum<T>>(
+                private val enumClass: KClass<T>
+            ) : StringColumnType() {
+                // uses reflection to retrieve elements of the enum class
+                private val enumConstants by lazy {
+                    enumClass.java.enumConstants?.map { it.name } ?: emptyList()
+                }
+
+                override fun sqlType(): String = enumConstants
+                    .takeUnless { it.isEmpty() }
+                    ?.let { "SET(${it.joinToString { e -> "'$e'" }})" }
+                    ?: error("SET column must be defined with a list of permitted values")
+            }
+
+            inline fun <reified T : Enum<T>> Table.set(name: String): Column<String> =
+                registerColumn(name, SetColumnType(T::class))
+
+            class EnumListColumnType<T : Enum<T>>(
+                private val enumClass: KClass<T>
+            ) : ColumnTransformer<String, List<T>> {
+                private val enumConstants by lazy {
+                    enumClass.java.enumConstants?.associateBy { it.name } ?: emptyMap()
+                }
+
+                override fun unwrap(value: List<T>): String {
+                    return value.joinToString(separator = ",") { it.name }
+                }
+
+                override fun wrap(value: String): List<T> = value
+                    .takeUnless { it.isEmpty() }?.let {
+                        it.split(',').map { e ->
+                            enumConstants[e]
+                                ?: error("$it can't be associated with any value from ${enumClass.qualifiedName}")
+                        }
+                    }
+                    ?: emptyList()
+            }
+        ]]></code-block>
+        <tip>
+            See <a href="Column-transformation.topic">column
+            transformations</a> for more details about <code>ColumnTransformer</code>.
+        </tip>
+        <p>The new column type and transformer can then be used in a table definition:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            enum class Vowel { A, E, I, O, U }
+
+            object TestTable : Table("test_table") {
+                val vowel: Column<List<Vowel>> = set<Vowel>("vowel")
+                    .transform(EnumListColumnType(Vowel::class))
+                    .default(listOf(Vowel.A, Vowel.E))
+            }
+        ]]></code-block>
+        <p>Lists of enum constants can then be inserted and queried from the <code>set</code> column. The following
+            block shows a query for all records that
+            have <code>Vowel.O</code> stored at any position in the <code>set</code> column string:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            transaction {
+                TestTable.insert { it[vowel] = listOf(Vowel.U, Vowel.E) }
+                TestTable.insert { it[vowel] = emptyList() }
+                TestTable.insert { it[vowel] = Vowel.entries }
+
+                TestTable
+                    .selectAll()
+                    .where { TestTable.vowel.findInSet(Vowel.O) greater 0 }
+                    .toList()
+            }
+
+            fun <T : Enum<T>> Expression<List<T>>.findInSet(enum: T) =
+                CustomFunction("FIND_IN_SET", IntegerColumnType(), stringParam(enum.name), this)
+        ]]></code-block>
+    </chapter>
+    <chapter title="Key-Value pair data" id="key-value-pair-data">
+        <p>PostgreSQL provides a data type, <a
+            href="https://www.postgresql.org/docs/16/hstore.html"><code>hstore</code></a>, to store key-value
+            data pairs in a single text string.</p>
+        <p>The existing <code>StringColumnType</code> class can be extended with a few overrides:</p>
+
+        <code-block lang="kotlin">
+            import org.postgresql.util.PGobject
+
+            class HStoreColumnType : TextColumnType() {
+                override fun sqlType(): String = "HSTORE"
+
+                override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+                    val parameterValue: PGobject? = value?.let {
+                        PGobject().apply {
+                            type = sqlType()
+                            this.value = value as? String
+                        }
+                    }
+                    super.setParameter(stmt, index, parameterValue)
+                }
+            }
+        </code-block>
+        <p>A table extension function can then be added to register a new column with this type.
+            This example assumes that the input values will be of type <code>Map&lt;String, String&gt;</code>, so
+            <code>transform()</code> is used on the string column to handle parsing:</p>
+
+        <code-block lang="kotlin">
+            fun Table.hstore(name: String): Column&lt;String&gt; = registerColumn(name, HStoreColumnType())
+
+            object TestTable : Table(&quot;test_table&quot;) {
+                val bookDetails = hstore(&quot;book_details&quot;).transform(
+                    wrap = {
+                        it.trim('{', '}').split(", ")
+                            .associate { pair ->
+                                pair.substringBefore("=") to pair.substringAfter("=")
+                            }
+                    },
+                    unwrap = {
+                        it.entries.joinToString(separator = ",") { (k, v) ->
+                            "\"$k\"=>\"$v\""
+                        }
+                    }
+                )
+            }
+        </code-block>
+        <tip>
+            See <a href="Column-transformation.topic">column
+            transformations</a> for more details about <code>transform()</code>.
+        </tip>
+        <note>
+            To use the <code>hstore</code> data type, the extension must first be enabled in the
+            database by running <code>exec(&quot;CREATE EXTENSION hstore;&quot;)</code>.
+        </note>
+        <p>Map values representing key-value pairs of strings can then be inserted and queried from the <code>bookDetails</code>
+            column.
+            The following block queries the value associated with the <code>title</code> key from all <code>bookDetails</code>
+            records:</p>
+
+        <code-block lang="kotlin"><![CDATA[
+            transaction {
+                TestTable.insert {
+                    it[bookDetails] = mapOf(
+                        "title" to "Kotlin in Action",
+                        "edition" to "2"
+                    )
+                }
+
+                val bookTitle = TestTable.bookDetails.getValue("title")
+                TestTable
+                    .select(bookTitle)
+                    .toList()
+            }
+
+            fun <T : Map<String, String>> Expression<T>.getValue(key: String) =
+                CustomOperator("->", TextColumnType(), this, stringParam(key))
+        ]]></code-block>
+    </chapter>
+    <chapter title="Case insensitive data" id="case-insensitive-data">
+        <p>PostgreSQL provides a data type, <a
+            href="https://www.postgresql.org/docs/16/citext.html"><code>citext</code></a>, that represents a
+            case-insensitive string type.</p>
+        <p>The existing <code>StringColumnType</code> class can be extended with a few overrides:</p>
+
+        <code-block lang="kotlin">
+            import org.postgresql.util.PGobject
+
+            class CitextColumnType(
+                colLength: Int
+            ) : VarCharColumnType(colLength) {
+                override fun sqlType(): String = &quot;CITEXT&quot;
+
+                override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+                    val parameterValue: PGobject? = value?.let {
+                        PGobject().apply {
+                            type = sqlType()
+                            this.value = value as? String
+                        }
+                    }
+                    super.setParameter(stmt, index, parameterValue)
+                }
+            }
+        </code-block>
+        <p>A table extension function can then be added to register a new column with this type:</p>
+
+        <code-block lang="kotlin">
+            fun Table.citext(name: String, length: Int): Column&lt;String&gt; =
+                registerColumn(name, CitextColumnType(length))
+
+            object TestTable : Table(&quot;test_table&quot;) {
+                val firstName = citext(&quot;first_name&quot;, 32)
+            }
+        </code-block>
+        <note>
+            <p>To use the <code>citext</code> data type, the extension must first be enabled in the
+                database by running <code>exec(&quot;CREATE EXTENSION citext;&quot;)</code>.</p>
+        </note>
+        <p>String values can then be inserted and queried from the <code>firstName</code> column in a
+            case-insensitive manner:</p>
+
+        <code-block lang="kotlin">
+            transaction {
+                val allNames = listOf(&quot;Anna&quot;, &quot;Anya&quot;, &quot;Agna&quot;)
+                TestTable.batchInsert(allNames) { name -&gt;
+                    this[TestTable.firstName] = name
+                }
+
+                TestTable
+                    .selectAll()
+                    .where { TestTable.firstName like &quot;an%&quot; }
+                    .toList()
+            }
+        </code-block>
+    </chapter>
+</topic>
