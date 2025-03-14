@@ -712,6 +712,7 @@ public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcResult : 
 	public fun close ()V
 	public fun mapRows (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
 	public final fun mapSegments (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+	public final fun rowsUpdated ()Lorg/reactivestreams/Publisher;
 	public fun toString ()Ljava/lang/String;
 }
 

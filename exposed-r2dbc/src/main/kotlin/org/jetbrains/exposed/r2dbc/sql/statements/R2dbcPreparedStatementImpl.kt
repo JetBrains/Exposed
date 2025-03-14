@@ -56,6 +56,7 @@ class R2dbcPreparedStatementImpl(
         val result = statement.execute()
         val r2dbcResult = R2dbcResult(result)
         resultRow = r2dbcResult
+
         return 0
     }
 

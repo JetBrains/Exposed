@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.reactivestreams.Publisher
 
+// TODO to discuss, avoid creation capitalized functions
 suspend fun R2dbcResult(resultPublisher: Publisher<out Result>): R2dbcResult {
     val result = resultPublisher.awaitFirstOrNull() ?: error("No result found")
     return R2dbcResult(result)
@@ -44,6 +45,10 @@ class R2dbcResult internal constructor(
         val result = block(it)
         result.asPublisher()
     }.asFlow()
+
+    fun rowsUpdated(): Publisher<Long> {
+        return result.rowsUpdated
+    }
 
     override fun toString(): String = "R2dbcResult(result = $result)"
 
