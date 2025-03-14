@@ -34,6 +34,8 @@ fun <T> assertEqualCollections(actual: Iterable<T>, expected: Collection<T>) {
     assertEqualCollectionsImpl(actual.toList(), expected)
 }
 
+suspend fun <T> assertEqualCollections(actual: Flow<T>, expected: Collection<T>) = assertEqualCollections(actual.toList(), expected)
+
 fun <T> assertEqualLists(expected: List<T>, actual: List<T>) {
     assertEquals(expected.size, actual.size, "Count mismatch on ${currentDialectIfAvailableTest?.name.orEmpty()}")
     expected.forEachIndexed { index, exp ->

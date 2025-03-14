@@ -138,7 +138,7 @@ fun R2dbcDatabaseTestsBase.withCitiesAndUsers(
     }
 }
 
-suspend fun R2dbcDatabaseTestsBase.withSales(
+fun R2dbcDatabaseTestsBase.withSales(
     excludeSettings: Collection<TestDB> = emptyList(),
     statement: suspend R2dbcTransaction.(testDb: TestDB, sales: DMLTestsData.Sales) -> Unit
 ) {
