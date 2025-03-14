@@ -49,11 +49,12 @@
             Array columns store and retrieve data as Kotlin <code>List</code> objects, providing a natural way to
             work with array data in your code.
         </p>
-        <p>Here's an example of defining and using array columns:</p>
+        <p>You can define array columns within a table definition as follows:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
                     include-symbol="SimpleArrays, AdvancedArrays"
         />
+        <p>Here's an example of inserting data into array columns:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
                     include-lines="59-63"

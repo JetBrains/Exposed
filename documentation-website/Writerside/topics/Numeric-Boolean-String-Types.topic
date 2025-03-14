@@ -20,7 +20,7 @@
          .
      </p>
     <chapter title="Basic usage" id="basic-usage">
-        <p>Here's a simple example of using different data types in a table definition:</p>
+        <p>Here's an example of using different data types in a table definition:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/BasicTypesExamples.kt"
                     include-lines="3,10-28"

@@ -19,7 +19,7 @@
         <p>PostgreSQL provides a data type, <a
             href="https://www.postgresql.org/docs/current/ltree.html"><code>ltree</code></a>, to represent
             hierarchical tree-like data.</p>
-        <p>The hierarchy labels are stored as strings, so the existing <code>StringColumnType</code> class be
+        <p>The hierarchy labels are stored as strings, so the existing <code>StringColumnType</code> class can be
             extended with a few overrides:</p>
 
         <code-block lang="kotlin">

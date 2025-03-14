@@ -223,6 +223,13 @@
                 Some databases provide specific interval types (like PostgreSQL's <code>INTERVAL</code>) for storing
                 time intervals. Refer to your database documentation for supported time interval types.
             </p>
+            <p>
+                For more details on handling custom time-based values, see the
+                <a href="Custom-data-types.topic" anchor="date-and-time-data">
+                    custom date and time types
+                </a>
+                section.
+            </p>
         </tip>
     </chapter>
 </topic>

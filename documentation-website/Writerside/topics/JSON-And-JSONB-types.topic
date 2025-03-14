@@ -11,7 +11,7 @@
         </p>
     </tldr>
     <p>
-        Exposed works together with the JSON serialization/deserialization library of your choice by allowing column
+        Exposed works together with the JSON serialization library of your choice by allowing column
         definitions that accept generic serializer and deserializer arguments through the
         <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/json.html">
             <code>json()</code>

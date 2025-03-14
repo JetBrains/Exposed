@@ -18,7 +18,7 @@ Navigate to the `App.kt` file and ensure that the Database connection credential
 
 ## Build
 
-To build the application, in a terminal window navigate to the `snippets` folder and run the following command:
+To build the application, run the following terminal command in the `snippets` folder:
 
 ```shell
 ./gradlew :exposed-data-types:build
