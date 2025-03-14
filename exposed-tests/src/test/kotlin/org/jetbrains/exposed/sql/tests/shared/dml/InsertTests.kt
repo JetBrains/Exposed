@@ -100,7 +100,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test insert and get id when column has different name and get value by id column`() {
+    fun testInsertAndGetIdWhenColumnHasDifferentNameAndGetValueByIdColumn() {
         val testTableWithId = object : IdTable<Int>("testTableWithId") {
             val code = integer("code")
             override val id: Column<EntityID<Int>> = code.entityId()
@@ -122,7 +122,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test id and column have different names and get value by original column`() {
+    fun testIdAndColumnHaveDifferentNamesAndGetValueByOriginalColumn() {
         val exampleTable = object : IdTable<String>("test_id_and_column_table") {
             val exampleColumn = varchar("example_column", 200)
             override val id = exampleColumn.entityId()
@@ -134,7 +134,7 @@ class InsertTests : DatabaseTestsBase() {
                 it[exampleColumn] = value
             }
 
-            val resultValues: List<String> = exampleTable.selectAll().map { it[exampleTable.exampleColumn] }
+            val resultValues = exampleTable.selectAll().map { it[exampleTable.exampleColumn] }
 
             assertEquals(value, resultValues.first())
         }
@@ -205,7 +205,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `batchInserting using empty sequence should work`() {
+    fun batchInsertingUsingEmptySequenceShouldWork() {
         val cities = DMLTestsData.Cities
         withTables(cities) {
             val names = emptySequence<String>()
@@ -433,7 +433,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test that column length checked on insert`() {
+    fun testThatColumnLengthCheckedOnInsert() {
         val stringTable = object : IntIdTable("StringTable") {
             val name = varchar("name", 10)
         }
@@ -449,7 +449,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test subquery in an insert or update statement`() {
+    fun testSubqueryInAnInsertOrUpdateStatement() {
         val tab1 = object : Table("tab1") {
             val id = varchar("id", 10)
         }
@@ -568,7 +568,7 @@ class InsertTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun `test optReference allows null values`() {
+    fun testOptReferenceAllowsNullValues() {
         withTables(EntityTests.Posts) {
             val id1 = EntityTests.Posts.insertAndGetId {
                 it[board] = null
