@@ -8,12 +8,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.h2Mode
+import org.jetbrains.exposed.sql.vendors.*
 import java.time.OffsetDateTime
 import kotlin.time.Duration
 
@@ -43,8 +38,9 @@ internal class TimeInternal(val expr: Expression<*>) : Function<LocalTime>(Kotli
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         val dialect = currentDialect
         val functionProvider = when (dialect.h2Mode) {
-            H2Dialect.H2CompatibilityMode.SQLServer, H2Dialect.H2CompatibilityMode.PostgreSQL ->
-                (dialect as H2Dialect).originalFunctionProvider
+            H2Dialect.H2CompatibilityMode.SQLServer,
+            H2Dialect.H2CompatibilityMode.PostgreSQL,
+            H2Dialect.H2CompatibilityMode.Oracle -> (dialect as H2Dialect).originalFunctionProvider
             else -> dialect.functionProvider
         }
         functionProvider.time(expr, queryBuilder)
@@ -68,37 +64,45 @@ fun <T : Instant?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal
 fun <T : OffsetDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeInternal(expr)
 
 /**
- * Represents the base SQL function that returns the current date and time, as determined by the specified [columnType].
+ * Represents the base SQL function that returns the current date and time, as determined by the specified [columnType]
+ * and fractional seconds [precision].
  */
-sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Function<T>(columnType) {
+sealed class CurrentTimestampBase<T>(private val precision: Byte?, columnType: IColumnType<T & Any>) : Function<T>(columnType) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
         +when {
-            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true -> "CURRENT_TIMESTAMP(6)"
+            (currentDialect as? MysqlDialect)?.isFractionDateTimeSupported() == true ||
+                (currentDialect !is SQLiteDialect && currentDialect !is SQLServerDialect) -> "CURRENT_TIMESTAMP${precision?.let { "($it)" }.orEmpty()}"
             else -> "CURRENT_TIMESTAMP"
         }
     }
 }
 
 /**
- * Represents an SQL function that returns the current date and time, as [LocalDateTime].
+ * Represents an SQL function that returns the current date and time, as [LocalDateTime] with the specified fractional seconds [precision].
  *
  * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
-object CurrentDateTime : CurrentTimestampBase<LocalDateTime>(KotlinLocalDateTimeColumnType.INSTANCE)
+open class CurrentDateTime(precision: Byte? = null) : CurrentTimestampBase<LocalDateTime>(precision, KotlinLocalDateTimeColumnType(precision)) {
+    companion object : CurrentDateTime()
+}
 
 /**
- * Represents an SQL function that returns the current date and time, as [Instant].
+ * Represents an SQL function that returns the current date and time, as [Instant] with the specified fractional seconds [precision].
  *
  * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
-object CurrentTimestamp : CurrentTimestampBase<Instant>(KotlinInstantColumnType.INSTANCE)
+open class CurrentTimestamp(precision: Byte? = null) : CurrentTimestampBase<Instant>(precision, KotlinInstantColumnType(precision)) {
+    companion object : CurrentTimestamp()
+}
 
 /**
- * Represents an SQL function that returns the current date and time with time zone, as [OffsetDateTime].
+ * Represents an SQL function that returns the current date and time with time zone, as [OffsetDateTime] with the specified fractional seconds [precision].
  *
  * @sample org.jetbrains.exposed.DefaultsTest.testTimestampWithTimeZoneDefaults
  */
-object CurrentTimestampWithTimeZone : CurrentTimestampBase<OffsetDateTime>(KotlinOffsetDateTimeColumnType.INSTANCE)
+open class CurrentTimestampWithTimeZone(precision: Byte? = null) : CurrentTimestampBase<OffsetDateTime>(precision, KotlinOffsetDateTimeColumnType(precision)) {
+    companion object : CurrentTimestampWithTimeZone()
+}
 
 /**
  * Represents an SQL function that returns the current date, as [LocalDate].

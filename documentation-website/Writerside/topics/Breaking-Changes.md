@@ -1,5 +1,13 @@
 # Breaking Changes
 
+## 0.61.0
+* In H2 Oracle, the `time` column now maps to data type `TIME` instead of `TIMESTAMP`.
+* In SQLite, the fractional seconds of values inserted into `time`, `datetime`, `timestamp` and `timestampWithTimeZone` columns are
+  no longer truncated and are stored in the database as they are.
+* In ALL databases, Exposed no longer specifies the fractional seconds precision for the `time`, `datetime`, `timestamp`
+  and `timestampWithTimeZone` column types, but now allows you to specify the precision according to your needs.
+  If the precision is not specified, the default precision of the database will apply.
+
 ## 0.60.0
 * In H2, the `timestamp()` column now maps to data type `TIMESTAMP(9)` instead of `DATETIME(9)`.
 * The names of the CHECK constraints created for the `ushort()` and `uinteger()` columns have been modified for consistency.

@@ -106,15 +106,18 @@ abstract class DataTypeProvider {
     // Date/Time types
 
     /** Data type for storing both date and time without a time zone. */
-    open fun dateTimeType(): String = "DATETIME"
+    open fun dateTimeType(precision: Byte? = null): String = "DATETIME${precision?.let { "($it)" }.orEmpty()}"
 
-    open fun timestampType(): String = dateTimeType()
+    open fun timestampType(precision: Byte? = null): String = dateTimeType(precision)
 
     /** Data type for storing both date and time with a time zone. */
-    open fun timestampWithTimeZoneType(): String = "TIMESTAMP WITH TIME ZONE"
+    open fun timestampWithTimeZoneType(precision: Byte? = null): String = "TIMESTAMP${precision?.let { "($it)" }.orEmpty()} WITH TIME ZONE"
 
-    /** Time type for storing time without a time zone. */
-    open fun timeType(): String = "TIME"
+    /** Time type for storing time without a time zone.
+     *
+     * **Note:** The precision is ignored in SQLite.
+     */
+    open fun timeType(precision: Byte? = null): String = "TIME${precision?.let { "($it)" }.orEmpty()}"
 
     /** Data type for storing date without time or a time zone. */
     open fun dateType(): String = "DATE"

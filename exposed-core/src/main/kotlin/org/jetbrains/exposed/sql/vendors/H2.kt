@@ -13,11 +13,9 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
     override fun uuidToDB(value: UUID): Any = value.toString()
 
-    override fun dateTimeType(): String = "DATETIME(9)"
+    override fun dateTimeType(precision: Byte?): String = "DATETIME${precision?.let { "($it)" }.orEmpty()}"
 
-    override fun timestampType(): String = "TIMESTAMP(9)"
-
-    override fun timestampWithTimeZoneType(): String = "TIMESTAMP(9) WITH TIME ZONE"
+    override fun timestampType(precision: Byte?): String = "TIMESTAMP${precision?.let { "($it)" }.orEmpty()}"
 
     override fun jsonBType(): String = "JSON"
 

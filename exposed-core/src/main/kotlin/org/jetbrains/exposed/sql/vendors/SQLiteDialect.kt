@@ -10,8 +10,24 @@ internal object SQLiteDataTypeProvider : DataTypeProvider() {
     override fun ulongAutoincType(): String = "INTEGER PRIMARY KEY AUTOINCREMENT"
     override fun floatType(): String = "SINGLE"
     override fun binaryType(): String = "BLOB"
-    override fun dateTimeType(): String = "TEXT"
-    override fun timestampWithTimeZoneType(): String = "TEXT"
+    override fun dateTimeType(precision: Byte?): String {
+        if (precision != null) {
+            exposedLogger.warn("The precision of the datetime column is not required.")
+        }
+        return "TEXT"
+    }
+    override fun timestampType(precision: Byte?): String {
+        if (precision != null) {
+            exposedLogger.warn("The precision of the timestamp column is not required.")
+        }
+        return "TEXT"
+    }
+    override fun timestampWithTimeZoneType(precision: Byte?): String {
+        if (precision != null) {
+            exposedLogger.warn("The precision of the timestampWithTimeZone column is not required.")
+        }
+        return "TEXT"
+    }
     override fun dateType(): String = "TEXT"
     override fun booleanToStatementString(bool: Boolean) = if (bool) "1" else "0"
     override fun jsonType(): String = "TEXT"
