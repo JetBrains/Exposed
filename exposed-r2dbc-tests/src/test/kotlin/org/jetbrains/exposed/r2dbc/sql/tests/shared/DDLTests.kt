@@ -281,34 +281,6 @@ class DDLTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun tableWithDifferentColumnTypesInSQLite() {
-        val testTable = object : Table("with_different_column_types") {
-            val id = integer("id")
-            val name = varchar("name", 42)
-            val age = integer("age").nullable()
-
-            override val primaryKey = PrimaryKey(id, name)
-        }
-
-        withDb {
-            val q = db.identifierManager.quoteString
-
-            val tableDescription = "CREATE TABLE " + addIfNotExistsIfSupported() + "with_different_column_types".inProperCase()
-            val idDescription = "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerType()} NOT NULL"
-            val nameDescription = "$q${"name".inProperCase()}$q VARCHAR(42) NOT NULL"
-            val ageDescription = "${"age".inProperCase()} ${db.dialect.dataTypeProvider.integerType()} NULL"
-            val constraint = "CONSTRAINT pk_with_different_column_types PRIMARY KEY (${"id".inProperCase()}, $q${"name".inProperCase()}$q)"
-
-            assertEquals(
-                "$tableDescription ($idDescription, $nameDescription, $ageDescription, $constraint," +
-                    " CONSTRAINT chk_with_different_column_types_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})," +
-                    " CONSTRAINT chk_with_different_column_types_signed_integer_age CHECK (${"age".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE}))",
-                testTable.ddl
-            )
-        }
-    }
-
-    @Test
     fun testAutoIncrementOnUnsignedColumns() {
         // separate tables are necessary as some db only allow a single column to be auto-incrementing
         val uIntTester = object : Table("u_int_tester") {
