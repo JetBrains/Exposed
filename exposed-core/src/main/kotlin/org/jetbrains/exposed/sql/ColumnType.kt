@@ -1303,7 +1303,7 @@ class ArrayColumnType<T, R : List<Any?>>(
         else -> (value as Array<Any?>).map { it?.let { delegate.valueFromDB(it) } }
     }
 
-    override fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index, java.sql.Array::class.java)
+    override fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when {
