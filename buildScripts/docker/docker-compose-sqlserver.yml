@@ -7,4 +7,5 @@ services:
             - "3005:1433"
         environment:
             ACCEPT_EULA: "1"
+            user: root
             SA_PASSWORD: "Exposed_password_1!"
