@@ -951,6 +951,7 @@ open class BasicBinaryColumnType : ColumnType<ByteArray>() {
         is InputStream -> value.use { it.readBytes() }
         is ByteArray -> value
         is String -> value.toByteArray()
+        is ByteBuffer -> value.array()
         else -> error("Unexpected value $value of type ${value::class.qualifiedName}")
     }
 
