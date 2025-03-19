@@ -60,7 +60,7 @@ You can implement nested queries by using the `alias()` function to create subqu
 or queries. For more information, see the [alias](DSL-Querying-data.topic#alias) documentation.
 
 ### How can I use SAVEPOINT?
-You can use `SAVEPOINT` by executing raw SQL statements within a transaction.
+You can use `SAVEPOINT` by executing [raw SQL statements](Working-with-SQL-Strings.md) within a transaction.
 
 ### How do I prepare query like `SELECT * FROM table WHERE (x,y) IN ((1, 2), (3, 4), (5, 6))`?
 Exposed does not natively support tuple-based `IN` clauses. To use such query, you can create a custom function to 
