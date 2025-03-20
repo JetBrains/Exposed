@@ -10,7 +10,7 @@ import org.junit.Test
 
 class LateralJoinTests : DatabaseTestsBase() {
     // lateral join is also supported by MySql8 database, but at the current moment there is no related configuration
-    private val lateralJoinSupportedDb = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)
+    private val lateralJoinSupportedDb = TestDB.ALL_POSTGRES + TestDB.ORACLE
 
     @Test
     fun testLateralJoinQuery() {
