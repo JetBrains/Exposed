@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.sql.ResultSet
 
 /**
  * Common interface for all database dialects.
@@ -77,6 +78,9 @@ interface DatabaseDialect {
     /** Returns the allowed maximum sequence value for a dialect, as a [Long]. */
     val sequenceMaxValue: Long get() = Long.MAX_VALUE
 
+    /** Returns whether Exposed currently supports column type change in migrations for this dialect. */
+    val supportsColumnTypeChange: Boolean get() = false
+
     /** Returns `true` if the database supports the `LIMIT` clause with update and delete statements. */
     fun supportsLimitWithUpdateOrDelete(): Boolean
 
@@ -135,6 +139,9 @@ interface DatabaseDialect {
 
     /** Returns a list of the names of all sequences in the database. */
     fun sequences(): List<String>
+
+    /** Returns a map with the CHECK constraints in each of the specified [tables] in the database. */
+    fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> = emptyMap()
 
     /** Returns `true` if the dialect supports `SELECT FOR UPDATE` statements, `false` otherwise. */
     fun supportsSelectForUpdate(): Boolean
@@ -201,6 +208,19 @@ interface DatabaseDialect {
         @OptIn(InternalApi::class)
         return TransactionManager.current().db.metadata { resolveReferenceOption(refOption.toString())!! }
     }
+
+    /** Returns a map of all the columns' names mapped to their type. */
+    fun fetchAllColumnTypes(tableName: String): Map<String, String> = emptyMap()
+
+    /** Returns the SQL type of the column in [resultSet]. If available, [prefetchedColumnTypes] is used to get the column type. */
+    fun getColumnType(resultSet: ResultSet, prefetchedColumnTypes: Map<String, String> = emptyMap()): String = ""
+
+    /** Returns whether the [columnMetadataSqlType] type and the [columnType] are equivalent.
+     *
+     * [columnMetadataJdbcType], the value of which comes from [java.sql.Types], is taken into consideration if needed by a specific database.
+     * @see [H2Dialect.areEquivalentColumnTypes] */
+    fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean =
+        columnMetadataSqlType.equals(columnType, ignoreCase = true)
 
     companion object {
         private val defaultLikePatternSpecialChars = mapOf('%' to null, '_' to null)

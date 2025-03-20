@@ -1,14 +1,9 @@
-import org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi
-import org.jetbrains.exposed.sql.Index
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SchemaUtils.addMissingColumnsStatements
 import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveForeignKeyConstraints
 import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveIndices
 import org.jetbrains.exposed.sql.SchemaUtils.checkMappingConsistence
 import org.jetbrains.exposed.sql.SchemaUtils.createStatements
-import org.jetbrains.exposed.sql.Sequence
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
@@ -159,7 +154,9 @@ object MigrationUtils {
             checkUnmappedIndices(tables = tables, withLogs).flatMap { it.dropStatement() } +
             checkExcessiveForeignKeyConstraints(tables = tables, withLogs).flatMap { it.dropStatement() } +
             checkExcessiveIndices(tables = tables, withLogs).flatMap { it.dropStatement() } +
-            checkUnmappedSequences(tables = tables, withLogs).flatMap { it.dropStatement() }
+            checkUnmappedSequences(tables = tables, withLogs).flatMap { it.dropStatement() } +
+            checkMissingCheckConstraints(tables = tables, withLogs).flatMap { it.createStatement() } +
+            checkUnmappedCheckConstraints(tables = tables, withLogs).flatMap { it.dropStatement() }
     }
 
     /**
@@ -350,6 +347,63 @@ object MigrationUtils {
         unmappedSequences.log("Sequences exist in database and not mapped in code:")
 
         return unmappedSequences.toList()
+    }
+
+    /**
+     * Checks all [tables] for any that have CHECK constraints that are missing in the database but are defined in the code.
+     * If found, this function also logs the CHECK constraints that will be created.
+     *
+     * @return List of CHECK constraints that are missing and can be created.
+     */
+    private fun checkMissingCheckConstraints(vararg tables: Table, withLogs: Boolean): List<CheckConstraint> {
+        fun Collection<CheckConstraint>.log(mainMessage: String) {
+            if (withLogs && isNotEmpty()) {
+                exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
+            }
+        }
+
+        if (!currentDialect.supportsColumnTypeChange) {
+            return emptyList()
+        }
+
+        val missingCheckConstraints = mutableListOf<CheckConstraint>()
+        tables.forEach { table ->
+            val mappedCheckConstraints = table.checkConstraints()
+            val existingCheckConstraints = currentDialect.existingCheckConstraints(*tables)[table].orEmpty()
+            val existingCheckConstraintsNames = existingCheckConstraints.map { it.checkName.uppercase() }.toSet()
+            missingCheckConstraints.addAll(mappedCheckConstraints.filterNot { it.checkName.uppercase() in existingCheckConstraintsNames })
+        }
+        missingCheckConstraints.log("CHECK constraints missed from database (will be created):")
+        return missingCheckConstraints
+    }
+
+    /**
+     * Checks all [tables] for any that have CHECK constraints that exist in the database but are not mapped in the code.
+     * If found, this function also logs the CHECK constraints that will be dropped.
+     *
+     * @return List of CHECK constraints that are unmapped and can be dropped.
+     */
+    private fun checkUnmappedCheckConstraints(vararg tables: Table, withLogs: Boolean): List<CheckConstraint> {
+        fun Collection<CheckConstraint>.log(mainMessage: String) {
+            if (withLogs && isNotEmpty()) {
+                exposedLogger.warn(joinToString(prefix = "$mainMessage\n\t\t", separator = "\n\t\t"))
+            }
+        }
+
+        if (!currentDialect.supportsColumnTypeChange) {
+            return emptyList()
+        }
+
+        val unmappedCheckConstraints = mutableListOf<CheckConstraint>()
+        tables.forEach { table ->
+            val existingCheckConstraints = currentDialect.existingCheckConstraints(*tables)[table].orEmpty()
+            val mappedCheckConstraints = table.checkConstraints()
+            val mappedCheckConstraintsNames = mappedCheckConstraints.map { it.checkName.uppercase() }.toSet()
+
+            unmappedCheckConstraints.addAll(existingCheckConstraints.filterNot { it.checkName.uppercase() in mappedCheckConstraintsNames })
+        }
+        unmappedCheckConstraints.log("CHECK constraints exist in database and not mapped in code:")
+        return unmappedCheckConstraints
     }
 
     private inline fun <R> logTimeSpent(message: String, withLogs: Boolean, block: () -> R): R {
