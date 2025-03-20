@@ -136,9 +136,7 @@ open class R2dbcTransaction(
     ): Flow<T?>? {
         if (stmt.isEmpty()) return emptyFlow()
 
-        val type = explicitStatementType
-            ?: StatementType.entries.find { stmt.trim().startsWith(it.name, true) }
-            ?: StatementType.OTHER
+        val type = explicitStatementType ?: StatementType.entries.find { stmt.trim().startsWith(it.name, true) } ?: StatementType.OTHER
 
         return exec(object : Statement<Flow<T?>>(type, emptyList()), SuspendExecutable<Flow<T?>, Statement<Flow<T?>>> {
             override val statement: Statement<Flow<T?>>
@@ -174,7 +172,7 @@ open class R2dbcTransaction(
      *
      * This function also updates its calling [Transaction] instance's statement count and overall duration,
      * as well as whether the execution time for [stmt] exceeds the threshold set by
-     * `DatabaseConfig.warnLongQueriesDuration`. If [debug] is set to `true`, these tracked values
+     * `R2dbcDatabaseConfig.warnLongQueriesDuration`. If [debug] is set to `true`, these tracked values
      * are stored for each call in [statementStats].
      */
     suspend fun <T> exec(stmt: SuspendExecutable<T, *>): T? = exec(stmt) { it }
@@ -192,8 +190,8 @@ open class R2dbcTransaction(
      * function [body] with this generated value as its argument and returns its result.
      *
      * This function also updates its calling [Transaction] instance's statement count and overall duration,
-     * as well as whether the execution time for [stmt] exceeds the threshold set by
-     * `DatabaseConfig.warnLongQueriesDuration`. If [debug] is set to `true`, these tracked values
+     * as well as whether the execution time for [stmt] exceeds the threshold set by [R2dbcDatabaseConfig.warnLongQueriesDuration].
+     * If [debug] is set to `true`, these tracked values
      * are stored for each call in [statementStats].
      */
     suspend fun <T, R> exec(stmt: SuspendExecutable<T, *>, body: suspend Statement<T>.(T) -> R): R? {
@@ -243,8 +241,7 @@ open class R2dbcTransaction(
 
         init {
             ServiceLoader.load(
-                GlobalStatementInterceptor::class.java,
-                GlobalStatementInterceptor::class.java.classLoader
+                GlobalStatementInterceptor::class.java, GlobalStatementInterceptor::class.java.classLoader
             ).forEach {
                 globalInterceptors.add(it)
             }

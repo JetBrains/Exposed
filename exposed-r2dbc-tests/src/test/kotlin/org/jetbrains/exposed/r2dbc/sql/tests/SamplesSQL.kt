@@ -47,7 +47,9 @@ fun main() {
         .option(ConnectionFactoryOptions.PASSWORD, "")
         .build()
 
-    R2dbcDatabase.connect(options)
+    R2dbcDatabase.connect {
+        connectionFactoryOptions = options
+    }
 
     runBlocking {
         suspendTransaction {

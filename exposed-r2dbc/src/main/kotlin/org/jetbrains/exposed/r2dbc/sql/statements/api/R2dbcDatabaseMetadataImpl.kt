@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.r2dbc.sql.R2dbcScope
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.r2dbc.sql.statements.asInt
@@ -21,7 +20,6 @@ import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.getValue
 
 /**
  * Base class responsible for retrieving and storing information about the R2DBC driver and underlying database.
@@ -59,8 +57,7 @@ class R2dbcDatabaseMetadataImpl(
                 if (dbProductName.startsWith("Microsoft Azure SQL ")) {
                     SQLServerDialect.dialectName
                 } else {
-                    R2dbcDatabase.getR2dbcDialectName(database)
-                        ?: error("Unsupported driver $dbProductName detected")
+                    error("Unsupported driver $dbProductName detected")
                 }
             }
         }

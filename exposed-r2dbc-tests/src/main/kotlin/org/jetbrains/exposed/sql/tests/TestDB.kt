@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests
 
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
+import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabaseConfig
 import org.jetbrains.exposed.r2dbc.sql.transactions.suspendTransaction
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.exposedLogger
@@ -96,12 +97,14 @@ enum class TestDB(
 
     var db: R2dbcDatabase? = null
 
-    fun connect(configure: DatabaseConfig.Builder.() -> Unit = {}): R2dbcDatabase {
-        val config = DatabaseConfig {
+    fun connect(configure: R2dbcDatabaseConfig.Builder.() -> Unit = {}): R2dbcDatabase {
+        val config = R2dbcDatabaseConfig {
             dbConfig()
             configure()
+
+            setUrl(connection())
         }
-        return R2dbcDatabase.connect(connection(), databaseConfig = config)
+        return R2dbcDatabase.connect(databaseConfig = config)
     }
 
     companion object {
