@@ -12,6 +12,12 @@ Exposed supports a variety of data types, including [basic data types](Numeric-B
 [enumeration](Enumeration-types.topic), and [](JSON-And-JSONB-types.topic). You can also extend and create new
 [custom data types](Custom-data-types.topic) to fit your specific needs.
 
+### Is it possible to generate SQL without a database connection?
+No, Exposed requires a database connection to generate SQL.
+SQL generation depends on the database dialect and transaction context, both of which are determined by the active 
+database connection. Since Exposed adapts queries dynamically based on the underlying database, a connection is
+necessary even if the query is never executed.
+
 ### How do I get a plain SQL query which will be executed?
 
 To get the SQL representation of a query without executing it, use the
@@ -76,11 +82,18 @@ transaction {
 ```
 
 ### How do I prepare query like `SELECT * FROM table WHERE (x,y) IN ((1, 2), (3, 4), (5, 6))`?
-Exposed does not natively support tuple-based `IN` clauses. To use such query, you can create a custom function to 
-handle tuple comparisons.
+Exposed provides the
+[`inList()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/in-list.html)
+function that works with pairs of columns. For more details, see
+[](DSL-Querying-data.topic#collection-condition-pairs-or-triples).
 
 ### How can I create a custom column type?
 
 You can implement a custom column type using the [`IColumnType`](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/ColumnType.kt#L25) interface
 and [`registerColumn()`](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/Table.kt#L387)
 to register it to a table. For more information, refer to the [custom data types](Custom-data-types.topic) documentation.
+
+### How can I convert a DSL query result to a DAO entity?
+To convert the result of a DSL query into an entity, you can use the DAO's
+[`wrapRow()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/wrap-row.html)
+function, which allows you to wrap a row into a DAO entity.
