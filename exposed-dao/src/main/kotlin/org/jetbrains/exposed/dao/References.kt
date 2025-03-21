@@ -156,7 +156,13 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
         return when {
             transaction == null -> {
                 val cachedValue = thisRef.getReferenceFromCache<Any?>(reference)
-                cachedValue as? SizedIterable<Child> ?: LazySizedCollection(SizedCollection(cachedValue as Child))
+                when {
+                    cachedValue is SizedIterable<*> -> cachedValue as SizedIterable<Child>
+                    cachedValue != null -> LazySizedCollection(SizedCollection(cachedValue as Child))
+                    thisRef.hasInReferenceCache(reference) ->
+                        EmptySizedIterable() // actively cached the value `null` - so provide an empty value
+                    else -> throw error("No transaction in context, and $reference not in entity cache.")
+                }
             }
             cache -> {
                 transaction.entityCache.getOrPutReferrers(thisRef.id, reference, query).also {

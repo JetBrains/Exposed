@@ -113,6 +113,10 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
         return referenceCache[ref] as T
     }
 
+    internal fun hasInReferenceCache(ref: Column<*>): Boolean {
+        return ref in referenceCache
+    }
+
     internal fun storeReferenceInCache(ref: Column<*>, value: Any?) {
         if (db.config.keepLoadedReferencesOutOfTransaction) {
             referenceCache[ref] = value
