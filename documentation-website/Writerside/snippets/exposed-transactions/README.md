@@ -29,7 +29,7 @@ val mysqlDb = Database.connect(
 To build the application, in a terminal window navigate to the `snippets` folder and run the following command:
 
 ```shell
-./gradlew :exposed-sql-functions:build
+./gradlew :exposed-transactions:build
 ```
 
 ## Run
@@ -37,7 +37,7 @@ To build the application, in a terminal window navigate to the `snippets` folder
 To run the application, in a terminal window navigate to the `snippets` folder and run the following command:
 
 ```shell
-./gradlew :exposed-sql-functions:run
+./gradlew :exposed-transactions:run
 ```
 
 This will run queries to create new tables and run all functions in the `/examples` folder.

@@ -59,30 +59,35 @@ relationships between tables. For more information, see the [](DAO-Relationships
 You can implement nested queries by using the `alias()` function to create subqueries and join them with other tables
 or queries. For more information, see the [alias](DSL-Querying-data.topic#alias) documentation.
 
-### How can I use SAVEPOINT?
-You can use `SAVEPOINT` by executing [raw SQL statements](Working-with-SQL-Strings.md) within a transaction.
+### How can I use a savepoint?
+You can set a savepoint through the `ExposedConnection.setSavepoint()` method within a transaction. For more details,
+see [](Transactions.md#using-savepoints).
+
+### Is it possible to use a low-level JDBC connection directly with Exposed?
+Yes, by accessing the raw connection wrapped by a transaction block's `connection` property:
+
+```Kotlin
+transaction {
+    val lowLevelCx = connection.connection as java.sql.Connection
+
+    val stmt = lowLevelCx.prepareStatement("INSERT INTO TEST_TABLE (AMOUNT) VALUES (?)")
+    stmt.setInt(1, 99)
+    stmt.addBatch()
+    stmt.setInt(1, 100)
+    stmt.addBatch()
+    stmt.executeBatch()
+
+    val query = lowLevelCx.createStatement()
+    val result = query.executeQuery("SELECT COUNT(*) FROM TEST_TABLE")
+    result.next()
+    val count = result.getInt(1)
+    println(count) // 2
+}
+```
 
 ### How do I prepare query like `SELECT * FROM table WHERE (x,y) IN ((1, 2), (3, 4), (5, 6))`?
 Exposed does not natively support tuple-based `IN` clauses. To use such query, you can create a custom function to 
 handle tuple comparisons.
-
-### Where can I find snapshot builds of Exposed?
-
-You could use a `jitpack.io` service for that.
-
-Add `jitpack.io` to `repositories`:
-```
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-```
-Then add an Exposed dependency as in the following way:
-
-```
-dependencies {
-    implementation 'com.github.JetBrains:Exposed:-SNAPSHOT'
-}
-```
 
 ### How can I create a custom column type?
 
