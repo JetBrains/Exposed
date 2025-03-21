@@ -1,14 +1,4 @@
-# Frequently Asked Questions 
-
-### What is the difference between Squash and Exposed?
-
-[Ilya Ryzhenkov](https://github.com/orangy/) ([Squash](https://github.com/orangy/squash) maintainer) answers:
-
-"Squash is an attempt to refactor Exposed (long time ago) to fix DSL issues, extensibility on dialect side, support
-graph fetching and avoid TLS-stored transactions. Unfortunately, I didn’t have enough time to finish the work, but I 
-still hope to return to it some day. We were talking with Exposed maintainer [@tapac](https://github.com/tapac/) at
-the time about coordinating efforts and eventually joining forces. Note that Squash is not an “official” JetBrains
-Kotlin SQL library, but rather a side project of mine."
+# Frequently Asked Questions
 
 ### Can I use multiple database connections?
 
