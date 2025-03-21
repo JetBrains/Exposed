@@ -136,17 +136,20 @@ class Database private constructor(
             "jdbc:mariadb" to "org.mariadb.jdbc.Driver",
             "jdbc:oracle" to "oracle.jdbc.OracleDriver",
             "jdbc:sqlite" to "org.sqlite.JDBC",
-            "jdbc:sqlserver" to "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+            "jdbc:sqlserver" to "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+            "jdbc:tc" to "org.testcontainers.jdbc.ContainerDatabaseDriver",
         )
         private val dialectMapping = mutableMapOf(
             "jdbc:h2" to H2Dialect.dialectName,
             "jdbc:postgresql" to PostgreSQLDialect.dialectName,
+            "jdbc:tc:postgresql" to PostgreSQLDialect.dialectName,
             "jdbc:pgsql" to PostgreSQLNGDialect.dialectName,
             "jdbc:mysql" to MysqlDialect.dialectName,
+            "jdbc:tc:mysql" to MysqlDialect.dialectName,
             "jdbc:mariadb" to MariaDBDialect.dialectName,
             "jdbc:oracle" to OracleDialect.dialectName,
             "jdbc:sqlite" to SQLiteDialect.dialectName,
-            "jdbc:sqlserver" to SQLServerDialect.dialectName
+            "jdbc:sqlserver" to SQLServerDialect.dialectName,
         )
 
         init {
