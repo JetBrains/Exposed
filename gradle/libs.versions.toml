@@ -46,6 +46,10 @@ hikariCP = "7.0.2"
 logcaptor = "2.12.6"
 maven-publish = "0.35.0"
 
+testcontainers = "1.20.6"
+
+flyway = "11.4.1"
+
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
@@ -113,6 +117,17 @@ r2dbc-mysql = { group = "io.asyncer", name = "r2dbc-mysql", version.ref = "mysql
 r2dbc-oracle = { group = "com.oracle.database.r2dbc", name = "oracle-r2dbc", version.ref = "oracle-r2dbc" }
 r2dbc-postgresql = { group = "org.postgresql", name = "r2dbc-postgresql", version.ref = "postgresql-r2dbc" }
 r2dbc-sqlserver = { group = "io.r2dbc", name = "r2dbc-mssql", version.ref = "sqlserver-r2dbc" }
+
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
+testcontainers-mariadb = { module = "org.testcontainers:mariadb", version.ref = "testcontainers" }
+testcontainers-mssqlserver = { module = "org.testcontainers:mssqlserver", version.ref = "testcontainers" }
+testcontainers-oracle = { module = "org.testcontainers:oracle-xe", version.ref = "testcontainers" }
+
+flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
+flyway-sqlserver = { module = "org.flywaydb:flyway-sqlserver", version.ref = "flyway" }
+flyway-oracle = { module = "org.flywaydb:flyway-database-oracle", version.ref = "flyway" }
 
 logcaptor = { group = "io.github.hakky54", name = "logcaptor", version.ref = "logcaptor" }
 
