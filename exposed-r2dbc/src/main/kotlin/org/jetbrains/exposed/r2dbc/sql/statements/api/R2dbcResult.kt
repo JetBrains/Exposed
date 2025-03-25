@@ -13,6 +13,8 @@ import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.reactivestreams.Publisher
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 // TODO to discuss, avoid creation capitalized functions
 suspend fun R2dbcResult(resultPublisher: Publisher<out Result>): R2dbcResult {
@@ -61,7 +63,14 @@ value class R2DBCRow(val row: Row) : RowApi {
 
     override fun getObject(name: String): Any? = row.get(name)
 
-    override fun <T> getObject(index: Int, type: Class<T>): T? = row.get(index - 1, type)
+    override fun <T> getObject(index: Int, type: Class<T>): T? = when (type) {
+        Timestamp::class.java -> {
+            val result: LocalDateTime? = row.get(index - 1, LocalDateTime::class.java) ?: return null
+            @Suppress("UNCHECKED_CAST")
+            Timestamp.valueOf(result) as T
+        }
+        else -> row.get(index - 1, type) as T
+    }
 
     override fun <T> getObject(name: String, type: Class<T>): T? = row.get(name, type)
 }
