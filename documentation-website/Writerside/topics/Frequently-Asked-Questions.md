@@ -21,8 +21,10 @@ Exposed supports a variety of data types, including [basic data types](Numeric-B
 
 ### How can I create a custom column type?
 
-You can implement a custom column type using the [`IColumnType`](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/ColumnType.kt#L25) interface
-and [`registerColumn()`](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/Table.kt#L387)
+You can implement a custom column type using the
+[`IColumnType`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-column-type/index.html)
+interface and
+[`registerColumn()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/register-column.html)
 to register it to a table. For more information, refer to the [custom data types](Custom-data-types.topic) documentation.
 
 ### Is it possible to generate SQL without a database connection?

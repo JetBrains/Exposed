@@ -39,9 +39,9 @@ class SavepointExample {
         transaction {
             SchemaUtils.create(TestTable)
             TestTable.insert { it[amount] = 99 }
-            val svptA = connection.setSavepoint("svpt_a")
+            val firstInsert = connection.setSavepoint("first_insert")
             TestTable.insert { it[amount] = 100 }
-            connection.rollback(svptA)
+            connection.rollback(firstInsert)
         }
 
         transaction {
