@@ -11,14 +11,14 @@ import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Test
 import org.postgresql.util.PGobject
 
 class EnumerationTests : R2dbcDatabaseTestsBase() {
-    private val supportsCustomEnumerationDB = TestDB.ALL_MYSQL_LIKE + TestDB.ALL_POSTGRES + listOf(TestDB.H2_V2, TestDB.H2_V2_PSQL)
+    // r2dbc-h2 declined feature request for enum codec support: https://github.com/r2dbc/r2dbc-h2/issues/131
+    private val supportsCustomEnumerationDB = TestDB.ALL_MYSQL_MARIADB + TestDB.ALL_POSTGRES
 
     internal enum class Foo {
         Bar, Baz;
@@ -55,7 +55,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
     fun testCustomEnumerationWithDefaultValue() {
         withDb(supportsCustomEnumerationDB) {
             val sqlType = when (currentDialectTest) {
-                is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
+                is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect -> "FooEnum2"
                 else -> error("Unsupported case")
             }
@@ -99,7 +99,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
 
         withDb(supportsCustomEnumerationDB) {
             val sqlType = when (currentDialectTest) {
-                is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
+                is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect -> "RefEnum"
                 else -> error("Unsupported case")
             }

@@ -8,6 +8,7 @@ import org.jetbrains.exposed.r2dbc.exceptions.getContexts
 import org.jetbrains.exposed.r2dbc.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
+import org.jetbrains.exposed.r2dbc.sql.statements.api.metadata
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.ExplainQuery
 import org.jetbrains.exposed.sql.ExplainResultRow
@@ -23,11 +24,15 @@ open class ExplainSuspendExecutable(
 
     override suspend fun collect(collector: FlowCollector<ExplainResultRow>) {
         val rs = TransactionManager.current().exec(this)!! as R2dbcResult
-        val fieldIndex = mutableMapOf<String, Int>()
+        var fieldIndex: Map<String, Int>? = null
 
         try {
-            rs.mapRows {
-                ExplainResultRow.Companion.create(it, fieldIndex)
+            rs.mapRows { row ->
+                if (fieldIndex == null) {
+                    fieldIndex = row.metadata.columnMetadatas.withIndex().associate { it.value.name to it.index }
+                }
+
+                ExplainResultRow.Companion.create(row, fieldIndex!!)
             }.collect(collector)
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, statement.getContexts(), TransactionManager.current())
