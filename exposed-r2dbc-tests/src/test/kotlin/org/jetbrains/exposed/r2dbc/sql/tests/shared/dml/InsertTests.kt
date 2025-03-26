@@ -1,7 +1,12 @@
 package org.jetbrains.exposed.r2dbc.sql.tests.shared.dml
 
+import io.r2dbc.spi.R2dbcException
 import junit.framework.TestCase.assertEquals
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -24,7 +29,6 @@ import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Assume
 import org.junit.Test
-import java.sql.SQLException
 import java.util.*
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -489,7 +493,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                         testTable.insert { it[foo] = 0 }
                     }
                     fail("Should fail on constraint > 0 with $db")
-                } catch (_: SQLException) {
+                } catch (_: R2dbcException) {
                     // expected
                 }
                 withDb(db) {

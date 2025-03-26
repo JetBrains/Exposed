@@ -1,12 +1,12 @@
 package org.jetbrains.exposed.r2dbc.sql.statements
 
-import org.jetbrains.exposed.exceptions.ExposedSQLException
+import io.r2dbc.spi.R2dbcException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementContext
-import java.sql.SQLException
 
 internal object DefaultValueMarker {
     override fun toString(): String = "DEFAULT"
@@ -101,8 +101,8 @@ internal suspend fun <T, S : Statement<T>> SuspendExecutable<T, S>.executeIn(
         prepared(transaction, statement.prepareSQL(transaction)).apply {
             setTimeout(transaction.queryTimeout)
         }
-    } catch (e: SQLException) {
-        throw ExposedSQLException(e, contexts, transaction)
+    } catch (cause: R2dbcException) {
+        throw ExposedR2dbcException(cause, contexts, transaction)
     }
     contexts.forEachIndexed { index, context ->
         statement.fillParameters(context.args)
@@ -120,8 +120,8 @@ internal suspend fun <T, S : Statement<T>> SuspendExecutable<T, S>.executeIn(
     transaction.interceptors.forEach { it.afterStatementPrepared(transaction, statement) }
     val result = try {
         statement.executeInternal(transaction)
-    } catch (cause: SQLException) {
-        throw ExposedSQLException(cause, contexts, transaction)
+    } catch (cause: R2dbcException) {
+        throw ExposedR2dbcException(cause, contexts, transaction)
     }
     transaction.currentStatement = null
     transaction.executedStatements.add(statement)

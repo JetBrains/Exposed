@@ -1,11 +1,13 @@
 package org.jetbrains.exposed.r2dbc.sql
 
+import io.r2dbc.spi.R2dbcException
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.emptyFlow
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.exceptions.LongQueryException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
@@ -34,7 +36,7 @@ open class R2dbcTransaction(
     /**
      * The maximum amount of attempts that will be made to perform this `transaction` block.
      *
-     * If this value is set to 1 and an SQLException happens, the exception will be thrown without performing a retry.
+     * If this value is set to 1 and an R2dbcException happens, the exception will be thrown without performing a retry.
      *
      * @throws IllegalArgumentException If the amount of attempts is set to a value less than 1.
      */
@@ -44,10 +46,10 @@ open class R2dbcTransaction(
             field = value
         }
 
-    /** The minimum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
+    /** The minimum number of milliseconds to wait before retrying this `transaction` if an R2dbcException happens. */
     var minRetryDelay: Long = db.transactionManager.defaultMinRetryDelay
 
-    /** The maximum number of milliseconds to wait before retrying this `transaction` if an SQLException happens. */
+    /** The maximum number of milliseconds to wait before retrying this `transaction` if an R2dbcException happens. */
     var maxRetryDelay: Long = db.transactionManager.defaultMaxRetryDelay
 
     /** The currently executing statement. */
@@ -116,7 +118,11 @@ open class R2dbcTransaction(
         args: Iterable<Pair<IColumnType<*>, Any?>> = emptyList(),
         explicitStatementType: StatementType? = null
     ) {
-        exec(stmt, args, explicitStatementType) { }?.collect()
+        try {
+            exec(stmt, args, explicitStatementType) { }?.collect()
+        } catch (cause: R2dbcException) {
+            throw ExposedR2dbcException(cause, stmt, this)
+        }
     }
 
     /**

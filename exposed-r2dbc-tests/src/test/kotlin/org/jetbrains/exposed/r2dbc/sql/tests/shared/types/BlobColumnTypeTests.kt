@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.all
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.select
@@ -96,7 +96,7 @@ class BlobColumnTypeTests : R2dbcDatabaseTestsBase() {
         withDb { testDb ->
             when (testDb) {
                 TestDB.MYSQL_V5, TestDB.MYSQL_V8 -> {
-                    expectException<ExposedSQLException> {
+                    expectException<ExposedR2dbcException> {
                         SchemaUtils.create(testTable)
                     }
                 }

@@ -1,25 +1,17 @@
 package org.jetbrains.exposed.r2dbc.sql
 
+import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
+import org.jetbrains.exposed.r2dbc.exceptions.getContexts
 import org.jetbrains.exposed.r2dbc.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.r2dbc.sql.statements.api.rowsCount
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.AbstractQuery
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.ExpressionWithColumnType
-import org.jetbrains.exposed.sql.FieldSet
-import org.jetbrains.exposed.sql.IExpressionAlias
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
@@ -84,11 +76,13 @@ sealed class SetOperation(
 
     /** Returns the number of results retrieved after query execution. */
     override suspend fun count(): Long {
-        try {
+        return try {
             count = true
-            return transaction.exec(this) { rs ->
-                rs.mapRows { (it.getObject(1) as? Number)?.toLong() }.single()
-            } ?: error("Count query didn't return any results")
+            val rs = transaction.exec(this) as R2dbcResult
+            rs.mapRows { (it.getObject(1) as? Number)?.toLong() }.single()
+                ?: error("Count query didn't return any results")
+        } catch (cause: R2dbcException) {
+            throw ExposedR2dbcException(cause, this.getContexts(), TransactionManager.current())
         } finally {
             count = false
         }
@@ -101,6 +95,8 @@ sealed class SetOperation(
             limit = 1
             val rs = transaction.exec(this)!!
             return rs.rowsCount() == 0
+        } catch (cause: R2dbcException) {
+            throw ExposedR2dbcException(cause, this.getContexts(), TransactionManager.current())
         } finally {
             limit = oldLimit
         }

@@ -8,7 +8,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
@@ -323,12 +323,6 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             assertEquals(1, result[0].second)
             assertEquals(2, result[1].second)
         }
-
-//        withDb {
-//            expectException<UnsupportedByDialectException> {
-//                SchemaUtils.create(foo)
-//            }
-//        }
     }
 
     @Test
@@ -352,7 +346,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
                     SchemaUtils.drop(testTable)
                 }
             } else {
-                expectException<ExposedSQLException> {
+                expectException<ExposedR2dbcException> {
                     SchemaUtils.create(testTable)
                 }
             }

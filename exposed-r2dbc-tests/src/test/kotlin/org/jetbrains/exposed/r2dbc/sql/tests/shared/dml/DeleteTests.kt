@@ -3,8 +3,8 @@ package org.jetbrains.exposed.r2dbc.sql.tests.shared.dml
 import junit.framework.TestCase.assertNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.single
-import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.delete
 import org.jetbrains.exposed.r2dbc.sql.deleteAll
 import org.jetbrains.exposed.r2dbc.sql.deleteIgnoreWhere
@@ -48,7 +48,7 @@ class DeleteTests : R2dbcDatabaseTestsBase() {
 
             if (currentDialectTest is MysqlDialect) {
                 assertEquals(1, cities.selectAll().where { cities.id eq 1 }.count())
-                expectException<ExposedSQLException> {
+                expectException<ExposedR2dbcException> {
                     // a regular delete throws SQLIntegrityConstraintViolationException because Users reference Cities
                     // Cannot delete or update a parent row: a foreign key constraint fails
                     cities.deleteWhere { cities.id eq 1 }
@@ -172,7 +172,7 @@ class DeleteTests : R2dbcDatabaseTestsBase() {
             val query = join.selectAll().where { users.id eq "smth" }
             assertTrue { query.count() > 0 }
 
-            expectException<ExposedSQLException> {
+            expectException<ExposedR2dbcException> {
                 // a regular delete throws SQLIntegrityConstraintViolationException because UserData reference Users
                 // Cannot delete or update a parent row: a foreign key constraint fails
                 join.delete(users, userData) { users.id eq "smth" }

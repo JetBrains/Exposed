@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.r2dbc.sql.tests.shared.functions
 
+import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.r2dbc.sql.insertAndGetId
@@ -14,7 +15,6 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import java.math.BigDecimal
-import java.sql.SQLException
 
 class MathFunctionTests : FunctionsTestBase() {
 
@@ -134,8 +134,13 @@ class MathFunctionTests : FunctionsTestBase() {
                 in (TestDB.ALL_MYSQL_MARIADB) -> {
                     assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                 }
+                in (TestDB.ALL_H2_V2) -> {
+                    expectException<IllegalStateException> {
+                        assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
+                    }
+                }
                 else -> {
-                    expectException<SQLException> {
+                    expectException<R2dbcException> {
                         assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                     }
                 }

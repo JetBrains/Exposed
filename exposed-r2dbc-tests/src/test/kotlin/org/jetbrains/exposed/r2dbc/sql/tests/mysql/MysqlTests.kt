@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.Query
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.select
@@ -128,7 +128,7 @@ class MysqlTests : R2dbcDatabaseTestsBase() {
                 .comment("+ MAX_EXECUTION_TIME(1000) ", AbstractQuery.CommentPosition.AFTER_SELECT)
             if (testDb in TestDB.ALL_MYSQL) {
                 // Query execution was interrupted, max statement execution time exceeded
-                expectException<ExposedSQLException> {
+                expectException<ExposedR2dbcException> {
                     queryWithHint.single()
                 }
             } else {

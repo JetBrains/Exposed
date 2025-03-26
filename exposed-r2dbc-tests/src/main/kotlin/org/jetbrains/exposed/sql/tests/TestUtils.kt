@@ -49,6 +49,8 @@ internal fun Row.getString(label: String): String? = get(label, java.lang.String
 
 internal fun Row.getBoolean(label: String): Boolean? = get(label, java.lang.Boolean::class.java)?.booleanValue()
 
+internal fun Row.getInt(label: String): Int? = get(label, java.lang.Integer::class.java)?.toInt()
+
 suspend fun Query.forEach(block: (ResultRow) -> Unit) {
     this.collect { block(it) }
 }

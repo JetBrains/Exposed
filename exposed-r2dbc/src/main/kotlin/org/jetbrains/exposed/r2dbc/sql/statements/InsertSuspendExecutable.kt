@@ -13,7 +13,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import java.sql.SQLException
 
 open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
@@ -180,13 +179,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             this@InsertSuspendExecutable.statement.table.columns
         }
         return columns.mapNotNull { col ->
-            @Suppress("SwallowedException")
-            try {
-                this?.columnMetadatas?.withIndex()?.firstOrNull { it.value.name == col.name }?.let {
-                    col to it.index
-                }
-            } catch (e: SQLException) {
-                null
+            this?.columnMetadatas?.withIndex()?.firstOrNull { it.value.name == col.name }?.let {
+                col to it.index
             }
         }
     }

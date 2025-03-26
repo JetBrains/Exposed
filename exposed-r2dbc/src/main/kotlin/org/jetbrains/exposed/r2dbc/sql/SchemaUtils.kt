@@ -3,7 +3,7 @@ package org.jetbrains.exposed.r2dbc.sql
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
-import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils.withDataBaseLock
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.r2dbc.sql.vendors.currentDialectMetadata
@@ -154,7 +154,7 @@ object SchemaUtils : SchemaUtilityApi() {
                 val createStatements = databases.flatMap { listOf(currentDialect.createDatabase(it)) }
                 execStatements(inBatch, createStatements)
             }
-        } catch (exception: ExposedSQLException) {
+        } catch (exception: ExposedR2dbcException) {
             if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection.getAutoCommit()) {
                 throw IllegalStateException(
                     "${currentDialect.name} requires autoCommit to be enabled for CREATE DATABASE",
@@ -197,7 +197,7 @@ object SchemaUtils : SchemaUtilityApi() {
                 val createStatements = databases.flatMap { listOf(currentDialect.dropDatabase(it)) }
                 execStatements(inBatch, createStatements)
             }
-        } catch (exception: ExposedSQLException) {
+        } catch (exception: ExposedR2dbcException) {
             if (currentDialect.requiresAutoCommitOnCreateDrop && !transaction.connection.getAutoCommit()) {
                 throw IllegalStateException(
                     "${currentDialect.name} requires autoCommit to be enabled for DROP DATABASE",

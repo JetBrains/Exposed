@@ -1,9 +1,10 @@
 package org.jetbrains.exposed.r2dbc.sql.transactions
 
+import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.mtc.MappedTransactionContext
@@ -15,7 +16,6 @@ import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.transactions.TransactionManagerApi
-import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
@@ -377,8 +377,8 @@ private suspend fun <T> TransactionScope.suspendedTransactionAsyncInternal(
                 if (shouldCommit) transaction.commit()
             }
             break
-        } catch (cause: SQLException) {
-            handleSQLException(cause, transaction, attempts)
+        } catch (cause: R2dbcException) {
+            handleR2dbcException(cause, transaction, attempts)
             attempts++
             if (attempts >= transaction.maxAttempts) {
                 throw cause
@@ -416,11 +416,11 @@ private suspend fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     answer
 }
 
-internal suspend fun handleSQLException(cause: SQLException, transaction: R2dbcTransaction, attempts: Int) {
-    val exposedSQLException = cause as? ExposedSQLException
-    val queriesToLog = exposedSQLException?.causedByQueries()?.joinToString(";\n") ?: "${transaction.currentStatement}"
+internal suspend fun handleR2dbcException(cause: R2dbcException, transaction: R2dbcTransaction, attempts: Int) {
+    val exposedR2dbcException = cause as? ExposedR2dbcException
+    val queriesToLog = exposedR2dbcException?.causedByQueries()?.joinToString(";\n") ?: "${transaction.currentStatement}"
     val message = "Transaction attempt #$attempts failed: ${cause.message}. Statement(s): $queriesToLog"
-    exposedSQLException?.contexts?.forEach {
+    exposedR2dbcException?.contexts?.forEach {
         transaction.interceptors.filterIsInstance<SqlLogger>().forEach { logger ->
             logger.log(it, transaction)
         }

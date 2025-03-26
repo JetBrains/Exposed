@@ -839,7 +839,6 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
         val zipValue = "BB".toByteArray()
         val provinceValue = "CC"
 
-        // SQLite doesn't support alter table with add column, so it doesn't generate alter statements
         withTables(originalTable) {
             expectException<IllegalArgumentException> {
                 originalTable.insert {

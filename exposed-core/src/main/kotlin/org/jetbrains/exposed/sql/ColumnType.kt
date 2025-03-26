@@ -15,7 +15,6 @@ import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.sql.Blob
 import java.sql.Clob
-import java.sql.SQLException
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -692,7 +691,7 @@ class DecimalColumnType(
         is BigDecimal -> value
         is Double -> {
             if (value.isNaN()) {
-                throw SQLException("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
+                error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
             } else {
                 value.toBigDecimal()
             }

@@ -1,7 +1,10 @@
 package org.jetbrains.exposed.r2dbc.sql
 
+import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
+import org.jetbrains.exposed.r2dbc.exceptions.getContexts
 import org.jetbrains.exposed.r2dbc.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
@@ -22,8 +25,13 @@ open class ExplainSuspendExecutable(
         val rs = TransactionManager.current().exec(this)!! as R2dbcResult
         val fieldIndex = mutableMapOf<String, Int>()
 
-        rs.mapRows { ExplainResultRow.Companion.create(it, fieldIndex) }
-            .collect(collector)
+        try {
+            rs.mapRows {
+                ExplainResultRow.Companion.create(it, fieldIndex)
+            }.collect(collector)
+        } catch (cause: R2dbcException) {
+            throw ExposedR2dbcException(cause, statement.getContexts(), TransactionManager.current())
+        }
     }
 }
 

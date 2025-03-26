@@ -1,7 +1,10 @@
 package org.jetbrains.exposed.r2dbc.sql
 
+import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
+import org.jetbrains.exposed.r2dbc.exceptions.getContexts
 import org.jetbrains.exposed.r2dbc.sql.statements.SuspendExecutable
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
@@ -251,6 +254,8 @@ open class Query(
                 val rs = transaction.exec(this) as R2dbcResult
                 rs.mapRows { (it.getObject(1) as? Number)?.toLong() }.single()
                     ?: error("The query did not return a single count result. Please check the SQL logs.")
+            } catch (cause: R2dbcException) {
+                throw ExposedR2dbcException(cause, this.getContexts(), TransactionManager.current())
             } finally {
                 count = false
             }
@@ -268,6 +273,8 @@ open class Query(
             if (!isForUpdate()) limit = 1
             val rs = transaction.exec(this) as R2dbcResult
             return rs.rowsCount() == 0
+        } catch (cause: R2dbcException) {
+            throw ExposedR2dbcException(cause, this.getContexts(), TransactionManager.current())
         } finally {
             limit = oldLimit
         }
@@ -298,11 +305,15 @@ open class Query(
         val tx = TransactionManager.current()
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
-        rs.mapRows {
-            val resultRow = ResultRow.Companion.create(it, fieldIndex)
-            trackResultSet(tx)
-            resultRow
-        }.collect(collector)
+        try {
+            rs.mapRows {
+                val resultRow = ResultRow.Companion.create(it, fieldIndex)
+                trackResultSet(tx)
+                resultRow
+            }.collect(collector)
+        } catch (cause: R2dbcException) {
+            throw ExposedR2dbcException(cause, this.getContexts(), transaction)
+        }
     }
 
     companion object {

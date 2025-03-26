@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.insertAndGetId
 import org.jetbrains.exposed.r2dbc.sql.select
@@ -274,7 +274,7 @@ class ConditionsTests : R2dbcDatabaseTestsBase() {
     @Test
     fun nullOpUpdateFailsTest() {
         withCitiesAndUsers { _, users, _ ->
-            expectException<ExposedSQLException> {
+            expectException<ExposedR2dbcException> {
                 users.update {
                     it[users.name] = Op.nullOp()
                 }

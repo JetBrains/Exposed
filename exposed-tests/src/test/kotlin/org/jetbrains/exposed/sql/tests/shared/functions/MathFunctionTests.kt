@@ -137,6 +137,11 @@ class MathFunctionTests : FunctionsTestBase() {
                 in (TestDB.ALL_MYSQL_MARIADB + TestDB.SQLITE) -> {
                     assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
                 }
+                in (TestDB.ALL_H2) -> {
+                    expectException<IllegalStateException> {
+                        assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))
+                    }
+                }
                 else -> {
                     expectException<SQLException> {
                         assertExpressionEqual(null, SqrtFunction(intLiteral(-100)))

@@ -18,13 +18,14 @@ import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.getBoolean
+import org.jetbrains.exposed.sql.tests.getInt
 import org.jetbrains.exposed.sql.tests.getString
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
-import java.sql.SQLException
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
@@ -182,15 +183,15 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                 it[amount] = 999
             }
 
+            // an invisible column is only returned in ResultSet if explicitly named
             tester
                 .selectAll()
                 .where { tester.amount greater 100 }
                 .execute(this)!!
                 .mapRows { row ->
                     assertNotNull(row)
-                    assertEquals(999, row.origin.get(tester.amount.name))
-                    // On the JDBC test `false` expected here, but R2DBC returns `null`
-                    assertEquals(false, row.origin.getBoolean(tester.active.name))
+                    assertEquals(999, row.origin.getInt(tester.amount.name))
+                    assertNull(row.origin.getBoolean(tester.active.name))
                 }.single()
 
             tester
@@ -199,9 +200,8 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                 .execute(this)!!
                 .mapRows { row ->
                     assertNotNull(row.origin)
-                    assertEquals(999, row.origin.get(tester.amount.name))
-                    // R2DBC does not throw error here comparing to JDBC
-                    expectException<SQLException> { row.origin.getBoolean(tester.active.name) }
+                    assertEquals(999, row.origin.getInt(tester.amount.name))
+                    expectException<NoSuchElementException> { row.origin.getBoolean(tester.active.name) }
                 }
                 .single()
         }

@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
@@ -112,7 +112,7 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
                 assertContentEquals(tooLongList, sizedTester.selectAll().single()[sizedTester.numbers])
             } else {
                 // H2 throws 'value too long for column' exception
-                expectException<ExposedSQLException> {
+                expectException<ExposedR2dbcException> {
                     sizedTester.insert {
                         it[numbers] = tooLongList
                     }

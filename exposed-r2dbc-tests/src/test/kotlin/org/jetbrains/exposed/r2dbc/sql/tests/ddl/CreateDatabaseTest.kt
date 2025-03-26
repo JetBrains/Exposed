@@ -1,12 +1,12 @@
 package org.jetbrains.exposed.r2dbc.sql.tests.ddl
 
+import io.r2dbc.spi.R2dbcException
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.r2dbc.sql.statements.R2dbcConnectionImpl
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.junit.Test
-import java.sql.SQLException
 import kotlin.test.assertFailsWith
 
 class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
@@ -25,7 +25,7 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
             val dbName = "jetbrains"
             try {
                 SchemaUtils.dropDatabase(dbName)
-            } catch (cause: SQLException) {
+            } catch (cause: R2dbcException) {
                 // ignore
             }
             SchemaUtils.createDatabase(dbName)
