@@ -1,107 +1,113 @@
-# Frequently Asked Questions 
+# Frequently Asked Questions
 
-### Q: [Squash](https://github.com/orangy/squash) is same as Exposed. Where is the difference?
-A: [Ilya Ryzhenkov](https://github.com/orangy/) (Squash maintainer) answers:
-> Squash is an attempt to refactor Exposed (long time ago) to fix DSL issues, extensibility on dialect side, support graph fetching and avoid TLS-stored transactions. Unfortunately, I didn’t have enough time to finish the work, but I still hope to return to it some day. We were talking with Exposed maintainer [@tapac](https://github.com/tapac/) at the time about coordinating efforts and eventually joining forces. Note that Squash is not an “official” JetBrains Kotlin SQL library, but rather a side project of mine.
+### What is Exposed?
 
-### Q: Can I use multiple Database Connections?
+Exposed is a Kotlin-based SQL library that combines a DSL for building queries, Object-Relational Mapping (ORM) 
+features, and a DAO framework for managing entities. It allows developers to write type-safe queries and interact 
+with a database using Kotlin's expressive and concise syntax.
+For a more detailed description, see the [about](About.topic) section.
 
-A: Yes. See [Transactions](Transactions.md#working-with-multiple-databases)
+### Can I use multiple database connections?
 
-### Q: Is `Array` column type supported?
+Yes. You can use multiple database connections by passing the database reference to the `transaction()` function.
+For more details and examples, see [](Transactions.md#working-with-multiple-databases).
 
-A: Yes. See [Data Types](Array-types.topic).
+### What data types are supported?
 
-### Q: Is `upsert` supported?
+Exposed supports a variety of data types, including [basic data types](Numeric-Boolean-String-Types.topic),
+[date and time](Date-and-time-types.topic), [arrays](Array-types.topic), [binary data](Binary-types.topic),
+[enumeration](Enumeration-types.topic), and [](JSON-And-JSONB-types.topic). You can also extend and create new
+[custom data types](Custom-data-types.topic) to fit your specific needs.
 
-A: Yes. See [Insert Or Update](DSL-CRUD-operations.topic#insert-or-update)
+### How can I create a custom column type?
 
-### Q: Is `json` type supported?
+You can implement a custom column type using the
+[`IColumnType`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-column-type/index.html)
+interface and
+[`registerColumn()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/register-column.html)
+to register it to a table. For more information, refer to the [custom data types](Custom-data-types.topic) documentation.
 
-A: Yes. See [JSON](JSON-And-JSONB-types.topic)
+### Is it possible to generate SQL without a database connection?
 
-### Q: How to get a plain SQL query which will be executed?
+No, Exposed requires a database connection to generate SQL.
+SQL generation depends on the database dialect and transaction context, both of which are determined by the active 
+database connection. Since Exposed adapts queries dynamically based on the underlying database, a connection is
+necessary even if the query is never executed.
 
-A:
+### How do I get a plain SQL query which will be executed?
+
+To get the SQL representation of a query without executing it, use the
+[`prepareSQL()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-abstract-query/prepare-s-q-l.html)
+method:
+
 ```kotlin
-val plainSQL = FooTable.selectAll().where {}.prepareSQL(QueryBuilder(false)) 
+val plainSQL = StarWarsFilmsTable.selectAll()
+    .where{ StarWarsFilmsTable.sequelId eq ActorsTable.sequelId }
+    .prepareSQL(QueryBuilder(false))
 ```
-Use QueryBuiler with `false` - if you want to inline statement arguments, `true` - to see '?' in query.
+In this example `QueryBuiler` is used with `false` to return a non-parameterized string.
 
-### Q: Is it possible to update a field relative to current field value?
+### Is it possible to update a field relative to current field value?
 
-A: Yes. See example here: [https://github.com/JetBrains/Exposed/wiki/DSL#update](https://github.com/JetBrains/Exposed/issues/118)
+Yes. You can achieve this by using the `.update()` function with the `SqlExpressionBuilder`. For more information, see
+[how to update a record](DSL-CRUD-operations.topic#update-record).
 
-### Q: How can I add another type of Database?
+### How do I prepare query like `SELECT * FROM table WHERE (x,y) IN ((1, 2), (3, 4), (5, 6))`?
 
-A: Implement `DatabaseDialect` interface and register it with `Database.registerDialect()`.  
-If the implementation adds a lot of value consider contributing it as a PR to Exposed.
+Exposed provides the
+[`inList()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/in-list.html)
+function that works with pairs of columns. For more details, see
+[](DSL-Querying-data.topic#collection-condition-pairs-or-triples).
 
-### Q: Is it possible to create tables with cross / cyclic reference?
+### How can I convert a DSL query result to a DAO entity?
 
-A: Yes, it's possible since Exposed 0.11.1 version
+To convert the result of a DSL query into an entity, you can use the DAO's
+[`wrapRow()`](https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/wrap-row.html)
+function, which allows you to wrap a row into a DAO entity.
 
-### Q: How can I implement nested queries?
+### How can I implement nested queries?
 
-A: See example here: [https://github.com/JetBrains/Exposed/issues/248](https://github.com/JetBrains/Exposed/issues/118)
+You can implement nested queries by using the `alias()` function to create subqueries and join them with other tables
+or queries. For more information, see the [alias](DSL-Querying-data.topic#alias) documentation.
 
-### Q: How can I use SAVEPOINT?
-A: It possible only through using a raw connection. See example [here](https://github.com/JetBrains/Exposed/issues/320#issuecomment-394825415).
+### Is it possible to create tables with cyclic (circular) reference?
 
-### Q: How to prepare query like: `SELECT * FROM table WHERE (x,y) IN ((1, 2), (3, 4), (5, 6))`
-A: It possible with custom function. See [example](https://github.com/JetBrains/Exposed/issues/373#issuecomment-414123325).
+Yes, it is. To define such tables, you can use the `reference()` or `optReference()` functions to establish foreign key 
+relationships between tables. For more information, see the [](DAO-Relationships.topic) topic.
 
-### Q: Where can I find snapshot builds of Exposed
-A: You could use jitpack.io service for that.
+### How can I use a savepoint?
 
-Add jitpack.io to repositories:
-```
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-```
-Then add Exposed dependency as stated below:
-```
-dependencies {
-    implementation 'com.github.JetBrains:Exposed:-SNAPSHOT'
-}
-```
+You can set a savepoint through the `ExposedConnection.setSavepoint()` method within a transaction. For more details,
+see [](Transactions.md#using-savepoints).
 
-### Q: How can I create a custom column type?
-A: Just implements [IColumnType](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/ColumnType.kt#L25)
-and use [registerColumn](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/Table.kt#L387)
-to [extends](https://kotlinlang.org/docs/extensions.html) a [Table](https://github.com/JetBrains/Exposed/blob/76a671e57a0105d6aed79e256c088690bd4a56b6/exposed-core/src/main/kotlin/org/jetbrains/exposed/sql/Table.kt#L326)
+### Is it possible to use a low-level JDBC connection directly with Exposed?
 
+Yes, by accessing the raw connection wrapped by a transaction block's `connection` property:
 
-eg: **Create custom UUID types (inpired by [@pjagielski article](https://medium.com/@pjagielski/how-we-use-kotlin-with-exposed-at-touk-eacaae4565b5#e4e4))**
-```kotlin
-abstract class TypedId(open val id: UUID): Serializable, Comparable<TypedId> {
-    override fun compareTo(other: TypedId) = this.id.compareTo(other.id)
-}
+```Kotlin
+transaction {
+    val lowLevelCx = connection.connection as java.sql.Connection
 
-class TypedUUIDColumnType<T: TypedId>(val constructor: (UUID) -> T, private val uuidColType: UUIDColumnType = UUIDColumnType()): IColumnType by uuidColType {
-    override fun valueFromDB(value: Any) = constructor(uuidColType.valueFromDB(value))
-    override fun notNullValueToDB(value: Any): Any = uuidColType.notNullValueToDB(valueUnwrap(value))
-    override fun nonNullValueToString(value: Any): String = uuidColType.nonNullValueToString(valueUnwrap(value))
-    private fun valueUnwrap(value: Any) = (value as? TypedId)?.id ?: value
-}
+    val stmt = lowLevelCx.prepareStatement("INSERT INTO TEST_TABLE (AMOUNT) VALUES (?)")
+    stmt.setInt(1, 99)
+    stmt.addBatch()
+    stmt.setInt(1, 100)
+    stmt.addBatch()
+    stmt.executeBatch()
 
-fun <T: TypedId> Table.typedUuid(name: String, constructor: (UUID) -> T) = registerColumn<T>(name, TypedUUIDColumnType<T>(constructor))
-fun <T: TypedId> Column<T>.autoGenerate(constructor: (UUID) -> T): Column<T> = clientDefault { constructor(UUID.randomUUID()) }
-
-
-class StarWarsFilmId(id: UUID): TypedId(id)
-
-object StarWarsFilms : Table() {
-    val id = typedUuid("id") { StarWarsFilmId(it) }.autoGenerate{ StarWarsFilmId(it) }
-    val name: Column<String> = varchar("name", 50)
-    val director: Column<String> = varchar("director", 50)
-    final override val primaryKey = PrimaryKey(id)
+    val query = lowLevelCx.createStatement()
+    val result = query.executeQuery("SELECT COUNT(*) FROM TEST_TABLE")
+    result.next()
+    val count = result.getInt(1)
+    println(count) // 2
 }
 ```
 
+### How can I add another type of database?
 
-Reference: [#149](https://github.com/JetBrains/Exposed/issues/149)
+To add another type of database that is not currently supported by Exposed, implement the
+[`DatabaseDialect`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.vendors/-database-dialect/index.html)
+interface and register it with
+[`Database.registerDialect()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-database/-companion/register-dialect.html).
 
-### More questions on Stack Overflow:
-[https://stackoverflow.com/questions/tagged/kotlin-exposed](https://stackoverflow.com/questions/tagged/kotlin-exposed)
+If the implementation adds a lot of value, consider [contributing](Contributing.md) it to Exposed.
