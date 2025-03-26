@@ -1050,7 +1050,10 @@ class UUIDColumnType : ColumnType<UUID>() {
         else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
     }
 
-    override fun notNullValueToDB(value: UUID): Any = currentDialect.dataTypeProvider.uuidToDB(value)
+    override fun notNullValueToDB(value: UUID): Any {
+        return ((currentDialect as? H2Dialect)?.originalDataTypeProvider ?: currentDialect.dataTypeProvider)
+            .uuidToDB(value)
+    }
 
     override fun nonNullValueToString(value: UUID): String = "'$value'"
 

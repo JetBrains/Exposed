@@ -1,3 +1,12 @@
+public final class org/jetbrains/exposed/r2dbc/exceptions/ExposedR2dbcException : io/r2dbc/spi/R2dbcException {
+	public fun <init> (Ljava/lang/Throwable;Ljava/util/List;Lorg/jetbrains/exposed/r2dbc/sql/R2dbcTransaction;)V
+	public final fun causedByQueries ()Ljava/util/List;
+	public final fun getContexts ()Ljava/util/List;
+	public final fun getSQLState ()Ljava/lang/String;
+	public final fun getSpecificErrorCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/jetbrains/exposed/r2dbc/sql/ConnectionFactoryOptionsUtilsKt {
 	public static final fun getDialect (Lio/r2dbc/spi/ConnectionFactoryOptions;)Lorg/jetbrains/exposed/sql/vendors/VendorDialect$DialectNameProvider;
 	public static final fun getDialectName (Lio/r2dbc/spi/ConnectionFactoryOptions;)Ljava/lang/String;
