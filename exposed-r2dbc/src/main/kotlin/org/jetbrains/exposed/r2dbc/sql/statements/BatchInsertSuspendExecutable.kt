@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.r2dbc.sql.statements
 
+import kotlinx.coroutines.flow.collect
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
@@ -34,6 +35,8 @@ open class SQLServerBatchInsertSuspendExecutable(
             executeQuery()
         } else {
             executeUpdate()
+            // since no result will be processed in this case, must apply a terminal operator to collect the flow
+            getResultRow()?.mapRows { }?.collect()
             null
         }
         return statement.arguments!!.size to rs

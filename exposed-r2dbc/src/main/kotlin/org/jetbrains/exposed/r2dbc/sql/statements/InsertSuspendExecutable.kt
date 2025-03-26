@@ -3,6 +3,7 @@ package org.jetbrains.exposed.r2dbc.sql.statements
 import io.r2dbc.spi.RowMetadata
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
@@ -21,17 +22,20 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         val inserted = if (statement.arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
         // According to the `processResults()` method when supportsOnlyIdentifiersInGeneratedKeys is false
         // all the columns could be taken from result set
-        val rs = if (columnsGeneratedOnDB().isNotEmpty() || !currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
-            getResultRow()
+        return if (columnsGeneratedOnDB().isNotEmpty() || !currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
+            inserted to getResultRow()
         } else {
-            null
+            // since no result will be processed in this case, must apply a terminal operator to collect the flow
+            // e.g. getResultRow()?.mapRows {  }?.collect()
+            val count = getResultRow()?.rowsUpdated()?.awaitFirstOrNull()?.toInt() ?: inserted
+            count to null
         }
-        return inserted to rs
     }
 
     @OptIn(InternalApi::class)
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): Int {
         val (_, rs) = execInsertFunction()
+        // could execInsertFunction() be changed to return Pair<Int?, _> so we could sometime use actual count...
 //        statement.insertedCount = this
         val processResults = processResults(rs)
         statement.resultedValues = processResults
