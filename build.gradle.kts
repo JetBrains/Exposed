@@ -3,6 +3,7 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configureMavenCentralMetadata
 import org.jetbrains.exposed.gradle.testDb
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 val buildScriptLogger: Logger = Logging.getLogger("buildScriptLogger")
@@ -11,11 +12,30 @@ val buildScriptLogger: Logger = Logging.getLogger("buildScriptLogger")
 
 val kotlin_version: String by project
 val kotlin_repo_url: String? by project
-val kotlin_language_version: String? by project
-val kotlin_api_version: String? by project
-buildScriptLogger.log(LogLevel.INFO, "kotlin Api Version : $kotlin_api_version ")
-buildScriptLogger.log(LogLevel.INFO, "kotlin Language Version : $kotlin_language_version ")
-buildScriptLogger.log(LogLevel.INFO, "kotlin repository url : $kotlin_repo_url ")
+
+val kotlin_language_version = providers.gradleProperty("kotlin_language_version")
+    .map(org.jetbrains.kotlin.gradle.dsl.KotlinVersion::fromVersion)
+    .orNull
+
+val kotlin_api_version = providers.gradleProperty("kotlin_api_version")
+    .map(org.jetbrains.kotlin.gradle.dsl.KotlinVersion::fromVersion)
+    .orNull
+
+val warnings_as_errors = providers.gradleProperty("kotlin_Werror_override").map {
+    when (it) {
+        "enable" -> true
+        "disable" -> false
+        else -> error("Unexpected value for 'kotlin_Werror_override' property: $it")
+    }
+}
+
+// infrastructure for builds as a Kotlin user project
+// ("implement a Gradle property for passing additional CLI options to the Kotlin compiler")
+val kotlin_additional_cli_options =
+    providers.gradleProperty("kotlin_additional_cli_options").orNull
+        ?.split(' ')
+        ?.map(String::trim)
+        ?.filter(String::isNotBlank)
 
 plugins {
     kotlin("jvm") apply true
@@ -141,10 +161,37 @@ subprojects {
 }
 
 tasks.withType<KotlinJvmCompile>().configureEach {
-    kotlinOptions {
-        jvmTarget = "21"
-        apiVersion = kotlin_api_version ?: "1.9"
-        languageVersion = kotlin_language_version ?: "1.9" //
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+        apiVersion.set(kotlin_api_version)
+        languageVersion.set(kotlin_language_version)
+
+        buildScriptLogger.log(LogLevel.INFO, "kotlin Api Version : $kotlin_api_version ")
+        buildScriptLogger.log(LogLevel.INFO, "kotlin Language Version : $kotlin_language_version ")
+        buildScriptLogger.log(LogLevel.INFO, "kotlin repository url : $kotlin_repo_url ")
+
+        println("Additional cli options ${kotlin_additional_cli_options?.joinToString(" ")}")
+
+        if (kotlin_additional_cli_options != null) {
+            compilerOptions.freeCompilerArgs.addAll(kotlin_additional_cli_options)
+            logger.info("<KUP> additional cli options added: ${kotlin_additional_cli_options.joinToString(" ")}")
+        }
+
+        freeCompilerArgs.add("-Xreport-all-warnings")
+        buildScriptLogger.log(LogLevel.INFO, "-Xreport-all-warnings enabled")
+
+        allWarningsAsErrors.set(warnings_as_errors)
+        buildScriptLogger.log(LogLevel.INFO, "-Werror state: $warnings_as_errors")
+
+        freeCompilerArgs.add("-Xrender-internal-diagnostic-names")
+        buildScriptLogger.log(LogLevel.INFO, "-Xrender-internal-diagnostic-names enabled")
+
+        freeCompilerArgs.add("-Wextra")
+        buildScriptLogger.log(LogLevel.INFO, "-Wextra enabled")
+
+        freeCompilerArgs.add("-Xuse-fir-experimental-checkers")
+        buildScriptLogger.log(LogLevel.INFO, "-Xuse-fir-experimental-checkers enabled")
+
     }
 }
 
