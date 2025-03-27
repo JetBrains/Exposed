@@ -554,7 +554,7 @@ public final class org/jetbrains/exposed/r2dbc/sql/statements/R2dbcConnectionImp
 }
 
 public final class org/jetbrains/exposed/r2dbc/sql/statements/R2dbcPreparedStatementImpl : org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcPreparedStatementApi {
-	public fun <init> (Lio/r2dbc/spi/Statement;Lio/r2dbc/spi/Connection;Z)V
+	public fun <init> (Lio/r2dbc/spi/Statement;Lio/r2dbc/spi/Connection;ZLorg/jetbrains/exposed/sql/vendors/DatabaseDialect;)V
 	public fun addBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun cancel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun closeIfPossible (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -566,7 +566,7 @@ public final class org/jetbrains/exposed/r2dbc/sql/statements/R2dbcPreparedState
 	public fun getResultRow (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getWasGeneratedKeysRequested ()Z
 	public fun set (ILjava/lang/Object;)V
-	public fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
+	public fun setArray (ILorg/jetbrains/exposed/sql/ArrayColumnType;[Ljava/lang/Object;)V
 	public fun setFetchSize (Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setInputStream (ILjava/io/InputStream;Z)V
 	public fun setNull (ILorg/jetbrains/exposed/sql/IColumnType;)V

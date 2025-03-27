@@ -7,6 +7,8 @@ import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.vendors.DatabaseDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import java.io.InputStream
 import java.math.BigDecimal
 import java.time.Duration
@@ -19,14 +21,13 @@ import java.util.*
  * [wasGeneratedKeysRequested].
  */
 class R2dbcPreparedStatementImpl(
-    statement: Statement,
+    private val statement: Statement,
     // the property below is only here for setTimeout() --> should this logic be in R2dbcConnectionImpl instead
     val connection: Connection,
-    val wasGeneratedKeysRequested: Boolean
+    val wasGeneratedKeysRequested: Boolean,
+    private val currentDialect: DatabaseDialect
 ) : R2dbcPreparedStatementApi {
     private var resultRow: R2dbcResult? = null
-
-    private val statement: Statement = statement
 
     override suspend fun getResultRow(): R2dbcResult? {
         if (resultRow == null) {
@@ -74,6 +75,7 @@ class R2dbcPreparedStatementImpl(
                 setNull(index, columnType.delegate)
                 return
             }
+            is ArrayColumnType<*, *> -> columnType.arrayDeclaration()
             is ByteColumnType -> Byte::class.java
             is UByteColumnType -> UByte::class.java
             is ShortColumnType -> Short::class.java
@@ -89,7 +91,6 @@ class R2dbcPreparedStatementImpl(
             is UUIDColumnType -> UUID::class.java
             is CharacterColumnType -> Char::class.java
             is BooleanColumnType -> Boolean::class.java
-            is ArrayColumnType<*, *> -> List::class.java
             else -> String::class.java
         }
         statement.bindNull(index - 1, columnValueType)
@@ -103,8 +104,31 @@ class R2dbcPreparedStatementImpl(
         }
     }
 
-    override fun setArray(index: Int, type: String, array: Array<*>) {
-        statement.bind(index - 1, Parameters.`in`(R2dbcType.COLLECTION, array))
+    override fun setArray(index: Int, arrayType: ArrayColumnType<*, *>, array: Array<*>) {
+        val value = if (currentDialect is PostgreSQLDialect) {
+            val list = array.toList()
+            when (arrayType.delegate) {
+                is BooleanColumnType -> (list as List<Boolean>).toTypedArray()
+                is ByteColumnType -> (list as List<Byte>).toTypedArray()
+                is UByteColumnType -> (list as List<UByte>).toTypedArray()
+                is ShortColumnType -> (list as List<Short>).toTypedArray()
+                is UShortColumnType -> (list as List<UShort>).toTypedArray()
+                is IntegerColumnType -> (list as List<Int>).toTypedArray()
+                is UIntegerColumnType -> (list as List<UInt>).toTypedArray()
+                is LongColumnType -> (list as List<Long>).toTypedArray()
+                is ULongColumnType -> (list as List<ULong>).toTypedArray()
+                is FloatColumnType -> (list as List<Float>).toTypedArray()
+                is DoubleColumnType -> (list as List<Double>).toTypedArray()
+                is BinaryColumnType -> (list as List<ByteArray>).toTypedArray()
+                is TextColumnType -> (list as List<String>).toTypedArray()
+                is DecimalColumnType -> (list as List<BigDecimal>).toTypedArray()
+                else -> error("Unsupported array type: $arrayType:${arrayType::class}")
+            }
+        } else {
+            Parameters.`in`(R2dbcType.COLLECTION, array)
+        }
+
+        statement.bind(index - 1, value)
     }
 
     override suspend fun closeIfPossible() {
@@ -118,5 +142,24 @@ class R2dbcPreparedStatementImpl(
 
     override suspend fun cancel() {
         // do nothing
+    }
+
+    private fun ArrayColumnType<*, *>.arrayDeclaration(): Class<out Array<out Any>> = when (delegate) {
+        is ByteColumnType -> Array<Byte>::class.java
+        is UByteColumnType -> Array<UByte>::class.java
+        is ShortColumnType -> Array<Short>::class.java
+        is UShortColumnType -> Array<UShort>::class.java
+        is IntegerColumnType -> Array<Integer>::class.java
+        is UIntegerColumnType -> Array<UInt>::class.java
+        is LongColumnType -> Array<Long>::class.java
+        is ULongColumnType -> Array<ULong>::class.java
+        is FloatColumnType -> Array<Float>::class.java
+        is DoubleColumnType -> Array<Double>::class.java
+        is DecimalColumnType -> Array<BigDecimal>::class.java
+        is BasicBinaryColumnType, is BlobColumnType -> Array<ByteArray>::class.java
+        is UUIDColumnType -> Array<UUID>::class.java
+        is CharacterColumnType -> Array<Char>::class.java
+        is BooleanColumnType -> Array<Boolean>::class.java
+        else -> Array<Any>::class.java
     }
 }

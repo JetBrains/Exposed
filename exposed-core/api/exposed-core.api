@@ -3315,7 +3315,7 @@ protected final class org/jetbrains/exposed/sql/statements/api/IdentifierManager
 public abstract interface class org/jetbrains/exposed/sql/statements/api/PreparedStatementApi {
 	public abstract fun fillParameters (Ljava/lang/Iterable;)I
 	public abstract fun set (ILjava/lang/Object;)V
-	public abstract fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
+	public abstract fun setArray (ILorg/jetbrains/exposed/sql/ArrayColumnType;[Ljava/lang/Object;)V
 	public abstract fun setInputStream (ILjava/io/InputStream;Z)V
 	public abstract fun setNull (ILorg/jetbrains/exposed/sql/IColumnType;)V
 }

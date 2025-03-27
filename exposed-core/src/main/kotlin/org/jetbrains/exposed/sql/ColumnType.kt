@@ -1312,9 +1312,9 @@ class ArrayColumnType<T, R : List<Any?>>(
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when {
             value is Array<*> && isArrayOfByteArrays(value) ->
-                stmt.setArray(index, delegateType, Array(value.size) { value[it] as ByteArray })
+                stmt.setArray(index, this, Array(value.size) { value[it] as ByteArray })
 
-            value is Array<*> -> stmt.setArray(index, delegateType, value)
+            value is Array<*> -> stmt.setArray(index, this, value)
             else -> super.setParameter(stmt, index, value)
         }
     }

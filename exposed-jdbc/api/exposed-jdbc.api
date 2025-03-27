@@ -715,7 +715,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcPreparedStateme
 	public fun getTimeout ()Ljava/lang/Integer;
 	public final fun getWasGeneratedKeysRequested ()Z
 	public fun set (ILjava/lang/Object;)V
-	public fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
+	public fun setArray (ILorg/jetbrains/exposed/sql/ArrayColumnType;[Ljava/lang/Object;)V
 	public fun setFetchSize (Ljava/lang/Integer;)V
 	public fun setInputStream (ILjava/io/InputStream;Z)V
 	public fun setNull (ILorg/jetbrains/exposed/sql/IColumnType;)V

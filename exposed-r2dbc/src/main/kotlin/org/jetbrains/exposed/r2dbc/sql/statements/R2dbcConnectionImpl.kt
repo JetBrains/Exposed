@@ -107,7 +107,7 @@ class R2dbcConnectionImpl(
 //        TODO
 //        val r2dbcQuery = if (returnKeys) "$preparedSql RETURNING *" else preparedSql
 //        R2dbcPreparedStatementImpl(createStatement(r2dbcQuery), this, returnKeys, isInsert = r2dbcQuery.startsWith("INSERT"))
-        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys, currentDialect)
     }
 
     override suspend fun prepareStatement(
@@ -116,7 +116,7 @@ class R2dbcConnectionImpl(
     ): R2dbcPreparedStatementImpl = withConnection {
         val preparedSql = r2dbcPreparedSql(sql)
         val r2dbcStatement = createStatement(preparedSql).returnGeneratedValues(*columns)
-        R2dbcPreparedStatementImpl(r2dbcStatement, this, true)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, true, currentDialect)
     }
 
     private fun r2dbcPreparedSql(sql: String): String {
