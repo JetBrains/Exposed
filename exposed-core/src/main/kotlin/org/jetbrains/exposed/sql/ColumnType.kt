@@ -614,10 +614,9 @@ class ULongColumnType : ColumnType<ULong>() {
                     ?: error("Value out of range: $value")
             }
 
-            dialect is PostgreSQLDialect ||
-                (dialect is H2Dialect && dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL) -> {
-                BigInteger(value.toString())
-            }
+            dialect is PostgreSQLDialect -> BigInteger(value.toString())
+            // Long is also an accepted mapping, but this would require handling as above for Oor errors
+            dialect is H2Dialect -> BigDecimal(value.toString())
 
             else -> value.toString()
         }
@@ -1047,6 +1046,7 @@ class UUIDColumnType : ColumnType<UUID>() {
         value is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
         value is String && value.matches(uuidRegexp) -> UUID.fromString(value)
         value is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
+        value is ByteBuffer -> value.let { b -> UUID(b.long, b.long) }
         else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
     }
 

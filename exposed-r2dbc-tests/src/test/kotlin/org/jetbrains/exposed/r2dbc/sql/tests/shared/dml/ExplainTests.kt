@@ -3,14 +3,7 @@ package org.jetbrains.exposed.r2dbc.sql.tests.shared.dml
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
-import org.jetbrains.exposed.r2dbc.sql.addLogger
-import org.jetbrains.exposed.r2dbc.sql.deleteAll
-import org.jetbrains.exposed.r2dbc.sql.explain
-import org.jetbrains.exposed.r2dbc.sql.insert
-import org.jetbrains.exposed.r2dbc.sql.select
-import org.jetbrains.exposed.r2dbc.sql.selectAll
-import org.jetbrains.exposed.r2dbc.sql.union
+import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.and
@@ -25,7 +18,6 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 
 class ExplainTests : R2dbcDatabaseTestsBase() {
@@ -96,7 +88,7 @@ class ExplainTests : R2dbcDatabaseTestsBase() {
                 explainAndIncrement { cities.insertIgnore { it[name] = cityName } }
                 explainAndIncrement { userData.insertIgnore(subquery) }
             }
-            if (testDb is MysqlDialect || testDb is SQLiteDialect) {
+            if (testDb is MysqlDialect) {
                 explainAndIncrement { cities.replace { it[name] = cityName } }
             }
             explainAndIncrement {
@@ -107,11 +99,9 @@ class ExplainTests : R2dbcDatabaseTestsBase() {
             }
             // update statements
             explainAndIncrement { cities.update { it[name] = cityName } }
-            if (testDb !is SQLiteDialect) {
-                explainAndIncrement {
-                    val join = users.innerJoin(userData)
-                    join.update { it[userData.value] = 123 }
-                }
+            explainAndIncrement {
+                val join = users.innerJoin(userData)
+                join.update { it[userData.value] = 123 }
             }
             // delete statements
             explainAndIncrement { cities.deleteWhere { cities.id eq 1 } }

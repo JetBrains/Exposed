@@ -16,7 +16,6 @@ import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import kotlin.test.expect
 
@@ -187,12 +186,8 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
 
             val createdStatements = tester.indices.map { SchemaUtils.createIndex(it).first() }
             assertEquals(3, createdStatements.size)
-            if (currentDialectTest is SQLiteDialect) {
-                assertTrue(createdStatements.all { it.startsWith("CREATE ") })
-            } else {
-                assertEquals(2, createdStatements.count { it.startsWith("CREATE ") })
-                assertEquals(1, createdStatements.count { it.startsWith("ALTER TABLE ") })
-            }
+            assertEquals(2, createdStatements.count { it.startsWith("CREATE ") })
+            assertEquals(1, createdStatements.count { it.startsWith("ALTER TABLE ") })
 
             assertEquals(2, tester.indices.count { it.filterCondition != null })
 
@@ -249,7 +244,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
             assertTrue(tester.exists())
 
             val expectedIndexCount = when (currentDialectTest) {
-                is PostgreSQLDialect, is SQLServerDialect, is SQLiteDialect -> 1
+                is PostgreSQLDialect, is SQLServerDialect -> 1
                 else -> 0
             }
             val actualIndexCount = currentDialectMetadataTest.existingIndices(tester)[tester].orEmpty().size

@@ -193,7 +193,7 @@ class GroupByTests : R2dbcDatabaseTestsBase() {
                 assertEquals("Andrey", it["St. Petersburg"])
                 when (currentDialectTest) {
                     // return order is arbitrary if no ORDER BY is specified
-                    is MariaDBDialect, is SQLiteDialect -> assertTrue(it["Munich"] in listOf("Sergey, Eugene", "Eugene, Sergey"))
+                    is MariaDBDialect -> assertTrue(it["Munich"] in listOf("Sergey, Eugene", "Eugene, Sergey"))
                     is MysqlDialect, is SQLServerDialect -> assertEquals("Eugene, Sergey", it["Munich"])
                     else -> assertEquals("Sergey, Eugene", it["Munich"])
                 }
@@ -201,7 +201,7 @@ class GroupByTests : R2dbcDatabaseTestsBase() {
                 assertNull(it["Prague"])
             }
 
-            users.name.groupConcat(separator = " | ", distinct = true).checkExcept(OracleDialect, SQLiteDialect, SQLServerDialect) {
+            users.name.groupConcat(separator = " | ", distinct = true).checkExcept(OracleDialect, SQLServerDialect) {
                 assertEquals(3, it.size)
                 assertEquals("Andrey", it["St. Petersburg"])
                 when (currentDialectTest) {

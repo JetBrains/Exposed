@@ -61,7 +61,7 @@ class CountTests : R2dbcDatabaseTestsBase() {
             val value = integer("value")
         }
 
-        // SQLite, MariaDB, Mysql do not support OFFSET clause without LIMIT
+        // MariaDB, Mysql do not support OFFSET clause without LIMIT
         withTables(excludeSettings = TestDB.ALL_MYSQL_MARIADB, tester) {
             tester.batchInsert(listOf(1, 2, 3, 4, 5)) {
                 this[tester.value] = it

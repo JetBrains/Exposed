@@ -166,7 +166,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                 val result1 = UShortTable.selectAll().where { UShortTable.unsignedShort eq number1 }.count()
                 assertEquals(1, result1)
 
-                // SMALLINT maps to INTEGER in SQLite and NUMBER(38) in Oracle, so they will not throw OoR error
+                // SMALLINT maps to NUMBER(38) in Oracle, so it will not throw OoR error
                 if (testDb != TestDB.ORACLE) {
                     val number2 = (Short.MAX_VALUE + 1).toUShort()
                     assertFailAndRollback("Out-of-range (OoR) error") {
@@ -244,7 +244,6 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                 val result1 = UIntTable.selectAll().where { UIntTable.unsignedInt eq number1 }.count()
                 assertEquals(1, result1)
 
-                // INT maps to INTEGER in SQLite, so it will not throw OoR error
                 val number2 = Int.MAX_VALUE.toUInt() + 1u
                 assertFailAndRollback("Out-of-range (OoR) error") {
                     UIntTable.insert { it[unsignedInt] = number2 }

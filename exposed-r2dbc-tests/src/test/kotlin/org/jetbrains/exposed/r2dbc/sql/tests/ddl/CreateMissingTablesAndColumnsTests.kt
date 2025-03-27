@@ -11,8 +11,13 @@ import org.jetbrains.exposed.r2dbc.sql.exists
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.insertAndGetId
 import org.jetbrains.exposed.r2dbc.sql.selectAll
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.doubleLiteral
+import org.jetbrains.exposed.sql.floatLiteral
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
@@ -343,7 +348,6 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
 
         val tableEmptyStringDefaultText = StringFieldTable("text_whitespace_test", true, "")
 
-        // SQLite doesn't support alter table with add column, so it doesn't generate the statements, hence excluded
         withDb { testDb ->
             // MySQL doesn't support default values on text columns, hence excluded
             val supportsTextDefault = testDb !in TestDB.ALL_MYSQL
@@ -699,7 +703,6 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
             val parent = reference("my_parent", parentTable)
         }
 
-        // SQLite does not recognize creation of schema other than the attached database
         withDb { testDb ->
             val schema = if (testDb == TestDB.SQLSERVER) {
                 Schema(schemaName, "guest")

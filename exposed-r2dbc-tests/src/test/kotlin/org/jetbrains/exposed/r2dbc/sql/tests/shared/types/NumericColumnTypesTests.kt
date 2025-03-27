@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.r2dbc.sql.tests.shared.types
 
+import org.jetbrains.exposed.r2dbc.sql.addLogger
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.r2dbc.sql.selectAll
@@ -35,11 +36,11 @@ class NumericColumnTypesTests : R2dbcDatabaseTestsBase() {
             assertEquals(2, testTable.select(testTable.short).count())
 
             val tableName = testTable.nameInDatabaseCase()
-            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
+            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for Oracle)") {
                 val outOfRangeValue = Short.MIN_VALUE - 1
                 exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
             }
-            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
+            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for Oracle)") {
                 val outOfRangeValue = Short.MAX_VALUE + 1
                 exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
             }
@@ -100,11 +101,11 @@ class NumericColumnTypesTests : R2dbcDatabaseTestsBase() {
             assertEquals(2, testTable.select(testTable.integer).count())
 
             val tableName = testTable.nameInDatabaseCase()
-            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
+            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for Oracle)") {
                 val outOfRangeValue = Int.MIN_VALUE.toLong() - 1
                 exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
             }
-            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
+            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for Oracle)") {
                 val outOfRangeValue = Int.MAX_VALUE.toLong() + 1
                 exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
             }
@@ -130,11 +131,11 @@ class NumericColumnTypesTests : R2dbcDatabaseTestsBase() {
             assertEquals(2, testTable.select(testTable.long).count())
 
             val tableName = testTable.nameInDatabaseCase()
-            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
+            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for Oracle)") {
                 val outOfRangeValue = Long.MIN_VALUE.toBigDecimal() - 1.toBigDecimal()
                 exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
             }
-            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for SQLite & Oracle)") {
+            assertFailAndRollback(message = "Out-of-range error (or CHECK constraint violation for Oracle)") {
                 val outOfRangeValue = Long.MAX_VALUE.toBigDecimal() + 1.toBigDecimal()
                 exec("INSERT INTO $tableName ($columnName) VALUES ($outOfRangeValue)")
             }
@@ -158,6 +159,7 @@ class NumericColumnTypesTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(testTable) {
+            addLogger(StdOutSqlLogger)
             testTable.insert {
                 it[byte] = byteParam(Byte.MIN_VALUE)
                 it[ubyte] = ubyteParam(UByte.MAX_VALUE)

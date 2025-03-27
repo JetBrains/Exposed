@@ -4,15 +4,8 @@ import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.r2dbc.sql.deleteWhere
-import org.jetbrains.exposed.r2dbc.sql.exists
-import org.jetbrains.exposed.r2dbc.sql.insert
-import org.jetbrains.exposed.r2dbc.sql.insertAndGetId
-import org.jetbrains.exposed.r2dbc.sql.name
-import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.r2dbc.sql.update
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
@@ -30,7 +23,6 @@ import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertFails
@@ -669,7 +661,6 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         is SQLServerDialect -> "dbo.$tableName"
         is OracleDialect -> "${this.user}.$tableName"
         is MysqlDialect -> "${this.db!!.name}.$tableName"
-        is SQLiteDialect -> tableName
         else -> "public.$tableName"
     }
 

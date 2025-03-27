@@ -59,7 +59,6 @@ class StatisticsFunctionTests : R2dbcDatabaseTestsBase() {
     private val scale = 4
 
     private fun withSampleTable(excludeDB: List<TestDB> = emptyList(), body: suspend R2dbcTransaction.(TestDB) -> Unit) {
-        // SQLite does not have any built-in statistics-specific aggregate functions
         withTables(excludeSettings = excludeDB, SampleTestTable) {
             SampleTestTable.batchInsert(data) { num ->
                 this[SampleTestTable.number] = num

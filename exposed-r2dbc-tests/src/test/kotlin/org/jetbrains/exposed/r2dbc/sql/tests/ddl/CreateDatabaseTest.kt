@@ -38,7 +38,11 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testListDatabasesWithAutoCommit() {
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.SQLSERVER)) {
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.SQLSERVER)) { testDb ->
+            // Connection.setAutoCommit() should first commit the transaction if already active
+            // But this does not seem to happen with SQL Server, leading to multi-statement tx errors
+            // so we commit here to force a new transaction in autoCommit mode
+            if (testDb == TestDB.SQLSERVER) connection.commit()
             connection.setAutoCommit(true)
 
             val dbName = "jetbrains"
@@ -79,7 +83,11 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
     @Test
     fun testCreateAndDropDatabaseWithAutoCommit() {
         // PostgreSQL needs auto commit to be "ON" to allow create database statement
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.SQLSERVER)) {
+        withDb(listOf(TestDB.POSTGRESQL, TestDB.SQLSERVER)) { testDb ->
+            // Connection.setAutoCommit() should first commit the transaction if already active
+            // But this does not seem to happen with SQL Server, leading to multi-statement tx errors
+            // so we commit here to force a new transaction in autoCommit mode
+            if (testDb == TestDB.SQLSERVER) connection.commit()
             connection.setAutoCommit(true)
             val dbName = "jetbrains"
             SchemaUtils.createDatabase(dbName)

@@ -27,7 +27,6 @@ import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertNotNull
@@ -419,11 +418,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         withTables(t) {
             val alter = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
-            if (currentDialectTest is SQLiteDialect) {
-                assertEquals("CREATE UNIQUE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
-            } else {
-                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE ($q${"name".inProperCase()}$q)", alter)
-            }
+            assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE ($q${"name".inProperCase()}$q)", alter)
         }
     }
 
@@ -439,11 +434,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         withTables(t) {
             val q = db.identifierManager.quoteString
             val alter = SchemaUtils.createIndex(t.indices[0])
-            if (currentDialectTest is SQLiteDialect) {
-                assertEquals("CREATE UNIQUE INDEX ${"U_T1_NAME"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
-            } else {
-                assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_NAME"} UNIQUE ($q${"name".inProperCase()}$q)", alter)
-            }
+            assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_NAME"} UNIQUE ($q${"name".inProperCase()}$q)", alter)
         }
     }
 
@@ -467,17 +458,10 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             assertEquals(
                 "CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter
             )
-            if (currentDialectTest is SQLiteDialect) {
-                assertEquals(
-                    "CREATE UNIQUE INDEX ${"t1_type_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)",
-                    uniqueAlter
-                )
-            } else {
-                assertEquals(
-                    "ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_type_name_unique".inProperCase()} UNIQUE ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)",
-                    uniqueAlter
-                )
-            }
+            assertEquals(
+                "ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_type_name_unique".inProperCase()} UNIQUE ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)",
+                uniqueAlter
+            )
         }
     }
 
@@ -498,16 +482,10 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"I_T1_NAME_TYPE"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter)
-            if (currentDialectTest is SQLiteDialect) {
-                assertEquals(
-                    "CREATE UNIQUE INDEX ${"U_T1_TYPE_NAME"} ON ${"t1".inProperCase()} ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)", uniqueAlter
-                )
-            } else {
-                assertEquals(
-                    "ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_TYPE_NAME"} UNIQUE ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)",
-                    uniqueAlter
-                )
-            }
+            assertEquals(
+                "ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_TYPE_NAME"} UNIQUE ($q${"type".inProperCase()}$q, $q${"name".inProperCase()}$q)",
+                uniqueAlter
+            )
         }
     }
 
@@ -728,9 +706,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             Table1.deleteAll()
             Table2.deleteAll()
 
-            if (currentDialectTest !is SQLiteDialect) {
-                exec(Table2.table1.foreignKey!!.dropStatement().single())
-            }
+            exec(Table2.table1.foreignKey!!.dropStatement().single())
         }
     }
 

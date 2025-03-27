@@ -197,7 +197,6 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
             }
         }
 
-        // SQLite does not recognize creation of schema other than the attached database.
         // Check constraints only introduced in MySQL v8+.
         withDb(excludeSettings = listOf(TestDB.MYSQL_V5)) { testDb ->
             val schema = prepareSchemaForTest(schemaName)
