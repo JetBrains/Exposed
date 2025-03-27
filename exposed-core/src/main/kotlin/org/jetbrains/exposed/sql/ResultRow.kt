@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.withDialect
@@ -118,15 +117,17 @@ class ResultRow(
      * @param expression expression for which to get the index
      * @throws IllegalStateException if expression is not in record set
      */
-    private fun <T> getExpressionIndex(expression: Expression<T>): Int = fieldIndex[expression]
-        ?: fieldIndex.keys.firstOrNull { exp ->
-            when (exp) {
-                is Column<*> -> (exp.columnType as? EntityIDColumnType<*>)?.idColumn == expression
-                is IExpressionAlias<*> -> exp.delegate == expression
-                else -> false
-            }
-        }?.let { exp -> fieldIndex[exp] }
-        ?: error("$expression is not in record set")
+    private fun <T> getExpressionIndex(expression: Expression<T>): Int {
+        return fieldIndex[expression]
+            ?: fieldIndex.keys.firstOrNull { exp ->
+                when (exp) {
+                    is Column<*> -> (exp.columnType as? EntityIDColumnType<*>)?.idColumn == expression
+                    is IExpressionAlias<*> -> exp.delegate == expression
+                    else -> false
+                }
+            }?.let { exp -> fieldIndex[exp] }
+            ?: error("$expression is not in record set")
+    }
 
     override fun toString(): String =
         fieldIndex.entries.joinToString { "${it.key}=${data[it.value]}" }
@@ -134,16 +135,18 @@ class ResultRow(
     internal object NotInitializedValue
 
     companion object {
-        /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [ResultApi]. */
-        fun create(rs: RowApi, fieldsIndex: Map<Expression<*>, Int>): ResultRow = ResultRow(fieldsIndex).apply {
-            fieldsIndex.forEach { (field, index) ->
-                val columnType: IColumnType<out Any>? = (field as? ExpressionWithColumnType)?.columnType
-                val value = if (columnType != null) {
-                    columnType.readObject(rs, index + 1)
-                } else {
-                    rs.getObject(index + 1)
+        /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [RowApi]. */
+        fun create(rs: RowApi, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
+            return ResultRow(fieldsIndex).apply {
+                fieldsIndex.forEach { (field, index) ->
+                    val columnType: IColumnType<out Any>? = (field as? ExpressionWithColumnType)?.columnType
+                    val value = if (columnType != null) {
+                        columnType.readObject(rs, index + 1)
+                    } else {
+                        rs.getObject(index + 1)
+                    }
+                    data[index] = value
                 }
-                data[index] = value
             }
         }
 

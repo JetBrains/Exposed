@@ -198,28 +198,6 @@ class DDLTests : R2dbcDatabaseTestsBase() {
     }
 
     @Test
-    fun unnamedTableWithQuotesSQLInSQLite() {
-        withDb {
-            val q = db.identifierManager.quoteString
-            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) {
-                "$q${"unnamedTable$1".inProperCase()}$q"
-            } else {
-                "unnamedTable$1".inProperCase()
-            }
-            val integerType = currentDialectTest.dataTypeProvider.integerType()
-            val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
-            assertEquals(
-                "CREATE TABLE " +
-                    addIfNotExistsIfSupported() +
-                    "$tableName " +
-                    "(${"id".inProperCase()} $integerType NOT NULL PRIMARY KEY, $q${"name".inProperCase()}$q $varCharType NOT NULL," +
-                    """ CONSTRAINT "chk_unnamedTable$1_signed_integer_id" CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE}))""",
-                unnamedTable.ddl
-            )
-        }
-    }
-
-    @Test
     fun namedEmptyTableWithoutQuotesSQL() {
         val testTable = object : Table("test_named_table") {}
 

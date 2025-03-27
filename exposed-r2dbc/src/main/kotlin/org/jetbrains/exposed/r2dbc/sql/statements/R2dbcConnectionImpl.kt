@@ -184,6 +184,7 @@ class R2dbcConnectionImpl(
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T = withContext(scope.coroutineContext) {
         if (localConnection == null) {
             localConnection = connection.awaitFirst().also {
+                // this starts an explicit transaction with autoCommit mode off
                 it.beginTransaction().awaitFirstOrNull()
             }
         }

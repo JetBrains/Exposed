@@ -168,7 +168,14 @@ class TransactionManager(
             outerTransaction?.connection ?: db.connector().apply {
                 @Suppress("TooGenericExceptionCaught")
                 try {
+                    // TODO assess need for property suspend setters vs Lazy usage
                     setupTxConnection?.invoke(this, this@R2dbcThreadLocalTransaction)
+//                        ?: runBlocking {
+//                            setTransactionIsolation(this@R2dbcThreadLocalTransaction.transactionIsolation)
+//                            setReadOnly(this@R2dbcThreadLocalTransaction.readOnly)
+//                            // potentially redundant if R2dbcConnectionImpl calls beginTransaction(), which disables autoCommit
+//                            setAutoCommit(false)
+//                        }
                 } catch (e: Exception) {
                     try {
                         // suspend alternative for lazy?
