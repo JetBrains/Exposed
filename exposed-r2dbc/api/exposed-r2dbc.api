@@ -748,14 +748,14 @@ public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcPreparedS
 
 public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcResult : org/jetbrains/exposed/sql/statements/api/ResultApi {
 	public fun close ()V
+	public final fun collect (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun mapRows (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
 	public final fun mapSegments (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
-	public final fun rowsUpdated ()Lorg/reactivestreams/Publisher;
+	public final fun rowsUpdated ()Lkotlinx/coroutines/flow/Flow;
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcResultKt {
-	public static final fun R2dbcResult (Lorg/reactivestreams/Publisher;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun getMetadata (Lorg/jetbrains/exposed/sql/statements/api/RowApi;)Lio/r2dbc/spi/RowMetadata;
 	public static final fun getOrigin (Lorg/jetbrains/exposed/sql/statements/api/RowApi;)Lio/r2dbc/spi/Row;
 	public static final fun rowsCount (Lorg/jetbrains/exposed/sql/statements/api/ResultApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

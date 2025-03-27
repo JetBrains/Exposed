@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnTransformer
 import org.jetbrains.exposed.sql.ColumnWithTransform
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
@@ -315,8 +316,9 @@ class ColumnWithTransformTest : R2dbcDatabaseTestsBase() {
                 .transform(wrap = { TransformDataHolder(it) }, unwrap = { it.value })
         }
 
-        withTables(tester) {
-            tester.batchInsert(listOf(1, 2, 3)) {
+        withTables(tester) { testDb ->
+            // Oracle throws: Batch execution returning generated values is not supported
+            tester.batchInsert(listOf(1, 2, 3), shouldReturnGeneratedValues = testDb != TestDB.ORACLE) {
                 this[tester.v1] = TransformDataHolder(it)
             }
 

@@ -4,6 +4,7 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.Parameters
 import io.r2dbc.spi.R2dbcType
 import io.r2dbc.spi.Statement
+import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.sql.*
@@ -30,7 +31,7 @@ class R2dbcPreparedStatementImpl(
     private var resultRow: R2dbcResult? = null
 
     override suspend fun getResultRow(): R2dbcResult? {
-        if (resultRow == null) {
+        if (resultRow == null && wasGeneratedKeysRequested) {
             val resultPublisher = statement.execute()
             resultRow = R2dbcResult(resultPublisher)
         }
@@ -47,8 +48,7 @@ class R2dbcPreparedStatementImpl(
     }
 
     override suspend fun addBatch() {
-        // unlike JDBC, differentiation may need to be made between Statement and Batch objects
-        statement.add() // REVIEW potential preceding operation, bind()
+        statement.add()
     }
 
     override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute())
@@ -58,7 +58,7 @@ class R2dbcPreparedStatementImpl(
         val r2dbcResult = R2dbcResult(result)
         resultRow = r2dbcResult
 
-        return 0
+        return -1
     }
 
     override fun set(index: Int, value: Any) {
@@ -136,8 +136,16 @@ class R2dbcPreparedStatementImpl(
     }
 
     override suspend fun executeBatch(): List<Int> {
-        // unlike JDBC, a differentiation may need to be made between Statement and Batch objects
-        return emptyList()
+        val result = statement.execute()
+        val r2dbcResult = R2dbcResult(result)
+
+        return if (wasGeneratedKeysRequested) {
+            resultRow = r2dbcResult
+            listOf(-1)
+        } else {
+            resultRow = null
+            r2dbcResult.rowsUpdated().toList()
+        }
     }
 
     override suspend fun cancel() {

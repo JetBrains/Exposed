@@ -215,6 +215,4 @@ abstract class R2dbcDatabaseTestsBase {
         quota = "20M",
         on = "USERS"
     )
-
-    fun withH2V1(testDB: Collection<TestDB>) = (testDB + TestDB.ALL_H2_V1).toSet()
 }

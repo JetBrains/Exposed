@@ -44,11 +44,11 @@ import kotlin.test.assertNotNull
 @Suppress("LargeClass")
 class UpsertTests : R2dbcDatabaseTestsBase() {
     // these DB require key columns from ON clause to be included in the derived source table (USING clause)
-    private val upsertViaMergeDB = TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.ORACLE
+    private val upsertViaMergeDB = TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.ORACLE
 
     @Test
     fun testUpsertWithPKConflict() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, AutoIncTable) { testDb ->
+        withTables(AutoIncTable) { testDb ->
             val id1 = AutoIncTable.insert {
                 it[name] = "A"
             } get AutoIncTable.id
@@ -78,7 +78,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             override val primaryKey = PrimaryKey(idA, idB)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             val insertStmt = tester.insert {
                 it[idA] = 1
                 it[idB] = 1
@@ -122,7 +122,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             }
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) { testDb ->
+        withTables(tester) { testDb ->
             val primaryKeyValues = Pair("User A", "Key A")
             // insert new row
             upsertOnlyKeyColumns(primaryKeyValues)
@@ -139,7 +139,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testUpsertWithUniqueIndexConflict() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val wordA = Words.upsert {
                 it[word] = "A"
                 it[count] = 10
@@ -167,7 +167,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             val name = varchar("name", 64)
         }
 
-        withTables(excludeSettings = TestDB.ALL_MYSQL_LIKE + TestDB.ALL_H2_V1, tester) { testDb ->
+        withTables(excludeSettings = TestDB.ALL_MYSQL_LIKE, tester) { testDb ->
             val oldIdA = tester.insert {
                 it[idA] = 1
                 it[idB] = 1
@@ -213,7 +213,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             val uuid1 = tester.upsert {
                 it[title] = "A"
             } get tester.id
@@ -236,7 +236,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
         val okWithNoUniquenessDB = TestDB.ALL_MYSQL_LIKE
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) { testDb ->
+        withTables(tester) { testDb ->
             if (testDb in okWithNoUniquenessDB) {
                 tester.upsert {
                     it[name] = "A"
@@ -254,7 +254,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testUpsertWithManualUpdateAssignment() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val testWord = "Test"
 
             repeat(3) {
@@ -287,7 +287,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             statement[tester.losses] = tester.losses - insertValue(tester.amount)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             val itemA = tester.upsert {
                 it[item] = "Item A"
             } get tester.item
@@ -328,7 +328,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             val phrase = varchar("phrase", 256).defaultExpression(stringParam(defaultPhrase))
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             val testWord = "Test"
             tester.upsert { // default expression in insert
                 it[word] = testWord
@@ -371,7 +371,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             val count = integer("count").default(1)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             tester.insert {
                 it[id] = 1
                 it[word] = "Word A"
@@ -423,7 +423,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             val losses = integer("losses")
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester, configure = { useNestedTransactions = true }) {
+        withTables(tester, configure = { useNestedTransactions = true }) {
             val itemA = "Item A"
             tester.upsert {
                 it[item] = itemA
@@ -550,7 +550,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             val name = varchar("name", 32)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester1, tester2) { testDb ->
+        withTables(tester1, tester2) { testDb ->
             val id1 = tester1.insertAndGetId {
                 it[name] = "foo"
             }
@@ -576,7 +576,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testBatchUpsertWithNoConflict() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val amountOfWords = 10
             val allWords = List(amountOfWords) { i -> "Word ${'A' + i}" to amountOfWords * i + amountOfWords }
 
@@ -592,7 +592,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testBatchUpsertWithConflict() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val vowels = listOf("A", "E", "I", "O", "U")
             val alphabet = ('A'..'Z').map { it.toString() }
             val lettersWithDuplicates = alphabet + vowels
@@ -614,7 +614,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testBatchUpsertWithSequence() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val amountOfWords = 25
             val allWords = List(amountOfWords) { UUID.randomUUID().toString() }.asSequence()
             Words.batchUpsert(allWords) { word -> this[Words.word] = word }
@@ -627,7 +627,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testBatchUpsertWithEmptySequence() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+        withTables(Words) {
             val allWords = emptySequence<String>()
             Words.batchUpsert(allWords) { word -> this[Words.word] = word }
 
@@ -666,15 +666,17 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testInsertedCountWithBatchUpsert() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, AutoIncTable) { testDb ->
-            // SQL Server requires statements to be executed before results can be obtained
-            val isNotSqlServer = testDb != TestDB.SQLSERVER
+        // Todo Good test example for allowing fetching of generated values + affected row count from batch execution
+        // OG test allowed generated values to be retrieved (but not used), which caused MySQL to fail, even though the correct affected
+        // row count was retrieved; an incorrect sum() of generated row values is used since both cannot be fetched...
+        // Oracle must be excluded as throws: 'Batch execution returning generated values is not supported'
+        withTables(AutoIncTable) { testDb ->
             val data = listOf(1 to "A", 2 to "B", 3 to "C")
             val newDataSize = data.size
             var statement: BatchUpsertStatement by Delegates.notNull()
 
             // all new rows inserted
-            AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
+            AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = false) { (id, name) ->
                 statement = this
                 this[AutoIncTable.id] = id
                 this[AutoIncTable.name] = name
@@ -684,7 +686,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             // all existing rows set to their current values
             val isH2MysqlMode = testDb == TestDB.H2_V2_MYSQL || testDb == TestDB.H2_V2_MARIADB
             var expected = if (isH2MysqlMode) 0 else newDataSize
-            AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
+            AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = false) { (id, name) ->
                 statement = this
                 this[AutoIncTable.id] = id
                 this[AutoIncTable.name] = name
@@ -694,7 +696,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             // all existing rows updated & 1 new row inserted
             val updatedData = data.map { it.first to "new${it.second}" } + (4 to "D")
             expected = if (testDb in TestDB.ALL_MYSQL_LIKE) newDataSize * 2 + 1 else newDataSize + 1
-            AutoIncTable.batchUpsert(updatedData, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
+            AutoIncTable.batchUpsert(updatedData, shouldReturnGeneratedValues = false) { (id, name) ->
                 statement = this
                 this[AutoIncTable.id] = id
                 this[AutoIncTable.name] = name
@@ -714,7 +716,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
         // At present, only Postgres returns the correct UUID directly from the result set.
         // For other databases incorrect ID is returned from the 'upsert' command.
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES.toSet(), tester) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
             val insertId = tester.insertAndGetId {
                 it[key] = 1
                 it[value] = "one"
@@ -740,7 +742,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             val value = text("test_value")
         }
 
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES.toSet(), tester) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
             val insertId = tester.insertAndGetId {
                 it[key] = 1
                 it[value] = "one"
@@ -768,7 +770,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             override val primaryKey = PrimaryKey(myTableId)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, tester) {
+        withTables(tester) {
             tester.upsert {
                 it[myTableId] = 1
                 it[myTableValue] = "Hello"

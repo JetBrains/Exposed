@@ -310,7 +310,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             override val primaryKey = PrimaryKey(column1)
         }
 
-        withDb(TestDB.ALL_H2) {
+        withDb(TestDB.ALL_H2_V2) {
             val h2Dialect = currentDialectTest as H2Dialect
             val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             val singleColumnDescription = testTable.columns.single().descriptionDdl(false)
@@ -383,7 +383,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             }
         }
 
-        withDb(TestDB.ALL_H2) {
+        withDb(TestDB.ALL_H2_V2) {
             val h2Dialect = currentDialectTest as H2Dialect
             val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             val tableProperName = testTable.tableName.inProperCase()
@@ -504,7 +504,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withDb { testDb ->
-            val functionsNotSupported = testDb in TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+            val functionsNotSupported = testDb in TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
 
             val tableProperName = tester.tableName.inProperCase()
             val priceColumnName = tester.price.nameInDatabaseCase()

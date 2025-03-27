@@ -21,7 +21,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
-    private val arrayTypeUnsupportedDb = TestDB.ALL - (TestDB.ALL_POSTGRES + TestDB.H2_V2 + TestDB.H2_V2_PSQL).toSet()
+    private val arrayTypeUnsupportedDb = TestDB.ALL - TestDB.ALL_POSTGRES + TestDB.H2_V2 + TestDB.H2_V2_PSQL
 
     object ArrayTestTable : IntIdTable("array_test_table") {
         val numbers = array<Int>("numbers").default(listOf(5))

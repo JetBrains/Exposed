@@ -317,7 +317,7 @@ class SelectTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.ALL_H2 + TestDB.MYSQL_V8
+    private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.ALL_H2_V2 + TestDB.MYSQL_V8
 
     @Test
     fun testInTable() {

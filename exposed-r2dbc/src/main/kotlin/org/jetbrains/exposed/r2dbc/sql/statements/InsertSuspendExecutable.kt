@@ -2,8 +2,8 @@ package org.jetbrains.exposed.r2dbc.sql.statements
 
 import io.r2dbc.spi.RowMetadata
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.reduce
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
@@ -26,21 +26,25 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             inserted to getResultRow()
         } else {
             // since no result will be processed in this case, must apply a terminal operator to collect the flow
-            // e.g. getResultRow()?.mapRows {  }?.collect()
-            val count = getResultRow()?.rowsUpdated()?.awaitFirstOrNull()?.toInt() ?: inserted
+            val count = try {
+                getResultRow()?.rowsUpdated()?.reduce(Int::plus) ?: 0
+            } catch (_: IllegalStateException) {
+                // only case it would have already been consumed is when executeBatch() + (wasGeneratedKeysRequested == false)
+                inserted
+            }
             count to null
         }
     }
 
     @OptIn(InternalApi::class)
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): Int {
-        val (_, rs) = execInsertFunction()
-        // could execInsertFunction() be changed to return Pair<Int?, _> so we could sometime use actual count...
-//        statement.insertedCount = this
+        val (inserted, rs) = execInsertFunction()
         val processResults = processResults(rs)
         statement.resultedValues = processResults
-        statement.insertedCount = processResults.size
-        return processResults.size
+        // Todo rework handling case when execution actually returns only count (e.g. change signature to Pair<Int?, R2dbcResult?>)
+        val affectedRowCount = inserted.takeIf { it != -1 } ?: processResults.size
+        statement.insertedCount = affectedRowCount
+        return affectedRowCount
     }
 
     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi = when {

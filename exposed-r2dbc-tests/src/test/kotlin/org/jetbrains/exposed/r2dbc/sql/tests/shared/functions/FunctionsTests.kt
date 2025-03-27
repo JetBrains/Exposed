@@ -484,7 +484,7 @@ class FunctionsTests : R2dbcDatabaseTestsBase() {
     fun testCustomIntegerFunctions02() {
         withCitiesAndUsers { cities, _, _ ->
             val power = CustomLongFunction("POWER", cities.id, intParam(2))
-            val ids = cities.select(power).map { it[power] }
+            val ids = cities.select(power).map { it[power] }.toList()
             assertEqualCollections(listOf(1L, 4L, 9L), ids)
         }
     }

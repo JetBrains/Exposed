@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
+import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -167,7 +168,9 @@ class InsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testBatchInsert01() {
-        withCitiesAndUsers { cities, users, _ ->
+        // Oracle throws: Batch execution returning generated values is not supported
+        // and this test is focusing on generated values from batch insert specifically
+        withCitiesAndUsers(exclude = listOf(TestDB.ORACLE)) { cities, users, _ ->
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
             val allCitiesID = cities.batchInsert(cityNames) { name ->
                 this[cities.name] = name
@@ -195,9 +198,12 @@ class InsertTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testBatchInsertWithSequence() {
         val cities = DMLTestsData.Cities
-        withTables(cities) {
+        withTables(cities) { testDb ->
             val names = List(25) { UUID.randomUUID().toString() }.asSequence()
-            cities.batchInsert(names) { name -> this[cities.name] = name }
+            // Oracle throws: Batch execution returning generated values is not supported
+            cities.batchInsert(names, shouldReturnGeneratedValues = testDb != TestDB.ORACLE) { name ->
+                this[cities.name] = name
+            }
 
             val batchesSize = cities.selectAll().count()
 
@@ -299,7 +305,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                 it[externalId] = id1.value
             }
 
-            val allRecords = standardTable.selectAll().map { it[standardTable.externalId] }
+            val allRecords = standardTable.selectAll().map { it[standardTable.externalId] }.toList()
             assertTrue(allRecords == listOf(id1))
         }
     }
@@ -693,8 +699,9 @@ class InsertTests : R2dbcDatabaseTestsBase() {
             val databaseGenerated = integer("databaseGenerated").default(-1)
         }
 
-        withTables(tester) {
-            testerWithFakeDefaults.batchInsert(listOf(1, 2, 3)) {
+        withTables(tester) { testDb ->
+            // Oracle throws: Batch execution returning generated values is not supported
+            testerWithFakeDefaults.batchInsert(listOf(1, 2, 3), shouldReturnGeneratedValues = testDb != TestDB.ORACLE) {
                 this[testerWithFakeDefaults.number] = 10
             }
 

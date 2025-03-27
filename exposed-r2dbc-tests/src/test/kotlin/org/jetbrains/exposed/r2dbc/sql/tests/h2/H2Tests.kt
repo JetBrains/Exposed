@@ -34,7 +34,7 @@ class H2Tests : R2dbcDatabaseTestsBase() {
     @Test
     fun testH2VersionIsCorrect() {
         val systemTestName = System.getProperty("exposed.test.name")
-        withDb(TestDB.ALL_H2) {
+        withDb(TestDB.ALL_H2_V2) {
             val dialect = currentDialect
             if (dialect is H2Dialect) {
                 val version = exec("SELECT H2VERSION();") {
@@ -129,7 +129,7 @@ class H2Tests : R2dbcDatabaseTestsBase() {
             val number = short("number")
         }
 
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2, testTable) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2_V2, testTable) {
             testTable.batchInsert(listOf<Short>(2, 4, 6, 8, 10)) { n ->
                 this[testTable.number] = n
             }

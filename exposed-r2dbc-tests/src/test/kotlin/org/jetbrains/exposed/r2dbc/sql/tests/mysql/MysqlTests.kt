@@ -34,6 +34,7 @@ class MysqlTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    // rewriteBatchedStatements property NOT supported by r2dbc-mysql: https://github.com/asyncer-io/r2dbc-mysql/issues/136
 //    @Test
 //    fun testBatchInsertWithRewriteBatchedStatementsOn() {
 //        val mysqlOnly = TestDB.enabledDialects() - TestDB.MYSQL_V8

@@ -62,8 +62,9 @@ class CountTests : R2dbcDatabaseTestsBase() {
         }
 
         // MariaDB, Mysql do not support OFFSET clause without LIMIT
-        withTables(excludeSettings = TestDB.ALL_MYSQL_MARIADB, tester) {
-            tester.batchInsert(listOf(1, 2, 3, 4, 5)) {
+        withTables(excludeSettings = TestDB.ALL_MYSQL_MARIADB, tester) { testDb ->
+            // Oracle throws: Batch execution returning generated values is not supported
+            tester.batchInsert(listOf(1, 2, 3, 4, 5), shouldReturnGeneratedValues = testDb != TestDB.ORACLE) {
                 this[tester.value] = it
             }
 

@@ -20,7 +20,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class ReturningTests : R2dbcDatabaseTestsBase() {
-    private val updateReturningSupportedDb = TestDB.ALL_POSTGRES.toSet()
+    private val updateReturningSupportedDb = TestDB.ALL_POSTGRES
     private val returningSupportedDb = updateReturningSupportedDb + TestDB.MARIADB
 
     object Items : IntIdTable("items") {
@@ -157,7 +157,7 @@ class ReturningTests : R2dbcDatabaseTestsBase() {
 
             assertEquals(2, Items.selectAll().count())
 
-            val result2 = Items.deleteReturning(listOf(Items.id)).map { it[Items.id].value }
+            val result2 = Items.deleteReturning(listOf(Items.id)).map { it[Items.id].value }.toList()
             assertEqualCollections(listOf(1, 2), result2)
 
             assertEquals(0, Items.selectAll().count())
@@ -183,7 +183,7 @@ class ReturningTests : R2dbcDatabaseTestsBase() {
 
             val result2 = Items.updateReturning(listOf(Items.name)) {
                 it[name] = name.lowerCase()
-            }.map { it[Items.name] }
+            }.map { it[Items.name] }.toList()
             assertEqualCollections(input.map { it.first.lowercase() }, result2)
 
             val newPrice = Items.price.alias("new_price")

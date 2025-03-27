@@ -26,7 +26,7 @@ private inline fun <reified T : Any> Table.array2(name: String, maximumCardinali
 
 class MultiArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
 
-    private val multiArrayTypeUnsupportedDb = TestDB.ALL - TestDB.ALL_POSTGRES.toSet()
+    private val multiArrayTypeUnsupportedDb = TestDB.ALL - TestDB.ALL_POSTGRES
 
     @Test
     fun test2xMultiArray() {

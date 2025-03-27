@@ -118,7 +118,7 @@ class DeleteTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testDeleteWithMultipleAliasJoins() {
-        withCitiesAndUsers(exclude = TestDB.ALL_H2) { cities, users, userData ->
+        withCitiesAndUsers(exclude = TestDB.ALL_H2_V2) { cities, users, userData ->
             val towns = cities.alias("towns")
             val people = users.alias("people")
             val stats = userData.alias("stats")
@@ -135,7 +135,7 @@ class DeleteTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testDeleteWithJoinQuery() {
-        withCitiesAndUsers(exclude = TestDB.ALL_H2_V1) { _, users, userData ->
+        withCitiesAndUsers { _, users, userData ->
             val singleJoinQuery = userData.joinQuery(
                 on = { userData.user_id eq it[users.id] },
                 joinPart = { users.selectAll().where { users.cityId eq 2 } }

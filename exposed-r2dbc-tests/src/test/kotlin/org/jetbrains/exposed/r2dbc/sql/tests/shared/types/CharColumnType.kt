@@ -46,7 +46,7 @@ class CharColumnType : R2dbcDatabaseTestsBase() {
         // H2 only allows collation for the entire database using SET COLLATION
         // Oracle only allows collation if MAX_STRING_SIZE=EXTENDED, which can only be set in upgrade mode
         // Oracle -> https://docs.oracle.com/en/database/oracle/oracle-database/12.2/refrn/MAX_STRING_SIZE.html#
-        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.ORACLE, tester) {
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.ORACLE, tester) {
             val letters = listOf("a", "A", "b", "B")
             tester.batchInsert(letters) { ch ->
                 this[tester.letter] = ch

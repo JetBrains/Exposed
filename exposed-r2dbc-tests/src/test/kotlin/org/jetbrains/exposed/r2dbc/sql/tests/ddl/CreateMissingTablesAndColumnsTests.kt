@@ -264,7 +264,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
         }
         val t = IntIdTable(tableName)
 
-        withTables(excludeSettings = TestDB.ALL_H2, tables = arrayOf(initialTable)) {
+        withTables(excludeSettings = TestDB.ALL_H2_V2, tables = arrayOf(initialTable)) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
             SchemaUtils.createMissingTablesAndColumns(t)

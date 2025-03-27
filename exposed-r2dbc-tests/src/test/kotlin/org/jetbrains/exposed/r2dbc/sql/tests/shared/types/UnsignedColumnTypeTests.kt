@@ -79,7 +79,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testPreviousUByteColumnTypeWorksWithNewSmallIntType() {
         // MySQL and MariaDB type hasn't changed, and PostgreSQL and Oracle never supported TINYINT
-        withDb(TestDB.ALL_H2 - TestDB.H2_V2_PSQL) { testDb ->
+        withDb(TestDB.ALL_H2_V2 - TestDB.H2_V2_PSQL) { testDb ->
             try {
                 val tableName = UByteTable.nameInDatabaseCase()
                 val columnName = UByteTable.unsignedByte.nameInDatabaseCase()

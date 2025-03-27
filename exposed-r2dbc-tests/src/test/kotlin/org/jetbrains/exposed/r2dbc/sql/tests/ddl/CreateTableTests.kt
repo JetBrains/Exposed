@@ -242,7 +242,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
             assertEquals("ALTER TABLE $tableProperName ADD ${Person.id1.descriptionDdl(false)}", ddlId1.first())
 
             when (testDb) {
-                in TestDB.ALL_H2, TestDB.ORACLE -> {
+                in TestDB.ALL_H2_V2, TestDB.ORACLE -> {
                     assertEquals(2, ddlId2.size)
                     assertEquals("ALTER TABLE $tableProperName ADD $id2ProperName ${Person.id2.columnType.sqlType()}", ddlId2.first())
                     assertEquals("ALTER TABLE $tableProperName ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)", Person.id2.ddl.last())
@@ -268,7 +268,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
             val ddlId1 = Book.id.ddl
 
             when (testDb) {
-                in TestDB.ALL_H2, TestDB.ORACLE -> assertEqualCollections(
+                in TestDB.ALL_H2_V2, TestDB.ORACLE -> assertEqualCollections(
                     listOf(
                         "ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}",
                         "ALTER TABLE $tableProperName ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName)"

@@ -119,7 +119,7 @@ class UpdateTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testUpdateWithMultipleJoins() {
-        withCitiesAndUsers(exclude = TestDB.ALL_H2) { cities, users, userData ->
+        withCitiesAndUsers(exclude = TestDB.ALL_H2_V2) { cities, users, userData ->
             val join = cities.innerJoin(users).innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name
@@ -143,7 +143,7 @@ class UpdateTests : R2dbcDatabaseTestsBase() {
             val tableAId = reference("table_a_id", tableA)
         }
 
-        val supportWhere = TestDB.entries - TestDB.ALL_H2.toSet() + TestDB.H2_V2_ORACLE
+        val supportWhere = TestDB.entries - TestDB.ALL_H2_V2 + TestDB.H2_V2_ORACLE
 
         withTables(tableA, tableB) { testingDb ->
             val aId = tableA.insertAndGetId { it[foo] = "foo" }
@@ -180,7 +180,7 @@ class UpdateTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testUpdateWithJoinQuery() {
-        withCitiesAndUsers(exclude = TestDB.ALL_H2_V1) { _, users, userData ->
+        withCitiesAndUsers { _, users, userData ->
             // single join query using join()
             val userAlias = users.selectAll().where { users.cityId neq 1 }.alias("u2")
             val joinWithSubQuery = userData.innerJoin(userAlias, { userData.user_id }, { userAlias[users.id] })
@@ -192,7 +192,7 @@ class UpdateTests : R2dbcDatabaseTestsBase() {
                 assertEquals(123, it[userData.value])
             }
 
-            if (currentTestDB !in TestDB.ALL_H2) { // does not support either multi-table joins or update(where)
+            if (currentTestDB !in TestDB.ALL_H2_V2) { // does not support either multi-table joins or update(where)
                 // single join query using join() with update(where)
                 joinWithSubQuery.update({ userData.comment like "Comment%" }) {
                     it[userData.value] = 0
