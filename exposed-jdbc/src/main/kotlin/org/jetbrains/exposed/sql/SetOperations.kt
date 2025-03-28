@@ -74,6 +74,7 @@ sealed class SetOperation(
         try {
             count = true
             return transaction.exec(this) { rs ->
+                check(rs is JdbcResult) { "Unexpected result type: $rs" }
                 rs.next()
                 (rs.getObject(1) as? Number)?.toLong().also {
                     rs.close()
@@ -90,6 +91,7 @@ sealed class SetOperation(
         try {
             limit = 1
             val rs = transaction.exec(this)!!
+            check(rs is JdbcResult) { "Unexpected result type: $rs" }
             return !rs.next().also { rs.close() }
         } finally {
             limit = oldLimit

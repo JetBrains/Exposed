@@ -1,15 +1,16 @@
 package org.jetbrains.exposed.sql.tests
 
+import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
+import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
+import org.jetbrains.exposed.r2dbc.sql.transactions.suspendTransaction
+import org.jetbrains.exposed.r2dbc.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.Key
-import org.jetbrains.exposed.sql.R2dbcTransaction
 import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
-import org.jetbrains.exposed.sql.transactions.suspendTransaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.junit.Assume
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -57,11 +58,11 @@ abstract class R2dbcDatabaseTestsBase {
     @Parameterized.Parameter(2)
     lateinit var testName: String
 
-    suspend fun withDb(
+    fun withDb(
         dbSettings: TestDB,
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
         statement: suspend R2dbcTransaction.(TestDB) -> Unit
-    ) {
+    ) = runTest {
         Assume.assumeTrue(dialect == dbSettings)
 
         val unregistered = dbSettings !in registeredOnShutdown
@@ -97,7 +98,7 @@ abstract class R2dbcDatabaseTestsBase {
         }
     }
 
-    suspend fun withDb(
+    fun withDb(
         db: Collection<TestDB>? = null,
         excludeSettings: Collection<TestDB> = emptyList(),
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
@@ -121,7 +122,7 @@ abstract class R2dbcDatabaseTestsBase {
         withDb(dialect, configure, statement)
     }
 
-    suspend fun withTables(
+    fun withTables(
         excludeSettings: Collection<TestDB>,
         vararg tables: Table,
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
@@ -154,7 +155,15 @@ abstract class R2dbcDatabaseTestsBase {
         }
     }
 
-    suspend fun withSchemas(
+    fun withTables(
+        vararg tables: Table,
+        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+        statement: suspend R2dbcTransaction.(TestDB) -> Unit
+    ) {
+        withTables(excludeSettings = emptyList(), tables = tables, configure = configure, statement = statement)
+    }
+
+    fun withSchemas(
         excludeSettings: List<TestDB>,
         vararg schemas: Schema,
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
@@ -185,15 +194,7 @@ abstract class R2dbcDatabaseTestsBase {
         }
     }
 
-    suspend fun withTables(
-        vararg tables: Table,
-        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-        statement: suspend R2dbcTransaction.(TestDB) -> Unit
-    ) {
-        withTables(excludeSettings = emptyList(), tables = tables, configure = configure, statement = statement)
-    }
-
-    suspend fun withSchemas(
+    fun withSchemas(
         vararg schemas: Schema,
         configure: (DatabaseConfig.Builder.() -> Unit)? = null,
         statement: suspend R2dbcTransaction.() -> Unit

@@ -5,7 +5,7 @@ import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.vendors.*
 import java.io.InputStream
 import java.math.BigDecimal
@@ -15,7 +15,6 @@ import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.sql.Blob
 import java.sql.Clob
-import java.sql.SQLException
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -82,7 +81,7 @@ interface IColumnType<T> {
     fun nonNullValueAsDefaultString(value: T & Any): String = nonNullValueToString(value)
 
     /** Returns the object at the specified [index] in the [rs]. */
-    fun readObject(rs: ResultApi, index: Int): Any? = rs.getObject(index)
+    fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index)
 
     /** Sets the [value] at the specified [index] into the [stmt]. */
     fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
@@ -259,7 +258,7 @@ class EntityIDColumnType<T : Any>(
         idColumn.table as IdTable<T>
     )
 
-    override fun readObject(rs: ResultApi, index: Int): Any? = idColumn.columnType.readObject(rs, index)
+    override fun readObject(rs: RowApi, index: Int): Any? = idColumn.columnType.readObject(rs, index)
 
     override fun equals(other: Any?): Boolean {
         if (other !is EntityIDColumnType<*>) return false
@@ -615,10 +614,9 @@ class ULongColumnType : ColumnType<ULong>() {
                     ?: error("Value out of range: $value")
             }
 
-            dialect is PostgreSQLDialect ||
-                (dialect is H2Dialect && dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL) -> {
-                BigInteger(value.toString())
-            }
+            dialect is PostgreSQLDialect -> BigInteger(value.toString())
+            // Long is also an accepted mapping, but this would require handling as above for Oor errors
+            dialect is H2Dialect -> BigDecimal(value.toString())
 
             else -> value.toString()
         }
@@ -692,7 +690,7 @@ class DecimalColumnType(
         is BigDecimal -> value
         is Double -> {
             if (value.isNaN()) {
-                throw SQLException("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
+                error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
             } else {
                 value.toBigDecimal()
             }
@@ -914,7 +912,7 @@ open class TextColumnType(
         }
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? {
+    override fun readObject(rs: RowApi, index: Int): Any? {
         val value = super.readObject(rs, index)
         return if (eagerLoading && value != null) {
             valueFromDB(value)
@@ -951,6 +949,7 @@ open class BasicBinaryColumnType : ColumnType<ByteArray>() {
         is InputStream -> value.use { it.readBytes() }
         is ByteArray -> value
         is String -> value.toByteArray()
+        is ByteBuffer -> value.array()
         else -> error("Unexpected value $value of type ${value::class.qualifiedName}")
     }
 
@@ -1010,6 +1009,7 @@ class BlobColumnType(
         is InputStream -> ExposedBlob(value)
         is ByteArray -> ExposedBlob(value)
         is Blob -> ExposedBlob(value.binaryStream)
+        is ByteBuffer -> ExposedBlob(value.array())
         else -> error("Unexpected value of type Blob: $value of ${value::class.qualifiedName}")
     }
 
@@ -1019,7 +1019,7 @@ class BlobColumnType(
             .hexToDb(value.hexString())
     }
 
-    override fun readObject(rs: ResultApi, index: Int) = when {
+    override fun readObject(rs: RowApi, index: Int) = when {
         currentDialect is PostgreSQLDialect && useObjectIdentifier -> {
             rs.getObject(index, java.sql.Blob::class.java)?.binaryStream?.let(::ExposedBlob)
         }
@@ -1046,10 +1046,14 @@ class UUIDColumnType : ColumnType<UUID>() {
         value is ByteArray -> ByteBuffer.wrap(value).let { b -> UUID(b.long, b.long) }
         value is String && value.matches(uuidRegexp) -> UUID.fromString(value)
         value is String -> ByteBuffer.wrap(value.toByteArray()).let { b -> UUID(b.long, b.long) }
+        value is ByteBuffer -> value.let { b -> UUID(b.long, b.long) }
         else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
     }
 
-    override fun notNullValueToDB(value: UUID): Any = currentDialect.dataTypeProvider.uuidToDB(value)
+    override fun notNullValueToDB(value: UUID): Any {
+        return ((currentDialect as? H2Dialect)?.originalDataTypeProvider ?: currentDialect.dataTypeProvider)
+            .uuidToDB(value)
+    }
 
     override fun nonNullValueToString(value: UUID): String = "'$value'"
 
@@ -1303,14 +1307,14 @@ class ArrayColumnType<T, R : List<Any?>>(
         else -> (value as Array<Any?>).map { it?.let { delegate.valueFromDB(it) } }
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? = rs.getObject(index, java.sql.Array::class.java)
+    override fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         when {
             value is Array<*> && isArrayOfByteArrays(value) ->
-                stmt.setArray(index, delegateType, Array(value.size) { value[it] as ByteArray })
+                stmt.setArray(index, this, Array(value.size) { value[it] as ByteArray })
 
-            value is Array<*> -> stmt.setArray(index, delegateType, value)
+            value is Array<*> -> stmt.setArray(index, this, value)
             else -> super.setParameter(stmt, index, value)
         }
     }

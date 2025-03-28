@@ -113,7 +113,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             }
         }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+        withDb(TestDB.ALL_POSTGRES) {
             SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
             assertTrue(partialIndexTable.exists())
 

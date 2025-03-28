@@ -80,7 +80,7 @@ enum class TestDB(
         "com.impossibl.postgres.jdbc.PGDriver",
     ),
     ORACLE(driver = "oracle.jdbc.OracleDriver", user = "ExposedTest", pass = "12345", connection = {
-        "jdbc:oracle:thin:@127.0.0.1:3003/XEPDB1"
+        "jdbc:oracle:thin:@127.0.0.1:3003/FREEPDB1"
     }, beforeConnection = {
         Locale.setDefault(Locale.ENGLISH)
         val tmp = Database.connect(

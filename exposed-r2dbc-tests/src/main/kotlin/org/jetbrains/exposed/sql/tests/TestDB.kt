@@ -1,9 +1,10 @@
 package org.jetbrains.exposed.sql.tests
 
+import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
+import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabaseConfig
+import org.jetbrains.exposed.r2dbc.sql.transactions.suspendTransaction
 import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.R2dbcDatabase
 import org.jetbrains.exposed.sql.exposedLogger
-import org.jetbrains.exposed.sql.transactions.suspendTransaction
 import java.sql.Connection
 import java.util.*
 
@@ -67,13 +68,13 @@ enum class TestDB(
         "org.postgresql.Driver"
     ),
     ORACLE(
-        { "r2dbc:oracle://${ORACLE.user}:${ORACLE.pass}@127.0.0.1:3003/XEPDB1" },
+        { "r2dbc:oracle://${ORACLE.user}:${ORACLE.pass}@127.0.0.1:3003/FREEPDB1" },
         "oracle.jdbc.OracleDriver",
         user = "ExposedTest",
         pass = "12345",
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
-            val tmp = R2dbcDatabase.connect("r2dbc:oracle://sys%20as%20sysdba:Oracle18@127.0.0.1:3003/XEPDB1")
+            val tmp = R2dbcDatabase.connect("r2dbc:oracle://sys%20as%20sysdba:Oracle18@127.0.0.1:3003/FREEPDB1")
             suspendTransaction(db = tmp, transactionIsolation = Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
 
@@ -96,16 +97,18 @@ enum class TestDB(
 
     var db: R2dbcDatabase? = null
 
-    fun connect(configure: DatabaseConfig.Builder.() -> Unit = {}): R2dbcDatabase {
-        val config = DatabaseConfig {
+    fun connect(configure: R2dbcDatabaseConfig.Builder.() -> Unit = {}): R2dbcDatabase {
+        val config = R2dbcDatabaseConfig {
             dbConfig()
             configure()
+
+            setUrl(connection())
         }
-        return R2dbcDatabase.connect(connection(), databaseConfig = config)
+        return R2dbcDatabase.connect(databaseConfig = config)
     }
 
     companion object {
-        val ALL_H2 = setOf(H2_V2, H2_V2_MYSQL, H2_V2_PSQL, H2_V2_MARIADB, H2_V2_ORACLE, H2_V2_SQLSERVER)
+        val ALL_H2_V2 = setOf(H2_V2, H2_V2_MYSQL, H2_V2_PSQL, H2_V2_MARIADB, H2_V2_ORACLE, H2_V2_SQLSERVER)
         val ALL_MYSQL = setOf(MYSQL_V5, MYSQL_V8)
         val ALL_MARIADB = setOf(MARIADB)
         val ALL_MYSQL_MARIADB = ALL_MYSQL + ALL_MARIADB

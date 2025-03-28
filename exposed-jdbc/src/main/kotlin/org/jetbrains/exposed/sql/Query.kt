@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql
 
+import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.first
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
@@ -249,6 +251,8 @@ open class Query(
             try {
                 count = true
                 transaction.exec(this) { rs ->
+                    check(rs is JdbcResult) { "Unexpected result type: $rs" }
+
                     rs.next()
                     (rs.getObject(1) as? Number)?.toLong().also {
                         rs.close()
@@ -270,6 +274,7 @@ open class Query(
         try {
             if (!isForUpdate()) limit = 1
             val resultSet = transaction.exec(this)!!
+            check(resultSet is JdbcResult) { "Unexpected result type: $resultSet" }
             return !resultSet.next().also { resultSet.close() }
         } finally {
             limit = oldLimit
