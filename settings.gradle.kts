@@ -22,7 +22,7 @@ include("exposed-migration-r2dbc")
 include("exposed-r2dbc")
 include("exposed-r2dbc-tests")
 include("exposed-jdbc-r2dbc-tests")
-include("exposed-migration-gradle-plugin")
+include("exposed-gradle-plugin")
 
 pluginManagement {
     repositories {
