@@ -68,13 +68,13 @@ enum class TestDB(
         "org.postgresql.Driver"
     ),
     ORACLE(
-        { "r2dbc:oracle://${ORACLE.user}:${ORACLE.pass}@127.0.0.1:3003/XEPDB1" },
+        { "r2dbc:oracle://${ORACLE.user}:${ORACLE.pass}@127.0.0.1:3003/FREEPDB1" },
         "oracle.jdbc.OracleDriver",
         user = "ExposedTest",
         pass = "12345",
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
-            val tmp = R2dbcDatabase.connect("r2dbc:oracle://sys%20as%20sysdba:Oracle18@127.0.0.1:3003/XEPDB1")
+            val tmp = R2dbcDatabase.connect("r2dbc:oracle://sys%20as%20sysdba:Oracle18@127.0.0.1:3003/FREEPDB1")
             suspendTransaction(db = tmp, transactionIsolation = Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
 
