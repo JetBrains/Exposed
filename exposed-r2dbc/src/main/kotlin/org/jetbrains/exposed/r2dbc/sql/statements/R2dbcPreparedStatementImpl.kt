@@ -62,7 +62,11 @@ class R2dbcPreparedStatementImpl(
     }
 
     override fun set(index: Int, value: Any) {
-        statement.bind(index - 1, value)
+        val convertedValue = when (value) {
+            is java.sql.Timestamp -> value.toLocalDateTime()
+            else -> value
+        }
+        statement.bind(index - 1, convertedValue)
     }
 
     override fun setNull(index: Int, columnType: IColumnType<*>) {
