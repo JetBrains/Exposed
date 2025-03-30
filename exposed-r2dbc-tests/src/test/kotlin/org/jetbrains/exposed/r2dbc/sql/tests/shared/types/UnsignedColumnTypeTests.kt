@@ -102,7 +102,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                 exec(UByteTable.unsignedByte.modifyStatement().first())
                 UByteTable.insert { it[unsignedByte] = number2 }
 
-                val result2 = UByteTable.selectAll().map { it[UByteTable.unsignedByte] }
+                val result2 = UByteTable.selectAll().map { it[UByteTable.unsignedByte] }.toList()
                 assertEqualCollections(listOf(number1, number2), result2)
             } finally {
                 SchemaUtils.drop(UByteTable)
@@ -178,7 +178,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                     exec(UShortTable.unsignedShort.modifyStatement().first())
                     UShortTable.insert { it[unsignedShort] = number2 }
 
-                    val result2 = UShortTable.selectAll().map { it[UShortTable.unsignedShort] }
+                    val result2 = UShortTable.selectAll().map { it[UShortTable.unsignedShort] }.toList()
                     assertEqualCollections(listOf(number1, number2), result2)
                 }
             } finally {
@@ -254,7 +254,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                 exec(UIntTable.unsignedInt.modifyStatement().first())
                 UIntTable.insert { it[unsignedInt] = number2 }
 
-                val result2 = UIntTable.selectAll().map { it[UIntTable.unsignedInt] }
+                val result2 = UIntTable.selectAll().map { it[UIntTable.unsignedInt] }.toList()
                 assertEqualCollections(listOf(number1, number2), result2)
             } finally {
                 SchemaUtils.drop(UIntTable)

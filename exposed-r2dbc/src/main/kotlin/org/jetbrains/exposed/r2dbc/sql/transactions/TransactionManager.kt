@@ -4,6 +4,7 @@ import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
@@ -193,9 +194,21 @@ class TransactionManager(
 
         private val useSavePoints = outerTransaction != null && db.useNestedTransactions
 
-        // how to use a suspend function result to set a property value
+        // Todo replace runBlocking()
+        // property needs to (possibly) be initialized with return value of a suspend function;
+        // this suspend function must be called as soon as transaction is opened, so lazySuspend options not sufficient;
+        // need something like initSuspend { }
+        // Option 1: launch coroutine
+        // Option 2: suspend operator fun invoke() -> all invoking functions are not suspending though...
+        // Option 3: suspend factory method -> same reason as above...
+        // Option 4: re-assess whether connection.setSavepoint() must suspend???
+        // OG below:
 //        private var savepoint: ExposedSavepoint? = if (useSavePoints) connection.setSavepoint(savepointName) else null
-        private var savepoint: ExposedSavepoint? = null
+        private var savepoint: ExposedSavepoint? = if (useSavePoints) {
+            runBlocking { connection.setSavepoint(savepointName) }
+        } else {
+            null
+        }
 
         override suspend fun commit() {
             if (connectionLazy.isInitialized()) {

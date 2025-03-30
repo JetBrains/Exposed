@@ -666,17 +666,16 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testInsertedCountWithBatchUpsert() {
-        // Todo Good test example for allowing fetching of generated values + affected row count from batch execution
-        // OG test allowed generated values to be retrieved (but not used), which caused MySQL to fail, even though the correct affected
-        // row count was retrieved; an incorrect sum() of generated row values is used since both cannot be fetched...
-        // Oracle must be excluded as throws: 'Batch execution returning generated values is not supported'
+        // Oracle throws: 'Batch execution returning generated values is not supported'
         withTables(AutoIncTable) { testDb ->
+            // SQL Server requires statements to be executed before results can be obtained
+            val isNotSqlServerOrOracle = testDb != TestDB.SQLSERVER && testDb != TestDB.ORACLE
             val data = listOf(1 to "A", 2 to "B", 3 to "C")
             val newDataSize = data.size
             var statement: BatchUpsertStatement by Delegates.notNull()
 
             // all new rows inserted
-            AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = false) { (id, name) ->
+            AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = isNotSqlServerOrOracle) { (id, name) ->
                 statement = this
                 this[AutoIncTable.id] = id
                 this[AutoIncTable.name] = name
@@ -686,7 +685,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             // all existing rows set to their current values
             val isH2MysqlMode = testDb == TestDB.H2_V2_MYSQL || testDb == TestDB.H2_V2_MARIADB
             var expected = if (isH2MysqlMode) 0 else newDataSize
-            AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = false) { (id, name) ->
+            AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = isNotSqlServerOrOracle) { (id, name) ->
                 statement = this
                 this[AutoIncTable.id] = id
                 this[AutoIncTable.name] = name
@@ -696,7 +695,7 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             // all existing rows updated & 1 new row inserted
             val updatedData = data.map { it.first to "new${it.second}" } + (4 to "D")
             expected = if (testDb in TestDB.ALL_MYSQL_LIKE) newDataSize * 2 + 1 else newDataSize + 1
-            AutoIncTable.batchUpsert(updatedData, shouldReturnGeneratedValues = false) { (id, name) ->
+            AutoIncTable.batchUpsert(updatedData, shouldReturnGeneratedValues = isNotSqlServerOrOracle) { (id, name) ->
                 statement = this
                 this[AutoIncTable.id] = id
                 this[AutoIncTable.name] = name

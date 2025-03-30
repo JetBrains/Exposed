@@ -2,7 +2,6 @@ package org.jetbrains.exposed.r2dbc.sql.tests.shared.dml
 
 import io.r2dbc.spi.R2dbcException
 import junit.framework.TestCase.assertEquals
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
@@ -64,8 +63,8 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    private val insertIgnoreUnsupportedDB =
-        TestDB.ALL - listOf(TestDB.MYSQL_V5, TestDB.H2_V2_MYSQL, TestDB.POSTGRESQL, TestDB.H2_V2_PSQL)
+    private val insertIgnoreUnsupportedDB = TestDB.ALL -
+        (TestDB.ALL_MYSQL + TestDB.H2_V2_MYSQL + TestDB.ALL_POSTGRES_LIKE).toSet()
 
     @Test
     fun testInsertIgnoreAndGetId01() {
@@ -136,7 +135,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                 it[exampleColumn] = value
             }
 
-            val resultValues = exampleTable.selectAll().map { it[exampleTable.exampleColumn] }
+            val resultValues = exampleTable.selectAll().map { it[exampleTable.exampleColumn] }.toList()
 
             assertEquals(value, resultValues.first())
         }

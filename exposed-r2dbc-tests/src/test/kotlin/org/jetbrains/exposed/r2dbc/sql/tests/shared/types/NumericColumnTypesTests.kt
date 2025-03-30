@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.r2dbc.sql.tests.shared.types
 
-import org.jetbrains.exposed.r2dbc.sql.addLogger
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.r2dbc.sql.selectAll
@@ -159,7 +158,6 @@ class NumericColumnTypesTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(testTable) {
-            addLogger(StdOutSqlLogger)
             testTable.insert {
                 it[byte] = byteParam(Byte.MIN_VALUE)
                 it[ubyte] = ubyteParam(UByte.MAX_VALUE)

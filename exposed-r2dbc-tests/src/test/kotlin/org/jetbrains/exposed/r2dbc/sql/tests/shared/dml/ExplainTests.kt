@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.intParam
 import org.jetbrains.exposed.sql.or
@@ -147,7 +146,6 @@ class ExplainTests : R2dbcDatabaseTestsBase() {
     fun testExplainWithOptions() {
         val optionsAvailableDb = TestDB.ALL_POSTGRES + TestDB.ALL_MYSQL_MARIADB
         withTables(excludeSettings = TestDB.ALL - optionsAvailableDb, Countries) { testDB ->
-            addLogger(StdOutSqlLogger)
             val formatOption = when (testDB) {
                 in TestDB.ALL_MYSQL_LIKE -> "FORMAT=JSON"
                 in TestDB.ALL_POSTGRES -> "FORMAT JSON"

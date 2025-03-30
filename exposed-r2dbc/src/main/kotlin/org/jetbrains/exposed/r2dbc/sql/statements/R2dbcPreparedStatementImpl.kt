@@ -58,7 +58,8 @@ class R2dbcPreparedStatementImpl(
         val r2dbcResult = R2dbcResult(result)
         resultRow = r2dbcResult
 
-        return -1
+        // Todo discuss if a return value is even necessary (since never used)
+        return 0
     }
 
     override fun set(index: Int, value: Any) {
@@ -145,7 +146,7 @@ class R2dbcPreparedStatementImpl(
 
         return if (wasGeneratedKeysRequested) {
             resultRow = r2dbcResult
-            listOf(-1)
+            emptyList()
         } else {
             resultRow = null
             r2dbcResult.rowsUpdated().toList()

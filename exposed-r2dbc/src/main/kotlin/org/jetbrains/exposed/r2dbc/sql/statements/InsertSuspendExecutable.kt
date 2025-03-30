@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.r2dbc.sql.statements
 
+import io.r2dbc.spi.Result
 import io.r2dbc.spi.RowMetadata
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.reduce
-import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
+import org.jetbrains.exposed.r2dbc.sql.statements.api.R2DBCRow
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.r2dbc.sql.statements.api.metadata
@@ -12,14 +13,22 @@ import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.r2dbc.sql.vendors.inProperCase
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
 open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
 ) : SuspendExecutable<Int, S> {
-    protected open suspend fun R2dbcPreparedStatementApi.execInsertFunction(): Pair<Int, R2dbcResult?> {
-        val inserted = if (statement.arguments().count() > 1 || isAlwaysBatch) executeBatch().sum() else executeUpdate()
+    protected open suspend fun R2dbcPreparedStatementApi.execInsertFunction(): Pair<Int?, R2dbcResult?> {
+        val inserted = if (statement.arguments().count() > 1 || isAlwaysBatch) {
+            executeBatch().takeIf { it.isNotEmpty() }?.sum()
+        } else {
+            executeUpdate()
+            null
+        }
         // According to the `processResults()` method when supportsOnlyIdentifiersInGeneratedKeys is false
         // all the columns could be taken from result set
         return if (columnsGeneratedOnDB().isNotEmpty() || !currentDialect.supportsOnlyIdentifiersInGeneratedKeys) {
@@ -28,9 +37,11 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             // since no result will be processed in this case, must apply a terminal operator to collect the flow
             val count = try {
                 getResultRow()?.rowsUpdated()?.reduce(Int::plus) ?: 0
-            } catch (_: IllegalStateException) {
+            } catch (_: IllegalStateException) { // result already consumed
                 // only case it would have already been consumed is when executeBatch() + (wasGeneratedKeysRequested == false)
                 inserted
+            } catch (_: NoSuchElementException) { // flow might be empty
+                0
             }
             count to null
         }
@@ -39,10 +50,10 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     @OptIn(InternalApi::class)
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): Int {
         val (inserted, rs) = execInsertFunction()
-        val processResults = processResults(rs)
-        statement.resultedValues = processResults
-        // Todo rework handling case when execution actually returns only count (e.g. change signature to Pair<Int?, R2dbcResult?>)
-        val affectedRowCount = inserted.takeIf { it != -1 } ?: processResults.size
+
+        val (processedCount, processedResults) = processResults(rs)
+        statement.resultedValues = processedResults
+        val affectedRowCount = inserted ?: processedCount
         statement.insertedCount = affectedRowCount
         return affectedRowCount
     }
@@ -74,11 +85,11 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-    private suspend fun processResults(rs: R2dbcResult?): List<ResultRow> {
-        val allResultSetsValues = rs?.returnedValues()
+    private suspend fun processResults(rs: R2dbcResult?): Pair<Int, List<ResultRow>> {
+        val (count, allResultSetsValues) = rs?.returnedValues() ?: (0 to null)
 
         @Suppress("UNCHECKED_CAST")
-        return statement.arguments!!
+        val results = statement.arguments!!
             .mapIndexed { index, columnValues ->
                 val resultSetValues = allResultSetsValues?.getOrNull(index) ?: hashMapOf()
                 val argumentValues = columnValues.toMap()
@@ -89,6 +100,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
             .map { unwrapColumnValues(defaultAndNullableValues(exceptColumns = it.keys)) + it }
             .map { ResultRow.createAndFillValues(it as Map<Expression<*>, Any?>) }
+
+        return count to results
     }
 
     private fun defaultAndNullableValues(exceptColumns: Collection<Column<*>>): Map<Column<*>, Any?> {
@@ -105,56 +118,108 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             .toMap()
     }
 
-    @Suppress("NestedBlockDepth", "TooGenericExceptionCaught")
-    private suspend fun R2dbcResult.returnedValues(): ArrayList<MutableMap<Column<*>, Any?>> {
+    @Suppress("NestedBlockDepth", "TooGenericExceptionCaught", "CyclomaticComplexMethod")
+    private suspend fun R2dbcResult.returnedValues(): Pair<Int, ArrayList<MutableMap<Column<*>, Any?>>> {
         val resultSetsValues = arrayListOf<MutableMap<Column<*>, Any?>>()
+        val resultSetsCounts = mutableListOf<Int>()
         var columnIndexesInResultSet: List<Pair<Column<*>, Int>>? = null
         val firstAutoIncColumn = autoIncColumns.firstOrNull()
+        val dialect = currentDialect
+        val sendsResultsOnFailure = dialect is MysqlDialect && dialect !is MariaDBDialect
 
-        mapRows<MutableMap<Column<*>, Any?>?> { row ->
-            if (columnIndexesInResultSet == null) {
-                columnIndexesInResultSet = row.metadata.returnedColumns()
+        mapSegments { segment ->
+            var values: MutableMap<Column<*>, Any?>? = null
+            var count: Int? = null
+
+            // PostgreSQL sends segments separately, but MySQL for example, sends them all together;
+            // So segment can match multiple types, & using a when block would lose part of the result data needed
+            if (segment is Result.UpdateCount) {
+                count = segment.value().toInt()
             }
 
-            if (firstAutoIncColumn == null && !columnIndexesInResultSet.isNotEmpty()) {
-                return@mapRows null
-            }
+            if (segment is Result.RowSegment) {
+                val row = R2DBCRow(segment.row())
 
-            try {
-                val returnedValues: MutableMap<Column<*>, Any?> = columnIndexesInResultSet.associateTo(mutableMapOf()) {
-                    it.first to it.first.columnType.readObject(row, it.second)
+                if (columnIndexesInResultSet == null) {
+                    columnIndexesInResultSet = row.metadata.returnedColumns()
                 }
-                if (returnedValues.isEmpty() && firstAutoIncColumn != null) {
-                    returnedValues[firstAutoIncColumn] = row.getObject(1)
-                }
-                returnedValues
-            } catch (cause: ArrayIndexOutOfBoundsException) {
-                // EXPOSED-191 Flaky Oracle test on TC build
-                // this try/catch should help to get information about the flaky test.
-                // try/catch can be safely removed after the fixing the issue.
-                // TooGenericExceptionCaught suppress also can be removed
 
-                val preparedSql = this@InsertSuspendExecutable.statement.prepareSQL(TransactionManager.current(), prepared = true)
+                values = if (firstAutoIncColumn == null && !columnIndexesInResultSet.isNotEmpty()) {
+                    null
+                } else {
+                    try {
+                        val returnedValues: MutableMap<Column<*>, Any?> = columnIndexesInResultSet.associateTo(mutableMapOf()) {
+                            it.first to it.first.columnType.readObject(row, it.second)
+                        }
+                        if (returnedValues.isEmpty() && firstAutoIncColumn != null) {
+                            returnedValues[firstAutoIncColumn] = row.getObject(1)
+                        }
+                        returnedValues
+                    } catch (cause: ArrayIndexOutOfBoundsException) {
+                        // EXPOSED-191 Flaky Oracle test on TC build
+                        // this try/catch should help to get information about the flaky test.
+                        // try/catch can be safely removed after the fixing the issue.
+                        // TooGenericExceptionCaught suppress also can be removed
 
-                val returnedColumnsString = columnIndexesInResultSet
-                    .mapIndexed { index, pair ->
-                        "column: ${pair.first.name}, index: ${pair.second} (columns-list-index: $index)"
+                        val preparedSql = this@InsertSuspendExecutable.statement.prepareSQL(TransactionManager.current(), prepared = true)
+
+                        val returnedColumnsString = columnIndexesInResultSet
+                            .mapIndexed { index, pair ->
+                                "column: ${pair.first.name}, index: ${pair.second} (columns-list-index: $index)"
+                            }
+                            .joinToString(prefix = "[", postfix = "]", separator = ", ")
+
+                        exposedLogger.error(
+                            "ArrayIndexOutOfBoundsException on processResults. " +
+                                "Table: ${this@InsertSuspendExecutable.statement.table.tableName}, " +
+                                "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
+                                "returnedColumnsString: $returnedColumnsString. " +
+                                "Failed SQL: $preparedSql",
+                            cause
+                        )
+                        throw cause
                     }
-                    .joinToString(prefix = "[", postfix = "]", separator = ", ")
-
-                exposedLogger.error(
-                    "ArrayIndexOutOfBoundsException on processResults. " +
-                        "Table: ${this@InsertSuspendExecutable.statement.table.tableName}, " +
-                        "firstAutoIncColumn: ${firstAutoIncColumn?.name}, " +
-                        "returnedColumnsString: $returnedColumnsString. " +
-                        "Failed SQL: $preparedSql",
-                    cause
-                )
-                throw cause
+                }
             }
-        }.filterNotNull().toList(resultSetsValues)
 
-        val inserted = resultSetsValues.size
+            if (segment is Result.Message) {
+                @Suppress("ThrowingExceptionsWithoutMessageOrCause")
+                throw segment.exception()
+            }
+
+            flowOf(count to values)
+        }.collect { (count, values) ->
+            // MySQL return a result with an id value of 0 if an insert did not occur
+            // which leads to incorrect stored values in the insert statement;
+            // If an insert did not occur, no generated values should be received and stored statement
+            // values should be generated based on user-provided values
+            // Todo review potential edge cases not covered by tests
+            count?.let { c ->
+                resultSetsCounts.add(c)
+                values.takeIf { sendsResultsOnFailure && c != 0 }?.let { resultSetsValues.add(it) }
+            }
+            values.takeIf { !sendsResultsOnFailure }?.let { resultSetsValues.add(it) }
+        }
+
+        // SQL Server returns a duplicate terminal row result from batch, even though it only attempts the correct executions;
+        // This happens with mapSegments(), mapRows(), and exec(), but not with plain SQL execution;
+        // So there must be some reason on our end that such a result is included
+        // Todo investigate why SQL Server delivers a duplicate final record
+        if (currentDialect is SQLServerDialect && resultSetsValues.size > 1 && resultSetsCounts.sum() > 1) {
+            // equality check is tricky because of potential type mismatch
+            // e.g. An Int id returns a duplicated final row of type BigDecimal - is this maybe the mssql last_inserted_id?
+            val lastIndex = resultSetsValues.lastIndex
+            resultSetsValues.removeAt(lastIndex)
+        }
+
+        // Some databases, like H2 and MariaDB, aren't returning UpdateCount segments;
+        // The workaround below therefore fails for upsert operations
+        // Todo review alternatives for these dialects
+        val inserted = if (resultSetsCounts.isEmpty()) {
+            resultSetsValues.size
+        } else {
+            resultSetsCounts.sum()
+        }
 
         if (firstAutoIncColumn != null || columnIndexesInResultSet?.isNotEmpty() == true) {
             if (inserted > 1 && firstAutoIncColumn != null && resultSetsValues.isNotEmpty() && !currentDialect.supportsMultipleGeneratedKeys) {
@@ -177,7 +242,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-        return resultSetsValues
+        return inserted to resultSetsValues
     }
 
     private fun RowMetadata?.returnedColumns(): List<Pair<Column<*>, Int>> {
