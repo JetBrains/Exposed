@@ -26,7 +26,7 @@ springFramework = "6.2.5"
 springBoot = "3.4.4"
 
 spring-security-crypto = "6.2.1"
-joda-time = "2.13.1"
+joda-time = "2.14.0"
 junit = "4.13.2"
 kotlinx-datetime = "0.6.2"
 javax-money = "1.1"
