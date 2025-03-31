@@ -1,5 +1,9 @@
-package org.jetbrains.exposed.sql.json
+package org.jetbrains.exposed.r2dbc.sql.tests.json
 
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.singleOrNull
+import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ArraySerializer
@@ -8,10 +12,15 @@ import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
+import org.jetbrains.exposed.sql.json.contains
+import org.jetbrains.exposed.sql.json.exists
+import org.jetbrains.exposed.sql.json.extract
+import org.jetbrains.exposed.sql.json.json
+import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
@@ -27,7 +36,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class JsonColumnTests : DatabaseTestsBase() {
+class JsonColumnTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testInsertAndSelect() {
         withJsonTable { tester, _, _, _ ->
@@ -57,7 +66,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWithSliceExtract() {
-        withJsonTable(exclude = TestDB.ALL_H2) { tester, user1, data1, _ ->
+        withJsonTable(exclude = TestDB.ALL_H2_V2) { tester, user1, data1, _ ->
             val pathPrefix = if (currentDialectTest is PostgreSQLDialect) "" else "."
             // SQLServer & Oracle return null if extracted JSON is not scalar
             val requiresScalar = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect
@@ -78,7 +87,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWhereWithExtract() {
-        withJsonTable(exclude = TestDB.ALL_H2) { tester, _, data1, _ ->
+        withJsonTable(exclude = TestDB.ALL_H2_V2) { tester, _, data1, _ ->
             val newId = tester.insertAndGetId {
                 it[jsonColumn] = data1.copy(logins = 1000)
             }
@@ -111,42 +120,7 @@ class JsonColumnTests : DatabaseTestsBase() {
         }
     }
 
-    @Test
-    fun testDAOFunctionsWithJsonColumn() {
-        val dataTable = JsonTestsData.JsonTable
-        val dataEntity = JsonTestsData.JsonEntity
-
-        withTables(dataTable) { testDb ->
-            val dataA = DataHolder(User("Admin", "Alpha"), 10, true, null)
-            val newUser = dataEntity.new {
-                jsonColumn = dataA
-            }
-
-            assertEquals(dataA, dataEntity.findById(newUser.id)?.jsonColumn)
-
-            val updatedUser = dataA.copy(user = User("Lead", "Beta"))
-            dataTable.update {
-                it[jsonColumn] = updatedUser
-            }
-
-            assertEquals(updatedUser, dataEntity.all().single().jsonColumn)
-
-            if (testDb !in TestDB.ALL_H2) {
-                dataEntity.new { jsonColumn = dataA }
-                val path = if (currentDialectTest is PostgreSQLDialect) {
-                    arrayOf("user", "team")
-                } else {
-                    arrayOf(".user.team")
-                }
-                val userTeam = dataTable.jsonColumn.extract<String>(*path)
-                val userInTeamB = dataEntity.find { userTeam like "B%" }.single()
-
-                assertEquals(updatedUser, userInTeamB.jsonColumn)
-            }
-        }
-    }
-
-    private val jsonContainsNotSupported = TestDB.entries -
+    private val jsonContainsNotSupported = TestDB.ALL -
         (TestDB.ALL_POSTGRES + TestDB.ALL_MYSQL_MARIADB)
 
     @Test
@@ -176,7 +150,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExists() {
-        withJsonTable(exclude = TestDB.ALL_H2 + TestDB.SQLSERVER) { tester, _, data1, testDb ->
+        withJsonTable(exclude = TestDB.ALL_H2_V2 + TestDB.SQLSERVER) { tester, _, data1, testDb ->
             val maximumLogins = 1000
             val teamA = "A"
             val newId = tester.insertAndGetId {
@@ -221,7 +195,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExtractWithArrays() {
-        withJsonArrays(exclude = TestDB.ALL_H2) { tester, singleId, _, testDb ->
+        withJsonArrays(exclude = TestDB.ALL_H2_V2) { tester, singleId, _, testDb ->
             val path1 = if (currentDialectTest is PostgreSQLDialect) {
                 arrayOf("users", "0", "team")
             } else {
@@ -234,7 +208,7 @@ class JsonColumnTests : DatabaseTestsBase() {
             val toScalar = testDb != TestDB.MYSQL_V5
             val path2 = if (currentDialectTest is PostgreSQLDialect) "0" else "[0]"
             val firstNumber = tester.numbers.extract<Int>(path2, toScalar = toScalar)
-            assertEqualCollections(listOf(100, 3), tester.select(firstNumber).map { it[firstNumber] })
+            assertEqualCollections(listOf(100, 3), tester.select(firstNumber).map { it[firstNumber] }.toList())
         }
     }
 
@@ -253,7 +227,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExistsWithArrays() {
-        withJsonArrays(exclude = TestDB.ALL_H2 + TestDB.SQLSERVER) { tester, _, tripleId, testDb ->
+        withJsonArrays(exclude = TestDB.ALL_H2_V2 + TestDB.SQLSERVER) { tester, _, tripleId, testDb ->
             val optional = if (testDb in TestDB.ALL_MYSQL_LIKE) "one" else null
 
             val hasMultipleUsers = tester.groups.exists(".users[1]", optional = optional)
@@ -272,9 +246,9 @@ class JsonColumnTests : DatabaseTestsBase() {
             val userArray = json<Array<User>>("user_array", Json.Default)
         }
 
-        fun selectIdWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<EntityID<Int>> {
+        suspend fun selectIdWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<EntityID<Int>> {
             val query = iterables.select(iterables.id).where(SqlExpressionBuilder.condition())
-            return query.map { it[iterables.id] }
+            return query.map { it[iterables.id] }.toList()
         }
 
         withTables(excludeSettings = jsonContainsNotSupported, iterables) {
@@ -389,7 +363,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonWithUpsert() {
-        withJsonTable(exclude = TestDB.ALL_H2_V1) { tester, _, _, _ ->
+        withJsonTable { tester, _, _, _ ->
             val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
             val newId = tester.insertAndGetId {
                 it[jsonColumn] = newData

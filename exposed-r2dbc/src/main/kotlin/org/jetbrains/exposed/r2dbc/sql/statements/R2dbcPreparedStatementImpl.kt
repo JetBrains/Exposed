@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.r2dbc.sql.statements
 
+import io.r2dbc.postgresql.codec.Json
 import io.r2dbc.spi.Connection
 import io.r2dbc.spi.Parameters
 import io.r2dbc.spi.R2dbcType
@@ -10,6 +11,7 @@ import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.postgresql.util.PGobject
 import java.io.InputStream
 import java.math.BigDecimal
 import java.time.Duration
@@ -63,8 +65,11 @@ class R2dbcPreparedStatementImpl(
     }
 
     override fun set(index: Int, value: Any) {
-        val convertedValue = when (value) {
-            is java.sql.Timestamp -> value.toLocalDateTime()
+        val convertedValue = when {
+            value is java.sql.Time -> value.toLocalTime()
+            value is java.sql.Date -> value.toLocalDate()
+            value is java.sql.Timestamp -> value.toLocalDateTime()
+            currentDialect is PostgreSQLDialect && value is PGobject -> Json.of(value.value!!)
             else -> value
         }
         statement.bind(index - 1, convertedValue)

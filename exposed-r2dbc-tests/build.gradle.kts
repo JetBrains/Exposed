@@ -3,9 +3,14 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     kotlin("jvm") apply true
+
+    // exposed-json dependencies
+    alias(libs.plugins.serialization)
 }
 
 kotlin {
+    // REQUIRED for exposed-crypt tests, but makes Oracle tests fail...
+//    jvmToolchain(17)
     jvmToolchain(11)
 }
 
@@ -26,6 +31,16 @@ dependencies {
     implementation(project(":exposed-r2dbc"))
     implementation(project(":exposed-kotlin-datetime"))
 
+    // non-exposed-tests module dependencies
+    // --- start ---
+    implementation(project(":exposed-money"))
+//    implementation(project(":exposed-crypt"))
+    implementation(project(":exposed-json"))
+    implementation(project(":exposed-kotlin-datetime"))
+    implementation(project(":exposed-java-time"))
+    implementation(project(":exposed-jodatime"))
+    // --- end ----
+
     implementation(libs.slf4j)
     implementation(libs.log4j.slf4j.impl)
     implementation(libs.log4j.api)
@@ -44,6 +59,9 @@ dependencies {
     testCompileOnly(libs.postgre)
 
     testImplementation(libs.logcaptor)
+
+    // exposed-money dependencies
+    testImplementation(libs.moneta)
 }
 
 tasks.withType<Test>().configureEach {

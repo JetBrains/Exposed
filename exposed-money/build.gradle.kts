@@ -14,7 +14,6 @@ kotlin {
 
 dependencies {
     api(project(":exposed-core"))
-    api(project(":exposed-dao"))
     api(libs.javax.money)
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
