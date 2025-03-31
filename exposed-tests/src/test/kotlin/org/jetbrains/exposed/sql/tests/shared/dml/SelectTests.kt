@@ -338,226 +338,189 @@ class SelectTests : DatabaseTestsBase() {
         }
     }
 
-    private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.ALL_H2 + TestDB.MYSQL_V8
+    private val inAnyAllFromTablesNotSupported = TestDB.ALL - (TestDB.ALL_POSTGRES + TestDB.ALL_H2 + TestDB.MYSQL_V8).toSet()
 
     @Test
     fun testInTable() {
-        withDb(testDBsSupportingInAnyAllFromTables) {
-            withSalesAndSomeAmounts { _, sales, someAmounts ->
-                val r = sales.selectAll().where { sales.amount inTable someAmounts }
-                assertEquals(2, r.count())
-            }
+        withSalesAndSomeAmounts(excludeSettings = inAnyAllFromTablesNotSupported) { _, sales, someAmounts ->
+            val r = sales.selectAll().where { sales.amount inTable someAmounts }
+            assertEquals(2, r.count())
         }
     }
 
     @Test
     fun testNotInTable() {
-        withDb(testDBsSupportingInAnyAllFromTables) {
-            withSalesAndSomeAmounts { _, sales, someAmounts ->
-                val r = sales.selectAll().where { sales.amount notInTable someAmounts }
-                assertEquals(5, r.count())
-            }
+        withSalesAndSomeAmounts(excludeSettings = inAnyAllFromTablesNotSupported) { _, sales, someAmounts ->
+            val r = sales.selectAll().where { sales.amount notInTable someAmounts }
+            assertEquals(5, r.count())
         }
     }
 
-    private val testDBsSupportingAnyAndAllFromSubQueries = TestDB.ALL - TestDB.SQLITE
-    private val testDBsSupportingAnyAndAllFromArrays = TestDB.ALL_POSTGRES + TestDB.ALL_H2_V2
-
     @Test
     fun testEqAnyFromSubQuery() {
-        withDb(testDBsSupportingAnyAndAllFromSubQueries) {
-            withCitiesAndUsers { cities, _, _ ->
-                val r = cities.selectAll().where {
-                    cities.id eq anyFrom(cities.select(cities.id).where { cities.id eq 2 })
-                }
-                assertEquals(1L, r.count())
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { cities, _, _ ->
+            val r = cities.selectAll().where {
+                cities.id eq anyFrom(cities.select(cities.id).where { cities.id eq 2 })
             }
+            assertEquals(1L, r.count())
         }
     }
 
     @Test
     fun testNeqAnyFromSubQuery() {
-        withDb(testDBsSupportingAnyAndAllFromSubQueries) {
-            withCitiesAndUsers { cities, _, _ ->
-                val r = cities.selectAll().where {
-                    cities.id neq anyFrom(cities.select(cities.id).where { cities.id eq 2 })
-                }
-                assertEquals(2, r.count())
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { cities, _, _ ->
+            val r = cities.selectAll().where {
+                cities.id neq anyFrom(cities.select(cities.id).where { cities.id eq 2 })
             }
+            assertEquals(2, r.count())
         }
     }
 
+    private val anyAndAllFromArraysNotSupported = TestDB.ALL - (TestDB.ALL_POSTGRES + TestDB.ALL_H2_V2).toSet()
+
     @Test
     fun testEqAnyFromArray() {
-        withDb(testDBsSupportingAnyAndAllFromArrays) {
-            withCitiesAndUsers { _, users, _ ->
-                val r = users.selectAll().where {
-                    users.id eq anyFrom(arrayOf("andrey", "alex"))
-                }.orderBy(users.name).toList()
+        withCitiesAndUsers(exclude = anyAndAllFromArraysNotSupported) { _, users, _ ->
+            val r = users.selectAll().where {
+                users.id eq anyFrom(arrayOf("andrey", "alex"))
+            }.orderBy(users.name).toList()
 
-                assertEquals(2, r.size)
-                assertEquals("Alex", r[0][users.name])
-                assertEquals("Andrey", r[1][users.name])
-            }
+            assertEquals(2, r.size)
+            assertEquals("Alex", r[0][users.name])
+            assertEquals("Andrey", r[1][users.name])
         }
     }
 
     @Test
     fun testEqAnyFromList() {
-        withDb(testDBsSupportingAnyAndAllFromArrays) {
-            withCitiesAndUsers { _, users, _ ->
-                val r = users.selectAll().where {
-                    users.id eq anyFrom(listOf("andrey", "alex"))
-                }.orderBy(users.name).toList()
+        withCitiesAndUsers(exclude = anyAndAllFromArraysNotSupported) { _, users, _ ->
+            val r = users.selectAll().where {
+                users.id eq anyFrom(listOf("andrey", "alex"))
+            }.orderBy(users.name).toList()
 
-                assertEquals(2, r.size)
-                assertEquals("Alex", r[0][users.name])
-                assertEquals("Andrey", r[1][users.name])
-            }
+            assertEquals(2, r.size)
+            assertEquals("Alex", r[0][users.name])
+            assertEquals("Andrey", r[1][users.name])
         }
     }
 
     @Test
     fun testNeqAnyFromArray() {
-        withDb(testDBsSupportingAnyAndAllFromArrays) {
-            withCitiesAndUsers { _, users, _ ->
-                val r = users.selectAll().where {
-                    users.id neq anyFrom(arrayOf("andrey"))
-                }.orderBy(users.name)
-                assertEquals(4, r.count())
-            }
+        withCitiesAndUsers(exclude = anyAndAllFromArraysNotSupported) { _, users, _ ->
+            val r = users.selectAll().where {
+                users.id neq anyFrom(arrayOf("andrey"))
+            }.orderBy(users.name)
+            assertEquals(4, r.count())
         }
     }
 
     @Test
     fun testNeqAnyFromList() {
-        withDb(testDBsSupportingAnyAndAllFromArrays) {
-            withCitiesAndUsers { _, users, _ ->
-                val r = users.selectAll().where {
-                    users.id neq anyFrom(listOf("andrey"))
-                }.orderBy(users.name)
-                assertEquals(4, r.count())
-            }
+        withCitiesAndUsers(exclude = anyAndAllFromArraysNotSupported) { _, users, _ ->
+            val r = users.selectAll().where {
+                users.id neq anyFrom(listOf("andrey"))
+            }.orderBy(users.name)
+            assertEquals(4, r.count())
         }
     }
 
     @Test
     fun testNeqAnyFromEmptyArray() {
-        withDb(testDBsSupportingAnyAndAllFromArrays) {
-            withCitiesAndUsers { _, users, _ ->
-                val r = users.selectAll().where { users.id neq anyFrom(emptyArray()) }.orderBy(users.name)
-                assert(r.empty())
-            }
+        withCitiesAndUsers(exclude = anyAndAllFromArraysNotSupported) { _, users, _ ->
+            val r = users.selectAll().where { users.id neq anyFrom(emptyArray()) }.orderBy(users.name)
+            assert(r.empty())
         }
     }
 
     @Test
     fun testNeqAnyFromEmptyList() {
-        withDb(testDBsSupportingAnyAndAllFromArrays) {
-            withCitiesAndUsers { _, users, _ ->
-                val r = users.selectAll().where { users.id neq anyFrom(emptyList()) }.orderBy(users.name)
-                assert(r.empty())
-            }
+        withCitiesAndUsers(exclude = anyAndAllFromArraysNotSupported) { _, users, _ ->
+            val r = users.selectAll().where { users.id neq anyFrom(emptyList()) }.orderBy(users.name)
+            assert(r.empty())
         }
     }
 
     @Test
     fun testGreaterEqAnyFromArray() {
-        withDb(testDBsSupportingAnyAndAllFromArrays) {
-            withSales { _, sales ->
-                val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
-                val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
-                    .orderBy(sales.amount)
-                    .map { it[sales.product] }
-                assertEquals(6, r.size)
-                r.subList(0, 3).forEach { assertEquals("tea", it) }
-                r.subList(3, 6).forEach { assertEquals("coffee", it) }
-            }
+        withSales(excludeSettings = anyAndAllFromArraysNotSupported) { _, sales ->
+            val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
+            val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
+                .orderBy(sales.amount)
+                .map { it[sales.product] }
+            assertEquals(6, r.size)
+            r.subList(0, 3).forEach { assertEquals("tea", it) }
+            r.subList(3, 6).forEach { assertEquals("coffee", it) }
         }
     }
 
     @Test
     fun testGreaterEqAnyFromList() {
-        withDb(testDBsSupportingAnyAndAllFromArrays) {
-            withSales { _, sales ->
-                val amounts = listOf(100, 1000).map { it.toBigDecimal() }
-                val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
-                    .orderBy(sales.amount)
-                    .map { it[sales.product] }
-                assertEquals(6, r.size)
-                r.subList(0, 3).forEach { assertEquals("tea", it) }
-                r.subList(3, 6).forEach { assertEquals("coffee", it) }
-            }
+        withSales(excludeSettings = anyAndAllFromArraysNotSupported) { _, sales ->
+            val amounts = listOf(100, 1000).map { it.toBigDecimal() }
+            val r = sales.selectAll().where { sales.amount greaterEq anyFrom(amounts) }
+                .orderBy(sales.amount)
+                .map { it[sales.product] }
+            assertEquals(6, r.size)
+            r.subList(0, 3).forEach { assertEquals("tea", it) }
+            r.subList(3, 6).forEach { assertEquals("coffee", it) }
         }
     }
 
     @Test
     fun testEqAnyFromTable() {
-        withDb(testDBsSupportingInAnyAllFromTables) {
-            withSalesAndSomeAmounts { _, sales, someAmounts ->
-                val r = sales.selectAll().where { sales.amount eq anyFrom(someAmounts) }
-                assertEquals(2, r.count())
-            }
+        withSalesAndSomeAmounts(excludeSettings = inAnyAllFromTablesNotSupported) { _, sales, someAmounts ->
+            val r = sales.selectAll().where { sales.amount eq anyFrom(someAmounts) }
+            assertEquals(2, r.count())
         }
     }
 
     @Test
     fun testNeqAllFromTable() {
-        withDb(testDBsSupportingInAnyAllFromTables) {
-            withSalesAndSomeAmounts { _, sales, someAmounts ->
-                val r = sales.selectAll().where { sales.amount neq allFrom(someAmounts) }
-                assertEquals(5, r.count())
-            }
+        withSalesAndSomeAmounts(excludeSettings = inAnyAllFromTablesNotSupported) { _, sales, someAmounts ->
+            val r = sales.selectAll().where { sales.amount neq allFrom(someAmounts) }
+            assertEquals(5, r.count())
         }
     }
 
     @Test
     fun testGreaterEqAllFromSubQuery() {
-        withDb(testDBsSupportingAnyAndAllFromSubQueries) {
-            withSales { _, sales ->
-                val r = sales.selectAll().where {
-                    sales.amount greaterEq allFrom(sales.select(sales.amount).where { sales.product eq "tea" })
-                }
-                    .orderBy(sales.amount).map { it[sales.product] }
-                assertEquals(4, r.size)
-                assertEquals("tea", r.first())
-                r.drop(1).forEach { assertEquals("coffee", it) }
+        withSales(excludeSettings = listOf(TestDB.SQLITE)) { _, sales ->
+            val r = sales.selectAll().where {
+                sales.amount greaterEq allFrom(sales.select(sales.amount).where { sales.product eq "tea" })
             }
+                .orderBy(sales.amount).map { it[sales.product] }
+            assertEquals(4, r.size)
+            assertEquals("tea", r.first())
+            r.drop(1).forEach { assertEquals("coffee", it) }
         }
     }
 
     @Test
     fun testGreaterEqAllFromArray() {
-        withDb(testDBsSupportingAnyAndAllFromArrays) {
-            withSales { _, sales ->
-                val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
-                val r = sales.selectAll().where { sales.amount greaterEq allFrom(amounts) }.toList()
-                assertEquals(3, r.size)
-                r.forEach { assertEquals("coffee", it[sales.product]) }
-            }
+        withSales(excludeSettings = anyAndAllFromArraysNotSupported) { _, sales ->
+            val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
+            val r = sales.selectAll().where { sales.amount greaterEq allFrom(amounts) }.toList()
+            assertEquals(3, r.size)
+            r.forEach { assertEquals("coffee", it[sales.product]) }
         }
     }
 
     @Test
     fun testGreaterEqAllFromList() {
-        withDb(testDBsSupportingAnyAndAllFromArrays) {
-            withSales { _, sales ->
-                val amounts = listOf(100, 1000).map { it.toBigDecimal() }
-                val r = sales.selectAll().where { sales.amount greaterEq allFrom(amounts) }.toList()
-                assertEquals(3, r.size)
-                r.forEach { assertEquals("coffee", it[sales.product]) }
-            }
+        withSales(excludeSettings = anyAndAllFromArraysNotSupported) { _, sales ->
+            val amounts = listOf(100, 1000).map { it.toBigDecimal() }
+            val r = sales.selectAll().where { sales.amount greaterEq allFrom(amounts) }.toList()
+            assertEquals(3, r.size)
+            r.forEach { assertEquals("coffee", it[sales.product]) }
         }
     }
 
     @Test
     fun testGreaterEqAllFromTable() {
-        withDb(testDBsSupportingInAnyAllFromTables) {
-            withSalesAndSomeAmounts { _, sales, someAmounts ->
-                val r = sales.selectAll().where { sales.amount greaterEq allFrom(someAmounts) }.toList()
-                assertEquals(3, r.size)
-                r.forEach { assertEquals("coffee", it[sales.product]) }
-            }
+        withSalesAndSomeAmounts(excludeSettings = inAnyAllFromTablesNotSupported) { _, sales, someAmounts ->
+            val r = sales.selectAll().where { sales.amount greaterEq allFrom(someAmounts) }.toList()
+            assertEquals(3, r.size)
+            r.forEach { assertEquals("coffee", it[sales.product]) }
         }
     }
 

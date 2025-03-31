@@ -12,7 +12,9 @@ import org.jetbrains.exposed.r2dbc.sql.statements.api.metadata
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.r2dbc.sql.vendors.inProperCase
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.BatchReplaceStatement
 import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.ReplaceStatement
 import org.jetbrains.exposed.sql.vendors.MariaDBDialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
@@ -64,9 +66,20 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         columnsGeneratedOnDB().isNotEmpty() && currentDialect is PostgreSQLDialect ->
             transaction.connection.prepareStatement(sql, true)
 
-        autoIncColumns.isNotEmpty() ->
-            // http://viralpatel.net/blogs/oracle-java-jdbc-get-primary-key-insert-sql/
-            transaction.connection.prepareStatement(sql, autoIncColumns.map { it.name.inProperCase() }.toTypedArray())
+        autoIncColumns.isNotEmpty() -> {
+            // [MariaDB] r2dbc returnGeneratedValues() does not support adding RETURNING clause to REPLACE statements
+            // see: org.mariadb.r2dbc.util.ClientParser.parameterPartsCheckReturning() switch case 82 -> 114
+            val needsManualReturning = (statement is ReplaceStatement<*> || statement is BatchReplaceStatement) &&
+                currentDialect is MariaDBDialect
+            val generatedColumns = autoIncColumns.map { it.name.inProperCase() }.toTypedArray()
+
+            if (needsManualReturning) {
+                val replaceReturning = "$sql RETURNING ${generatedColumns.joinToString()}"
+                transaction.connection.prepareStatement(replaceReturning, false)
+            } else {
+                transaction.connection.prepareStatement(sql, generatedColumns)
+            }
+        }
 
         else -> transaction.connection.prepareStatement(sql, false)
     }

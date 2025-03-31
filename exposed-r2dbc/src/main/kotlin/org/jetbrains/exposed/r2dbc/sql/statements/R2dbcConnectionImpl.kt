@@ -79,7 +79,11 @@ class R2dbcConnectionImpl(
     }
 
     override suspend fun commit() {
-        withConnection { commitTransaction().awaitFirstOrNull() }
+        withConnection {
+            // this has side effect of enabling auto-commit ON, which may cause unexpected rollback behavior
+            commitTransaction().awaitFirstOrNull()
+            // but attempting to revert or clean active tx state using beginTransaction() leads to another commit/abort
+        }
     }
 
     override suspend fun rollback() {

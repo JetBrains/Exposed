@@ -491,9 +491,13 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         Assume.assumeTrue(dbToTest.isNotEmpty())
         dbToTest.forEach { db ->
             try {
+                withDb(db) {
+                    SchemaUtils.create(testTable)
+                }
                 try {
                     withDb(db) {
-                        SchemaUtils.create(testTable)
+                        // Todo Investigate whether calling commit in a tx is expected to enable auto-commit mode
+                        // and whether it is Exposed's responsibility to revert or the user's
                         testTable.insert { it[foo] = 1 }
                         testTable.insert { it[foo] = 0 }
                     }

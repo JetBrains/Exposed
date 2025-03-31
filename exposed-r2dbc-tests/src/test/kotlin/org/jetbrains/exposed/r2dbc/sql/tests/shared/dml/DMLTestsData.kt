@@ -138,6 +138,10 @@ fun R2dbcDatabaseTestsBase.withCitiesAndUsers(
     }
 }
 
+internal suspend fun Query.toCityNameList(): List<String> {
+    return this.map { it[DMLTestsData.Cities.name] }.toList()
+}
+
 fun R2dbcDatabaseTestsBase.withSales(
     excludeSettings: Collection<TestDB> = emptyList(),
     statement: suspend R2dbcTransaction.(testDb: TestDB, sales: DMLTestsData.Sales) -> Unit
@@ -145,57 +149,52 @@ fun R2dbcDatabaseTestsBase.withSales(
     val sales = DMLTestsData.Sales
 
     withTables(excludeSettings, sales) {
-        insertSale(2018, 11, "tea", "550.10")
-        insertSale(2018, 12, "coffee", "1500.25")
-        insertSale(2018, 12, "tea", "900.30")
-        insertSale(2019, 1, "coffee", "1620.10")
-        insertSale(2019, 1, "tea", "650.70")
-        insertSale(2019, 2, "coffee", "1870.90")
-        insertSale(2019, 2, null, "10.20")
+        sales.insertSaleData()
 
         statement(it, sales)
     }
 }
 
-private suspend fun insertSale(year: Int, month: Int, product: String?, amount: String) {
-    val sales = DMLTestsData.Sales
-    sales.insert {
-        it[sales.year] = year
-        it[sales.month] = month
-        it[sales.product] = product
-        it[sales.amount] = BigDecimal(amount)
+private suspend fun DMLTestsData.Sales.insertSaleData() {
+    insertSale(2018, 11, "tea", "550.10")
+    insertSale(2018, 12, "coffee", "1500.25")
+    insertSale(2018, 12, "tea", "900.30")
+    insertSale(2019, 1, "coffee", "1620.10")
+    insertSale(2019, 1, "tea", "650.70")
+    insertSale(2019, 2, "coffee", "1870.90")
+    insertSale(2019, 2, null, "10.20")
+}
+
+private suspend fun DMLTestsData.Sales.insertSale(year: Int, month: Int, product: String?, amount: String) {
+    insert {
+        it[this.year] = year
+        it[this.month] = month
+        it[this.product] = product
+        it[this.amount] = BigDecimal(amount)
     }
 }
 
-suspend fun R2dbcDatabaseTestsBase.withSomeAmounts(
-    statement: suspend R2dbcTransaction.(testDb: TestDB, someAmounts: DMLTestsData.SomeAmounts) -> Unit
-) {
-    val someAmounts = DMLTestsData.SomeAmounts
-
-    withTables(someAmounts) {
-        suspend fun insertAmount(amount: BigDecimal) =
-            someAmounts.insert { it[someAmounts.amount] = amount }
-        insertAmount(BigDecimal("650.70"))
-        insertAmount(BigDecimal("1500.25"))
-        insertAmount(BigDecimal(1000))
-
-        statement(it, someAmounts)
-    }
-}
-
-suspend fun R2dbcDatabaseTestsBase.withSalesAndSomeAmounts(
+fun R2dbcDatabaseTestsBase.withSalesAndSomeAmounts(
+    excludeSettings: Collection<TestDB> = emptyList(),
     statement: suspend R2dbcTransaction.(
         testDb: TestDB,
         sales: DMLTestsData.Sales,
         someAmounts: DMLTestsData.SomeAmounts
     ) -> Unit
-) =
-    withSales { testDb, sales ->
-        withSomeAmounts { _, someAmounts ->
-            statement(testDb, sales, someAmounts)
-        }
-    }
+) {
+    val sales = DMLTestsData.Sales
+    val someAmounts = DMLTestsData.SomeAmounts
 
-internal suspend fun Query.toCityNameList(): List<String> {
-    return this.map { it[DMLTestsData.Cities.name] }.toList()
+    withTables(excludeSettings, sales, someAmounts) {
+        sales.insertSaleData()
+        someAmounts.insertAmount(BigDecimal("650.70"))
+        someAmounts.insertAmount(BigDecimal("1500.25"))
+        someAmounts.insertAmount(BigDecimal(1000))
+
+        statement(it, sales, someAmounts)
+    }
+}
+
+private suspend fun DMLTestsData.SomeAmounts.insertAmount(amount: BigDecimal) {
+    insert { it[this.amount] = amount }
 }
