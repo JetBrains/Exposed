@@ -2,6 +2,7 @@ package org.example
 
 import org.example.examples.ExecExamples
 import org.example.examples.ExecMySQLExamples
+import org.example.examples.SavepointExample
 import org.example.tables.FilmsTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
@@ -28,6 +29,7 @@ fun main() {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(FilmsTable)
         runExecExamples()
+        runSavepointExample()
     }
 
     transaction(mysqlDb) {
@@ -48,4 +50,10 @@ fun runExecExamples() {
 fun runExecMySQLExamples() {
     val execMySQLExamples = ExecMySQLExamples()
     execMySQLExamples.execMultipleStrings()
+}
+
+fun runSavepointExample() {
+    val savepointExample = SavepointExample()
+    savepointExample.setSavepoint()
+    savepointExample.nestedTransaction()
 }
