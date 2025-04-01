@@ -33,8 +33,7 @@ dependencyResolutionManagement {
 pluginManagement.resolutionStrategy.eachPlugin {
     if (requested.id.id.startsWith("org.jetbrains.kotlin.")) {
         useVersion(kotlin_version)
-        // Confusing log in CI build with community-plugin. Use it for local debug
-//        println("Using kotlin compiler version: $kotlin_version")
+        println("Using kotlin compiler version: $kotlin_version")
     }
 }
 
@@ -43,7 +42,7 @@ pluginManagement {
     repositories {
         google()
         maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
-        maven("https://packages.jetbrains.team/maven/p/kt/dev")
+        maven("https://redirector.kotlinlang.org/maven/dev")
         mavenCentral()
         gradlePluginPortal()
     }
@@ -52,7 +51,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositories {
         maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
-        maven("https://packages.jetbrains.team/maven/p/kt/dev")
+        maven("https://redirector.kotlinlang.org/maven/dev")
         google()
         mavenCentral()
     }
