@@ -1,3 +1,4 @@
+import kotlinRepoUrl
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
@@ -8,6 +9,10 @@ plugins {
 }
 
 repositories {
+    val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
+    if (kotlinRepoUrl?.isNotEmpty() == true) {
+        maven(kotlinRepoUrl)
+    }
     mavenCentral()
 }
 

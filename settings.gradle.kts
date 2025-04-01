@@ -37,11 +37,14 @@ pluginManagement.resolutionStrategy.eachPlugin {
     }
 }
 
+val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
 
 pluginManagement {
     repositories {
+        if (kotlinRepoUrl?.isNotEmpty() == true) {
+            maven(kotlinRepoUrl)
+        }
         google()
-        maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
         maven("https://redirector.kotlinlang.org/maven/dev")
         mavenCentral()
         gradlePluginPortal()
@@ -50,7 +53,9 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+        if (kotlinRepoUrl?.isNotEmpty() == true) {
+            maven(kotlinRepoUrl)
+        }
         maven("https://redirector.kotlinlang.org/maven/dev")
         google()
         mavenCentral()

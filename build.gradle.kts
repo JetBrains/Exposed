@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.maven
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configurePublishing
 import org.jetbrains.exposed.gradle.testDb
@@ -45,8 +46,11 @@ dependencies {
     dokka(projects.exposed.springTransaction)
 }
 
+val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
 repositories {
-    maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+    if (kotlinRepoUrl?.isNotEmpty() == true) {
+        maven(kotlinRepoUrl)
+    }
     maven("https://redirector.kotlinlang.org/maven/dev")
     mavenLocal()
     mavenCentral()
