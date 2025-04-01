@@ -37,10 +37,10 @@ pluginManagement.resolutionStrategy.eachPlugin {
     }
 }
 
-val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
 
 pluginManagement {
     repositories {
+        val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
         if (kotlinRepoUrl?.isNotEmpty() == true) {
             maven(kotlinRepoUrl)
         }
@@ -53,6 +53,7 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
+        val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
         if (kotlinRepoUrl?.isNotEmpty() == true) {
             maven(kotlinRepoUrl)
         }
