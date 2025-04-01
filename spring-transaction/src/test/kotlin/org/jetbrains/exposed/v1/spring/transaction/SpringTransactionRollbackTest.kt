@@ -95,10 +95,11 @@ class SpringTransactionRollbackTest {
                     testRollback.transaction { // inner logicTx start
                         testRollback.insertOriginTable("Tx2")
 
+                        @Suppress("TooGenericExceptionThrown")
                         throw RuntimeException()
                         // isGlobalRollbackOnParticipationFailure == true -> doSetRollbackOnly() -> mark as globalRollBack
                     }
-                } catch (e: Exception) {
+                } catch (@Suppress("SwallowedException") e: RuntimeException) {
                     // something...
                 }
             } // when outer logicTx commit() -> check globalRollBack mark -> throw UnexpectedRollbackException -> rollback
@@ -121,9 +122,10 @@ class SpringTransactionRollbackTest {
                         val innerTx = TransactionManager.currentOrNull()
                         assertFalse(innerTx!!.isMarkedRollback())
 
+                        @Suppress("TooGenericExceptionThrown")
                         throw RuntimeException() // mark as globalRollBack
                     }
-                } catch (e: Exception) {
+                } catch (@Suppress("SwallowedException") e: RuntimeException) {
                     // something...
                 }
 
@@ -141,7 +143,7 @@ class SpringTransactionRollbackTest {
             }
         }
 
-        testRollback.transaction{ // other transaction not affected by previous transaction rollback status
+        testRollback.transaction { // other transaction not affected by previous transaction rollback status
             val newTx = TransactionManager.currentOrNull()
             assertFalse(newTx!!.isMarkedRollback())
         }
@@ -158,9 +160,10 @@ class SpringTransactionRollbackTest {
                 testRollback.transactionWithRequiresNew {
                     testRollback.insertOriginTable("Tx2")
 
+                    @Suppress("TooGenericExceptionThrown")
                     throw RuntimeException()
                 }
-            } catch (e: Exception) {
+            } catch (@Suppress("SwallowedException") e: RuntimeException) {
                 // something...
             }
         }
@@ -175,10 +178,11 @@ class SpringTransactionRollbackTest {
         val testRollback = container.getBean(TestRollback::class.java)
 
         assertFailsWith<RuntimeException> {
-
             // Execute without a transaction -> Should not be rolled back
             testRollback.transactionWithSupports {
                 testRollback.insertOriginTable("No Tx")
+
+                @Suppress("TooGenericExceptionThrown")
                 throw RuntimeException() // Non-transactional, so it should not be rolled back
             }
         }
@@ -187,12 +191,13 @@ class SpringTransactionRollbackTest {
 
         // Execute within a transaction -> Should be rolled back
         assertFailsWith<RuntimeException> {
-
             testRollback.transaction {
                 testRollback.insertOriginTable("With Tx")
 
                 testRollback.transactionWithSupports {
                     testRollback.insertOriginTable("Supports Tx")
+
+                    @Suppress("TooGenericExceptionThrown")
                     throw RuntimeException() // Should trigger rollback
                 }
             }
@@ -213,9 +218,11 @@ class SpringTransactionRollbackTest {
             try {
                 testRollback.transactionWithNotSupported {
                     testRollback.insertOriginTable("No Tx")
+
+                    @Suppress("TooGenericExceptionThrown")
                     throw RuntimeException() // Since it's non-transactional, it won't be rolled back
                 }
-            } catch (e: Exception) {
+            } catch (@Suppress("SwallowedException") e: RuntimeException) {
                 // Ignore exception
             }
         }
@@ -253,9 +260,11 @@ class SpringTransactionRollbackTest {
             try {
                 testRollback.transactionWithNested {
                     testRollback.insertOriginTable("Tx2")
+
+                    @Suppress("TooGenericExceptionThrown")
                     throw RuntimeException() // Rollback only the inner transaction
                 }
-            } catch (e: Exception) {
+            } catch (@Suppress("SwallowedException") e: RuntimeException) {
                 // something...
             }
         }
