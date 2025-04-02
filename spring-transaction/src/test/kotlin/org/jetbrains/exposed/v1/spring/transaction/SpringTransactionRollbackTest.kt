@@ -299,15 +299,14 @@ open class TransactionManagerAttributeSourceTestConfig {
     open fun testRollback() = TestRollback()
 }
 
+@Transactional
 open class TestRollback {
 
-    @Transactional
     open fun init() {
         SchemaUtils.create(RollbackTable)
         RollbackTable.deleteAll()
     }
 
-    @Transactional
     open fun transaction(block: TestRollback.() -> Unit) {
         block()
     }
@@ -337,26 +336,22 @@ open class TestRollback {
         block()
     }
 
-    @Transactional
     open fun insertOriginTable(name: String) {
         RollbackTable.insert {
             it[RollbackTable.name] = name
         }
     }
 
-    @Transactional
     open fun insertWrongTable(name: String) {
         WrongDefinedRollbackTable.insert {
             it[WrongDefinedRollbackTable.name] = name
         }
     }
 
-    @Transactional
     open fun entireTableSize(): Long {
         return RollbackTable.selectAll().count()
     }
 
-    @Transactional
     open fun selectAll(): List<RollbackEntity> {
         return RollbackTable.selectAll().map {
             RollbackEntity(
