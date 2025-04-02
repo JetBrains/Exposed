@@ -90,9 +90,8 @@ subprojects {
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_21
-        languageVersion = KotlinVersion.fromVersion(languageVersion.toString())
-        apiVersion = KotlinVersion.fromVersion(apiVersion.toString())
-
+        languageVersion.set(KotlinVersion.fromVersion(kotlin_language_version ?: "2.2"))
+        apiVersion.set(KotlinVersion.fromVersion(kotlin_api_version ?: "2.2"))
     }
 }
 
