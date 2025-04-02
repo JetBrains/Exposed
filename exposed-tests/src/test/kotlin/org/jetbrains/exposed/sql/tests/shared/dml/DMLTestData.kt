@@ -141,8 +141,6 @@ fun DatabaseTestsBase.withCitiesAndUsers(
     }
 }
 
-internal fun Iterable<ResultRow>.toCityNameList(): List<String> = map { it[DMLTestsData.Cities.name] }
-
 fun DatabaseTestsBase.withSales(
     excludeSettings: Collection<TestDB> = emptyList(),
     statement: JdbcTransaction.(testDb: TestDB, sales: DMLTestsData.Sales) -> Unit
@@ -222,3 +220,5 @@ class Org(id: EntityID<Int>) : IntEntity(id) {
     var uid by Orgs.uid
     var name by Orgs.name
 }
+
+internal fun Iterable<ResultRow>.toCityNameList(): List<String> = map { it[DMLTestsData.Cities.name] }

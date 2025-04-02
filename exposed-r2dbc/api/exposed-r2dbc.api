@@ -183,6 +183,8 @@ public class org/jetbrains/exposed/r2dbc/sql/Query : org/jetbrains/exposed/sql/A
 	public fun empty (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun execute (Lorg/jetbrains/exposed/r2dbc/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeInternal (Lorg/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/r2dbc/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun fetchBatchedResults (ILorg/jetbrains/exposed/sql/SortOrder;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun fetchBatchedResults$default (Lorg/jetbrains/exposed/r2dbc/sql/Query;ILorg/jetbrains/exposed/sql/SortOrder;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/r2dbc/sql/Query;
 	public synthetic fun forUpdate (Lorg/jetbrains/exposed/sql/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/r2dbc/sql/SizedIterable;
 	public fun getSet ()Lorg/jetbrains/exposed/sql/FieldSet;

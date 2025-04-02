@@ -1,11 +1,12 @@
 package org.jetbrains.exposed.r2dbc.sql.tests.shared.dml
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import org.jetbrains.exposed.r2dbc.sql.Query
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -138,10 +139,6 @@ fun R2dbcDatabaseTestsBase.withCitiesAndUsers(
     }
 }
 
-internal suspend fun Query.toCityNameList(): List<String> {
-    return this.map { it[DMLTestsData.Cities.name] }.toList()
-}
-
 fun R2dbcDatabaseTestsBase.withSales(
     excludeSettings: Collection<TestDB> = emptyList(),
     statement: suspend R2dbcTransaction.(testDb: TestDB, sales: DMLTestsData.Sales) -> Unit
@@ -198,3 +195,5 @@ fun R2dbcDatabaseTestsBase.withSalesAndSomeAmounts(
 private suspend fun DMLTestsData.SomeAmounts.insertAmount(amount: BigDecimal) {
     insert { it[this.amount] = amount }
 }
+
+internal suspend fun Flow<ResultRow>.toCityNameList(): List<String> = map { it[DMLTestsData.Cities.name] }.toList()

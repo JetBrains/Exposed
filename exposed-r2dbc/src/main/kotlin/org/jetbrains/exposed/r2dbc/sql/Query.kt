@@ -1,8 +1,12 @@
 package org.jetbrains.exposed.r2dbc.sql
 
 import io.r2dbc.spi.R2dbcException
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.exceptions.getContexts
 import org.jetbrains.exposed.r2dbc.sql.statements.SuspendExecutable
@@ -11,6 +15,8 @@ import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.r2dbc.sql.statements.api.rowsCount
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.currentDialect
@@ -145,77 +151,80 @@ open class Query(
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
-    // DECIDE on what should be the return value here
-//    suspend fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Iterable<Iterable<ResultRow>> {
-//        require(batchSize > 0) { "Batch size should be greater than 0." }
-//        require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
-//        require(orderByExpressions.isEmpty()) {
-//            "A manual `ORDER BY` clause should not be set. By default, the auto-incrementing column will be used."
-//        }
-//
-//        val autoIncColumn = try {
-//            set.source.columns.first { it.columnType.isAutoInc }
-//        } catch (_: NoSuchElementException) {
-//            throw UnsupportedOperationException("Batched select only works on tables with an auto-incrementing column")
-//        }
-//        limit = batchSize
-//        (orderByExpressions as MutableList).add(autoIncColumn to sortOrder)
-//        val whereOp = where ?: Op.TRUE
-//        val fetchInAscendingOrder = sortOrder in listOf(SortOrder.ASC, SortOrder.ASC_NULLS_FIRST, SortOrder.ASC_NULLS_LAST)
-//
-//        return object : Iterable<Iterable<ResultRow>> {
-//            override fun iterator(): Iterator<Iterable<ResultRow>> {
-//                return iterator {
-//                    var lastOffset = if (fetchInAscendingOrder) 0L else null
-//                    while (true) {
-//                        val query = this@Query.copy().adjustWhere {
-//                            lastOffset?.let { lastOffset ->
-//                                whereOp and if (fetchInAscendingOrder) {
-//                                    when (autoIncColumn.columnType) {
-//                                        is EntityIDColumnType<*> -> {
-//                                            (autoIncColumn as? Column<EntityID<Long>>)?.let {
-//                                                (it greater lastOffset)
-//                                            } ?: (autoIncColumn as? Column<EntityID<Int>>)?.let {
-//                                                (it greater lastOffset.toInt())
-//                                            } ?: (autoIncColumn greater lastOffset)
-//                                        }
-//                                        else -> (autoIncColumn greater lastOffset)
-//                                    }
-//                                } else {
-//                                    when (autoIncColumn.columnType) {
-//                                        is EntityIDColumnType<*> -> {
-//                                            (autoIncColumn as? Column<EntityID<Long>>)?.let {
-//                                                (it less lastOffset)
-//                                            } ?: (autoIncColumn as? Column<EntityID<Int>>)?.let {
-//                                                (it less lastOffset.toInt())
-//                                            } ?: (autoIncColumn less lastOffset)
-//                                        }
-//                                        else -> (autoIncColumn less lastOffset)
-//                                    }
-//                                }
-//                            } ?: whereOp
-//                        }
-//
-//                        val results = query.toList()
-//
-//                        if (results.isNotEmpty()) {
-//                            yield(results)
-//                        }
-//
-//                        if (results.size < batchSize) break
-//
-//                        lastOffset = toLong(results.last()[autoIncColumn]!!)
-//                    }
-//                }
-//            }
-//
-//            private fun toLong(autoIncVal: Any): Long = when (autoIncVal) {
-//                is EntityID<*> -> toLong(autoIncVal.value)
-//                is Int -> autoIncVal.toLong()
-//                else -> autoIncVal as Long
-//            }
-//        }
-//    }
+    fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Flow<Flow<ResultRow>> {
+        require(batchSize > 0) { "Batch size should be greater than 0." }
+        require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
+        require(orderByExpressions.isEmpty()) {
+            "A manual `ORDER BY` clause should not be set. By default, the auto-incrementing column will be used."
+        }
+
+        val autoIncColumn = try {
+            set.source.columns.first { it.columnType.isAutoInc }
+        } catch (_: NoSuchElementException) {
+            throw UnsupportedOperationException("Batched select only works on tables with an auto-incrementing column")
+        }
+        limit = batchSize
+        (orderByExpressions as MutableList).add(autoIncColumn to sortOrder)
+        val whereOp = where ?: Op.TRUE
+        val fetchInAscendingOrder = sortOrder in listOf(SortOrder.ASC, SortOrder.ASC_NULLS_FIRST, SortOrder.ASC_NULLS_LAST)
+
+        return object : Flow<Flow<ResultRow>> {
+            override suspend fun collect(collector: FlowCollector<Flow<ResultRow>>) {
+                var lastOffset = if (fetchInAscendingOrder) 0L else null
+                while (true) {
+                    val query = this@Query.copy().adjustWhere {
+                        lastOffset?.let { lastOffset ->
+                            whereOp and if (fetchInAscendingOrder) {
+                                when (autoIncColumn.columnType) {
+                                    is EntityIDColumnType<*> -> {
+                                        (autoIncColumn as? Column<EntityID<Long>>)?.let {
+                                            (it greater lastOffset)
+                                        } ?: (autoIncColumn as? Column<EntityID<Int>>)?.let {
+                                            (it greater lastOffset.toInt())
+                                        } ?: (autoIncColumn greater lastOffset)
+                                    }
+                                    else -> (autoIncColumn greater lastOffset)
+                                }
+                            } else {
+                                when (autoIncColumn.columnType) {
+                                    is EntityIDColumnType<*> -> {
+                                        (autoIncColumn as? Column<EntityID<Long>>)?.let {
+                                            (it less lastOffset)
+                                        } ?: (autoIncColumn as? Column<EntityID<Int>>)?.let {
+                                            (it less lastOffset.toInt())
+                                        } ?: (autoIncColumn less lastOffset)
+                                    }
+                                    else -> (autoIncColumn less lastOffset)
+                                }
+                            }
+                        } ?: whereOp
+                    }
+
+                    var resultCount = 0
+                    var lastResult: ResultRow? = null
+
+                    val results = flow { query.collect(this) }.onEach {
+                        resultCount++
+                        lastResult = it
+                    }
+
+                    collector.emit(results)
+
+                    if (resultCount < batchSize) break
+
+                    lastResult?.let {
+                        lastOffset = toLong(it[autoIncColumn]!!)
+                    }
+                }
+            }
+
+            private fun toLong(autoIncVal: Any): Long = when (autoIncVal) {
+                is EntityID<*> -> toLong(autoIncVal.value)
+                is Int -> autoIncVal.toLong()
+                else -> autoIncVal as Long
+            }
+        }
+    }
 
     /**
      * Returns the number of results retrieved after query execution.

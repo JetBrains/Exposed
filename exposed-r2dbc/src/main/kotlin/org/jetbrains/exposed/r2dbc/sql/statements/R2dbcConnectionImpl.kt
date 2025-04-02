@@ -134,7 +134,7 @@ class R2dbcConnectionImpl(
         val useCharParameter = currentDialect is SQLServerDialect
         var preparedSQL = sql
         for (i in 1..paramCount) {
-            val newValue = if (useCharParameter) "@${'@' + i}" else "$$i"
+            val newValue = if (useCharParameter) "@P$i" else "$$i"
             preparedSQL = preparedSQL.replaceFirst("?", newValue)
         }
         return preparedSQL
@@ -152,7 +152,7 @@ class R2dbcConnectionImpl(
 
         withConnection {
             val batch = createBatch()
-            sqls.forEach { sql -> batch.add(r2dbcPreparedSql(sql)) }
+            sqls.forEach { sql -> batch.add(sql) }
             batch.execute().awaitFirstOrNull()
         }
     }
