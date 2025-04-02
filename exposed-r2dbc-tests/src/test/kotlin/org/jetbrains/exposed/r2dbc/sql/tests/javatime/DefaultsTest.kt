@@ -27,9 +27,16 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
 import java.time.*
+import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+
+/** Forces [LocalDateTime] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun LocalDateTime.asJdk8(): LocalDateTime = truncatedTo(ChronoUnit.SECONDS)
+
+/** Forces [Instant] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun Instant.asJdk8(): Instant = truncatedTo(ChronoUnit.SECONDS)
 
 private val dbTimestampNow: CustomFunction<OffsetDateTime>
     get() = object : CustomFunction<OffsetDateTime>("now", JavaOffsetDateTimeColumnType()) {}
@@ -448,7 +455,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testTimeDefaultDoesNotTriggerAlterStatement() {
-        val time = LocalDateTime.now(ZoneId.of("Japan")).toLocalTime()
+        val time = LocalDateTime.now(ZoneId.of("Japan")).asJdk8().toLocalTime()
 
         val tester = object : Table("tester") {
             val timeWithDefault = time("timeWithDefault").default(time)

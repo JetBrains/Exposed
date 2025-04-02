@@ -31,20 +31,19 @@ dependencies {
     implementation(project(":exposed-r2dbc"))
     implementation(project(":exposed-kotlin-datetime"))
 
-    // non-exposed-tests module dependencies
-    // --- start ---
-    implementation(project(":exposed-money"))
-//    implementation(project(":exposed-crypt"))
-    implementation(project(":exposed-json"))
-    implementation(project(":exposed-kotlin-datetime"))
-    implementation(project(":exposed-java-time"))
-    implementation(project(":exposed-jodatime"))
-    // --- end ----
-
     implementation(libs.slf4j)
     implementation(libs.log4j.slf4j.impl)
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
+
+    // non-exposed-tests module dependencies
+    // --- start ---
+    testImplementation(project(":exposed-money"))
+//    testImplementation(project(":exposed-crypt"))
+    testImplementation(project(":exposed-json"))
+    testImplementation(project(":exposed-java-time"))
+    testImplementation(project(":exposed-jodatime"))
+    // --- end ----
 
     testRuntimeOnly(libs.r2dbc.h2) {
         exclude(group = "com.h2database", module = "h2")
@@ -65,7 +64,7 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
-    if (JavaVersion.VERSION_1_8 > JavaVersion.current()) {
+    if (JavaVersion.VERSION_11 > JavaVersion.current()) {
         jvmArgs = listOf("-XX:MaxPermSize=256m")
     }
     testLogging {

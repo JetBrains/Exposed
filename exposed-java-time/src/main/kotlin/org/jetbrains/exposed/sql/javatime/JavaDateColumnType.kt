@@ -208,6 +208,15 @@ class JavaLocalDateColumnType : ColumnType<LocalDate>(), IDateColumnType {
         else -> super.nonNullValueAsDefaultString(value)
     }
 
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        val dialect = currentDialect
+        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            rs.getObject(index, java.sql.Timestamp::class.java)
+        } else {
+            super.readObject(rs, index)
+        }
+    }
+
     private fun longToLocalDate(instant: Long) = Instant.ofEpochMilli(instant).atZone(ZoneId.systemDefault()).toLocalDate()
 
     companion object {
@@ -333,6 +342,15 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         is PostgreSQLDialect -> "${nonNullValueToString(value)}::time without time zone"
         is MysqlDialect -> "'${MYSQL_TIME_AS_DEFAULT_STRING_FORMATTER.format(value)}'"
         else -> super.nonNullValueAsDefaultString(value)
+    }
+
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        val dialect = currentDialect
+        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            rs.getObject(index, java.sql.Timestamp::class.java)
+        } else {
+            super.readObject(rs, index)
+        }
     }
 
     private fun longToLocalTime(millis: Long) = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalTime()

@@ -31,7 +31,10 @@ import kotlin.test.assertTrue
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+/** Forces [Instant] precision to be reduced to millisecond-level, for JDK8 test compatibility. */
+internal fun Clock.System.nowAsJdk8(): Instant = Instant.fromEpochMilliseconds(this.now().toEpochMilliseconds())
+
+internal fun now(): LocalDateTime = Clock.System.nowAsJdk8().toLocalDateTime(TimeZone.currentSystemDefault())
 
 private val dbTimestampNow: CustomFunction<OffsetDateTime>
     get() = object : CustomFunction<OffsetDateTime>("now", KotlinOffsetDateTimeColumnType()) {}
@@ -445,7 +448,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testTimeDefaultDoesNotTriggerAlterStatement() {
-        val time = Clock.System.now().toLocalDateTime(TimeZone.of("Japan")).time
+        val time = Clock.System.nowAsJdk8().toLocalDateTime(TimeZone.of("Japan")).time
 
         val tester = object : Table("tester") {
             val timeWithDefault = time("timeWithDefault").default(time)

@@ -157,7 +157,7 @@ class ExplainTests : R2dbcDatabaseTestsBase() {
             val jsonString = result.toString().substringAfter("=")
             when (testDB) {
                 in TestDB.ALL_MYSQL_LIKE -> assertTrue(jsonString.startsWith('{') && jsonString.endsWith('}'))
-                else -> assertTrue(jsonString.startsWith("JsonByteArrayInput{[") && jsonString.endsWith("]}"))
+                else -> assertTrue(jsonString.startsWith('[') && jsonString.endsWith(']'))
             }
 
             // test multiple options only

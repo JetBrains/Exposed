@@ -102,7 +102,7 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
             val tsn = timestamp("tsn").nullable()
         }
 
-        val now = Instant.now()
+        val now = Instant.now().asJdk8()
 
         withTables(testTable) {
             testTable.insert {
@@ -413,7 +413,7 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testDateTimeAsArray() {
         val defaultDates = listOf(today)
-        val defaultDateTimes = listOf(LocalDateTime.now())
+        val defaultDateTimes = listOf(LocalDateTime.now().asJdk8())
         val tester = object : Table("array_tester") {
             val dates = array("dates", JavaLocalDateColumnType()).default(defaultDates)
             val datetimes = array("datetimes", JavaLocalDateTimeColumnType()).default(defaultDateTimes)
@@ -479,7 +479,7 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
             java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
-            val instant = Instant.now()
+            val instant = Instant.now().asJdk8()
 
             tester.insert {
                 it[timestamp_col] = instant

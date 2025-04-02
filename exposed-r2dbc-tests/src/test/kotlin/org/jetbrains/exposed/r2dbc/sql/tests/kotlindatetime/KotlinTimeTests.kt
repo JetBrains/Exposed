@@ -99,7 +99,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             val tsn = timestamp("tsn").nullable()
         }
 
-        val now = Clock.System.now()
+        val now = Clock.System.nowAsJdk8()
 
         withTables(testTable) {
             testTable.insert {
@@ -497,7 +497,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
-            val instant = Clock.System.now()
+            val instant = Clock.System.nowAsJdk8()
 
             tester.insert {
                 it[timestamp_col] = instant
