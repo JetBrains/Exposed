@@ -12,10 +12,8 @@ val buildScriptLogger: Logger = Logging.getLogger("buildScriptLogger")
 
 val kotlin_version: String by project
 val kotlin_repo_url: String? by project
-val kotlin_language_version: String? by project
 val kotlin_api_version: String? by project
 buildScriptLogger.log(LogLevel.INFO, "kotlin Api Version : $kotlin_api_version ")
-buildScriptLogger.log(LogLevel.INFO, "kotlin Language Version : $kotlin_language_version ")
 buildScriptLogger.log(LogLevel.INFO, "kotlin repository url : $kotlin_repo_url ")
 
 plugins {
@@ -87,14 +85,19 @@ subprojects {
 
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget = JvmTarget.JVM_21
-        languageVersion.set(KotlinVersion.fromVersion(kotlin_language_version ?: "2.2"))
-        apiVersion.set(KotlinVersion.fromVersion(kotlin_api_version ?: "2.2"))
+// !! infrastructure for builds as a Kotlin user project
+// ("implement a Gradle property for overriding LVs when compiling Kotlin code")
+val kotlinLanguageVersionOverride = providers.gradleProperty("kotlin_language_version")
+    .map(KotlinVersion::fromVersion)
+    .orNull
+if (kotlinLanguageVersionOverride != null) {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach kotlinCompilationTask@ {
+        compilerOptions {
+            languageVersion.set(kotlinLanguageVersionOverride)
+            logger.info("<KUP> ${this@kotlinCompilationTask.path} : set Kotlin Language Version to $kotlinLanguageVersionOverride")
+        }
     }
 }
-
 
 subprojects {
     if (name == "exposed-bom") return@subprojects
