@@ -2,6 +2,8 @@ import org.gradle.kotlin.dsl.maven
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configurePublishing
 import org.jetbrains.exposed.gradle.testDb
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 val buildScriptLogger: Logger = Logging.getLogger("buildScriptLogger")
@@ -85,13 +87,15 @@ subprojects {
 
 }
 
-tasks.withType<KotlinJvmCompile>().configureEach {
-    kotlinOptions {
-        jvmTarget = "21"
-        apiVersion = kotlin_api_version ?: "1.9"
-        languageVersion = kotlin_language_version ?: "1.9" //
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+        languageVersion = KotlinVersion.fromVersion(languageVersion.toString())
+        apiVersion = KotlinVersion.fromVersion(apiVersion.toString())
+
     }
 }
+
 
 subprojects {
     if (name == "exposed-bom") return@subprojects
