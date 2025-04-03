@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
+import java.sql.ResultSet
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -392,6 +393,44 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
             val queryAlias = TransformTable.selectAll().alias("query_alias")
             val e3 = queryAlias.selectAll().map { TransformEntity.wrapRow(it, queryAlias) }.first()
             assertEquals(10, e3.simple.value)
+        }
+    }
+
+    @Test
+    fun testReadObjectPassedToDelegate() {
+        data class DateHolder(val value: String)
+
+        // Prefix is added only on reading the value from the table via `readObject` method
+        // `eagerLoading` is set to true to get String (instead of CLOB) inside `readObject` immediately
+        class TextWithPrefixColumnType(val prefix: String) : TextColumnType(eagerLoading = true) {
+            override fun readObject(rs: ResultSet, index: Int): Any {
+                return "${prefix}${super.readObject(rs, index)}"
+            }
+        }
+
+        fun Table.textWithPrefix(name: String, prefix: String): Column<String> =
+            registerColumn(name, TextWithPrefixColumnType(prefix))
+
+        val transformer = object : ColumnTransformer<String, DateHolder> {
+            override fun wrap(value: String): DateHolder = DateHolder(value)
+            override fun unwrap(value: DateHolder): String = value.value
+        }
+
+        val tester = object : Table("tester") {
+            val dateTime = textWithPrefix("text_with_prefix", prefix = "###").transform(transformer)
+        }
+
+        val testValue = "test_value"
+
+        withTables(tester) {
+            val holder = DateHolder(testValue)
+
+            tester.insert {
+                it[dateTime] = holder
+            }
+
+            val result = tester.selectAll().single()[tester.dateTime]
+            assertEquals("###$testValue", result.value)
         }
     }
 }
