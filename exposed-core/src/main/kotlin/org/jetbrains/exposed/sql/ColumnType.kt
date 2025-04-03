@@ -376,6 +376,10 @@ open class ColumnWithTransform<Unwrapped, Wrapped>(
     override fun parameterMarker(value: Wrapped?): String {
         return delegate.parameterMarker(value?.let { transformer.unwrap(it) })
     }
+
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        return delegate.readObject(rs, index)
+    }
 }
 
 internal fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
