@@ -11,10 +11,14 @@ import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementResult
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.postgresql.util.PGobject
 import java.io.InputStream
 import java.math.BigDecimal
+import java.math.MathContext
 import java.time.Duration
 import java.util.*
 
@@ -85,7 +89,21 @@ class R2dbcPreparedStatementImpl(
         val convertedValue = when {
             value is java.sql.Time -> value.toLocalTime()
             value is java.sql.Date -> value.toLocalDate()
-            value is java.sql.Timestamp -> value.toLocalDateTime()
+            value is java.sql.Timestamp -> {
+                // SQL Server & MySQL convert a Timestamp to a LocalDateTime with the exact correct nanosecond,
+                // but the db adjusts precision (with R2dbc) by truncating the value, instead of rounding (like with Jdbc).
+                // e.g. Input of 777777 becomes 777800 with Jdbc, but 777700 with R2dbc.
+                // This is due to setting parameter as LocalDateTime (R2dbc) instead of Timestamp (Jdbc),
+                // but this code conversion is necessary for R2dbc.
+                @Suppress("MagicNumber")
+                val preciseNanos = when (currentDialect) {
+                    is SQLServerDialect -> BigDecimal(value.nanos).round(MathContext(4)).toInt()
+                    is MariaDBDialect -> value.nanos
+                    is MysqlDialect -> BigDecimal(value.nanos).round(MathContext(3)).toInt()
+                    else -> value.nanos
+                }
+                value.apply { nanos = preciseNanos }.toLocalDateTime()
+            }
             currentDialect is PostgreSQLDialect && value is PGobject -> Json.of(value.value!!)
             else -> value
         }
