@@ -369,6 +369,8 @@ open class ColumnWithTransform<Unwrapped, Wrapped>(
         return delegate.notNullValueToDB(transformer.unwrap(value)!!)
     }
 
+    override fun readObject(rs: ResultSet, index: Int): Any? = delegate.readObject(rs, index)
+
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         return delegate.setParameter(stmt, index, value)
     }
