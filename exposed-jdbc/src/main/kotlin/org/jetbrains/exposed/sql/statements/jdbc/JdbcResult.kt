@@ -16,7 +16,7 @@ class JdbcResult(
 ) : ResultApi, RowApi {
     private var consumed = false
 
-    override fun <T> mapRows(block: (RowApi) -> T): Flow<T> {
+    override fun <T> mapRows(block: (RowApi) -> T?): Flow<T?> {
         if (consumed) error("Result is already consumed")
         consumed = true
 

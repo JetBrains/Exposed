@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.r2dbc.sql.tests.shared.types
 
-import kotlinx.coroutines.flow.all
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -15,15 +14,12 @@ import org.jetbrains.exposed.sql.blobParam
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.tests.shared.expectException
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Test
 import java.nio.charset.Charset
 import kotlin.random.Random
-import kotlin.test.assertContentEquals
 
 class BlobColumnTypeTests : R2dbcDatabaseTestsBase() {
     object BlobTable : IntIdTable("test-blob") {
@@ -115,43 +111,48 @@ class BlobColumnTypeTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-    @Test
-    fun testBlobAsOid() {
-        val defaultBytes = "test".toByteArray()
-        val defaultBlob = ExposedBlob(defaultBytes)
-        val tester = object : Table("blob_tester") {
-            val blobCol = blob("blob_col", useObjectIdentifier = true).default(defaultBlob)
-        }
-
-        withDb {
-            if (currentDialectTest !is PostgreSQLDialect) {
-                expectException<IllegalStateException> {
-                    SchemaUtils.create(tester)
-                }
-            } else {
-                assertEquals("oid", tester.blobCol.descriptionDdl().split(" ")[1])
-                SchemaUtils.create(tester)
-
-                tester.insert {}
-
-                val result1 = tester.selectAll().single()[tester.blobCol]
-                assertContentEquals(defaultBytes, result1.bytes)
-
-                tester.insert {
-                    defaultBlob.inputStream.reset()
-                    it[blobCol] = defaultBlob
-                }
-                tester.insert {
-                    defaultBlob.inputStream.reset()
-                    it[blobCol] = blobParam(defaultBlob, useObjectIdentifier = true)
-                }
-
-                val result2 = tester.selectAll()
-                assertEquals(3, result2.count())
-                assertTrue(result2.all { it[tester.blobCol].bytes.contentEquals(defaultBytes) })
-
-                SchemaUtils.drop(tester)
-            }
-        }
-    }
+    // r2dbc-postgresql supports OID type, but only as a numeric (default is Integer) value;
+    // so attempting to read/write expects a single identifier value;
+    // there is no LargeObject functionality equivalent to JDBC setBlob() or getBlob();
+    // there is only ByteBuffer or byte arrays, which is not a compatible mapping for encoding/decoding oid type.
+    // Feature request: https://github.com/pgjdbc/r2dbc-postgresql/issues/255
+//    @Test
+//    fun testBlobAsOid() {
+//        val defaultBytes = "test".toByteArray()
+//        val defaultBlob = ExposedBlob(defaultBytes)
+//        val tester = object : Table("blob_tester") {
+//            val blobCol = blob("blob_col", useObjectIdentifier = true).default(defaultBlob)
+//        }
+//
+//        withDb {
+//            if (currentDialectTest !is PostgreSQLDialect) {
+//                expectException<IllegalStateException> {
+//                    SchemaUtils.create(tester)
+//                }
+//            } else {
+//                assertEquals("oid", tester.blobCol.descriptionDdl().split(" ")[1])
+//                SchemaUtils.create(tester)
+//
+//                tester.insert {}
+//
+//                val result1 = tester.selectAll().single()[tester.blobCol]
+//                assertContentEquals(defaultBytes, result1.bytes)
+//
+//                tester.insert {
+//                    defaultBlob.inputStream.reset()
+//                    it[blobCol] = defaultBlob
+//                }
+//                tester.insert {
+//                    defaultBlob.inputStream.reset()
+//                    it[blobCol] = blobParam(defaultBlob, useObjectIdentifier = true)
+//                }
+//
+//                val result2 = tester.selectAll()
+//                assertEquals(3, result2.count())
+//                assertTrue(result2.all { it[tester.blobCol].bytes.contentEquals(defaultBytes) })
+//
+//                SchemaUtils.drop(tester)
+//            }
+//        }
+//    }
 }

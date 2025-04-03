@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.StatementResult
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.postgresql.util.PGobject
@@ -62,6 +63,22 @@ class R2dbcPreparedStatementImpl(
 
         // Todo discuss if a return value is even necessary (since never used)
         return 0
+    }
+
+    override suspend fun executeMultiple(): List<StatementResult> {
+        val result = statement.execute()
+        val r2dbcResult = R2dbcResult(result)
+        return listOf(StatementResult.Object(r2dbcResult))
+        // full JDBC logic does not seem possible here
+//        return if (statement.execute()) {
+//            listOf(StatementResult.Object(JdbcResult(statement.resultSet)))
+//        } else {
+//            // getMoreResults() returns true only if next result is a ResultSet
+//            while (!statement.getMoreResults(Statement.CLOSE_CURRENT_RESULT)) {
+//                if (statement.updateCount == -1) return emptyList()
+//            }
+//            listOf(StatementResult.Object(JdbcResult(statement.resultSet)))
+//        }
     }
 
     override fun set(index: Int, value: Any) {

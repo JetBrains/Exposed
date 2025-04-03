@@ -24,6 +24,7 @@ import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.statements.GlobalStatementInterceptor
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementInterceptor
+import org.jetbrains.exposed.sql.statements.StatementResult
 import org.jetbrains.exposed.sql.statements.StatementType
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -153,7 +154,10 @@ open class R2dbcTransaction(
                     StatementType.SELECT, StatementType.EXEC, StatementType.SHOW, StatementType.PRAGMA -> {
                         executeQuery()
                     }
-                    StatementType.MULTI -> error("Executing statement with multiple results is unsupported")
+                    StatementType.MULTI -> {
+                        val result = executeMultiple().first() as StatementResult.Object
+                        result.resultSet as R2dbcResult
+                    }
                     else -> {
                         executeUpdate()
                         getResultRow()

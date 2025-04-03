@@ -169,7 +169,7 @@ sealed class SetOperation(
             val value = ResultRow.Companion.create(row, fieldIndex)
             trackResultSet(tx)
             value
-        }.collect(collector)
+        }.collect { rr -> rr?.let { collector.emit(it) } }
     }
 
     companion object {

@@ -561,6 +561,7 @@ public final class org/jetbrains/exposed/r2dbc/sql/statements/R2dbcPreparedState
 	public fun cancel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun closeIfPossible (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeMultiple (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeQuery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeUpdate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun fillParameters (Ljava/lang/Iterable;)I
@@ -737,6 +738,7 @@ public abstract interface class org/jetbrains/exposed/r2dbc/sql/statements/api/R
 	public abstract fun cancel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun closeIfPossible (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun executeBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun executeMultiple (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun executeQuery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun executeUpdate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getResultRow (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

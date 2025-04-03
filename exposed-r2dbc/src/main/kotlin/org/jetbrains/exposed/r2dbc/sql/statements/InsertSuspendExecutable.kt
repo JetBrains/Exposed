@@ -218,7 +218,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         // This happens with mapSegments(), mapRows(), and exec(), but not with plain SQL execution;
         // So there must be some reason on our end that such a result is included
         // Todo investigate why SQL Server delivers a duplicate final record
-        if (currentDialect is SQLServerDialect && resultSetsValues.size > 1 && resultSetsCounts.sum() > 1) {
+        if (currentDialect is SQLServerDialect && resultSetsValues.size > 1 && resultSetsCounts.sum() >= 1) {
             // equality check is tricky because of potential type mismatch
             // e.g. An Int id returns a duplicated final row of type BigDecimal - is this maybe the mssql last_inserted_id?
             val lastIndex = resultSetsValues.lastIndex

@@ -319,7 +319,7 @@ open class Query(
                 val resultRow = ResultRow.Companion.create(it, fieldIndex)
                 trackResultSet(tx)
                 resultRow
-            }.collect(collector)
+            }.collect { rr -> rr?.let { collector.emit(it) } }
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, this.getContexts(), transaction)
         }

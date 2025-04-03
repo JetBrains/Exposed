@@ -3,12 +3,18 @@ package org.jetbrains.exposed.r2dbc.sql.tests.shared
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.r2dbc.sql.addLogger
 import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.sql.BooleanColumnType
+import org.jetbrains.exposed.sql.IntegerColumnType
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.VarCharColumnType
+import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.sql.tests.TestDB
+import org.jetbrains.exposed.sql.tests.inProperCase
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class ParameterizationTests : R2dbcDatabaseTestsBase() {
@@ -16,9 +22,11 @@ class ParameterizationTests : R2dbcDatabaseTestsBase() {
         val name = varchar("foo", 50).nullable()
     }
 
-//    private val supportMultipleStatements by lazy {
-//        TestDB.ALL_MARIADB + TestDB.SQLSERVER + TestDB.ALL_MYSQL + TestDB.POSTGRESQL
-//    }
+    // r2dbc-mysql does NOT support allowMultiQueries option: https://github.com/asyncer-io/r2dbc-mysql/issues/291
+    // r2dbc-postgresql does NOT seem to support multiple statements either, even though the attached issue is old:
+    // https://github.com/pgjdbc/r2dbc-postgresql/issues/82, but the exception being thrown is the same:
+    // "... cannot be created. This is often due to the presence of both multiple statements and parameters at the same time."
+    private val multipleStatementsNotSupported = TestDB.ALL - TestDB.SQLSERVER
 
     @Test
     fun testInsertWithQuotesAndGetItBack() {
@@ -32,110 +40,72 @@ class ParameterizationTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-//    @Test
-//    fun testSingleParametersWithMultipleStatements() {
-//        Assume.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
-//
-//        val dialect = TestDB.enabledDialects().first()
-//        val db = Database.connect(
-//            dialect.connection.invoke().plus(urlExtra(dialect)),
-//            dialect.driver,
-//            dialect.user,
-//            dialect.pass
-//        )
-//
-//        transaction(db) {
-//            try {
-//                SchemaUtils.create(TempTable)
-//
-//                val table = TempTable.tableName.inProperCase()
-//                val column = TempTable.name.name.inProperCase()
-//
-//                val result = exec(
-//                    """
-//                        INSERT INTO $table ($column) VALUES (?);
-//                        INSERT INTO $table ($column) VALUES (?);
-//                        INSERT INTO $table ($column) VALUES (?);
-//                        DELETE FROM $table WHERE $table.$column LIKE ?;
-//                        SELECT COUNT(*) FROM $table;
-//                    """.trimIndent(),
-//                    args = listOf(
-//                        VarCharColumnType() to "Anne",
-//                        VarCharColumnType() to "Anya",
-//                        VarCharColumnType() to "Anna",
-//                        VarCharColumnType() to "Ann%",
-//                    ),
-//                    explicitStatementType = StatementType.MULTI
-//                ) { resultSet ->
-//                    resultSet.next()
-//                    resultSet.getInt(1)
-//                }
-//                assertNotNull(result)
-//                assertEquals(1, result)
-//
-//                assertEquals("Anya", TempTable.selectAll().single()[TempTable.name])
-//            } finally {
-//                SchemaUtils.drop(TempTable)
-//            }
-//        }
-//
-//        TransactionManager.closeAndUnregister(db)
-//    }
+    @Test
+    fun testSingleParametersWithMultipleStatements() {
+        withTables(excludeSettings = multipleStatementsNotSupported, TempTable) {
+            val table = TempTable.tableName.inProperCase()
+            val column = TempTable.name.name.inProperCase()
 
-//    @Test
-//    fun testMultipleParametersWithMultipleStatements() {
-//        Assume.assumeTrue(supportMultipleStatements.containsAll(TestDB.enabledDialects()))
-//
-//        val tester = object : Table("tester") {
-//            val name = varchar("foo", 50)
-//            val age = integer("age")
-//            val active = bool("active")
-//        }
-//
-//        val dialect = TestDB.enabledDialects().first()
-//        val db = Database.connect(
-//            dialect.connection.invoke().plus(urlExtra(dialect)),
-//            dialect.driver,
-//            dialect.user,
-//            dialect.pass
-//        )
-//
-//        transaction(db) {
-//            try {
-//                SchemaUtils.create(tester)
-//
-//                val table = tester.tableName.inProperCase()
-//                val (name, age, active) = tester.columns.map { it.name.inProperCase() }
-//
-//                val result = exec(
-//                    """
-//                        INSERT INTO $table ($active, $age, $name) VALUES (?, ?, ?);
-//                        INSERT INTO $table ($active, $age, $name) VALUES (?, ?, ?);
-//                        UPDATE $table SET $age=? WHERE ($table.$name LIKE ?) AND ($table.$active = ?);
-//                        SELECT COUNT(*) FROM $table WHERE ($table.$name LIKE ?) AND ($table.$age = ?);
-//                    """.trimIndent(),
-//                    args = listOf(
-//                        BooleanColumnType() to true, IntegerColumnType() to 1, VarCharColumnType() to "Anna",
-//                        BooleanColumnType() to false, IntegerColumnType() to 1, VarCharColumnType() to "Anya",
-//                        IntegerColumnType() to 2, VarCharColumnType() to "A%", BooleanColumnType() to true,
-//                        VarCharColumnType() to "A%", IntegerColumnType() to 2
-//                    ),
-//                    explicitStatementType = StatementType.MULTI
-//                ) { resultSet ->
-//                    resultSet.next()
-//                    resultSet.getInt(1)
-//                }
-//                assertNotNull(result)
-//                assertEquals(1, result)
-//
-//                assertEquals(2, tester.selectAll().count())
-//            } finally {
-//                SchemaUtils.drop(tester)
-//            }
-//        }
-//
-//        TransactionManager.closeAndUnregister(db)
-//    }
+            val result = exec(
+                """
+                        INSERT INTO $table ($column) VALUES (?);
+                        INSERT INTO $table ($column) VALUES (?);
+                        INSERT INTO $table ($column) VALUES (?);
+                        DELETE FROM $table WHERE $table.$column LIKE ?;
+                        SELECT COUNT(*) FROM $table;
+                """.trimIndent(),
+                args = listOf(
+                    VarCharColumnType() to "Anne",
+                    VarCharColumnType() to "Anya",
+                    VarCharColumnType() to "Anna",
+                    VarCharColumnType() to "Ann%",
+                ),
+                explicitStatementType = StatementType.MULTI
+            ) { row ->
+                row.get(0)
+            }?.single()
+            assertNotNull(result)
+            assertEquals(1, result)
+
+            assertEquals("Anya", TempTable.selectAll().single()[TempTable.name])
+        }
+    }
+
+    @Test
+    fun testMultipleParametersWithMultipleStatements() {
+        val tester = object : Table("tester") {
+            val name = varchar("foo", 50)
+            val age = integer("age")
+            val active = bool("active")
+        }
+
+        withTables(excludeSettings = multipleStatementsNotSupported, tester) {
+            val table = tester.tableName.inProperCase()
+            val (name, age, active) = tester.columns.map { it.name.inProperCase() }
+
+            val result = exec(
+                """
+                        INSERT INTO $table ($active, $age, $name) VALUES (?, ?, ?);
+                        INSERT INTO $table ($active, $age, $name) VALUES (?, ?, ?);
+                        UPDATE $table SET $age=? WHERE ($table.$name LIKE ?) AND ($table.$active = ?);
+                        SELECT COUNT(*) FROM $table WHERE ($table.$name LIKE ?) AND ($table.$age = ?);
+                """.trimIndent(),
+                args = listOf(
+                    BooleanColumnType() to true, IntegerColumnType() to 1, VarCharColumnType() to "Anna",
+                    BooleanColumnType() to false, IntegerColumnType() to 1, VarCharColumnType() to "Anya",
+                    IntegerColumnType() to 2, VarCharColumnType() to "A%", BooleanColumnType() to true,
+                    VarCharColumnType() to "A%", IntegerColumnType() to 2
+                ),
+                explicitStatementType = StatementType.MULTI
+            ) { row ->
+                row.get(0)
+            }?.single()
+            assertNotNull(result)
+            assertEquals(1, result)
+
+            assertEquals(2, tester.selectAll().count())
+        }
+    }
 
     @Test
     fun testNullParameterWithLogger() {
@@ -151,12 +121,4 @@ class ParameterizationTests : R2dbcDatabaseTestsBase() {
             assertNull(TempTable.selectAll().single()[TempTable.name])
         }
     }
-
-//    private fun urlExtra(testDB: TestDB): String {
-//        return when (testDB) {
-//            in TestDB.ALL_MYSQL -> "&allowMultiQueries=true"
-//            in TestDB.ALL_MARIADB -> "?&allowMultiQueries=true"
-//            else -> ""
-//        }
-//    }
 }

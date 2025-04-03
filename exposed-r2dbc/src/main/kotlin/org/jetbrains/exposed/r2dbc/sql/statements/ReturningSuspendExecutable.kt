@@ -23,7 +23,9 @@ open class ReturningSuspendExecutable(
             .associateBy({ it.value }, { it.index })
         val rs = TransactionManager.current().exec(this)!!
         try {
-            rs.mapRows { ResultRow.create(it, fieldIndex) }.collect(collector)
+            rs.mapRows {
+                ResultRow.create(it, fieldIndex)
+            }.collect { rr -> rr?.let { collector.emit(it) } }
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, statement.getContexts(), TransactionManager.current())
         }

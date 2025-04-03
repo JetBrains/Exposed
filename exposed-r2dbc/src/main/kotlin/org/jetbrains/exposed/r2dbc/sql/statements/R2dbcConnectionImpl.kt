@@ -28,6 +28,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.reactivestreams.Publisher
+import java.util.Stack
 
 /**
  * Class representing a wrapped R2DBC database [Connection].
@@ -128,16 +129,43 @@ class R2dbcConnectionImpl(
         val standardParametersSupported = dialect is MysqlDialect || dialect is OracleDialect
         if (standardParametersSupported) return sql
 
-        val paramCount = sql.count { it == '?' }
-        if (paramCount == 0) return sql
+        if (sql.count { it == '?' } == 0) return sql
 
-        val useCharParameter = currentDialect is SQLServerDialect
-        var preparedSQL = sql
-        for (i in 1..paramCount) {
-            val newValue = if (useCharParameter) "@P$i" else "$$i"
-            preparedSQL = preparedSQL.replaceFirst("?", newValue)
+        val parameterMarker = if (currentDialect is SQLServerDialect) "@P" else "$"
+
+        return buildString {
+            val quoteStack = Stack<Char>()
+            var lastPos = 0
+            var paramCount = 0
+
+            var i = -1
+            while (++i < sql.length) {
+                val char = sql[i]
+                when {
+                    char == '?' && quoteStack.isEmpty() -> {
+                        if (sql.getOrNull(i + 1) == '?') {
+                            i++
+                            append(sql.substring(lastPos, i))
+                            lastPos = i + 1
+                            continue
+                        }
+                        append("${sql.substring(lastPos, i)}${parameterMarker}${++paramCount}")
+                        lastPos = i + 1
+                    }
+                    char == '\'' || char == '\"' -> {
+                        when {
+                            quoteStack.isEmpty() -> quoteStack.push(char)
+                            quoteStack.peek() == char -> quoteStack.pop()
+                            else -> quoteStack.push(char)
+                        }
+                    }
+                }
+            }
+
+            if (lastPos < sql.length) {
+                append(sql.substring(lastPos))
+            }
         }
-        return preparedSQL
     }
 
     override suspend fun executeInBatch(sqls: List<String>) {

@@ -33,7 +33,7 @@ open class ExplainSuspendExecutable(
                 }
 
                 ExplainResultRow.Companion.create(row, fieldIndex!!)
-            }.collect(collector)
+            }.collect { rr -> rr?.let { collector.emit(it) } }
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, statement.getContexts(), TransactionManager.current())
         }
