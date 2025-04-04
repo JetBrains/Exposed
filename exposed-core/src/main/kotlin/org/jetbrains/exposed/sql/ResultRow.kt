@@ -3,7 +3,7 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.withDialect
 
@@ -135,11 +135,11 @@ class ResultRow(
     internal object NotInitializedValue
 
     companion object {
-        /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [ResultApi]. */
-        fun create(rs: ResultApi, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
+        /** Creates a [ResultRow] storing all expressions in [fieldsIndex] with their values retrieved from a [RowApi]. */
+        fun create(rs: RowApi, fieldsIndex: Map<Expression<*>, Int>): ResultRow {
             return ResultRow(fieldsIndex).apply {
                 fieldsIndex.forEach { (field, index) ->
-                    val columnType = (field as? ExpressionWithColumnType)?.columnType
+                    val columnType: IColumnType<out Any>? = (field as? ExpressionWithColumnType)?.columnType
                     val value = if (columnType != null) {
                         columnType.readObject(rs, index + 1)
                     } else {

@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.vendors.*
 import java.time.*
 import java.time.ZoneOffset.UTC
@@ -208,6 +208,15 @@ class JavaLocalDateColumnType : ColumnType<LocalDate>(), IDateColumnType {
         else -> super.nonNullValueAsDefaultString(value)
     }
 
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        val dialect = currentDialect
+        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            rs.getObject(index, java.sql.Timestamp::class.java)
+        } else {
+            super.readObject(rs, index)
+        }
+    }
+
     private fun longToLocalDate(instant: Long) = Instant.ofEpochMilli(instant).atZone(ZoneId.systemDefault()).toLocalDate()
 
     companion object {
@@ -259,7 +268,7 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
         }
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? {
+    override fun readObject(rs: RowApi, index: Int): Any? {
         return if (currentDialect is OracleDialect) {
             rs.getObject(index, java.sql.Timestamp::class.java)
         } else {
@@ -335,6 +344,15 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         else -> super.nonNullValueAsDefaultString(value)
     }
 
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        val dialect = currentDialect
+        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            rs.getObject(index, java.sql.Timestamp::class.java)
+        } else {
+            super.readObject(rs, index)
+        }
+    }
+
     private fun longToLocalTime(millis: Long) = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalTime()
 
     companion object {
@@ -373,7 +391,7 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
         else -> valueFromDB(value.toString())
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? {
+    override fun readObject(rs: RowApi, index: Int): Any? {
         return rs.getObject(index, java.sql.Timestamp::class.java)
     }
 
@@ -441,7 +459,7 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? = when (currentDialect) {
+    override fun readObject(rs: RowApi, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
         is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java)
         else -> rs.getObject(index, OffsetDateTime::class.java)

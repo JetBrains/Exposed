@@ -47,6 +47,8 @@ open class InsertStatement<Key : Any>(
      */
     fun <T> getOrNull(column: Column<T>): T? = resultedValues?.firstOrNull()?.getOrNull(column)
 
+    // TODO: log issue about unifying process result method for jdbc and r2dbc
+
     @OptIn(InternalApi::class)
     @Suppress("NestedBlockDepth")
     @Deprecated(

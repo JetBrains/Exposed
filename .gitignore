@@ -10,3 +10,4 @@ build/
 classes/
 **/jetbrains.db
 .DS_Store
+.kotlin
