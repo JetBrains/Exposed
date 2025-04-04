@@ -1250,7 +1250,7 @@ class ArrayColumnType<T, R : List<Any?>>(
     val dimensions: Int = 1
 ) : ColumnType<R>() {
 
-    private val NULL_ELEMENT_STRING = "null"
+    private val nullElementString = "null"
 
     /**
      * Constructor with maximum cardinality for a single dimension.
@@ -1328,7 +1328,7 @@ class ArrayColumnType<T, R : List<Any?>>(
 
     private fun recursiveNonNullValueToString(value: Any?, level: Int): String = when {
         level > 1 -> (value as List<Any?>).joinToString(",", "[", "]") { recursiveNonNullValueToString(it, level - 1) }
-        else -> (value as List<T>).joinToString(",", "[", "]") { it?.let { delegate.nonNullValueToString(it) } ?: NULL_ELEMENT_STRING }
+        else -> (value as List<T>).joinToString(",", "[", "]") { it?.let { delegate.nonNullValueToString(it) } ?: nullElementString }
     }
 
     override fun nonNullValueAsDefaultString(value: R): String {
@@ -1337,7 +1337,7 @@ class ArrayColumnType<T, R : List<Any?>>(
 
     private fun recursiveNonNullValueAsDefaultString(value: Any?, level: Int): String = when {
         level > 1 -> (value as List<Any?>).joinToString(",", "[", "]") { recursiveNonNullValueAsDefaultString(it, level - 1) }
-        else -> (value as List<T>).joinToString(",", "[", "]") { it?.let { delegate.nonNullValueAsDefaultString(it) } ?: NULL_ELEMENT_STRING }
+        else -> (value as List<T>).joinToString(",", "[", "]") { it?.let { delegate.nonNullValueAsDefaultString(it) } ?: nullElementString }
     }
 
     private fun arrayLiteralPrefix(): String {
