@@ -78,6 +78,13 @@ enum class TestDB(
             suspendTransaction(db = tmp, transactionIsolation = Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
 
+                @Suppress("SwallowedException", "TooGenericExceptionCaught")
+                try {
+                    exec("CREATE TABLESPACE users DATAFILE '/opt/oracle/oradata/FREE/FREEPDB1/users01.dbf' SIZE 100M AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED")
+                } catch (e: Exception) { // ignore
+                    exposedLogger.warn("Tablespace users already exists", e)
+                }
+
                 try {
                     exec("DROP USER ExposedTest CASCADE")
                 } catch (_: Exception) {

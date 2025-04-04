@@ -2,7 +2,7 @@ services:
     oracle:
         container_name: oracleDB
         restart: always
-        image: container-registry.oracle.com/database/free:latest-lite
+        image: container-registry.oracle.com/database/free:23.7.0.0-lite
         ports:
             - "3003:1521"
         environment:

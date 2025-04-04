@@ -94,6 +94,13 @@ enum class TestDB(
 
             @Suppress("SwallowedException", "TooGenericExceptionCaught")
             try {
+                exec("CREATE TABLESPACE users DATAFILE '/opt/oracle/oradata/FREE/FREEPDB1/users01.dbf' SIZE 100M AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED")
+            } catch (e: Exception) { // ignore
+                exposedLogger.warn("Tablespace users already exists", e)
+            }
+
+            @Suppress("SwallowedException", "TooGenericExceptionCaught")
+            try {
                 exec("DROP USER ExposedTest CASCADE")
             } catch (e: Exception) { // ignore
                 exposedLogger.warn("Exception on deleting ExposedTest user")
