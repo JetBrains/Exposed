@@ -12,10 +12,14 @@ import kotlinx.coroutines.reactive.asPublisher
 import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.statements.api.RowApi
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.reactivestreams.Publisher
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -87,7 +91,7 @@ value class R2DBCRow(val row: Row) : RowApi {
 
     override fun <T> getObject(index: Int, type: Class<T>): T? = when (type) {
         Time::class.java -> {
-            val result: LocalTime? = row.get(index - 1, LocalTime::class.java) ?: return null
+            val result: LocalTime = row.get(index - 1, LocalTime::class.java) ?: return null
             @Suppress("UNCHECKED_CAST")
             Time.valueOf(result) as T
         }
@@ -97,9 +101,19 @@ value class R2DBCRow(val row: Row) : RowApi {
             Date.valueOf(result) as T
         }
         Timestamp::class.java -> {
-            val result: LocalDateTime? = row.get(index - 1, LocalDateTime::class.java) ?: return null
-            @Suppress("UNCHECKED_CAST")
-            Timestamp.valueOf(result) as T
+            // It is tricky, probably the reason for MySql special case is not here but in `KotlinInstantColumnType`
+            // The problem is that the line `rs.getObject(index, java.sql.Timestamp::class.java)` in method `valueFromDB()` inside
+            // the column type changes the time according to the time zone, and reverts it back in `valueFromDB`
+            // But for R2DBC it does not happen. This line changes that behaviour to match it to JDBC behaviour.
+            if (currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
+                val result: Instant = row.get(index - 1, Instant::class.java) ?: return null
+                @Suppress("UNCHECKED_CAST")
+                Timestamp.from(result) as T
+            } else {
+                val result: LocalDateTime = row.get(index - 1, LocalDateTime::class.java) ?: return null
+                @Suppress("UNCHECKED_CAST")
+                Timestamp.valueOf(result) as T
+            }
         }
         else -> row.get(index - 1, type) as T
     }
