@@ -1121,4 +1121,5 @@ interface ISqlExpressionBuilder {
 /**
  * Builder object for creating SQL expressions.
  */
+// TODO: make a function same as IStatementBuilder
 object SqlExpressionBuilder : ISqlExpressionBuilder

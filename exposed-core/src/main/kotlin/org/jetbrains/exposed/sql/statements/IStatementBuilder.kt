@@ -430,6 +430,9 @@ interface IStatementBuilder {
 }
 
 /** Builder object for creating SQL statements. Made it private to avoid imports clash */
+// TODO: StatementBuilder -> StatementBuilderImpl, and IStatementBuilder -> StatementBuilder
 private object StatementBuilder : IStatementBuilder
+
+// TODO: add documentation for building statements without execution, like in the old DSL
 
 fun <S> buildStatement(body: IStatementBuilder.() -> S): S = body(StatementBuilder)

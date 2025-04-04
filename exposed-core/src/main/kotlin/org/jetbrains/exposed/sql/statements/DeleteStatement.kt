@@ -80,4 +80,6 @@ open class DeleteStatement(
         where?.toQueryBuilder(this)
         listOf(args)
     }
+
+    // TODO: companion object should be reverted with deprecations
 }

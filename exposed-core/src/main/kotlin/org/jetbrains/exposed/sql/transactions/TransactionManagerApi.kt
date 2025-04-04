@@ -7,7 +7,10 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicReference
 
+// TODO: break down this to a separate files
+
 private object NotInitializedTransactionManager : TransactionManagerApi {
+    // TODO: should we have an ENUM for this?
     override var defaultIsolationLevel: Int = -1
 
     override var defaultReadOnly: Boolean = false
@@ -34,6 +37,7 @@ private object NotInitializedTransactionManager : TransactionManagerApi {
  */
 interface TransactionManagerApi {
     /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
+    // TODO: check if this can be an ENUM with set(int) operator in JDBC and R2DBC modules
     var defaultIsolationLevel: Int
 
     /** Whether transactions should be performed in read-only mode. Unless specified, the database default will be used. */
@@ -71,6 +75,7 @@ interface TransactionManagerApi {
  * Represents the object responsible for storing internal data related to each registered database
  * and its transaction manager.
  */
+// TODO: move/add kdocs from TransactionManager
 @InternalApi
 object CoreTransactionManager {
     private val databases = ConcurrentLinkedDeque<DatabaseApi>()

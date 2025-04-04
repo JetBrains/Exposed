@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
+// TODO: consider naming this as QueryState (or something related to state of the query) and check that it has only single responsibility
 /** Base class representing an SQL query that returns a [ResultSet] when executed. */
 abstract class AbstractQuery<T : AbstractQuery<T>>(
     targets: List<Table>
