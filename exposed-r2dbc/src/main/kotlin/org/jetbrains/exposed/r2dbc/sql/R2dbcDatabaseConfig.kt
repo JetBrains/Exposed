@@ -3,6 +3,7 @@ package org.jetbrains.exposed.r2dbc.sql
 import io.r2dbc.spi.ConnectionFactoryOptions
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import org.jetbrains.exposed.r2dbc.sql.mappers.TypeMapperRegistry
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 
@@ -14,12 +15,16 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
 
     val useExposedCodecs: Boolean
 
+    val typeMapperRegistry: TypeMapperRegistry
+
     class Builder : DatabaseConfig.Builder() {
         var useExposedCodecs: Boolean = true
 
         var connectionFactoryOptions: ConnectionFactoryOptions = ConnectionFactoryOptions.builder().build()
 
         var dispatcher: CoroutineDispatcher = Dispatchers.IO
+
+        var typeMapperRegistry: TypeMapperRegistry = TypeMapperRegistry.default()
 
         fun setUrl(url: String) {
             connectionFactoryOptions { from(ConnectionFactoryOptions.parse(url)) }
@@ -73,6 +78,8 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
                     get() = this@Builder.connectionFactoryOptions
                 override val useExposedCodecs: Boolean
                     get() = this@Builder.useExposedCodecs
+                override val typeMapperRegistry: TypeMapperRegistry
+                    get() = this@Builder.typeMapperRegistry
             }
         }
     }

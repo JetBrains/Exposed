@@ -14,6 +14,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.r2dbc.sql.R2dbcScope
+import org.jetbrains.exposed.r2dbc.sql.mappers.TypeMapperRegistry
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcDatabaseMetadataImpl
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcExposedDatabaseMetadata
@@ -37,7 +38,8 @@ import java.util.Stack
 class R2dbcConnectionImpl(
     override val connection: Publisher<out Connection>,
     private val vendorDialect: String,
-    private val scope: R2dbcScope
+    private val scope: R2dbcScope,
+    private val typeMapperRegistry: TypeMapperRegistry
 ) : R2dbcExposedConnection<Publisher<out Connection>> {
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
 
@@ -112,7 +114,7 @@ class R2dbcConnectionImpl(
 //        TODO
 //        val r2dbcQuery = if (returnKeys) "$preparedSql RETURNING *" else preparedSql
 //        R2dbcPreparedStatementImpl(createStatement(r2dbcQuery), this, returnKeys, isInsert = r2dbcQuery.startsWith("INSERT"))
-        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys, currentDialect)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys, currentDialect, typeMapperRegistry)
     }
 
     override suspend fun prepareStatement(
@@ -121,7 +123,7 @@ class R2dbcConnectionImpl(
     ): R2dbcPreparedStatementImpl = withConnection {
         val preparedSql = r2dbcPreparedSql(sql)
         val r2dbcStatement = createStatement(preparedSql).returnGeneratedValues(*columns)
-        R2dbcPreparedStatementImpl(r2dbcStatement, this, true, currentDialect)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, true, currentDialect, typeMapperRegistry)
     }
 
     private fun r2dbcPreparedSql(sql: String): String {

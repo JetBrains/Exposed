@@ -137,7 +137,7 @@ class R2dbcDatabase private constructor(
             val factory = ConnectionFactories.get(options)
 
             return R2dbcDatabase(explicitVendor, config) {
-                R2dbcConnectionImpl(factory.create(), explicitVendor, R2dbcScope(config.dispatcher))
+                R2dbcConnectionImpl(factory.create(), explicitVendor, R2dbcScope(config.dispatcher), config.typeMapperRegistry)
             }.apply {
                 connectionUrl = options.urlString
                 CoreTransactionManager.registerDatabaseManager(this, manager(this))
