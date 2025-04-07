@@ -40,16 +40,11 @@ class TypeMapperRegistry(private val mappers: MutableList<TypeMapper> = mutableL
         for (mapper in mappers) {
             // Check if the mapper supports this dialect
             val supportsDialect = mapper.dialects.isEmpty() || mapper.dialects.any { it.isInstance(dialect) }
-            if (!supportsDialect) continue
-
-            // Check if the mapper supports this column type
             val supportsColumnType = mapper.columnTypes.isEmpty() || mapper.columnTypes.any { it.isInstance(columnType) }
-            if (!supportsColumnType) continue
+            if (!supportsDialect || !supportsColumnType) continue
 
             // Try to set the value
-            if (mapper.setValue(statement, dialect, this, columnType, value, index)) {
-                return true
-            }
+            if (mapper.setValue(statement, dialect, this, columnType, value, index)) return true
         }
         return false
     }
