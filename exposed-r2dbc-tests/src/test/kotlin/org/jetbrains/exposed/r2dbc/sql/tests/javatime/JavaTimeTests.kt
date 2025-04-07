@@ -364,19 +364,20 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
             )
 
             assertEquals(
-                now.hour,
-                testTable.select(testTable.timestampWithTimeZone.hour()).where { testTable.id eq nowId }.single()[testTable.timestampWithTimeZone.hour()]
+                now.hour, testTable.select(testTable.timestampWithTimeZone.hour()).where { testTable.id eq nowId }.single()[testTable.timestampWithTimeZone.hour()]
             )
 
             assertEquals(
                 now.minute,
                 testTable.select(testTable.timestampWithTimeZone.minute()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.minute()])
+                    .single()[testTable.timestampWithTimeZone.minute()]
+            )
 
             assertEquals(
                 now.second,
                 testTable.select(testTable.timestampWithTimeZone.second()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.second()])
+                    .single()[testTable.timestampWithTimeZone.second()]
+            )
         }
     }
 
@@ -445,8 +446,7 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
             }
 
             assertEquals(
-                localTime,
-                tableWithTime.select(tableWithTime.id, tableWithTime.time).where { tableWithTime.time eq localTimeLiteral }.single()[tableWithTime.time]
+                localTime, tableWithTime.select(tableWithTime.id, tableWithTime.time).where { tableWithTime.time eq localTimeLiteral }.single()[tableWithTime.time]
             )
         }
     }
@@ -582,7 +582,8 @@ object CitiesTime : IntIdTable("CitiesTime") {
 
 @Serializable
 data class ModifierData(
-    val userId: Int, @Serializable(with = DateTimeSerializer::class) val timestamp: LocalDateTime
+    val userId: Int,
+    @Serializable(with = DateTimeSerializer::class) val timestamp: LocalDateTime
 )
 
 object DateTimeSerializer : KSerializer<LocalDateTime> {
