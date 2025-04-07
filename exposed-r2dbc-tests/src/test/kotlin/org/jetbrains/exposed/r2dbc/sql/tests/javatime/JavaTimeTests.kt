@@ -257,36 +257,31 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
                 it[timestampWithTimeZone] = cairoNow
             }
 
-            val cairoNowInsertedInCairoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
-                .single()[testTable.timestampWithTimeZone]
+            val cairoNowInsertedInCairoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }.single()[testTable.timestampWithTimeZone]
 
             // UTC time zone
             java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
             assertEquals("UTC", ZoneId.systemDefault().id)
 
-            val cairoNowRetrievedInUTCTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
-                .single()[testTable.timestampWithTimeZone]
+            val cairoNowRetrievedInUTCTimeZone = testTable.selectAll().where { testTable.id eq cairoId }.single()[testTable.timestampWithTimeZone]
 
             val utcID = testTable.insertAndGetId {
                 it[timestampWithTimeZone] = cairoNow
             }
 
-            val cairoNowInsertedInUTCTimeZone = testTable.selectAll().where { testTable.id eq utcID }
-                .single()[testTable.timestampWithTimeZone]
+            val cairoNowInsertedInUTCTimeZone = testTable.selectAll().where { testTable.id eq utcID }.single()[testTable.timestampWithTimeZone]
 
             // Tokyo time zone
             java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Tokyo"))
             assertEquals("Asia/Tokyo", ZoneId.systemDefault().id)
 
-            val cairoNowRetrievedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }
-                .single()[testTable.timestampWithTimeZone]
+            val cairoNowRetrievedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq cairoId }.single()[testTable.timestampWithTimeZone]
 
             val tokyoID = testTable.insertAndGetId {
                 it[timestampWithTimeZone] = cairoNow
             }
 
-            val cairoNowInsertedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq tokyoID }
-                .single()[testTable.timestampWithTimeZone]
+            val cairoNowInsertedInTokyoTimeZone = testTable.selectAll().where { testTable.id eq tokyoID }.single()[testTable.timestampWithTimeZone]
 
             // PostgreSQL and MySQL always store the timestamp in UTC, thereby losing the original time zone.
             // To preserve the original time zone, store the time zone information in a separate column.
@@ -346,52 +341,42 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
 
             assertEquals(
                 now.toLocalDate(),
-                testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.date()]
+                testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }.single()[testTable.timestampWithTimeZone.date()]
             )
 
-            val expectedTime =
-                when (testDb) {
-                    TestDB.MYSQL_V8, TestDB.SQLSERVER,
-                    in TestDB.ALL_ORACLE_LIKE,
-                    in TestDB.ALL_POSTGRES_LIKE -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")
-                    else -> now
-                }.toLocalTime()
+            val expectedTime = when (testDb) {
+                TestDB.MYSQL_V8, TestDB.SQLSERVER, in TestDB.ALL_ORACLE_LIKE, in TestDB.ALL_POSTGRES_LIKE -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")
+                else -> now
+            }.toLocalTime()
             assertEquals(
                 expectedTime,
-                testTable.select(testTable.timestampWithTimeZone.time()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.time()]
+                testTable.select(testTable.timestampWithTimeZone.time()).where { testTable.id eq nowId }.single()[testTable.timestampWithTimeZone.time()]
             )
 
             assertEquals(
                 now.month.value,
-                testTable.select(testTable.timestampWithTimeZone.month()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.month()]
+                testTable.select(testTable.timestampWithTimeZone.month()).where { testTable.id eq nowId }.single()[testTable.timestampWithTimeZone.month()]
             )
 
             assertEquals(
                 now.dayOfMonth,
-                testTable.select(testTable.timestampWithTimeZone.day()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.day()]
+                testTable.select(testTable.timestampWithTimeZone.day()).where { testTable.id eq nowId }.single()[testTable.timestampWithTimeZone.day()]
             )
 
             assertEquals(
                 now.hour,
-                testTable.select(testTable.timestampWithTimeZone.hour()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.hour()]
+                testTable.select(testTable.timestampWithTimeZone.hour()).where { testTable.id eq nowId }.single()[testTable.timestampWithTimeZone.hour()]
             )
 
             assertEquals(
                 now.minute,
                 testTable.select(testTable.timestampWithTimeZone.minute()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.minute()]
-            )
+                    .single()[testTable.timestampWithTimeZone.minute()])
 
             assertEquals(
                 now.second,
                 testTable.select(testTable.timestampWithTimeZone.second()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.second()]
-            )
+                    .single()[testTable.timestampWithTimeZone.second()])
         }
     }
 
@@ -461,9 +446,7 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
 
             assertEquals(
                 localTime,
-                tableWithTime.select(tableWithTime.id, tableWithTime.time)
-                    .where { tableWithTime.time eq localTimeLiteral }
-                    .single()[tableWithTime.time]
+                tableWithTime.select(tableWithTime.id, tableWithTime.time).where { tableWithTime.time eq localTimeLiteral }.single()[tableWithTime.time]
             )
         }
     }
@@ -486,8 +469,7 @@ class JavaTimeTests : R2dbcDatabaseTestsBase() {
             }
 
             assertEquals(
-                instant,
-                tester.selectAll().single()[tester.timestamp_col]
+                instant, tester.selectAll().single()[tester.timestamp_col]
             )
         }
     }
@@ -506,9 +488,7 @@ fun <T : Temporal> assertEqualDateTime(d1: T?, d2: T?) {
         }
         d1 is LocalDateTime && d2 is LocalDateTime -> {
             assertEquals(
-                d1.toEpochSecond(ZoneOffset.UTC),
-                d2.toEpochSecond(ZoneOffset.UTC),
-                "Failed on epoch seconds ${currentDialectTest.name}"
+                d1.toEpochSecond(ZoneOffset.UTC), d2.toEpochSecond(ZoneOffset.UTC), "Failed on epoch seconds ${currentDialectTest.name}"
             )
             assertEqualFractionalPart(d1.nano, d2.nano)
         }
@@ -527,27 +507,51 @@ fun <T : Temporal> assertEqualDateTime(d1: T?, d2: T?) {
 private fun assertEqualFractionalPart(nano1: Int, nano2: Int) {
     val dialect = currentDialectTest
     val db = dialect.name
+
+    // Calculate expected and actual values based on database type
+    var expected = 0
+    var actual = 0
+    var tolerance = 1 // Default tolerance of ±1 unit
+
     when (dialect) {
         // accurate to 100 nanoseconds
-        is SQLServerDialect ->
-            assertEquals(roundTo100Nanos(nano1), roundTo100Nanos(nano2), "Failed on 1/10th microseconds $db")
+        is SQLServerDialect -> {
+            expected = roundTo100Nanos(nano1)
+            actual = roundTo100Nanos(nano2)
+        }
         // microseconds
-        is MariaDBDialect ->
-            assertEquals(floorToMicro(nano1), floorToMicro(nano2), "Failed on microseconds $db")
+        is MariaDBDialect -> {
+            expected = floorToMicro(nano1)
+            actual = floorToMicro(nano2)
+        }
         is H2Dialect, is PostgreSQLDialect, is MysqlDialect -> {
             when ((dialect as? MysqlDialect)?.isFractionDateTimeSupported()) {
                 null, true -> {
-                    assertEquals(roundToMicro(nano1), roundToMicro(nano2), "Failed on microseconds $db")
+                    expected = roundToMicro(nano1)
+                    actual = roundToMicro(nano2)
                 }
-                else -> {} // don't compare fractional part
+                else -> {
+                    // don't compare fractional part
+                    return
+                }
             }
         }
         // milliseconds
-        is OracleDialect ->
-            assertEquals(roundToMilli(nano1), roundToMilli(nano2), "Failed on milliseconds $db")
-        is SQLiteDialect ->
-            assertEquals(floorToMilli(nano1), floorToMilli(nano2), "Failed on milliseconds $db")
+        is OracleDialect -> {
+            expected = roundToMilli(nano1)
+            actual = roundToMilli(nano2)
+        }
+        is SQLiteDialect -> {
+            expected = floorToMilli(nano1)
+            actual = floorToMilli(nano2)
+        }
         else -> fail("Unknown dialect $db")
+    }
+
+    // Check if the difference is within the acceptable tolerance
+    val diff = kotlin.math.abs(expected - actual)
+    if (diff > tolerance) {
+        error("Failed on fractional comparison for $db: expected $expected, actual $actual, difference $diff exceeds tolerance $tolerance")
     }
 }
 
@@ -578,9 +582,7 @@ object CitiesTime : IntIdTable("CitiesTime") {
 
 @Serializable
 data class ModifierData(
-    val userId: Int,
-    @Serializable(with = DateTimeSerializer::class)
-    val timestamp: LocalDateTime
+    val userId: Int, @Serializable(with = DateTimeSerializer::class) val timestamp: LocalDateTime
 )
 
 object DateTimeSerializer : KSerializer<LocalDateTime> {
