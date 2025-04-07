@@ -18,6 +18,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** Clears and resets any stored information about the database's current schema to default values. */
     abstract fun resetCurrentScheme()
 
+    @Suppress("ForbiddenComment")
     // TODO: THIS should become protected after the usage in DatabaseDialect is fully deprecated
     /**
      * Returns the corresponding [ReferenceOption] for the specified [refOption] result,
@@ -33,6 +34,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     abstract val identifierManager: IdentifierManagerApi
 
     @InternalApi
+    @Suppress("ForbiddenComment")
     // TODO: drop inner and move to utils package
     protected inner class CachableMapWithDefault<K, V>(
         private val map: MutableMap<K, V> = mutableMapOf(),
@@ -88,6 +90,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
      *
      * @return `null` - if the value was set to `null` or not configured. `defaultValue` in other case.
      */
+    @Suppress("ForbiddenComment")
     // TODO: move to the utility class, rename
     @InternalApi
     protected fun sanitizedDefault(defaultValue: String): String? {

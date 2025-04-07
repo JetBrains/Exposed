@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicReference
 
+@Suppress("ForbiddenComment")
 // TODO: break down this to a separate files
 
 private object NotInitializedTransactionManager : TransactionManagerApi {
@@ -37,6 +38,7 @@ private object NotInitializedTransactionManager : TransactionManagerApi {
  */
 interface TransactionManagerApi {
     /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
+    @Suppress("ForbiddenComment", "AnnotationSpacing")
     // TODO: check if this can be an ENUM with set(int) operator in JDBC and R2DBC modules
     var defaultIsolationLevel: Int
 
@@ -75,6 +77,7 @@ interface TransactionManagerApi {
  * Represents the object responsible for storing internal data related to each registered database
  * and its transaction manager.
  */
+@Suppress("ForbiddenComment")
 // TODO: move/add kdocs from TransactionManager
 @InternalApi
 object CoreTransactionManager {

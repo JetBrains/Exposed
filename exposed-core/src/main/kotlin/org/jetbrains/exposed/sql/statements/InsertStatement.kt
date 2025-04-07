@@ -10,6 +10,7 @@ import kotlin.properties.Delegates
  * @param isIgnore Whether to ignore errors or not.
  * **Note** [isIgnore] is not supported by all vendors. Please check the documentation.
  */
+@Suppress("ForbiddenComment", "AnnotationSpacing")
 open class InsertStatement<Key : Any>(
     val table: Table,
     val isIgnore: Boolean = false
@@ -46,7 +47,6 @@ open class InsertStatement<Key : Any>(
      * retrieved from the database or if the column cannot be found in the row.
      */
     fun <T> getOrNull(column: Column<T>): T? = resultedValues?.firstOrNull()?.getOrNull(column)
-
     // TODO: log issue about unifying process result method for jdbc and r2dbc
 
     @OptIn(InternalApi::class)

@@ -16,6 +16,7 @@ import org.jetbrains.exposed.sql.vendors.h2Mode
  * @param limit Maximum number of rows to delete.
  * @param targetTables List of specific tables from [targetsSet] to delete rows from.
  */
+@Suppress("ForbiddenComment", "AnnotationSpacing")
 open class DeleteStatement(
     val targetsSet: ColumnSet,
     val where: Op<Boolean>? = null,

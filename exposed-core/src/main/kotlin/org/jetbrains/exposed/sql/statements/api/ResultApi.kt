@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql.statements.api
 
 import kotlinx.coroutines.flow.Flow
 
+@Suppress("ForbiddenComment", "AnnotationSpacing")
 // TODO: write KDocs, check naming
 
 /**
