@@ -570,7 +570,7 @@ private fun assertEqualFractionalPart(nano1: Int, nano2: Int) {
 }
 
 private fun roundTo100Nanos(nanos: Int): Int {
-    return BigDecimal(nanos).divide(BigDecimal(100), RoundingMode.HALF_UP).toInt()
+    return nanos / 100
 }
 
 private fun roundToMicro(nanos: Int): Int {
