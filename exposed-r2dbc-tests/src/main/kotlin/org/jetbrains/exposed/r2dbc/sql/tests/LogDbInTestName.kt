@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests
+package org.jetbrains.exposed.r2dbc.sql.tests
 
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized

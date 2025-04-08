@@ -6,13 +6,13 @@ import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.r2dbc.sql.*
 import org.jetbrains.exposed.r2dbc.sql.statements.ReturningSuspendExecutable
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.shared.assertEqualCollections
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

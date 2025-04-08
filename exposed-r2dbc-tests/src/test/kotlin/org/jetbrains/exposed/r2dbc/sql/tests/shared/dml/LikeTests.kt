@@ -5,10 +5,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.LikePattern
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import kotlin.test.assertContentEquals
 

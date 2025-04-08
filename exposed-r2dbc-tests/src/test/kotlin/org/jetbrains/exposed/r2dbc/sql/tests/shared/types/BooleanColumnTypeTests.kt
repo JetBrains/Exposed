@@ -8,13 +8,13 @@ import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.insertAndGetId
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.VarCharColumnType
 import org.jetbrains.exposed.sql.booleanParam
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 
 class BooleanColumnTypeTests : R2dbcDatabaseTestsBase() {

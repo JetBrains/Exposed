@@ -4,6 +4,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.currentDialectTest
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.case
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -13,9 +16,6 @@ import org.jetbrains.exposed.sql.booleanLiteral
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.notExists
 import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.currentDialectTest
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect

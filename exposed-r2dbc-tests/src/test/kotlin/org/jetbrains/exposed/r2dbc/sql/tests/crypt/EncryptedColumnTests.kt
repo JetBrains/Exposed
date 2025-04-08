@@ -14,9 +14,9 @@ package org.jetbrains.exposed.r2dbc.sql.tests.crypt
 // import org.jetbrains.exposed.r2dbc.sql.selectAll
 // import org.jetbrains.exposed.r2dbc.sql.update
 // import org.jetbrains.exposed.sql.exposedLogger
-// import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-// import org.jetbrains.exposed.sql.tests.shared.assertEquals
-// import org.jetbrains.exposed.sql.tests.shared.assertTrue
+// import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+// import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
+// import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertTrue
 // import org.junit.Test
 // import kotlin.test.assertEquals
 //

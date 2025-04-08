@@ -38,8 +38,8 @@ private object NotInitializedTransactionManager : TransactionManagerApi {
  */
 interface TransactionManagerApi {
     /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
-    @Suppress("ForbiddenComment", "AnnotationSpacing")
     // TODO: check if this can be an ENUM with set(int) operator in JDBC and R2DBC modules
+    @Suppress("ForbiddenComment", "AnnotationSpacing")
     var defaultIsolationLevel: Int
 
     /** Whether transactions should be performed in read-only mode. Unless specified, the database default will be used. */

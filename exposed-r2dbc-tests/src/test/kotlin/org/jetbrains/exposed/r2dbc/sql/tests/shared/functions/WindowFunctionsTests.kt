@@ -2,6 +2,9 @@ package org.jetbrains.exposed.r2dbc.sql.tests.shared.functions
 
 import kotlinx.coroutines.flow.map
 import org.jetbrains.exposed.r2dbc.sql.select
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.withSales
 import org.jetbrains.exposed.sql.*
@@ -18,9 +21,6 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.percentRank
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.rank
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.rowNumber
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.math.BigDecimal

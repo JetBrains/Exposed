@@ -2,10 +2,10 @@ package org.jetbrains.exposed.r2dbc.sql.tests.ddl
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.EntityIDColumnType
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 
 class ReplaceColumnTests : R2dbcDatabaseTestsBase() {

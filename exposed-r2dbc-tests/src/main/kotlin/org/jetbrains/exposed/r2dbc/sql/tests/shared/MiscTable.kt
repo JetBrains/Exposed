@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests.shared
+package org.jetbrains.exposed.r2dbc.sql.tests.shared
 
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table

@@ -5,14 +5,14 @@ import org.javamoney.moneta.Money
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.*
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.money.compositeMoney
 import org.jetbrains.exposed.sql.money.currency
 import org.jetbrains.exposed.sql.money.nullable
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import java.math.BigDecimal
 import javax.money.CurrencyUnit

@@ -10,19 +10,19 @@ import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.insertAndGetId
 import org.jetbrains.exposed.r2dbc.sql.select
 import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
+import org.jetbrains.exposed.r2dbc.sql.tests.forEach
+import org.jetbrains.exposed.r2dbc.sql.tests.forEachIndexed
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.expectException
 import org.jetbrains.exposed.r2dbc.sql.update
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.forEach
-import org.jetbrains.exposed.sql.tests.forEachIndexed
-import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import kotlin.test.assertFailsWith
 

@@ -1121,6 +1121,6 @@ interface ISqlExpressionBuilder {
 /**
  * Builder object for creating SQL expressions.
  */
-@Suppress("ForbiddenComment", "AnnotationSpacing")
 // TODO: make a function same as IStatementBuilder
+@Suppress("ForbiddenComment", "AnnotationSpacing")
 object SqlExpressionBuilder : ISqlExpressionBuilder

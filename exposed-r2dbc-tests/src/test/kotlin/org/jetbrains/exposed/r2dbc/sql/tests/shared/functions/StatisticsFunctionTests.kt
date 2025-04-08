@@ -4,13 +4,13 @@ import kotlinx.coroutines.flow.first
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.batchInsert
 import org.jetbrains.exposed.r2dbc.sql.select
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.Function
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.stdDevPop
 import org.jetbrains.exposed.sql.stdDevSamp
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.varPop
 import org.jetbrains.exposed.sql.varSamp
 import org.junit.Test

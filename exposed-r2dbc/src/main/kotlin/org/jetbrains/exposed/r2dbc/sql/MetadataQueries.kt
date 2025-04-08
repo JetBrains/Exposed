@@ -13,7 +13,7 @@ suspend fun Schema.exists(): Boolean = currentDialectMetadata.schemaExists(this)
 /**
  * Returns whether [this] table exists in the database.
  *
- * @sample org.jetbrains.exposed.sql.tests.shared.DDLTests.tableExists02
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.DDLTests.tableExists02
  */
 suspend fun Table.exists(): Boolean = currentDialectMetadata.tableExists(this)
 

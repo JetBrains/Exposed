@@ -6,13 +6,14 @@ import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.*
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
+import org.jetbrains.exposed.r2dbc.sql.tests.currentDialectTest
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.junit.Test
@@ -104,7 +105,7 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
 
         withTestTableAndExcludeSettings(sizedTester) {
             val tooLongList = List(maxArraySize + 1) { i -> i + 1 }
-            if (org.jetbrains.exposed.sql.tests.currentDialectTest is PostgreSQLDialect) {
+            if (currentDialectTest is PostgreSQLDialect) {
                 // PostgreSQL ignores any max cardinality value
                 sizedTester.insert {
                     it[numbers] = tooLongList
@@ -207,7 +208,7 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
             }
             assertEquals(id1, result2.single()[ArrayTestTable.id])
 
-            if (org.jetbrains.exposed.sql.tests.currentDialectTest is PostgreSQLDialect) {
+            if (currentDialectTest is PostgreSQLDialect) {
                 val lastStrings = ArrayTestTable.strings.slice(lower = 4) // strings[4:]
                 val result3 = ArrayTestTable.select(ArrayTestTable.id).where {
                     lastStrings eq arrayLiteral(listOf("hello"))

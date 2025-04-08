@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests
+package org.jetbrains.exposed.r2dbc.sql.tests
 
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.Flow

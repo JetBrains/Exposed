@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests
+package org.jetbrains.exposed.r2dbc.sql.tests
 
 import org.junit.rules.TestRule
 import org.junit.runner.Description

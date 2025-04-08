@@ -2,7 +2,7 @@ services:
     sqlserver:
         container_name: SQLServer
         restart: always
-        image: mcr.microsoft.com/azure-sql-edge:latest # TODO: fix this to use the fixed version
+        image: mcr.microsoft.com/azure-sql-edge:2.0.0
         platform: linux/amd64
         ports:
             - "3005:1433"

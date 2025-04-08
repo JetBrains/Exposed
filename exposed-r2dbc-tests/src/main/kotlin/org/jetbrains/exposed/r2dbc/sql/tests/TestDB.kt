@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests
+package org.jetbrains.exposed.r2dbc.sql.tests
 
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabaseConfig

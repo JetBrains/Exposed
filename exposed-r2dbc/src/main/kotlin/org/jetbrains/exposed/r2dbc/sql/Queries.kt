@@ -19,7 +19,7 @@ import kotlin.sequences.Sequence
  *
  * The column set selected from may be either a [org.jetbrains.exposed.sql.Table] or a [org.jetbrains.exposed.sql.Join].
  *
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.SelectTests.testSelect
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.SelectTests.testSelect
  */
 fun FieldSet.selectAll(): Query = Query(this, null)
 
@@ -29,7 +29,7 @@ fun FieldSet.selectAll(): Query = Query(this, null)
  * The column set selected from may be either a [org.jetbrains.exposed.sql.Table] or a [org.jetbrains.exposed.sql.Join].
  * Arguments provided to [column] and [columns] may be table object columns or function expressions.
  *
- * @sample org.jetbrains.exposed.sql.tests.shared.AliasesTests.testJoinSubQuery01
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.AliasesTests.testJoinSubQuery01
  */
 @LowPriorityInOverloadResolution
 fun ColumnSet.select(column: Expression<*>, vararg columns: Expression<*>): Query =
@@ -49,7 +49,7 @@ fun ColumnSet.select(columns: List<Expression<*>>): Query = Query(Slice(this, co
  * @param limit Maximum number of rows to delete.
  * @param op Condition that determines which rows to delete.
  * @return Count of deleted rows.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.DeleteTests.testDelete01
  */
 suspend fun <T : Table> T.deleteWhere(
     limit: Int? = null,
@@ -87,7 +87,7 @@ suspend fun <T : Table> T.deleteIgnoreWhere(
  * Represents the SQL statement that deletes all rows in a table.
  *
  * @return Count of deleted rows.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDelete01
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.DeleteTests.testDelete01
  */
 suspend fun Table.deleteAll(): Int {
     val stmt = buildStatement { deleteAll() }
@@ -116,7 +116,7 @@ suspend fun <T : Table> T.deleteReturning(
  * @param where Condition that determines which rows to delete.
  * @return A [ReturningStatement] that will be executed once iterated over, providing [org.jetbrains.exposed.sql.ResultRow]s containing the specified
  * expressions mapped to their resulting data.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testDeleteReturning
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReturningTests.testDeleteReturning
  */
 fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
@@ -132,7 +132,7 @@ fun <T : Table> T.deleteReturning(
  * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
  * @return A [ReturningStatement] that will be executed once iterated over, providing [org.jetbrains.exposed.sql.ResultRow]s containing the specified
  * expressions mapped to their resulting data.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testDeleteReturning
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReturningTests.testDeleteReturning
  */
 fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns
@@ -173,7 +173,7 @@ suspend fun Join.delete(
  * **Note** [limit] is not supported by all vendors. Please check the documentation.
  * @param where Condition that determines which rows to delete.
  * @return The number of deleted rows.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDeleteWithSingleJoin
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.DeleteTests.testDeleteWithSingleJoin
  */
 suspend fun Join.delete(
     targetTable: Table,
@@ -197,7 +197,7 @@ suspend fun Join.delete(
  * @param limit Maximum number of rows to delete.
  * **Note** [limit] is not supported by all vendors. Please check the documentation.
  * @return The number of deleted rows.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.DeleteTests.testDeleteWithSingleJoin
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.DeleteTests.testDeleteWithSingleJoin
  */
 suspend fun Join.delete(
     targetTable: Table,
@@ -212,7 +212,7 @@ suspend fun Join.delete(
 /**
  * Represents the SQL statement that inserts a new row into a table.
  *
- * @sample org.jetbrains.exposed.sql.tests.h2.H2Tests.insertInH2
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.h2.H2Tests.insertInH2
  */
 suspend fun <T : Table> T.insert(
     body: T.(UpdateBuilder<*>) -> Unit
@@ -225,7 +225,7 @@ suspend fun <T : Table> T.insert(
  * Represents the SQL statement that inserts a new row into a table.
  *
  * @return The generated ID for the new row.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testGeneratedKey04
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.InsertTests.testGeneratedKey04
  */
 suspend fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
     body: T.(UpdateBuilder<*>) -> Unit
@@ -244,7 +244,7 @@ suspend fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
  * For example, if the new row would violate a unique constraint, its insertion would be ignored.
  * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
  *
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetIdWithPredefinedId
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetIdWithPredefinedId
  */
 suspend fun <T : Table> T.insertIgnore(
     body: T.(UpdateBuilder<*>) -> Unit
@@ -261,7 +261,7 @@ suspend fun <T : Table> T.insertIgnore(
  * **Note:** `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
  *
  * @return The generated ID for the new row, or `null` if none was retrieved after statement execution.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetId01
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.InsertTests.testInsertIgnoreAndGetId01
  */
 suspend fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
     body: T.(UpdateBuilder<*>) -> Unit
@@ -282,7 +282,7 @@ suspend fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
  * @param columns Columns to insert the values into. This defaults to all columns in the table that are not
  * auto-increment columns without a valid sequence to generate new values.
  * @return The number of inserted rows, or `null` if nothing was retrieved after statement execution.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertSelectTests.testInsertSelect04
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.InsertSelectTests.testInsertSelect04
  */
 suspend fun <T : Table> T.insert(
     selectQuery: AbstractQuery<*>,
@@ -319,7 +319,7 @@ suspend fun <T : Table> T.insertIgnore(
  * Note `INSERT IGNORE` is not supported by all vendors. Please check the documentation.
  * @return A [ReturningStatement] that will be executed once iterated over, providing [org.jetbrains.exposed.sql.ResultRow]s containing the specified
  * expressions mapped to their resulting data.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testInsertReturning
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReturningTests.testInsertReturning
  */
 suspend fun <T : Table> T.insertReturning(
     returning: List<Expression<*>> = columns,
@@ -339,7 +339,7 @@ suspend fun <T : Table> T.insertReturning(
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
  * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  * @return A list of [org.jetbrains.exposed.sql.ResultRow] representing data from each newly inserted row.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testBatchInsert01
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.InsertTests.testBatchInsert01
  */
 suspend fun <T : Table, E> T.batchInsert(
     data: Iterable<E>,
@@ -357,7 +357,7 @@ suspend fun <T : Table, E> T.batchInsert(
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
  * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
  * @return A list of [ResultRow] representing data from each newly inserted row.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.InsertTests.testBatchInsertWithSequence
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.InsertTests.testBatchInsertWithSequence
  */
 suspend fun <T : Table, E> T.batchInsert(
     data: Sequence<E>,
@@ -382,7 +382,7 @@ private suspend fun <T : Table, E> T.batchInsert(
  *
  * **Note:** This operation is not supported by all vendors, please check the documentation.
  *
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceWithExpression
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReplaceTests.testReplaceWithExpression
  */
 suspend fun <T : Table> T.replace(
     body: T.(UpdateBuilder<*>) -> Unit
@@ -401,7 +401,7 @@ suspend fun <T : Table> T.replace(
  * @param columns Columns to either insert values into or delete values from then insert into. This defaults to all
  * columns in the table that are not auto-increment columns without a valid sequence to generate new values.
  * @return The number of inserted (and possibly deleted) rows, or `null` if nothing was retrieved after statement execution.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testReplaceSelect
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReplaceTests.testReplaceSelect
  */
 suspend fun <T : Table> T.replace(
     selectQuery: AbstractQuery<*>,
@@ -420,7 +420,7 @@ suspend fun <T : Table> T.replace(
  * @param data Collection of values to use in replace.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testBatchReplace01
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReplaceTests.testBatchReplace01
  */
 suspend fun <T : Table, E : Any> T.batchReplace(
     data: Iterable<E>,
@@ -437,7 +437,7 @@ suspend fun <T : Table, E : Any> T.batchReplace(
  * @param data Sequence of values to use in replace.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReplaceTests.testBatchReplaceWithSequence
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReplaceTests.testBatchReplaceWithSequence
  */
 suspend fun <T : Table, E : Any> T.batchReplace(
     data: Sequence<E>,
@@ -519,7 +519,7 @@ suspend fun <T : Table> T.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)
  * @param where Condition that determines which rows to update.
  * @param limit Maximum number of rows to update.
  * @return The number of updated rows.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdate01
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UpdateTests.testUpdate01
  */
 suspend fun <T : Table> T.update(
     where: SqlExpressionBuilder.() -> Op<Boolean>,
@@ -538,7 +538,7 @@ suspend fun <T : Table> T.update(
  *
  * @param limit Maximum number of rows to update.
  * @return The number of updated rows.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdate01
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UpdateTests.testUpdate01
  */
 suspend fun <T : Table> T.update(
     limit: Int? = null,
@@ -569,7 +569,7 @@ suspend fun Join.update(where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
  * @param where Condition that determines which rows to update.
  * @param limit Maximum number of rows to update.
  * @return The number of updated rows.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
  */
 suspend fun Join.update(
     where: SqlExpressionBuilder.() -> Op<Boolean>,
@@ -585,7 +585,7 @@ suspend fun Join.update(
  *
  * @param limit Maximum number of rows to update.
  * @return The number of updated rows.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UpdateTests.testUpdateWithSingleJoin
  */
 suspend fun Join.update(
     limit: Int? = null,
@@ -618,7 +618,7 @@ fun <T : Table> T.updateReturning(
  * @param where Condition that determines which rows to update.
  * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
  * expressions mapped to their resulting data.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpdateReturning
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReturningTests.testUpdateReturning
  */
 fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
@@ -635,7 +635,7 @@ fun <T : Table> T.updateReturning(
  * @param returning Columns and expressions to include in the returned data. This defaults to all columns in the table.
  * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
  * expressions mapped to their resulting data.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpdateReturning
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReturningTests.testUpdateReturning
  */
 fun <T : Table> T.updateReturning(
     returning: List<Expression<*>> = columns,
@@ -663,7 +663,7 @@ fun <T : Table> T.updateReturning(
  * @param onUpdateExclude List of specific columns to exclude from updating.
  * If left null, all columns will be updated with the values provided for the insert.
  * @param where Condition that determines which rows to update, if a unique violation is found.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testUpsertWithUniqueIndexConflict
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UpsertTests.testUpsertWithUniqueIndexConflict
  */
 suspend fun <T : Table> T.upsert(
     vararg keys: Column<*>,
@@ -692,7 +692,7 @@ suspend fun <T : Table> T.upsert(
  * @param where Condition that determines which rows to update, if a unique violation is found.
  * @return A [ReturningStatement] that will be executed once iterated over, providing [ResultRow]s containing the specified
  * expressions mapped to their resulting data.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.ReturningTests.testUpsertReturning
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReturningTests.testUpsertReturning
  */
 fun <T : Table> T.upsertReturning(
     vararg keys: Column<*>,
@@ -721,7 +721,7 @@ fun <T : Table> T.upsertReturning(
  * @param where Condition that determines which rows to update, if a unique violation is found.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testBatchUpsertWithNoConflict
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UpsertTests.testBatchUpsertWithNoConflict
  */
 suspend fun <T : Table, E : Any> T.batchUpsert(
     data: Iterable<E>,
@@ -750,7 +750,7 @@ suspend fun <T : Table, E : Any> T.batchUpsert(
  * @param where Condition that determines which rows to update, if a unique violation is found.
  * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs) should be returned.
  * See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
- * @sample org.jetbrains.exposed.sql.tests.shared.dml.UpsertTests.testBatchUpsertWithSequence
+ * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UpsertTests.testBatchUpsertWithSequence
  */
 suspend fun <T : Table, E : Any> T.batchUpsert(
     data: Sequence<E>,

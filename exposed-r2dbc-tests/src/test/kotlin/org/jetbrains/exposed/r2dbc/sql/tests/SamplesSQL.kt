@@ -15,7 +15,6 @@ import org.jetbrains.exposed.r2dbc.sql.transactions.suspendTransaction
 import org.jetbrains.exposed.r2dbc.sql.update
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.tests.TestDB
 import org.junit.Assume
 import org.junit.Test
 import kotlin.test.assertEquals

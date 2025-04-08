@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.r2dbc.sql.tests.shared.functions
 
+import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.sql.decimalLiteral
 import org.jetbrains.exposed.sql.doubleLiteral
 import org.jetbrains.exposed.sql.functions.math.*
 import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.tests.TestDB
 import org.junit.Test
 import java.math.BigDecimal
 

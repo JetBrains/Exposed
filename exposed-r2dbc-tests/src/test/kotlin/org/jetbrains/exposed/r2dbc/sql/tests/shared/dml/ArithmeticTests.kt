@@ -2,16 +2,16 @@ package org.jetbrains.exposed.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.r2dbc.sql.select
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
+import org.jetbrains.exposed.r2dbc.sql.tests.forEach
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.DivideOp.Companion.withScale
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.div
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.sql.decimalLiteral
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.forEach
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
 import java.math.BigDecimal
 

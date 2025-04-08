@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.sql.tests
+package org.jetbrains.exposed.r2dbc.sql.tests
 
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction

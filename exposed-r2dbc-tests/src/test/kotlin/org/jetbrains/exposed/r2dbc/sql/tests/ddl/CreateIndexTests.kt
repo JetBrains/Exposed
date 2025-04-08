@@ -4,16 +4,16 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.r2dbc.sql.exists
+import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
+import org.jetbrains.exposed.r2dbc.sql.tests.currentDialectMetadataTest
+import org.jetbrains.exposed.r2dbc.sql.tests.currentDialectTest
+import org.jetbrains.exposed.r2dbc.sql.tests.getString
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.currentDialectMetadataTest
-import org.jetbrains.exposed.sql.tests.currentDialectTest
-import org.jetbrains.exposed.sql.tests.getString
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
@@ -284,6 +284,6 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
 
     private suspend fun R2dbcTransaction.getIndices(table: Table): List<Index> {
         db.dialectMetadata.resetCaches()
-        return org.jetbrains.exposed.sql.tests.currentDialectMetadataTest.existingIndices(table)[table].orEmpty()
+        return currentDialectMetadataTest.existingIndices(table)[table].orEmpty()
     }
 }

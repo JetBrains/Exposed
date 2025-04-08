@@ -434,7 +434,6 @@ interface IStatementBuilder {
 // TODO: StatementBuilder -> StatementBuilderImpl, and IStatementBuilder -> StatementBuilder
 private object StatementBuilder : IStatementBuilder
 
-@Suppress("ForbiddenComment", "AnnotationSpacing")
 // TODO: add documentation for building statements without execution, like in the old DSL
-
+@Suppress("ForbiddenComment", "AnnotationSpacing")
 fun <S> buildStatement(body: IStatementBuilder.() -> S): S = body(StatementBuilder)

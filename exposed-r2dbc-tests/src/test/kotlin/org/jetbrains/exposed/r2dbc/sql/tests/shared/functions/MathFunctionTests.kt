@@ -5,14 +5,14 @@ import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.r2dbc.sql.insertAndGetId
 import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.div
 import org.jetbrains.exposed.sql.decimalLiteral
 import org.jetbrains.exposed.sql.doubleLiteral
 import org.jetbrains.exposed.sql.functions.math.*
 import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.tests.TestDB
-import org.jetbrains.exposed.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 import java.math.BigDecimal
 
