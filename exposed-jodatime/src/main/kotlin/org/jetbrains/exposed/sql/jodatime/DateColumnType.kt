@@ -217,12 +217,18 @@ class LocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         is Long -> longToLocalTime(value)
         is String -> {
             val dialect = currentDialect
-            val formatter = if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-                formatterForDateTimeString(value)
+            if (value.contains('T')) {
+                // Handle ISO format like "1970-01-01T12:00"
+                val timeStr = value.substringAfter('T')
+                val formatter = ISODateTimeFormat.timeParser().withLocale(Locale.ROOT).withZone(DateTimeZone.getDefault())
+                LocalTime.parse(timeStr, formatter)
+            } else if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+                val formatter = formatterForDateTimeString(value)
+                LocalTime.parse(value, formatter)
             } else {
-                ISODateTimeFormat.timeParser().withLocale(Locale.ROOT).withZone(DateTimeZone.getDefault())
+                val formatter = ISODateTimeFormat.timeParser().withLocale(Locale.ROOT).withZone(DateTimeZone.getDefault())
+                LocalTime.parse(value, formatter)
             }
-            LocalTime.parse(value, formatter)
         }
         else -> valueFromDB(value.toString())
     }
