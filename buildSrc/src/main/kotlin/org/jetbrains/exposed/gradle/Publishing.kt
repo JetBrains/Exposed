@@ -51,7 +51,7 @@ fun MavenPublication.signPublicationIfKeyPresent(project: Project) {
     val signingKeyPassphrase = System.getenv("exposed.sign.passphrase")
     if (!signingKey.isNullOrBlank()) {
         project.extensions.configure<SigningExtension>("signing") {
-            useInMemoryPgpKeys(keyId, signingKey.replace(" ", "\r\n"), signingKeyPassphrase)
+            useInMemoryPgpKeys(keyId, preprocessPrivateGpgKey(signingKey), signingKeyPassphrase)
             sign(this@signPublicationIfKeyPresent)
         }
     }
@@ -107,4 +107,14 @@ fun Project.configurePublishing() {
             }
         }
     }
+}
+
+private fun preprocessPrivateGpgKey(key: String): String {
+    val prefix = "-----BEGIN PGP PRIVATE KEY BLOCK-----"
+    val suffix = "-----END PGP PRIVATE KEY BLOCK-----"
+    val delimiter = "\r\n"
+    return prefix + delimiter + key
+        .replace(prefix, "")
+        .replace(suffix, "")
+        .replace(" ", "\r\n") + delimiter + suffix
 }
