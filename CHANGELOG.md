@@ -1,3 +1,28 @@
+# 0.61.0
+## What's Changed
+Infrastructure:
+* Spring Framework 6.2.5
+* junit-bom 5.12.1
+* Spring Boot 3.4.4
+* moneta 1.4.5
+* Joda Time 2.14.0
+* Kotlinx Serialization 1.8.1
+* logcaptor 2.10.2
+
+Features:
+* feat: EXPOSED-733 Detect column type change for migrations in H2 by @joc-a in https://github.com/JetBrains/Exposed/pull/2419
+
+Bug fixes:
+* fix: EXPOSED-739 support actively cached null values in entity-local cache by @bystam in https://github.com/JetBrains/Exposed/pull/2424
+* fix: EXPOSED-761 Forward ColumnWithTransform.readObject to delegate by @Maxr1998 in https://github.com/JetBrains/Exposed/pull/2455
+
+Docs:
+* docs: Fix text that says Exposed is not an official JetBrains library by @joc-a in https://github.com/JetBrains/Exposed/pull/2439
+* docs: EXPOSED-673 Update and extend the "Data types" topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2437
+* docs: EXPOSED-567 Update the FAQ topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2449
+
+**Full Changelog**: https://github.com/JetBrains/Exposed/compare/0.60.0...0.61.0
+
 # 0.60.0
 Infrastructure:
 * Joda Time 2.13.1
