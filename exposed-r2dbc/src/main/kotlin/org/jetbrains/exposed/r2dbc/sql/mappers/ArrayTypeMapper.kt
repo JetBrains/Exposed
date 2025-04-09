@@ -76,21 +76,56 @@ class ArrayTypeMapper : TypeMapper {
         }
 
         // For PostgreSQL, we need to explicitly create arrays of primitive types
-        return when (columnType.delegate) {
-            is BooleanColumnType -> (mappedList as List<Boolean>).toTypedArray()
-            is ByteColumnType -> (mappedList as List<Byte>).toTypedArray()
-            is UByteColumnType -> (mappedList as List<UByte>).toTypedArray()
-            is ShortColumnType -> (mappedList as List<Short>).toTypedArray()
-            is UShortColumnType -> (mappedList as List<UShort>).toTypedArray()
-            is IntegerColumnType -> (mappedList as List<Int>).toTypedArray()
-            is UIntegerColumnType -> (mappedList as List<UInt>).toTypedArray()
-            is LongColumnType -> (mappedList as List<Long>).toTypedArray()
-            is ULongColumnType -> (mappedList as List<ULong>).toTypedArray()
-            is FloatColumnType -> (mappedList as List<Float>).toTypedArray()
-            is DoubleColumnType -> (mappedList as List<Double>).toTypedArray()
-            is BinaryColumnType -> (mappedList as List<ByteArray>).toTypedArray()
-            is TextColumnType -> (mappedList as List<String>).toTypedArray()
-            is DecimalColumnType -> (mappedList as List<java.math.BigDecimal>).toTypedArray()
+        return when {
+            columnType.delegate is BooleanColumnType -> (mappedList as List<Boolean>).toTypedArray()
+            columnType.delegate is ByteColumnType -> (mappedList as List<Byte>).toTypedArray()
+            columnType.delegate is UByteColumnType -> (mappedList as List<UByte>).toTypedArray()
+            columnType.delegate is ShortColumnType -> (mappedList as List<Short>).toTypedArray()
+            columnType.delegate is UShortColumnType -> (mappedList as List<UShort>).toTypedArray()
+            columnType.delegate is IntegerColumnType -> (mappedList as List<Int>).toTypedArray()
+            columnType.delegate is UIntegerColumnType -> (mappedList as List<UInt>).toTypedArray()
+            columnType.delegate is LongColumnType -> (mappedList as List<Long>).toTypedArray()
+            columnType.delegate is ULongColumnType -> (mappedList as List<ULong>).toTypedArray()
+            columnType.delegate is FloatColumnType -> (mappedList as List<Float>).toTypedArray()
+            columnType.delegate is DoubleColumnType -> (mappedList as List<Double>).toTypedArray()
+            columnType.delegate is BinaryColumnType -> (mappedList as List<ByteArray>).toTypedArray()
+            columnType.delegate is TextColumnType -> (mappedList as List<String>).toTypedArray()
+            columnType.delegate is DecimalColumnType -> (mappedList as List<java.math.BigDecimal>).toTypedArray()
+            columnType.delegate is IDateColumnType -> {
+                // For date/time types, we need to handle them specially
+                // The hasTimePart property tells us whether it's a DATE or DATETIME column
+                val hasTimePart = (columnType.delegate as IDateColumnType).hasTimePart
+
+                // For PostgreSQL, we need to ensure the strings are in the correct format
+                // for PostgreSQL date arrays
+                val stringList = mappedList.map { value ->
+                    if (value == null) return@map null
+
+                    // Use ISO format for dates and datetimes
+                    if (hasTimePart) {
+                        // For DATETIME columns, use ISO datetime format
+                        // PostgreSQL expects timestamps in the format 'YYYY-MM-DD HH:MM:SS'
+                        val dateStr = value.toString()
+                        if (dateStr.contains('T')) {
+                            // Convert ISO 8601 format to PostgreSQL timestamp format
+                            dateStr.replace('T', ' ').substringBefore('.')
+                        } else {
+                            dateStr
+                        }
+                    } else {
+                        // For DATE columns, use ISO date format (without time part)
+                        // PostgreSQL expects dates in the format 'YYYY-MM-DD'
+                        val dateStr = value.toString()
+                        if (dateStr.contains('T')) {
+                            dateStr.substringBefore('T')
+                        } else {
+                            dateStr
+                        }
+                    }
+                }
+
+                stringList.toTypedArray()
+            }
             else -> error("Unsupported array type: $columnType:${columnType::class}")
         }
     }
@@ -146,5 +181,13 @@ private fun ArrayColumnType<*, *>.arrayDeclaration(): Class<out Array<out Any>> 
     is UUIDColumnType -> Array<java.util.UUID>::class.java
     is CharacterColumnType -> Array<Char>::class.java
     is BooleanColumnType -> Array<Boolean>::class.java
+    is IDateColumnType -> {
+        // For date/time types, use Date or Timestamp arrays depending on whether the column type has a time part
+        if ((delegate as IDateColumnType).hasTimePart) {
+            Array<java.sql.Timestamp>::class.java
+        } else {
+            Array<java.sql.Date>::class.java
+        }
+    }
     else -> Array<Any>::class.java
 }

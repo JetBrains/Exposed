@@ -1370,6 +1370,12 @@ class ArrayColumnType<T, R : List<Any?>>(
             return castH2ParameterMarker(columnType) ?: super.parameterMarker(value)
         }
 
+        // For PostgreSQL, add a cast for date arrays to ensure they're properly recognized
+        if (currentDialect is PostgreSQLDialect && delegate is IDateColumnType) {
+            val pgType = if (delegate.hasTimePart) "timestamp[]" else "date[]"
+            return "?::$pgType"
+        }
+
         return super.parameterMarker(value)
     }
 }
