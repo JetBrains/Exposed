@@ -22,8 +22,8 @@ postgreNG = "0.8.9"
 sqlite3 = "3.49.1.0"
 sqlserver = "9.4.1.jre8"
 
-springFramework = "6.2.5"
-springBoot = "3.4.4"
+springFramework = "6.2.4"
+springBoot = "3.4.3"
 
 spring-security-crypto = "6.2.1"
 joda-time = "2.14.0"
@@ -33,6 +33,10 @@ javax-money = "1.1"
 moneta = "1.4.5"
 hikariCP = "4.0.3"
 logcaptor = "2.10.2"
+
+testcontainers = "1.20.6"
+
+flyway = "11.4.1"
 
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
@@ -80,6 +84,17 @@ maria-db2 = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.
 maria-db3 = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariaDB_v3" }
 oracle19 = { group = "com.oracle.database.jdbc", name = "ojdbc8", version.ref = "oracle19" }
 mssql = { group = "com.microsoft.sqlserver", name = "mssql-jdbc", version.ref = "sqlserver" }
+
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
+testcontainers-mariadb = { module = "org.testcontainers:mariadb", version.ref = "testcontainers" }
+testcontainers-mssqlserver = { module = "org.testcontainers:mssqlserver", version.ref = "testcontainers" }
+testcontainers-oracle = { module = "org.testcontainers:oracle-xe", version.ref = "testcontainers" }
+
+flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+flyway-mysql = { module = "org.flywaydb:flyway-mysql", version.ref = "flyway" }
+flyway-sqlserver = { module = "org.flywaydb:flyway-sqlserver", version.ref = "flyway" }
+flyway-oracle = { module = "org.flywaydb:flyway-database-oracle", version.ref = "flyway" }
 
 logcaptor = { group = "io.github.hakky54", name = "logcaptor", version.ref = "logcaptor" }
 
