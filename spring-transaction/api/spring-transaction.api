@@ -10,3 +10,7 @@ public final class org/jetbrains/exposed/spring/SpringTransactionManager : org/s
 	public synthetic fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
+public final class org/jetbrains/exposed/spring/SpringTransactionManagerKt {
+	public static final fun isMarkedRollback (Lorg/jetbrains/exposed/sql/Transaction;)Z
+}
+
