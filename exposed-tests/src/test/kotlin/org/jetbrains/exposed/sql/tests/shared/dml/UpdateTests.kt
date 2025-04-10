@@ -238,4 +238,25 @@ class UpdateTests : DatabaseTestsBase() {
             }
         }
     }
+
+    @Test
+    fun testBatchUpdateWithNoConflict() {
+        withTables(excludeSettings = TestDB.ALL_H2_V1, Words) {
+            val amountOfWords = 10
+            val allWords = List(amountOfWords) { i -> "Word ${'A' + i}" to amountOfWords * i + amountOfWords }
+
+            Words.batchUpdate(allWords) { (word, count) ->
+                this[Words.word] = word
+                this[Words.count] = count
+            }
+
+//            assertEquals(amountOfWords, generatedIds.size)
+            assertEquals(amountOfWords.toLong(), Words.selectAll().count())
+        }
+    }
+
+    private object Words : Table("words") {
+        val word = varchar("name", 64).uniqueIndex()
+        val count = integer("count").default(1)
+    }
 }
