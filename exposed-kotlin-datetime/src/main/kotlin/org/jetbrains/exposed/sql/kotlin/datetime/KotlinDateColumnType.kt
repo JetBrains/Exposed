@@ -359,8 +359,26 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
 
     override fun readObject(rs: RowApi, index: Int): Any? {
         val dialect = currentDialect
-        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+        return if (dialect is OracleDialect) {
             rs.getObject(index, java.sql.Timestamp::class.java)
+        } else if (dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            // For H2 in Oracle compatibility mode, get the value as a string and parse it
+            // This avoids the "Cannot decode value of type java.time.LocalDateTime" error
+            val timeString = rs.getObject(index, String::class.java)
+            if (timeString != null) {
+                // Parse the time string in the format "1970-01-01 HH:mm:ss[.SSSSSS]"
+                @Suppress("MagicNumber")
+                val formatter = java.time.format.DateTimeFormatterBuilder()
+                    .appendPattern("yyyy-MM-dd HH:mm:ss")
+                    .optionalStart()
+                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+                    .optionalEnd()
+                    .toFormatter(Locale.ROOT)
+                val dateTime = java.time.LocalDateTime.parse(timeString, formatter)
+                java.sql.Timestamp.valueOf(dateTime)
+            } else {
+                null
+            }
         } else {
             super.readObject(rs, index)
         }
