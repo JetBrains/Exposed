@@ -134,6 +134,24 @@ class H2Tests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testH2UUIDConversionWithBinary16ColumnType() {
+        val testTable = object : UUIDTable("test_table") {
+        }
+
+        withDb(TestDB.ALL_H2) {
+            exec("CREATE TABLE test_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")
+
+            val uuid = UUID.randomUUID()
+
+            testTable.insert { it[testTable.id] = uuid }
+
+            val actualId = testTable.select(testTable.id).single()[testTable.id].value
+
+            assertEquals(uuid, actualId)
+        }
+    }
+
     class WrappedTransactionManager(val transactionManager: TransactionManagerApi) :
         TransactionManagerApi by transactionManager
 
