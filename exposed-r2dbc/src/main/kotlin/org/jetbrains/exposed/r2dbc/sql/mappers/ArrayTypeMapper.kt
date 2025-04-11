@@ -6,6 +6,9 @@ import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import kotlin.reflect.KClass
 
 /**
@@ -34,6 +37,23 @@ class ArrayTypeMapper : TypeMapper {
         }
 
         if (value !is Array<*>) return false
+
+        // Special handling for arrays containing date/time types
+        if (columnType.delegate is IDateColumnType && dialect !is PostgreSQLDialect) {
+            // Convert java.sql.Date and java.sql.Timestamp to LocalDate/LocalDateTime/String
+            // as R2DBC drivers may not support these types directly in arrays
+            val convertedArray = value.map { element ->
+                when (element) {
+                    is java.sql.Date -> element.toLocalDate()
+                    is java.sql.Timestamp -> element.toLocalDateTime()
+                    else -> element
+                }
+            }.toTypedArray()
+
+            val convertedValue = Parameters.`in`(R2dbcType.COLLECTION, convertedArray)
+            statement.bind(index - 1, convertedValue)
+            return true
+        }
 
         if (dialect !is PostgreSQLDialect) {
             val convertedValue = Parameters.`in`(R2dbcType.COLLECTION, value)
@@ -161,6 +181,16 @@ private class TempStatement : Statement {
     override fun bind(name: String, value: Any): Statement = this
     override fun bindNull(name: String, type: Class<*>): Statement = this
 }
+
+/**
+ * Extension function to convert java.sql.Date to LocalDate
+ */
+private fun java.sql.Date.toLocalDate(): LocalDate = toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+
+/**
+ * Extension function to convert java.sql.Timestamp to LocalDateTime
+ */
+private fun java.sql.Timestamp.toLocalDateTime(): LocalDateTime = toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
 
 /**
  * Extension function to get the Java class type for an array column type.
