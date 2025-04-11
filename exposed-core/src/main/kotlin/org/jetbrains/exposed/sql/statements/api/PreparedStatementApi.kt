@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.statements.api
 
+import org.jetbrains.exposed.sql.ArrayColumnType
 import org.jetbrains.exposed.sql.IColumnType
 import java.io.InputStream
 
@@ -30,5 +31,5 @@ interface PreparedStatementApi {
     fun setInputStream(index: Int, inputStream: InputStream, setAsBlobObject: Boolean)
 
     /** Sets the statement parameter at the [index] position to the provided [array] of SQL [type]. */
-    fun setArray(index: Int, type: String, array: Array<*>)
+    fun setArray(index: Int, type: ArrayColumnType<*, *>, array: Array<*>)
 }

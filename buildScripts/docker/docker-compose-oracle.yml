@@ -2,8 +2,8 @@ services:
     oracle:
         container_name: oracleDB
         restart: always
-        image: gvenzl/oracle-xe:21-slim-faststart
+        image: container-registry.oracle.com/database/free:23.7.0.0-lite
         ports:
             - "3003:1521"
         environment:
-            ORACLE_PASSWORD: "Oracle18"
+            ORACLE_PWD: "Oracle18"

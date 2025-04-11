@@ -3,10 +3,10 @@ package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.sql.statements.BlockingExecutable
 import org.jetbrains.exposed.sql.statements.IStatementBuilder
 import org.jetbrains.exposed.sql.statements.Statement
-import org.jetbrains.exposed.sql.statements.StatementBuilder
 import org.jetbrains.exposed.sql.statements.StatementIterator
 import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.buildStatement
 import org.jetbrains.exposed.sql.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
@@ -53,6 +53,6 @@ fun JdbcTransaction.explain(
     options: String? = null,
     body: IStatementBuilder.() -> Statement<*>
 ): ExplainBlockingExecutable {
-    val stmt = ExplainQuery(analyze, options, StatementBuilder.body())
+    val stmt = ExplainQuery(analyze, options, buildStatement(body))
     return ExplainBlockingExecutable(stmt)
 }
