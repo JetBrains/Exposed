@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql
 
+// TODO add kdocs & make sure to not use acronyms
 enum class SortOrder(val code: String) {
     ASC(code = "ASC"),
     DESC(code = "DESC"),

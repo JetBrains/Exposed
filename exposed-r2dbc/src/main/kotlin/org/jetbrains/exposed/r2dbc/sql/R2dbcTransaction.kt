@@ -259,6 +259,7 @@ open class R2dbcTransaction(
     }
 }
 
+// TODO Check why separated and if could be returned to single place in core (Transaction?)
 /** Adds one or more [org.jetbrains.exposed.sql.SqlLogger]s to [this] transaction. */
 fun R2dbcTransaction.addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
     return CompositeSqlLogger().apply {

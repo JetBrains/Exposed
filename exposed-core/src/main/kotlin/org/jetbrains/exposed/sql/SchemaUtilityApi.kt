@@ -8,6 +8,7 @@ import java.math.BigDecimal
  * Base class representing helper functions necessary for creating, altering, and dropping database schema objects.
  */
 abstract class SchemaUtilityApi {
+    // TODO make companion object with public string fields
     @InternalApi
     protected val columnsLogMessage = "Extracting table columns"
 
@@ -502,6 +503,7 @@ abstract class SchemaUtilityApi {
         }
     }
 
+    // TODO extract tp separate file & move this top-level internal class
     private class TableDepthGraph(val tables: Iterable<Table>) {
         val graph = fetchAllTables().let { tables ->
             if (tables.isEmpty()) {

@@ -1121,6 +1121,9 @@ interface ISqlExpressionBuilder {
 /**
  * Builder object for creating SQL expressions.
  */
+// TODO: Pick a single way to write "SQL" and use it across the board for 1.0
+// TODO check Kotlin style guide
+// TODO Decide what to do when it comes at the end : "PostgreSQLDialect" vs "PostgresqlDialect" or "PostgreSqlDialect"
 // TODO: make a function same as IStatementBuilder
 @Suppress("ForbiddenComment", "AnnotationSpacing")
 object SqlExpressionBuilder : ISqlExpressionBuilder

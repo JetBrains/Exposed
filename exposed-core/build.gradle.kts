@@ -21,7 +21,7 @@ dependencies {
     api(libs.slf4j)
 }
 
-// TODO: Remove this
+// TODO: Remove this if not applied for tests
 tasks.named<KotlinCompilationTask<*>>("compileKotlin").configure {
     compilerOptions.optIn.add("org.jetbrains.exposed.sql.InternalApi")
 }

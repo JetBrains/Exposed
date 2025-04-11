@@ -2,6 +2,7 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 
+// TODO instead of magic number? put back into DatabaseConfig?
 internal const val DEFAULT_MAX_ATTEMPTS = 3
 
 /**
@@ -135,10 +136,12 @@ interface DatabaseConfig {
     }
 
     companion object {
+        // TODO make sure R2dbcDatabaseConfig has constructor function so that it is compatible with JDBC
         operator fun invoke(body: Builder.() -> Unit = {}): DatabaseConfig {
             val builder = Builder().apply(body)
             require(builder.defaultMaxAttempts > 0) { "defaultMaxAttempts must be set to perform at least 1 attempt." }
 
+            // TODO make default implementation to simplify & call constructor func instead
             return object : DatabaseConfig {
                 override val sqlLogger: SqlLogger
                     get() = builder.sqlLogger ?: Slf4jSqlDebugLogger

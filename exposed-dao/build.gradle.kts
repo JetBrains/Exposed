@@ -13,6 +13,7 @@ kotlin {
 
 dependencies {
     api(project(":exposed-core"))
-    // how to avoid this
+
+    // TODO change dependency level (use api or at minimum implementation dep)
     compileOnly(project(":exposed-jdbc"))
 }

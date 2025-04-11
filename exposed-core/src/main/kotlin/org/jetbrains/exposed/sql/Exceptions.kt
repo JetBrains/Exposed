@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import java.sql.SQLException
 
 // TODO Discuss keeping this in core (not used here) & package mismatch
+// Consider changing package if moving to jdbc module
 /**
  * An exception that provides information about a database access error,
  * within the [contexts] of the executed statements that caused the exception.
