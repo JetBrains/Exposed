@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.sql.tests.h2
 
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
@@ -13,6 +14,7 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
+import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -125,6 +127,24 @@ class H2Tests : DatabaseTestsBase() {
             val average = testTable.number.avg()
             val result = testTable.select(average).single()[average]
             assertEquals("6.00".toBigDecimal(), result)
+        }
+    }
+
+    @Test
+    fun testH2UUIDConversionWithBinary16ColumnType() {
+        val testTable = object : UUIDTable("test_table") {
+        }
+
+        withDb(TestDB.ALL_H2) {
+            exec("CREATE TABLE test_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")
+
+            val uuid = UUID.randomUUID()
+
+            testTable.insert { it[testTable.id] = uuid }
+
+            val actualId = testTable.select(testTable.id).single()[testTable.id].value
+
+            assertEquals(uuid, actualId)
         }
     }
 
