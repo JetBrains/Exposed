@@ -111,12 +111,7 @@ enum class TestDB(
 
             setUrl(connection())
         }
-        return R2dbcDatabase.connect(
-            url = "",
-            databaseConfig = {
-                defaultIsolationLevel = 1
-            }
-        )
+        return R2dbcDatabase.connect(databaseConfig = config)
     }
 
     companion object {
