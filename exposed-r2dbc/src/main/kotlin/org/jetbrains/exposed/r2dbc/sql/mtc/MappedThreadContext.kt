@@ -8,8 +8,11 @@ internal object MappedThreadContext {
     private val tlm = ThreadLocalMap()
 
     fun put(key: String, value: Any?) {
-        val ht = tlm.getOrSet { Hashtable(HT_SIZE) }
-        ht[key] = value
+        // Hashtable does not allow set tx value to be null - put() throws NPE
+        value?.let {
+            val ht = tlm.getOrSet { Hashtable(HT_SIZE) }
+            ht[key] = value
+        }
     }
 
     fun get(key: String): Any? {

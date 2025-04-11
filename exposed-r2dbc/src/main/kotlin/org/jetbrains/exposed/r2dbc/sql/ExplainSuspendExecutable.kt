@@ -32,7 +32,7 @@ open class ExplainSuspendExecutable(
                     fieldIndex = row.metadata.columnMetadatas.withIndex().associate { it.value.name to it.index }
                 }
 
-                ExplainResultRow.Companion.create(row, fieldIndex!!)
+                ExplainResultRow.create(row, fieldIndex!!)
             }.collect { rr -> rr?.let { collector.emit(it) } }
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, statement.getContexts(), TransactionManager.current())

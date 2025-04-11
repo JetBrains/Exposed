@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
+import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.r2dbc.sql.mtc.MappedTransactionContext
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.sql.InternalApi
@@ -42,7 +43,6 @@ class TransactionManager(
 
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
-    // coroutine equivalent as context element?
     val threadLocal = ThreadLocal<R2dbcTransaction>()
 
     override fun toString(): String {
@@ -66,14 +66,16 @@ class TransactionManager(
     }
 
     override fun currentOrNull(): R2dbcTransaction? {
-        return MappedTransactionContext.getTransactionOrNull()
+        return threadLocal.get() ?: MappedTransactionContext.getTransactionOrNull()
     }
 
     override fun bindTransactionToThread(transaction: Transaction?) {
         if (transaction != null) {
             threadLocal.set(transaction as R2dbcTransaction)
+            MappedTransactionContext.setTransaction(transaction)
         } else {
             threadLocal.remove()
+            MappedTransactionContext.clean()
         }
     }
 
@@ -243,16 +245,17 @@ class TransactionManager(
                 }
             } finally {
                 threadLocal.set(outerTransaction)
+                MappedTransactionContext.setTransaction(outerTransaction)
             }
         }
 
         private val savepointName: String
             get() {
                 var nestedLevel = 0
-                var currenTransaction = outerTransaction
-                while (currenTransaction?.outerTransaction != null) {
+                var currentTransaction = outerTransaction
+                while (currentTransaction?.outerTransaction != null) {
                     nestedLevel++
-                    currenTransaction = currenTransaction.outerTransaction
+                    currentTransaction = currentTransaction.outerTransaction
                 }
                 return "Exposed_savepoint_$nestedLevel"
             }
@@ -272,9 +275,10 @@ suspend fun <T> suspendTransaction(
     context: CoroutineContext? = null,
     db: R2dbcDatabase? = null,
     transactionIsolation: Int? = null,
+    readOnly: Boolean? = null,
     statement: suspend R2dbcTransaction.() -> T
 ): T =
-    withTransactionScope(context, null, db, transactionIsolation) {
+    withTransactionScope(context, null, db, transactionIsolation, readOnly) {
         suspendedTransactionAsyncInternal(true, statement).await()
     }
 
@@ -287,10 +291,12 @@ suspend fun <T> suspendTransaction(
 suspend fun <T> R2dbcTransaction.suspendTransaction(
     context: CoroutineContext? = null,
     statement: suspend R2dbcTransaction.() -> T
-): T =
-    withTransactionScope(context, this, db = null, transactionIsolation = null) {
-        suspendedTransactionAsyncInternal(false, statement).await()
+): T {
+    val innerShouldBeNested = this.db.useNestedTransactions == true
+    return withTransactionScope(context, this, db = null, transactionIsolation = null, readOnly = null) {
+        suspendedTransactionAsyncInternal(innerShouldBeNested, statement).await()
     }
+}
 
 /**
  * Creates a new `TransactionScope` and returns its future result as an implementation of [Deferred].
@@ -302,10 +308,11 @@ suspend fun <T> suspendTransactionAsync(
     context: CoroutineContext? = null,
     db: R2dbcDatabase? = null,
     transactionIsolation: Int? = null,
+    readOnly: Boolean? = null,
     statement: suspend R2dbcTransaction.() -> T
 ): Deferred<T> {
     val currentTransaction = TransactionManager.currentOrNull()
-    return withTransactionScope(context, null, db, transactionIsolation) {
+    return withTransactionScope(context, null, db, transactionIsolation, readOnly) {
         suspendedTransactionAsyncInternal(!holdsSameTransaction(currentTransaction), statement)
     }
 }
@@ -329,6 +336,7 @@ private suspend fun <T> withTransactionScope(
     currentTransaction: R2dbcTransaction?,
     db: R2dbcDatabase? = null,
     transactionIsolation: Int?,
+    readOnly: Boolean?,
     body: suspend TransactionScope.() -> T
 ): T {
     val currentScope = coroutineContext[TransactionScope]
@@ -341,7 +349,11 @@ private suspend fun <T> withTransactionScope(
         val manager = currentDatabase?.transactionManager ?: TransactionManager.manager
 
         val tx = lazy(LazyThreadSafetyMode.NONE) {
-            currentTransaction ?: manager.newTransaction(transactionIsolation ?: manager.defaultIsolationLevel)
+            manager.newTransaction(
+                isolation = transactionIsolation ?: manager.defaultIsolationLevel,
+                readOnly = readOnly ?: manager.defaultReadOnly,
+                outerTransaction = currentTransaction
+            )
         }
 
         val element = TransactionCoroutineElement(tx, manager)
@@ -379,7 +391,7 @@ private suspend fun R2dbcTransaction.resetIfClosed(): R2dbcTransaction {
 }
 
 @Suppress("CyclomaticComplexMethod")
-private suspend fun <T> TransactionScope.suspendedTransactionAsyncInternal(
+private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     shouldCommit: Boolean,
     statement: suspend R2dbcTransaction.() -> T
 ): Deferred<T> = async {
@@ -393,6 +405,7 @@ private suspend fun <T> TransactionScope.suspendedTransactionAsyncInternal(
 
         @Suppress("TooGenericExceptionCaught")
         try {
+            transaction.db.config.defaultSchema?.let { SchemaUtils.setSchema(it) }
             answer = transaction.statement().apply {
                 if (shouldCommit) transaction.commit()
             }

@@ -166,7 +166,7 @@ sealed class SetOperation(
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
         rs.mapRows { row ->
-            val value = ResultRow.Companion.create(row, fieldIndex)
+            val value = ResultRow.create(row, fieldIndex)
             trackResultSet(tx)
             value
         }.collect { rr -> rr?.let { collector.emit(it) } }

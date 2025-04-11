@@ -29,17 +29,17 @@ internal class TransactionCoroutineElement(
     override val key: CoroutineContext.Key<TransactionCoroutineElement> = Companion
 
     override fun updateThreadContext(context: CoroutineContext): TransactionContext {
-        val currentTransaction = TransactionManager.Companion.currentOrNull()
+        val currentTransaction = TransactionManager.currentOrNull()
         val currentManager = currentTransaction?.db?.transactionManager
         manager.bindTransactionToThread(newTransaction.value)
-        TransactionManager.Companion.resetCurrent(manager)
+        TransactionManager.resetCurrent(manager)
         setCurrentTransaction(newTransaction.value)
         return TransactionContext(currentManager, currentTransaction)
     }
 
     override fun restoreThreadContext(context: CoroutineContext, oldState: TransactionContext) {
         manager.bindTransactionToThread(oldState.transaction)
-        TransactionManager.Companion.resetCurrent(oldState.manager)
+        TransactionManager.resetCurrent(oldState.manager)
     }
 
     private fun setCurrentTransaction(transaction: R2dbcTransaction?) {

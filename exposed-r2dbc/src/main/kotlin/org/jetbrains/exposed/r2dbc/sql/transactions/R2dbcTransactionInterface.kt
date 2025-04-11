@@ -30,7 +30,7 @@ interface R2dbcTransactionInterface : TransactionInterface {
  */
 @Suppress("TooGenericExceptionThrown")
 val R2dbcDatabase?.transactionManager: TransactionManager
-    get() = TransactionManager.Companion.managerFor(this)
+    get() = TransactionManager.managerFor(this)
         ?: throw RuntimeException("Database $this does not have any transaction manager")
 
 @Suppress("TooGenericExceptionCaught")

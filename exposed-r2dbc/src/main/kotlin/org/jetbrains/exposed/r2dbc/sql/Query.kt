@@ -316,7 +316,7 @@ open class Query(
 
         try {
             rs.mapRows {
-                val resultRow = ResultRow.Companion.create(it, fieldIndex)
+                val resultRow = ResultRow.create(it, fieldIndex)
                 trackResultSet(tx)
                 resultRow
             }.collect { rr -> rr?.let { collector.emit(it) } }
@@ -344,7 +344,7 @@ open class Query(
  * @return same Query instance which was provided as a receiver.
  */
 fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
-    val expr = Op.Companion.build { andPart() }
+    val expr = Op.build { andPart() }
     if (this == null) expr else this and expr
 }
 
@@ -353,7 +353,7 @@ fun Query.andHaving(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHav
  * @return same Query instance which was provided as a receiver.
  */
 fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHaving {
-    val expr = Op.Companion.build { orPart() }
+    val expr = Op.build { orPart() }
     if (this == null) expr else this or expr
 }
 
@@ -362,7 +362,7 @@ fun Query.orHaving(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustHavin
  * @return same Query instance which was provided as a receiver.
  */
 fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
-    val expr = Op.Companion.build { andPart() }
+    val expr = Op.build { andPart() }
     if (this == null) expr else this and expr
 }
 
@@ -371,6 +371,6 @@ fun Query.andWhere(andPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWher
  * @return same Query instance which was provided as a receiver.
  */
 fun Query.orWhere(orPart: SqlExpressionBuilder.() -> Op<Boolean>) = adjustWhere {
-    val expr = Op.Companion.build { orPart() }
+    val expr = Op.build { orPart() }
     if (this == null) expr else this or expr
 }
