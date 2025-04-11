@@ -5,6 +5,8 @@ import org.jetbrains.exposed.sql.IColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import java.sql.Date
 import java.sql.Time
@@ -29,10 +31,29 @@ class DateTimeTypeMapper : TypeMapper {
     ): Boolean {
         if (columnType !is IDateColumnType) return false
 
-        if (value == null) {
+        // most db throw: Cannot encode [null] parameter of type [java.time.temporal.Temporal]
+        val temporalSupported = dialect is OracleDialect || (dialect is MysqlDialect && dialect !is MariaDBDialect)
+        if (value == null && temporalSupported) {
             // For null values, we need to determine the appropriate Java class type
             // Since we don't know the exact type, we'll use a generic approach
             statement.bindNull(index - 1, java.time.temporal.Temporal::class.java)
+            return true
+        } else if (value == null) {
+            val classOptions = listOf(
+                java.time.LocalDateTime::class.java,
+                java.time.LocalTime::class.java,
+                java.time.LocalDate::class.java,
+            )
+            var optionIndex = 0
+            var incorrectOption = true
+            while (optionIndex < classOptions.size && incorrectOption) {
+                try {
+                    statement.bindNull(index - 1, classOptions[optionIndex])
+                    incorrectOption = false
+                } catch (_: RuntimeException) {
+                    optionIndex++
+                }
+            }
             return true
         }
 
