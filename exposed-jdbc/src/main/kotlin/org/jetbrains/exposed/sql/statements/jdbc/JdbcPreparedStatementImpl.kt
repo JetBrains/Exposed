@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
+import org.jetbrains.exposed.sql.ArrayColumnType
 import org.jetbrains.exposed.sql.BinaryColumnType
 import org.jetbrains.exposed.sql.BlobColumnType
 import org.jetbrains.exposed.sql.IColumnType
@@ -84,8 +85,10 @@ class JdbcPreparedStatementImpl(
         }
     }
 
-    override fun setArray(index: Int, type: String, array: Array<*>) {
-        statement.setArray(index, statement.connection.createArrayOf(type, array))
+    // TODO we changed interface here, it's breaking change.
+    // TODO Could we avoid it by creating separate method, and deprecating this one?
+    override fun setArray(index: Int, type: ArrayColumnType<*, *>, array: Array<*>) {
+        statement.setArray(index, statement.connection.createArrayOf(type.delegateType, array))
     }
 
     override fun closeIfPossible() {

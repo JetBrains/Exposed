@@ -10,7 +10,7 @@ import org.junit.Test
 
 class LateralJoinTests : DatabaseTestsBase() {
     // lateral join is also supported by MySql8 database, but at the current moment there is no related configuration
-    private val lateralJoinSupportedDb = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)
+    private val lateralJoinSupportedDb = TestDB.ALL_POSTGRES + TestDB.ORACLE
 
     @Test
     fun testLateralJoinQuery() {
@@ -19,7 +19,7 @@ class LateralJoinTests : DatabaseTestsBase() {
                 joinType = JoinType.CROSS,
                 lateral = true
             ) {
-                child.selectAll().where { child.value greater parent.value }.limit(1)
+                child.selectAll().where { child.value greater parent.value }
             }
 
             val subqueryAlias = query.lastQueryAlias ?: error("Alias must exist!")
@@ -32,7 +32,7 @@ class LateralJoinTests : DatabaseTestsBase() {
     fun testLateralJoinQueryAlias() {
         withTestTablesAndDefaultData { parent, child, _ ->
             // Cross join
-            child.selectAll().where { child.value greater parent.value }.limit(1).alias("subquery")
+            child.selectAll().where { child.value greater parent.value }.alias("subquery")
                 .let { subqueryAlias ->
                     val query = parent.join(subqueryAlias, JoinType.CROSS, onColumn = parent.id, otherColumn = subqueryAlias[child.parent], lateral = true)
 

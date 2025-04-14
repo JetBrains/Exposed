@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.vendors.*
 import java.time.*
 import java.time.ZoneOffset.UTC
@@ -12,6 +12,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 import java.util.*
+
+private const val ORACLE_START_YEAR = 1970
 
 private val DEFAULT_DATE_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
@@ -208,6 +210,15 @@ class JavaLocalDateColumnType : ColumnType<LocalDate>(), IDateColumnType {
         else -> super.nonNullValueAsDefaultString(value)
     }
 
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        val dialect = currentDialect
+        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            rs.getObject(index, java.sql.Timestamp::class.java)
+        } else {
+            super.readObject(rs, index)
+        }
+    }
+
     private fun longToLocalDate(instant: Long) = Instant.ofEpochMilli(instant).atZone(ZoneId.systemDefault()).toLocalDate()
 
     companion object {
@@ -259,7 +270,7 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
         }
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? {
+    override fun readObject(rs: RowApi, index: Int): Any? {
         return if (currentDialect is OracleDialect) {
             rs.getObject(index, java.sql.Timestamp::class.java)
         } else {
@@ -295,7 +306,18 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
 class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
     override val hasTimePart: Boolean = true
 
-    override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
+    override fun sqlType(): String {
+        val dialect = currentDialect
+        // TODO Check if this change actually changes something?
+        // TODO If it changes from 'TIME' to 'TIMESTAMP' for H2 Oracle, should it be inside OracleDataTypeProvider
+        // TODO like `integerType` for example
+        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            // For Oracle dialect, use TIMESTAMP type
+            "TIMESTAMP"
+        } else {
+            dialect.dataTypeProvider.timeType()
+        }
+    }
 
     override fun nonNullValueToString(value: LocalTime): String {
         val dialect = currentDialect
@@ -323,16 +345,37 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         else -> valueFromDB(value.toString())
     }
 
-    override fun notNullValueToDB(value: LocalTime): Any = when {
-        currentDialect is SQLiteDialect -> DEFAULT_TIME_STRING_FORMATTER.format(value)
-        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> ORACLE_TIME_STRING_FORMATTER.format(value)
-        else -> java.sql.Time.valueOf(value)
+    // TODO check if we still need it after introducing type mappers?
+    override fun notNullValueToDB(value: LocalTime): Any {
+        val dialect = currentDialect
+        return when {
+            dialect is SQLiteDialect -> {
+                DEFAULT_TIME_STRING_FORMATTER.format(value)
+            }
+            dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
+                // For Oracle dialect, convert LocalTime to java.sql.Timestamp with a fixed date (1970-01-01)
+                val dateTime = LocalDateTime.of(LocalDate.of(ORACLE_START_YEAR, 1, 1), value)
+                java.sql.Timestamp.valueOf(dateTime)
+            }
+            else -> {
+                java.sql.Time.valueOf(value)
+            }
+        }
     }
 
     override fun nonNullValueAsDefaultString(value: LocalTime): String = when (currentDialect) {
         is PostgreSQLDialect -> "${nonNullValueToString(value)}::time without time zone"
         is MysqlDialect -> "'${MYSQL_TIME_AS_DEFAULT_STRING_FORMATTER.format(value)}'"
         else -> super.nonNullValueAsDefaultString(value)
+    }
+
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        val dialect = currentDialect
+        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            rs.getObject(index, java.sql.Timestamp::class.java)
+        } else {
+            super.readObject(rs, index)
+        }
     }
 
     private fun longToLocalTime(millis: Long) = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalTime()
@@ -373,7 +416,7 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
         else -> valueFromDB(value.toString())
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? {
+    override fun readObject(rs: RowApi, index: Int): Any? {
         return rs.getObject(index, java.sql.Timestamp::class.java)
     }
 
@@ -441,7 +484,7 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? = when (currentDialect) {
+    override fun readObject(rs: RowApi, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
         is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java)
         else -> rs.getObject(index, OffsetDateTime::class.java)

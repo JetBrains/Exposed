@@ -1,6 +1,9 @@
 package org.jetbrains.exposed.sql.statements.jdbc
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.api.RowApi
 import java.sql.ResultSet
 
 /**
@@ -10,7 +13,22 @@ import java.sql.ResultSet
  */
 class JdbcResult(
     val result: ResultSet
-) : ResultApi {
+) : ResultApi, RowApi {
+    private var consumed = false
+
+    // TODO should we allow users to use ResultApi manually with possibility to call next()/getObject() in the code?
+    // TODO Or the `mapRows` is the only right way to use it?
+    override fun <T> mapRows(block: (RowApi) -> T?): Flow<T?> {
+        if (consumed) error("Result is already consumed")
+        consumed = true
+
+        return flow {
+            while (next()) {
+                emit(block(this@JdbcResult))
+            }
+        }
+    }
+
     override fun toString(): String = "JdbcResult(resultSet = $result)"
 
     override fun getObject(index: Int): Any? = result.getObject(index)
@@ -21,15 +39,14 @@ class JdbcResult(
 
     override fun <T> getObject(name: String, type: Class<T>): T? = result.getObject(name, type)
 
-    override fun next(): Boolean = result.next()
+    fun next(): Boolean = result.next()
 
     override fun close() {
-        result.close()
+        releaseResult()
     }
 
-    override fun releaseResult() {
+    fun releaseResult() {
         val statement = result.statement
-        close()
         statement?.close()
     }
 }

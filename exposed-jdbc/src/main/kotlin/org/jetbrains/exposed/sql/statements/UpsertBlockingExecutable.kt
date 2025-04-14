@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
+// TODO KDocs should be added
 open class UpsertBlockingExecutable<Key : Any>(
     override val statement: UpsertStatement<Key>
 ) : InsertBlockingExecutable<Key, UpsertStatement<Key>>(statement) {

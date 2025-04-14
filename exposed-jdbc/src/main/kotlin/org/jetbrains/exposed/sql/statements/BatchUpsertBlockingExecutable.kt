@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
+// TODO KDocs should be added
 open class BatchUpsertBlockingExecutable(
     override val statement: BatchUpsertStatement
 ) : BatchInsertBlockingExecutable<BatchUpsertStatement>(statement) {

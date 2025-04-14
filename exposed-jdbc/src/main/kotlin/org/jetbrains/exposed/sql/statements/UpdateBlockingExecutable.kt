@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 
+// TODO KDocs should be added
 open class UpdateBlockingExecutable(
     override val statement: UpdateStatement
 ) : BlockingExecutable<Int, UpdateStatement> {

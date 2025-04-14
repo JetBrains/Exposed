@@ -44,6 +44,8 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     var duration: Long = 0
 
     /** The threshold in milliseconds for query execution to exceed before logging a warning. */
+    // TODO fix unused assignment (getter needs to check field if mutable)
+    // TODO add unit tests
     var warnLongQueriesDuration: Long? = null
         get() = db.config.warnLongQueriesDuration
 

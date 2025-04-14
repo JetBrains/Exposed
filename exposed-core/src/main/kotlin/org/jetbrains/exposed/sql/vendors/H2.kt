@@ -11,7 +11,7 @@ internal object H2DataTypeProvider : DataTypeProvider() {
 
     override fun uuidType(): String = "UUID"
 
-    override fun uuidToDB(value: UUID): Any = value.toString()
+    override fun uuidToDB(value: UUID): Any = value
 
     override fun dateTimeType(): String = "DATETIME(9)"
 

@@ -125,7 +125,6 @@ subprojects {
 
     testDb("oracle") {
         port = 3003
-        colima = true
         dialects("ORACLE")
         dependencies {
             dependency(rootProject.libs.oracle19)

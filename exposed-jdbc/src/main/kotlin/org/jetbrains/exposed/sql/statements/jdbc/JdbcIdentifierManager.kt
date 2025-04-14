@@ -29,5 +29,6 @@ internal class JdbcIdentifierManager(metadata: DatabaseMetaData) : IdentifierMan
     override val maxColumnNameLength: Int = metadata.maxColumnNameLength
 }
 
+// TODO could we make it public for internal API and remove duplication functions like org.jetbrains.exposed.sql.vendors.DatabaseDialectKt.inProperCase
 internal fun String.inProperCase(): String =
     TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
