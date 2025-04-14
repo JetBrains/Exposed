@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.sql.SQLException
 
+// TODO KDocs should be added
 open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
 ) : BlockingExecutable<Int, S> {

@@ -115,11 +115,12 @@ fun Transaction.registeredChanges() = entityEvents.toList()
  *
  * The [action] will be unregistered at the end of the call to the [body] block.
  */
-// HERE
+// TODO add tests, at the current moment it's not used anywhere
 fun <T> withHook(action: (EntityChange) -> Unit, body: () -> T): T {
     EntityHook.subscribe(action)
     try {
         return body().apply {
+            // TODO Could it be replaces with CoreTransactionsManager?
             TransactionManager.current().commit()
         }
     } finally {

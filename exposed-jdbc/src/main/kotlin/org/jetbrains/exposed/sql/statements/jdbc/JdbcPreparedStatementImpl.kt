@@ -85,6 +85,8 @@ class JdbcPreparedStatementImpl(
         }
     }
 
+    // TODO we changed interface here, it's breaking change.
+    // TODO Could we avoid it by creating separate method, and deprecating this one?
     override fun setArray(index: Int, type: ArrayColumnType<*, *>, array: Array<*>) {
         statement.setArray(index, statement.connection.createArrayOf(type.delegateType, array))
     }

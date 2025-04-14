@@ -16,6 +16,8 @@ class JdbcResult(
 ) : ResultApi, RowApi {
     private var consumed = false
 
+    // TODO should we allow users to use ResultApi manually with possibility to call next()/getObject() in the code?
+    // TODO Or the `mapRows` is the only right way to use it?
     override fun <T> mapRows(block: (RowApi) -> T?): Flow<T?> {
         if (consumed) error("Result is already consumed")
         consumed = true

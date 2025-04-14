@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.statements.api.JdbcPreparedStatementApi
 import java.sql.ResultSet
 
+// TODO KDocs should be added
 open class BatchInsertBlockingExecutable<S : BaseBatchInsertStatement>(
     override val statement: S
 ) : InsertBlockingExecutable<List<ResultRow>, S>(statement) {
