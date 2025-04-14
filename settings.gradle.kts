@@ -15,6 +15,7 @@ include("exposed-kotlin-datetime")
 include("exposed-crypt")
 include("exposed-json")
 include("exposed-migration")
+include("exposed-gradle-plugin")
 
 pluginManagement {
     repositories {

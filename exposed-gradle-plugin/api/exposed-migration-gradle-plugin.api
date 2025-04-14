@@ -1,0 +1,76 @@
+public class org/jetbrains/exposed/migration/plugin/ExposedMigrationExtension {
+	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
+	public final fun getClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public final fun getDatabasePassword ()Lorg/gradle/api/provider/Property;
+	public final fun getDatabaseUrl ()Lorg/gradle/api/provider/Property;
+	public final fun getDatabaseUser ()Lorg/gradle/api/provider/Property;
+	public final fun getExposedTablesPackage ()Lorg/gradle/api/provider/Property;
+	public final fun getMigrationFileExtension ()Lorg/gradle/api/provider/Property;
+	public final fun getMigrationFilePrefix ()Lorg/gradle/api/provider/Property;
+	public final fun getMigrationFileSeparator ()Lorg/gradle/api/provider/Property;
+	public final fun getMigrationsDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public final fun getTestContainersImageName ()Lorg/gradle/api/provider/Property;
+}
+
+public final class org/jetbrains/exposed/migration/plugin/ExposedMigrationPlugin : org/gradle/api/Plugin {
+	public fun <init> ()V
+	public synthetic fun apply (Ljava/lang/Object;)V
+	public fun apply (Lorg/gradle/api/Project;)V
+}
+
+public abstract interface class org/jetbrains/exposed/migration/plugin/GenerateMigrationsParameters : org/gradle/workers/WorkParameters {
+	public abstract fun getClasspathUrls ()Ljava/util/List;
+	public abstract fun getDatabasePassword ()Ljava/lang/String;
+	public abstract fun getDatabaseUrl ()Ljava/lang/String;
+	public abstract fun getDatabaseUser ()Ljava/lang/String;
+	public abstract fun getDebug ()Z
+	public abstract fun getExposedTablesPackage ()Ljava/lang/String;
+	public abstract fun getMigrationFileExtension ()Ljava/lang/String;
+	public abstract fun getMigrationFilePrefix ()Ljava/lang/String;
+	public abstract fun getMigrationFileSeparator ()Ljava/lang/String;
+	public abstract fun getMigrationsDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getTestContainersImageName ()Ljava/lang/String;
+	public abstract fun setClasspathUrls (Ljava/util/List;)V
+	public abstract fun setDatabasePassword (Ljava/lang/String;)V
+	public abstract fun setDatabaseUrl (Ljava/lang/String;)V
+	public abstract fun setDatabaseUser (Ljava/lang/String;)V
+	public abstract fun setDebug (Z)V
+	public abstract fun setExposedTablesPackage (Ljava/lang/String;)V
+	public abstract fun setMigrationFileExtension (Ljava/lang/String;)V
+	public abstract fun setMigrationFilePrefix (Ljava/lang/String;)V
+	public abstract fun setMigrationFileSeparator (Ljava/lang/String;)V
+	public abstract fun setTestContainersImageName (Ljava/lang/String;)V
+}
+
+public abstract class org/jetbrains/exposed/migration/plugin/GenerateMigrationsTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	public final fun generateMigrations ()V
+	public abstract fun getClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getDatabasePassword ()Lorg/gradle/api/provider/Property;
+	public abstract fun getDatabaseUrl ()Lorg/gradle/api/provider/Property;
+	public abstract fun getDatabaseUser ()Lorg/gradle/api/provider/Property;
+	public abstract fun getExposedTablesPackage ()Lorg/gradle/api/provider/Property;
+	public abstract fun getMigrationFileExtension ()Lorg/gradle/api/provider/Property;
+	public abstract fun getMigrationFilePrefix ()Lorg/gradle/api/provider/Property;
+	public abstract fun getMigrationFileSeparator ()Lorg/gradle/api/provider/Property;
+	public abstract fun getMigrationsDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getTestContainersImageName ()Lorg/gradle/api/provider/Property;
+	public abstract fun getWorkerExecutor ()Lorg/gradle/workers/WorkerExecutor;
+}
+
+public abstract class org/jetbrains/exposed/migration/plugin/GenerateMigrationsWorker : org/gradle/workers/WorkAction {
+	public fun <init> ()V
+	public final fun container (Ljava/lang/String;)Lorg/testcontainers/containers/JdbcDatabaseContainer;
+	public fun execute ()V
+	public final fun findHighestVersion (Ljava/io/File;)Lkotlin/jvm/functions/Function1;
+}
+
+public final class org/jetbrains/exposed/migration/plugin/GenerateMigrationsWorker$GradleLogger : org/jetbrains/exposed/sql/SqlLogger {
+	public fun <init> (Lorg/jetbrains/exposed/migration/plugin/GenerateMigrationsWorker;)V
+	public fun log (Lorg/jetbrains/exposed/sql/statements/StatementContext;Lorg/jetbrains/exposed/sql/Transaction;)V
+}
+
+public final class org/jetbrains/exposed/migration/plugin/NameGeneratorKt {
+	public static final fun statementToFileName (Ljava/lang/String;)Ljava/lang/String;
+}
+
