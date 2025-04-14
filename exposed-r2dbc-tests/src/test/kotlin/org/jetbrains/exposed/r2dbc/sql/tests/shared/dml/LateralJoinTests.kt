@@ -27,7 +27,7 @@ class LateralJoinTests : R2dbcDatabaseTestsBase() {
                 joinType = org.jetbrains.exposed.sql.JoinType.CROSS,
                 lateral = true
             ) {
-                child.selectAll().where { child.value greater parent.value }.limit(1)
+                child.selectAll().where { child.value greater parent.value }
             }
 
             val subqueryAlias = query.lastQueryAlias ?: error("Alias must exist!")
@@ -40,7 +40,7 @@ class LateralJoinTests : R2dbcDatabaseTestsBase() {
     fun testLateralJoinQueryAlias() {
         withTestTablesAndDefaultData { parent, child, _ ->
             // Cross join
-            child.selectAll().where { child.value greater parent.value }.limit(1).alias("subquery")
+            child.selectAll().where { child.value greater parent.value }.alias("subquery")
                 .let { subqueryAlias ->
                     val query = parent.join(
                         subqueryAlias,
