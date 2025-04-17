@@ -22,7 +22,7 @@ postgreNG = "0.8.9"
 sqlite3 = "3.49.1.0"
 sqlserver = "9.4.1.jre8"
 
-springFramework = "6.2.5"
+springFramework = "6.2.6"
 springBoot = "3.4.4"
 
 spring-security-crypto = "6.2.1"
