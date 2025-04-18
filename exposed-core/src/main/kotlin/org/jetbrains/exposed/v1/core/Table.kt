@@ -661,6 +661,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
             newCol.extraDefinitions = extraDefinitions
         }
         (table as IdTable<T>).addIdColumnInternal(newColumn)
+        newColumn.foreignKey = this.foreignKey
         return replaceColumn(this, newColumn)
     }
 
