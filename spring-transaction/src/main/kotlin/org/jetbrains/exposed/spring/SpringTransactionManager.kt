@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.jetbrains.exposed.sql.transactions.transactionScope
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.support.AbstractPlatformTransactionManager
@@ -162,6 +163,11 @@ class SpringTransactionManager(
 
     override fun doSetRollbackOnly(status: DefaultTransactionStatus) {
         val trxObject = status.transaction as ExposedTransactionObject
+
+        if (status.isDebug) {
+            exposedLogger.debug("Exposed transaction [${status.transactionName}] set rollback-only")
+        }
+
         trxObject.setRollbackOnly()
     }
 
@@ -170,8 +176,6 @@ class SpringTransactionManager(
         val outerManager: TransactionManager,
         private val outerTransaction: Transaction?,
     ) : SmartTransactionObject {
-
-        private var isRollback: Boolean = false
 
         fun cleanUpTransactionIfIsPossible(block: (transaction: Transaction) -> Unit) {
             val currentTransaction = getCurrentTransaction()
@@ -206,13 +210,18 @@ class SpringTransactionManager(
         fun getCurrentTransaction(): Transaction? = manager.currentOrNull()
 
         fun setRollbackOnly() {
-            isRollback = true
+            getCurrentTransaction()?.isRollback = true
         }
 
-        override fun isRollbackOnly() = isRollback
+        override fun isRollbackOnly(): Boolean = getCurrentTransaction()?.isRollback ?: false
 
         override fun flush() {
             // Do noting
         }
     }
 }
+
+private var Transaction.isRollback by transactionScope { false }
+
+/** Returns the rollback status of the current [Transaction]. */
+fun Transaction.isMarkedRollback(): Boolean = isRollback
