@@ -1065,11 +1065,6 @@ class UUIDColumnType : ColumnType<UUID>() {
 
     override fun nonNullValueToString(value: UUID): String = "'$value'"
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
-        is MariaDBDialect -> rs.getBytes(index)
-        else -> super.readObject(rs, index)
-    }
-
     companion object {
         private val uuidRegexp =
             Regex("[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}", RegexOption.IGNORE_CASE)

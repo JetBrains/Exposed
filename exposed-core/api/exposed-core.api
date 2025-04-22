@@ -2846,7 +2846,6 @@ public final class org/jetbrains/exposed/sql/UUIDColumnType : org/jetbrains/expo
 	public fun nonNullValueToString (Ljava/util/UUID;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Ljava/util/UUID;)Ljava/lang/Object;
-	public fun readObject (Ljava/sql/ResultSet;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/util/UUID;
