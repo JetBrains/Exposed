@@ -414,13 +414,14 @@ class ConditionsTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testNoColumnType() {
+    fun testCaseOperationWithSpecificColumnType() {
         val tester = object : Table("test") {
             val id = integer("id")
             val text = text("text")
         }
 
-        withTables(tester) {
+        // As I can see SQLServer and Oracle do not support CASE in condition
+        withTables(excludeSettings = listOf(TestDB.SQLSERVER, TestDB.ORACLE), tester) {
             tester.insert {
                 it[id] = 1
                 it[text] = "first"
