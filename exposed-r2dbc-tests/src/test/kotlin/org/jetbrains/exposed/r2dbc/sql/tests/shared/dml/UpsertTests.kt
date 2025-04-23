@@ -695,7 +695,8 @@ class UpsertTests : R2dbcDatabaseTestsBase() {
             // all existing rows updated & 1 new row inserted
             val updatedData = data.map { it.first to "new${it.second}" } + (4 to "D")
             expected = if (testDb in TestDB.ALL_MYSQL_LIKE) newDataSize * 2 + 1 else newDataSize + 1
-            AutoIncTable.batchUpsert(updatedData, shouldReturnGeneratedValues = isNotSqlServerOrOracle) { (id, name) ->
+            // `shouldReturnGeneratedValues = false` allows to get "real" amount of affected rows
+            AutoIncTable.batchUpsert(updatedData, shouldReturnGeneratedValues = false) { (id, name) ->
                 statement = this
                 this[AutoIncTable.id] = id
                 this[AutoIncTable.name] = name
