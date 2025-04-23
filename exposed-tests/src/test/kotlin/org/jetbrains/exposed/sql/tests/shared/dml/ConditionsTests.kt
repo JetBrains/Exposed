@@ -4,6 +4,8 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.case
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
@@ -408,6 +410,40 @@ class ConditionsTests : DatabaseTestsBase() {
             tester.insert { it[name] = "Something" }
 
             assertEquals(2, tester.selectAll().where { tester.name.isNullOrEmpty() }.count())
+        }
+    }
+
+    @Test
+    fun testNoColumnType() {
+        val tester = object : Table("test") {
+            val id = integer("id")
+            val text = text("text")
+        }
+
+        withTables(tester) {
+            tester.insert {
+                it[id] = 1
+                it[text] = "first"
+            }
+            tester.insert {
+                it[id] = 2
+                it[text] = "second"
+            }
+
+            val caseOp = case(columnType = BooleanColumnType())
+                .When(
+                    tester.id eq intLiteral(1),
+                    tester.text eq "first",
+                )
+                .Else(tester.text eq "not-second")
+
+            val result = tester
+                .selectAll()
+                .where {
+                    Op.TRUE.and(caseOp)
+                }
+                .first()[tester.text]
+            assertEquals("first", result)
         }
     }
 }
