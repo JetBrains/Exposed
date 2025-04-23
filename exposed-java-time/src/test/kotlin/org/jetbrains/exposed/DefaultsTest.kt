@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.*
@@ -30,6 +31,7 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.h2Mode
 import org.junit.Test
 import java.time.*
+import kotlin.random.Random.Default.nextInt
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -601,6 +603,34 @@ class DefaultsTest : DatabaseTestsBase() {
             val timestamp = DefaultTimestampTable.selectAll().first()[DefaultTimestampTable.timestamp]
 
             assertEquals(timestamp, entity[DefaultTimestampTable.timestamp])
+        }
+    }
+
+    object TableWithDefaultValue : IdTable<Int>() {
+        const val DEFAULT_VALUE = 10
+        val value = integer("value")
+        val valueWithDefault = integer("valueWithDefault").default(DEFAULT_VALUE)
+
+        override val id = integer("id").clientDefault { nextInt() }.entityId()
+        override val primaryKey: PrimaryKey = PrimaryKey(id)
+    }
+
+    class TableWithDefaultValueEntity(id: EntityID<Int>) : Entity<Int>(id) {
+        var value by TableWithDefaultValue.value
+        var valueWithDefault by TableWithDefaultValue.valueWithDefault
+
+        companion object : EntityClass<Int, TableWithDefaultValueEntity>(TableWithDefaultValue)
+    }
+
+    @Test
+    fun testExplicitInsertionOfDefaultValuesWithIdTable() {
+        withTables(TableWithDefaultValue) {
+            TableWithDefaultValueEntity.new(5) {
+                value = 94
+                valueWithDefault = TableWithDefaultValue.DEFAULT_VALUE
+            }.run {
+                assertTrue(this.writeValues.values.contains(TableWithDefaultValue.DEFAULT_VALUE))
+            }
         }
     }
 }
