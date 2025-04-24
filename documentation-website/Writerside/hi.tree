@@ -29,6 +29,7 @@
         <toc-element topic="SQL-Functions.md"/>
         <toc-element topic="Working-with-Schema.topic"/>
     </toc-element>
+    <toc-element topic="Migrations.md"/>
     <toc-element toc-title="Transactions">
         <toc-element topic="Transactions.md"/>
         <toc-element topic="Working-with-SQL-Strings.md"/>
