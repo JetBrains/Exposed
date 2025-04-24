@@ -1,15 +1,11 @@
 @file:OptIn(ExperimentalDatabaseMigrationApi::class)
 
-package org.example.migrations
+package org.example
 
-import MigrationUtils
 import org.example.tables.UsersTable
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi
 import org.jetbrains.exposed.sql.transactions.transaction
-
-private const val MIGRATIONS_DIRECTORY = "migrations" // Location of migration scripts
 
 val h2db = Database.connect(
     url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
@@ -17,19 +13,6 @@ val h2db = Database.connect(
     user = "root",
     password = ""
 )
-
-//val sqliteDb = Database.connect(
-//    "jdbc:sqlite:file:test?mode=memory&cache=shared",
-//    "org.sqlite.JDBC",
-//    databaseConfig = DatabaseConfig { useNestedTransactions = true }
-//)
-//
-//val mysqlDb = Database.connect(
-//    "jdbc:mysql://localhost:3306/test",
-//    driver = "com.mysql.cj.jdbc.Driver",
-//    user = "root",
-//    password = "password",
-//)
 
 fun main() {
     simulateExistingDatabase(h2db)
@@ -48,7 +31,7 @@ fun simulateExistingDatabase(database: Database) {
 }
 
 fun generateMigrationScript() {
-    // This will generate a migration script in the path exposed-migration/migrations
+    // Generate a migration script in the specified path
     MigrationUtils.generateMigrationScript(
         UsersTable,
         scriptDirectory = MIGRATIONS_DIRECTORY,

@@ -46,3 +46,10 @@ tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
 }
+
+tasks.register<JavaExec>("generateMigrationScript") {
+    group = "application"
+    description = "Generate a migration script in the path exposed-migrations/src/main/kotlin/org/example/migrations"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass = "org.example.GenerateMigrationScriptKt"
+}
