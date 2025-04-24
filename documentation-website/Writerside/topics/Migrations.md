@@ -91,5 +91,5 @@ We recommend that you always manually review generated diffs or scripts before a
 
 Currently, Exposed does not offer a Maven plugin or Liquibase integration — share your interest to help shape future support:
 
-- [Upvote or comment on the Maven plugin feature request]()
-- [Join the discussion for Liquibase extension support]()
+- [Upvote or comment on the Maven plugin feature request](https://youtrack.jetbrains.com/issue/EXPOSED-758/Create-a-migration-plugin-for-Maven-build-tool)
+- [Join the discussion for Liquibase extension support](https://youtrack.jetbrains.com/issue/EXPOSED-757/Allow-use-of-migration-plugin-with-Liquibase)
