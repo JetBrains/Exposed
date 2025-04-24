@@ -431,7 +431,7 @@ class ConditionsTests : DatabaseTestsBase() {
                 it[text] = "second"
             }
 
-            val caseOp = case(columnType = BooleanColumnType())
+            val caseOp = case()
                 .When(
                     tester.id eq intLiteral(1),
                     tester.text eq "first",

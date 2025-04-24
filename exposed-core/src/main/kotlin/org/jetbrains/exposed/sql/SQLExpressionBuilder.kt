@@ -889,7 +889,7 @@ interface ISqlExpressionBuilder {
      *
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.ConditionsTests.nullOpInCaseTest
      */
-    fun case(value: Expression<*>? = null, columnType: IColumnType<*>? = null): Case = Case(value, columnType)
+    fun case(value: Expression<*>? = null): Case = Case(value)
 
     // Subquery Expressions
 

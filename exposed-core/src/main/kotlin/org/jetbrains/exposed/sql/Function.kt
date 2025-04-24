@@ -372,14 +372,10 @@ sealed class NextVal<T>(
 @Suppress("FunctionNaming")
 class Case(
     /** The value that is compared against every conditional expression. */
-    val value: Expression<*>? = null,
-    /** If the parameter `columnType` is specified, the `case()` function will use that type
-     * instead of attempting to extract a column type from the cases. */
-    val columnType: IColumnType<*>? = null
+    val value: Expression<*>? = null
 ) {
     /** Adds a conditional expression with a [result] if the expression evaluates to `true`. */
-    fun <T> When(cond: Expression<Boolean>, result: Expression<T>): CaseWhen<T> =
-        CaseWhen<T>(value, columnType).When(cond, result)
+    fun <T> When(cond: Expression<Boolean>, result: Expression<T>): CaseWhen<T> = CaseWhen<T>(value).When(cond, result)
 }
 
 /**
@@ -390,10 +386,7 @@ class Case(
 @Suppress("FunctionNaming")
 class CaseWhen<T>(
     /** The value that is compared against every conditional expression. */
-    val value: Expression<*>?,
-    /** If the parameter `columnType` is specified, the `case()` function will use that type
-     * instead of attempting to extract a column type from the cases. */
-    val columnType: IColumnType<*>? = null
+    val value: Expression<*>?
 ) {
     /** The boolean conditions to check and their resulting expressions if the condition is met. */
     val cases: MutableList<Pair<Expression<Boolean>, Expression<out T>>> = mutableListOf()
@@ -405,9 +398,7 @@ class CaseWhen<T>(
     }
 
     /** Adds an expression that will be used as the function result if all [cases] evaluate to `false`. */
-    @Suppress("UNCHECKED_CAST")
-    fun Else(e: Expression<T>): ExpressionWithColumnType<T> =
-        CaseWhenElse(this, e, columnType as IColumnType<T & Any>?)
+    fun Else(e: Expression<T>): ExpressionWithColumnType<T> = CaseWhenElse(this, e)
 }
 
 /**
@@ -418,17 +409,18 @@ class CaseWhenElse<T>(
     /** The conditions to check and their results if met. */
     val caseWhen: CaseWhen<T>,
     /** The result if none of the conditions checked are found to be `true`. */
-    val elseResult: Expression<T>,
-    /** If the parameter `customColumnType` is specified, the `case()` function will use that type
-     * instead of attempting to extract a column type from the cases. */
-    val customColumnType: IColumnType<T & Any>? = null
+    val elseResult: Expression<T>
 ) : ExpressionWithColumnType<T>(), ComplexExpression {
 
+    @Suppress("UNCHECKED_CAST")
     override val columnType: IColumnType<T & Any> =
-        customColumnType
-            ?: (elseResult as? ExpressionWithColumnType<T>)?.columnType
-            ?: caseWhen.cases.map { it.second }.filterIsInstance<ExpressionWithColumnType<T>>().firstOrNull()?.columnType
+        expressions().filterIsInstance<ExpressionWithColumnType<T>>().firstOrNull()?.columnType
+            ?: expressions().filterIsInstance<Op.OpBoolean>().firstOrNull()?.let { BooleanColumnType.INSTANCE as IColumnType<T & Any> }
             ?: error("No column type has been found")
+
+    private fun expressions(): List<Expression<out T>> {
+        return caseWhen.cases.map { it.second } + elseResult
+    }
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
