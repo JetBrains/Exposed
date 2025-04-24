@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Common interface for all database dialect metadata.
  */
+// TODO document that class name was changed from DatabaseDialect to DatabaseDialectMetadata for those who extend it
 abstract class DatabaseDialectMetadata {
     private var _allTableNames: Map<String, List<String>>? = null
 

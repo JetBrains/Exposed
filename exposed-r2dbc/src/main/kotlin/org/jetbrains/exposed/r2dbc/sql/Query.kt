@@ -281,6 +281,9 @@ open class Query(
         try {
             if (!isForUpdate()) limit = 1
             val rs = transaction.exec(this) as R2dbcResult
+            // TODO could we avoid reading all the lines from the result for checking emptyness
+            // TODO can we send a query to ask if this query has results in DB without fetching actual results
+            // TODO probably something like `explain` query
             return rs.rowsCount() == 0
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, this.getContexts(), TransactionManager.current())

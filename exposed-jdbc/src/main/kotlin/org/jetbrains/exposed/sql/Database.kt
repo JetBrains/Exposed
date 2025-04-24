@@ -157,6 +157,7 @@ class Database private constructor(
         }
 
         /** Registers a new [DatabaseDialectMetadata] with the identifier [prefix]. */
+        // TODO probably it should not be private, if users were able to register own metadata before
         private fun registerDialectMetadata(prefix: String, metadata: () -> DatabaseDialectMetadata) {
             dialectsMetadata[prefix.lowercase()] = metadata
         }
@@ -180,7 +181,7 @@ class Database private constructor(
                 connectionAutoRegistration(getNewConnection().apply { setupConnection(this) })
             }.apply {
                 CoreTransactionManager.registerDatabaseManager(this, manager(this))
-                // ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
+                // TODO ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
                 // TransactionManager.registerManager(this, manager(this))
             }
         }

@@ -48,6 +48,7 @@ open class JdbcTransaction(
 
     internal var openResultSetsCount: Int = 0
 
+    // TODO it's supposed to be internal for both JDBC and R2DBC
     val interceptors = arrayListOf<StatementInterceptor>()
 
     init {

@@ -105,6 +105,7 @@ class TransactionManager(
             set(value) { CoreTransactionManager.setDefaultDatabase(value) }
 
         /** Associates the provided [database] with a specific [manager]. */
+        // TODO `manager` parameter could have `TransactionManagerApi` type instead of `TransactionManager`
         @Synchronized
         fun registerManager(database: Database, manager: TransactionManager) {
             @OptIn(InternalApi::class)
