@@ -1,14 +1,14 @@
 package org.example
 
 import MigrationUtils
+import org.example.tables.UsersTable
 import org.flywaydb.core.Flyway
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.util.*
-import org.example.tables.UsersTable
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
 
 /*
     Important: The contents of this file are referenced by line number in `Migrations.md`.
@@ -23,7 +23,7 @@ const val MIGRATIONS_DIRECTORY = "src/main/kotlin/org/example/migrations" // Loc
 
 fun main() {
     val h2db = Database.connect(
-        url =  URL,
+        url = URL,
         driver = "org.h2.Driver",
         user = USER,
         password = PASSWORD
