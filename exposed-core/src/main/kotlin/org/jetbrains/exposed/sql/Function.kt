@@ -412,10 +412,15 @@ class CaseWhenElse<T>(
     val elseResult: Expression<T>
 ) : ExpressionWithColumnType<T>(), ComplexExpression {
 
+    @Suppress("UNCHECKED_CAST")
     override val columnType: IColumnType<T & Any> =
-        (elseResult as? ExpressionWithColumnType<T>)?.columnType
-            ?: caseWhen.cases.map { it.second }.filterIsInstance<ExpressionWithColumnType<T>>().firstOrNull()?.columnType
+        expressions().filterIsInstance<ExpressionWithColumnType<T>>().firstOrNull()?.columnType
+            ?: expressions().filterIsInstance<Op.OpBoolean>().firstOrNull()?.let { BooleanColumnType.INSTANCE as IColumnType<T & Any> }
             ?: error("No column type has been found")
+
+    private fun expressions(): List<Expression<out T>> {
+        return caseWhen.cases.map { it.second } + elseResult
+    }
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder {
