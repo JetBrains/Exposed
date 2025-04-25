@@ -85,13 +85,12 @@ function:
 ```
 {src="exposed-migrations/src/main/kotlin/org/example/GenerateMigrationScript.kt" include-lines="35-39"}
 
-This method allows you to see what the migration script will look like before applying the migration.
-
-If a migration script with the same name already exists, its content will be overwritten.
+This method allows you to see what the migration script will look like before applying the migration. If a migration script with the same name already exists,
+its content will be overwritten.
 
 ## Legacy columns cleanup
 
-As your schema evolves, it's common to remove or rename columns in your Exposed definitions. However, old columns may still exist in the database unless
+As your schema evolves, it's common to remove or rename columns in your table definitions. However, old columns may still exist in the database unless
 explicitly dropped.
 
 The [`MigrationUtils.dropUnmappedColumnsStatements()`](https://jetbrains.github.io/Exposed/api/exposed-migration/[root]/-migration-utils/drop-unmapped-columns-statements.html)
@@ -104,7 +103,7 @@ function helps identify columns that are no longer present in your current table
 
 ## Logging
 
-By default, each method provided by `exposed-migration` logs descriptions and the execution time of each intermediate step. These logs are emitted at the `INFO` 
+By default, each method provided by `MigrationUtils` logs descriptions and the execution time of each intermediate step. These logs are emitted at the `INFO` 
 level and can be disabled by setting `withLogs` to `false`:
 
 ```Kotlin
@@ -113,7 +112,12 @@ level and can be disabled by setting `withLogs` to `false`:
 
 ## Limitations
 
-While Exposed’s migration tools are powerful, there are some limitations. Column renames, complex constraint changes, and type transformations are not yet supported.
+While Exposed’s migration tools are powerful, there are some limitations:
+
+- You must still implement and manage your own migration flow.
+- No automatic migration application is provided — scripts must be executed manually or integrated into your deployment process.
+- Some database-specific behaviors, such as SQLite’s limited `ALTER TABLE` support, may lead to partial or failed migrations if not reviewed.
+- Destructive operations like `DROP COLUMN` or `DROP SEQUENCE` can be included — caution is advised.
 
 We recommend that you always manually review generated diffs or scripts before applying them to a live database.
 
