@@ -5,6 +5,7 @@ import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.io.InputStream
 import java.math.BigDecimal
@@ -1065,9 +1066,13 @@ class UUIDColumnType : ColumnType<UUID>() {
 
     override fun nonNullValueToString(value: UUID): String = "'$value'"
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = when (currentDialect) {
-        is MariaDBDialect -> rs.getBytes(index)
-        else -> super.readObject(rs, index)
+    @Suppress("MagicNumber")
+    override fun readObject(rs: ResultSet, index: Int): Any? {
+        val db = TransactionManager.current().db
+        if (currentDialect is MariaDBDialect && !db.isVersionCovers(10, 0)) {
+            return rs.getBytes(index)
+        }
+        return super.readObject(rs, index)
     }
 
     companion object {
