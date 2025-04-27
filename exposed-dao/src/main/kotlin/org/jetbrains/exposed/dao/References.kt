@@ -117,35 +117,10 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
         mapOf(reference as Column<*> to reference.referee!!)
     }
 
-    @Suppress("UNCHECKED_CAST", "NestedBlockDepth")
+    @Suppress("UNCHECKED_CAST")
     override operator fun getValue(thisRef: Parent, property: KProperty<*>): SizedIterable<Child> {
-        val isSingleIdReference = hasSingleReferenceWithReferee(allReferences)
-        val value: REF = thisRef.run {
-            if (isSingleIdReference) {
-                val refereeColumn = reference.referee<REF>()!!
-                val refereeValue = refereeColumn.lookup()
-                when {
-                    reference.columnType !is EntityIDColumnType<*> && refereeColumn.columnType is EntityIDColumnType<*> ->
-                        (refereeValue as? EntityID<*>)?.let { it.value as? REF } ?: refereeValue
-                    else -> refereeValue
-                }
-            } else {
-                getCompositeID {
-                    allReferences.map { (_, parent) -> parent to parent.lookup() }
-                } as REF
-            }
-        }
-        if (thisRef.id._value == null || value == null) return emptySized()
+        val condition = buildFindCondition(thisRef) ?: return emptySized()
 
-        val condition = if (isSingleIdReference) {
-            reference eq value
-        } else {
-            value as CompositeID
-            allReferences.map { (child, parent) ->
-                val parentValue = value[parent as Column<EntityID<Any>>].value
-                EqOp(child, child.wrap((parentValue as? DaoEntityID<*>)?.value ?: parentValue))
-            }.compoundAnd()
-        }
         val query = {
             @Suppress("SpreadOperator")
             factory
@@ -170,6 +145,38 @@ open class Referrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any
                 }
             }
             else -> query()
+        }
+    }
+
+    /** Builds the condition that will be used to filter child entities. */
+    @Suppress("UNCHECKED_CAST", "NestedBlockDepth")
+    protected open fun buildFindCondition(thisRef: Parent): Op<Boolean>? {
+        val isSingleIdReference = hasSingleReferenceWithReferee(allReferences)
+        val value: REF = thisRef.run {
+            if (isSingleIdReference) {
+                val refereeColumn = reference.referee<REF>()!!
+                val refereeValue = refereeColumn.lookup()
+                when {
+                    reference.columnType !is EntityIDColumnType<*> && refereeColumn.columnType is EntityIDColumnType<*> ->
+                        (refereeValue as? EntityID<*>)?.let { it.value as? REF } ?: refereeValue
+                    else -> refereeValue
+                }
+            } else {
+                getCompositeID {
+                    allReferences.map { (_, parent) -> parent to parent.lookup() }
+                } as REF
+            }
+        }
+        if (thisRef.id._value == null || value == null) return null
+
+        return if (isSingleIdReference) {
+            reference eq value
+        } else {
+            value as CompositeID
+            allReferences.map { (child, parent) ->
+                val parentValue = value[parent as Column<EntityID<Any>>].value
+                EqOp(child, child.wrap((parentValue as? DaoEntityID<*>)?.value ?: parentValue))
+            }.compoundAnd()
         }
     }
 
@@ -207,6 +214,25 @@ class OptionalReferrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : 
     cache: Boolean,
     references: Map<Column<*>, Column<*>>? = null
 ) : Referrers<ParentID, Parent, ChildID, Child, REF?>(reference, factory, cache, references)
+
+/**
+ * Class responsible for implementing property delegates of the read-only properties involved in a filtered one-to-many
+ * relation, which retrieves only those child entities that both are referenced by the parent entity and match the
+ * condition specified in the given [view].
+ *
+ * @param reference The reference column defined on the child entity's associated table.
+ * @param view The [View] that defines the additional conditions child entities should match.
+ * @param cache Whether loaded reference entities should be stored in the [EntityCache].
+ */
+class ViewReferrers<ParentID : Any, in Parent : Entity<ParentID>, ChildID : Any, out Child : Entity<ChildID>, REF>(
+    reference: Column<REF>,
+    private val view: View<Child>,
+    cache: Boolean,
+    references: Map<Column<*>, Column<*>>? = null
+) : Referrers<ParentID, Parent, ChildID, Child, REF>(reference, view.factory as EntityClass<ChildID, Child>, cache, references) {
+
+    override fun buildFindCondition(thisRef: Parent): Op<Boolean>? = super.buildFindCondition(thisRef)?.and(view.op)
+}
 
 private fun <SRC : Entity<*>> getReferenceObjectFromDelegatedProperty(entity: SRC, property: KProperty1<SRC, Any?>): Any? {
     property.isAccessible = true
