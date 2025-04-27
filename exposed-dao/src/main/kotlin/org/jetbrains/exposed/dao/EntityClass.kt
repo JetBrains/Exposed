@@ -775,6 +775,70 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     }
 
     /**
+     * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent and match the conditions in the view.
+     *
+     * The reference should have been defined by the creation of a [column] using either `optReference()` or
+     * reference().nullable()` on the child table.
+     *
+     * By default, this also stores the loaded entities to a cache.
+     */
+    infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> View<Target>.optionalReferrersOn(
+        column: Column<REF?>
+    ) =
+        registerRefRule(column) { ViewReferrers<ID, Entity<ID>, TargetID, Target, REF?>(column, this, true) }
+
+    /**
+     * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent and match the conditions in the view.
+     *
+     * The reference should have been defined by the creation of a foreign key constraint on the child table,
+     * by using `foreignKey()`.
+     *
+     * By default, this also stores the loaded entities to a cache.
+     */
+    infix fun <TargetID : Any, Target : Entity<TargetID>> View<Target>.optionalReferrersOn(
+        table: IdTable<*>
+    ): ViewReferrers<ID, Entity<ID>, TargetID, Target, Any?> {
+        val tableFK = this@EntityClass.getCompositeForeignKey(table)
+        val delegate = tableFK.from.first() as Column<Any?>
+        return registerRefRule(delegate) { ViewReferrers(delegate, this, true, tableFK.references) }
+    }
+
+    /**
+     * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent and match the conditions in the view.
+     *
+     * The reference should have been defined by the creation of a [column] using either `optReference()` or
+     * `reference().nullable()` on the child table.
+     *
+     * Set [cache] to `true` to also store the loaded entities to a cache.
+     */
+    fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> View<Target>.optionalReferrersOn(
+        column: Column<REF?>,
+        cache: Boolean = false
+    ) =
+        registerRefRule(column) { ViewReferrers<ID, Entity<ID>, TargetID, Target, REF?>(column, this, cache) }
+
+    /**
+     * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
+     * child objects of this `EntityClass` that all reference the parent and match the conditions in the view.
+     *
+     * The reference should have been defined by the creation of a foreign key constraint on the child table,
+     * by using `foreignKey()`.
+     *
+     * Set [cache] to `true` to also store the loaded entities to a cache.
+     */
+    fun <TargetID : Any, Target : Entity<TargetID>> View<Target>.optionalReferrersOn(
+        table: IdTable<*>,
+        cache: Boolean = false
+    ): ViewReferrers<ID, Entity<ID>, TargetID, Target, Any?> {
+        val tableFK = this@EntityClass.getCompositeForeignKey(table)
+        val delegate = tableFK.from.first() as Column<Any?>
+        return registerRefRule(delegate) { ViewReferrers(delegate, this, cache, tableFK.references) }
+    }
+
+    /**
      * Returns the child table's [ForeignKeyConstraint] that matches the primary key columns defined on the table
      * associated with this `EntityClass`.
      *
