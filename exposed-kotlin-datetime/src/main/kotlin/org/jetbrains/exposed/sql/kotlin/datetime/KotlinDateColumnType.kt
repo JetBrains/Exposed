@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.vendors.*
+import java.sql.Timestamp
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset.UTC
@@ -357,7 +358,7 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
     override fun notNullValueToDB(value: LocalTime): Any = when {
         currentDialect is SQLiteDialect -> DEFAULT_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())
         currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
-            ORACLE_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())
+            Timestamp.valueOf(ORACLE_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())).toInstant()
         else -> java.sql.Time.valueOf(value.toJavaLocalTime())
     }
 
@@ -372,23 +373,8 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         return if (dialect is OracleDialect) {
             rs.getObject(index, java.sql.Timestamp::class.java)
         } else if (dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-            // For H2 in Oracle compatibility mode, get the value as a string and parse it
-            // This avoids the "Cannot decode value of type java.time.LocalDateTime" error
-            val timeString = rs.getObject(index, String::class.java)
-            if (timeString != null) {
-                // Parse the time string in the format "1970-01-01 HH:mm:ss[.SSSSSS]"
-                @Suppress("MagicNumber")
-                val formatter = java.time.format.DateTimeFormatterBuilder()
-                    .appendPattern("yyyy-MM-dd HH:mm:ss")
-                    .optionalStart()
-                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
-                    .optionalEnd()
-                    .toFormatter(Locale.ROOT)
-                val dateTime = java.time.LocalDateTime.parse(timeString, formatter)
-                java.sql.Timestamp.valueOf(dateTime)
-            } else {
-                null
-            }
+            val localDateTime = rs.getObject(index, java.time.LocalDateTime::class.java)
+            localDateTime?.let { java.sql.Timestamp.valueOf(it) }
         } else {
             super.readObject(rs, index)
         }
