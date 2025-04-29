@@ -3,6 +3,8 @@ package org.jetbrains.exposed.r2dbc.sql.mappers
 import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 
 /**
  * Default mapper for types that aren't handled by other mappers.
@@ -21,12 +23,19 @@ class DefaultTypeMapper : TypeMapper {
         value: Any?,
         index: Int
     ): Boolean {
-        if (columnType is EnumerationColumnType<*>) {
-            statement.bindNull(index - 1, Int::class.java)
-            return true
-        } else if (value == null) {
-            statement.bindNull(index - 1, String::class.java)
-            return true
+        if (value == null) {
+            if (currentDialect is PostgreSQLDialect) {
+                val typeProvider = currentDialect.dataTypeProvider
+                when (columnType.sqlType()) {
+                    typeProvider.integerType() -> statement.bindNull(index - 1, Int::class.java)
+                    typeProvider.longType() -> statement.bindNull(index - 1, Long::class.java)
+                    else -> statement.bindNull(index - 1, String::class.java)
+                }
+                return true
+            } else {
+                statement.bindNull(index - 1, String::class.java)
+                return true
+            }
         } else {
             statement.bind(index - 1, value)
             return true
