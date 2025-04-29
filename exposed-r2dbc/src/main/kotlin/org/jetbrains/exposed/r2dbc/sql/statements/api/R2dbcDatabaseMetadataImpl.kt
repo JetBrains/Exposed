@@ -21,6 +21,7 @@ import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 
+// TODO review why constructor parameters are not being used, e.g. 'scope'
 /**
  * Base class responsible for retrieving and storing information about the R2DBC driver and underlying database.
  */
@@ -34,7 +35,7 @@ class R2dbcDatabaseMetadataImpl(
     private val connectionData: ConnectionMetadata = connection.metadata
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
 
-    // REVIEW db with major/minor/patch
+    // TODO REVIEW db with major/minor/patch
     override fun getVersion(): BigDecimal = connectionData.databaseVersion
         .split('.', ' ')
         .let {
@@ -100,12 +101,13 @@ class R2dbcDatabaseMetadataImpl(
 
     override val identifierManager: IdentifierManagerApi by lazy {
         // db URL as KEY causes issues with multi-tenancy!
-        // REVIEW use of JDBC url versus database here
+        // TODO REVIEW use of JDBC url versus database here
         identityManagerCache.getOrPut(database) { R2dbcIdentifierManager(metadataProvider, connectionData) }
     }
 
     private var currentSchema: String? = null
 
+    // TODO compare side-by-side JDBC VS R2DBC (all API files in this package) to make sure nothing was left out
     private suspend fun getCurrentSchema(): String {
         if (currentSchema == null) {
             currentSchema = try {
@@ -131,6 +133,7 @@ class R2dbcDatabaseMetadataImpl(
         @OptIn(InternalApi::class)
         return CachableMapWithDefault( // should this internal cache model be refactored?
             default = { schemaName ->
+                // TODO replace runBlocking with SuspendCachableMapWithDefault
                 runBlocking { tableNamesFor(schemaName) }
             }
         )
@@ -198,6 +201,7 @@ class R2dbcDatabaseMetadataImpl(
         return result
     }
 
+    // TODO Could Row be replaced with RowApi to share this between jdbc/r2dbc
     @OptIn(InternalApi::class)
     private fun Row.asColumnMetadata(): ColumnMetadata {
         val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
@@ -403,6 +407,7 @@ class R2dbcDatabaseMetadataImpl(
     }
 }
 
+// TODO are these not covered as part of RowApi or something public? Should they be?
 internal fun Row.getString(name: String): String? = get(name, java.lang.String::class.java)?.toString()
 
 internal fun Row.getBoolean(name: String): Boolean = get(name)?.toString()?.toBoolean() == true

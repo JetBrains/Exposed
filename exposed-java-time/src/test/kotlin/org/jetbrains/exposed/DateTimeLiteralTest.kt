@@ -13,6 +13,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.assertNotNull
 
+// TODO think about design of datetime module packages & extracting tests to JDBC + R2DBC test modules
+
 class DateTimeLiteralTest : DatabaseTestsBase() {
     private val defaultDate = LocalDate.of(2000, 1, 1)
     private val futureDate = LocalDate.of(3000, 1, 1)

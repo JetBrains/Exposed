@@ -23,9 +23,11 @@ dependencies {
 
     implementation(libs.slf4j)
 
+    // TODO are both needed? can we remove 1?
     compileOnly(libs.postgre)
     compileOnly(libs.r2dbc.postgresql)
 }
+// TODO confirm use of repomix.config.json +/- remove?
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {

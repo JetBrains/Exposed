@@ -368,6 +368,7 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         else -> super.nonNullValueAsDefaultString(value)
     }
 
+    // TODO check if this logic can be moved to TypeMapper level
     override fun readObject(rs: RowApi, index: Int): Any? {
         val dialect = currentDialect
         return if (dialect is OracleDialect) {
