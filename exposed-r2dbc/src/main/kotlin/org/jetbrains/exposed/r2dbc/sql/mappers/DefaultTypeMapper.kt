@@ -21,7 +21,10 @@ class DefaultTypeMapper : TypeMapper {
         value: Any?,
         index: Int
     ): Boolean {
-        if (value == null) {
+        if (columnType is EnumerationColumnType<*>) {
+            statement.bindNull(index - 1, Int::class.java)
+            return true
+        } else if (value == null) {
             statement.bindNull(index - 1, String::class.java)
             return true
         } else {
