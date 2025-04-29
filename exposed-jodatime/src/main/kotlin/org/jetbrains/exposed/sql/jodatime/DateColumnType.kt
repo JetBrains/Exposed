@@ -13,6 +13,7 @@ import org.joda.time.LocalTime
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.ISODateTimeFormat
+import java.sql.Timestamp
 import java.time.OffsetDateTime
 import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
@@ -235,7 +236,9 @@ class LocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
 
     override fun notNullValueToDB(value: LocalTime): Any = when {
         currentDialect is SQLiteDialect -> DEFAULT_TIME_STRING_FORMATTER.print(value)
-        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> ORACLE_TIME_STRING_FORMATTER.print(value)
+        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
+            Timestamp.valueOf(ORACLE_TIME_STRING_FORMATTER.print(value)).toInstant()
+        }
         else -> java.sql.Time.valueOf(DEFAULT_TIME_STRING_FORMATTER.print(value))
     }
 
