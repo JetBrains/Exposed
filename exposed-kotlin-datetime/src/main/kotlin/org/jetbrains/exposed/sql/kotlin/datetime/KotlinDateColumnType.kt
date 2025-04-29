@@ -373,29 +373,34 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         return if (dialect is OracleDialect) {
             rs.getObject(index, java.sql.Timestamp::class.java)
         } else if (dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-            // For H2 in Oracle compatibility mode it could be possible to get both LocalDateTime and String values.
-            // Here we handle both of them
+            // For H2 in Oracle compatibility mode it could be possible to get both LocalDateTime, Timestamp, or String values.
+            // Here we convert all of them into Timestamp
             val dateTime = rs.getObject(index) ?: return null
 
-            require(dateTime is java.time.LocalDateTime || dateTime is String) {
+            require(dateTime is java.time.LocalDateTime || dateTime is String || dateTime is java.sql.Timestamp) {
                 "Unexpected value of type ${dateTime::class.qualifiedName} for Oracle H2 compatibility mode"
             }
 
-            if (dateTime is java.time.LocalDateTime) {
-                java.sql.Timestamp.valueOf(dateTime)
-            } else if (dateTime is String) {
-                // Parse the time string in the format "1970-01-01 HH:mm:ss[.SSSSSS]"
-                @Suppress("MagicNumber")
-                val formatter = java.time.format.DateTimeFormatterBuilder()
-                    .appendPattern("yyyy-MM-dd HH:mm:ss")
-                    .optionalStart()
-                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
-                    .optionalEnd()
-                    .toFormatter(Locale.ROOT)
-                val dateTime = java.time.LocalDateTime.parse(dateTime, formatter)
-                java.sql.Timestamp.valueOf(dateTime)
-            } else {
-                null
+            when (dateTime) {
+                is java.sql.Timestamp -> dateTime
+                is java.time.LocalDateTime -> {
+                    java.sql.Timestamp.valueOf(dateTime)
+                }
+                is String -> {
+                    // Parse the time string in the format "1970-01-01 HH:mm:ss[.SSSSSS]"
+                    @Suppress("MagicNumber")
+                    val formatter = java.time.format.DateTimeFormatterBuilder()
+                        .appendPattern("yyyy-MM-dd HH:mm:ss")
+                        .optionalStart()
+                        .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+                        .optionalEnd()
+                        .toFormatter(Locale.ROOT)
+                    val dateTime = java.time.LocalDateTime.parse(dateTime, formatter)
+                    java.sql.Timestamp.valueOf(dateTime)
+                }
+                else -> {
+                    null
+                }
             }
         } else {
             super.readObject(rs, index)
