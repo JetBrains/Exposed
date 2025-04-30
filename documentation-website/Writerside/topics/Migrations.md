@@ -80,6 +80,38 @@ function:
 This method allows you to see what the migration script will look like before applying the migration. If a migration script with the same name already exists,
 its content will be overwritten.
 
+## Validating the database schema
+
+Before applying any migrations, it’s useful to validate that your Exposed schema definitions match the actual state of the database. While the primary use of
+schema alignment methods is to generate SQL statements and migration scripts, these same methods can also serve as pre-checks—especially when used to detect
+unexpected changes.
+
+Exposed provides several low-level APIs that support schema validation and can be integrated into custom migration or deployment pipelines. These methods are also
+used internally by Exposed to generate migration statements, but you can also use them for more precise checks.
+
+### Check for existence of database object
+
+To determine if a specific database object is already present, use one of the following methods:
+
+- [`Table.exists()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/exists.html)
+- [`Sequence.exists()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-sequence/exists.html)
+- [`Schema.exists()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema/exists.html)
+
+### Structural integrity checks
+
+To evaluate whether a table has excessive indices or foreign keys, which might indicate schema drift or duplication, use one of the following `SchemaUtils` methods:
+
+- [`SchemaUtils.checkExcessiveIndices()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/check-excessive-indices.html)
+- [`SchemaUtils.checkExcessiveForeignKeyConstraints()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/check-excessive-foreign-key-constraints.html)
+
+### Database metadata inspection
+
+To retrieve metadata from the current dialect to compare with your defined Exposed schema, use one of the following `currentDialect` methods:
+
+- [`currentDialect.tableColumns()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.vendors/-database-dialect/table-columns.html)
+- [`currentDialect.existingIndices()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.vendors/-database-dialect/existing-indices.html)
+- [`currentDialect.existingPrimaryKeys()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.vendors/-database-dialect/existing-primary-keys.html)
+
 ## Legacy columns cleanup
 
 As your schema evolves, it's common to remove or rename columns in your table definitions. However, old columns may still exist in the database unless
