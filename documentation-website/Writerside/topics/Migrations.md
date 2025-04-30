@@ -4,7 +4,7 @@
 
 <tldr>
     <p>
-        <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-migrations</code>
+        <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-migration</code>
     </p>
     <p>
         <b>Code example</b>: <a href="https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-migrations">exposed-migrations</a>
@@ -21,18 +21,19 @@ database state and your defined table schema, and to generate or apply migration
 
 ## Adding dependencies
 
-To use the methods provided by `MigrationUtils`, include the `exposed-migrations` artifact in your build script:
+To use the methods provided by `MigrationUtils`, include the `exposed-migration` artifact in your build script:
 
 ```Kotlin
-implementation("org.jetbrains.exposed:exposed-migrations:%exposed_version%")
+implementation("org.jetbrains.exposed:exposed-migration:%exposed_version%")
 ```
 
 ## Aligning the database schema
 
 When you need to bring your database schema in line with your current Exposed table definitions, you have two options:
 
-1. [Generate only missing column statements](#generate-missing-column-statements)
-2. [Generate all required statements for database migration](#generate-all-required-statements)
+1. [Generate only missing column statements](#generate-missing-column-statements){summary="Use this method to get exact control over which part of the schema you want to align"}
+2. [Generate all required statements for database migration](#generate-all-required-statements){summary="Use this method as a validation check before actual migration"}
+3. [Generate a migration script](#generate-a-migration-script){summary="Use this method for a more hands-off approach that also allows you to control the content of the script before integrating your own migration "}
 
 ### Generate missing column statements
 
@@ -45,12 +46,10 @@ function:
 ```
 {src="exposed-migrations/src/main/kotlin/org/example/App.kt" include-symbol="missingColStatements"}
 
-<tip>
-    <snippet id="sqlite-limitation-note">
-        Some databases, like SQLite, only support <code>ALTER TABLE ADD COLUMN</code> under strict conditions. As a result, adding certain types of columns might fail
-        silently or behave unexpectedly. Refer to the relevant database documentation for limitations.
-    </snippet>
-</tip>
+This function returns a collection of string SQL statements, ensuring that any column-associated constraints are aligned. As it adds missing columns, it
+simultaneously adds any associated constraints such as primary keys, indexes, and foreign keys that may be absent.
+
+> For database-specific constraints, see the [limitations](#limitations) section.
 
 ### Generate all required statements
 
@@ -63,19 +62,12 @@ function:
 ```
 {src="exposed-migrations/src/main/kotlin/org/example/App.kt" include-symbol="statements"}
 
-These statements may include `CREATE`, `ALTER`, and `DROP` operations—including potentially destructive actions like `DROP COLUMN` or `DELETE`, so review them
-carefully before execution.
+The returned collection of string SQL statements may include `CREATE`, `ALTER`, and `DROP` operations—including potentially destructive actions like `DROP COLUMN`
+or `DELETE`, so review them carefully before choosing to execute them.
 
-#### PostgreSQL
+> For database-specific constraints, see the [limitations](#limitations) section.
 
-When running on PostgreSQL, the function also checks for inconsistencies between table definitions and sequences (especially those tied to `SERIAL` columns
-on `IdTable`).
-
-Sequences manually created with `CREATE SEQUENCE` and not linked to a table are ignored.
-
-No `DROP` statements are generated for such sequences.
-
-## Generating migration scripts
+### Generate a migration script
 
 To generate a migration script based on schema differences between your database and the current Exposed model, use the
 [`MigrationUtils.generateMigrationScript()`](https://jetbrains.github.io/Exposed/api/exposed-migration/[root]/-migration-utils/generate-migration-script.html)
@@ -115,15 +107,41 @@ level and can be disabled by setting `withLogs` to `false`:
 While Exposed’s migration tools are powerful, there are some limitations:
 
 - You must still implement and manage your own migration flow.
-- No automatic migration application is provided — scripts must be executed manually or integrated into your deployment process.
+- Automatic migration execution is not provided — scripts must be run manually or integrated into your deployment process. This limitation is already addressed in the 
+[Gradle migration plugin feature request](#gradle-plugin).
+> For an example of manual execution
+> with Flyway, see the [`exposed-migrations` sample project](https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-migrations).
 - Some database-specific behaviors, such as SQLite’s limited `ALTER TABLE` support, may lead to partial or failed migrations if not reviewed.
 - Destructive operations like `DROP COLUMN` or `DROP SEQUENCE` can be included — caution is advised.
 
 We recommend that you always manually review generated diffs or scripts before applying them to a live database.
 
-### Feature requests
+### SQLite
 
-Currently, Exposed does not offer a Maven plugin or Liquibase integration — share your interest to help shape future support:
+SQLite has strict limitations around the `ALTER TABLE ADD COLUMN` statement. For example, it does not allow adding a new column without a 
+default value under certain conditions. Since Exposed cannot account for all of SQLite’s specific constraints, it will still generate the expected SQL statement. 
+It is up to you to review the generated SQL and avoid attempting migrations that are incompatible with SQLite’s rules. If such a statement is executed, it will
+fail at runtime.
+
+> For more information on this restriction, refer to the [SQLite documentation](https://www.sqlite.org/lang_altertable.html#alter_table_add_column). 
+
+### PostgreSQL
+
+When running on PostgreSQL, the functions to align the database schema also check for inconsistencies between table definitions and sequences (especially those tied
+to `SERIAL` columns on `IdTable`).
+
+Sequences manually created with `CREATE SEQUENCE` and not linked to a table are ignored. No `DROP` statements are generated for such sequences.
+
+## Feature requests
+
+### Gradle plugin
+
+A Gradle plugin to simplify SQL migrations is in development. A proposed design for Flyway integration has been presented and is actively being implemented. To show
+interest or get involved, see the [YouTrack issue fpr creating the migration Gradle plugin](https://youtrack.jetbrains.com/issue/EXPOSED-755/Create-a-migration-Gradle-plugin).
+
+### Maven and Liquibase integration
+
+Exposed does not currently offer a Maven plugin or Liquibase integration — share your interest to help shape future support:
 
 - [Upvote or comment on the Maven plugin feature request](https://youtrack.jetbrains.com/issue/EXPOSED-758/Create-a-migration-plugin-for-Maven-build-tool)
 - [Join the discussion for Liquibase extension support](https://youtrack.jetbrains.com/issue/EXPOSED-757/Allow-use-of-migration-plugin-with-Liquibase)
