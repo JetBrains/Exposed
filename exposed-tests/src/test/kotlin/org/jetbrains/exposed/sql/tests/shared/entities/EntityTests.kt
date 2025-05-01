@@ -19,6 +19,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -1775,6 +1776,118 @@ class EntityTests : DatabaseTestsBase() {
             entityB.value = 4
 
             flushCache()
+        }
+    }
+
+    object HumansWithAge : IntIdTable() {
+        val name = varchar("name", 255)
+        val age = integer("age")
+
+        val parent = optReference("parent", HumansWithAge)
+    }
+
+    class HumanWithAge(id: EntityID<Int>) : IntEntity(id) {
+        var name by HumansWithAge.name
+        var age by HumansWithAge.age
+
+        var parent by HumanWithAge optionalReferencedOn HumansWithAge.parent
+        val children by HumanWithAge optionalReferrersOn HumansWithAge.parent
+
+        val underageChildren by HumanWithAge.view { HumansWithAge.age less 18 } optionalReferrersOn HumansWithAge.parent
+
+        companion object : IntEntityClass<HumanWithAge>(HumansWithAge)
+    }
+
+    @Test
+    fun testOptionalFilteredReferences() {
+        withTables(HumansWithAge) {
+            val parent = HumanWithAge.new {
+                name = "Human 1"
+                age = 45
+            }
+
+            val child1 = HumanWithAge.new {
+                this.parent = parent
+                name = "Child 1"
+                age = 20
+            }
+
+            val child2 = HumanWithAge.new {
+                this.parent = parent
+                name = "Child 2"
+                age = 2
+            }
+
+            commit()
+
+            assertContains(parent.children, child1)
+            assertContains(parent.children, child2)
+
+            assertContains(parent.underageChildren, child2)
+            assertFalse(parent.underageChildren.contains(child1))
+        }
+    }
+
+    object Directors : IntIdTable() {
+        val name = varchar("name", 255)
+    }
+
+    object Films : IntIdTable() {
+        val title = varchar("title", 255)
+        val metacriticScore = integer("metacritic_score")
+        val director = reference("director", Directors)
+    }
+
+    class Director(id: EntityID<Int>) : IntEntity(id) {
+        var name by Directors.name
+
+        val films by Film referrersOn Films.director
+        val goodFilms by Film.view { Films.metacriticScore greaterEq 70 } referrersOn Films.director
+
+        companion object : IntEntityClass<Director>(Directors)
+    }
+
+    class Film(id: EntityID<Int>) : IntEntity(id) {
+        var title by Films.title
+        var metacriticScore by Films.metacriticScore
+        var director by Director referencedOn Films.director
+
+        companion object : IntEntityClass<Film>(Films)
+    }
+
+    @Test
+    fun testFilteredReferences() {
+        withTables(Directors, Films) {
+            val director = Director.new { name = "Steven Spielberg" }
+            val otherDirector = Director.new { name = "Cristopher Nolan" }
+
+            // Good film according to some Reddit answer. And Metacritic.
+            val goodFilm = Film.new {
+                title = "Saving Private Ryan"
+                metacriticScore = 91
+                this.director = director
+            }
+
+            val badFilm = Film.new {
+                title = "1941"
+                metacriticScore = 34
+                this.director = director
+            }
+
+            val someoneElsesFilm = Film.new {
+                title = "Interstellar"
+                metacriticScore = 74
+                this.director = otherDirector
+            }
+
+            commit()
+
+            assertContains(director.films, goodFilm)
+            assertContains(director.films, badFilm)
+
+            assertContains(director.goodFilms, goodFilm)
+            assertFalse(director.goodFilms.contains(badFilm))
+            assertFalse(director.goodFilms.contains(someoneElsesFilm))
         }
     }
 }
