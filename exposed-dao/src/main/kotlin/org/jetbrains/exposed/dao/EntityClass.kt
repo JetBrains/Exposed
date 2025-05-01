@@ -649,7 +649,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * By default, this also stores the loaded entities to a cache.
      */
     infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> View<Target>.referrersOn(column: Column<REF>) =
-        registerRefRule(column) { ViewReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
+        registerRefRule(column) { ViewReferrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, false) }
 
     /**
      * Registers a reference as an immutable field of the parent entity class, which returns a collection of
@@ -786,7 +786,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> View<Target>.optionalReferrersOn(
         column: Column<REF?>
     ) =
-        registerRefRule(column) { ViewReferrers<ID, Entity<ID>, TargetID, Target, REF?>(column, this, true) }
+        registerRefRule(column) { ViewReferrers<ID, Entity<ID>, TargetID, Target, REF?>(column, this, false) }
 
     /**
      * Registers an optional reference as an immutable field of the parent entity class, which returns a collection of
