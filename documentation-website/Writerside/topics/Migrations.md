@@ -169,7 +169,7 @@ Sequences manually created with `CREATE SEQUENCE` and not linked to a table are 
 ### Gradle plugin
 
 A Gradle plugin to simplify SQL migrations is in development. A proposed design for Flyway integration has been presented and is actively being implemented. To show
-interest or get involved, see the [YouTrack issue fpr creating the migration Gradle plugin](https://youtrack.jetbrains.com/issue/EXPOSED-755/Create-a-migration-Gradle-plugin).
+interest or get involved, see the [YouTrack issue for creating the migration Gradle plugin](https://youtrack.jetbrains.com/issue/EXPOSED-755/Create-a-migration-Gradle-plugin).
 
 ### Maven and Liquibase integration
 
