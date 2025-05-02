@@ -2,6 +2,7 @@ package org.jetbrains.exposed.r2dbc.sql.tests
 
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.Query
@@ -43,33 +44,60 @@ suspend fun Table.insertAndWait(duration: Long) {
     Thread.sleep(duration)
 }
 
-internal fun Row.getString(index: Int): String? = get(index, java.lang.String::class.java)?.toString()
+/** Retrieves the value of the designated column as a `String`, with column index starting at 1. **/
+internal fun Row.getString(index: Int): String? = get(index - 1, java.lang.String::class.java)?.toString()
 
+/** Retrieves the value of the named column as a `String`. **/
 internal fun Row.getString(label: String): String? = get(label, java.lang.String::class.java)?.toString()
 
-internal fun Row.getBoolean(label: String): Boolean? = get(label, java.lang.Boolean::class.java)?.booleanValue()
+/**
+ * Retrieves the value of the designated column as a `Boolean`, with column index starting at 1.
+ *
+ * If the value is SQL `NULL`, the value returned is `false`.
+ */
+internal fun Row.getBoolean(index: Int): Boolean = get(index - 1, java.lang.Boolean::class.java)?.booleanValue() ?: false
 
-internal fun Row.getInt(label: String): Int? = get(label, java.lang.Integer::class.java)?.toInt()
+/**
+ * Retrieves the value of the named column as a `Boolean`.
+ *
+ * If the value is SQL `NULL`, the value returned is `false`.
+ */
+internal fun Row.getBoolean(label: String): Boolean = get(label, java.lang.Boolean::class.java)?.booleanValue() ?: false
 
-suspend fun Query.forEach(block: (ResultRow) -> Unit) {
+/**
+ * Retrieves the value of the designated column as an `Int`, with column index starting at 1.
+ *
+ * If the value is SQL `NULL`, the value returned is 0.
+ */
+internal fun Row.getInt(index: Int): Int = get(index - 1, java.lang.Integer::class.java)?.toInt() ?: 0
+
+/**
+ * Retrieves the value of the named column as an `Int`.
+ *
+ * If the value is SQL `NULL`, the value returned is 0.
+ */
+internal fun Row.getInt(label: String): Int = get(label, java.lang.Integer::class.java)?.toInt() ?: 0
+
+internal suspend fun Query.forEach(block: (ResultRow) -> Unit) {
     this.collect { block(it) }
 }
 
-suspend fun Query.forEachIndexed(block: (Int, ResultRow) -> Unit) {
+internal suspend fun Query.forEachIndexed(block: (Int, ResultRow) -> Unit) {
     var index = 0
     forEach { block(index++, it) }
 }
 
-@Suppress("SwallowedException")
-suspend fun <T> Flow<T>.any(): Boolean {
+internal suspend fun <T> Flow<T>.any(): Boolean {
     return try {
         this.first()
         true
-    } catch (e: NoSuchElementException) {
+    } catch (_: NoSuchElementException) {
         false
     }
 }
 
-suspend fun <T : Comparable<T>> Flow<T>.sorted(): List<T> {
+internal suspend fun <T : Comparable<T>> Flow<T>.sorted(): List<T> {
     return toList().sorted()
 }
+
+internal suspend fun <T> Flow<T>.distinct(): List<T> = this.distinctUntilChanged().toList()

@@ -26,6 +26,10 @@ fun <T> assertEqualCollections(actual: Collection<T>, vararg expected: T) {
     assertEqualCollectionsImpl(actual, expected.toList())
 }
 
+suspend fun <T> assertEqualCollections(actual: Flow<T>, vararg expected: T) {
+    assertEqualCollectionsImpl(actual.toList(), expected.toList())
+}
+
 fun <T> assertEqualCollections(actual: Iterable<T>, vararg expected: T) {
     assertEqualCollectionsImpl(actual.toList(), expected.toList())
 }
@@ -34,23 +38,39 @@ fun <T> assertEqualCollections(actual: Iterable<T>, expected: Collection<T>) {
     assertEqualCollectionsImpl(actual.toList(), expected)
 }
 
-suspend fun <T> assertEqualCollections(actual: Flow<T>, expected: Collection<T>) = assertEqualCollections(actual.toList(), expected)
+suspend fun <T> assertEqualCollections(actual: Flow<T>, expected: Collection<T>) {
+    assertEqualCollectionsImpl(actual.toList(), expected)
+}
 
-fun <T> assertEqualLists(expected: List<T>, actual: List<T>) {
+suspend fun <T> assertEqualCollections(expected: Collection<T>, actual: Flow<T>) {
+    assertEqualCollectionsImpl(actual.toList(), expected)
+}
+
+fun <T> assertEqualLists(actual: List<T>, expected: List<T>) {
     assertEquals(expected.size, actual.size, "Count mismatch on ${currentDialectIfAvailableTest?.name.orEmpty()}")
     expected.forEachIndexed { index, exp ->
         val act = actual.getOrElse(index) {
             fail("Value absent at pos $index on ${currentDialectIfAvailableTest?.name.orEmpty()}")
         }
-        assertEquals(expected, actual, "Error at pos $index on ${currentDialectIfAvailableTest?.name.orEmpty()}:")
+        assertEquals(exp, act, "Error at pos $index on ${currentDialectIfAvailableTest?.name.orEmpty()}:")
     }
 }
 
-suspend fun <T> assertEqualLists(expected: Flow<T>, actual: List<T>) = assertEqualLists(expected.toList(), actual)
+fun <T> assertEqualLists(actual: List<T>, vararg expected: T) {
+    assertEqualLists(actual, expected.toList())
+}
 
-suspend fun <T> assertEqualLists(expected: List<T>, actual: Flow<T>) = assertEqualLists(expected, actual.toList())
+suspend fun <T> assertEqualLists(expected: Flow<T>, actual: List<T>) {
+    assertEqualLists(actual, expected.toList())
+}
 
-suspend fun <T> assertEqualLists(expected: Flow<T>, actual: Flow<T>) = assertEqualLists(expected.toList(), actual.toList())
+suspend fun <T> assertEqualLists(expected: List<T>, actual: Flow<T>) {
+    assertEqualLists(actual.toList(), expected)
+}
+
+suspend fun <T> assertEqualLists(expected: Flow<T>, actual: Flow<T>) {
+    assertEqualLists(actual.toList(), expected.toList())
+}
 
 private val R2dbcTransaction.failedOn: String get() = currentTestDB?.name ?: currentDialectTest.name
 

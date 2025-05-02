@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.r2dbc.sql.tests.ddl
+package org.jetbrains.exposed.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.dao.id.EntityID
@@ -419,7 +419,7 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        val complexAlterTable = TestDB.ALL_POSTGRES + listOf(TestDB.ORACLE, TestDB.H2_V2_PSQL, TestDB.SQLSERVER)
+        val complexAlterTable = TestDB.ALL_POSTGRES_LIKE + TestDB.ORACLE + TestDB.SQLSERVER
         withDb { testDb ->
             try {
                 SchemaUtils.createMissingTablesAndColumns(t1)

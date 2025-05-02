@@ -29,7 +29,7 @@ import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.reactivestreams.Publisher
-import java.util.Stack
+import java.util.*
 
 /**
  * Class representing a wrapped R2DBC database [Connection].
@@ -99,6 +99,7 @@ class R2dbcConnectionImpl(
 
     override suspend fun close() {
         withConnection { close().awaitFirstOrNull() }
+        localConnection = null
     }
 
     override suspend fun prepareStatement(

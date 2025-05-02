@@ -1,18 +1,11 @@
-package org.jetbrains.exposed.r2dbc.sql.tests
+package org.jetbrains.exposed.r2dbc.sql.tests.demo.sql
 
-import io.r2dbc.spi.ConnectionFactoryOptions
 import kotlinx.coroutines.flow.single
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
-import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.r2dbc.sql.addLogger
-import org.jetbrains.exposed.r2dbc.sql.deleteWhere
-import org.jetbrains.exposed.r2dbc.sql.insert
-import org.jetbrains.exposed.r2dbc.sql.select
-import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.r2dbc.sql.*
+import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
+import org.jetbrains.exposed.r2dbc.sql.tests.forEach
 import org.jetbrains.exposed.r2dbc.sql.transactions.suspendTransaction
-import org.jetbrains.exposed.r2dbc.sql.update
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.junit.Assume
@@ -37,18 +30,7 @@ object Cities : Table() {
 @Suppress("LongMethod")
 fun main() {
     Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-
-    val options = ConnectionFactoryOptions.builder()
-        .option(ConnectionFactoryOptions.DRIVER, "h2")
-        .option(ConnectionFactoryOptions.PROTOCOL, "mem")
-        .option(ConnectionFactoryOptions.DATABASE, "test")
-        .option(ConnectionFactoryOptions.USER, "root")
-        .option(ConnectionFactoryOptions.PASSWORD, "")
-        .build()
-
-    R2dbcDatabase.connect {
-        connectionFactoryOptions = options
-    }
+    R2dbcDatabase.connect("r2dbc:h2:mem:///test;USER=root;")
 
     runBlocking {
         suspendTransaction {
@@ -109,7 +91,7 @@ fun main() {
 
             println("All cities:")
 
-            for (city in Cities.selectAll().toList()) {
+            Cities.selectAll().forEach { city ->
                 println("${city[Cities.id]}: ${city[Cities.name]}")
             }
 
@@ -119,7 +101,7 @@ fun main() {
                 .where {
                     (Users.id.eq("andrey") or Users.name.eq("Sergey")) and
                         Users.id.eq("sergey") and Users.cityId.eq(Cities.id)
-                }.collect {
+                }.forEach {
                     println("${it[Users.name]} lives in ${it[Cities.name]}")
                 }
 
@@ -128,7 +110,7 @@ fun main() {
             (Users innerJoin Cities)
                 .select(Users.name, Users.cityId, Cities.name)
                 .where { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
-                .collect {
+                .forEach {
                     if (it[Users.cityId] != null) {
                         println("${it[Users.name]} lives in ${it[Cities.name]}")
                     } else {
@@ -142,7 +124,7 @@ fun main() {
                 (Cities innerJoin Users)
                     .select(Cities.name, Users.id.count())
                     .groupBy(Cities.name)
-                ).collect {
+                ).forEach {
                 val cityName = it[Cities.name]
                 val userCount = it[Users.id.count()]
 

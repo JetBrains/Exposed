@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.r2dbc.sql.tests.ddl
+package org.jetbrains.exposed.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -25,7 +25,8 @@ class WhereConditionsTests : R2dbcDatabaseTestsBase() {
             }
             val namesResult = User.selectAll().where {
                 User.name like stringLiteral("Hich%").upperCase()
-            }.map { it[User.name] }.toList()
+            }.map { it[User.name] }
+                .toList() // TODO this is the only unmapped Iterable <-> Flow operation; impossible?
 
             assertEquals(1, namesResult.size)
             assertEquals("HICHEM", namesResult.first())
@@ -40,7 +41,8 @@ class WhereConditionsTests : R2dbcDatabaseTestsBase() {
             }
             val namesResult = User.selectAll().where {
                 User.name notLike stringLiteral("Hich%").upperCase()
-            }.map { it }.toList()
+            }.map { it }
+                .toList()
 
             assertTrue(namesResult.isEmpty())
         }

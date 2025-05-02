@@ -230,6 +230,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
                     }
                 set.realFields.appendTo { +it }
             }
+            @OptIn(InternalApi::class)
             if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
                 append(" FROM ")
                 set.source.describe(CoreTransactionManager.currentTransaction(), this)

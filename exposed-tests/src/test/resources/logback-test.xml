@@ -17,5 +17,3 @@
         <appender-ref ref="ASYNC"/>
     </logger>
 </configuration>
-
-<!-- 19:57:29.845 DEBUG Test worker Exposed - DROP TABLE jointable -->

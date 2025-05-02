@@ -28,13 +28,15 @@ class MysqlTests : R2dbcDatabaseTestsBase() {
         withDb(TestDB.MYSQL_V5) {
             assertFalse(
                 TransactionManager.current().exec("SELECT VERSION();") {
-                    it.getString(0)
-                }?.firstOrNull()?.isEmpty() ?: true
+                    it.getString(1)
+                }?.firstOrNull()
+                    .isNullOrEmpty()
             )
         }
     }
 
-    // rewriteBatchedStatements property NOT supported by r2dbc-mysql: https://github.com/asyncer-io/r2dbc-mysql/issues/136
+    // NOTE: UNSUPPORTED by r2dbc-mysql
+    // rewriteBatchedStatements property: https://github.com/asyncer-io/r2dbc-mysql/issues/136
 //    @Test
 //    fun testBatchInsertWithRewriteBatchedStatementsOn() {
 //        val mysqlOnly = TestDB.enabledDialects() - TestDB.MYSQL_V8

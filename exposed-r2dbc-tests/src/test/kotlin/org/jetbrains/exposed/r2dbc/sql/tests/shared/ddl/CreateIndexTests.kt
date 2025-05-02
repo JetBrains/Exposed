@@ -1,5 +1,6 @@
-package org.jetbrains.exposed.r2dbc.sql.tests.ddl
+package org.jetbrains.exposed.r2dbc.sql.tests.shared.ddl
 
+import kotlinx.coroutines.flow.count
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
@@ -121,18 +122,16 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
             assertTrue(partialIndexTable.exists())
 
             // check that indexes are created and contain the proper filtering conditions
-            exec(
+            val totalIndexCount = exec(
                 """SELECT indexname AS INDEX_NAME,
                    substring(indexdef, strpos(indexdef, ' WHERE ') + 7) AS FILTER_CONDITION
                    FROM pg_indexes
                    WHERE tablename='partialindextabletest' AND indexname != 'partialindextabletest_pkey'
                 """.trimIndent()
             ) {
-                var totalIndexCount = 0
-                totalIndexCount += 1
                 val filter = it.getString("FILTER_CONDITION")!!
-
-                when (it.getString("INDEX_NAME")) {
+                val indexName = it.getString("INDEX_NAME")
+                when (indexName) {
                     "partialindextabletest_value_name" -> assertEquals(
                         filter,
                         "(((name)::text = 'aaa'::text) AND (value >= 6))"
@@ -140,8 +139,9 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
                     "flag_index" -> assertEquals(filter, "(flag = true)")
                     "partialindextabletest_anothervalue_unique" -> assertTrue(filter.startsWith(" UNIQUE INDEX "))
                 }
-                kotlin.test.assertEquals(totalIndexCount, 3, "Indexes expected to be created")
-            }
+                indexName
+            }?.count()
+            kotlin.test.assertEquals(totalIndexCount, 3, "Indexes expected to be created")
 
             val dropIndex = Index(
                 columns = listOf(partialIndexTable.value, partialIndexTable.name),
@@ -266,7 +266,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
             }
         }
 
-        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
         withTables(excludeSettings = functionsNotSupported, tester) {
             SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())

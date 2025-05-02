@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -15,17 +16,21 @@ import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.r2dbc.sql.tests.currentDialectTest
 import org.jetbrains.exposed.r2dbc.sql.tests.forEach
 import org.jetbrains.exposed.r2dbc.sql.tests.inProperCase
+import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
+import org.jetbrains.exposed.r2dbc.sql.transactions.suspendTransaction
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.junit.Assume
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertNotNull
 import kotlin.test.expect
 
+// NOTE: 1 DAO TEST REMOVED
 @Suppress("LargeClass")
 class DDLTests : R2dbcDatabaseTestsBase() {
     @Test
@@ -56,56 +61,53 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
-//    @Test
-//    fun testKeywordIdentifiersWithOptOut() {
-//        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
-//
-//        val keywords = listOf("Integer", "name")
-//        val tester = object : Table(keywords[0]) {
-//            val name = varchar(keywords[1], 32)
-//        }
-//
-//        transaction(keywordFlagDB) {
-//            assertFalse(db.config.preserveKeywordCasing)
-//
-//            SchemaUtils.create(tester)
-//            assertTrue(tester.exists())
-//
-//            val (tableName, columnName) = keywords.map { "\"${it.uppercase()}\"" }
-//
-//            val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
-//                "$columnName ${tester.name.columnType.sqlType()} NOT NULL)"
-//            assertEquals(expectedCreate, tester.ddl.single())
-//
-//            // check that insert and select statement identifiers also match in DB without throwing SQLException
-//            tester.insert { it[name] = "A" }
-//
-//            val expectedSelect = "SELECT $tableName.$columnName FROM $tableName"
-//            tester.selectAll().also {
-//                assertEquals(expectedSelect, it.prepareSQL(this, prepared = false))
-//            }
-//
-//            // check that identifiers match with returned jdbc metadata
-//            val statements = SchemaUtils.statementsRequiredToActualizeScheme(tester, withLogs = false)
-//            assertTrue(statements.isEmpty())
-//
-//            SchemaUtils.drop(tester)
-//        }
-//        TransactionManager.closeAndUnregister(keywordFlagDB)
-//    }
-//
-//    private val keywordFlagDB by lazy {
-//        Database.connect(
-//            url = "jdbc:h2:mem:flagtest;DB_CLOSE_DELAY=-1;",
-//            driver = "org.h2.Driver",
-//            user = "root",
-//            password = "",
-//            databaseConfig = DatabaseConfig {
-//                @OptIn(ExperimentalKeywordApi::class)
-//                preserveKeywordCasing = false
-//            }
-//        )
-//    }
+    @Test
+    fun testKeywordIdentifiersWithOptOut() = runTest {
+        Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())
+
+        val keywords = listOf("Integer", "name")
+        val tester = object : Table(keywords[0]) {
+            val name = varchar(keywords[1], 32)
+        }
+
+        suspendTransaction(db = keywordFlagDB) {
+            assertFalse(db.config.preserveKeywordCasing)
+
+            SchemaUtils.create(tester)
+            assertTrue(tester.exists())
+
+            val (tableName, columnName) = keywords.map { "\"${it.uppercase()}\"" }
+
+            val expectedCreate = "CREATE TABLE ${addIfNotExistsIfSupported()}$tableName (" +
+                "$columnName ${tester.name.columnType.sqlType()} NOT NULL)"
+            assertEquals(expectedCreate, tester.ddl.single())
+
+            // check that insert and select statement identifiers also match in DB without throwing SQLException
+            tester.insert { it[name] = "A" }
+
+            val expectedSelect = "SELECT $tableName.$columnName FROM $tableName"
+            tester.selectAll().also {
+                assertEquals(expectedSelect, it.prepareSQL(this, prepared = false))
+            }
+
+            // check that identifiers match with returned jdbc metadata
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(tester, withLogs = false)
+            assertTrue(statements.isEmpty())
+
+            SchemaUtils.drop(tester)
+        }
+        TransactionManager.closeAndUnregister(keywordFlagDB)
+    }
+
+    private val keywordFlagDB by lazy {
+        R2dbcDatabase.connect(
+            url = "r2dbc:h2:mem:///flagtest;DB_CLOSE_DELAY=-1;",
+            databaseConfig = {
+                @OptIn(ExperimentalKeywordApi::class)
+                preserveKeywordCasing = false
+            }
+        )
+    }
 
     @Test
     fun testKeywordIdentifiersWithoutOptOut() {
@@ -289,7 +291,8 @@ class DDLTests : R2dbcDatabaseTestsBase() {
                 it[foo.bar] = 2
             }
 
-            val result = foo.selectAll().map { it[foo.id] to it[foo.bar] }.toList()
+            val result = foo.selectAll().map { it[foo.id] to it[foo.bar] }
+                .toList()
             assertEquals(2, result.size)
             assertEquals(1, result[0].second)
             assertEquals(2, result[1].second)
@@ -556,12 +559,12 @@ class DDLTests : R2dbcDatabaseTestsBase() {
                 it[tableWithBinary.binaryColumn] = kotlinBytes
             }
 
-            assertEqualLists(tableWithBinary.selectAll().readAsString(), listOf("Exposed", "Kotlin"))
+            assertEqualCollections(tableWithBinary.selectAll().readAsString(), listOf("Exposed", "Kotlin"))
 
             val insertedKotlin = tableWithBinary.selectAll().where {
                 tableWithBinary.binaryColumn eq kotlinBytes
             }.readAsString()
-            assertEqualLists(insertedKotlin, listOf("Kotlin"))
+            assertEqualCollections(insertedKotlin, listOf("Kotlin"))
         }
     }
 
@@ -572,7 +575,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             val byteCol = binary("byteCol", 1).clientDefault { byteArrayOf(0) }
         }
 
-        fun Query.readAsString() = map { result -> result[t.binary]?.let { String(it) } }
+        fun SizedIterable<ResultRow>.readAsString() = map { result -> result[t.binary]?.let { String(it) } }
 
         withTables(t) {
             t.insert { it[t.binary] = "Hello!".toByteArray() }
@@ -924,10 +927,6 @@ class DDLTests : R2dbcDatabaseTestsBase() {
                 }
             }
         }
-    }
-
-    object KeyWordTable : IntIdTable(name = "keywords") {
-        val bool = bool("bool")
     }
 
     // https://github.com/JetBrains/Exposed/issues/522

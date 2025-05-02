@@ -3,6 +3,7 @@ package org.jetbrains.exposed.r2dbc.sql.statements
 import io.r2dbc.spi.Connection
 import io.r2dbc.spi.Statement
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.jetbrains.exposed.r2dbc.sql.mappers.TypeMapperRegistry
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
@@ -42,7 +43,9 @@ class R2dbcPreparedStatementImpl(
     }
 
     override suspend fun setTimeout(value: Int?) {
-        value?.let { connection.setStatementTimeout(Duration.ofSeconds(value.toLong())) }
+        value?.let {
+            connection.setStatementTimeout(Duration.ofSeconds(value.toLong())).awaitFirstOrNull()
+        }
     }
 
     override suspend fun addBatch() {

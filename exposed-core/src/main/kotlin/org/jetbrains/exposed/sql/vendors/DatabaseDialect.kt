@@ -142,8 +142,13 @@ internal fun <T> withDialect(dialect: DatabaseDialect, body: () -> T): T {
 }
 
 /** Returns the dialect used in the current transaction, may throw an exception if there is no current transaction. */
-val currentDialect: DatabaseDialect get() = explicitDialect.get() ?: CoreTransactionManager.currentTransaction().db.dialect
+val currentDialect: DatabaseDialect
+    get() {
+        @OptIn(InternalApi::class)
+        return explicitDialect.get() ?: CoreTransactionManager.currentTransaction().db.dialect
+    }
 
+@OptIn(InternalApi::class)
 internal val currentDialectIfAvailable: DatabaseDialect?
     get() = if (CoreTransactionManager.getDefaultDatabaseOrFirst() != null && CoreTransactionManager.currentTransactionOrNull() != null) {
         currentDialect
@@ -151,5 +156,6 @@ internal val currentDialectIfAvailable: DatabaseDialect?
         null
     }
 
+@OptIn(InternalApi::class)
 internal fun String.inProperCase(): String =
     CoreTransactionManager.currentTransactionOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

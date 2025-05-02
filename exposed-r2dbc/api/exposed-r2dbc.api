@@ -260,6 +260,7 @@ public abstract interface class org/jetbrains/exposed/r2dbc/sql/R2dbcDatabaseCon
 
 public final class org/jetbrains/exposed/r2dbc/sql/R2dbcDatabaseConfig$Builder : org/jetbrains/exposed/sql/DatabaseConfig$Builder {
 	public fun <init> ()V
+	public final fun asInt (Lio/r2dbc/spi/IsolationLevel;)I
 	public final fun build ()Lorg/jetbrains/exposed/r2dbc/sql/R2dbcDatabaseConfig;
 	public final fun connectionFactoryOptions (Lkotlin/jvm/functions/Function1;)V
 	public final fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
@@ -903,9 +904,9 @@ public final class org/jetbrains/exposed/r2dbc/sql/transactions/TransactionManag
 }
 
 public final class org/jetbrains/exposed/r2dbc/sql/transactions/TransactionManagerKt {
-	public static final fun suspendTransaction (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/r2dbc/sql/R2dbcDatabase;Ljava/lang/Integer;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendTransaction (Lkotlin/coroutines/CoroutineContext;Ljava/lang/Integer;Ljava/lang/Boolean;Lorg/jetbrains/exposed/r2dbc/sql/R2dbcDatabase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun suspendTransaction (Lorg/jetbrains/exposed/r2dbc/sql/R2dbcTransaction;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun suspendTransaction$default (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/r2dbc/sql/R2dbcDatabase;Ljava/lang/Integer;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun suspendTransaction$default (Lkotlin/coroutines/CoroutineContext;Ljava/lang/Integer;Ljava/lang/Boolean;Lorg/jetbrains/exposed/r2dbc/sql/R2dbcDatabase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun suspendTransaction$default (Lorg/jetbrains/exposed/r2dbc/sql/R2dbcTransaction;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun suspendTransactionAsync (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/r2dbc/sql/R2dbcDatabase;Ljava/lang/Integer;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun suspendTransactionAsync$default (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/r2dbc/sql/R2dbcDatabase;Ljava/lang/Integer;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;

@@ -273,9 +273,9 @@ class TransactionManager(
  */
 suspend fun <T> suspendTransaction(
     context: CoroutineContext? = null,
-    db: R2dbcDatabase? = null,
     transactionIsolation: Int? = null,
     readOnly: Boolean? = null,
+    db: R2dbcDatabase? = null,
     statement: suspend R2dbcTransaction.() -> T
 ): T =
     withTransactionScope(context, null, db, transactionIsolation, readOnly) {

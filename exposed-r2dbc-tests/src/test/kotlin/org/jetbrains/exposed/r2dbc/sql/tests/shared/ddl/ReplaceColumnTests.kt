@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.r2dbc.sql.tests.ddl
+package org.jetbrains.exposed.r2dbc.sql.tests.shared.ddl
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.DuplicateColumnException

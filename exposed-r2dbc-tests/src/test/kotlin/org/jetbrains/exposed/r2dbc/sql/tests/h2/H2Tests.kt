@@ -38,7 +38,7 @@ class H2Tests : R2dbcDatabaseTestsBase() {
             val dialect = currentDialect
             if (dialect is H2Dialect) {
                 val version = exec("SELECT H2VERSION();") {
-                    it.getString(0)
+                    it.getString(1)
                 }?.first()
 
                 assertTrue(systemTestName == "h2_v2" || systemTestName == "h2_v1")
@@ -129,7 +129,7 @@ class H2Tests : R2dbcDatabaseTestsBase() {
             val number = short("number")
         }
 
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2_V2, testTable) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2, testTable) {
             testTable.batchInsert(listOf<Short>(2, 4, 6, 8, 10)) { n ->
                 this[testTable.number] = n
             }

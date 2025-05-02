@@ -155,14 +155,6 @@ abstract class R2dbcDatabaseTestsBase {
         }
     }
 
-    fun withTables(
-        vararg tables: Table,
-        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-        statement: suspend R2dbcTransaction.(TestDB) -> Unit
-    ) {
-        withTables(excludeSettings = emptyList(), tables = tables, configure = configure, statement = statement)
-    }
-
     fun withSchemas(
         excludeSettings: List<TestDB>,
         vararg schemas: Schema,
@@ -192,6 +184,14 @@ abstract class R2dbcDatabaseTestsBase {
                 }
             }
         }
+    }
+
+    fun withTables(
+        vararg tables: Table,
+        configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+        statement: suspend R2dbcTransaction.(TestDB) -> Unit
+    ) {
+        withTables(excludeSettings = emptyList(), tables = tables, configure = configure, statement = statement)
     }
 
     fun withSchemas(

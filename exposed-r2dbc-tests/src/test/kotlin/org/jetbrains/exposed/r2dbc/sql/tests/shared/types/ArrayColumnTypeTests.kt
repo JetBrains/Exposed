@@ -294,12 +294,12 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    // NOTE: UNSUPPORTED by r2dbc-postgresql
+    // r2dbc-postgresql reads nested array as OID type, and returns an array of integers
+    // there is only ByteBuffer or byte arrays, which is not a compatible mapping for encoding/decoding oid type.
     @Test
     fun testInsertArrayOfByteArrays() {
-        // POSTGRESQLNG is excluded because the problem may be on their side.
-        // Related issue: https://github.com/impossibl/pgjdbc-ng/issues/600
-        // Recheck on our side when the issue is resolved.
-        withTestTableAndExcludeSettings(excludeSettings = arrayTypeUnsupportedDb) {
+        withTestTableAndExcludeSettings(excludeSettings = arrayTypeUnsupportedDb + TestDB.POSTGRESQL) {
             val testByteArraysList = listOf(
                 byteArrayOf(0), byteArrayOf(1, 2, 3)
             )

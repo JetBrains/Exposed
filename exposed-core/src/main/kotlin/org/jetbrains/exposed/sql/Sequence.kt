@@ -27,6 +27,7 @@ class Sequence(
 ) {
     /** This name of this sequence in proper database casing. */
     val identifier: String
+        @OptIn(InternalApi::class)
         get() = CoreTransactionManager.currentTransaction().db.identifierManager.cutIfNecessaryAndQuote(name)
 
     override fun toString(): String = "Sequence(identifier=$identifier)"

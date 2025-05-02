@@ -1,10 +1,16 @@
-package org.jetbrains.exposed.r2dbc.sql.tests.ddl
+package org.jetbrains.exposed.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.r2dbc.sql.*
+import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
+import org.jetbrains.exposed.r2dbc.sql.deleteWhere
+import org.jetbrains.exposed.r2dbc.sql.exists
+import org.jetbrains.exposed.r2dbc.sql.insert
+import org.jetbrains.exposed.r2dbc.sql.insertAndGetId
+import org.jetbrains.exposed.r2dbc.sql.name
+import org.jetbrains.exposed.r2dbc.sql.selectAll
 import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.r2dbc.sql.tests.currentDialectTest
@@ -16,6 +22,7 @@ import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
+import org.jetbrains.exposed.r2dbc.sql.update
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
@@ -24,7 +31,7 @@ import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.junit.Test
-import java.util.*
+import java.util.UUID
 import kotlin.test.assertFails
 
 class CreateTableTests : R2dbcDatabaseTestsBase() {

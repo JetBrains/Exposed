@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.r2dbc.sql
 
 import io.r2dbc.spi.ConnectionFactoryOptions
+import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.r2dbc.sql.mappers.TypeMapperRegistry
@@ -35,6 +36,15 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
             connectionFactoryOptions.let { builder.from(it) }
             builder.apply(block)
             connectionFactoryOptions = builder.build()
+        }
+
+        @Suppress("MagicNumber")
+        fun IsolationLevel.asInt(): Int = when (this) {
+            IsolationLevel.READ_UNCOMMITTED -> 1
+            IsolationLevel.READ_COMMITTED -> 2
+            IsolationLevel.REPEATABLE_READ -> 4
+            IsolationLevel.SERIALIZABLE -> 8
+            else -> error("Unsupported io.r2dbc.spi.IsolationLevel provided: $this")
         }
 
         fun build(): R2dbcDatabaseConfig {

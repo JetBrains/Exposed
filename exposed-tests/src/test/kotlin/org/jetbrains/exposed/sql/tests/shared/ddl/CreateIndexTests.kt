@@ -179,7 +179,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             }
         }
 
-        withDb(listOf(TestDB.SQLITE, TestDB.SQLSERVER, TestDB.POSTGRESQLNG, TestDB.POSTGRESQL)) {
+        withDb(TestDB.ALL_POSTGRES + TestDB.SQLITE + TestDB.SQLSERVER) {
             SchemaUtils.createMissingTablesAndColumns(tester)
             assertTrue(tester.exists())
 

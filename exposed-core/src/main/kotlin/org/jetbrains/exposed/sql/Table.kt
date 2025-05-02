@@ -1659,6 +1659,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     // DDL statements
 
+    @OptIn(InternalApi::class)
     internal fun primaryKeyConstraint(): String? {
         return primaryKey?.let { primaryKey ->
             val tr = CoreTransactionManager.currentTransaction()
@@ -1674,6 +1675,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
         val foreignKeyConstraints = foreignKeys
 
+        @OptIn(InternalApi::class)
         val createTable = buildString {
             append("CREATE TABLE ")
             if (currentDialect.supportsIfNotExists) {

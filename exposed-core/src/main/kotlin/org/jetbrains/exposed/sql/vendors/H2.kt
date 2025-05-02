@@ -29,6 +29,7 @@ internal object H2FunctionProvider : FunctionProvider() {
         get() = h2Mode == H2Dialect.H2CompatibilityMode.Oracle
 
     override fun nextVal(seq: Sequence, builder: QueryBuilder) =
+        @OptIn(InternalApi::class)
         when ((CoreTransactionManager.currentTransaction().db.dialect as H2Dialect).majorVersion) {
             H2Dialect.H2MajorVersion.One -> super.nextVal(seq, builder)
             H2Dialect.H2MajorVersion.Two -> builder {
@@ -202,6 +203,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         One, Two
     }
 
+    @OptIn(InternalApi::class)
     internal val version by lazy {
         exactH2Version(CoreTransactionManager.currentTransaction())
     }
@@ -263,6 +265,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     /** The H2 database compatibility mode retrieved from metadata. */
     val h2Mode: H2CompatibilityMode? by lazy {
+        @OptIn(InternalApi::class)
         val modeValue = CoreTransactionManager.currentTransaction().db.dialectMode
         when {
             modeValue == null -> null

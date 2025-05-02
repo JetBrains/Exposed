@@ -127,6 +127,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         expr: GroupConcat<T>,
         queryBuilder: QueryBuilder
     ): Unit = queryBuilder {
+        @OptIn(InternalApi::class)
         val tr = CoreTransactionManager.currentTransaction()
         if (expr.distinct) tr.throwUnsupportedException("Oracle doesn't support DISTINCT in LISTAGG")
         if (expr.orderBy.size > 1) {
@@ -202,6 +203,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
+        @OptIn(InternalApi::class)
         if (path.size > 1) {
             CoreTransactionManager.currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
@@ -220,6 +222,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
+        @OptIn(InternalApi::class)
         if (path.size > 1) {
             CoreTransactionManager.currentTransaction().throwUnsupportedException("Oracle does not support multiple JSON path arguments")
         }
@@ -272,6 +275,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         +"SELECT "
         columnsToSelect.values.appendTo { +it }
         +" FROM "
+        @OptIn(InternalApi::class)
         targets.describe(CoreTransactionManager.currentTransaction(), this)
         where?.let {
             +" WHERE "
@@ -355,6 +359,7 @@ internal object OracleFunctionProvider : FunctionProvider() {
         targets.checkJoinTypes(StatementType.DELETE)
 
         // TODO the same as above
+        @OptIn(InternalApi::class)
         return with(QueryBuilder(true)) {
             +"DELETE (SELECT "
             tableToDelete.columns.appendTo { +it }

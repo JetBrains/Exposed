@@ -342,11 +342,21 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
                 it[testTable.timestampWithTimeZone] = now
             }
 
-            assertEquals(
-                now.toLocalDate().toKotlinLocalDate(),
-                testTable.select(testTable.timestampWithTimeZone.date()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.date()]
-            )
+            val dateExpr = testTable.timestampWithTimeZone.date()
+            val timeExpr = testTable.timestampWithTimeZone.time()
+            val yearExpr = testTable.timestampWithTimeZone.year()
+            val monthExpr = testTable.timestampWithTimeZone.month()
+            val dayExpr = testTable.timestampWithTimeZone.day()
+            val hourExpr = testTable.timestampWithTimeZone.hour()
+            val minuteExpr = testTable.timestampWithTimeZone.minute()
+            val secondExpr = testTable.timestampWithTimeZone.second()
+
+            val result = testTable.select(
+                dateExpr, timeExpr, yearExpr, monthExpr, dayExpr, hourExpr, minuteExpr, secondExpr
+            ).where { testTable.id eq nowId }
+                .single()
+
+            assertEquals(now.toLocalDate().toKotlinLocalDate(), result[dateExpr])
 
             val expectedTime =
                 when (testDb) {
@@ -355,47 +365,19 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
                     in TestDB.ALL_POSTGRES_LIKE -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")
                     else -> now
                 }.toLocalTime().toKotlinLocalTime()
-            assertEquals(
-                expectedTime,
-                testTable.select(testTable.timestampWithTimeZone.time()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.time()]
-            )
+            assertEquals(expectedTime, result[timeExpr])
 
-            assertEquals(
-                now.year,
-                testTable.select(testTable.timestampWithTimeZone.year()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.year()]
-            )
+            assertEquals(now.year, result[yearExpr])
 
-            assertEquals(
-                now.month.value,
-                testTable.select(testTable.timestampWithTimeZone.month()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.month()]
-            )
+            assertEquals(now.month.value, result[monthExpr])
 
-            assertEquals(
-                now.dayOfMonth,
-                testTable.select(testTable.timestampWithTimeZone.day()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.day()]
-            )
+            assertEquals(now.dayOfMonth, result[dayExpr])
 
-            assertEquals(
-                now.hour,
-                testTable.select(testTable.timestampWithTimeZone.hour()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.hour()]
-            )
+            assertEquals(now.hour, result[hourExpr])
 
-            assertEquals(
-                now.minute,
-                testTable.select(testTable.timestampWithTimeZone.minute()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.minute()]
-            )
+            assertEquals(now.minute, result[minuteExpr])
 
-            assertEquals(
-                now.second,
-                testTable.select(testTable.timestampWithTimeZone.second()).where { testTable.id eq nowId }
-                    .single()[testTable.timestampWithTimeZone.second()]
-            )
+            assertEquals(now.second, result[secondExpr])
         }
     }
 

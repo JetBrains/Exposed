@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.vendors.*
 val ConnectionFactoryOptions.dialect: VendorDialect.DialectNameProvider
     get() {
         val dbDialect = getValue(ConnectionFactoryOptions.DRIVER)?.toString()
+            ?.takeUnless { it == "pool" }
+            ?: getValue(ConnectionFactoryOptions.PROTOCOL)?.toString()?.substringBefore(':')
 
         return when (dbDialect) {
             "h2" -> H2Dialect

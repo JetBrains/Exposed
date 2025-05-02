@@ -21,6 +21,7 @@ class ParameterizationTests : R2dbcDatabaseTestsBase() {
         val name = varchar("foo", 50).nullable()
     }
 
+    // NOTE: UNSUPPORTED by r2dbc-mysql && r2dbc-postgresql
     // r2dbc-mysql does NOT support allowMultiQueries option: https://github.com/asyncer-io/r2dbc-mysql/issues/291
     // r2dbc-postgresql does NOT seem to support multiple statements either, even though the attached issue is old:
     // https://github.com/pgjdbc/r2dbc-postgresql/issues/82, but the exception being thrown is the same:

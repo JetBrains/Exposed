@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.r2dbc.sql.tests.ddl
+package org.jetbrains.exposed.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.dao.id.EntityID
@@ -18,12 +18,18 @@ import org.jetbrains.exposed.r2dbc.sql.tests.inProperCase
 import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Sequence
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.autoIncColumnType
+import org.jetbrains.exposed.sql.nextIntVal
+import org.jetbrains.exposed.sql.nextLongVal
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+// NOTE: 1 DAO TEST REMOVED
 class SequencesTests : R2dbcDatabaseTestsBase() {
     @Test
     fun createSequenceStatementTest() {
@@ -51,15 +57,15 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
                     SchemaUtils.createSequence(myseq)
 
                     var developerId = Developer.insert {
-                        it[id] = myseq.nextIntVal()
-                        it[name] = "Hichem"
+                        it[Developer.id] = myseq.nextIntVal()
+                        it[Developer.name] = "Hichem"
                     } get Developer.id
 
                     assertEquals(myseq.startWith, developerId.toLong())
 
                     developerId = Developer.insert {
-                        it[id] = myseq.nextIntVal()
-                        it[name] = "Andrey"
+                        it[Developer.id] = myseq.nextIntVal()
+                        it[Developer.name] = "Andrey"
                     } get Developer.id
 
                     assertEquals(myseq.startWith!! + myseq.incrementBy!!, developerId.toLong())
@@ -193,8 +199,8 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
                     SchemaUtils.createSequence(myseq)
                     val nextVal = myseq.nextIntVal()
                     Developer.insert {
-                        it[id] = nextVal
-                        it[name] = "Hichem"
+                        it[Developer.id] = nextVal
+                        it[Developer.name] = "Hichem"
                     }
 
                     val firstValue = Developer.select(nextVal).single()[nextVal]

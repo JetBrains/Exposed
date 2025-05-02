@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.r2dbc.sql.tests
 
+import io.r2dbc.spi.IsolationLevel
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabaseConfig
 import org.jetbrains.exposed.r2dbc.sql.transactions.suspendTransaction
-import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.exposedLogger
 import java.sql.Connection
 import java.util.*
@@ -15,13 +15,13 @@ enum class TestDB(
     val pass: String = "Exposed_password_1!",
     val beforeConnection: suspend () -> Unit = {},
     val afterTestFinished: () -> Unit = {},
-    val dbConfig: DatabaseConfig.Builder.() -> Unit = {}
+    val dbConfig: R2dbcDatabaseConfig.Builder.() -> Unit = {}
 ) {
     H2_V2(
         { "r2dbc:h2:mem:///regular;DB_CLOSE_DELAY=-1;" },
         "org.h2.Driver",
         dbConfig = {
-            defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
+            defaultIsolationLevel = IsolationLevel.READ_COMMITTED.asInt()
         }
     ),
     H2_V2_MYSQL(
@@ -75,7 +75,7 @@ enum class TestDB(
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
             val tmp = R2dbcDatabase.connect("r2dbc:oracle://sys%20as%20sysdba:Oracle18@127.0.0.1:3003/FREEPDB1")
-            suspendTransaction(db = tmp, transactionIsolation = Connection.TRANSACTION_READ_COMMITTED) {
+            suspendTransaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED, db = tmp) {
                 maxAttempts = 1
 
                 @Suppress("SwallowedException", "TooGenericExceptionCaught")
@@ -87,7 +87,7 @@ enum class TestDB(
 
                 try {
                     exec("DROP USER ExposedTest CASCADE")
-                } catch (_: Exception) {
+                } catch (_: Exception) { // ignore
                     exposedLogger.warn("Exception on deleting ExposedTest user")
                 }
                 exec("CREATE USER ExposedTest ACCOUNT UNLOCK IDENTIFIED BY 12345")
@@ -116,6 +116,7 @@ enum class TestDB(
 
     companion object {
         val ALL_H2_V2 = setOf(H2_V2, H2_V2_MYSQL, H2_V2_PSQL, H2_V2_MARIADB, H2_V2_ORACLE, H2_V2_SQLSERVER)
+        val ALL_H2 = ALL_H2_V2
         val ALL_MYSQL = setOf(MYSQL_V5, MYSQL_V8)
         val ALL_MARIADB = setOf(MARIADB)
         val ALL_MYSQL_MARIADB = ALL_MYSQL + ALL_MARIADB

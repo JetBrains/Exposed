@@ -43,7 +43,10 @@ class Column<T>(
     internal var extraDefinitions = mutableListOf<Any>()
 
     /** Appends the SQL representation of this column to the specified [queryBuilder]. */
-    override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = CoreTransactionManager.currentTransaction().fullIdentity(this@Column, queryBuilder)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        @OptIn(InternalApi::class)
+        CoreTransactionManager.currentTransaction().fullIdentity(this@Column, queryBuilder)
+    }
 
     /** Returns the column name in proper case. */
     fun nameInDatabaseCase(): String = name.inProperCase()
@@ -68,6 +71,7 @@ class Column<T>(
         }
 
     override fun createStatement(): List<String> {
+        @OptIn(InternalApi::class)
         val alterTablePrefix = "ALTER TABLE ${CoreTransactionManager.currentTransaction().identity(table)} ADD"
         val isH2withCustomPKConstraint = currentDialect is H2Dialect && isLastColumnInPK
         val isOracle = currentDialect is OracleDialect
@@ -93,6 +97,7 @@ class Column<T>(
     override fun modifyStatement(): List<String> = currentDialect.modifyColumn(this, ColumnDiff.AllChanged)
 
     override fun dropStatement(): List<String> {
+        @OptIn(InternalApi::class)
         val tr = CoreTransactionManager.currentTransaction()
         return listOf("ALTER TABLE ${tr.identity(table)} DROP COLUMN ${tr.identity(this)}")
     }
@@ -102,6 +107,7 @@ class Column<T>(
     /** Returns the SQL representation of this column. */
     @Suppress("ComplexMethod")
     fun descriptionDdl(modify: Boolean = false): String = buildString {
+        @OptIn(InternalApi::class)
         val tr = CoreTransactionManager.currentTransaction()
         val column = this@Column
         append(tr.identity(column))

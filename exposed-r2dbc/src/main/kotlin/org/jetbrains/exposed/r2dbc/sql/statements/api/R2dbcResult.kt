@@ -110,9 +110,15 @@ value class R2DBCRow(val row: Row) : RowApi {
                 @Suppress("UNCHECKED_CAST")
                 Timestamp.from(result) as T
             } else {
-                val result: LocalDateTime = row.get(index - 1, LocalDateTime::class.java) ?: return null
-                @Suppress("UNCHECKED_CAST")
-                Timestamp.valueOf(result) as T
+                try {
+                    val result: LocalDateTime = row.get(index - 1, LocalDateTime::class.java) ?: return null
+                    @Suppress("UNCHECKED_CAST")
+                    Timestamp.valueOf(result) as T
+                } catch (_: Exception) {
+                    val result: String = row.get(index - 1, String::class.java) ?: return null
+                    @Suppress("UNCHECKED_CAST")
+                    Timestamp.valueOf(result) as T
+                }
             }
         }
         else -> row.get(index - 1, type) as T

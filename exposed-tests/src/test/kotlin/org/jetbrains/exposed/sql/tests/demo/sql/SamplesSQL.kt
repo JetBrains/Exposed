@@ -85,7 +85,7 @@ fun main() {
 
         println("All cities:")
 
-        for (city in Cities.selectAll()) {
+        Cities.selectAll().forEach { city ->
             println("${city[Cities.id]}: ${city[Cities.name]}")
         }
 

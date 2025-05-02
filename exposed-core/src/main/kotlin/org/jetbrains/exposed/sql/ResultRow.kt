@@ -13,6 +13,7 @@ class ResultRow(
     val fieldIndex: Map<Expression<*>, Int>,
     private val data: Array<Any?> = arrayOfNulls<Any?>(fieldIndex.size)
 ) {
+    @OptIn(InternalApi::class)
     private val database: DatabaseApi? = CoreTransactionManager.currentTransactionOrNull()?.db
 
     private val lookUpCache = ResultRowCache()
@@ -68,6 +69,7 @@ class ResultRow(
      */
     fun <T> getOrNull(expression: Expression<T>): T? = if (hasValue(expression)) getInternal(expression, checkNullability = false) else null
 
+    @OptIn(InternalApi::class)
     private fun <T> getInternal(expression: Expression<T>, checkNullability: Boolean): T = lookUpCache.cached(expression) {
         val rawValue = getRaw(expression)
 

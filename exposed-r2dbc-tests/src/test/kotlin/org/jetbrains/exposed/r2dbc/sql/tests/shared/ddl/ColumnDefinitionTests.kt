@@ -1,20 +1,22 @@
-package org.jetbrains.exposed.r2dbc.sql.tests.ddl
+package org.jetbrains.exposed.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
-import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.r2dbc.sql.Query
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.r2dbc.sql.insert
 import org.jetbrains.exposed.r2dbc.sql.selectAll
+import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.r2dbc.sql.statements.api.origin
 import org.jetbrains.exposed.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.r2dbc.sql.tests.TestDB
+import org.jetbrains.exposed.r2dbc.sql.tests.distinct
 import org.jetbrains.exposed.r2dbc.sql.tests.getBoolean
 import org.jetbrains.exposed.r2dbc.sql.tests.getInt
 import org.jetbrains.exposed.r2dbc.sql.tests.getString
 import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.r2dbc.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.r2dbc.sql.tests.shared.expectException
 import org.jetbrains.exposed.sql.FieldSet
 import org.jetbrains.exposed.sql.Op
@@ -36,7 +38,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
             val amount = integer("amount").withDefinition("COMMENT", stringLiteral(comment))
         }
 
-        val columnCommentSupportedDB = TestDB.ALL_H2_V2 + TestDB.ALL_MYSQL_MARIADB
+        val columnCommentSupportedDB = TestDB.ALL_H2 + TestDB.ALL_MYSQL_MARIADB
 
         withTables(excludeSettings = TestDB.ALL - columnCommentSupportedDB, tester) { testDb ->
             assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
@@ -54,8 +56,8 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                 else -> "REMARKS"
             }
 
-            val result = exec(showStatement) { rs ->
-                rs.getString(resultLabel)
+            val result = exec(showStatement) { row ->
+                row.getString(resultLabel)
             }?.first()
             assertNotNull(result)
             assertContains(result, comment)
@@ -125,7 +127,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                 """.trimIndent()
             )
 
-            val result1 = tester.selectAll().map { it[tester.item] }.toList().distinct().single()
+            val result1 = tester.selectAll().map { it[tester.item] }.distinct().single()
             assertEquals(itemA, result1)
 
             // when Docker image is updated to Oracle23+, this can be removed to test update as well
@@ -145,7 +147,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
 
                 val (singleAmount, singleItem) = tester.selectAll().map {
                     it[tester.amount] to it[tester.item]
-                }.toList().distinct().single()
+                }.distinct().single()
                 assertEquals(999, singleAmount)
                 assertEquals(itemA, singleItem)
             }
@@ -167,10 +169,9 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                 return super.prepareSQL(builder).replaceBefore(" FROM ", "SELECT *")
             }
         }
-
         fun FieldSet.selectImplicitAll(): Query = ImplicitQuery(this, null)
 
-        val invisibilitySupportedDB = TestDB.ALL_H2_V2 + TestDB.ALL_MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE
+        val invisibilitySupportedDB = TestDB.ALL_H2 + TestDB.ALL_MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE
 
         withTables(excludeSettings = TestDB.ALL - invisibilitySupportedDB, tester) { testDb ->
             if (testDb == TestDB.MYSQL_V8 || testDb == TestDB.ORACLE) {
@@ -183,27 +184,36 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                 it[amount] = 999
             }
 
-            // an invisible column is only returned in ResultSet if explicitly named
-            tester
-                .selectAll()
-                .where { tester.amount greater 100 }
-                .execute(this)!!
+            // an invisible column is only returned in Row if explicitly named
+            val result1 = (
+                tester
+                    .selectAll()
+                    .where { tester.amount greater 100 }
+                    .execute(this) as R2dbcResult
+                )
                 .mapRows { row ->
-                    assertNotNull(row)
-                    assertEquals(999, row.origin.getInt(tester.amount.name))
-                    assertNull(row.origin.getBoolean(tester.active.name))
+                    row.origin.getInt(tester.amount.name) to row.origin.getBoolean(tester.active.name)
                 }.single()
+            assertNotNull(result1)
+            assertEquals(999, result1.first)
+            assertFalse(result1.second)
 
-            tester
-                .selectImplicitAll()
-                .where { tester.amount greater 100 }
-                .execute(this)!!
+            val result2 = (
+                tester
+                    .selectImplicitAll()
+                    .where { tester.amount greater 100 }
+                    .execute(this) as R2dbcResult
+                )
                 .mapRows { row ->
-                    assertNotNull(row.origin)
-                    assertEquals(999, row.origin.getInt(tester.amount.name))
-                    expectException<NoSuchElementException> { row.origin.getBoolean(tester.active.name) }
-                }
-                .single()
+                    val amount = row.origin.getInt(tester.amount.name)
+                    expectException<NoSuchElementException> {
+                        row.origin.getBoolean(tester.active.name)
+                    }
+                    amount to null
+                }.single()
+            assertNotNull(result2)
+            assertEquals(999, result2.first)
+            assertNull(result2.second)
         }
     }
 }

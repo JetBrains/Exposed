@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.sql.statements.api
 
+import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.ANSI_SQL_2003_KEYWORDS
 import org.jetbrains.exposed.sql.vendors.VENDORS_KEYWORDS
@@ -75,6 +76,7 @@ abstract class IdentifierManagerApi {
         message = "This will be removed in future releases when the opt-out flag is removed in DatabaseConfig",
         level = DeprecationLevel.WARNING
     )
+    @OptIn(InternalApi::class)
     private val shouldPreserveKeywordCasing by lazy {
         CoreTransactionManager.currentTransactionOrNull()?.db?.config?.preserveKeywordCasing == true
     }

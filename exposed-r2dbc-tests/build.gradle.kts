@@ -45,17 +45,16 @@ dependencies {
     testImplementation(project(":exposed-jodatime"))
     // --- end ----
 
+    testRuntimeOnly(libs.r2dbc.pool)
     testRuntimeOnly(libs.r2dbc.h2) {
         exclude(group = "com.h2database", module = "h2")
     }
-    testRuntimeOnly(libs.h2)
     testRuntimeOnly(libs.r2dbc.mariadb)
     testRuntimeOnly(libs.r2dbc.mysql)
     testRuntimeOnly(libs.r2dbc.oracle)
-    testRuntimeOnly(libs.r2dbc.postgresql)
-    testRuntimeOnly(libs.r2dbc.sqlserver)
-
+    testImplementation(libs.r2dbc.postgresql)
     testCompileOnly(libs.postgre)
+    testRuntimeOnly(libs.r2dbc.sqlserver)
 
     testImplementation(libs.logcaptor)
 
