@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.r2dbc.sql
 
 import io.r2dbc.spi.ConnectionFactories
+import io.r2dbc.spi.ConnectionFactory
 import io.r2dbc.spi.IsolationLevel
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.r2dbc.sql.statements.R2dbcConnectionImpl
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcExposedConnection
@@ -130,11 +130,14 @@ class R2dbcDatabase private constructor(
         @OptIn(InternalApi::class)
         private fun doConnect(
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
+            connectionFactory: ConnectionFactory?,
             config: R2dbcDatabaseConfig,
         ): R2dbcDatabase {
             val options = config.connectionFactoryOptions
-            val explicitVendor = config.explicitDialect?.name ?: options.dialectName
-            val factory = ConnectionFactories.get(options)
+            val explicitVendor = config.explicitDialect
+                ?.let { if (it is H2Dialect) H2Dialect.dialectName else it.name }
+                ?: options.dialectName
+            val factory = connectionFactory ?: ConnectionFactories.get(options)
 
             return R2dbcDatabase(explicitVendor, config) {
                 R2dbcConnectionImpl(factory.create(), explicitVendor, R2dbcScope(config.dispatcher), config.typeMapperRegistry)
@@ -146,36 +149,48 @@ class R2dbcDatabase private constructor(
             }
         }
 
-        // TODO add connect(connectionFactory = ) & drop 1 connect(databaseCongif) below
-
         /**
-         * Creates a [R2dbcDatabase] instance.
+         * Creates an [R2dbcDatabase] instance.
          *
          * **Note:** This function does not immediately instantiate an actual connection to a database,
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
-         * @param connectionOptions Builder options that represent the configuration state of the database when
-         * getting a connection.
-         * @param databaseConfig Configuration parameters for this [R2dbcDatabase] instance.
-         * @param dispatcher [CoroutineDispatcher] responsible for determining the threads for execution.
          * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
+         * @param databaseConfig Builder of configuration parameters for this [R2dbcDatabase] instance.
          * @throws IllegalStateException If a corresponding database dialect cannot be resolved from values
-         * provided to [connectionOptions].
+         * provided to [databaseConfig].
          */
         fun connect(
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
             databaseConfig: R2dbcDatabaseConfig.Builder.() -> Unit = {}
-        ): R2dbcDatabase = doConnect(manager, R2dbcDatabaseConfig(databaseConfig))
+        ): R2dbcDatabase = doConnect(manager, null, R2dbcDatabaseConfig(databaseConfig))
 
         /**
-         * Creates a [R2dbcDatabase] instance.
+         * Creates an [R2dbcDatabase] instance.
+         *
+         * **Note:** This function does not immediately instantiate an actual connection to a database,
+         * but instead provides the details necessary to do so whenever a connection is required by a transaction.
+         *
+         * @param connectionFactory The [ConnectionFactory] entry point for an R2DBC driver when getting a connection.
+         * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
+         * @param databaseConfig Builder of configuration parameters for this [R2dbcDatabase] instance.
+         * @throws IllegalStateException If a corresponding database dialect cannot be resolved from the [connectionFactory]
+         * or from values provided to [databaseConfig].
+         */
+        fun connect(
+            connectionFactory: ConnectionFactory,
+            databaseConfig: R2dbcDatabaseConfig = R2dbcDatabaseConfig.invoke(),
+            manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) }
+        ): R2dbcDatabase = doConnect(manager, connectionFactory, databaseConfig)
+
+        /**
+         * Creates an [R2dbcDatabase] instance.
          *
          * **Note:** This function does not immediately instantiate an actual connection to a database,
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param url The URL that represents the database when getting a connection.
          * @param databaseConfig Configuration parameters for this [R2dbcDatabase] instance.
-         * @param dispatcher [CoroutineDispatcher] responsible for determining the threads for execution.
          * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
          * @throws IllegalStateException If a corresponding database dialect cannot be resolved from the provided [url].
          */
@@ -188,7 +203,7 @@ class R2dbcDatabase private constructor(
             builder.setUrl(url)
             databaseConfig(builder)
 
-            return doConnect(manager, builder.build())
+            return doConnect(manager, null, builder.build())
         }
 
         /**
@@ -197,17 +212,16 @@ class R2dbcDatabase private constructor(
          * **Note:** This function does not immediately instantiate an actual connection to a database,
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
-         * @param url The URL that represents the database when getting a connection.
          * @param databaseConfig Configuration parameters for this [R2dbcDatabase] instance.
-         * @param dispatcher [CoroutineDispatcher] responsible for determining the threads for execution.
          * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
-         * @throws IllegalStateException If a corresponding database dialect cannot be resolved from the provided [url].
+         * @throws IllegalStateException If a corresponding database dialect cannot be resolved from the provided [databaseConfig].
          */
         fun connect(
             databaseConfig: R2dbcDatabaseConfig,
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) }
         ): R2dbcDatabase = doConnect(
             manager = manager,
+            connectionFactory = null,
             config = databaseConfig,
         )
 

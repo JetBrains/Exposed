@@ -83,6 +83,7 @@ open class DeleteStatement(
     }
 
     companion object {
+        @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
         @Deprecated(
             message = """
                 Statement execution has been removed from exposed-core.
@@ -100,6 +101,7 @@ open class DeleteStatement(
         )
         fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null): Int = 0
 
+        @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
         @Deprecated(
             message = """
                 Statement execution has been removed from exposed-core.
