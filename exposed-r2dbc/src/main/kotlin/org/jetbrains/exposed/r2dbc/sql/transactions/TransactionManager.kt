@@ -210,6 +210,7 @@ class TransactionManager(
         private val useSavePoints = outerTransaction != null && db.useNestedTransactions
 
         // Todo replace runBlocking()
+        // TODO swap out lazy for fake connection in transaction manager +/- other lazy uses in connectionImpl
         // property needs to (possibly) be initialized with return value of a suspend function;
         // this suspend function must be called as soon as transaction is opened, so lazySuspend options not sufficient;
         // need something like initSuspend { }
@@ -275,7 +276,8 @@ class TransactionManager(
     }
 }
 
-// naming
+// TODO naming of new Api
+// push decision to public slack poll
 
 /**
  * Creates a new `TransactionScope` then calls the specified suspending [statement], suspends until it completes,

@@ -82,5 +82,5 @@ open class DeleteStatement(
         listOf(args)
     }
 
-    // TODO: companion object should be reverted with deprecations
+    // TODO: companion object should be reverted with deprecations (pre-beta)
 }

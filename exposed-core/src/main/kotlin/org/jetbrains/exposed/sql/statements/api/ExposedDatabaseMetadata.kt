@@ -40,6 +40,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
         private val map: MutableMap<K, V> = mutableMapOf(),
         val default: (K) -> V
     ) : Map<K, V> by map {
+        // TODO review replacement of get vs getOrDefault() in RDMI.kt
         override fun get(key: K): V? = map.getOrPut(key) { default(key) }
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false

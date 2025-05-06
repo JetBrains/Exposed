@@ -60,6 +60,7 @@ internal class TransactionCoroutineElement(
     companion object : CoroutineContext.Key<TransactionCoroutineElement>
 }
 
+// TODO add deprecations + note for feedback/pushback (pre-beta)
 /**
  * Creates a new `TransactionScope` then calls the specified suspending [statement], suspends until it completes,
  * and returns the result.

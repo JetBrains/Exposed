@@ -14,6 +14,8 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.Connection
 import java.sql.PreparedStatement
 
+// TODO Introduce package versioning & rearrange packages to reflect
+// org.jetbrains.exposed.v1.jdbc.sql.statements
 /**
  * Class representing a wrapped JDBC database [Connection].
  */

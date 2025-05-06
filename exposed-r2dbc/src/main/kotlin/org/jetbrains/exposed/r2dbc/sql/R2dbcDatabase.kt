@@ -88,6 +88,7 @@ class R2dbcDatabase private constructor(
     override val fullVersion: String by lazy { runBlocking { metadata { getDatabaseProductVersion() } } }
 
     // cleanup -> none of these properties need suspend; better to call MetadataProvider directly?
+    // TODO for properties that do not actually query metadata (hard-coded), switch to metadat property
     override val supportsAlterTableWithAddColumn: Boolean by lazy { runBlocking { metadata { supportsAlterTableWithAddColumn } } }
 
     override val supportsAlterTableWithDropColumn: Boolean by lazy { runBlocking { metadata { supportsAlterTableWithDropColumn } } }
@@ -144,6 +145,8 @@ class R2dbcDatabase private constructor(
                 // TransactionManager.registerManager(this, manager(this))
             }
         }
+
+        // TODO add connect(connectionFactory = ) & drop 1 connect(databaseCongif) below
 
         /**
          * Creates a [R2dbcDatabase] instance.
