@@ -2832,6 +2832,7 @@ public class org/jetbrains/exposed/sql/statements/BatchUpsertStatement : org/jet
 }
 
 public class org/jetbrains/exposed/sql/statements/DeleteStatement : org/jetbrains/exposed/sql/statements/Statement {
+	public static final field Companion Lorg/jetbrains/exposed/sql/statements/DeleteStatement$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/Op;ZLjava/lang/Integer;Ljava/util/List;)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/Op;ZLjava/lang/Integer;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Op;ZLjava/lang/Integer;Ljava/lang/Long;)V
@@ -2844,6 +2845,12 @@ public class org/jetbrains/exposed/sql/statements/DeleteStatement : org/jetbrain
 	public final fun getWhere ()Lorg/jetbrains/exposed/sql/Op;
 	public final fun isIgnore ()Z
 	public fun prepareSQL (Lorg/jetbrains/exposed/sql/Transaction;Z)Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/sql/statements/DeleteStatement$Companion {
+	public final fun all (Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/Table;)I
+	public final fun where (Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Op;ZLjava/lang/Integer;)I
+	public static synthetic fun where$default (Lorg/jetbrains/exposed/sql/statements/DeleteStatement$Companion;Lorg/jetbrains/exposed/sql/Transaction;Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Op;ZLjava/lang/Integer;ILjava/lang/Object;)I
 }
 
 public abstract interface class org/jetbrains/exposed/sql/statements/GlobalStatementInterceptor : org/jetbrains/exposed/sql/statements/StatementInterceptor {

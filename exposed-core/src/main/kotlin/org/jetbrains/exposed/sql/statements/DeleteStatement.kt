@@ -82,5 +82,37 @@ open class DeleteStatement(
         listOf(args)
     }
 
-    // TODO: companion object should be reverted with deprecations (pre-beta)
+    companion object {
+        @Deprecated(
+            message = """
+                Statement execution has been removed from exposed-core.
+                Replace directly with a table extension function:
+                    `table.deleteWhere(limit) { op }` OR `table.deleteIgnoreWhere(limit) { op }`
+
+                Or pass the expected statement to an instance of Executable:
+                For JDBC:
+                `DeleteBlockingExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
+
+                FOR R2DBC:
+                `DeleteSuspendExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
+            """,
+            level = DeprecationLevel.ERROR
+        )
+        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null): Int = 0
+
+        @Deprecated(
+            message = """
+                Statement execution has been removed from exposed-core.
+                Replace directly with a table extension function or pass the expected statement to an instance of Executable:
+
+                For JDBC:
+                `DeleteBlockingExecutable(buildStatement { table.deleteAll() }).execute(transaction) ?: 0`
+
+                FOR R2DBC:
+                `DeleteSuspendExecutable(buildStatement { table.deleteAll() }).execute(transaction) ?: 0`
+            """,
+            level = DeprecationLevel.ERROR
+        )
+        fun all(transaction: Transaction, table: Table): Int = 0
+    }
 }

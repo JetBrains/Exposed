@@ -60,16 +60,17 @@ internal class TransactionCoroutineElement(
     companion object : CoroutineContext.Key<TransactionCoroutineElement>
 }
 
-// TODO add deprecations + note for feedback/pushback (pre-beta)
-/**
- * Creates a new `TransactionScope` then calls the specified suspending [statement], suspends until it completes,
- * and returns the result.
- *
- * The `TransactionScope` is derived from a new `Transaction` and a given coroutine [context],
- * or the current [CoroutineContext] if no [context] is provided.
- *
- * @sample org.jetbrains.exposed.sql.tests.shared.CoroutineTests.suspendedTx
- */
+@Deprecated(
+    message = """"
+        This function will be removed in future releases.
+
+        Replace with `suspendTransaction()` from exposed-r2dbc instead to use a suspending transaction.
+
+        Please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
+        with a use case if you believe this method should remain available for JDBC connections.
+    """,
+    level = DeprecationLevel.WARNING
+)
 suspend fun <T> newSuspendedTransaction(
     context: CoroutineContext? = null,
     db: Database? = null,
@@ -81,14 +82,17 @@ suspend fun <T> newSuspendedTransaction(
         suspendedTransactionAsyncInternal(true, statement).await()
     }
 
-/**
- * Calls the specified suspending [statement], suspends until it completes, and returns the result.
- *
- * The resulting `TransactionScope` is derived from the current [CoroutineContext] if the latter already holds
- * [this] `Transaction`; otherwise, a new scope is created using [this] `Transaction` and a given coroutine [context].
- *
- * @sample org.jetbrains.exposed.sql.tests.shared.CoroutineTests.suspendedTx
- */
+@Deprecated(
+    message = """"
+        This function will be removed in future releases.
+
+        Replace with nested `suspendTransaction()` from exposed-r2dbc instead to use a suspending transaction.
+
+        Please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
+        with a use case if you believe this method should remain available for JDBC connections.
+    """,
+    level = DeprecationLevel.WARNING
+)
 suspend fun <T> JdbcTransaction.withSuspendTransaction(
     context: CoroutineContext? = null,
     statement: suspend JdbcTransaction.() -> T
@@ -97,14 +101,17 @@ suspend fun <T> JdbcTransaction.withSuspendTransaction(
         suspendedTransactionAsyncInternal(false, statement).await()
     }
 
-/**
- * Creates a new `TransactionScope` and returns its future result as an implementation of [Deferred].
- *
- * The `TransactionScope` is derived from a new `Transaction` and a given coroutine [context],
- * or the current [CoroutineContext] if no [context] is provided.
- *
- * @sample org.jetbrains.exposed.sql.tests.shared.CoroutineTests.suspendTxAsync
- */
+@Deprecated(
+    message = """"
+        This function will be removed in future releases.
+
+        Replace with `suspendTransactionAsync()` from exposed-r2dbc instead to use a suspending transaction.
+
+        Please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
+        with a use case if you believe this method should remain available for JDBC connections.
+    """,
+    level = DeprecationLevel.WARNING
+)
 suspend fun <T> suspendedTransactionAsync(
     context: CoroutineContext? = null,
     db: Database? = null,
