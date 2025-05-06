@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.r2dbc.sql.statements.api
 
+import io.r2dbc.spi.IsolationLevel
 import org.jetbrains.exposed.sql.ForeignKeyConstraint
 import org.jetbrains.exposed.sql.Index
 import org.jetbrains.exposed.sql.Sequence
@@ -45,7 +46,7 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
     abstract fun getDatabaseProductVersion(): String
 
     /** The default transaction isolation level for the database. */
-    abstract suspend fun getDefaultIsolationLevel(): Int
+    abstract suspend fun getDefaultIsolationLevel(): IsolationLevel
 
     /** A mapping of all schema names in the database to a list of all defined table names in each schema. */
     abstract suspend fun tableNames(): Map<String, List<String>>

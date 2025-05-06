@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.r2dbc.sql.statements.api
 
+import io.r2dbc.spi.IsolationLevel
 import org.jetbrains.exposed.r2dbc.sql.statements.R2dbcPreparedStatementImpl
 import org.jetbrains.exposed.sql.statements.api.ExposedSavepoint
 
@@ -31,10 +32,10 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
     suspend fun setReadOnly(value: Boolean)
 
     /** Retrieves the transaction isolation level of the connection. */
-    suspend fun getTransactionIsolation(): Int
+    suspend fun getTransactionIsolation(): IsolationLevel
 
     /** Sets the transaction isolation level of the connection. */
-    suspend fun setTransactionIsolation(value: Int)
+    suspend fun setTransactionIsolation(value: IsolationLevel)
 
     /** Saves all changes since the last commit or rollback operation. */
     suspend fun commit()

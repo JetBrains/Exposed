@@ -66,7 +66,7 @@ open class R2dbcTransaction(
 
     internal var openResultRowsCount: Int = 0
 
-    val interceptors = arrayListOf<StatementInterceptor>()
+    internal val interceptors = arrayListOf<StatementInterceptor>()
 
     init {
         addLogger(db.config.sqlLogger)

@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.r2dbc.sql.transactions
 
+import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -7,6 +8,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
+import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabaseConfig
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.r2dbc.sql.mtc.MappedTransactionContext
@@ -38,8 +40,9 @@ class TransactionManager(
 
     override var defaultMaxRetryDelay: Long = db.config.defaultMaxRetryDelay
 
-    override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
-        get() = if (field == -1) R2dbcDatabase.getDefaultIsolationLevel(db) else field
+    /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
+    var defaultIsolationLevel: IsolationLevel? = (db.config as R2dbcDatabaseConfig).defaultR2dbcIsolationLevel
+        get() = if (field == null) R2dbcDatabase.getDefaultIsolationLevel(db) else field
 
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
@@ -49,8 +52,18 @@ class TransactionManager(
         return "R2dbcTransactionManager[${hashCode()}](db=$db)"
     }
 
-    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): R2dbcTransaction {
-        val transaction = outerTransaction?.takeIf { !db.useNestedTransactions } as? R2dbcTransaction
+    /**
+     * Returns a [R2dbcTransaction] instance.
+     *
+     * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
+     * an existing transaction with the database not configured to `useNestedTransactions`.
+     */
+    fun newTransaction(
+        isolation: IsolationLevel = defaultIsolationLevel!!,
+        readOnly: Boolean = defaultReadOnly,
+        outerTransaction: R2dbcTransaction? = null
+    ): R2dbcTransaction {
+        val transaction = outerTransaction?.takeIf { !db.useNestedTransactions }
             ?: R2dbcTransaction(
                 R2dbcThreadLocalTransaction(
                     db = db,
@@ -58,7 +71,7 @@ class TransactionManager(
                     transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
                     setupTxConnection = setupTxConnection,
                     threadLocal = threadLocal,
-                    outerTransaction = outerTransaction as? R2dbcTransaction,
+                    outerTransaction = outerTransaction,
                 ),
             )
 
@@ -139,7 +152,7 @@ class TransactionManager(
         }
 
         /** Returns the current [Transaction], or creates a new transaction with the provided [isolation] level. */
-        fun currentOrNew(isolation: Int): R2dbcTransaction = currentOrNull() ?: manager.newTransaction(isolation)
+        fun currentOrNew(isolation: IsolationLevel): R2dbcTransaction = currentOrNull() ?: manager.newTransaction(isolation)
 
         /** Returns the current [Transaction], or `null` if none exists. */
         fun currentOrNull(): R2dbcTransaction? = manager.currentOrNull()
@@ -161,7 +174,7 @@ class TransactionManager(
     private class R2dbcThreadLocalTransaction(
         override val db: R2dbcDatabase,
         private val setupTxConnection: ((R2dbcExposedConnection<*>, R2dbcTransactionInterface) -> Unit)?,
-        override val transactionIsolation: Int,
+        override val transactionIsolation: IsolationLevel,
         override val readOnly: Boolean,
         val threadLocal: ThreadLocal<R2dbcTransaction>,
         override val outerTransaction: R2dbcTransaction?,
@@ -273,7 +286,7 @@ class TransactionManager(
  */
 suspend fun <T> suspendTransaction(
     context: CoroutineContext? = null,
-    transactionIsolation: Int? = null,
+    transactionIsolation: IsolationLevel? = null,
     readOnly: Boolean? = null,
     db: R2dbcDatabase? = null,
     statement: suspend R2dbcTransaction.() -> T
@@ -307,7 +320,7 @@ suspend fun <T> R2dbcTransaction.suspendTransaction(
 suspend fun <T> suspendTransactionAsync(
     context: CoroutineContext? = null,
     db: R2dbcDatabase? = null,
-    transactionIsolation: Int? = null,
+    transactionIsolation: IsolationLevel? = null,
     readOnly: Boolean? = null,
     statement: suspend R2dbcTransaction.() -> T
 ): Deferred<T> {
@@ -335,7 +348,7 @@ private suspend fun <T> withTransactionScope(
     context: CoroutineContext?,
     currentTransaction: R2dbcTransaction?,
     db: R2dbcDatabase? = null,
-    transactionIsolation: Int?,
+    transactionIsolation: IsolationLevel?,
     readOnly: Boolean?,
     body: suspend TransactionScope.() -> T
 ): T {
@@ -350,7 +363,7 @@ private suspend fun <T> withTransactionScope(
 
         val tx = lazy(LazyThreadSafetyMode.NONE) {
             manager.newTransaction(
-                isolation = transactionIsolation ?: manager.defaultIsolationLevel,
+                isolation = transactionIsolation ?: manager.defaultIsolationLevel ?: error("Default transaction isolation not set"),
                 readOnly = readOnly ?: manager.defaultReadOnly,
                 outerTransaction = currentTransaction
             )

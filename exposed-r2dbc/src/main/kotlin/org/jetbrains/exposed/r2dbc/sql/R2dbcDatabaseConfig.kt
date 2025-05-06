@@ -5,6 +5,7 @@ import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.r2dbc.sql.mappers.TypeMapperRegistry
+import org.jetbrains.exposed.r2dbc.sql.statements.asInt
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 
@@ -18,6 +19,8 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
 
     val typeMapperRegistry: TypeMapperRegistry
 
+    val defaultR2dbcIsolationLevel: IsolationLevel?
+
     class Builder : DatabaseConfig.Builder() {
         var useExposedCodecs: Boolean = true
 
@@ -26,6 +29,14 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
         var dispatcher: CoroutineDispatcher = Dispatchers.IO
 
         var typeMapperRegistry: TypeMapperRegistry = TypeMapperRegistry.default()
+
+        var defaultR2dbcIsolationLevel: IsolationLevel? = null
+
+        override var defaultIsolationLevel: Int
+            get() = defaultR2dbcIsolationLevel?.asInt() ?: -1
+            set(value) {
+                error("Set a specific io.r2dbc.spi.IsolationLevel value directly to defaultR2dbcIsolationLevel instead")
+            }
 
         fun setUrl(url: String) {
             connectionFactoryOptions { from(ConnectionFactoryOptions.parse(url)) }
@@ -36,15 +47,6 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
             connectionFactoryOptions.let { builder.from(it) }
             builder.apply(block)
             connectionFactoryOptions = builder.build()
-        }
-
-        @Suppress("MagicNumber")
-        fun IsolationLevel.asInt(): Int = when (this) {
-            IsolationLevel.READ_UNCOMMITTED -> 1
-            IsolationLevel.READ_COMMITTED -> 2
-            IsolationLevel.REPEATABLE_READ -> 4
-            IsolationLevel.SERIALIZABLE -> 8
-            else -> error("Unsupported io.r2dbc.spi.IsolationLevel provided: $this")
         }
 
         fun build(): R2dbcDatabaseConfig {
@@ -90,6 +92,8 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
                     get() = this@Builder.useExposedCodecs
                 override val typeMapperRegistry: TypeMapperRegistry
                     get() = this@Builder.typeMapperRegistry
+                override val defaultR2dbcIsolationLevel: IsolationLevel?
+                    get() = this@Builder.defaultR2dbcIsolationLevel
             }
         }
     }

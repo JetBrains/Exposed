@@ -712,7 +712,7 @@ public abstract interface class org/jetbrains/exposed/sql/DatabaseConfig {
 public class org/jetbrains/exposed/sql/DatabaseConfig$Builder {
 	public fun <init> ()V
 	public final fun getDefaultFetchSize ()Ljava/lang/Integer;
-	public final fun getDefaultIsolationLevel ()I
+	public fun getDefaultIsolationLevel ()I
 	public final fun getDefaultMaxAttempts ()I
 	public final fun getDefaultMaxRetryDelay ()J
 	public final fun getDefaultMinRetryDelay ()J
@@ -727,7 +727,7 @@ public class org/jetbrains/exposed/sql/DatabaseConfig$Builder {
 	public final fun getUseNestedTransactions ()Z
 	public final fun getWarnLongQueriesDuration ()Ljava/lang/Long;
 	public final fun setDefaultFetchSize (Ljava/lang/Integer;)V
-	public final fun setDefaultIsolationLevel (I)V
+	public fun setDefaultIsolationLevel (I)V
 	public final fun setDefaultMaxAttempts (I)V
 	public final fun setDefaultMaxRetryDelay (J)V
 	public final fun setDefaultMinRetryDelay (J)V
@@ -3353,27 +3353,19 @@ public abstract interface class org/jetbrains/exposed/sql/transactions/Transacti
 	public abstract fun getDb ()Lorg/jetbrains/exposed/sql/DatabaseApi;
 	public abstract fun getOuterTransaction ()Lorg/jetbrains/exposed/sql/Transaction;
 	public abstract fun getReadOnly ()Z
-	public abstract fun getTransactionIsolation ()I
 }
 
 public abstract interface class org/jetbrains/exposed/sql/transactions/TransactionManagerApi {
 	public abstract fun bindTransactionToThread (Lorg/jetbrains/exposed/sql/Transaction;)V
 	public abstract fun currentOrNull ()Lorg/jetbrains/exposed/sql/Transaction;
-	public abstract fun getDefaultIsolationLevel ()I
 	public abstract fun getDefaultMaxAttempts ()I
 	public abstract fun getDefaultMaxRetryDelay ()J
 	public abstract fun getDefaultMinRetryDelay ()J
 	public abstract fun getDefaultReadOnly ()Z
-	public abstract fun newTransaction (IZLorg/jetbrains/exposed/sql/Transaction;)Lorg/jetbrains/exposed/sql/Transaction;
-	public abstract fun setDefaultIsolationLevel (I)V
 	public abstract fun setDefaultMaxAttempts (I)V
 	public abstract fun setDefaultMaxRetryDelay (J)V
 	public abstract fun setDefaultMinRetryDelay (J)V
 	public abstract fun setDefaultReadOnly (Z)V
-}
-
-public final class org/jetbrains/exposed/sql/transactions/TransactionManagerApi$DefaultImpls {
-	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/sql/transactions/TransactionManagerApi;IZLorg/jetbrains/exposed/sql/Transaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Transaction;
 }
 
 public final class org/jetbrains/exposed/sql/transactions/TransactionScopeKt {

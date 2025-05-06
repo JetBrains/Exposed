@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.r2dbc.sql.transactions
 
+import io.r2dbc.spi.IsolationLevel
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcExposedConnection
@@ -9,6 +10,9 @@ interface R2dbcTransactionInterface : TransactionInterface {
     override val db: R2dbcDatabase
 
     override val outerTransaction: R2dbcTransaction?
+
+    /** The transaction isolation level of the transaction, which may differ from the set database level. */
+    val transactionIsolation: IsolationLevel
 
     /** The database connection used by the transaction. */
     val connection: R2dbcExposedConnection<*>

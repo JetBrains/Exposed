@@ -10,6 +10,9 @@ interface JdbcTransactionInterface : TransactionInterface {
 
     override val outerTransaction: JdbcTransaction?
 
+    /** The transaction isolation level of the transaction, which may differ from the set database level. */
+    val transactionIsolation: Int
+
     /** The database connection used by the transaction. */
     val connection: ExposedConnection<*>
 

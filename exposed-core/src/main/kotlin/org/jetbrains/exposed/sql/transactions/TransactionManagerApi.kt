@@ -11,9 +11,6 @@ import java.util.concurrent.atomic.AtomicReference
 // TODO: break down this to a separate files
 
 private object NotInitializedTransactionManager : TransactionManagerApi {
-    // TODO: should we have an ENUM for this?
-    override var defaultIsolationLevel: Int = -1
-
     override var defaultReadOnly: Boolean = false
 
     override var defaultMaxAttempts: Int = -1
@@ -21,9 +18,6 @@ private object NotInitializedTransactionManager : TransactionManagerApi {
     override var defaultMinRetryDelay: Long = 0
 
     override var defaultMaxRetryDelay: Long = 0
-
-    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): Transaction =
-        error("Please call Database.connect() before using this code")
 
     override fun currentOrNull(): Transaction = error("Please call Database.connect() before using this code")
 
@@ -37,11 +31,6 @@ private object NotInitializedTransactionManager : TransactionManagerApi {
  * and storing data related to the database and its transactions.
  */
 interface TransactionManagerApi {
-    /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
-    // TODO: check if this can be an ENUM with set(int) operator in JDBC and R2DBC modules
-    @Suppress("ForbiddenComment", "AnnotationSpacing")
-    var defaultIsolationLevel: Int
-
     /** Whether transactions should be performed in read-only mode. Unless specified, the database default will be used. */
     var defaultReadOnly: Boolean
 
@@ -53,18 +42,6 @@ interface TransactionManagerApi {
 
     /** The default maximum number of milliseconds to wait before retrying a transaction if an exception is thrown. */
     var defaultMaxRetryDelay: Long
-
-    /**
-     * Returns a [Transaction] instance.
-     *
-     * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
-     * an existing transaction with the database not configured to `useNestedTransactions`.
-     */
-    fun newTransaction(
-        isolation: Int = defaultIsolationLevel,
-        readOnly: Boolean = defaultReadOnly,
-        outerTransaction: Transaction? = null
-    ): Transaction
 
     /** Returns the current [Transaction], or `null` if none exists. */
     fun currentOrNull(): Transaction?

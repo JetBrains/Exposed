@@ -157,8 +157,7 @@ class Database private constructor(
         }
 
         /** Registers a new [DatabaseDialectMetadata] with the identifier [prefix]. */
-        // TODO probably it should not be private, if users were able to register own metadata before
-        private fun registerDialectMetadata(prefix: String, metadata: () -> DatabaseDialectMetadata) {
+        fun registerDialectMetadata(prefix: String, metadata: () -> DatabaseDialectMetadata) {
             dialectsMetadata[prefix.lowercase()] = metadata
         }
 

@@ -75,10 +75,10 @@ class R2dbcConnectionImpl(
         withConnection { executeSQL(metadataProvider.setReadOnlyMode(value)) }
     }
 
-    override suspend fun getTransactionIsolation(): Int = withConnection { transactionIsolationLevel.asInt() }
+    override suspend fun getTransactionIsolation(): IsolationLevel = withConnection { transactionIsolationLevel }
 
-    override suspend fun setTransactionIsolation(value: Int) {
-        withConnection { setTransactionIsolationLevel(value.asIsolationLevel()).awaitFirstOrNull() }
+    override suspend fun setTransactionIsolation(value: IsolationLevel) {
+        withConnection { setTransactionIsolationLevel(value).awaitFirstOrNull() }
     }
 
     override suspend fun commit() {

@@ -39,7 +39,7 @@ class MultiDatabaseTest {
         R2dbcDatabase.connect(
             "r2dbc:h2:mem:///db1;USER=root;DB_CLOSE_DELAY=-1;",
             databaseConfig = {
-                defaultIsolationLevel = IsolationLevel.READ_COMMITTED.asInt()
+                defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
             }
         )
     }
@@ -47,7 +47,7 @@ class MultiDatabaseTest {
         R2dbcDatabase.connect(
             "r2dbc:h2:mem:///db2;USER=root;DB_CLOSE_DELAY=-1;",
             databaseConfig = {
-                defaultIsolationLevel = IsolationLevel.READ_COMMITTED.asInt()
+                defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
             }
         )
     }

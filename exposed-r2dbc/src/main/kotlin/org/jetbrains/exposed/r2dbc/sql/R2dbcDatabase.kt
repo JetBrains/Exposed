@@ -7,7 +7,6 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.r2dbc.sql.statements.R2dbcConnectionImpl
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.r2dbc.sql.statements.api.R2dbcExposedDatabaseMetadata
-import org.jetbrains.exposed.r2dbc.sql.statements.asInt
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.r2dbc.sql.vendors.*
 import org.jetbrains.exposed.sql.DatabaseApi
@@ -123,7 +122,7 @@ class R2dbcDatabase private constructor(
         }
 
         /** Registers a new [DatabaseDialectMetadata] with the identifier [prefix]. */
-        private fun registerDialectMetadata(prefix: String, metadata: () -> DatabaseDialectMetadata) {
+        fun registerDialectMetadata(prefix: String, metadata: () -> DatabaseDialectMetadata) {
             dialectsMetadata[prefix.lowercase()] = metadata
         }
 
@@ -210,10 +209,10 @@ class R2dbcDatabase private constructor(
         )
 
         /** Returns the stored default transaction isolation level for a specific database. */
-        fun getDefaultIsolationLevel(db: R2dbcDatabase): Int =
+        fun getDefaultIsolationLevel(db: R2dbcDatabase): IsolationLevel =
             when (db.dialect) {
-                is MysqlDialect -> IsolationLevel.REPEATABLE_READ.asInt()
-                else -> IsolationLevel.READ_COMMITTED.asInt()
+                is MysqlDialect -> IsolationLevel.REPEATABLE_READ
+                else -> IsolationLevel.READ_COMMITTED
             }
     }
 }

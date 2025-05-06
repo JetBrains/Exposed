@@ -102,7 +102,7 @@ suspend fun Table.deleteAll(): Int {
     DeprecationLevel.WARNING
 )
 @JvmName("deleteReturningNullableParam")
-suspend fun <T : Table> T.deleteReturning(
+fun <T : Table> T.deleteReturning(
     returning: List<Expression<*>> = columns,
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null
 ): ReturningSuspendExecutable {
@@ -321,7 +321,7 @@ suspend fun <T : Table> T.insertIgnore(
  * expressions mapped to their resulting data.
  * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ReturningTests.testInsertReturning
  */
-suspend fun <T : Table> T.insertReturning(
+fun <T : Table> T.insertReturning(
     returning: List<Expression<*>> = columns,
     ignoreErrors: Boolean = false,
     body: T.(InsertStatement<Number>) -> Unit

@@ -6,9 +6,9 @@ import org.jetbrains.exposed.sql.vendors.DatabaseDialect
 internal const val DEFAULT_MAX_ATTEMPTS = 3
 
 /**
- * A configuration for a [Database].
+ * A configuration for a [DatabaseApi] instance.
  *
- * Parameters set in this class apply to all transactions that use the [Database] instance,
+ * Parameters set in this class apply to all transactions that use the [DatabaseApi] instance,
  * unless an applicable override is specified in an individual transaction block.
  */
 interface DatabaseConfig {
@@ -50,7 +50,7 @@ interface DatabaseConfig {
          * the `transaction` function.
          * Check [Database.getDefaultIsolationLevel] for the database defaults.
          */
-        var defaultIsolationLevel: Int = -1
+        open var defaultIsolationLevel: Int = -1
 
         /**
          * The maximum amount of attempts that will be made to perform any transaction block.

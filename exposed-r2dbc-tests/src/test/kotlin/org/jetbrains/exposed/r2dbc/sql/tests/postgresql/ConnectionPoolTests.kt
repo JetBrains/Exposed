@@ -18,7 +18,7 @@ import org.junit.Test
 class ConnectionPoolTests : LogDbInTestName() {
     private val poolPG by lazy {
         R2dbcDatabase.connect {
-            defaultIsolationLevel = IsolationLevel.SERIALIZABLE.asInt()
+            defaultR2dbcIsolationLevel = IsolationLevel.SERIALIZABLE
 
             setUrl(TestDB.POSTGRESQL.connection.invoke().replace("rdbc:", "r2dbc:pool:"))
 

@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.r2dbc.sql.tests.shared
 
+import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
 import kotlinx.coroutines.flow.map
@@ -21,7 +22,6 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.Rule
 import org.junit.Test
-import java.sql.Connection
 import java.util.concurrent.Executors
 
 private val singleThreadDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
@@ -200,7 +200,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
             val mainJob = GlobalScope.async {
                 val job = launch(Dispatchers.IO) {
                     suspendTransaction(db = db) {
-                        connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED)
+                        connection.setTransactionIsolation(IsolationLevel.READ_COMMITTED)
                         assertEquals(
                             null,
                             Testing.selectAll().where { Testing.id.eq(1) }.singleOrNull()?.getOrNull(Testing.id)

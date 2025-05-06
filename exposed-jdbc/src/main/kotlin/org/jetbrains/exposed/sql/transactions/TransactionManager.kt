@@ -26,8 +26,9 @@ class TransactionManager(
     @Volatile
     override var defaultMaxRetryDelay: Long = db.config.defaultMaxRetryDelay
 
+    /** The default transaction isolation level. Unless specified, the database-specific level will be used. */
     @Volatile
-    override var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
+    var defaultIsolationLevel: Int = db.config.defaultIsolationLevel
         get() {
             when {
                 field == -1 -> {
@@ -62,8 +63,18 @@ class TransactionManager(
         return "JdbcTransactionManager[${hashCode()}](db=$db)"
     }
 
-    override fun newTransaction(isolation: Int, readOnly: Boolean, outerTransaction: Transaction?): JdbcTransaction {
-        val transaction = outerTransaction?.takeIf { !db.useNestedTransactions } as? JdbcTransaction
+    /**
+     * Returns a [JdbcTransaction] instance.
+     *
+     * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
+     * an existing transaction with the database not configured to `useNestedTransactions`.
+     */
+    fun newTransaction(
+        isolation: Int = defaultIsolationLevel,
+        readOnly: Boolean = defaultReadOnly,
+        outerTransaction: JdbcTransaction? = null
+    ): JdbcTransaction {
+        val transaction = outerTransaction?.takeIf { !db.useNestedTransactions }
             ?: JdbcTransaction(
                 ThreadLocalTransaction(
                     db = db,
@@ -71,7 +82,7 @@ class TransactionManager(
                     transactionIsolation = outerTransaction?.transactionIsolation ?: isolation,
                     setupTxConnection = setupTxConnection,
                     threadLocal = threadLocal,
-                    outerTransaction = outerTransaction as? JdbcTransaction,
+                    outerTransaction = outerTransaction,
                     loadDataSourceIsolationLevel = loadDataSourceIsolationLevel,
                 ),
             )

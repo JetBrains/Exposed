@@ -5,7 +5,6 @@ import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.r2dbc.sql.R2dbcDatabaseConfig
 import org.jetbrains.exposed.r2dbc.sql.transactions.suspendTransaction
 import org.jetbrains.exposed.sql.exposedLogger
-import java.sql.Connection
 import java.util.*
 
 enum class TestDB(
@@ -21,7 +20,7 @@ enum class TestDB(
         { "r2dbc:h2:mem:///regular;DB_CLOSE_DELAY=-1;" },
         "org.h2.Driver",
         dbConfig = {
-            defaultIsolationLevel = IsolationLevel.READ_COMMITTED.asInt()
+            defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
         }
     ),
     H2_V2_MYSQL(
@@ -75,7 +74,7 @@ enum class TestDB(
         beforeConnection = {
             Locale.setDefault(Locale.ENGLISH)
             val tmp = R2dbcDatabase.connect("r2dbc:oracle://sys%20as%20sysdba:Oracle18@127.0.0.1:3003/FREEPDB1")
-            suspendTransaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED, db = tmp) {
+            suspendTransaction(transactionIsolation = IsolationLevel.READ_COMMITTED, db = tmp) {
                 maxAttempts = 1
 
                 @Suppress("SwallowedException", "TooGenericExceptionCaught")

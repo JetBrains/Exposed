@@ -61,6 +61,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    // flaky test?
     @Test
     fun testKeywordIdentifiersWithOptOut() = runTest {
         Assume.assumeTrue(TestDB.H2_V2 in TestDB.enabledDialects())

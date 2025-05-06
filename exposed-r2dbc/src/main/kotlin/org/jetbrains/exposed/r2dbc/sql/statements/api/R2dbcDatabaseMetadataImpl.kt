@@ -2,6 +2,7 @@ package org.jetbrains.exposed.r2dbc.sql.statements.api
 
 import io.r2dbc.spi.Connection
 import io.r2dbc.spi.ConnectionMetadata
+import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -9,7 +10,6 @@ import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.r2dbc.sql.R2dbcScope
 import org.jetbrains.exposed.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.r2dbc.sql.statements.asInt
 import org.jetbrains.exposed.r2dbc.sql.statements.executeSQL
 import org.jetbrains.exposed.r2dbc.sql.statements.getCurrentCatalog
 import org.jetbrains.exposed.r2dbc.sql.statements.getCurrentSchema
@@ -77,7 +77,7 @@ class R2dbcDatabaseMetadataImpl(
 
     override fun getDatabaseProductVersion(): String = connectionData.databaseVersion
 
-    override suspend fun getDefaultIsolationLevel(): Int = connection.transactionIsolationLevel.asInt()
+    override suspend fun getDefaultIsolationLevel(): IsolationLevel = connection.transactionIsolationLevel
 
     override val supportsAlterTableWithAddColumn: Boolean by lazy {
         metadataProvider.propertyProvider.supportsAlterTableWithAddColumn
