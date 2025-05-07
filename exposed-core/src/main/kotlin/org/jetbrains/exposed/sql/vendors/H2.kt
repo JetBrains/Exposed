@@ -3,7 +3,6 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementType
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
 import java.sql.Types
 import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
@@ -307,36 +306,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsWindowFrameGroupsMode: Boolean by lazy { resolveDelegatedDialect()?.supportsWindowFrameGroupsMode ?: super.supportsWindowFrameGroupsMode }
     override val supportsColumnTypeChange: Boolean get() = isSecondVersion
 
-    override fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
-        val result = mutableMapOf<Table, List<CheckConstraint>>()
-        tables.forEach { table ->
-            val transaction = TransactionManager.current()
-            val checkConstraints = mutableListOf<CheckConstraint>()
-            transaction.exec(
-                """
-                    SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE
-                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-                    JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS cc
-                        ON tc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
-                    WHERE tc.CONSTRAINT_TYPE = 'CHECK'
-                    AND tc.TABLE_NAME = '${table.nameInDatabaseCaseUnquoted()}';
-                """.trimIndent()
-            ) { rs ->
-                while (rs.next()) {
-                    checkConstraints.add(
-                        CheckConstraint(
-                            tableName = transaction.identity(table),
-                            checkName = rs.getString(1),
-                            checkOp = rs.getString(2)
-                        )
-                    )
-                }
-            }
-            result[table] = checkConstraints
-        }
-        return result
-    }
-
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun createIndex(index: Index): String {
@@ -371,53 +340,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
 
-    override fun fetchAllColumnTypes(tableName: String): Map<String, String> {
-        val map = mutableMapOf<String, String>()
-        TransactionManager.current().exec("SHOW COLUMNS FROM $tableName") { rs ->
-            while (rs.next()) {
-                val field = rs.getString("FIELD")
-                val type = rs.getString("TYPE").uppercase()
-                map[field] = type
-            }
-        }
-        return map
-    }
-
-    // All H2 V1 databases are excluded because Exposed will be dropping support for it soon
-    override fun getColumnType(resultSet: ResultSet, prefetchedColumnTypes: Map<String, String>): String {
-        val columnName = resultSet.getString("COLUMN_NAME")
-        val columnType = prefetchedColumnTypes[columnName] ?: resultSet.getString("TYPE_NAME").uppercase()
-        val dataType = resultSet.getInt("DATA_TYPE")
-        return if (dataType == Types.ARRAY) {
-            val baseType = columnType.substringBefore(" ARRAY")
-            normalizedColumnType(baseType) + columnType.replaceBefore(" ARRAY", "")
-        } else {
-            normalizedColumnType(columnType)
-        }
-    }
-
-    /** Returns the normalized column type. */
-    private fun normalizedColumnType(columnType: String): String =
-        when {
-            columnType.matches(Regex("CHARACTER VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
-                H2CompatibilityMode.Oracle -> columnType.replace("CHARACTER VARYING", "VARCHAR2")
-                else -> columnType.replace("CHARACTER VARYING", "VARCHAR")
-            }
-            columnType.matches(Regex("CHARACTER(?:\\(\\d+\\))?")) -> columnType.replace("CHARACTER", "CHAR")
-            columnType.matches(Regex("BINARY VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
-                H2CompatibilityMode.PostgreSQL -> "bytea"
-                H2CompatibilityMode.Oracle -> columnType.replace("BINARY VARYING", "RAW")
-                else -> columnType.replace("BINARY VARYING", "VARBINARY")
-            }
-            columnType == "BOOLEAN" -> when (h2Mode) {
-                H2CompatibilityMode.SQLServer -> "BIT"
-                else -> columnType
-            }
-            columnType == "BINARY LARGE OBJECT" -> "BLOB"
-            columnType == "CHARACTER LARGE OBJECT" -> "CLOB"
-            columnType == "INTEGER" && h2Mode != H2CompatibilityMode.Oracle -> "INT"
-            else -> columnType
-        }
 
     @Suppress("CyclomaticComplexMethod")
     override fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean {

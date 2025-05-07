@@ -223,6 +223,7 @@ data class CheckConstraint(
     companion object {
         fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank()) { "Check constraint name cannot be blank" }
+            @OptIn(InternalApi::class)
             val tr = CoreTransactionManager.currentTransaction()
             val identifierManager = tr.db.identifierManager
             val tableName = tr.identity(table)

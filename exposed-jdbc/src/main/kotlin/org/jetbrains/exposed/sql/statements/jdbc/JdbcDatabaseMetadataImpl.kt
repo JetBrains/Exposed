@@ -11,6 +11,7 @@ import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.SQLException
+import java.sql.Types
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -168,7 +169,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
     }
 
     private fun ResultSet.extractColumns(tableName: String): List<ColumnMetadata> {
-        val prefetchedColumnTypes = currentDialect.fetchAllColumnTypes(tableName)
+        val prefetchedColumnTypes = fetchAllColumnTypes(tableName)
         val result = mutableListOf<ColumnMetadata>()
         while (next()) {
             result.add(asColumnMetadata(prefetchedColumnTypes))
@@ -204,7 +205,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val nullable = getBoolean("NULLABLE")
         val size = getInt("COLUMN_SIZE").takeIf { it != 0 }
         val scale = getInt("DECIMAL_DIGITS").takeIf { it != 0 }
-        val sqlType = currentDialect.getColumnType(this, prefetchedColumnTypes)
+        val sqlType = getColumnType(this, prefetchedColumnTypes)
 
         return ColumnMetadata(name, type, sqlType, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
     }
@@ -232,7 +233,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 }
 
                 val storedIndexTable = if
-                    (tableSchema == currentSchema!! && currentDialect is OracleDialect) {
+                                           (tableSchema == currentSchema!! && currentDialect is OracleDialect) {
                     table.nameInDatabaseCase()
                 } else {
                     table.nameInDatabaseCaseUnquoted()
@@ -276,6 +277,37 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
             }
         }
         return HashMap(existingIndicesCache)
+    }
+
+    // TODO create this method also for R2DBC
+    override fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
+        val result = mutableMapOf<Table, List<CheckConstraint>>()
+        tables.forEach { table ->
+            val transaction = TransactionManager.current()
+            val checkConstraints = mutableListOf<CheckConstraint>()
+            transaction.exec(
+                """
+                    SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE
+                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                    JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS cc
+                        ON tc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
+                    WHERE tc.CONSTRAINT_TYPE = 'CHECK'
+                    AND tc.TABLE_NAME = '${table.nameInDatabaseCaseUnquoted()}';
+                """.trimIndent()
+            ) { rs ->
+                while (rs.next()) {
+                    checkConstraints.add(
+                        CheckConstraint(
+                            tableName = transaction.identity(table),
+                            checkName = rs.getString(1),
+                            checkOp = rs.getString(2)
+                        )
+                    )
+                }
+            }
+            result[table] = checkConstraints
+        }
+        return result
     }
 
     override fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
@@ -436,6 +468,61 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     .map { it.reduce(ForeignKeyConstraint::plus) }
             }
         }
+    }
+
+    // All H2 V1 databases are excluded because Exposed will be dropping support for it soon
+    private fun getColumnType(resultSet: ResultSet, prefetchedColumnTypes: Map<String, String>): String {
+        if (currentDialect !is H2Dialect) {
+            return ""
+        }
+
+        val columnName = resultSet.getString("COLUMN_NAME")
+        val columnType = prefetchedColumnTypes[columnName] ?: resultSet.getString("TYPE_NAME").uppercase()
+        val dataType = resultSet.getInt("DATA_TYPE")
+        return if (dataType == Types.ARRAY) {
+            val baseType = columnType.substringBefore(" ARRAY")
+            normalizedColumnType(baseType) + columnType.replaceBefore(" ARRAY", "")
+        } else {
+            normalizedColumnType(columnType)
+        }
+    }
+
+    // TODO extract to ExposedDatabaseMetadata
+    /** Returns the normalized column type. */
+    private fun normalizedColumnType(columnType: String): String {
+        val h2Mode = currentDialect.h2Mode
+        return when {
+            columnType.matches(Regex("CHARACTER VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
+                H2CompatibilityMode.Oracle -> columnType.replace("CHARACTER VARYING", "VARCHAR2")
+                else -> columnType.replace("CHARACTER VARYING", "VARCHAR")
+            }
+            columnType.matches(Regex("CHARACTER(?:\\(\\d+\\))?")) -> columnType.replace("CHARACTER", "CHAR")
+            columnType.matches(Regex("BINARY VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
+                H2CompatibilityMode.PostgreSQL -> "bytea"
+                H2CompatibilityMode.Oracle -> columnType.replace("BINARY VARYING", "RAW")
+                else -> columnType.replace("BINARY VARYING", "VARBINARY")
+            }
+            columnType == "BOOLEAN" -> when (h2Mode) {
+                H2CompatibilityMode.SQLServer -> "BIT"
+                else -> columnType
+            }
+            columnType == "BINARY LARGE OBJECT" -> "BLOB"
+            columnType == "CHARACTER LARGE OBJECT" -> "CLOB"
+            columnType == "INTEGER" && h2Mode != H2CompatibilityMode.Oracle -> "INT"
+            else -> columnType
+        }
+    }
+
+    override fun fetchAllColumnTypes(tableName: String): Map<String, String> {
+        val map = mutableMapOf<String, String>()
+        TransactionManager.current().exec("SHOW COLUMNS FROM $tableName") { rs ->
+            while (rs.next()) {
+                val field = rs.getString("FIELD")
+                val type = rs.getString("TYPE").uppercase()
+                map[field] = type
+            }
+        }
+        return map
     }
 
     private fun ResultSet.extractForeignKeys(

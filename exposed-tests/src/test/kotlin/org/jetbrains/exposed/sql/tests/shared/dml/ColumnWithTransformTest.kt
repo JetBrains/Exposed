@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
@@ -403,7 +404,7 @@ class ColumnWithTransformTest : DatabaseTestsBase() {
         // Prefix is added only on reading the value from the table via `readObject` method
         // `eagerLoading` is set to true to get String (instead of CLOB) inside `readObject` immediately
         class TextWithPrefixColumnType(val prefix: String) : TextColumnType(eagerLoading = true) {
-            override fun readObject(rs: ResultSet, index: Int): Any {
+            override fun readObject(rs: RowApi, index: Int): Any {
                 return "${prefix}${super.readObject(rs, index)}"
             }
         }

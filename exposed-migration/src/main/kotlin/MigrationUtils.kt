@@ -285,7 +285,7 @@ object MigrationUtils : MigrationUtilityApi() {
         val missingCheckConstraints = mutableListOf<CheckConstraint>()
         tables.forEach { table ->
             val mappedCheckConstraints = table.checkConstraints()
-            val existingCheckConstraints = currentDialect.existingCheckConstraints(*tables)[table].orEmpty()
+            val existingCheckConstraints = currentDialectMetadata.existingCheckConstraints(*tables)[table].orEmpty()
             val existingCheckConstraintsNames = existingCheckConstraints.map { it.checkName.uppercase() }.toSet()
             missingCheckConstraints.addAll(mappedCheckConstraints.filterNot { it.checkName.uppercase() in existingCheckConstraintsNames })
         }
@@ -312,7 +312,7 @@ object MigrationUtils : MigrationUtilityApi() {
 
         val unmappedCheckConstraints = mutableListOf<CheckConstraint>()
         tables.forEach { table ->
-            val existingCheckConstraints = currentDialect.existingCheckConstraints(*tables)[table].orEmpty()
+            val existingCheckConstraints = currentDialectMetadata.existingCheckConstraints(*tables)[table].orEmpty()
             val mappedCheckConstraints = table.checkConstraints()
             val mappedCheckConstraintsNames = mappedCheckConstraints.map { it.checkName.uppercase() }.toSet()
 

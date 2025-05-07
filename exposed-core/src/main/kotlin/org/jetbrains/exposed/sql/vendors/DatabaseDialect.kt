@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import java.sql.ResultSet
 import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 
@@ -130,13 +130,16 @@ interface DatabaseDialect {
         }
     }
 
-    // TODO move it to JDBC or R2DBC metadata
-    /** Returns a map of all the columns' names mapped to their type. */
-    fun fetchAllColumnTypes(tableName: String): Map<String, String> = emptyMap()
-
-    // TODO move it to JDBC or R2DBC metadata
-    /** Returns the SQL type of the column in [resultSet]. If available, [prefetchedColumnTypes] is used to get the column type. */
-    fun getColumnType(resultSet: ResultSet, prefetchedColumnTypes: Map<String, String> = emptyMap()): String = ""
+//    // TODO move it to JDBC or R2DBC metadata
+//    // TODO remove it here
+//    /** Returns a map of all the columns' names mapped to their type. */
+//    fun fetchAllColumnTypes(tableName: String): Map<String, String> = emptyMap()
+//
+//    // TODO move it to JDBC or R2DBC metadata
+//    // TODO refactor this funciton. It should not take the `ResultSet`/`ResultApi` as a parameter
+//    // TODO make this method internal
+//    /** Returns the SQL type of the column in [resultSet]. If available, [prefetchedColumnTypes] is used to get the column type. */
+//    fun getColumnType(resultSet: ResultApi, prefetchedColumnTypes: Map<String, String> = emptyMap()): String = ""
 
     // TODO move it to JDBC or R2DBC metadata
     /** Returns whether the [columnMetadataSqlType] type and the [columnType] are equivalent.

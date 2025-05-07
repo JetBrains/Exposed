@@ -5,8 +5,9 @@ import org.jetbrains.exposed.dao.id.EntityIDFunctionProvider
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.statements.api.ResultApi
 import org.jetbrains.exposed.sql.statements.api.RowApi
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.io.InputStream
 import java.math.BigDecimal
@@ -371,7 +372,7 @@ open class ColumnWithTransform<Unwrapped, Wrapped>(
         return delegate.notNullValueToDB(transformer.unwrap(value)!!)
     }
 
-    override fun readObject(rs: ResultSet, index: Int): Any? = delegate.readObject(rs, index)
+    override fun readObject(rs: RowApi, index: Int): Any? = delegate.readObject(rs, index)
 
     override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
         return delegate.setParameter(stmt, index, value)
@@ -1065,10 +1066,11 @@ class UUIDColumnType : ColumnType<UUID>() {
     override fun nonNullValueToString(value: UUID): String = "'$value'"
 
     @Suppress("MagicNumber")
-    override fun readObject(rs: ResultSet, index: Int): Any? {
-        val db = TransactionManager.current().db
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        @OptIn(InternalApi::class)
+        val db = CoreTransactionManager.currentTransaction().db
         if (currentDialect is MariaDBDialect && !db.isVersionCovers(10, 0)) {
-            return rs.getBytes(index)
+            return rs.getObject(index, java.sql.Array::class.java)
         }
         return super.readObject(rs, index)
     }

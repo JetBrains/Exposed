@@ -9,4 +9,9 @@ open class H2DialectMetadata : DatabaseDialectMetadata() {
             entry.value.filterNot { it.indexName.startsWith("PRIMARY_KEY_") }
         }
         .filterValues { it.isNotEmpty() }
+
+
+    override fun fetchAllColumnTypes(tableName: String): Map<String, String> {
+        return super.fetchAllColumnTypes(tableName)
+    }
 }

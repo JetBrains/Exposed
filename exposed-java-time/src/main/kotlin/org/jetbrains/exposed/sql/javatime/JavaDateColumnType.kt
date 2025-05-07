@@ -3,9 +3,10 @@ package org.jetbrains.exposed.sql.javatime
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
+import org.jetbrains.exposed.sql.InternalApi
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.statements.api.RowApi
+import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.time.*
 import java.time.ZoneOffset.UTC
@@ -424,10 +425,11 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     @Suppress("MagicNumber")
     override fun notNullValueToDB(value: Instant): Any {
         val dialect = currentDialect
+        @OptIn(InternalApi::class)
         return when {
             dialect is SQLiteDialect ->
                 SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value)
-            dialect is MysqlDialect && dialect !is MariaDBDialect && !TransactionManager.current().db.isVersionCovers(8, 0) -> {
+            dialect is MysqlDialect && dialect !is MariaDBDialect && !CoreTransactionManager.currentTransaction().db.isVersionCovers(8, 0) -> {
                 val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER else MYSQL_TIMESTAMP_STRING_FORMATTER
                 formatter.format(value)
             }

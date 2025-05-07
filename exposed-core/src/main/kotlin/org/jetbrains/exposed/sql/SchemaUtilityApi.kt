@@ -229,9 +229,11 @@ abstract class SchemaUtilityApi {
         } else {
             this
         }
+
         fun Table.existingIndices() = this@filterAndLogMissingAndUnmappedIndices[this].orEmpty()
             .filterForeignKeys()
             .filterInternalIndices()
+
         fun Table.mappedIndices() = this.indices.filterForeignKeys().filterInternalIndices()
         val missingIndices = HashSet<Index>()
         val unMappedIndices = HashMap<String, MutableSet<Index>>()
@@ -288,19 +290,25 @@ abstract class SchemaUtilityApi {
             } else {
                 columnType.nullable
             }
+            val incorrectType = if (currentDialect.supportsColumnTypeChange) isIncorrectType(existingCol, col) else false
             val incorrectNullability = existingCol.nullable != colNullable
             val incorrectAutoInc = isIncorrectAutoInc(existingCol, col)
             val incorrectDefaults = isIncorrectDefault(dialect, existingCol, col, columnDbDefaultIsAllowed)
             val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameUnquoted().inProperCase()
-            val incorrectSizeOrScale = isIncorrectSizeOrScale(existingCol, columnType)
+            val incorrectSizeOrScale = if (incorrectType) false else isIncorrectSizeOrScale(existingCol, columnType)
             ColumnDiff(
                 incorrectNullability,
+                incorrectType,
                 incorrectAutoInc,
                 incorrectDefaults,
                 incorrectCaseSensitiveName,
                 incorrectSizeOrScale
             )
         }.filterValues { it.hasDifferences() }
+    }
+
+    private fun isIncorrectType(columnMetadata: ColumnMetadata, column: Column<*>): Boolean {
+        return !currentDialect.areEquivalentColumnTypes(columnMetadata.sqlType, columnMetadata.jdbcType, column.columnType.sqlType())
     }
 
     private fun isIncorrectAutoInc(existingColumn: ColumnMetadata, column: Column<*>): Boolean {
@@ -469,14 +477,19 @@ abstract class SchemaUtilityApi {
         }
     }
 
-    private fun isIncorrectSizeOrScale(existingColumn: ColumnMetadata, columnType: IColumnType<*>): Boolean {
+    private fun isIncorrectSizeOrScale(columnMeta: ColumnMetadata, columnType: IColumnType<*>): Boolean {
         // ColumnMetadata.scale can only be non-null if ColumnMetadata.size is non-null
-        if (existingColumn.size == null) return false
+        if (columnMeta.size == null) return false
+        val dialect = currentDialect
         return when (columnType) {
-            is DecimalColumnType -> columnType.precision != existingColumn.size || columnType.scale != existingColumn.scale
-            is CharColumnType -> columnType.colLength != existingColumn.size
-            is VarCharColumnType -> columnType.colLength != existingColumn.size
-            is BinaryColumnType -> columnType.length != existingColumn.size
+            is DecimalColumnType -> columnType.precision != columnMeta.size || columnType.scale != columnMeta.scale
+            is CharColumnType -> columnType.colLength != columnMeta.size
+            is VarCharColumnType -> columnType.colLength != columnMeta.size
+            is BinaryColumnType -> if (dialect is PostgreSQLDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.PostgreSQL) {
+                false
+            } else {
+                columnType.length != columnMeta.size
+            }
             else -> false
         }
     }

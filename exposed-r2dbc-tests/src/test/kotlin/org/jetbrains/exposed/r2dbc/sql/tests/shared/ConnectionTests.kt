@@ -18,24 +18,24 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
 
     @Test
     fun testGettingColumnMetadata() {
-        withTables(excludeSettings = TestDB.ALL - TestDB.H2_V2, People) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2_V2, People) {
             val columnMetadata = connection.metadata {
                 requireNotNull(columns(People)[People])
             }.toSet()
-            val expected = when ((db.dialect as H2Dialect).isSecondVersion) {
-                false -> setOf(
-                    ColumnMetadata("ID", Types.BIGINT, false, 19, null, true, null),
-                    ColumnMetadata("FIRSTNAME", Types.VARCHAR, true, 80, null, false, null),
-                    ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, null, false, "Doe"),
-                    ColumnMetadata("AGE", Types.INTEGER, false, 10, null, false, "18"),
-                )
-                true -> setOf(
-                    ColumnMetadata("ID", Types.BIGINT, false, 64, null, true, null),
-                    ColumnMetadata("FIRSTNAME", Types.VARCHAR, true, 80, null, false, null),
-                    ColumnMetadata("LASTNAME", Types.VARCHAR, false, 42, null, false, "Doe"),
-                    ColumnMetadata("AGE", Types.INTEGER, false, 32, null, false, "18"),
-                )
-            }
+
+            val h2Dialect = (db.dialect as H2Dialect)
+            val idType = "BIGINT"
+            val firstNameType = if (h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) "VARCHAR2(80)" else "VARCHAR(80)"
+            val lastNameType = if (h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) "VARCHAR2(42)" else "VARCHAR(42)"
+            val ageType = if (h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) "INTEGER" else "INT"
+
+            val expected = setOf(
+                ColumnMetadata(People.id.nameInDatabaseCase(), Types.BIGINT, idType, false, 64, null, h2Dialect.h2Mode != H2Dialect.H2CompatibilityMode.Oracle, null),
+                ColumnMetadata(People.firstName.nameInDatabaseCase(), Types.VARCHAR, firstNameType, true, 80, null, false, null),
+                ColumnMetadata(People.lastName.nameInDatabaseCase(), Types.VARCHAR, lastNameType, false, 42, null, false, "Doe"),
+                ColumnMetadata(People.age.nameInDatabaseCase(), Types.INTEGER, ageType, false, 32, null, false, "18"),
+            )
+
             assertEquals(expected, columnMetadata)
         }
     }
