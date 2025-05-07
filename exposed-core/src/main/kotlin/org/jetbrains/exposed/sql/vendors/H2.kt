@@ -3,9 +3,8 @@ package org.jetbrains.exposed.sql.vendors
 import org.jetbrains.exposed.exceptions.throwUnsupportedException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.StatementType
-import java.sql.ResultSet
-import java.sql.Types
 import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
+import java.sql.Types
 import java.util.*
 
 internal object H2DataTypeProvider : DataTypeProvider() {
@@ -339,7 +338,6 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         super.modifyColumn(column, columnDiff).map { it.replace("MODIFY COLUMN", "ALTER COLUMN") }
 
     override fun dropDatabase(name: String) = "DROP SCHEMA IF EXISTS ${name.inProperCase()}"
-
 
     @Suppress("CyclomaticComplexMethod")
     override fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean {

@@ -198,4 +198,6 @@ internal class SQLServerMetadata : MetadataProvider(SQLServerPropertyProvider, S
             append("ORDER BY PKTABLE_NAME, KEY_SEQ")
         }
     }
+
+    override fun getCheckConstraints(catalog: String, schemaPattern: String, table: String): String = ""
 }

@@ -842,7 +842,9 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
         val zipValue = "BB".toByteArray()
         val provinceValue = "CC"
 
-        withTables(originalTable) {
+        withTables(originalTable) { testDb ->
+            assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(originalTable, withLogs = false).isEmpty())
+
             expectException<IllegalArgumentException> {
                 originalTable.insert {
                     it[tax] = taxValue
@@ -852,8 +854,13 @@ class CreateMissingTablesAndColumnsTests : R2dbcDatabaseTestsBase() {
                 }
             }
 
-            val alterStatements = SchemaUtils.statementsRequiredToActualizeScheme(newTable)
-            assertEquals(4, alterStatements.size)
+            val alterStatements = SchemaUtils.statementsRequiredToActualizeScheme(newTable, withLogs = false)
+            val expectedSize = if (testDb in TestDB.ALL_POSTGRES_LIKE) {
+                3
+            } else {
+                4
+            }
+            assertEquals(expectedSize, alterStatements.size)
             alterStatements.forEach { exec(it) }
 
             newTable.insert {

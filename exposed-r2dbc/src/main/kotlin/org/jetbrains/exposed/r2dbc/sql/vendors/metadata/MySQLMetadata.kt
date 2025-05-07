@@ -208,6 +208,8 @@ internal open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), My
             append("ORDER BY PKTABLE_NAME, KEY_SEQ")
         }
     }
+
+    override fun getCheckConstraints(catalog: String, schemaPattern: String, table: String): String = ""
 }
 
 private val isMySQL6Plus: Boolean

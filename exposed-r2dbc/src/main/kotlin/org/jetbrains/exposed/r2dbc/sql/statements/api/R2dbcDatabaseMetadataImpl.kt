@@ -4,6 +4,7 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.ConnectionMetadata
 import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Row
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
@@ -14,14 +15,11 @@ import org.jetbrains.exposed.r2dbc.sql.statements.executeSQL
 import org.jetbrains.exposed.r2dbc.sql.statements.getCurrentCatalog
 import org.jetbrains.exposed.r2dbc.sql.statements.getCurrentSchema
 import org.jetbrains.exposed.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.r2dbc.sql.vendors.currentDialectMetadata
 import org.jetbrains.exposed.r2dbc.sql.vendors.metadata.MetadataProvider
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.sql.vendors.*
-import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode
 import java.math.BigDecimal
-import java.sql.ResultSet
 import java.sql.Types
 import java.util.concurrent.ConcurrentHashMap
 
@@ -193,9 +191,11 @@ class R2dbcDatabaseMetadataImpl(
         for ((schema, schemaTables) in tablesBySchema.entries) {
             for (table in schemaTables) {
                 val catalog = if (!useSchemaInsteadOfDatabase || schema == getCurrentSchema()) getDatabaseName() else schema
+                // TODO is this necessary with R2DBC?
+                val prefetchedColumnTypes = fetchAllColumnTypes(table.nameInDatabaseCase())
                 val query = metadataProvider.getColumns(catalog, schema, table.nameInDatabaseCaseUnquoted())
                 val columns = connection.executeSQL(query) { row, _ ->
-                    row.asColumnMetadata()
+                    row.asColumnMetadata(prefetchedColumnTypes)
                 }.orEmpty()
                 check(columns.isNotEmpty())
                 result[table] = columns
@@ -205,47 +205,33 @@ class R2dbcDatabaseMetadataImpl(
         return result
     }
 
-    // All H2 V1 databases are excluded because Exposed will be dropping support for it soon
-    private fun getColumnType(resultSet: Row, prefetchedColumnTypes: Map<String, String>): String {
-        if (currentDialect !is H2Dialect) {
-            return ""
-        }
+    // TODO is this necessary with R2DBC?
+    /** Returns a map of all the columns' names mapped to their type. */
+    private suspend fun fetchAllColumnTypes(tableName: String): Map<String, String> {
+        if (currentDialect !is H2Dialect) return emptyMap()
 
-        val columnName = resultSet.getString("COLUMN_NAME")
-        val columnType = prefetchedColumnTypes[columnName] ?: resultSet.getString("TYPE_NAME")?.uppercase() ?: return ""
-        val dataType = resultSet.getInt("DATA_TYPE")
+        // TODO extract if needed to metadataProvider for future extension
+        return TransactionManager.current().exec("SHOW COLUMNS FROM $tableName") { row ->
+            val field = row.getString("FIELD")
+            val type = row.getString("TYPE")?.uppercase() ?: ""
+            field?.let { it to type }
+        }?.filterNotNull()?.toList().orEmpty().toMap()
+    }
+
+    // All H2 V1 databases are excluded because Exposed will be dropping support for it soon
+    @OptIn(InternalApi::class)
+    private fun getColumnType(resultSet: Row, prefetchedColumnTypes: Map<String, String>): String {
+        if (currentDialect !is H2Dialect) return ""
+
+        val columnName = resultSet.getString("COLUMN_NAME")!!
+        val columnType = prefetchedColumnTypes[columnName] ?: resultSet.getString("DATA_TYPE_OG")?.uppercase()!!
+        val dataType = resultSet.getInt("DATA_TYPE")!!
         // TODO check if it works with R2DBC. It's possible that R2DBC does not use java.sql types.
         return if (dataType == Types.ARRAY) {
             val baseType = columnType.substringBefore(" ARRAY")
             normalizedColumnType(baseType) + columnType.replaceBefore(" ARRAY", "")
         } else {
             normalizedColumnType(columnType)
-        }
-    }
-
-    // TODO extract to ExposedDatabaseMetadata
-    /** Returns the normalized column type. */
-    private fun normalizedColumnType(columnType: String): String {
-        val h2Mode = currentDialect.h2Mode
-        return when {
-            columnType.matches(Regex("CHARACTER VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
-                H2CompatibilityMode.Oracle -> columnType.replace("CHARACTER VARYING", "VARCHAR2")
-                else -> columnType.replace("CHARACTER VARYING", "VARCHAR")
-            }
-            columnType.matches(Regex("CHARACTER(?:\\(\\d+\\))?")) -> columnType.replace("CHARACTER", "CHAR")
-            columnType.matches(Regex("BINARY VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
-                H2CompatibilityMode.PostgreSQL -> "bytea"
-                H2CompatibilityMode.Oracle -> columnType.replace("BINARY VARYING", "RAW")
-                else -> columnType.replace("BINARY VARYING", "VARBINARY")
-            }
-            columnType == "BOOLEAN" -> when (h2Mode) {
-                H2CompatibilityMode.SQLServer -> "BIT"
-                else -> columnType
-            }
-            columnType == "BINARY LARGE OBJECT" -> "BLOB"
-            columnType == "CHARACTER LARGE OBJECT" -> "CLOB"
-            columnType == "INTEGER" && h2Mode != H2CompatibilityMode.Oracle -> "INT"
-            else -> columnType
         }
     }
 
@@ -322,6 +308,23 @@ class R2dbcDatabaseMetadataImpl(
             }
         }
         return HashMap(existingIndicesCache)
+    }
+
+    override suspend fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
+        val tx = TransactionManager.current()
+        return tables.associateWith { table ->
+            val (catalog, tableSchema) = tableCatalogAndSchema(table)
+            val query = metadataProvider.getCheckConstraints(catalog, tableSchema, table.nameInDatabaseCaseUnquoted())
+            connection.executeSQL(query) { row, _ ->
+                row.getString("CONSTRAINT_NAME")?.let {
+                    CheckConstraint(
+                        tx.identity(table),
+                        it,
+                        row.getString("CHECK_CLAUSE") ?: ""
+                    )
+                }
+            }?.filterNotNull().orEmpty()
+        }
     }
 
     override suspend fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {

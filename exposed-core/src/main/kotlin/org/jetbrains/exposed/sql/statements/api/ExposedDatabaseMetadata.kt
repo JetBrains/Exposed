@@ -120,4 +120,30 @@ abstract class ExposedDatabaseMetadata(val database: String) {
         this.startsWith('\'') && this.endsWith('\'') -> this.trim('\'')
         else -> this
     }
+
+    /** Returns the normalized column type. */
+    @InternalApi
+    protected fun normalizedColumnType(columnType: String): String {
+        val h2Mode = currentDialect.h2Mode
+        return when {
+            columnType.matches(Regex("CHARACTER VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
+                H2CompatibilityMode.Oracle -> columnType.replace("CHARACTER VARYING", "VARCHAR2")
+                else -> columnType.replace("CHARACTER VARYING", "VARCHAR")
+            }
+            columnType.matches(Regex("CHARACTER(?:\\(\\d+\\))?")) -> columnType.replace("CHARACTER", "CHAR")
+            columnType.matches(Regex("BINARY VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
+                H2CompatibilityMode.PostgreSQL -> "bytea"
+                H2CompatibilityMode.Oracle -> columnType.replace("BINARY VARYING", "RAW")
+                else -> columnType.replace("BINARY VARYING", "VARBINARY")
+            }
+            columnType == "BOOLEAN" -> when (h2Mode) {
+                H2CompatibilityMode.SQLServer -> "BIT"
+                else -> columnType
+            }
+            columnType == "BINARY LARGE OBJECT" -> "BLOB"
+            columnType == "CHARACTER LARGE OBJECT" -> "CLOB"
+            columnType == "INTEGER" && h2Mode != H2CompatibilityMode.Oracle -> "INT"
+            else -> columnType
+        }
+    }
 }

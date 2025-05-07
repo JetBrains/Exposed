@@ -746,6 +746,7 @@ public final class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcDatabaseM
 	public fun <init> (Ljava/lang/String;Lio/r2dbc/spi/Connection;Ljava/lang/String;Lorg/jetbrains/exposed/r2dbc/sql/R2dbcScope;)V
 	public fun cleanCache ()V
 	public fun columns ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun existingCheckConstraints ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -801,6 +802,7 @@ public abstract interface class org/jetbrains/exposed/r2dbc/sql/statements/api/R
 public abstract class org/jetbrains/exposed/r2dbc/sql/statements/api/R2dbcExposedDatabaseMetadata : org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMetadata {
 	public fun <init> (Ljava/lang/String;)V
 	public abstract fun columns ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun existingCheckConstraints ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -925,6 +927,7 @@ public abstract class org/jetbrains/exposed/r2dbc/sql/vendors/DatabaseDialectMet
 	public final fun allTablesNamesInAllSchemas (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun catalog (Lorg/jetbrains/exposed/r2dbc/sql/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun columnConstraints ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun existingCheckConstraints ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

@@ -458,7 +458,6 @@ class KotlinInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     @Suppress("MagicNumber")
     override fun notNullValueToDB(value: Instant): Any {
         val dialect = currentDialect
-        
         @OptIn(InternalApi::class)
         return when {
             dialect is SQLiteDialect ->

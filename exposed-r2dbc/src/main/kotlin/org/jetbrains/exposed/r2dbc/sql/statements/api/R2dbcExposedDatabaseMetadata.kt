@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.r2dbc.sql.statements.api
 
 import io.r2dbc.spi.IsolationLevel
+import org.jetbrains.exposed.sql.CheckConstraint
 import org.jetbrains.exposed.sql.ForeignKeyConstraint
 import org.jetbrains.exposed.sql.Index
 import org.jetbrains.exposed.sql.Sequence
@@ -66,6 +67,9 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
 
     /** Returns a map with all the defined indices in each of the specified [tables]. */
     abstract suspend fun existingIndices(vararg tables: Table): Map<Table, List<Index>>
+
+    /** Returns a map with all the defined check constraints in each of the specified [tables]. */
+    abstract suspend fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>>
 
     /** Returns a map with the [PrimaryKeyMetadata] in each of the specified [tables]. */
     abstract suspend fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?>

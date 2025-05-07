@@ -6,11 +6,9 @@ import org.jetbrains.exposed.sql.Index
 import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.vendors.ColumnMetadata
-import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.sql.vendors.SchemaMetadata
 import java.math.BigDecimal
-import java.sql.ResultSet
 
 /**
  * Base class responsible for retrieving and storing information about the JDBC driver and underlying database.
@@ -75,7 +73,7 @@ abstract class JdbcExposedDatabaseMetadata(database: String) : ExposedDatabaseMe
     /** Returns a map with all the defined indices in each of the specified [tables]. */
     abstract fun existingIndices(vararg tables: Table): Map<Table, List<Index>>
 
-    // TODO add KDoc
+    /** Returns a map with all the defined check constraints in each of the specified [tables]. */
     abstract fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>>
 
     /** Returns a map with the [PrimaryKeyMetadata] in each of the specified [tables]. */
@@ -101,8 +99,4 @@ abstract class JdbcExposedDatabaseMetadata(database: String) : ExposedDatabaseMe
      * with the table name used as the key.
      */
     abstract fun tableConstraints(tables: List<Table>): Map<String, List<ForeignKeyConstraint>>
-
-    // TODO KDoc
-    abstract fun fetchAllColumnTypes(tableName: String): Map<String, String>
-
 }

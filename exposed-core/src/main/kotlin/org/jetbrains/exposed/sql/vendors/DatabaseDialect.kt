@@ -1,8 +1,6 @@
 package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.ResultApi
-import java.sql.ResultSet
 import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 
 /**
@@ -130,25 +128,14 @@ interface DatabaseDialect {
         }
     }
 
-//    // TODO move it to JDBC or R2DBC metadata
-//    // TODO remove it here
-//    /** Returns a map of all the columns' names mapped to their type. */
-//    fun fetchAllColumnTypes(tableName: String): Map<String, String> = emptyMap()
-//
-//    // TODO move it to JDBC or R2DBC metadata
-//    // TODO refactor this funciton. It should not take the `ResultSet`/`ResultApi` as a parameter
-//    // TODO make this method internal
-//    /** Returns the SQL type of the column in [resultSet]. If available, [prefetchedColumnTypes] is used to get the column type. */
-//    fun getColumnType(resultSet: ResultApi, prefetchedColumnTypes: Map<String, String> = emptyMap()): String = ""
-
     // TODO move it to JDBC or R2DBC metadata
     /** Returns whether the [columnMetadataSqlType] type and the [columnType] are equivalent.
      *
      * [columnMetadataJdbcType], the value of which comes from [java.sql.Types], is taken into consideration if needed by a specific database.
-     * @see [H2Dialect.areEquivalentColumnTypes] */
+     * @see [H2Dialect.areEquivalentColumnTypes]
+     */
     fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean =
         columnMetadataSqlType.equals(columnType, ignoreCase = true)
-
 
     companion object {
         private val defaultLikePatternSpecialChars = mapOf('%' to null, '_' to null)

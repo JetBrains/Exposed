@@ -177,6 +177,21 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return result
     }
 
+    /** Returns a map of all the columns' names mapped to their type. */
+    private fun fetchAllColumnTypes(tableName: String): Map<String, String> {
+        if (currentDialect !is H2Dialect) return emptyMap()
+
+        val map = mutableMapOf<String, String>()
+        TransactionManager.current().exec("SHOW COLUMNS FROM $tableName") { rs ->
+            while (rs.next()) {
+                val field = rs.getString("FIELD")
+                val type = rs.getString("TYPE").uppercase()
+                map[field] = type
+            }
+        }
+        return map
+    }
+
     override fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>> {
         val result = mutableMapOf<Table, List<ColumnMetadata>>()
         val useSchemaInsteadOfDatabase = currentDialect is MysqlDialect
@@ -196,6 +211,25 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return result
     }
 
+    // All H2 V1 databases are excluded because Exposed will be dropping support for it soon
+    @OptIn(InternalApi::class)
+    private fun getColumnType(resultSet: ResultSet, prefetchedColumnTypes: Map<String, String>): String {
+        if (currentDialect !is H2Dialect) {
+            return ""
+        }
+
+        val columnName = resultSet.getString("COLUMN_NAME")
+        val columnType = prefetchedColumnTypes[columnName] ?: resultSet.getString("TYPE_NAME").uppercase()
+        val dataType = resultSet.getInt("DATA_TYPE")
+        return if (dataType == Types.ARRAY) {
+            val baseType = columnType.substringBefore(" ARRAY")
+            normalizedColumnType(baseType) + columnType.replaceBefore(" ARRAY", "")
+        } else {
+            normalizedColumnType(columnType)
+        }
+    }
+
+    @OptIn(InternalApi::class)
     private fun ResultSet.asColumnMetadata(prefetchedColumnTypes: Map<String, String> = emptyMap()): ColumnMetadata {
         @OptIn(InternalApi::class)
         val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
@@ -233,7 +267,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 }
 
                 val storedIndexTable = if
-                                           (tableSchema == currentSchema!! && currentDialect is OracleDialect) {
+                    (tableSchema == currentSchema!! && currentDialect is OracleDialect) {
                     table.nameInDatabaseCase()
                 } else {
                     table.nameInDatabaseCaseUnquoted()
@@ -279,7 +313,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return HashMap(existingIndicesCache)
     }
 
-    // TODO create this method also for R2DBC
     override fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
         val result = mutableMapOf<Table, List<CheckConstraint>>()
         tables.forEach { table ->
@@ -468,61 +501,6 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                     .map { it.reduce(ForeignKeyConstraint::plus) }
             }
         }
-    }
-
-    // All H2 V1 databases are excluded because Exposed will be dropping support for it soon
-    private fun getColumnType(resultSet: ResultSet, prefetchedColumnTypes: Map<String, String>): String {
-        if (currentDialect !is H2Dialect) {
-            return ""
-        }
-
-        val columnName = resultSet.getString("COLUMN_NAME")
-        val columnType = prefetchedColumnTypes[columnName] ?: resultSet.getString("TYPE_NAME").uppercase()
-        val dataType = resultSet.getInt("DATA_TYPE")
-        return if (dataType == Types.ARRAY) {
-            val baseType = columnType.substringBefore(" ARRAY")
-            normalizedColumnType(baseType) + columnType.replaceBefore(" ARRAY", "")
-        } else {
-            normalizedColumnType(columnType)
-        }
-    }
-
-    // TODO extract to ExposedDatabaseMetadata
-    /** Returns the normalized column type. */
-    private fun normalizedColumnType(columnType: String): String {
-        val h2Mode = currentDialect.h2Mode
-        return when {
-            columnType.matches(Regex("CHARACTER VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
-                H2CompatibilityMode.Oracle -> columnType.replace("CHARACTER VARYING", "VARCHAR2")
-                else -> columnType.replace("CHARACTER VARYING", "VARCHAR")
-            }
-            columnType.matches(Regex("CHARACTER(?:\\(\\d+\\))?")) -> columnType.replace("CHARACTER", "CHAR")
-            columnType.matches(Regex("BINARY VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {
-                H2CompatibilityMode.PostgreSQL -> "bytea"
-                H2CompatibilityMode.Oracle -> columnType.replace("BINARY VARYING", "RAW")
-                else -> columnType.replace("BINARY VARYING", "VARBINARY")
-            }
-            columnType == "BOOLEAN" -> when (h2Mode) {
-                H2CompatibilityMode.SQLServer -> "BIT"
-                else -> columnType
-            }
-            columnType == "BINARY LARGE OBJECT" -> "BLOB"
-            columnType == "CHARACTER LARGE OBJECT" -> "CLOB"
-            columnType == "INTEGER" && h2Mode != H2CompatibilityMode.Oracle -> "INT"
-            else -> columnType
-        }
-    }
-
-    override fun fetchAllColumnTypes(tableName: String): Map<String, String> {
-        val map = mutableMapOf<String, String>()
-        TransactionManager.current().exec("SHOW COLUMNS FROM $tableName") { rs ->
-            while (rs.next()) {
-                val field = rs.getString("FIELD")
-                val type = rs.getString("TYPE").uppercase()
-                map[field] = type
-            }
-        }
-        return map
     }
 
     private fun ResultSet.extractForeignKeys(

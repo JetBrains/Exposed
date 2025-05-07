@@ -132,6 +132,11 @@ abstract class DatabaseDialectMetadata {
         return TransactionManager.current().db.metadata { existingIndices(*tables) }
     }
 
+    /** Returns a map with all the defined check constraints in each of the specified [tables]. */
+    suspend fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
+        return TransactionManager.current().db.metadata { existingCheckConstraints(*tables) }
+    }
+
     /** Returns a map with the primary key metadata in each of the specified [tables]. */
     suspend fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
         return TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }

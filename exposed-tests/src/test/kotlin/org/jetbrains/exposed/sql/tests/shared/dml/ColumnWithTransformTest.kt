@@ -12,7 +12,6 @@ import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.junit.Test
-import java.sql.ResultSet
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

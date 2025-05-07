@@ -1,10 +1,5 @@
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SchemaUtils.addMissingColumnsStatements
-import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveForeignKeyConstraints
-import org.jetbrains.exposed.sql.SchemaUtils.checkExcessiveIndices
 import org.jetbrains.exposed.sql.SchemaUtils.checkMappingConsistence
-import org.jetbrains.exposed.sql.SchemaUtils.createStatements
-import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect

@@ -593,6 +593,7 @@ public abstract interface class org/jetbrains/exposed/sql/statements/api/Exposed
 public abstract class org/jetbrains/exposed/sql/statements/api/JdbcExposedDatabaseMetadata : org/jetbrains/exposed/sql/statements/api/ExposedDatabaseMetadata {
 	public fun <init> (Ljava/lang/String;)V
 	public abstract fun columns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public abstract fun existingCheckConstraints ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public abstract fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
@@ -669,6 +670,7 @@ public final class org/jetbrains/exposed/sql/statements/jdbc/JdbcDatabaseMetadat
 	public fun <init> (Ljava/lang/String;Ljava/sql/DatabaseMetaData;)V
 	public fun cleanCache ()V
 	public fun columns ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public fun existingCheckConstraints ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
@@ -837,6 +839,7 @@ public abstract class org/jetbrains/exposed/sql/vendors/DatabaseDialectMetadata 
 	public final fun allTablesNamesInAllSchemas ()Ljava/util/List;
 	public final fun catalog (Lorg/jetbrains/exposed/sql/JdbcTransaction;)Ljava/lang/String;
 	public final fun columnConstraints ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
+	public final fun existingCheckConstraints ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public fun existingIndices ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public final fun existingPrimaryKeys ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;
 	public final fun existingSequences ([Lorg/jetbrains/exposed/sql/Table;)Ljava/util/Map;

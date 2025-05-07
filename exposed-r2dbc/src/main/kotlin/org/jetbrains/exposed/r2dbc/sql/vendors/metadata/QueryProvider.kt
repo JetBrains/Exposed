@@ -56,4 +56,7 @@ internal interface QueryProvider {
 
     /** Returns an SQL query to retrieve details about foreign key columns from the tables that match the specified pattern. */
     fun getImportedKeys(catalog: String, schemaPattern: String, table: String): String
+
+    /** Returns an SQL query to retrieve details about all check constraints from the tables that match the specified pattern. */
+    fun getCheckConstraints(catalog: String, schemaPattern: String, table: String): String
 }

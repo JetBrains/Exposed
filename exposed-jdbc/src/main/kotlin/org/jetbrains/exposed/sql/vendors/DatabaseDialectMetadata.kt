@@ -2,7 +2,6 @@ package org.jetbrains.exposed.sql.vendors
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -138,14 +137,14 @@ abstract class DatabaseDialectMetadata {
         return TransactionManager.current().db.metadata { existingIndices(*tables) }
     }
 
+    /** Returns a map with all the defined check constraints in each of the specified [tables]. */
+    fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
+        return TransactionManager.current().db.metadata { existingCheckConstraints(*tables) }
+    }
+
     /** Returns a map with the primary key metadata in each of the specified [tables]. */
     fun existingPrimaryKeys(vararg tables: Table): Map<Table, PrimaryKeyMetadata?> {
         return TransactionManager.current().db.metadata { existingPrimaryKeys(*tables) }
-    }
-
-    // TODO KDoc
-    fun existingCheckConstraints(vararg tables: Table): Map<Table, List<CheckConstraint>> {
-        return TransactionManager.current().db.metadata { existingCheckConstraints(*tables) }
     }
 
     /**
@@ -179,11 +178,6 @@ abstract class DatabaseDialectMetadata {
         _allSchemaNames = null
         resetCaches()
     }
-
-    // TODO move it to JDBC or R2DBC metadata
-    // TODO remove it here
-    /** Returns a map of all the columns' names mapped to their type. */
-    open fun fetchAllColumnTypes(tableName: String): Map<String, String> = emptyMap()
 }
 
 private val explicitDialect = ThreadLocal<DatabaseDialectMetadata?>()
