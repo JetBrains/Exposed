@@ -91,6 +91,7 @@ open class MariaDBDialect : MysqlDialect() {
     override val supportsOnlyIdentifiersInGeneratedKeys: Boolean = true
     override val supportsSetDefaultReferenceOption: Boolean = false
     override val supportsCreateSequence: Boolean by lazy {
+        @OptIn(InternalApi::class)
         CoreTransactionManager.currentTransaction().db.isVersionCovers(SEQUENCE_MIN_MAJOR_VERSION, SEQUENCE_MIN_MINOR_VERSION)
     }
 
@@ -99,6 +100,7 @@ open class MariaDBDialect : MysqlDialect() {
 
     @Suppress("MagicNumber")
     override val sequenceMaxValue: Long by lazy {
+        @OptIn(InternalApi::class)
         if (CoreTransactionManager.currentTransaction().db.isVersionCovers(11, 5)) {
             super.sequenceMaxValue
         } else {
@@ -108,7 +110,10 @@ open class MariaDBDialect : MysqlDialect() {
 
     /** Returns `true` if the MariaDB database version is greater than or equal to 5.3. */
     @Suppress("MagicNumber")
-    override fun isFractionDateTimeSupported(): Boolean = CoreTransactionManager.currentTransaction().db.isVersionCovers(5, 3)
+    override fun isFractionDateTimeSupported(): Boolean {
+        @OptIn(InternalApi::class)
+        return CoreTransactionManager.currentTransaction().db.isVersionCovers(5, 3)
+    }
 
     override fun isTimeZoneOffsetSupported(): Boolean = false
 

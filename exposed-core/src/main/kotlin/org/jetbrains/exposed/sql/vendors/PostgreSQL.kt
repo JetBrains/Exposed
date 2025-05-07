@@ -54,6 +54,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
     }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
+        @OptIn(InternalApi::class)
         val tr = CoreTransactionManager.currentTransaction()
         return when (expr.separator) {
             null -> tr.throwUnsupportedException("PostgreSQL requires explicit separator in STRING_AGG function.")
@@ -173,6 +174,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
+        @OptIn(InternalApi::class)
         path?.let {
             CoreTransactionManager.currentTransaction().throwUnsupportedException("PostgreSQL does not support a JSON path argument")
         }
@@ -192,6 +194,7 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
+        @OptIn(InternalApi::class)
         if (path.size > 1) {
             CoreTransactionManager.currentTransaction().throwUnsupportedException("PostgreSQL does not support multiple JSON path arguments")
         }
@@ -367,6 +370,7 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        @OptIn(InternalApi::class)
         val list = mutableListOf(
             buildString {
                 val tr = CoreTransactionManager.currentTransaction()

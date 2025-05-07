@@ -165,6 +165,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
         queryBuilder: QueryBuilder
     ) {
         val oneOrAll = optional?.lowercase()
+        @OptIn(InternalApi::class)
         if (oneOrAll != "one" && oneOrAll != "all") {
             CoreTransactionManager.currentTransaction().throwUnsupportedException("MySQL requires a single optional argument: 'one' or 'all'")
         }
@@ -319,6 +320,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
     }
 
     override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String {
+        @OptIn(InternalApi::class)
         if (size == null && offset > 0) {
             CoreTransactionManager.currentTransaction().throwUnsupportedException(
                 "${currentDialect.name} doesn't support OFFSET clause without LIMIT"
@@ -336,11 +338,12 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
  * MySQL dialect implementation.
  */
 open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTANCE, MysqlFunctionProvider.INSTANCE) {
-
+    @OptIn(InternalApi::class)
     internal val isMysql8: Boolean by lazy {
         CoreTransactionManager.currentTransaction().db.isVersionCovers(BigDecimal("8.0"))
     }
 
+    @OptIn(InternalApi::class)
     internal val fullVersion: String by lazy {
         CoreTransactionManager.currentTransaction().db.fullVersion
     }
@@ -357,7 +360,10 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
 
     /** Returns `true` if the MySQL database version is greater than or equal to 5.6. */
     @Suppress("MagicNumber")
-    open fun isFractionDateTimeSupported(): Boolean = CoreTransactionManager.currentTransaction().db.isVersionCovers(5, 6)
+    open fun isFractionDateTimeSupported(): Boolean {
+        @OptIn(InternalApi::class)
+        return CoreTransactionManager.currentTransaction().db.isVersionCovers(5, 6)
+    }
 
     /** Returns `true` if a MySQL database is being used and its version is greater than or equal to 8.0. */
     open fun isTimeZoneOffsetSupported(): Boolean = isMysql8

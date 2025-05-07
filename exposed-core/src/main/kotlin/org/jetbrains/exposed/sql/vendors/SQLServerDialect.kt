@@ -93,6 +93,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
     }
 
     override fun <T : String?> groupConcat(expr: GroupConcat<T>, queryBuilder: QueryBuilder) {
+        @OptIn(InternalApi::class)
         val tr = CoreTransactionManager.currentTransaction()
         return when {
             expr.separator == null -> tr.throwUnsupportedException("SQL Server requires explicit separator in STRING_AGG")
@@ -122,7 +123,10 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         pattern: Expression<String>,
         caseSensitive: Boolean,
         queryBuilder: QueryBuilder
-    ): Unit = CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead.")
+    ) {
+        @OptIn(InternalApi::class)
+        CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLServer doesn't provide built in REGEXP expression, use LIKE instead.")
+    }
 
     override fun <T> date(expr: Expression<T>, queryBuilder: QueryBuilder) = queryBuilder {
         append("CAST(", expr, " AS DATE)")
@@ -179,6 +183,7 @@ internal object SQLServerFunctionProvider : FunctionProvider() {
         jsonType: IColumnType<*>,
         queryBuilder: QueryBuilder
     ) {
+        @OptIn(InternalApi::class)
         if (path.size > 1) {
             CoreTransactionManager.currentTransaction().throwUnsupportedException("SQLServer does not support multiple JSON path arguments")
         }
@@ -358,6 +363,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
     }
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
+        @OptIn(InternalApi::class)
         val transaction = CoreTransactionManager.currentTransaction()
 
         val alterTablePart = "ALTER TABLE ${transaction.identity(column.table)} "

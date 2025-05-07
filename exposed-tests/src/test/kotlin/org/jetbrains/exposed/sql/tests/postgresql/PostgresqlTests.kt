@@ -33,7 +33,7 @@ class PostgresqlTests : DatabaseTestsBase() {
             return table.selectAll().where { table.id eq id }.forUpdate(option).city()
         }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+        withDb(TestDB.ALL_POSTGRES) {
             withTable {
                 val name = "name"
                 table.insert {
@@ -95,7 +95,7 @@ class PostgresqlTests : DatabaseTestsBase() {
                 transform(rs)
             }
         }
-        withDb(listOf(TestDB.POSTGRESQLNG, TestDB.POSTGRESQL)) {
+        withDb(TestDB.ALL_POSTGRES) {
             val defaultPKName = "tester_pkey"
             SchemaUtils.createMissingTablesAndColumns(tester1)
             assertPrimaryKey {

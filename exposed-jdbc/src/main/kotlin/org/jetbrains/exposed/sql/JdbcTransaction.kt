@@ -48,7 +48,7 @@ open class JdbcTransaction(
 
     internal var openResultSetsCount: Int = 0
 
-    val interceptors = arrayListOf<StatementInterceptor>()
+    internal val interceptors = arrayListOf<StatementInterceptor>()
 
     init {
         addLogger(db.config.sqlLogger)

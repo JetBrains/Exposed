@@ -4,11 +4,16 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.currentDialectTest
 import org.jetbrains.exposed.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
@@ -16,7 +21,7 @@ import org.junit.Test
 import org.postgresql.util.PGobject
 
 class EnumerationTests : DatabaseTestsBase() {
-    private val supportsCustomEnumerationDB = TestDB.ALL_MYSQL_LIKE + listOf(TestDB.H2_V2, TestDB.H2_V2_PSQL, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)
+    private val supportsCustomEnumerationDB = TestDB.ALL_MYSQL_LIKE + TestDB.ALL_POSTGRES_LIKE
 
     internal enum class Foo {
         Bar, Baz;

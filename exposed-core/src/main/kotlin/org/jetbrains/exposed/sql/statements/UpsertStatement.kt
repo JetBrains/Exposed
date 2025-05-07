@@ -89,6 +89,7 @@ sealed interface UpsertBuilder {
      */
     fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
 
+    @OptIn(InternalApi::class)
     private class InsertValue<T>(
         val column: Column<T>,
         override val columnType: IColumnType<T & Any>

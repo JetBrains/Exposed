@@ -3,9 +3,14 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     kotlin("jvm") apply true
+
+    // exposed-json dependencies
+    alias(libs.plugins.serialization)
 }
 
 kotlin {
+    // REQUIRED for exposed-crypt tests, but makes Oracle tests fail...
+//    jvmToolchain(17)
     jvmToolchain(11)
 }
 
@@ -16,6 +21,7 @@ repositories {
 dependencies {
     implementation(libs.kotlinx.coroutines.reactive)
     implementation(libs.kotlinx.coroutines.debug)
+    implementation(libs.kotlinx.coroutines.test)
     implementation(libs.r2dbc.spi)
 
     implementation(kotlin("test-junit"))
@@ -30,19 +36,34 @@ dependencies {
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
 
-    testRuntimeOnly(libs.r2dbc.h2)
+    // non-exposed-tests module dependencies
+    // --- start ---
+    testImplementation(project(":exposed-money"))
+//    testImplementation(project(":exposed-crypt"))
+    testImplementation(project(":exposed-json"))
+    testImplementation(project(":exposed-java-time"))
+    testImplementation(project(":exposed-jodatime"))
+    // --- end ----
+
+    testRuntimeOnly(libs.r2dbc.pool)
+    testRuntimeOnly(libs.r2dbc.h2) {
+        exclude(group = "com.h2database", module = "h2")
+    }
     testRuntimeOnly(libs.r2dbc.mariadb)
     testRuntimeOnly(libs.r2dbc.mysql)
     testRuntimeOnly(libs.r2dbc.oracle)
-    testRuntimeOnly(libs.r2dbc.postgresql)
+    testImplementation(libs.r2dbc.postgresql)
+    testCompileOnly(libs.postgre)
     testRuntimeOnly(libs.r2dbc.sqlserver)
 
     testImplementation(libs.logcaptor)
-    testImplementation(libs.kotlinx.coroutines.test)
+
+    // exposed-money dependencies
+    testImplementation(libs.moneta)
 }
 
 tasks.withType<Test>().configureEach {
-    if (JavaVersion.VERSION_1_8 > JavaVersion.current()) {
+    if (JavaVersion.VERSION_11 > JavaVersion.current()) {
         jvmArgs = listOf("-XX:MaxPermSize=256m")
     }
     testLogging {

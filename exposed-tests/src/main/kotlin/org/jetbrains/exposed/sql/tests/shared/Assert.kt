@@ -33,12 +33,12 @@ fun <T> assertEqualCollections(actual: Iterable<T>, expected: Collection<T>) {
 }
 
 fun <T> assertEqualLists(actual: List<T>, expected: List<T>) {
-    assertEquals(actual.size, expected.size, "Count mismatch on ${currentDialectIfAvailableTest?.name.orEmpty()}")
+    assertEquals(expected.size, actual.size, "Count mismatch on ${currentDialectIfAvailableTest?.name.orEmpty()}")
     expected.forEachIndexed { index, exp ->
         val act = actual.getOrElse(index) {
             fail("Value absent at pos $index on ${currentDialectIfAvailableTest?.name.orEmpty()}")
         }
-        assertEquals(act, exp, "Error at pos $index on ${currentDialectIfAvailableTest?.name.orEmpty()}:")
+        assertEquals(exp, act, "Error at pos $index on ${currentDialectIfAvailableTest?.name.orEmpty()}:")
     }
 }
 

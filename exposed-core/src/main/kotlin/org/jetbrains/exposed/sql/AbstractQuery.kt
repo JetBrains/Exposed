@@ -7,6 +7,9 @@ import org.jetbrains.exposed.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.vendors.currentDialect
 
+@Suppress("ForbiddenComment")
+// TODO: check if Statement<T> is limited to ResultApi & if we can introduce typed exec()s to avoid casting ResultApi
+// TODO: consider naming this as QueryState (or something related to state of the query) and check that it has only single responsibility
 /** Base class representing an SQL query that returns a [ResultSet] when executed. */
 abstract class AbstractQuery<T : AbstractQuery<T>>(
     targets: List<Table>
@@ -228,6 +231,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
                     }
                 set.realFields.appendTo { +it }
             }
+            @OptIn(InternalApi::class)
             if (set.source != Table.Dual || currentDialect.supportsDualTableConcept) {
                 append(" FROM ")
                 set.source.describe(CoreTransactionManager.currentTransaction(), this)

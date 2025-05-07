@@ -65,6 +65,7 @@ data class ForeignKeyConstraint(
         name: String?
     ) : this(mapOf(from to target), onUpdate, onDelete, name)
 
+    @OptIn(InternalApi::class)
     private val tx: Transaction
         get() = CoreTransactionManager.currentTransaction()
 
@@ -220,6 +221,7 @@ data class CheckConstraint(
     }
 
     companion object {
+        @OptIn(InternalApi::class)
         internal fun from(table: Table, name: String, op: Op<Boolean>): CheckConstraint {
             require(name.isNotBlank()) { "Check constraint name cannot be blank" }
             val tr = CoreTransactionManager.currentTransaction()

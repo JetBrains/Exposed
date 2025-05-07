@@ -14,8 +14,7 @@ import kotlin.reflect.KProperty
  * @param op The conditional expression to use when querying for matching entities.
  * @param factory The [EntityClass] to use when searching for matching entities.
  */
-// HERE
-class View<out Target : Entity<*>> (val op: Op<Boolean>, val factory: EntityClass<*, Target>) : SizedIterable<Target> {
+class View<out Target : Entity<*>>(val op: Op<Boolean>, val factory: EntityClass<*, Target>) : SizedIterable<Target> {
     override fun limit(count: Int): SizedIterable<Target> = factory.find(op).limit(count)
     override fun offset(start: Long): SizedIterable<Target> = factory.find(op).offset(start)
     override fun count(): Long = factory.find(op).count()

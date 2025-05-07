@@ -17,6 +17,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.test.assertNotEquals
 
 class H2Tests : DatabaseTestsBase() {
     @Test
@@ -32,6 +33,7 @@ class H2Tests : DatabaseTestsBase() {
 
                 assertTrue(systemTestName == "h2_v2" || systemTestName == "h2_v1")
                 if (systemTestName == "h2_v2") {
+                    assertNotEquals("2.1.214", version)
                     assertEquals("2", version?.first()?.toString())
                 }
                 if (systemTestName == "h2_v1") {

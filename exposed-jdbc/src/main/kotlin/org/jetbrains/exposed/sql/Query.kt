@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.sql
 
+import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.first
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
@@ -75,6 +77,9 @@ open class Query(
      * @param columns The columns and their sort orders to apply the `DISTINCT ON` clause.
      * @return The current `Query` instance with the `DISTINCT ON` clause and reordering applied.
      */
+    // TODO Check if it could be moved to the base query class,
+    // TODO probably we need to create another base query class that extends AbstractQuery class and used
+    // TODO as a base for R2DBC and JDBC Queries
     fun withDistinctOn(vararg columns: Pair<Column<*>, SortOrder>): Query = apply {
         if (columns.isEmpty()) return@apply
 
@@ -143,7 +148,10 @@ open class Query(
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
      * @sample org.jetbrains.exposed.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
-    fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Iterable<Iterable<ResultRow>> {
+    fun fetchBatchedResults(
+        batchSize: Int = 1000,
+        sortOrder: SortOrder = SortOrder.ASC
+    ): Iterable<Iterable<ResultRow>> {
         require(batchSize > 0) { "Batch size should be greater than 0." }
         require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
         require(orderByExpressions.isEmpty()) {
@@ -158,7 +166,8 @@ open class Query(
         limit = batchSize
         (orderByExpressions as MutableList).add(autoIncColumn to sortOrder)
         val whereOp = where ?: Op.TRUE
-        val fetchInAscendingOrder = sortOrder in listOf(SortOrder.ASC, SortOrder.ASC_NULLS_FIRST, SortOrder.ASC_NULLS_LAST)
+        val fetchInAscendingOrder =
+            sortOrder in listOf(SortOrder.ASC, SortOrder.ASC_NULLS_FIRST, SortOrder.ASC_NULLS_LAST)
 
         return object : Iterable<Iterable<ResultRow>> {
             override fun iterator(): Iterator<Iterable<ResultRow>> {
@@ -176,6 +185,7 @@ open class Query(
                                                 (it greater lastOffset.toInt())
                                             } ?: (autoIncColumn greater lastOffset)
                                         }
+
                                         else -> (autoIncColumn greater lastOffset)
                                     }
                                 } else {
@@ -187,6 +197,7 @@ open class Query(
                                                 (it less lastOffset.toInt())
                                             } ?: (autoIncColumn less lastOffset)
                                         }
+
                                         else -> (autoIncColumn less lastOffset)
                                     }
                                 }
@@ -248,7 +259,10 @@ open class Query(
         } else {
             try {
                 count = true
+                // TODO !!! it would be not nice if users have to cast `rs` to `JdbcResult`, it's large breaking change.
                 transaction.exec(this) { rs ->
+                    check(rs is JdbcResult) { "Unexpected result type: $rs" }
+
                     rs.next()
                     (rs.getObject(1) as? Number)?.toLong().also {
                         rs.close()
@@ -270,6 +284,7 @@ open class Query(
         try {
             if (!isForUpdate()) limit = 1
             val resultSet = transaction.exec(this)!!
+            check(resultSet is JdbcResult) { "Unexpected result type: $resultSet" }
             return !resultSet.next().also { resultSet.close() }
         } finally {
             limit = oldLimit

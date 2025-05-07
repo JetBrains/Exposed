@@ -16,6 +16,7 @@ import org.jetbrains.exposed.sql.vendors.h2Mode
  * @param limit Maximum number of rows to delete.
  * @param targetTables List of specific tables from [targetsSet] to delete rows from.
  */
+@Suppress("ForbiddenComment", "AnnotationSpacing")
 open class DeleteStatement(
     val targetsSet: ColumnSet,
     val where: Op<Boolean>? = null,
@@ -79,5 +80,41 @@ open class DeleteStatement(
         }
         where?.toQueryBuilder(this)
         listOf(args)
+    }
+
+    companion object {
+        @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
+        @Deprecated(
+            message = """
+                Statement execution has been removed from exposed-core.
+                Replace directly with a table extension function:
+                    `table.deleteWhere(limit) { op }` OR `table.deleteIgnoreWhere(limit) { op }`
+
+                Or pass the expected statement to an instance of Executable:
+                For JDBC:
+                `DeleteBlockingExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
+
+                FOR R2DBC:
+                `DeleteSuspendExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
+            """,
+            level = DeprecationLevel.ERROR
+        )
+        fun where(transaction: Transaction, table: Table, op: Op<Boolean>, isIgnore: Boolean = false, limit: Int? = null): Int = 0
+
+        @Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
+        @Deprecated(
+            message = """
+                Statement execution has been removed from exposed-core.
+                Replace directly with a table extension function or pass the expected statement to an instance of Executable:
+
+                For JDBC:
+                `DeleteBlockingExecutable(buildStatement { table.deleteAll() }).execute(transaction) ?: 0`
+
+                FOR R2DBC:
+                `DeleteSuspendExecutable(buildStatement { table.deleteAll() }).execute(transaction) ?: 0`
+            """,
+            level = DeprecationLevel.ERROR
+        )
+        fun all(transaction: Transaction, table: Table): Int = 0
     }
 }

@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.ResultSet
 
+// TODO KDocs should be added
 open class ReturningBlockingExecutable(
     override val statement: ReturningStatement
 ) : BlockingExecutable<ResultApi, ReturningStatement>, Iterable<ResultRow> {

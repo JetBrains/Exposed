@@ -6,8 +6,9 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.IDateColumnType
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.statements.api.ResultApi
+import org.jetbrains.exposed.sql.statements.api.RowApi
 import org.jetbrains.exposed.sql.vendors.*
+import java.sql.Timestamp
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset.UTC
@@ -214,6 +215,15 @@ class KotlinLocalDateColumnType : ColumnType<LocalDate>(), IDateColumnType {
         else -> super.nonNullValueAsDefaultString(value)
     }
 
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        val dialect = currentDialect
+        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            rs.getObject(index, java.sql.Timestamp::class.java)
+        } else {
+            super.readObject(rs, index)
+        }
+    }
+
     private fun longToLocalDate(instant: Long) = Instant.fromEpochMilliseconds(instant).toLocalDateTime(DEFAULT_TIME_ZONE).date
 
     companion object {
@@ -263,11 +273,21 @@ class KotlinLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnTy
             SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value.toJavaLocalDateTime().atZone(ZoneId.systemDefault()))
         else -> {
             val instant = value.toJavaLocalDateTime().atZone(ZoneId.systemDefault()).toInstant()
-            java.sql.Timestamp(instant.toEpochMilli()).apply { nanos = instant.nano }
+            java.sql.Timestamp(instant.toEpochMilli())
+                .apply { nanos = instant.nano }
+                .let {
+                    // TODO this check fixes the problem with precisions on R2DBC MySql
+                    //  Related test: org.jetbrains.exposed.r2dbc.sql.tests.kotlindatetime.KotlinTimeTests::testStoringLocalDateTimeWithNanos
+                    if (currentDialect is MysqlDialect) {
+                        it.toString()
+                    } else {
+                        it
+                    }
+                }
         }
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? {
+    override fun readObject(rs: RowApi, index: Int): Any? {
         return if (currentDialect is OracleDialect) {
             rs.getObject(index, java.sql.Timestamp::class.java)
         } else {
@@ -338,7 +358,7 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
     override fun notNullValueToDB(value: LocalTime): Any = when {
         currentDialect is SQLiteDialect -> DEFAULT_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())
         currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
-            ORACLE_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())
+            Timestamp.valueOf(ORACLE_TIME_STRING_FORMATTER.format(value.toJavaLocalTime())).toInstant()
         else -> java.sql.Time.valueOf(value.toJavaLocalTime())
     }
 
@@ -346,6 +366,46 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         is PostgreSQLDialect -> "${nonNullValueToString(value)}::time without time zone"
         is MysqlDialect -> "'${MYSQL_TIME_AS_DEFAULT_STRING_FORMATTER.format(value.toJavaLocalTime())}'"
         else -> super.nonNullValueAsDefaultString(value)
+    }
+
+    // TODO check if this logic can be moved to TypeMapper level
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        val dialect = currentDialect
+        return if (dialect is OracleDialect) {
+            rs.getObject(index, java.sql.Timestamp::class.java)
+        } else if (dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+            // For H2 in Oracle compatibility mode it could be possible to get both LocalDateTime, Timestamp, or String values.
+            // Here we convert all of them into Timestamp
+            val dateTime = rs.getObject(index) ?: return null
+
+            require(dateTime is java.time.LocalDateTime || dateTime is String || dateTime is java.sql.Timestamp) {
+                "Unexpected value of type ${dateTime::class.qualifiedName} for Oracle H2 compatibility mode"
+            }
+
+            when (dateTime) {
+                is java.sql.Timestamp -> dateTime
+                is java.time.LocalDateTime -> {
+                    java.sql.Timestamp.valueOf(dateTime)
+                }
+                is String -> {
+                    // Parse the time string in the format "1970-01-01 HH:mm:ss[.SSSSSS]"
+                    @Suppress("MagicNumber")
+                    val formatter = java.time.format.DateTimeFormatterBuilder()
+                        .appendPattern("yyyy-MM-dd HH:mm:ss")
+                        .optionalStart()
+                        .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+                        .optionalEnd()
+                        .toFormatter(Locale.ROOT)
+                    val dateTime = java.time.LocalDateTime.parse(dateTime, formatter)
+                    java.sql.Timestamp.valueOf(dateTime)
+                }
+                else -> {
+                    null
+                }
+            }
+        } else {
+            super.readObject(rs, index)
+        }
     }
 
     private fun longToLocalTime(millis: Long) = Instant.fromEpochMilliseconds(millis).toLocalDateTime(DEFAULT_TIME_ZONE).time
@@ -389,7 +449,7 @@ class KotlinInstantColumnType : ColumnType<Instant>(), IDateColumnType {
         else -> valueFromDB(value.toString())
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? {
+    override fun readObject(rs: RowApi, index: Int): Any? {
         return rs.getObject(index, java.sql.Timestamp::class.java)
     }
 
@@ -459,7 +519,7 @@ class KotlinOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumn
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
-    override fun readObject(rs: ResultApi, index: Int): Any? = when (currentDialect) {
+    override fun readObject(rs: RowApi, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
         is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java)
         else -> rs.getObject(index, OffsetDateTime::class.java)

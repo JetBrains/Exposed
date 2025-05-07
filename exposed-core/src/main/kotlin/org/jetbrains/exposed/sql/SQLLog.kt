@@ -32,6 +32,7 @@ object Slf4jSqlDebugLogger : SqlLogger {
      * **Note:** This is only logged if DEBUG level is currently enabled.
      */
     override fun log(context: StatementContext, transaction: Transaction) {
+        @OptIn(InternalApi::class)
         if (exposedLogger.isDebugEnabled) {
             exposedLogger.debug(context.expandArgs(CoreTransactionManager.currentTransaction()))
         }

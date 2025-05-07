@@ -18,7 +18,8 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** Clears and resets any stored information about the database's current schema to default values. */
     abstract fun resetCurrentScheme()
 
-    // THIS should become protected after the usage in DatabaseDialect is fully deprecated
+    @Suppress("ForbiddenComment")
+    // TODO: THIS should become protected after the usage in DatabaseDialect is fully deprecated
     /**
      * Returns the corresponding [ReferenceOption] for the specified [refOption] result,
      * or `null` if the database result is an invalid string without a corresponding match.
@@ -33,10 +34,13 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     abstract val identifierManager: IdentifierManagerApi
 
     @InternalApi
+    @Suppress("ForbiddenComment")
+    // TODO: drop inner and move to utils package
     protected inner class CachableMapWithDefault<K, V>(
         private val map: MutableMap<K, V> = mutableMapOf(),
         val default: (K) -> V
     ) : Map<K, V> by map {
+        // TODO review replacement of get vs getOrDefault() in RDMI.kt
         override fun get(key: K): V? = map.getOrPut(key) { default(key) }
         override fun containsKey(key: K): Boolean = true
         override fun isEmpty(): Boolean = false
@@ -87,6 +91,8 @@ abstract class ExposedDatabaseMetadata(val database: String) {
      *
      * @return `null` - if the value was set to `null` or not configured. `defaultValue` in other case.
      */
+    @Suppress("ForbiddenComment")
+    // TODO: move to the utility class, rename
     @InternalApi
     protected fun sanitizedDefault(defaultValue: String): String? {
         val dialect = currentDialect

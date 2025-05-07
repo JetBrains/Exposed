@@ -157,7 +157,7 @@ class Database private constructor(
         }
 
         /** Registers a new [DatabaseDialectMetadata] with the identifier [prefix]. */
-        private fun registerDialectMetadata(prefix: String, metadata: () -> DatabaseDialectMetadata) {
+        fun registerDialectMetadata(prefix: String, metadata: () -> DatabaseDialectMetadata) {
             dialectsMetadata[prefix.lowercase()] = metadata
         }
 
@@ -180,7 +180,7 @@ class Database private constructor(
                 connectionAutoRegistration(getNewConnection().apply { setupConnection(this) })
             }.apply {
                 CoreTransactionManager.registerDatabaseManager(this, manager(this))
-                // ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
+                // TODO ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
                 // TransactionManager.registerManager(this, manager(this))
             }
         }

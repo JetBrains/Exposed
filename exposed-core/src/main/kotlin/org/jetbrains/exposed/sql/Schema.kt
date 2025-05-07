@@ -26,6 +26,7 @@ data class Schema(
 ) {
     /** This schema's name in proper database casing. */
     val identifier
+        @OptIn(InternalApi::class)
         get() = CoreTransactionManager.currentTransaction().db.identifierManager.cutIfNecessaryAndQuote(name)
 
     /** The SQL statements that create this schema. */

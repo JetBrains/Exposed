@@ -4,10 +4,14 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.JdbcTransaction
 import org.jetbrains.exposed.sql.statements.api.ExposedConnection
 
+// TODO add missed KDocs
 interface JdbcTransactionInterface : TransactionInterface {
     override val db: Database
 
     override val outerTransaction: JdbcTransaction?
+
+    /** The transaction isolation level of the transaction, which may differ from the set database level. */
+    val transactionIsolation: Int
 
     /** The database connection used by the transaction. */
     val connection: ExposedConnection<*>
@@ -27,6 +31,7 @@ interface JdbcTransactionInterface : TransactionInterface {
  *
  * @throws [RuntimeException] If a manager has not been registered for the database.
  */
+// TODO check if we can move it to Database to make it field/method there.
 @Suppress("TooGenericExceptionThrown")
 val Database?.transactionManager: TransactionManager
     get() = TransactionManager.managerFor(this)

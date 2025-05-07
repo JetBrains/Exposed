@@ -14,6 +14,7 @@ abstract class VendorDialect(
 ) : DatabaseDialect {
 
     protected val identifierManager
+        @OptIn(InternalApi::class)
         get() = CoreTransactionManager.currentTransaction().db.identifierManager
 
     @Suppress("UnnecessaryAbstractClass")
@@ -56,6 +57,7 @@ abstract class VendorDialect(
      * Unique indexes can be partial
      */
     override fun createIndex(index: Index): String {
+        @OptIn(InternalApi::class)
         val t = CoreTransactionManager.currentTransaction()
         val quotedTableName = t.identity(index.table)
         val quotedIndexName = t.db.identifierManager.cutIfNecessaryAndQuote(index.indexName)
@@ -107,9 +109,11 @@ abstract class VendorDialect(
     }
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
+        @OptIn(InternalApi::class)
         listOf("ALTER TABLE ${CoreTransactionManager.currentTransaction().identity(column.table)} MODIFY COLUMN ${column.descriptionDdl(true)}")
 
     override fun addPrimaryKey(table: Table, pkName: String?, vararg pkColumns: Column<*>): String {
+        @OptIn(InternalApi::class)
         val transaction = CoreTransactionManager.currentTransaction()
         val columns = pkColumns.joinToString(prefix = "(", postfix = ")") { transaction.identity(it) }
         val constraint = pkName?.let { " CONSTRAINT ${identifierManager.quoteIfNecessary(it)} " } ?: " "

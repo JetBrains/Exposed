@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.jetbrains.exposed.sql.vendors.currentDialectMetadata
 import java.io.File
 
+// TODO MigrationUtils needs jdbc || r2bdc; add a exposed-migration-r2dbc module?
 /**
  * Utility functions that assist with generating the necessary SQL statements to migrate database schema objects.
  */

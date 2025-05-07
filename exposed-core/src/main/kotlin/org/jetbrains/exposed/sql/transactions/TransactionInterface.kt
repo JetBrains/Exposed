@@ -8,9 +8,6 @@ interface TransactionInterface {
     /** The database on which the transaction tasks are performed. */
     val db: DatabaseApi
 
-    /** The transaction isolation level of the transaction, which may differ from the set database level. */
-    val transactionIsolation: Int
-
     /** Whether the transaction is in read-only mode. */
     val readOnly: Boolean
 

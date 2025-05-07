@@ -13,7 +13,7 @@ class CreateDatabaseTest : DatabaseTestsBase() {
     @Test
     @Suppress("SwallowedException")
     fun testCreateAndDropDatabase() {
-        withDb(excludeSettings = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.ORACLE)) {
+        withDb(excludeSettings = TestDB.ALL_POSTGRES + TestDB.ORACLE) {
             val dbName = "jetbrains"
             try {
                 SchemaUtils.dropDatabase(dbName)
@@ -36,7 +36,7 @@ class CreateDatabaseTest : DatabaseTestsBase() {
 
     @Test
     fun testListDatabasesWithAutoCommit() {
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLSERVER)) {
+        withDb(TestDB.ALL_POSTGRES + TestDB.SQLSERVER) {
             connection.autoCommit = true
             val dbName = "jetbrains"
             val initial = SchemaUtils.listDatabases()
@@ -56,7 +56,7 @@ class CreateDatabaseTest : DatabaseTestsBase() {
 
     @Test
     fun testListDatabases() {
-        withDb(excludeSettings = listOf(TestDB.ORACLE, TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.SQLSERVER)) {
+        withDb(excludeSettings = TestDB.ALL_POSTGRES + TestDB.SQLSERVER + TestDB.ORACLE) {
             val dbName = "jetbrains"
             val initial = SchemaUtils.listDatabases()
             if (dbName in initial) {
@@ -75,7 +75,7 @@ class CreateDatabaseTest : DatabaseTestsBase() {
     @Test
     fun testCreateAndDropDatabaseWithAutoCommit() {
         // PostgreSQL needs auto commit to be "ON" to allow create database statement
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG)) {
+        withDb(TestDB.ALL_POSTGRES) {
             connection.autoCommit = true
             val dbName = "jetbrains"
             SchemaUtils.createDatabase(dbName)
