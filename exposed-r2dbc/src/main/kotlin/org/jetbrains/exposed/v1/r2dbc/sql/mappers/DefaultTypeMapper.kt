@@ -15,6 +15,9 @@ import org.jetbrains.exposed.v1.sql.vendors.currentDialect
  */
 class DefaultTypeMapper : TypeMapper {
 
+    // TODO we could add ordering for column mappers based on priority
+    //  fun priority(): Double = 0.5
+
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
@@ -24,6 +27,7 @@ class DefaultTypeMapper : TypeMapper {
         index: Int
     ): Boolean {
         if (value == null) {
+            // TODO this code could be simplified
             if (currentDialect is PostgreSQLDialect) {
                 val typeProvider = currentDialect.dataTypeProvider
                 when (columnType.sqlType()) {

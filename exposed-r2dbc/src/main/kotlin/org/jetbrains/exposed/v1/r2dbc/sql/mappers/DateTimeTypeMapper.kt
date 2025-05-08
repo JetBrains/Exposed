@@ -31,6 +31,8 @@ class DateTimeTypeMapper : TypeMapper {
     ): Boolean {
         if (columnType !is IDateColumnType) return false
 
+        // TODO if we have priority for TypeMappers we could split this logic into different type mappers
+
         // most db throw: Cannot encode [null] parameter of type [java.time.temporal.Temporal]
         val temporalSupported = dialect is OracleDialect || (dialect is MysqlDialect && dialect !is MariaDBDialect)
         if (value == null && temporalSupported) {

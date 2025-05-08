@@ -2,13 +2,14 @@ package org.jetbrains.exposed.v1.sql.statements
 
 import org.jetbrains.exposed.v1.sql.InternalApi
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
+import org.jetbrains.exposed.v1.sql.ResultRow
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
 import java.sql.ResultSet
 
 // TODO KDocs should be added
 open class BatchInsertBlockingExecutable<S : BaseBatchInsertStatement>(
     override val statement: S
-) : InsertBlockingExecutable<List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>, S>(statement) {
+) : InsertBlockingExecutable<List<ResultRow>, S>(statement) {
     override val isAlwaysBatch = true
 
     override fun prepared(transaction: JdbcTransaction, sql: String): JdbcPreparedStatementApi {

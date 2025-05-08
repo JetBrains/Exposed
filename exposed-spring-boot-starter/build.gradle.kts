@@ -21,7 +21,8 @@ dependencies {
     api(project(":exposed-core"))
     api(project(":exposed-dao"))
     api(project(":spring-transaction"))
-    // how to avoid this
+    // TODO how to avoid this
+    //  Should we create r2dbc-spring-boot-starter module?
     compileOnly(project(":exposed-jdbc"))
     api(libs.spring.boot.starter.jdbc)
     api(libs.spring.boot.autoconfigure)

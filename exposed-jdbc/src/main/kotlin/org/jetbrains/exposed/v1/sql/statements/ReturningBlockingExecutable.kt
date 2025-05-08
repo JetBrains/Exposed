@@ -21,7 +21,7 @@ open class ReturningBlockingExecutable(
         return Iterable { resultIterator }.iterator()
     }
 
-    private inner class ResultIterator(rs: ResultSet) : StatementIterator<Expression<*>, _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>(rs) {
+    private inner class ResultIterator(rs: ResultSet) : StatementIterator<Expression<*>, ResultRow>(rs) {
         override val fieldIndex = statement.returningExpressions.withIndex()
             .associateBy({ it.value }, { it.index })
 

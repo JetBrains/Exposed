@@ -160,7 +160,7 @@ open class OrderConfig {
 @Transactional
 open class Orders {
 
-    open fun findAll(): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> = Order.selectAll().toList()
+    open fun findAll(): List<ResultRow> = Order.selectAll().toList()
 
     open fun findAllWithExposedTrxBlock() = org.jetbrains.exposed.v1.sql.transactions.transaction { findAll() }
 

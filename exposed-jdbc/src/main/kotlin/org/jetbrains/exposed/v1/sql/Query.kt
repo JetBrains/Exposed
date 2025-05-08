@@ -1,7 +1,5 @@
 package org.jetbrains.exposed.v1.sql
 
-import kotlinx.coroutines.flow.count
-import kotlinx.coroutines.flow.first
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.less
@@ -326,11 +324,10 @@ open class Query(
 
         init {
             hasNext = result.next()
-            if (hasNext) Query.Companion.trackResultSet(transaction)
+            if (hasNext) trackResultSet(transaction)
         }
 
-        override fun createResultRow(): _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow =
-            _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow.create(JdbcResult(result), fieldIndex)
+        override fun createResultRow(): ResultRow = ResultRow.create(JdbcResult(result), fieldIndex)
     }
 
     companion object {

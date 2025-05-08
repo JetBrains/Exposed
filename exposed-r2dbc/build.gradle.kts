@@ -23,7 +23,7 @@ dependencies {
 
     implementation(libs.slf4j)
 
-    // TODO are both needed? can we remove 1?
+    // TODO are both needed? can we remove both of them?
     compileOnly(libs.postgre)
     compileOnly(libs.r2dbc.postgresql)
 }

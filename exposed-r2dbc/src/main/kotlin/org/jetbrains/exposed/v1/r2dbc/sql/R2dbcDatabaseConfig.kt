@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.r2dbc.sql.statements.asInt
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.vendors.DatabaseDialect
 
+// TODO add KDocs
 interface R2dbcDatabaseConfig : DatabaseConfig {
 
     val dispatcher: CoroutineDispatcher
@@ -21,6 +22,7 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
 
     val defaultR2dbcIsolationLevel: IsolationLevel?
 
+    // TODO add KDocs
     class Builder : DatabaseConfig.Builder() {
         var useExposedCodecs: Boolean = true
 

@@ -8,6 +8,9 @@ import java.util.ServiceLoader
 /**
  * Registry for type mappers.
  * This class holds a list of type mappers and provides methods to register and use them.
+ *
+ * TODO add hint about `mappers` ordering
+ * TODO TypeMapperRegistry should become interface to allow users create own registries
  */
 class TypeMapperRegistry(private val mappers: MutableList<TypeMapper> = mutableListOf()) {
 
@@ -68,6 +71,7 @@ class TypeMapperRegistry(private val mappers: MutableList<TypeMapper> = mutableL
 
             // If service loader found mappers, use them
             if (serviceLoaderMappers.isNotEmpty()) {
+                // TODO sort these mappers somehow to keep it deterministic
                 serviceLoaderMappers.forEach { registry.register(it) }
             } else {
                 // Fallback to hardcoded defaults
@@ -77,7 +81,7 @@ class TypeMapperRegistry(private val mappers: MutableList<TypeMapper> = mutableL
                     .register(BinaryTypeMapper())
                     .register(ArrayTypeMapper())
                     .register(PostgresSpecificTypeMapper())
-                    .register(org.jetbrains.exposed.v1.r2dbc.sql.mappers.ValueTypeMapper())
+                    .register(ValueTypeMapper())
                     .register(DefaultTypeMapper())
             }
 

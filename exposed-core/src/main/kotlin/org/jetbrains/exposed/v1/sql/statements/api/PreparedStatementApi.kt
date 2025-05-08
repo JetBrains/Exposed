@@ -21,6 +21,9 @@ interface PreparedStatementApi {
 
     operator fun set(index: Int, value: Any)
 
+    // TODO Could we add method `set()` that could pass `columnType` (actually for r2dbc mappers now)?
+    //  fun set(index: Int, value: Any, columnType: IColumnType<*>) = set(index, value)
+
     /** Sets the statement parameter at the [index] position to SQL NULL, if allowed wih the specified [columnType]. */
     fun setNull(index: Int, columnType: IColumnType<*>)
 

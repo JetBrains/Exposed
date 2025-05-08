@@ -101,6 +101,7 @@ public final class org/jetbrains/exposed/v1/sql/javatime/JavaInstantColumnType :
 	public fun nonNullValueToString (Ljava/time/Instant;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun notNullValueToDB (Ljava/time/Instant;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/sql/statements/api/RowApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/time/Instant;

@@ -14,14 +14,14 @@ import java.sql.Timestamp
  * Mapper for values without a column type.
  * This mapper is used by the set method in R2dbcPreparedStatementImpl.
  */
-class ValueTypeMapper : org.jetbrains.exposed.v1.r2dbc.sql.mappers.TypeMapper {
+class ValueTypeMapper : TypeMapper {
     // This mapper handles all column types, but only for specific value types
     // It's a fallback for values that don't have a specific mapper
 
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: org.jetbrains.exposed.v1.r2dbc.sql.mappers.TypeMapperRegistry,
+        mapperRegistry: TypeMapperRegistry,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
@@ -34,6 +34,7 @@ class ValueTypeMapper : org.jetbrains.exposed.v1.r2dbc.sql.mappers.TypeMapper {
             value is Time -> value.toLocalTime()
             value is Date -> value.toLocalDate()
             value is Timestamp -> value.toLocalDateTime()
+            // TODO should it be inside PostgresSpecificTypeMapper
             dialect is PostgreSQLDialect && value is PGobject -> Json.of(value.value!!)
             else -> value
         }

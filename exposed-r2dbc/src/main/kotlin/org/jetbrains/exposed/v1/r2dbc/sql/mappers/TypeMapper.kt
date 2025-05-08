@@ -43,4 +43,7 @@ interface TypeMapper {
         value: Any?,
         index: Int
     ): Boolean
+
+    // TODO Implement getValue() in same way as setValue()
+    //  It could be optional
 }
