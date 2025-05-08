@@ -21,41 +21,34 @@ abstract class InListOrNotInListBaseOp<V>(
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder): Unit = queryBuilder {
         val iterator = list.iterator()
-        if (!iterator.hasNext()) {
-            if (isInList) {
-                +FALSE
-            } else {
-                +TRUE
-            }
-        } else {
-            val singleColumn = columnTypes.singleOrNull()
-            if (singleColumn != null) {
-                append(singleColumn)
-            } else {
-                columnTypes.appendTo(prefix = "(", postfix = ")") { +it }
-            }
+        val hasElements = iterator.hasNext()
 
-            val firstValue = iterator.next()
-
-            if (!iterator.hasNext() && currentDialectIfAvailable !is OracleDialect) {
-                when {
-                    isInList -> append(" = ")
-                    else -> append(" != ")
-                }
-                registerValues(firstValue)
-            } else {
-                when {
-                    isInList -> append(" IN (")
-                    else -> append(" NOT IN (")
-                }
-                registerValues(firstValue)
-                iterator.forEach { value ->
-                    append(", ")
-                    registerValues(value)
-                }
-                append(')')
-            }
+        if (!hasElements) {
+            +if (isInList) FALSE else TRUE
+            return
         }
+
+        if (columnTypes.size == 1) {
+            append(columnTypes.first())
+        } else {
+            columnTypes.appendTo(prefix = "(", postfix = ")") { +it }
+        }
+
+        val firstValue = iterator.next()
+           appendOperator(isInList)
+           registerValues(firstValue)
+
+           if (hasElements) {
+               iterator.forEach { value ->
+                  append(", ")
+                  registerValues(value)
+            }
+            append(')')
+         }
+    }
+
+    private fun QueryBuilder.appendOperator(isInList: Boolean) {
+        append(if (isInList) " IN (" else " NOT IN (")
     }
 
     protected abstract fun QueryBuilder.registerValues(values: V)
