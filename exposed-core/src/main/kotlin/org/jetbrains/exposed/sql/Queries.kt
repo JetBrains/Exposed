@@ -722,6 +722,26 @@ inline fun <T : Table> T.updateReturning(
     return ReturningStatement(this, returning, update)
 }
 
+fun <T : Table, E> T.batchUpdate(
+    data: Iterable<E>,
+    limit: Int? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: BatchUpdateStatement.(E) -> Unit
+): List<ResultRow> = batchUpdate(data.iterator(), limit, where, body)
+
+private fun <T : Table, E> T.batchUpdate(
+    data: Iterator<E>,
+    limit: Int? = null,
+    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    body: BatchUpdateStatement.(E) -> Unit
+): List<ResultRow> = executeBatch(data, body) {
+    BatchUpdateStatement(
+        this,
+        limit,
+        where = where?.let { SqlExpressionBuilder.it() },
+    )
+}
+
 /**
  * Represents the SQL statement that either inserts a new row into a table, or updates the existing row if insertion would violate a unique constraint.
  *
