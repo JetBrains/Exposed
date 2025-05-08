@@ -262,6 +262,9 @@ class EntityIDColumnType<T : Any>(
 
     override fun readObject(rs: ResultSet, index: Int): Any? = idColumn.columnType.readObject(rs, index)
 
+    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) =
+        idColumn.columnType.setParameter(stmt, index, value)
+
     override fun equals(other: Any?): Boolean {
         if (other !is EntityIDColumnType<*>) return false
 
