@@ -11,13 +11,13 @@
     </p>
 </tldr>
 
-Managing database schema changes is a critical part of application development. Exposed offers several tools to assist with schema migrations, allowing you to
+Managing database schema changes is a critical part of application development. Exposed offers several tools to help with schema migrations, allowing you to
 evolve your database alongside your codebase.
 
 While Exposed provides basic migration support through [`SchemaUtils`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/index.html),
 the [`MigrationUtils`](https://jetbrains.github.io/Exposed/api/exposed-migration/[root]/-migration-utils/index.html) methods from the `exposed-migration` package
 provide a more structured and production-ready way to manage schema changes. They allow you to [inspect differences](#aligning-the-database-schema) between the current
-database state and your defined table schema, and to generate or apply migration scripts accordingly.
+database state and your defined table schema and to generate or apply migration scripts accordingly.
 
 ## Adding dependencies
 
@@ -29,7 +29,7 @@ implementation("org.jetbrains.exposed:exposed-migration:%exposed_version%")
 
 ## Aligning the database schema
 
-When you need to bring your database schema in line with your current Exposed table definitions, you have two options:
+When you need to bring your database schema in line with your current Exposed table definitions, you have three options:
 
 1. [Generate only missing column statements](#generate-missing-column-statements){summary="Use this method to get exact control over which part of the schema you want to align"}
 2. [Generate all required statements for database migration](#generate-all-required-statements){summary="Use this method as a validation check before actual migration"}
@@ -62,7 +62,7 @@ function:
 ```
 {src="exposed-migrations/src/main/kotlin/org/example/App.kt" include-symbol="statements"}
 
-The returned collection of string SQL statements may include `CREATE`, `ALTER`, and `DROP` operations—including potentially destructive actions like `DROP COLUMN`
+The returned collection of string SQL statements may include `CREATE`, `ALTER`, and `DROP` operations — including potentially destructive actions like `DROP COLUMN`
 or `DELETE`, so review them carefully before choosing to execute them.
 
 > For database-specific constraints, see the [limitations](#limitations) section.
@@ -82,14 +82,14 @@ its content will be overwritten.
 
 ## Validating the database schema
 
-Before applying any migrations, it’s useful to validate that your Exposed schema definitions match the actual state of the database. While the primary use of
-schema alignment methods is to generate SQL statements and migration scripts, these same methods can also serve as pre-checks—especially when used to detect
+Before applying any migrations, it's useful to validate that your Exposed schema definitions match the actual state of the database. While the primary use of
+schema alignment methods is to generate SQL statements and migration scripts, these same methods can also serve as pre-checks — especially when used to detect
 unexpected changes.
 
 Exposed provides several low-level APIs that support schema validation and can be integrated into custom migration or deployment pipelines. These methods are also
 used internally by Exposed to generate migration statements, but you can also use them for more precise checks.
 
-### Check for existence of database object
+### Check for existence of a database object
 
 To determine if a specific database object is already present, use one of the following methods:
 
@@ -136,14 +136,14 @@ level and can be disabled by setting `withLogs` to `false`:
 
 ## Limitations
 
-While Exposed’s migration tools are powerful, there are some limitations:
+While Exposed's migration tools are powerful, there are some limitations:
 
 - You must still implement and manage your own migration flow.
 - Automatic migration execution is not provided — scripts must be run manually or integrated into your deployment process. This limitation is already addressed in the 
 [Gradle migration plugin feature request](#gradle-plugin).
 > For an example of manual execution
 > with Flyway, see the [`exposed-migrations` sample project](https://github.com/JetBrains/Exposed/tree/main/documentation-website/Writerside/snippets/exposed-migrations).
-- Some database-specific behaviors, such as SQLite’s limited `ALTER TABLE` support, may lead to partial or failed migrations if not reviewed.
+- Some database-specific behaviors, such as SQLite's limited `ALTER TABLE` support, may lead to partial or failed migrations if not reviewed.
 - Destructive operations like `DROP COLUMN` or `DROP SEQUENCE` can be included — caution is advised.
 
 We recommend that you always manually review generated diffs or scripts before applying them to a live database.

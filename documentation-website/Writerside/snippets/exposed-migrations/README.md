@@ -13,7 +13,7 @@ To build the application, in a terminal window navigate to the `snippets` folder
 
 ## Generate a migration script
 
-To run the application, in a terminal window navigate to the `snippets` folder and run the following command:
+To generate the migration script, in a terminal window navigate to the `snippets` folder and run the following command:
 
 ```shell
 ./gradlew :exposed-migrations:generateMigrationScript
