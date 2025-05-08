@@ -122,6 +122,29 @@
                 user1.rating // returns a UserRating object
             </code-block>
         </chapter>
+        <chapter title="Filtering references" id="filtering-references">
+            <p>
+                Suppose you want to additionally filter a user's ratings to only show the films they rated 5 or more.
+                You could to this with a regular Kotlin property and the <code>filter</code> method of collections:
+            </p>
+            <code-block lang="kotlin">
+                val fiveStarRatings
+                    get() = ratings.filter { it.value > 5 }
+            </code-block>
+            <p>
+                This has a slight problem: even though we only use a fraction of the user's ratings, we still have to
+                fetch all of them from the database. A much better choice would be to add another property using
+                <code>referrersOn</code> with a <code>View</code>:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-dao-relationships/src/main/kotlin/org/example/entities/UserEntity.kt"
+                        include-symbol="UserWithFiveStarRatingEntity"
+            />
+            <p>
+                By using a <code>View</code> you can add any conditions to the generated <code>WHERE</code> clause. However,
+                currently those relationships <b>do not support caching and eager loading</b> via <code>UserEntity::load(UserEntity::fiveStarRatings)</code>, so beware!
+            </p>
+        </chapter>
     </chapter>
     <chapter title="Optional reference" id="optional-reference">
         <p>In Exposed, you can also add an optional reference.</p>

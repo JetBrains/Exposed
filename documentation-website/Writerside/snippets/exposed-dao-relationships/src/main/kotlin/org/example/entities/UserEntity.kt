@@ -46,3 +46,12 @@ class UserWithSingleRatingEntity(id: EntityID<Int>) : IntEntity(id) {
     var name by UsersTable.name
     val rating by UserRatingEntity backReferencedOn UserRatingsTable.user // make sure to use val and backReferencedOn
 }
+
+class UserWithFiveStarRatingEntity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<UserWithFiveStarRatingEntity>(UsersTable)
+
+    var name by UsersTable.name
+    val ratings by UserRatingEntity referrersOn UserRatingsTable.user
+
+    val fiveStarRatings by UserRatingEntity.view { UserRatingsTable.value greaterEq 5 } referrersOn UserRatingsTable.user
+}

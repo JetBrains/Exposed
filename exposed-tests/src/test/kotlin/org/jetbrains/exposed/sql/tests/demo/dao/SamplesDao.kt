@@ -32,6 +32,7 @@ class City(id: EntityID<Int>) : IntEntity(id) {
 
     var name by Cities.name
     val users by User referrersOn Users.city
+    val kids by User.view { Users.age less 18 } referrersOn Users.city
 }
 
 fun main() {
@@ -72,6 +73,7 @@ fun main() {
         println("Cities: ${City.all().joinToString { it.name }}")
         println("Users in ${stPete.name}: ${stPete.users.joinToString { it.name }}")
         println("Adults: ${User.find { Users.age greaterEq 18 }.joinToString { it.name }}")
+        println("Kids in ${stPete.name}: ${stPete.kids.joinToString { it.name }}")
     }
 }
 
