@@ -1,4 +1,4 @@
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.sql.Table
 
 const val MAX_VARCHAR_LENGTH = 128
 

@@ -1,10 +1,10 @@
 package org.example.examples
 
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.sql.SchemaUtils
+import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.sql.insert
+import org.jetbrains.exposed.v1.sql.selectAll
+import org.jetbrains.exposed.v1.sql.transactions.transaction
 
 /*
     Important: This file is referenced by line number in `Transactions.md`.

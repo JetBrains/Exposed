@@ -61,7 +61,7 @@
 </div></section><section class="chapter"><h3 id="findSingleByAndUpdate" data-toc="findSingleByAndUpdate">Update using a query</h3><p id="xegomq_86">To search for a single entity by a query and apply an update, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/find-single-by-and-update.html" id="xegomq_87" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_88">.findSingleByAndUpdate()</code></a> function:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">        val updatedMovie2 = StarWarsFilmEntity.findSingleByAndUpdate(StarWarsFilmsTable.name eq &quot;The Last Jedi&quot;) {
             it.name = &quot;Episode VIII – The Last Jedi&quot;
         }
-</div></section></section><section class="chapter"><h2 id="delete" data-toc="delete">Delete</h2><p id="xegomq_90">To delete a record, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity/delete.html" id="xegomq_91" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_92">.delete()</code></a> function:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">            movie.delete()</div></section><section class="chapter"><h2 id="use-queries-as-expressions" data-toc="use-queries-as-expressions">Use queries as expressions</h2><p id="xegomq_94">Suppose that you want to sort cities by the number of users in each city. To achieve this, you can write a subquery which counts the users in each city and then order the result by that count. To do so, however, you need to convert the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/index.html" id="xegomq_95" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_96">Query</code></a> to an <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-expression/index.html" id="xegomq_97" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_98">Expression</code></a>.</p><p id="xegomq_99">This can be done using the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/wrap-as-expression.html" id="xegomq_100" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_101">wrapAsExpression()</code></a> function:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">        val expression = wrapAsExpression&lt;Int&gt;(
+</div></section></section><section class="chapter"><h2 id="delete" data-toc="delete">Delete</h2><p id="xegomq_90">To delete a record, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity/delete.html" id="xegomq_91" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_92">.delete()</code></a> function:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">            movie.delete()</div></section><section class="chapter"><h2 id="use-queries-as-expressions" data-toc="use-queries-as-expressions">Use queries as expressions</h2><p id="xegomq_94">Suppose that you want to sort cities by the number of users in each city. To achieve this, you can write a subquery which counts the users in each city and then order the result by that count. To do so, however, you need to convert the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/index.html" id="xegomq_95" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_96">Query</code></a> to an <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-expression/index.html" id="xegomq_97" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_98">Expression</code></a>.</p><p id="xegomq_99">This can be done using the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/wrap-as-expression.html" id="xegomq_100" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_101">wrapAsExpression()</code></a> function:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">        val expression = wrapAsExpression&lt;Int&gt;(
             UsersTable.select(UsersTable.id.count())
                 .where { CitiesTable.id eq UsersTable.cityId }
         )
@@ -72,11 +72,11 @@
 </div></section><section class="chapter"><h2 id="add-computed-fields-to-entity-class" data-toc="add-computed-fields-to-entity-class">Add computed fields to entity class</h2><p id="xegomq_103">Suppose that you want to use a window function to rank films with each entity fetch. The companion object of the entity class can override any open function in <code class="code" id="xegomq_104">EntityClass</code>. However, to achieve this functionality, you only need to override the <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/search-query.html" id="xegomq_105" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_106">searchQuery()</code></a> function. The results of the function can then be accessed through a property of the entity class:</p><div class="tabs" id="xegomq_107" data-anchors="[entity-class,table-definition]"><div class="tabs__content" data-gtm="tab" id="entity-class" data-title="StarWarsFilmWithRankEntity"><div class="code-block" data-lang="kotlin" data-title="Kotlin" data-disable-link-processing="true">package org.example.entities
 
 import org.example.tables.StarWarsFilmsWithRankTable
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.id.EntityID
+import org.jetbrains.exposed.v1.sql.Op
+import org.jetbrains.exposed.v1.sql.Query
 
 class StarWarsFilmWithRankEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
     var sequelId by StarWarsFilmsWithRankTable.sequelId
@@ -96,9 +96,9 @@ class StarWarsFilmWithRankEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
 }
 </div></div><div class="tabs__content" data-gtm="tab" id="table-definition" data-title="StarWarsFilmsWithRankTable"><div class="code-block" data-lang="kotlin" data-title="Kotlin" data-disable-link-processing="true">package org.example.tables
 
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Rank
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.v1.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.sql.Rank
+import org.jetbrains.exposed.v1.sql.SortOrder
 
 const val MAX_NAME_LENGTH = 32
 
@@ -127,10 +127,10 @@ object StarWarsFilmsWithRankTable : IntIdTable() {
 </div></section><section class="chapter"><h2 id="auto-fill-columns-on-entity-change" data-toc="auto-fill-columns-on-entity-change">Auto-fill columns on entity change</h2><p id="xegomq_112">Suppose that you need all your table objects to have at minimum two columns for storing the date and time when a record is created and modified. You could define a <code class="code" id="xegomq_113">BaseTable</code> to automatically handle registering these columns to any table that extends this abstract class. An abstract <code class="code" id="xegomq_114">BaseEntity</code> could also be defined to automatically associate fields to the relevant columns:</p><div class="tabs" id="xegomq_115" data-anchors="[abstract-base-entity,abstract-base-table]"><div class="tabs__content" data-gtm="tab" id="abstract-base-table" data-title="BaseTable"><div class="code-block" data-lang="kotlin" data-title="Kotlin" data-disable-link-processing="true">package org.example.tables
 
 import kotlinx.datetime.LocalDateTime
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDateTime
-import org.jetbrains.exposed.sql.kotlin.datetime.datetime
+import org.jetbrains.exposed.v1.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.sql.Column
+import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentDateTime
+import org.jetbrains.exposed.v1.sql.kotlin.datetime.datetime
 
 abstract class BaseTable(name: String = &quot;&quot;) : IntIdTable(name) {
     val created: Column&lt;LocalDateTime&gt; = datetime(&quot;created&quot;)
@@ -141,23 +141,23 @@ abstract class BaseTable(name: String = &quot;&quot;) : IntIdTable(name) {
 
 import kotlinx.datetime.LocalDateTime
 import org.example.tables.BaseTable
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.id.EntityID
 
 abstract class BaseEntity(id: EntityID&lt;Int&gt;, table: BaseTable) : IntEntity(id) {
     val created: LocalDateTime by table.created
     var modified: LocalDateTime? by table.modified
 }
-</div></div></div><p id="xegomq_118">Whenever a new entity is instantiated, the <code class="code" id="xegomq_119">created</code> column will be filled with the database default defined by <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.sql.kotlin.datetime/-current-date-time/index.html" id="xegomq_120" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_121">CurrentDateTime</code></a>, while the <code class="code" id="xegomq_122">modified</code> column will be filled with a null value.</p><p id="xegomq_123">An entity lifecycle interceptor, <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-hook/index.html" id="xegomq_124" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_125">EntityHook</code></a>, can then be subscribed to in order to automatically populate the <code class="code" id="xegomq_126">modified</code> field whenever an existing entity is later updated:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">package org.example.entities
+</div></div></div><p id="xegomq_118">Whenever a new entity is instantiated, the <code class="code" id="xegomq_119">created</code> column will be filled with the database default defined by <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.sql.kotlin.datetime/-current-date-time/index.html" id="xegomq_120" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_121">CurrentDateTime</code></a>, while the <code class="code" id="xegomq_122">modified</code> column will be filled with a null value.</p><p id="xegomq_123">An entity lifecycle interceptor, <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-hook/index.html" id="xegomq_124" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_125">EntityHook</code></a>, can then be subscribed to in order to automatically populate the <code class="code" id="xegomq_126">modified</code> field whenever an existing entity is later updated:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">package org.example.entities
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.example.tables.BaseTable
-import org.jetbrains.exposed.dao.*
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.exposedLogger
+import org.jetbrains.exposed.v1.dao.*
+import org.jetbrains.exposed.v1.sql.Column
+import org.jetbrains.exposed.v1.sql.exposedLogger
 
 abstract class BaseEntityClass&lt;out E : BaseEntity&gt;(
     table: BaseTable
@@ -191,4 +191,4 @@ abstract class BaseEntityClass&lt;out E : BaseEntity&gt;(
         }
     }
 }
-</div><p id="xegomq_128">The example above invokes <code class="code" id="xegomq_129">EntityHook.subscribe()</code> in an abstract <code class="code" id="xegomq_130">BaseEntityClass</code> that can be used as a companion object for any <code class="code" id="xegomq_131">BaseEntity</code> implementation, but the interceptor could be subscribed to (and unsubscribed from) on the transaction level as well.</p><p id="xegomq_132">The subscription only performs an action when a record is updated (detected by <code class="code" id="xegomq_133">EntityChangeType.Updated</code>).</p><aside class="prompt" data-type="tip" data-title="" id="xegomq_134"><p>Other actions could be detected for when an entity is created (<code class="code" id="xegomq_135">EntityChangeType.Created</code>) or removed (<code class="code" id="xegomq_136">EntityChangeType.Removed</code>).</p></aside><p id="xegomq_137">When an update occurs, the <code class="code" id="xegomq_138">modified</code> column is populated with the current UTC time using the <code class="code" id="xegomq_139">nowUTC()</code> method. However, the update only happens if the <code class="code" id="xegomq_140">modified</code> field has not already been set. This is checked by using <code class="code" id="xegomq_141">Entity.writeValues</code>, which holds the column-value mappings for an entity instance before being flushed to the database. Performing this check ensures that filling the <code class="code" id="xegomq_142">modified</code> column does not trigger the interceptor itself.</p><p id="xegomq_143">Additionally, every change (creation, update, or deletion) is logged using the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/exposed-logger.html" id="xegomq_144" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_145">exposedLogger</code></a>.</p><aside class="prompt" data-type="tip" data-title="" id="xegomq_146"><p>For more details about using statement interceptors, see <a href="transactions.html#statement-interceptors" id="xegomq_147" data-tooltip="DSL operations within a transaction create SQL statements, on which commands like Execute, Commit, and Rollback are issued. Exposed provides the StatementInterceptor interface that allows you to implement your own logic before and after these specific steps in a statement's…">DSL Statement Interceptors</a>.</p></aside></section><div class="last-modified">Last modified: 14 January 2025</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="dao-entity-definition.html" class="navigation-links__prev">Entity definition</a><a href="dao-relationships.html" class="navigation-links__next">Relationships</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.js"></script></body></html>
+</div><p id="xegomq_128">The example above invokes <code class="code" id="xegomq_129">EntityHook.subscribe()</code> in an abstract <code class="code" id="xegomq_130">BaseEntityClass</code> that can be used as a companion object for any <code class="code" id="xegomq_131">BaseEntity</code> implementation, but the interceptor could be subscribed to (and unsubscribed from) on the transaction level as well.</p><p id="xegomq_132">The subscription only performs an action when a record is updated (detected by <code class="code" id="xegomq_133">EntityChangeType.Updated</code>).</p><aside class="prompt" data-type="tip" data-title="" id="xegomq_134"><p>Other actions could be detected for when an entity is created (<code class="code" id="xegomq_135">EntityChangeType.Created</code>) or removed (<code class="code" id="xegomq_136">EntityChangeType.Removed</code>).</p></aside><p id="xegomq_137">When an update occurs, the <code class="code" id="xegomq_138">modified</code> column is populated with the current UTC time using the <code class="code" id="xegomq_139">nowUTC()</code> method. However, the update only happens if the <code class="code" id="xegomq_140">modified</code> field has not already been set. This is checked by using <code class="code" id="xegomq_141">Entity.writeValues</code>, which holds the column-value mappings for an entity instance before being flushed to the database. Performing this check ensures that filling the <code class="code" id="xegomq_142">modified</code> column does not trigger the interceptor itself.</p><p id="xegomq_143">Additionally, every change (creation, update, or deletion) is logged using the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/exposed-logger.html" id="xegomq_144" data-external="true" rel="noopener noreferrer"><code class="code" id="xegomq_145">exposedLogger</code></a>.</p><aside class="prompt" data-type="tip" data-title="" id="xegomq_146"><p>For more details about using statement interceptors, see <a href="transactions.html#statement-interceptors" id="xegomq_147" data-tooltip="DSL operations within a transaction create SQL statements, on which commands like Execute, Commit, and Rollback are issued. Exposed provides the StatementInterceptor interface that allows you to implement your own logic before and after these specific steps in a statement's…">DSL Statement Interceptors</a>.</p></aside></section><div class="last-modified">Last modified: 14 January 2025</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="dao-entity-definition.html" class="navigation-links__prev">Entity definition</a><a href="dao-relationships.html" class="navigation-links__next">Relationships</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.js"></script></body></html>

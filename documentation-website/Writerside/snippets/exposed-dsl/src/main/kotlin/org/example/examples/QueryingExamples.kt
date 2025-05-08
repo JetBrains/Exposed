@@ -2,13 +2,13 @@ package org.example.examples
 
 import org.example.tables.ActorsTable
 import org.example.tables.StarWarsFilmsTable
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.andWhere
-import org.jetbrains.exposed.sql.anyFrom
-import org.jetbrains.exposed.sql.count
-import org.jetbrains.exposed.sql.innerJoin
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.sql.SortOrder
+import org.jetbrains.exposed.v1.sql.andWhere
+import org.jetbrains.exposed.v1.sql.anyFrom
+import org.jetbrains.exposed.v1.sql.count
+import org.jetbrains.exposed.v1.sql.innerJoin
+import org.jetbrains.exposed.v1.sql.selectAll
+import org.jetbrains.exposed.v1.sql.transactions.transaction
 
 /*
     Important: All assigned examples in this file are referenced by name and all unassigned examples by line number in `DSL-Querying-Data.topic`.

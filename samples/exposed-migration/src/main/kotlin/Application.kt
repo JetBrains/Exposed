@@ -1,7 +1,7 @@
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.v1.sql.insert
+import org.jetbrains.exposed.v1.sql.transactions.transaction
+import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import java.util.*
 
 fun main() {

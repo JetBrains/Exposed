@@ -1,7 +1,7 @@
 package org.example.examples
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.plus
 
 private const val MOVIE_SEQUEL_3_ID = 9
 private const val MOVIE_3_RELEASE_YEAR = 2019

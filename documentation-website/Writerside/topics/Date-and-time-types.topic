@@ -24,7 +24,7 @@
         </tr>
         <tr>
             <td>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.sql.kotlin.datetime/index.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.sql.kotlin.datetime/index.html">
                     <code>exposed-kotlin-datetime</code>
                 </a>
             </td>
@@ -33,7 +33,7 @@
         </tr>
         <tr>
             <td>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.sql.javatime/index.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.sql.javatime/index.html">
                     <code>exposed-java-time</code>
                 </a>
             </td>
@@ -42,7 +42,7 @@
         </tr>
         <tr>
             <td>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.sql.jodatime/index.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.sql.jodatime/index.html">
                     <code>exposed-jodatime</code>
                 </a>
             </td>
@@ -54,16 +54,16 @@
     <chapter title="Basic usage" id="basic-usage">
         <p>Here are examples of using date and time types. The imports will vary based on your chosen module:</p>
         <code-block lang="kotlin">
-        import org.jetbrains.exposed.sql.Table
+        import org.jetbrains.exposed.v1.sql.Table
 
         // For exposed-kotlin-datetime (recommended)
-        import org.jetbrains.exposed.sql.kotlin.datetime.*
+        import org.jetbrains.exposed.v1.sql.kotlin.datetime.*
 
         // For exposed-java-time
-        import org.jetbrains.exposed.sql.javatime.*
+        import org.jetbrains.exposed.v1.sql.javatime.*
 
         // For exposed-jodatime
-        import org.jetbrains.exposed.sql.jodatime.*
+        import org.jetbrains.exposed.v1.sql.jodatime.*
 
         object Events : Table() {
             val id = integer("id").autoIncrement()

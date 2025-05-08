@@ -1,8 +1,8 @@
 package org.example.examples
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.sql.statements.api.ExposedBlob
+import org.jetbrains.exposed.v1.sql.transactions.transaction
 
 /*
     Important: The code in this file is referenced by line number in `Binary-types.topic`.

@@ -3,10 +3,10 @@ package org.example.entities
 import org.example.entities.UserRatingEntity.Companion.backReferencedOn
 import org.example.tables.UserRatingsTable
 import org.example.tables.UsersTable
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.id.EntityID
+import org.jetbrains.exposed.v1.sql.SortOrder
 
 /*
     Important: This file is referenced by line number in `DAO-Relationships.topic`.

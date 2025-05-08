@@ -8,12 +8,12 @@ import org.example.examples.QueryingExamples
 import org.example.examples.ReadExamples
 import org.example.examples.UpdateExamples
 import org.example.tables.*
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.sql.Database
+import org.jetbrains.exposed.v1.sql.DatabaseConfig
+import org.jetbrains.exposed.v1.sql.SchemaUtils
+import org.jetbrains.exposed.v1.sql.StdOutSqlLogger
+import org.jetbrains.exposed.v1.sql.addLogger
+import org.jetbrains.exposed.v1.sql.transactions.transaction
 
 fun main() {
     val h2Db = Database.connect(

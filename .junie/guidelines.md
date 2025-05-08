@@ -68,7 +68,7 @@ The project uses Gradle for building. Key build commands:
 - `./gradlew build`: Build the entire project
 - `./gradlew test`: Run all tests
 - `./gradlew <module>:test`: Run tests for a specific module
-- `./gradlew <module>:test --tests "org.jetbrains.exposed.sql.tests.<TestClass>"`: Run a specific test class
+- `./gradlew <module>:test --tests "org.jetbrains.exposed.v1.sql.tests.<TestClass>"`: Run a specific test class
 
 ## Code Style Guidelines
 The project uses detekt for static code analysis. Code should follow Kotlin coding conventions and pass detekt checks.

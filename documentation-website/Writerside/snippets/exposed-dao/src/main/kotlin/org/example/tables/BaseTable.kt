@@ -1,10 +1,10 @@
 package org.example.tables
 
 import kotlinx.datetime.LocalDateTime
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDateTime
-import org.jetbrains.exposed.sql.kotlin.datetime.datetime
+import org.jetbrains.exposed.v1.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.sql.Column
+import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentDateTime
+import org.jetbrains.exposed.v1.sql.kotlin.datetime.datetime
 
 abstract class BaseTable(name: String = "") : IntIdTable(name) {
     val created: Column<LocalDateTime> = datetime("created")

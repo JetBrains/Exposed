@@ -4,16 +4,16 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.json.contains
-import org.jetbrains.exposed.sql.json.exists
-import org.jetbrains.exposed.sql.json.extract
-import org.jetbrains.exposed.sql.json.json
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.sql.insert
+import org.jetbrains.exposed.v1.sql.json.contains
+import org.jetbrains.exposed.v1.sql.json.exists
+import org.jetbrains.exposed.v1.sql.json.extract
+import org.jetbrains.exposed.v1.sql.json.json
+import org.jetbrains.exposed.v1.sql.lowerCase
+import org.jetbrains.exposed.v1.sql.selectAll
+import org.jetbrains.exposed.v1.sql.update
 
 const val GROUP_ID_LENGTH = 32
 const val INT_ARRAY_ITEM_1 = 1

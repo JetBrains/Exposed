@@ -1,17 +1,17 @@
 package org.example.examples
 
 import org.example.tables.FilmBoxOfficeTable
-import org.jetbrains.exposed.sql.Concat
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.charLength
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.locate
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.stringLiteral
-import org.jetbrains.exposed.sql.substring
-import org.jetbrains.exposed.sql.trim
-import org.jetbrains.exposed.sql.upperCase
+import org.jetbrains.exposed.v1.sql.Concat
+import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.concat
+import org.jetbrains.exposed.v1.sql.alias
+import org.jetbrains.exposed.v1.sql.charLength
+import org.jetbrains.exposed.v1.sql.insert
+import org.jetbrains.exposed.v1.sql.locate
+import org.jetbrains.exposed.v1.sql.lowerCase
+import org.jetbrains.exposed.v1.sql.stringLiteral
+import org.jetbrains.exposed.v1.sql.substring
+import org.jetbrains.exposed.v1.sql.trim
+import org.jetbrains.exposed.v1.sql.upperCase
 
 /*
     Important: This file is referenced by line number in `SQL-Functions.md`.

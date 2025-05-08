@@ -2,14 +2,14 @@
 
 package org.jetbrains.exposed.samples.spring.service
 
-import org.jetbrains.exposed.samples.spring.domain.User
-import org.jetbrains.exposed.samples.spring.domain.UserEntity
-import org.jetbrains.exposed.samples.spring.domain.UserId
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.samples.spring.domain.User
+import org.jetbrains.exposed.v1.samples.spring.domain.UserEntity
+import org.jetbrains.exposed.v1.samples.spring.domain.UserId
+import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.sql.deleteWhere
+import org.jetbrains.exposed.v1.sql.insertAndGetId
+import org.jetbrains.exposed.v1.sql.selectAll
+import org.jetbrains.exposed.v1.sql.update
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 

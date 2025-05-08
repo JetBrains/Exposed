@@ -1,8 +1,8 @@
 package org.example.tables
 
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Rank
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.v1.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.sql.Rank
+import org.jetbrains.exposed.v1.sql.SortOrder
 
 const val MAX_NAME_LENGTH = 32
 
