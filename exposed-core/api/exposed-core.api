@@ -492,7 +492,9 @@ public abstract class org/jetbrains/exposed/sql/ColumnSet : org/jetbrains/expose
 	public fun getSource ()Lorg/jetbrains/exposed/sql/ColumnSet;
 	public abstract fun innerJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public abstract fun join (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/JoinType;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;ZLkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
+	public abstract fun join (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/JoinType;Z)Lorg/jetbrains/exposed/sql/Join;
 	public static synthetic fun join$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/JoinType;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
+	public static synthetic fun join$default (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/JoinType;ZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Join;
 	public abstract fun leftJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public abstract fun rightJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public final fun select (Ljava/util/List;)Lorg/jetbrains/exposed/sql/Query;
@@ -1504,6 +1506,7 @@ public final class org/jetbrains/exposed/sql/Join : org/jetbrains/exposed/sql/Co
 	public final fun getTable ()Lorg/jetbrains/exposed/sql/ColumnSet;
 	public fun innerJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public fun join (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/JoinType;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;ZLkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
+	public fun join (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/JoinType;Z)Lorg/jetbrains/exposed/sql/Join;
 	public fun leftJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public fun rightJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 }
@@ -2037,6 +2040,7 @@ public final class org/jetbrains/exposed/sql/QueryAlias : org/jetbrains/exposed/
 	public final fun getQuery ()Lorg/jetbrains/exposed/sql/AbstractQuery;
 	public fun innerJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public fun join (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/JoinType;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;ZLkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
+	public fun join (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/JoinType;Z)Lorg/jetbrains/exposed/sql/Join;
 	public fun leftJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 	public fun rightJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;
 }
@@ -2635,6 +2639,7 @@ public class org/jetbrains/exposed/sql/Table : org/jetbrains/exposed/sql/ColumnS
 	public final fun integer (Ljava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun integer$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public fun join (Lorg/jetbrains/exposed/sql/ColumnSet;Lorg/jetbrains/exposed/sql/JoinType;Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/Expression;ZLkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/sql/Join;
+	public fun join (Lorg/jetbrains/exposed/sql/Expression;Lorg/jetbrains/exposed/sql/JoinType;Z)Lorg/jetbrains/exposed/sql/Join;
 	public final fun largeText (Ljava/lang/String;Ljava/lang/String;Z)Lorg/jetbrains/exposed/sql/Column;
 	public static synthetic fun largeText$default (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lorg/jetbrains/exposed/sql/Column;
 	public fun leftJoin (Lorg/jetbrains/exposed/sql/ColumnSet;)Lorg/jetbrains/exposed/sql/Join;

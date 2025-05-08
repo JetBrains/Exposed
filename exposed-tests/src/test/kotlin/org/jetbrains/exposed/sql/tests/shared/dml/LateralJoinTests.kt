@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.sql.tests.TestDB
 import org.jetbrains.exposed.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.sql.tests.shared.expectException
 import org.junit.Test
 
@@ -71,6 +72,89 @@ class LateralJoinTests : DatabaseTestsBase() {
             expectException<IllegalArgumentException> {
                 parent.join(child, JoinType.LEFT, lateral = true).selectAll().toList()
             }
+        }
+    }
+
+    @Test
+    fun testLateralJoinOnExpression() {
+        val tester = object : IntIdTable("lateral_join_tester") {
+            val name = text("name")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            tester.insert { it[name] = "abcde" }
+
+            val upperCaseExpression = UpperCase(tester.name).alias("upper_cased_name")
+
+            val query = tester
+                .join(
+                    upperCaseExpression,
+                    JoinType.CROSS,
+                    lateral = true
+                )
+                .select(upperCaseExpression.aliasOnlyExpression())
+            val result = query.single()
+
+            assertEquals("ABCDE", result[upperCaseExpression.aliasOnlyExpression()])
+        }
+    }
+
+    @Test
+    fun testNestedLateralJoinOnExpression() {
+        val tester = object : IntIdTable("lateral_join_tester") {
+            val name = text("name")
+        }
+
+        withTables(
+            excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester
+        ) {
+            tester.insert { it[name] = "abCDE" }
+
+            val upperCaseExpression = UpperCase(tester.name).alias("upper_cased_name")
+            val lowerCaseExpression = LowerCase(tester.name).alias("lower_cased_name")
+
+            val result = tester
+                .join(upperCaseExpression, JoinType.CROSS, lateral = true)
+                .join(lowerCaseExpression, JoinType.CROSS, lateral = true)
+                .select(upperCaseExpression.aliasOnlyExpression(), lowerCaseExpression.aliasOnlyExpression())
+                .single()
+
+            assertEquals("ABCDE", result[upperCaseExpression.aliasOnlyExpression()])
+            assertEquals("abcde", result[lowerCaseExpression.aliasOnlyExpression()])
+        }
+    }
+
+    @Test
+    fun testLateralJoinOnExpressionWithTableJoin() {
+        val tester = object : IntIdTable("lateral_join_tester") {
+            val name = text("name")
+        }
+
+        val testerRef = object : IntIdTable("lateral_join_tester_ref") {
+            val testerId = reference("tester_id", tester.id)
+
+            val name = text("name")
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester, testerRef) {
+            val testerId = tester.insertAndGetId { it[name] = "abCD" }
+            testerRef.insert {
+                it[testerRef.testerId] = testerId
+                it[name] = "EfG"
+            }
+
+            val upperCaseTester = UpperCase(tester.name).alias("upper_cased_name")
+            val lowerCaseTesterRef = LowerCase(testerRef.name).alias("lower_cased_name")
+
+            val result = tester
+                .join(upperCaseTester, JoinType.CROSS, lateral = true)
+                .join(testerRef, JoinType.INNER, onColumn = tester.id, otherColumn = testerRef.testerId)
+                .join(lowerCaseTesterRef, JoinType.CROSS, lateral = true)
+                .select(upperCaseTester.aliasOnlyExpression(), lowerCaseTesterRef.aliasOnlyExpression())
+                .single()
+
+            assertEquals("ABCD", result[upperCaseTester.aliasOnlyExpression()])
+            assertEquals("efg", result[lowerCaseTesterRef.aliasOnlyExpression()])
         }
     }
 

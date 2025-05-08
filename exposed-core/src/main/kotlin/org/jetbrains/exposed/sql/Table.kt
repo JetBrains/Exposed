@@ -108,6 +108,8 @@ abstract class ColumnSet : FieldSet {
     /** Creates a cross join relation with [otherTable]. */
     abstract fun crossJoin(otherTable: ColumnSet): Join
 
+    abstract fun join(otherExpression: Expression<*>, joinType: JoinType, lateral: Boolean = false): Join
+
     @Deprecated(
         message = "As part of SELECT DSL design changes, this will be removed in future releases.",
         replaceWith = ReplaceWith("select(column, *columns)"),
@@ -141,6 +143,41 @@ abstract class ColumnSet : FieldSet {
      */
     @LowPriorityInOverloadResolution
     fun select(columns: List<Expression<*>>): Query = Query(Select(this, columns), null)
+}
+
+internal class ExpressionColumnSet(val expression: Expression<*>) : ColumnSet() {
+    override val source: ColumnSet = this
+
+    override val columns: List<Column<*>> = emptyList()
+    override fun describe(s: Transaction, queryBuilder: QueryBuilder) {
+        queryBuilder.append(expression)
+    }
+
+    override val fields: List<Expression<*>> = listOf(expression)
+
+    override fun join(
+        otherTable: ColumnSet,
+        joinType: JoinType,
+        onColumn: Expression<*>?,
+        otherColumn: Expression<*>?,
+        lateral: Boolean,
+        additionalConstraint: (SqlExpressionBuilder.() -> Op<Boolean>)?
+    ): Join {
+        return Join(this, otherTable, joinType, onColumn, otherColumn, lateral, additionalConstraint)
+    }
+
+    override infix fun innerJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.INNER)
+
+    override infix fun leftJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.LEFT)
+
+    override infix fun rightJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.RIGHT)
+
+    override infix fun fullJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.FULL)
+
+    override infix fun crossJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.CROSS)
+
+    override fun join(otherExpression: Expression<*>, joinType: JoinType, lateral: Boolean) =
+        join(ExpressionColumnSet(otherExpression), joinType, lateral = lateral)
 }
 
 /**
@@ -317,6 +354,9 @@ class Join(
     override infix fun fullJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = implicitJoin(otherTable, JoinType.CROSS)
+
+    override fun join(otherExpression: Expression<*>, joinType: JoinType, lateral: Boolean) =
+        join(ExpressionColumnSet(otherExpression), joinType, lateral = lateral)
 
     private fun implicitJoin(
         otherTable: ColumnSet,
@@ -600,6 +640,9 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     override infix fun fullJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.CROSS)
+
+    override fun join(otherExpression: Expression<*>, joinType: JoinType, lateral: Boolean) =
+        join(ExpressionColumnSet(otherExpression), joinType, lateral = lateral)
 
     // Column registration
 
@@ -1820,6 +1863,7 @@ fun ColumnSet.targetTables(): List<Table> = when (this) {
     is QueryAlias -> this.query.set.source.targetTables()
     is Table -> listOf(this)
     is Join -> this.table.targetTables() + this.joinParts.flatMap { it.joinPart.targetTables() }
+    is ExpressionColumnSet -> emptyList()
     else -> error("No target provided for update")
 }
 

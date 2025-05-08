@@ -197,7 +197,8 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
         val aliases = query.set.fields.filterIsInstance<ExpressionAlias<T>>()
         return aliases.find { it == original }?.let {
             it.delegate.alias("$alias.${it.alias}").aliasOnlyExpression()
-        } ?: aliases.find { it.delegate == original }?.aliasOnlyExpression()
+        }
+            ?: aliases.find { it.delegate == original }?.aliasOnlyExpression()
             ?: error("Field not found in original table fields")
     }
 
@@ -230,6 +231,9 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
     override infix fun fullJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.FULL)
 
     override infix fun crossJoin(otherTable: ColumnSet): Join = Join(this, otherTable, JoinType.CROSS)
+
+    override fun join(otherExpression: Expression<*>, joinType: JoinType, lateral: Boolean) =
+        join(ExpressionColumnSet(otherExpression), joinType, lateral = lateral)
 
     private fun <T> Column<T>.clone() = Column<T>(table.alias(alias), name, columnType)
 }
