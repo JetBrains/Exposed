@@ -415,11 +415,8 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     override fun valueFromDB(value: Any): Instant = when (value) {
         is java.sql.Timestamp -> value.toInstant()
         is String -> Instant.parse(value)
+        is LocalDateTime -> value.atZone(ZoneId.systemDefault()).toInstant()
         else -> valueFromDB(value.toString())
-    }
-
-    override fun readObject(rs: RowApi, index: Int): Any? {
-        return rs.getObject(index, java.sql.Timestamp::class.java)
     }
 
     @Suppress("MagicNumber")

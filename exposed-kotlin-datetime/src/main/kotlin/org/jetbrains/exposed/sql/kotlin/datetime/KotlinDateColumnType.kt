@@ -448,11 +448,8 @@ class KotlinInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     override fun valueFromDB(value: Any): Instant = when (value) {
         is java.sql.Timestamp -> value.toInstant().toKotlinInstant()
         is String -> Instant.parse(value)
+        is java.time.LocalDateTime -> value.atZone(ZoneId.systemDefault()).toInstant().toKotlinInstant()
         else -> valueFromDB(value.toString())
-    }
-
-    override fun readObject(rs: RowApi, index: Int): Any? {
-        return rs.getObject(index, java.sql.Timestamp::class.java)
     }
 
     @Suppress("MagicNumber")
