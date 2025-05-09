@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcScope
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.executeSQL
@@ -16,9 +19,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.statements.getCurrentCatalog
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.getCurrentSchema
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.sql.vendors.metadata.MetadataProvider
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.Types
 import java.util.concurrent.ConcurrentHashMap

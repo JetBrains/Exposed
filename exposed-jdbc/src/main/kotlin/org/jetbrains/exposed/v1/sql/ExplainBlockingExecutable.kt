@@ -1,12 +1,14 @@
 package org.jetbrains.exposed.v1.sql
 
+import org.jetbrains.exposed.v1.core.ExplainQuery
+import org.jetbrains.exposed.v1.core.ExplainResultRow
+import org.jetbrains.exposed.v1.core.statements.IStatementBuilder
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.sql.statements.BlockingExecutable
-import org.jetbrains.exposed.v1.sql.statements.IStatementBuilder
-import org.jetbrains.exposed.v1.sql.statements.Statement
 import org.jetbrains.exposed.v1.sql.statements.StatementIterator
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
-import org.jetbrains.exposed.v1.sql.statements.api.ResultApi
-import org.jetbrains.exposed.v1.sql.statements.buildStatement
 import org.jetbrains.exposed.v1.sql.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import java.sql.ResultSet

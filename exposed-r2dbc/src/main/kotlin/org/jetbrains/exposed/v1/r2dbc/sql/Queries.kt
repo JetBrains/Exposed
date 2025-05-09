@@ -2,15 +2,15 @@
 
 package org.jetbrains.exposed.v1.r2dbc.sql
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.*
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.*
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.sql.vendors.currentDialectMetadata
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.*
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import kotlin.internal.LowPriorityInOverloadResolution
 import kotlin.sequences.Sequence
 
@@ -289,7 +289,7 @@ suspend fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
 suspend fun <T : Table> T.insert(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>>? = null
-): InsertSelectStatement {
+): org.jetbrains.exposed.v1.core.statements.InsertSelectStatement {
     val stmt = buildStatement { insert(selectQuery, columns) }
     return InsertSelectSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }
@@ -348,7 +348,7 @@ suspend fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
 /**
  * Represents the SQL statement that batch inserts new rows into a table.
@@ -366,14 +366,14 @@ suspend fun <T : Table, E> T.batchInsert(
     ignore: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchInsert(data.iterator(), ignoreErrors = ignore, shouldReturnGeneratedValues, body)
 
 private suspend fun <T : Table, E> T.batchInsert(
     data: Iterator<E>,
     ignoreErrors: Boolean = false,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchInsertStatement.(E) -> Unit
-): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> = executeBatch(data, body) {
+): List<ResultRow> = executeBatch(data, body) {
     val stmt = buildStatement { batchInsert(ignoreErrors, shouldReturnGeneratedValues, body) }
     stmt.executable()
 }
@@ -428,7 +428,7 @@ suspend fun <T : Table, E : Any> T.batchReplace(
     data: Iterable<E>,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchReplaceStatement.(E) -> Unit
-): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
 
 /**
  * Represents the SQL statement that either batch inserts new rows into a table, or, if insertions violate unique constraints,
@@ -445,13 +445,13 @@ suspend fun <T : Table, E : Any> T.batchReplace(
     data: Sequence<E>,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchReplaceStatement.(E) -> Unit
-): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
+): List<ResultRow> = batchReplace(data.iterator(), shouldReturnGeneratedValues, body)
 
 private suspend fun <T : Table, E> T.batchReplace(
     data: Iterator<E>,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchReplaceStatement.(E) -> Unit
-): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> = executeBatch(data, body) {
+): List<ResultRow> = executeBatch(data, body) {
     val stmt = buildStatement { batchReplace(shouldReturnGeneratedValues, body) }
     BatchInsertSuspendExecutable(stmt)
 }
@@ -461,12 +461,12 @@ private suspend fun <E, S1 : BaseBatchInsertStatement, S2 : BatchInsertSuspendEx
     data: Iterator<E>,
     body: S1.(E) -> Unit,
     newBatchStatement: () -> S2
-): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> {
+): List<ResultRow> {
     if (!data.hasNext()) return emptyList()
 
     var executable = newBatchStatement()
 
-    val result = ArrayList<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>()
+    val result = ArrayList<ResultRow>()
     suspend fun S2.handleBatchException(removeLastData: Boolean = false, body: S1.() -> Unit) {
         try {
             statement.body()
@@ -733,7 +733,7 @@ suspend fun <T : Table, E : Any> T.batchUpsert(
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
-): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> {
+): List<ResultRow> {
     return batchUpsert(data.iterator(), null, onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body = body)
 }
 
@@ -762,7 +762,7 @@ suspend fun <T : Table, E : Any> T.batchUpsert(
     where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
-): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> {
+): List<ResultRow> {
     return batchUpsert(data.iterator(), null, onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body = body)
 }
 
@@ -776,7 +776,7 @@ private suspend fun <T : Table, E> T.batchUpsert(
     shouldReturnGeneratedValues: Boolean = true,
     vararg keys: Column<*>,
     body: BatchUpsertStatement.(E) -> Unit
-): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> = executeBatch(data, body) {
+): List<ResultRow> = executeBatch(data, body) {
     val stmt = buildStatement {
         batchUpsert(onUpdateList, onUpdate, onUpdateExclude, where, shouldReturnGeneratedValues, keys = keys, body)
     }

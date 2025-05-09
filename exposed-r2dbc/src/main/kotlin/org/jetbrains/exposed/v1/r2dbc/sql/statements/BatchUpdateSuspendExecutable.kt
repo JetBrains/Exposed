@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.statements
 
 import kotlinx.coroutines.flow.reduce
+import org.jetbrains.exposed.v1.core.statements.BatchUpdateStatement
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
-import org.jetbrains.exposed.v1.sql.statements.BatchUpdateStatement
 
 open class BatchUpdateSuspendExecutable(
     override val statement: BatchUpdateStatement

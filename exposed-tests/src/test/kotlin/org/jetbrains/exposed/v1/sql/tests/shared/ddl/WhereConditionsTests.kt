@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.ddl
 
-import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.upperCase
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.selectAll
-import org.jetbrains.exposed.v1.sql.stringLiteral
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.sql.upperCase
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

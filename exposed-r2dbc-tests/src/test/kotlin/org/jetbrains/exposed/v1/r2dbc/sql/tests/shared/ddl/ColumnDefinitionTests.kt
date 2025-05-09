@@ -3,6 +3,12 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.FieldSet
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.r2dbc.sql.Query
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
@@ -18,12 +24,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.FieldSet
-import org.jetbrains.exposed.v1.sql.Op
-import org.jetbrains.exposed.v1.sql.QueryBuilder
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.statements.StatementType
-import org.jetbrains.exposed.v1.sql.stringLiteral
 import org.junit.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
@@ -169,6 +169,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                 return super.prepareSQL(builder).replaceBefore(" FROM ", "SELECT *")
             }
         }
+
         fun FieldSet.selectImplicitAll(): Query = ImplicitQuery(this, null)
 
         val invisibilitySupportedDB = TestDB.ALL_H2 + TestDB.ALL_MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE

@@ -4,12 +4,12 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.Statement
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.StatementResult
+import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.mappers.TypeMapperRegistry
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcResult
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.StatementResult
-import org.jetbrains.exposed.v1.sql.vendors.DatabaseDialect
 import java.io.InputStream
 import java.time.Duration
 

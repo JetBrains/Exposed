@@ -2,14 +2,14 @@ package org.example.examples
 
 import org.example.entities.*
 import org.example.tables.*
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.wrapAsExpression
 import org.jetbrains.exposed.v1.dao.id.CompositeID
-import org.jetbrains.exposed.v1.sql.SortOrder
-import org.jetbrains.exposed.v1.sql.and
-import org.jetbrains.exposed.v1.sql.count
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.jetbrains.exposed.v1.sql.transactions.transaction
-import org.jetbrains.exposed.v1.sql.wrapAsExpression
 import java.util.*
 
 const val MOVIE_SEQUELID = 8

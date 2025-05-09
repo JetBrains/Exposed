@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.functions
 
 import kotlinx.coroutines.flow.first
+import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
@@ -8,7 +9,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.select
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.Function
 import java.math.BigDecimal
 
 abstract class FunctionsTestBase : R2dbcDatabaseTestsBase() {

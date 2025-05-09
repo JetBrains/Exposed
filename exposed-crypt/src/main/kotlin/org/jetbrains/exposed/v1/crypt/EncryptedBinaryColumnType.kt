@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.crypt
 
-import org.jetbrains.exposed.v1.sql.BinaryColumnType
-import org.jetbrains.exposed.v1.sql.ColumnTransformer
-import org.jetbrains.exposed.v1.sql.ColumnWithTransform
+import org.jetbrains.exposed.v1.core.BinaryColumnType
+import org.jetbrains.exposed.v1.core.ColumnTransformer
+import org.jetbrains.exposed.v1.core.ColumnWithTransform
 
 /**
  * Binary column for storing encrypted binary strings of a specific [length], using the provided [encryptor].

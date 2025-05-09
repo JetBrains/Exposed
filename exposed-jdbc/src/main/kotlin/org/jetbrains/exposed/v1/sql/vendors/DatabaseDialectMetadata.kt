@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.v1.sql.vendors
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
+import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap

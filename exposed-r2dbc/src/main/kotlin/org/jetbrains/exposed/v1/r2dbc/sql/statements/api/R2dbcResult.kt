@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactive.asPublisher
 import kotlinx.coroutines.reactive.collect
-import org.jetbrains.exposed.v1.sql.statements.api.ResultApi
-import org.jetbrains.exposed.v1.sql.statements.api.RowApi
-import org.jetbrains.exposed.v1.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.statements.api.RowApi
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.reactivestreams.Publisher
 import java.sql.Date
 import java.sql.Time

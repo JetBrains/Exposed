@@ -4,14 +4,14 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.json.contains
 import org.jetbrains.exposed.v1.sql.json.exists
 import org.jetbrains.exposed.v1.sql.json.extract
 import org.jetbrains.exposed.v1.sql.json.json
-import org.jetbrains.exposed.v1.sql.lowerCase
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.jetbrains.exposed.v1.sql.update
 

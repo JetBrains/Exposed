@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.entities
 
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.Table
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.sql.tests.shared.dml.DMLTestsData
 import org.junit.Test

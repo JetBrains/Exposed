@@ -1,8 +1,9 @@
 package org.jetbrains.exposed.v1.sql.json
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.asLiteral
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.asLiteral
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 
 // Operator Classes
 

@@ -6,7 +6,7 @@ public final class org/jetbrains/exposed/v1/spring/ExposedSpringTransactionAttri
 }
 
 public final class org/jetbrains/exposed/v1/spring/SpringTransactionManager : org/springframework/transaction/support/AbstractPlatformTransactionManager {
-	public fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/sql/DatabaseConfig;Z)V
-	public synthetic fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/sql/DatabaseConfig;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/core/DatabaseConfig;Z)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/core/DatabaseConfig;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 

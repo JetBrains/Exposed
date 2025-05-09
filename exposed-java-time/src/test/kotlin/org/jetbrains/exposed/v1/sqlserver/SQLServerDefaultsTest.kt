@@ -1,5 +1,9 @@
 package org.jetbrains.exposed.v1.sqlserver
 
+import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
+import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.javatime.*
@@ -43,7 +47,7 @@ class SQLServerDefaultsTest : DatabaseTestsBase() {
                 )
 
                 val names = listOf("name")
-                val batchInsert: List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> =
+                val batchInsert: List<ResultRow> =
                     temporalTable.batchInsert(names, shouldReturnGeneratedValues = true) {
                         this[temporalTable.name] = "name"
                     }

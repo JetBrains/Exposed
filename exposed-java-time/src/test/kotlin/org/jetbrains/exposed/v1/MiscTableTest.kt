@@ -2,6 +2,10 @@
 
 package org.jetbrains.exposed.v1
 
+import org.jetbrains.exposed.v1.core.Cast
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.javatime.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
@@ -1230,6 +1234,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
         override val primaryKey = PrimaryKey(id)
     }
+
     private val zeroDateTimeTableDdl = """
         CREATE TABLE `zerodatetimetable` (
         `id` INT NOT NULL AUTO_INCREMENT,
@@ -1270,7 +1275,7 @@ class MiscTableTest : DatabaseTestsBase() {
 
 @Suppress("LongParameterList")
 fun Misc.checkRowFull(
-    row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow,
+    row: ResultRow,
     by: Byte,
     byn: Byte?,
     sm: Short,
@@ -1306,7 +1311,7 @@ fun Misc.checkRowFull(
 
 @Suppress("LongParameterList")
 fun Misc.checkRowDates(
-    row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow,
+    row: ResultRow,
     d: LocalDate,
     dn: LocalDate?,
     t: LocalTime,

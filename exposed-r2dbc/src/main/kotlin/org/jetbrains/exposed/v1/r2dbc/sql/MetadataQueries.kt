@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.v1.r2dbc.sql
 
+import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.core.Sequence
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.sql.vendors.currentDialectMetadata
-import org.jetbrains.exposed.v1.sql.Schema
-import org.jetbrains.exposed.v1.sql.Sequence
-import org.jetbrains.exposed.v1.sql.Table
 
 /**
  * Checks if this schema exists or not.

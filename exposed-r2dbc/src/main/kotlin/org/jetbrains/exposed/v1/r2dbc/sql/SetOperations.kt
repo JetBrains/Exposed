@@ -3,6 +3,14 @@ package org.jetbrains.exposed.v1.r2dbc.sql
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.exceptions.getContexts
@@ -11,14 +19,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcPreparedStatementA
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.rowsCount
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.api.ResultApi
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
-import org.jetbrains.exposed.v1.sql.vendors.h2Mode
 
 /**
  * Represents an SQL operation that combines the results of multiple queries into a single result.
@@ -31,7 +31,7 @@ sealed class SetOperation(
     val secondStatement: AbstractQuery<*>
 ) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()),
     SuspendExecutable<ResultApi, SetOperation>,
-    SizedIterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> {
+    SizedIterable<ResultRow> {
 
     override val statement: SetOperation = this
 
@@ -158,7 +158,7 @@ sealed class SetOperation(
     private val queryToExecute: SuspendExecutable<ResultApi, SetOperation>
         get() = this
 
-    override suspend fun collect(collector: FlowCollector<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>) {
+    override suspend fun collect(collector: FlowCollector<ResultRow>) {
         val fieldIndex = set.realFields.toSet()
             .mapIndexed { index, expression -> expression to index }
             .toMap()
@@ -166,7 +166,7 @@ sealed class SetOperation(
         val rs = tx.exec(queryToExecute)!! as R2dbcResult
 
         rs.mapRows { row ->
-            val value = _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow.create(row, fieldIndex)
+            val value = ResultRow.create(row, fieldIndex)
             trackResultSet(tx)
             value
         }.collect { rr -> rr?.let { collector.emit(it) } }

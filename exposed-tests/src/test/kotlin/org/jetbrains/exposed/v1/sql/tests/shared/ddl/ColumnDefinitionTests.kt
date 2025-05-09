@@ -1,7 +1,12 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.ddl
 
+import org.jetbrains.exposed.v1.core.FieldSet
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.StatementType
 import org.jetbrains.exposed.v1.sql.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
@@ -156,6 +161,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
                 return super.prepareSQL(builder).replaceBefore(" FROM ", "SELECT *")
             }
         }
+
         fun FieldSet.selectImplicitAll(): org.jetbrains.exposed.v1.sql.Query = ImplicitQuery(this, null)
 
         val invisibilitySupportedDB = TestDB.ALL_H2 + TestDB.ALL_MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE

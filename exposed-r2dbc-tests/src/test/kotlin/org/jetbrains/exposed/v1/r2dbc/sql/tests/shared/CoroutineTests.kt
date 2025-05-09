@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
@@ -18,8 +20,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.suspendTransactionAsync
 import org.jetbrains.exposed.v1.r2dbc.sql.update
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.Executors

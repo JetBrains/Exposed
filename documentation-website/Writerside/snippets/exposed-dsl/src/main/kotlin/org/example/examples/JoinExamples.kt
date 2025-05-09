@@ -3,8 +3,8 @@ package org.example.examples
 import org.example.tables.ActorsIntIdTable
 import org.example.tables.RolesTable
 import org.example.tables.StarWarsFilmsIntIdTable
-import org.jetbrains.exposed.v1.sql.JoinType
-import org.jetbrains.exposed.v1.sql.count
+import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.count
 import org.jetbrains.exposed.v1.sql.unionAll
 
 /*

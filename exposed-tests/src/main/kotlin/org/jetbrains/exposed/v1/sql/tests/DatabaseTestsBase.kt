@@ -1,14 +1,14 @@
 package org.jetbrains.exposed.v1.sql.tests
 
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.Key
+import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
+import org.jetbrains.exposed.v1.core.transactions.nullableTransactionScope
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.Key
-import org.jetbrains.exposed.v1.sql.Schema
 import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.sql.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.v1.sql.transactions.nullableTransactionScope
 import org.jetbrains.exposed.v1.sql.transactions.transaction
 import org.jetbrains.exposed.v1.sql.transactions.transactionManager
 import org.junit.Assume

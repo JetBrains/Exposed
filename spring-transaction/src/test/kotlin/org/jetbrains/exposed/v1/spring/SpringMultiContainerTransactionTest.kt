@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.spring
 
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.sql.ResultRow
 import org.jetbrains.exposed.v1.sql.SchemaUtils
 import org.jetbrains.exposed.v1.sql.deleteAll
 import org.jetbrains.exposed.v1.sql.insertAndGetId
@@ -203,7 +203,7 @@ open class PaymentConfig {
 @Transactional
 open class Payments {
 
-    open fun findAll(): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> = Payment.selectAll().toList()
+    open fun findAll(): List<ResultRow> = Payment.selectAll().toList()
 
     open fun findAllWithExposedTrxBlock() = transaction { findAll() }
 

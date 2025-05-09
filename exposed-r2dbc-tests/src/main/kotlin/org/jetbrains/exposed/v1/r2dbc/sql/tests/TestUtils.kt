@@ -5,14 +5,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.Query
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.sql.vendors.DatabaseDialectMetadata
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.vendors.DatabaseDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
 import java.util.*
 
 fun String.inProperCase(): String = TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this) ?: this
@@ -77,11 +78,11 @@ internal fun Row.getInt(index: Int): Int = get(index - 1, java.lang.Integer::cla
  */
 internal fun Row.getInt(label: String): Int = get(label, java.lang.Integer::class.java)?.toInt() ?: 0
 
-internal suspend fun Query.forEach(block: (_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow) -> Unit) {
+internal suspend fun Query.forEach(block: (ResultRow) -> Unit) {
     this.collect { block(it) }
 }
 
-internal suspend fun Query.forEachIndexed(block: (Int, _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow) -> Unit) {
+internal suspend fun Query.forEachIndexed(block: (Int, ResultRow) -> Unit) {
     var index = 0
     forEach { block(index++, it) }
 }

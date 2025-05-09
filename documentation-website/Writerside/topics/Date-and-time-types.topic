@@ -54,7 +54,7 @@
     <chapter title="Basic usage" id="basic-usage">
         <p>Here are examples of using date and time types. The imports will vary based on your chosen module:</p>
         <code-block lang="kotlin">
-        import org.jetbrains.exposed.v1.sql.Table
+        import org.jetbrains.exposed.v1.core.Table
 
         // For exposed-kotlin-datetime (recommended)
         import org.jetbrains.exposed.v1.sql.kotlin.datetime.*

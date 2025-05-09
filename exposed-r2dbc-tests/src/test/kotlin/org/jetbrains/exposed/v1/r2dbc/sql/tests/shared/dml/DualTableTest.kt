@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.r2dbc.sql.select
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.intLiteral
 import org.junit.Test
 
 class DualTableTest : R2dbcDatabaseTestsBase() {

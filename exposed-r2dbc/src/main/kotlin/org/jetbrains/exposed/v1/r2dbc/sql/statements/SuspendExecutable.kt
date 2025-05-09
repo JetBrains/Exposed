@@ -1,12 +1,12 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.statements
 
 import io.r2dbc.spi.R2dbcException
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
-import org.jetbrains.exposed.v1.sql.InternalApi
-import org.jetbrains.exposed.v1.sql.statements.Statement
-import org.jetbrains.exposed.v1.sql.statements.StatementContext
 
 internal object DefaultValueMarker {
     override fun toString(): String = "DEFAULT"

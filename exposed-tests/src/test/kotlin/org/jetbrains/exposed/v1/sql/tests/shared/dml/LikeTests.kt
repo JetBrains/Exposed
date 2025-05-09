@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
-import org.jetbrains.exposed.v1.sql.LikePattern
-import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.core.LikePattern
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase

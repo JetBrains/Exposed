@@ -4,11 +4,13 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.builtins.ArraySerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
@@ -16,7 +18,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull

@@ -4,10 +4,10 @@ import io.r2dbc.spi.ConnectionFactoryOptions
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.mappers.TypeMapperRegistry
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.asInt
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.vendors.DatabaseDialect
 
 // TODO add KDocs
 interface R2dbcDatabaseConfig : DatabaseConfig {

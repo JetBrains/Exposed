@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.types
-
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
@@ -13,9 +16,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
@@ -78,7 +78,7 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
                 it[doubles] = emptyList()
             }
 
-            val result2: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow = ArrayTestTable.selectAll().where { ArrayTestTable.id eq id2 }.single()
+            val result2: ResultRow = ArrayTestTable.selectAll().where { ArrayTestTable.id eq id2 }.single()
             assertTrue(result2[ArrayTestTable.numbers].isEmpty())
             assertTrue(result2[ArrayTestTable.strings].isEmpty())
             assertEquals(true, result2[ArrayTestTable.doubles]?.isEmpty())

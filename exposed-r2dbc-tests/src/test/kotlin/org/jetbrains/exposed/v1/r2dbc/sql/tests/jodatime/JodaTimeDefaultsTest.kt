@@ -4,6 +4,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
+import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
@@ -22,9 +26,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.sql.update
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.jodatime.*
-import org.jetbrains.exposed.v1.sql.statements.BatchDataInconsistentException
-import org.jetbrains.exposed.v1.sql.statements.BatchInsertStatement
-import org.jetbrains.exposed.v1.sql.vendors.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime

@@ -2,8 +2,8 @@ package org.jetbrains.exposed.v1.sql.statements.jdbc
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import org.jetbrains.exposed.v1.sql.statements.api.ResultApi
-import org.jetbrains.exposed.v1.sql.statements.api.RowApi
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import java.sql.ResultSet
 
 /**

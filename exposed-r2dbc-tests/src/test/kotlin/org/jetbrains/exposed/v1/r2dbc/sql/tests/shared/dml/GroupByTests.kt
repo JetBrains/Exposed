@@ -2,6 +2,8 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.sql.select
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
@@ -10,7 +12,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.forEach
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.vendors.*
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertNotNull

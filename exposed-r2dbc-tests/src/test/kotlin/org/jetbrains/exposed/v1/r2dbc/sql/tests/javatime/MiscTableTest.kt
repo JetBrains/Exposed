@@ -4,6 +4,10 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.javatime
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.Cast
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
@@ -13,11 +17,7 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.MiscTable
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.checkInsert
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.checkRow
 import org.jetbrains.exposed.v1.r2dbc.sql.update
-import org.jetbrains.exposed.v1.sql.Cast
-import org.jetbrains.exposed.v1.sql.ResultRow
-import org.jetbrains.exposed.v1.sql.Table
 import org.jetbrains.exposed.v1.sql.javatime.*
-import org.jetbrains.exposed.v1.sql.substring
 import org.junit.Test
 import java.math.BigDecimal
 import java.time.Duration
@@ -1239,6 +1239,7 @@ class MiscTableTest : R2dbcDatabaseTestsBase() {
 
         override val primaryKey = PrimaryKey(id)
     }
+
     private val zeroDateTimeTableDdl = """
         CREATE TABLE `zerodatetimetable` (
         `id` INT NOT NULL AUTO_INCREMENT,

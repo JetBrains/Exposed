@@ -4,6 +4,9 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.jodatime
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
@@ -13,11 +16,8 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.MiscTable
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.checkInsert
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.checkRow
 import org.jetbrains.exposed.v1.r2dbc.sql.update
-import org.jetbrains.exposed.v1.sql.ResultRow
-import org.jetbrains.exposed.v1.sql.Table
 import org.jetbrains.exposed.v1.sql.jodatime.date
 import org.jetbrains.exposed.v1.sql.jodatime.datetime
-import org.jetbrains.exposed.v1.sql.substring
 import org.joda.time.DateTime
 import org.junit.Test
 import java.math.BigDecimal
@@ -381,7 +381,31 @@ class JodaTimeMiscTableTest : R2dbcDatabaseTestsBase() {
             }
 
             val row = tbl.selectAll().where { tbl.n eq 101 }.single()
-            tbl.checkRowFull(row, 13, null, -10, null, 101, null, date, null, time, null, eOne, null, eOne, null, "1234", "1234", "23456789", "3456789", dec, null, null, null)
+            tbl.checkRowFull(
+                row,
+                13,
+                null,
+                -10,
+                null,
+                101,
+                null,
+                date,
+                null,
+                time,
+                null,
+                eOne,
+                null,
+                eOne,
+                null,
+                "1234",
+                "1234",
+                "23456789",
+                "3456789",
+                dec,
+                null,
+                null,
+                null
+            )
         }
     }
 
@@ -395,6 +419,7 @@ class JodaTimeMiscTableTest : R2dbcDatabaseTestsBase() {
 
         override val primaryKey = PrimaryKey(id)
     }
+
     private val zeroDateTimeTableDdl = """
         CREATE TABLE `zerodatetimetable` (
         `id` INT NOT NULL AUTO_INCREMENT,

@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.vendors
 
-import org.jetbrains.exposed.v1.sql.InternalApi
-import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Table
 
 open class MysqlDialectMetadata : DatabaseDialectMetadata() {
     @OptIn(InternalApi::class)

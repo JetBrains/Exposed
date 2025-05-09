@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.crypt
 
 import nl.altindag.log.LogCaptor
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.exposedLogger
 import org.jetbrains.exposed.v1.sql.insertAndGetId
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase

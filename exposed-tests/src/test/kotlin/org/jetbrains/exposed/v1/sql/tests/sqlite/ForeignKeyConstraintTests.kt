@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.v1.sql.tests.sqlite
-
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectMetadataTest

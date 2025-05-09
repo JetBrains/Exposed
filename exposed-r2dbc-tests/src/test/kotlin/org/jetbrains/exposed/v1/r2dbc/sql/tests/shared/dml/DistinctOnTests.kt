@@ -2,6 +2,8 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
@@ -11,8 +13,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.SortOrder
 import org.junit.Test
 import kotlin.test.assertNull
 

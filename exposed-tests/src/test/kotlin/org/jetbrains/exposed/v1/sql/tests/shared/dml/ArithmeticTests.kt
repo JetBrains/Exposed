@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
-import org.jetbrains.exposed.v1.sql.DivideOp.Companion.withScale
-import org.jetbrains.exposed.v1.sql.Expression
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.div
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.times
-import org.jetbrains.exposed.v1.sql.decimalLiteral
+import org.jetbrains.exposed.v1.core.DivideOp.Companion.withScale
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
+import org.jetbrains.exposed.v1.core.decimalLiteral
 import org.jetbrains.exposed.v1.sql.select
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB

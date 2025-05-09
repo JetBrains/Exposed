@@ -1,6 +1,11 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.count
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
@@ -13,10 +18,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
 import org.junit.Test
 import kotlin.test.expect
 

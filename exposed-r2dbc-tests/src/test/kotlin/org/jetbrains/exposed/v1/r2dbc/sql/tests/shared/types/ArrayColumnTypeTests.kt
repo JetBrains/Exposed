@@ -3,6 +3,10 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.types
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.sql.*
@@ -14,8 +18,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
@@ -167,7 +169,7 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
 
             val firstThreeStrings = ArrayTestTable.strings.slice(upper = 3) // strings[:3]
             val result2 = ArrayTestTable.select(firstThreeStrings).single()[firstThreeStrings]
-            if (org.jetbrains.exposed.v1.sql.vendors.currentDialect is H2Dialect) { // H2 returns SQL NULL if any parameter in ARRAY_SLICE is null
+            if (currentDialect is H2Dialect) { // H2 returns SQL NULL if any parameter in ARRAY_SLICE is null
                 assertNull(result2)
             } else {
                 assertTrue(result2.filterNotNull().isEmpty())
@@ -175,7 +177,7 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
 
             val allNumbers = ArrayTestTable.numbers.slice() // numbers[:]
             val result3 = ArrayTestTable.select(allNumbers).single()[allNumbers]
-            if (org.jetbrains.exposed.v1.sql.vendors.currentDialect is H2Dialect) {
+            if (currentDialect is H2Dialect) {
                 assertNull(result3)
             } else {
                 assertContentEquals(numInput, result3)

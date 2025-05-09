@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import kotlinx.coroutines.selects.select
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.Table.Dual.innerJoin
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
@@ -21,7 +24,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
                 .select(users.name)
                 .where(predicate)
 
-            fun org.jetbrains.exposed.v1.sql.Query.sliceIt(): FieldSet = this.set.source.select(users.name, cities.name).set
+            fun Query.sliceIt(): FieldSet = this.set.source.select(users.name, cities.name).set
             val oldSlice = queryAdjusted.set.fields
             val expectedSlice = queryAdjusted.sliceIt().fields
             queryAdjusted.adjustSelect { select(users.name, cities.name) }

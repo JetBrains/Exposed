@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.types
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.functions.math.RoundFunction
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
 import org.jetbrains.exposed.v1.r2dbc.sql.select
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
@@ -10,8 +13,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.functions.math.RoundFunction
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
 import org.junit.Test
 import java.math.BigDecimal
 

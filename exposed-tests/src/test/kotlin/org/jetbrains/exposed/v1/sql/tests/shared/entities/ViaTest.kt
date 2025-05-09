@@ -1,5 +1,5 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.entities
-
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.dao.id.CompositeID
 import org.jetbrains.exposed.v1.dao.id.CompositeIdTable

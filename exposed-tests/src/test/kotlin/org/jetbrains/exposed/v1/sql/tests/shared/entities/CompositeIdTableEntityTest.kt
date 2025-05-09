@@ -1,12 +1,13 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.entities
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.dao.id.CompositeID
 import org.jetbrains.exposed.v1.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentTestDB
@@ -110,6 +111,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
         val publisherIsbn = uuid("publisher_isbn").nullable()
 
         override val primaryKey = PrimaryKey(zipCode, name, areaCode)
+
         init {
             foreignKey(publisherId, publisherIsbn, target = Publishers.primaryKey)
         }

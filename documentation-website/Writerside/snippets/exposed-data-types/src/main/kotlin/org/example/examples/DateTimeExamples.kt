@@ -1,7 +1,7 @@
 package org.example.examples
 
 import kotlinx.datetime.*
-import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentDateTime
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentTimestamp

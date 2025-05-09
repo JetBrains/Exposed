@@ -3,9 +3,9 @@ package org.jetbrains.exposed.v1.r2dbc.sql.mappers
 import io.r2dbc.spi.Parameters
 import io.r2dbc.spi.R2dbcType
 import io.r2dbc.spi.Statement
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.vendors.DatabaseDialect
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId

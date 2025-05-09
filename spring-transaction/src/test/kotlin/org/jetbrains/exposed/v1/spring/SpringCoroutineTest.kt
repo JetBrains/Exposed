@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.spring
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.tests.RepeatableTest
 import org.jetbrains.exposed.v1.sql.transactions.experimental.suspendedTransactionAsync

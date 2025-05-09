@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.statements.api
 
 import io.r2dbc.spi.ConnectionMetadata
+import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.r2dbc.sql.vendors.metadata.MetadataProvider
-import org.jetbrains.exposed.v1.sql.statements.api.IdentifierManagerApi
 
 /**
  * Class responsible for the parsing and processing of identifier tokens in SQL command syntax.

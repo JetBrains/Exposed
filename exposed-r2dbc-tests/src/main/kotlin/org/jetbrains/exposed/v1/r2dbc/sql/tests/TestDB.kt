@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests
 
 import io.r2dbc.spi.IsolationLevel
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.sql.exposedLogger
 import java.util.*
 
 enum class TestDB(

@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists

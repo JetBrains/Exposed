@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.sql.statements.jdbc
 
-import org.jetbrains.exposed.v1.sql.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import java.sql.DatabaseMetaData
 

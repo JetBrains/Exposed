@@ -2,17 +2,17 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.functions
 
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
+import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.core.doubleLiteral
+import org.jetbrains.exposed.v1.core.functions.math.*
+import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.div
-import org.jetbrains.exposed.v1.sql.decimalLiteral
-import org.jetbrains.exposed.v1.sql.doubleLiteral
-import org.jetbrains.exposed.v1.sql.functions.math.*
-import org.jetbrains.exposed.v1.sql.intLiteral
 import org.junit.Test
 import java.math.BigDecimal
 

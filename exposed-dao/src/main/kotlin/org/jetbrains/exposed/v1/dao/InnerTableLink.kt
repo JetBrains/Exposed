@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.v1.dao
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.notInList
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.notInList
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty

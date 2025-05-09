@@ -2,6 +2,9 @@
 
 package org.jetbrains.exposed.v1
 
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.jodatime.date
 import org.jetbrains.exposed.v1.sql.jodatime.datetime
@@ -373,7 +376,31 @@ class JodaTimeMiscTableTest : DatabaseTestsBase() {
             }
 
             val row = tbl.selectAll().where { tbl.n eq 101 }.single()
-            tbl.checkRowFull(row, 13, null, -10, null, 101, null, date, null, time, null, eOne, null, eOne, null, "1234", "1234", "23456789", "3456789", dec, null, null, null)
+            tbl.checkRowFull(
+                row,
+                13,
+                null,
+                -10,
+                null,
+                101,
+                null,
+                date,
+                null,
+                time,
+                null,
+                eOne,
+                null,
+                eOne,
+                null,
+                "1234",
+                "1234",
+                "23456789",
+                "3456789",
+                dec,
+                null,
+                null,
+                null
+            )
         }
     }
 
@@ -387,6 +414,7 @@ class JodaTimeMiscTableTest : DatabaseTestsBase() {
 
         override val primaryKey = PrimaryKey(id)
     }
+
     private val zeroDateTimeTableDdl = """
         CREATE TABLE `zerodatetimetable` (
         `id` INT NOT NULL AUTO_INCREMENT,
@@ -427,7 +455,7 @@ class JodaTimeMiscTableTest : DatabaseTestsBase() {
 
 @Suppress("LongParameterList")
 fun Misc.checkRowFull(
-    row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow,
+    row: ResultRow,
     by: Byte,
     byn: Byte?,
     sm: Short,
@@ -455,7 +483,7 @@ fun Misc.checkRowFull(
     checkRowDates(row, d, dn, t, tn)
 }
 
-fun Misc.checkRowDates(row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow, d: DateTime, dn: DateTime?, t: DateTime, tn: DateTime?) {
+fun Misc.checkRowDates(row: ResultRow, d: DateTime, dn: DateTime?, t: DateTime, tn: DateTime?) {
     assertEqualDateTime(row[Misc.d], d)
     assertEqualDateTime(row[Misc.dn], dn)
     assertEqualDateTime(row[Misc.t], t)

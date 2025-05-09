@@ -3,6 +3,11 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.r2dbc.exceptions.ExposedR2dbcException
@@ -19,10 +24,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.sql.update
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.less
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.lessEq
 import org.junit.Test
 import kotlin.test.assertFailsWith
 

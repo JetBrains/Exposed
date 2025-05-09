@@ -1,5 +1,9 @@
 package org.jetbrains.exposed.v1
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
+import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.dao.IntEntity
@@ -9,8 +13,6 @@ import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.jodatime.*
-import org.jetbrains.exposed.v1.sql.statements.BatchDataInconsistentException
-import org.jetbrains.exposed.v1.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.constraintNamePart
@@ -22,7 +24,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.vendors.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
@@ -373,7 +374,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
         }
 
         val date = DateTime.now()
-        var list1: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow? = null
+        var list1: ResultRow? = null
         withTables(testData) {
             testData.insert {
                 it[name] = "test1"

@@ -1,10 +1,12 @@
 package org.jetbrains.exposed.v1.sql.statements
 
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.jetbrains.exposed.v1.sql.InternalApi
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
-import org.jetbrains.exposed.v1.sql.statements.api.PreparedStatementApi
 import java.sql.SQLException
 
 internal object DefaultValueMarker {

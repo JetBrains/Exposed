@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.vendors.metadata
 
-import org.jetbrains.exposed.v1.sql.ReferenceOption
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect.H2CompatibilityMode
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
-import org.jetbrains.exposed.v1.sql.vendors.h2Mode
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect.H2CompatibilityMode
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.h2Mode
 
 internal object H2PropertyProvider : PropertyProvider() {
     override val storesUpperCaseIdentifiers: Boolean

@@ -1,7 +1,8 @@
 package org.jetbrains.exposed.v1.sql.tests.demo.sql
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.transactions.transaction
 import org.junit.Assume

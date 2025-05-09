@@ -1,5 +1,5 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.types
-
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID

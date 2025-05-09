@@ -1,6 +1,6 @@
 package org.example.tables
 
-import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 /*
     Important: This file is referenced by line number in `DSL-Table-Types.topic`.

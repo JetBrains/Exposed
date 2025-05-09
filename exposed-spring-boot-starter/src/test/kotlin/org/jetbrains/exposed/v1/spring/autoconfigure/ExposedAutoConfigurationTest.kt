@@ -1,12 +1,12 @@
 package org.jetbrains.exposed.v1.spring.autoconfigure
 
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.spring.Application
 import org.jetbrains.exposed.v1.spring.DatabaseInitializer
 import org.jetbrains.exposed.v1.spring.ExposedSpringTransactionAttributeSource
 import org.jetbrains.exposed.v1.spring.SpringTransactionManager
 import org.jetbrains.exposed.v1.spring.tables.TestTable
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
-import org.jetbrains.exposed.v1.sql.ResultRow
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled

@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.flattenConcat
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
@@ -12,9 +15,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.v1.sql.ReferenceOption
-import org.jetbrains.exposed.v1.sql.SortOrder
-import org.jetbrains.exposed.v1.sql.alias
 import org.junit.Test
 import java.util.*
 

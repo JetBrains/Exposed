@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.vendors.metadata
 
-import org.jetbrains.exposed.v1.sql.ReferenceOption
+import org.jetbrains.exposed.v1.core.ReferenceOption
 
 /** Base class responsible for providing details and string builders for all supported SQL types in a database. */
 @Suppress("MagicNumber")
@@ -235,6 +235,7 @@ internal abstract class SqlTypeProvider {
             if (other !is DataType) return false
             return this.name == other.name
         }
+
         override fun hashCode(): Int = name.hashCode()
     }
 

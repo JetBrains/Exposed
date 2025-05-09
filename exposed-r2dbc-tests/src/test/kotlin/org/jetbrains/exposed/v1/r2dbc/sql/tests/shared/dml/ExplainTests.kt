@@ -2,6 +2,14 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.intParam
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.statements.IStatementBuilder
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.*
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
@@ -9,14 +17,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.and
-import org.jetbrains.exposed.v1.sql.intParam
-import org.jetbrains.exposed.v1.sql.or
-import org.jetbrains.exposed.v1.sql.statements.IStatementBuilder
-import org.jetbrains.exposed.v1.sql.statements.Statement
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
 import org.junit.Test
 
 class ExplainTests : R2dbcDatabaseTestsBase() {

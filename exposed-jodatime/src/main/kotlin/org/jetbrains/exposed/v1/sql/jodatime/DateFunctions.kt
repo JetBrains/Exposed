@@ -1,13 +1,14 @@
 package org.jetbrains.exposed.v1.sql.jodatime
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.Function
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.Function
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
-import org.jetbrains.exposed.v1.sql.vendors.h2Mode
 import org.joda.time.DateTime
 import org.joda.time.LocalTime
 

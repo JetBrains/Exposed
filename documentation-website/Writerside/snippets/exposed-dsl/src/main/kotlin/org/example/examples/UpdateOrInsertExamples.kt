@@ -1,9 +1,9 @@
 package org.example.examples
 
 import org.example.tables.StarWarsFilmsTable
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.sql.stringLiteral
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.concat
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.sql.upsert
 
 private const val MOVIE_SEQUEL_ID = 9

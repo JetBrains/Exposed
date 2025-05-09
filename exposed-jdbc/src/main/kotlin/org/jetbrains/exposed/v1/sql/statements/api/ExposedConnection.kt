@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.v1.sql.statements.api
 
+import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
+
 /** Represents a wrapper for a database connection. */
 interface ExposedConnection<OriginalConnection : Any> {
     /** Whether the connection has been closed. */

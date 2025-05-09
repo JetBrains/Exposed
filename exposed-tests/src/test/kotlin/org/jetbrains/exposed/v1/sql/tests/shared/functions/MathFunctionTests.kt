@@ -1,12 +1,14 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.functions
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
+import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.core.doubleLiteral
+import org.jetbrains.exposed.v1.core.functions.math.*
+import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.div
-import org.jetbrains.exposed.v1.sql.decimalLiteral
-import org.jetbrains.exposed.v1.sql.doubleLiteral
-import org.jetbrains.exposed.v1.sql.functions.math.*
+import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.insertAndGetId
-import org.jetbrains.exposed.v1.sql.intLiteral
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals

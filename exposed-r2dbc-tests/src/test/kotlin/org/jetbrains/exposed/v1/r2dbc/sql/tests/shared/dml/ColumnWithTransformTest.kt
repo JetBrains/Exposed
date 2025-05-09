@@ -3,6 +3,9 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ColumnTransformer
+import org.jetbrains.exposed.v1.core.ColumnWithTransform
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
@@ -15,9 +18,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.update
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.ColumnTransformer
-import org.jetbrains.exposed.v1.sql.ColumnWithTransform
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertEquals

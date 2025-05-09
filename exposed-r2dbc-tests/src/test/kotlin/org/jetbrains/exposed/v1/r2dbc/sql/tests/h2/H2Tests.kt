@@ -2,6 +2,13 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.h2
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.avg
+import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
@@ -18,13 +25,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.transactionManager
-import org.jetbrains.exposed.v1.sql.InternalApi
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.avg
-import org.jetbrains.exposed.v1.sql.transactions.CoreTransactionManager
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManagerApi
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit

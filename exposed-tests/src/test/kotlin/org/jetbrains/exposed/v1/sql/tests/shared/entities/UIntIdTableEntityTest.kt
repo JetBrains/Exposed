@@ -1,12 +1,13 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.entities
-
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.exists
 import org.jetbrains.exposed.v1.dao.UIntEntity
 import org.jetbrains.exposed.v1.dao.UIntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.UIntIdTable
 import org.jetbrains.exposed.v1.dao.with
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.exists
+import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.insertAndGetId
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals

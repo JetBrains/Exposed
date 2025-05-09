@@ -1,6 +1,21 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.functions
 
 import kotlinx.coroutines.flow.map
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.cumeDist
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.denseRank
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.firstValue
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lag
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lastValue
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lead
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.nthValue
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.ntile
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.percentRank
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.rank
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.rowNumber
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.select
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
@@ -8,20 +23,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.withSales
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.cumeDist
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.denseRank
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.firstValue
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.lag
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.lastValue
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.lead
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.nthValue
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.ntile
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.percentRank
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.rank
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.rowNumber
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Test
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -418,9 +419,9 @@ class WindowFunctionsTests : R2dbcDatabaseTestsBase() {
     ) {
         val result = select(definition)
             .orderBy(
-                year to org.jetbrains.exposed.v1.sql.SortOrder.ASC,
-                month to org.jetbrains.exposed.v1.sql.SortOrder.ASC,
-                product to org.jetbrains.exposed.v1.sql.SortOrder.ASC_NULLS_FIRST
+                year to SortOrder.ASC,
+                month to SortOrder.ASC,
+                product to SortOrder.ASC_NULLS_FIRST
             )
             .map { it[definition] }
 

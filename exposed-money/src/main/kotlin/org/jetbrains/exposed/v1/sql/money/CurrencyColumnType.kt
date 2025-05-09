@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.sql.money
 
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.ColumnType
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.VarCharColumnType
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ColumnType
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.VarCharColumnType
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import javax.money.CurrencyUnit
 import javax.money.Monetary
 

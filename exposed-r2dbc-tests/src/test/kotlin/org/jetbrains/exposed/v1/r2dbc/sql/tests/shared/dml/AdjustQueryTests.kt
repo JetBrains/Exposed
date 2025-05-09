@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.Table.Dual.innerJoin
 import org.jetbrains.exposed.v1.r2dbc.sql.Query
 import org.jetbrains.exposed.v1.r2dbc.sql.andHaving
 import org.jetbrains.exposed.v1.r2dbc.sql.andWhere

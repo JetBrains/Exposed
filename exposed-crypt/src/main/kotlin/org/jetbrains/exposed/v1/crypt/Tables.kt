@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.crypt
 
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Table
 
 /**
  * Creates a character column, with the specified [name], for storing encrypted strings.

@@ -2,6 +2,10 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.types
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.blobParam
+import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
@@ -13,10 +17,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.alias
-import org.jetbrains.exposed.v1.sql.blobParam
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedBlob
 import org.junit.Test
 import java.nio.charset.Charset
 import kotlin.random.Random

@@ -1,5 +1,12 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.ddl
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Sequence
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.nextIntVal
+import org.jetbrains.exposed.v1.core.nextLongVal
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
@@ -17,7 +24,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.transactions.transaction
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Assume
 import org.junit.Test
 import java.util.*

@@ -10,7 +10,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 // import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcDatabase
 // import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 // import org.jetbrains.exposed.v1.r2dbc.sql.transactions.suspendTransaction
-// import org.jetbrains.exposed.v1.sql.DatabaseConfig
+// import org.jetbrains.exposed.v1.core.DatabaseConfig
 // import org.junit.Test
 // import org.reactivestreams.Publisher
 // import java.sql.Connection

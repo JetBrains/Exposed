@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.spring
 
 import junit.framework.TestCase.assertEquals
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
+import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import org.junit.Test
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy

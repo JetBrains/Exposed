@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.v1.sql.tests.h2
 
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.entityCache
@@ -8,10 +10,8 @@ import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.load
 import org.jetbrains.exposed.v1.dao.with
-import org.jetbrains.exposed.v1.sql.ReferenceOption
 import org.jetbrains.exposed.v1.sql.SchemaUtils
 import org.jetbrains.exposed.v1.sql.SizedCollection
-import org.jetbrains.exposed.v1.sql.Table
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.demo.dao.Cities

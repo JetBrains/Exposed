@@ -1,18 +1,19 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.ddl
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLiteDialect
 import org.junit.Test
 import kotlin.test.expect
 

@@ -1,9 +1,12 @@
 package org.jetbrains.exposed.v1.sql.tests.shared
 
-import org.jetbrains.exposed.v1.sql.Schema
+import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.exists
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.and
 import org.jetbrains.exposed.v1.sql.exists
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.selectAll
@@ -11,8 +14,6 @@ import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.sql.transactions.transaction
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Assume
 import org.junit.Test
 
@@ -186,6 +187,7 @@ class SchemaTests : DatabaseTestsBase() {
         val tester = object : Table("$schemaName.test_table") {
             val amount1 = ushort("amount1") // implicit column check constraint
             val amount2 = integer("amount2").check { it lessEq 100 } // explicit column check constraint
+
             init {
                 check { (amount1 less 100.toUShort()) and (amount2 greater 50) } // explicit table check constraint
             }

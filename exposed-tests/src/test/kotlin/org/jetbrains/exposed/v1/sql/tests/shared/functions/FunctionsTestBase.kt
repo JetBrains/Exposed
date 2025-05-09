@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.functions
-
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.Function
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals

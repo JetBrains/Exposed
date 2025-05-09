@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.sql.tests.shared
 
+import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
-import org.jetbrains.exposed.v1.sql.vendors.ColumnMetadata
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
 import org.junit.Test
 import java.sql.Types
 

@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.v1.sql.tests.shared
 
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.StatementType
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.inProperCase

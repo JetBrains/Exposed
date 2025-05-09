@@ -1,5 +1,12 @@
 package org.jetbrains.exposed.v1.sql.tests.shared
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
@@ -9,18 +16,12 @@ import org.jetbrains.exposed.v1.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.sql.tests.inProperCase
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.sql.transactions.transaction
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLiteDialect
 import org.junit.Assume
 import org.junit.Test
 import java.util.*
@@ -627,7 +628,7 @@ class DDLTests : DatabaseTestsBase() {
             val binaryColumn = binary("binaryColumn")
         }
 
-        fun SizedIterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
+        fun SizedIterable<ResultRow>.readAsString() = map { String(it[tableWithBinary.binaryColumn]) }
 
         val exposedBytes = "Exposed".toByteArray()
         val kotlinBytes = "Kotlin".toByteArray()
@@ -660,7 +661,7 @@ class DDLTests : DatabaseTestsBase() {
             val byteCol = binary("byteCol", 1).clientDefault { byteArrayOf(0) }
         }
 
-        fun SizedIterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>.readAsString() = map { result -> result[t.binary]?.let { String(it) } }
+        fun SizedIterable<ResultRow>.readAsString() = map { result -> result[t.binary]?.let { String(it) } }
 
         withTables(t) {
             t.insert { it[t.binary] = "Hello!".toByteArray() }

@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.transactions
 
 import io.r2dbc.spi.IsolationLevel
+import org.jetbrains.exposed.v1.core.transactions.TransactionInterface
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
-import org.jetbrains.exposed.v1.sql.transactions.TransactionInterface
 
 interface R2dbcTransactionInterface : TransactionInterface {
     override val db: R2dbcDatabase

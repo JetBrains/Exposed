@@ -4,9 +4,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
-import org.jetbrains.exposed.v1.sql.Expression
-import org.jetbrains.exposed.v1.sql.SortOrder
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 
 /** Represents the iterable elements of a database result. */
 interface SizedIterable<out T> : Flow<T> {

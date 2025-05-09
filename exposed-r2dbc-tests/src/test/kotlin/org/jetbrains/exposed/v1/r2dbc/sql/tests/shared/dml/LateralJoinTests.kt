@@ -2,6 +2,10 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.joinQuery
+import org.jetbrains.exposed.v1.core.lastQueryAlias
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
@@ -11,9 +15,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.alias
-import org.jetbrains.exposed.v1.sql.joinQuery
-import org.jetbrains.exposed.v1.sql.lastQueryAlias
 import org.junit.Test
 
 class LateralJoinTests : R2dbcDatabaseTestsBase() {
@@ -24,7 +25,7 @@ class LateralJoinTests : R2dbcDatabaseTestsBase() {
     fun testLateralJoinQuery() {
         withTestTablesAndDefaultData { parent, child, _ ->
             val query = parent.joinQuery(
-                joinType = org.jetbrains.exposed.v1.sql.JoinType.CROSS,
+                joinType = JoinType.CROSS,
                 lateral = true
             ) {
                 child.selectAll().where { child.value greater parent.value }
@@ -44,7 +45,7 @@ class LateralJoinTests : R2dbcDatabaseTestsBase() {
                 .let { subqueryAlias ->
                     val query = parent.join(
                         subqueryAlias,
-                        org.jetbrains.exposed.v1.sql.JoinType.CROSS,
+                        JoinType.CROSS,
                         onColumn = parent.id,
                         otherColumn = subqueryAlias[child.parent],
                         lateral = true
@@ -58,7 +59,7 @@ class LateralJoinTests : R2dbcDatabaseTestsBase() {
                 .let { subqueryAlias ->
                     val query = parent.join(
                         subqueryAlias,
-                        org.jetbrains.exposed.v1.sql.JoinType.LEFT,
+                        JoinType.LEFT,
                         onColumn = parent.id,
                         otherColumn = subqueryAlias[child.parent],
                         lateral = true
@@ -74,7 +75,7 @@ class LateralJoinTests : R2dbcDatabaseTestsBase() {
                     val query = parentQuery
                         .join(
                             subqueryAlias,
-                            org.jetbrains.exposed.v1.sql.JoinType.LEFT,
+                            JoinType.LEFT,
                             onColumn = parentQuery[parent.id],
                             otherColumn = subqueryAlias[child.parent],
                             lateral = true
@@ -90,12 +91,12 @@ class LateralJoinTests : R2dbcDatabaseTestsBase() {
         withTestTables { parent, child, _ ->
             // Explicit notation
             expectException<IllegalArgumentException> {
-                parent.join(child, org.jetbrains.exposed.v1.sql.JoinType.LEFT, onColumn = parent.id, otherColumn = child.parent, lateral = true)
+                parent.join(child, JoinType.LEFT, onColumn = parent.id, otherColumn = child.parent, lateral = true)
             }
 
             // Implicit notation
             expectException<IllegalArgumentException> {
-                parent.join(child, org.jetbrains.exposed.v1.sql.JoinType.LEFT, lateral = true).selectAll().toList()
+                parent.join(child, JoinType.LEFT, lateral = true).selectAll().toList()
             }
         }
     }

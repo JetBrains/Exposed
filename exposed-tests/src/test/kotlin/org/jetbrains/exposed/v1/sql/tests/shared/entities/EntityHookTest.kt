@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.entities
-
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.ReferenceOption
 import org.jetbrains.exposed.v1.sql.SizedCollection
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualCollections
@@ -28,7 +29,7 @@ object EntityHookTestData {
         val name = varchar("name", 50)
     }
 
-    object UsersToCities : org.jetbrains.exposed.v1.sql.Table() {
+    object UsersToCities : Table() {
         val user = reference("user", Users, onDelete = ReferenceOption.CASCADE)
         val city = reference("city", Cities, onDelete = ReferenceOption.CASCADE)
     }

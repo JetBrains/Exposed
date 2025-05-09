@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.sql.tests.shared
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
@@ -322,7 +323,8 @@ class CoroutineTests : DatabaseTestsBase() {
         companion object : IntEntityClass<TestingEntity>(Testing)
     }
 
-    @Test fun testCoroutinesWithExceptionWithin() {
+    @Test
+    fun testCoroutinesWithExceptionWithin() {
         withTables(Testing) {
             val id = Testing.insertAndGetId {}
             commit()

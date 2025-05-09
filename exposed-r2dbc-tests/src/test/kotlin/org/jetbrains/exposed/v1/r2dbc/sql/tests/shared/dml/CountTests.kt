@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
@@ -10,9 +13,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.alias
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
 import org.junit.Test
 
 class CountTests : R2dbcDatabaseTestsBase() {

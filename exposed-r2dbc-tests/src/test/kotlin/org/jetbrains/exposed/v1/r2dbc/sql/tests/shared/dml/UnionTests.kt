@@ -2,6 +2,15 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.Query
 import org.jetbrains.exposed.v1.r2dbc.sql.except
 import org.jetbrains.exposed.v1.r2dbc.sql.intersect
@@ -16,11 +25,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.sql.union
 import org.jetbrains.exposed.v1.r2dbc.sql.unionAll
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertTrue
 

@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.sql.tests.shared
 
-import org.jetbrains.exposed.v1.sql.ResultRow
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.statements.InsertStatement
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 
@@ -46,7 +46,7 @@ open class MiscTable : Table() {
 
 @Suppress("LongParameterList")
 fun MiscTable.checkRow(
-    row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow,
+    row: ResultRow,
     by: Byte,
     byn: Byte?,
     sm: Short,

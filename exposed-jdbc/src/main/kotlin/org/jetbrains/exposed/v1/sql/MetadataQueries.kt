@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.v1.sql
 
+import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.core.Sequence
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.sql.vendors.currentDialectMetadata
 
 /**

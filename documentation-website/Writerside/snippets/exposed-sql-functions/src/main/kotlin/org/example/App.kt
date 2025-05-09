@@ -5,10 +5,10 @@ import org.example.examples.CustomFuncExamples
 import org.example.examples.StringFuncExamples
 import org.example.examples.WindowFuncExamples
 import org.example.tables.FilmBoxOfficeTable
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.sql.Database
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
 import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.StdOutSqlLogger
 import org.jetbrains.exposed.v1.sql.addLogger
 import org.jetbrains.exposed.v1.sql.transactions.transaction
 

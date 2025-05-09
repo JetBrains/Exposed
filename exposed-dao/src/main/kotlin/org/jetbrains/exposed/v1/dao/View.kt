@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.dao
 
-import org.jetbrains.exposed.v1.sql.Expression
-import org.jetbrains.exposed.v1.sql.Op
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.sql.SizedIterable
-import org.jetbrains.exposed.v1.sql.SortOrder
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption
 import kotlin.reflect.KProperty
 
 /**

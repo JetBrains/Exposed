@@ -1,12 +1,13 @@
 package org.jetbrains.exposed.v1.dao
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.v1.dao.id.CompositeID
 import org.jetbrains.exposed.v1.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
@@ -185,7 +186,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     /**
      * Returns a [SizedIterable] containing entities generated using data retrieved from a database result set in [rows].
      */
-    fun wrapRows(rows: SizedIterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>): SizedIterable<T> = rows mapLazy {
+    fun wrapRows(rows: SizedIterable<ResultRow>): SizedIterable<T> = rows mapLazy {
         wrapRow(it)
     }
 
@@ -194,7 +195,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * An [alias] should be provided to adjust each [ResultRow] mapping, if necessary, before generating entities.
      */
-    fun wrapRows(rows: SizedIterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>, alias: Alias<IdTable<*>>) = rows mapLazy {
+    fun wrapRows(rows: SizedIterable<ResultRow>, alias: Alias<IdTable<*>>) = rows mapLazy {
         wrapRow(it, alias)
     }
 
@@ -203,13 +204,13 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * An [alias] should be provided to adjust each [ResultRow] mapping, if necessary, before generating entities.
      */
-    fun wrapRows(rows: SizedIterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>, alias: QueryAlias) = rows mapLazy {
+    fun wrapRows(rows: SizedIterable<ResultRow>, alias: QueryAlias) = rows mapLazy {
         wrapRow(it, alias)
     }
 
     /** Wraps the specified [ResultRow] data into an [Entity] instance. */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun wrapRow(row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow): T {
+    fun wrapRow(row: ResultRow): T {
         val entity = wrap(row[table.id], row)
         if (entity._readValues == null) {
             entity._readValues = row
@@ -225,7 +226,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * @sample org.jetbrains.exposed.v1.sql.tests.shared.AliasesTests.testWrapRowWithAliasedTable
      */
-    fun wrapRow(row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow, alias: Alias<IdTable<*>>): T {
+    fun wrapRow(row: ResultRow, alias: Alias<IdTable<*>>): T {
         require(alias.delegate == table) { "Alias for a wrong table ${alias.delegate.tableName} while ${table.tableName} expected" }
         val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
             val column = exp as? Column<*>
@@ -238,7 +239,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             }
         }.toMap()
 
-        return wrapRow(_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow.createAndFillValues(unwrapColumnValues(newFieldsMapping)))
+        return wrapRow(ResultRow.createAndFillValues(unwrapColumnValues(newFieldsMapping)))
     }
 
     /**
@@ -248,7 +249,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * @sample org.jetbrains.exposed.v1.sql.tests.shared.AliasesTests.testWrapRowWithAliasedQuery
      */
-    fun wrapRow(row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow, alias: QueryAlias): T {
+    fun wrapRow(row: ResultRow, alias: QueryAlias): T {
         require(alias.columns.any { (it.table as Alias<*>).delegate == table }) { "QueryAlias doesn't have any column from ${table.tableName} table" }
         val originalColumns = alias.query.set.source.columns
         val newFieldsMapping = row.fieldIndex.mapNotNull { (exp, _) ->
@@ -267,7 +268,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
             }
         }.toMap()
 
-        return wrapRow(_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow.createAndFillValues(unwrapColumnValues(newFieldsMapping)))
+        return wrapRow(ResultRow.createAndFillValues(unwrapColumnValues(newFieldsMapping)))
     }
 
     /**
@@ -337,13 +338,13 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     }
 
     /** Creates a new [Entity] instance with the provided [entityId] value. */
-    protected open fun createInstance(entityId: EntityID<ID>, row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow?): T = entityCtor(entityId)
+    protected open fun createInstance(entityId: EntityID<ID>, row: ResultRow?): T = entityCtor(entityId)
 
     /**
      * Returns an [Entity] with the provided [EntityID] value, or, if an entity was not found in the current
      * [EntityCache], creates a new instance using the data in [row].
      */
-    fun wrap(id: EntityID<ID>, row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow?): T {
+    fun wrap(id: EntityID<ID>, row: ResultRow?): T {
         val transaction = TransactionManager.current()
         return transaction.entityCache.find(this, id) ?: createInstance(id, row).also { new ->
             new.klass = this
@@ -379,7 +380,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
         val prototype: T = createInstance(entityId, null)
         prototype.klass = this
         prototype.db = TransactionManager.current().db
-        prototype._readValues = _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow.createAndFillDefaults(dependsOnColumns)
+        prototype._readValues = ResultRow.createAndFillDefaults(dependsOnColumns)
         if (entityId._value != null) {
             prototype.writeIdColumnValue(table, entityId)
         }

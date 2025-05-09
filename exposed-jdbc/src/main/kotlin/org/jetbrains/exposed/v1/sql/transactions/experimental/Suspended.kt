@@ -5,11 +5,11 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.exposedLogger
+import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.sql.Database
-import org.jetbrains.exposed.v1.sql.InternalApi
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.exposedLogger
-import org.jetbrains.exposed.v1.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.sql.transactions.closeStatementsAndConnection
 import org.jetbrains.exposed.v1.sql.transactions.handleSQLException

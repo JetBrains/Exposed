@@ -1,4 +1,4 @@
-import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 const val EMAIL_LIMIT = 320
 

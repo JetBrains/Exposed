@@ -1,16 +1,17 @@
 package org.jetbrains.exposed.v1.sql
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.v1.sql.statements.BlockingExecutable
 import org.jetbrains.exposed.v1.sql.statements.StatementIterator
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
-import org.jetbrains.exposed.v1.sql.statements.api.ResultApi
 import org.jetbrains.exposed.v1.sql.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import java.sql.ResultSet
 
 /** Class representing an SQL `SELECT` statement on which query clauses can be built. */
@@ -19,7 +20,7 @@ open class Query(
     where: Op<Boolean>?
 ) : AbstractQuery<Query>(set.source.targetTables()),
     BlockingExecutable<ResultApi, Query>,
-    org.jetbrains.exposed.v1.sql.SizedIterable<org.jetbrains.exposed.v1.sql.ResultRow> {
+    SizedIterable<ResultRow> {
 
     override val statement: Query = this
 
@@ -149,7 +150,7 @@ open class Query(
     fun fetchBatchedResults(
         batchSize: Int = 1000,
         sortOrder: SortOrder = SortOrder.ASC
-    ): Iterable<Iterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>> {
+    ): Iterable<Iterable<ResultRow>> {
         require(batchSize > 0) { "Batch size should be greater than 0." }
         require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
         require(orderByExpressions.isEmpty()) {
@@ -167,8 +168,8 @@ open class Query(
         val fetchInAscendingOrder =
             sortOrder in listOf(SortOrder.ASC, SortOrder.ASC_NULLS_FIRST, SortOrder.ASC_NULLS_LAST)
 
-        return object : Iterable<Iterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>> {
-            override fun iterator(): Iterator<Iterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>> {
+        return object : Iterable<Iterable<ResultRow>> {
+            override fun iterator(): Iterator<Iterable<ResultRow>> {
                 return iterator {
                     var lastOffset = if (fetchInAscendingOrder) 0L else null
                     while (true) {
@@ -307,7 +308,7 @@ open class Query(
             }
         }
 
-    override fun iterator(): Iterator<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> {
+    override fun iterator(): Iterator<ResultRow> {
         val rs = transaction.exec(queryToExecute)!! as JdbcResult
         val resultIterator = ResultIterator(rs.result)
         return if (transaction.db.supportsMultipleResultSets) {
@@ -317,7 +318,7 @@ open class Query(
         }
     }
 
-    private inner class ResultIterator(rs: ResultSet) : StatementIterator<Expression<*>, _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>(rs) {
+    private inner class ResultIterator(rs: ResultSet) : StatementIterator<Expression<*>, ResultRow>(rs) {
         override val fieldIndex = set.realFields.toSet()
             .mapIndexed { index, expression -> expression to index }
             .toMap()

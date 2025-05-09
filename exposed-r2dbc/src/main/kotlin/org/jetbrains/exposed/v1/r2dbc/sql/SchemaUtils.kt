@@ -3,12 +3,12 @@ package org.jetbrains.exposed.v1.r2dbc.sql
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils.withDataBaseLock
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.sql.vendors.currentDialectMetadata
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 
 /** Utility functions that assist with creating, altering, and dropping database schema objects. */
 @Suppress("TooManyFunctions", "LargeClass")

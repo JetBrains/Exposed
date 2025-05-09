@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.sql.tests.shared
 
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.dao.id.IntIdTable

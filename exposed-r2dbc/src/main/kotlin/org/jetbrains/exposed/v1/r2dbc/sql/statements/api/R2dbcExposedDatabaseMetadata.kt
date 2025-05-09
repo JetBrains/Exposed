@@ -1,15 +1,15 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.statements.api
 
 import io.r2dbc.spi.IsolationLevel
-import org.jetbrains.exposed.v1.sql.CheckConstraint
-import org.jetbrains.exposed.v1.sql.ForeignKeyConstraint
-import org.jetbrains.exposed.v1.sql.Index
-import org.jetbrains.exposed.v1.sql.Sequence
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedDatabaseMetadata
-import org.jetbrains.exposed.v1.sql.vendors.ColumnMetadata
-import org.jetbrains.exposed.v1.sql.vendors.PrimaryKeyMetadata
-import org.jetbrains.exposed.v1.sql.vendors.SchemaMetadata
+import org.jetbrains.exposed.v1.core.CheckConstraint
+import org.jetbrains.exposed.v1.core.ForeignKeyConstraint
+import org.jetbrains.exposed.v1.core.Index
+import org.jetbrains.exposed.v1.core.Sequence
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.api.ExposedDatabaseMetadata
+import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
+import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.v1.core.vendors.SchemaMetadata
 import java.math.BigDecimal
 
 abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseMetadata(database) {

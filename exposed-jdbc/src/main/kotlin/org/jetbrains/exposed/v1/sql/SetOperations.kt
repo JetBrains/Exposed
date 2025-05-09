@@ -1,18 +1,19 @@
 package org.jetbrains.exposed.v1.sql
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.sql.statements.BlockingExecutable
 import org.jetbrains.exposed.v1.sql.statements.StatementIterator
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
-import org.jetbrains.exposed.v1.sql.statements.api.ResultApi
 import org.jetbrains.exposed.v1.sql.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
-import org.jetbrains.exposed.v1.sql.vendors.h2Mode
 import java.sql.ResultSet
 
 /**
@@ -35,7 +36,7 @@ sealed class SetOperation(
 
     /** The SQL statement on the left-hand side of the set operator. */
     val firstStatement: AbstractQuery<*> = when (_firstStatement) {
-        is org.jetbrains.exposed.v1.sql.Query -> {
+        is Query -> {
             val newSlice = _firstStatement.set.fields.mapIndexed { index, expression ->
                 when (expression) {
                     is Column<*>, is IExpressionAlias<*> -> expression

@@ -1,19 +1,20 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNull
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.isNull
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.timestamp
 import org.jetbrains.exposed.v1.sql.statements.BatchInsertBlockingExecutable
-import org.jetbrains.exposed.v1.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentTestDB

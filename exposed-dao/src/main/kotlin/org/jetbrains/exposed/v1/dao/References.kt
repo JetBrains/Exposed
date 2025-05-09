@@ -1,13 +1,19 @@
 package org.jetbrains.exposed.v1.dao
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.EqOp
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
+import org.jetbrains.exposed.v1.core.compoundAnd
 import org.jetbrains.exposed.v1.dao.id.CompositeID
 import org.jetbrains.exposed.v1.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.wrap
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty

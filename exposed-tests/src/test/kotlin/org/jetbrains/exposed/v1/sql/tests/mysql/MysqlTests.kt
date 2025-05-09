@@ -2,6 +2,11 @@ package org.jetbrains.exposed.v1.sql.tests.mysql
 
 import com.mysql.cj.conf.PropertyKey
 import com.mysql.cj.jdbc.ConnectionImpl
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL.ForUpdate
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL.MODE
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.sql.*
@@ -11,10 +16,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption.MySQL
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption.MySQL.ForUpdate
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption.MySQL.MODE
 import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull

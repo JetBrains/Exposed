@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.dao.id
 
-import org.jetbrains.exposed.v1.sql.Column
+import org.jetbrains.exposed.v1.core.Column
 
 /** Class representing a mapping of each composite primary key column to its stored identity value. */
 class CompositeID private constructor() {

@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.v1.spring.autoconfigure
 
+import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.spring.DatabaseInitializer
 import org.jetbrains.exposed.v1.spring.ExposedSpringTransactionAttributeSource
 import org.jetbrains.exposed.v1.spring.SpringTransactionManager
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean

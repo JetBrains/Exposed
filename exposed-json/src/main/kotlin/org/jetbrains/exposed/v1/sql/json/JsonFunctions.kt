@@ -4,9 +4,10 @@ package org.jetbrains.exposed.v1.sql.json
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.Function
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.Function
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 
 // Function Classes
 

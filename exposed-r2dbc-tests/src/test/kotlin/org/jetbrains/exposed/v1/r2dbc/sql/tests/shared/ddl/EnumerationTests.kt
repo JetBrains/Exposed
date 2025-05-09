@@ -3,6 +3,10 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration
 import io.r2dbc.postgresql.codec.EnumCodec
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
@@ -12,10 +16,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.update
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
 import org.junit.Test
 
 class EnumerationTests : R2dbcDatabaseTestsBase() {

@@ -1,16 +1,17 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.statements
 
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.statements.BaseBatchInsertStatement
+import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.statements.SQLServerBatchInsertStatement
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcResult
-import org.jetbrains.exposed.v1.sql.InternalApi
-import org.jetbrains.exposed.v1.sql.statements.BaseBatchInsertStatement
-import org.jetbrains.exposed.v1.sql.statements.BatchInsertStatement
-import org.jetbrains.exposed.v1.sql.statements.SQLServerBatchInsertStatement
 
 open class BatchInsertSuspendExecutable<S : BaseBatchInsertStatement>(
     override val statement: S
-) : org.jetbrains.exposed.v1.r2dbc.sql.statements.InsertSuspendExecutable<List<org.jetbrains.exposed.v1.sql.ResultRow>, S>(statement) {
+) : InsertSuspendExecutable<List<ResultRow>, S>(statement) {
     override val isAlwaysBatch = true
 
     override suspend fun prepared(transaction: R2dbcTransaction, sql: String): R2dbcPreparedStatementApi {

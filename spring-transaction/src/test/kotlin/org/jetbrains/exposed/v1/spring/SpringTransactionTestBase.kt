@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.spring
 
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
+import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.junit.FixMethodOrder
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters

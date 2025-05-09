@@ -5,6 +5,12 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
@@ -19,11 +25,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
 import org.junit.Assume
 import org.junit.Test
 import java.util.*

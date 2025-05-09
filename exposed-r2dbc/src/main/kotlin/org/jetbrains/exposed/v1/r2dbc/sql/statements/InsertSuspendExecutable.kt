@@ -4,6 +4,15 @@ import io.r2dbc.spi.Result
 import io.r2dbc.spi.RowMetadata
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.reduce
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.BatchReplaceStatement
+import org.jetbrains.exposed.v1.core.statements.InsertStatement
+import org.jetbrains.exposed.v1.core.statements.ReplaceStatement
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2DBCRow
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
@@ -11,15 +20,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.metadata
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.sql.vendors.inProperCase
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.BatchReplaceStatement
-import org.jetbrains.exposed.v1.sql.statements.InsertStatement
-import org.jetbrains.exposed.v1.sql.statements.ReplaceStatement
-import org.jetbrains.exposed.v1.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 
 open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
@@ -98,7 +98,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-    private suspend fun processResults(rs: R2dbcResult?): Pair<Int, List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>> {
+    private suspend fun processResults(rs: R2dbcResult?): Pair<Int, List<ResultRow>> {
         val (count, allResultSetsValues) = rs?.returnedValues() ?: (0 to null)
 
         @Suppress("UNCHECKED_CAST")
@@ -112,7 +112,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
                 argumentValues + resultSetValues
             }
             .map { unwrapColumnValues(defaultAndNullableValues(exceptColumns = it.keys)) + it }
-            .map { _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow.createAndFillValues(it as Map<Expression<*>, Any?>) }
+            .map { ResultRow.createAndFillValues(it as Map<Expression<*>, Any?>) }
 
         return count to results
     }

@@ -1,5 +1,8 @@
 package org.jetbrains.exposed.v1.sql.tests.postgresql
 
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.PostgreSQL
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
@@ -8,8 +11,6 @@ import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption.PostgreSQL
 import org.junit.Rule
 import org.junit.Test
 import java.sql.ResultSet

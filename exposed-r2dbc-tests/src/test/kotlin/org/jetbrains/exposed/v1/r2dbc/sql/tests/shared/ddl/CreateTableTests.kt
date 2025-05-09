@@ -1,6 +1,13 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.singleOrNull
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.id.LongIdTable
@@ -23,13 +30,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.sql.update
-import org.jetbrains.exposed.v1.sql.ReferenceOption
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.autoIncColumnType
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
 import org.junit.Test
 import java.util.UUID
 import kotlin.test.assertFails

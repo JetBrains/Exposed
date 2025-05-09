@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.statements.api
 
-import org.jetbrains.exposed.v1.sql.statements.StatementResult
-import org.jetbrains.exposed.v1.sql.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.v1.core.statements.StatementResult
+import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import java.sql.ResultSet
 
 interface R2dbcPreparedStatementApi : PreparedStatementApi {

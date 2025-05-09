@@ -3,12 +3,12 @@
 package org.jetbrains.exposed.v1.r2dbc.exceptions
 
 import io.r2dbc.spi.R2dbcException
+import org.jetbrains.exposed.v1.core.AbstractQuery
+import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.expandArgs
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
-import org.jetbrains.exposed.v1.sql.AbstractQuery
-import org.jetbrains.exposed.v1.sql.QueryBuilder
-import org.jetbrains.exposed.v1.sql.statements.Statement
-import org.jetbrains.exposed.v1.sql.statements.StatementContext
-import org.jetbrains.exposed.v1.sql.statements.expandArgs
 
 // TODO Discuss need for package mismatch (cf. core module ExposedSQLException)
 /**

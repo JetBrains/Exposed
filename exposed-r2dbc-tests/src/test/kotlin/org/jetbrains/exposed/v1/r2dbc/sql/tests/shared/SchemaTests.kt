@@ -1,6 +1,11 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
 import kotlinx.coroutines.test.runTest
+import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.exists
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
@@ -9,11 +14,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.sql.Schema
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.and
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Assume
 import org.junit.Test
 

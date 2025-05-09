@@ -226,7 +226,7 @@ By contributing to the Exposed project, you agree that your contributions will b
 
 ```kotlin
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.sql.transactions.transaction
 
 object Users : Table() {

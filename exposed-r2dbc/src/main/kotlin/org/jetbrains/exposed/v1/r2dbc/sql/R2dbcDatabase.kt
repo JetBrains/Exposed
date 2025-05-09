@@ -4,16 +4,16 @@ import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.DatabaseApi
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.R2dbcConnectionImpl
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.sql.vendors.*
-import org.jetbrains.exposed.v1.sql.DatabaseApi
-import org.jetbrains.exposed.v1.sql.InternalApi
-import org.jetbrains.exposed.v1.sql.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.sql.transactions.CoreTransactionManager
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManagerApi
-import org.jetbrains.exposed.v1.sql.vendors.*
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 

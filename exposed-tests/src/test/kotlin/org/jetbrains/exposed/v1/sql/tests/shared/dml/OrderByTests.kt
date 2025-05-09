@@ -1,15 +1,21 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.substring
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect.H2CompatibilityMode
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.h2Mode
+import org.jetbrains.exposed.v1.core.wrapAsExpression
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect.H2CompatibilityMode
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.sql.vendors.h2Mode
 import org.junit.Test
 
 class OrderByTests : DatabaseTestsBase() {

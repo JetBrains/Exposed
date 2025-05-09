@@ -3,12 +3,12 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.LikePattern
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.LikePattern
-import org.jetbrains.exposed.v1.sql.Table
 import org.junit.Test
 import kotlin.test.assertContentEquals
 

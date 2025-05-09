@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.v1.sql.statements.jdbc
 
-import org.jetbrains.exposed.v1.sql.ColumnType
+import org.jetbrains.exposed.v1.core.ColumnType
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.Transaction
 import org.jetbrains.exposed.v1.sql.statements.BlockingExecutable
-import org.jetbrains.exposed.v1.sql.statements.Statement
-import org.jetbrains.exposed.v1.sql.statements.StatementType
 import org.jetbrains.exposed.v1.sql.statements.api.ExposedConnection
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
@@ -23,12 +23,30 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
     // Oracle driver could throw exception on catalog
     override var catalog: String
-        get() = try { connection.catalog } catch (_: Exception) { null } ?: connection.metaData.userName ?: ""
-        set(value) { try { connection.catalog = value } catch (_: Exception) {} }
+        get() = try {
+            connection.catalog
+        } catch (_: Exception) {
+            null
+        } ?: connection.metaData.userName ?: ""
+        set(value) {
+            try {
+                connection.catalog = value
+            } catch (_: Exception) {
+            }
+        }
 
     override var schema: String
-        get() = try { connection.schema } catch (_: Exception) { "" }
-        set(value) { try { connection.schema = value } catch (_: Exception) {} }
+        get() = try {
+            connection.schema
+        } catch (_: Exception) {
+            ""
+        }
+        set(value) {
+            try {
+                connection.schema = value
+            } catch (_: Exception) {
+            }
+        }
 
     override fun commit() {
         connection.commit()
@@ -45,7 +63,9 @@ class JdbcConnectionImpl(override val connection: Connection) : ExposedConnectio
 
     override var autoCommit: Boolean
         get() = connection.autoCommit
-        set(value) { connection.autoCommit = value }
+        set(value) {
+            connection.autoCommit = value
+        }
 
     override var readOnly: Boolean
         get() = connection.isReadOnly

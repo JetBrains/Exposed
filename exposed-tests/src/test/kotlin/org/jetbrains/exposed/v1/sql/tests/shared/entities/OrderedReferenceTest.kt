@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.entities
 
+import org.jetbrains.exposed.v1.core.SortOrder.DESC
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.SortOrder.DESC
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.insertAndGetId
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase

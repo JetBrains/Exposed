@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
-import org.jetbrains.exposed.v1.sql.ReferenceOption
-import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Table
 
 object Category : Table("Category") {
     val id = integer("id")

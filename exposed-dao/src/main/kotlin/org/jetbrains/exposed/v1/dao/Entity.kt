@@ -1,12 +1,13 @@
 package org.jetbrains.exposed.v1.dao
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.v1.dao.id.CompositeID
 import org.jetbrains.exposed.v1.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
@@ -65,10 +66,10 @@ open class Entity<ID : Any>(val id: EntityID<ID>) {
     val writeValues = LinkedHashMap<Column<Any?>, Any?>()
 
     @Suppress("VariableNaming")
-    var _readValues: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow? = null
+    var _readValues: ResultRow? = null
 
     /** The final column-value mapping for this [Entity] instance after being flushed and retrieved from the database. */
-    val readValues: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow
+    val readValues: ResultRow
         get() = _readValues ?: run {
             val table = klass.table
             _readValues = klass.searchQuery(Op.build { table.id eq id }).firstOrNull()

@@ -1,15 +1,21 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.case
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.booleanLiteral
+import org.jetbrains.exposed.v1.core.exists
+import org.jetbrains.exposed.v1.core.notExists
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.case
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Test
 
 class ExistsTests : DatabaseTestsBase() {
@@ -17,7 +23,7 @@ class ExistsTests : DatabaseTestsBase() {
     fun testExists01() {
         withCitiesAndUsers { _, users, userData ->
             val r = users.selectAll().where {
-                org.jetbrains.exposed.v1.sql.exists(
+                exists(
                     userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%here%"))
                 )
             }.toList()
@@ -29,7 +35,7 @@ class ExistsTests : DatabaseTestsBase() {
     @Test
     fun testExistsInASlice() {
         withCitiesAndUsers { _, users, userData ->
-            var exists: Expression<Boolean> = org.jetbrains.exposed.v1.sql.exists(
+            var exists: Expression<Boolean> = exists(
                 userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%here%"))
             )
             if (currentDialectTest is OracleDialect || currentDialect is SQLServerDialect) {
@@ -55,7 +61,7 @@ class ExistsTests : DatabaseTestsBase() {
             val r = users
                 .selectAll()
                 .where {
-                    org.jetbrains.exposed.v1.sql.exists(
+                    exists(
                         userData.selectAll().where(
                             (userData.user_id eq users.id) and ((userData.comment like "%here%") or (userData.comment like "%Sergey"))
                         )
@@ -72,10 +78,10 @@ class ExistsTests : DatabaseTestsBase() {
     fun testExists03() {
         withCitiesAndUsers { _, users, userData ->
             val r = users.selectAll().where {
-                org.jetbrains.exposed.v1.sql.exists(
+                exists(
                     userData.selectAll().where((userData.user_id eq users.id) and (userData.comment like "%here%"))
                 ) or
-                    org.jetbrains.exposed.v1.sql.exists(
+                    exists(
                         userData.selectAll()
                             .where((userData.user_id eq users.id) and (userData.comment like "%Sergey"))
                     )

@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.entities
 
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.Op
+import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals

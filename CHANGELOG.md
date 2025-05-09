@@ -842,7 +842,7 @@ Infrastructure:
 Feature:
 * Read-only transactions/connections support. Read-Only option can be set on all levels (via `DatabaseConfig`, `transaction`, `TransactionManager`). Thanks [Alex Shubert](https://github.com/lure) for the improvement
 * `Table.deleteWhere` now captures receiver table and allows to omit the table in a lambda. Greetings to [Alexey Soshin](https://github.com/AlexeySoshin) for the first PR in the project!  
-    * **Breaking change**: Code using `deleteWhere` with `eq` will need to `import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq`.
+    * **Breaking change**: Code using `deleteWhere` with `eq` will need to `import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq`.
       Lambdas previously using an implicit `it` reference from an outer scope will also need to introduce an explicit name to access that binding.
 * New `mediumText` and `largeText` columns were introduced by [Alex Shubert](https://github.com/lure) to allow use more suitable data types for databases where they are supported.
 * `ForUpdateOption` (like `ForUpdateOption.PostgreSQL.ForKeyShare`) added for more flexible management of locks in your `SELECT` queries. You can set it as a parameter via `Query.forUpdate` function. Another kudos goes to [Alex Shubert](https://github.com/lure)

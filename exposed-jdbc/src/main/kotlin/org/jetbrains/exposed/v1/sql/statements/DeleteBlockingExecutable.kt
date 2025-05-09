@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.sql.statements
 
+import org.jetbrains.exposed.v1.core.statements.DeleteStatement
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
 

@@ -1,16 +1,16 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.javatime.sqlserver
 
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
+import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.sql.ExpressionWithColumnType
-import org.jetbrains.exposed.v1.sql.IColumnType
-import org.jetbrains.exposed.v1.sql.QueryBuilder
-import org.jetbrains.exposed.v1.sql.ResultRow
 import org.jetbrains.exposed.v1.sql.javatime.JavaLocalDateTimeColumnType
 import org.jetbrains.exposed.v1.sql.javatime.datetime
 import org.junit.Test

@@ -3,6 +3,10 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.longLiteral
+import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.trim
 import org.jetbrains.exposed.v1.r2dbc.sql.batchReplace
 import org.jetbrains.exposed.v1.r2dbc.sql.deleteAll
 import org.jetbrains.exposed.v1.r2dbc.sql.replace
@@ -13,10 +17,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.longLiteral
-import org.jetbrains.exposed.v1.sql.stringLiteral
-import org.jetbrains.exposed.v1.sql.trim
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertContentEquals

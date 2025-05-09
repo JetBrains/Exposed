@@ -3,14 +3,14 @@ package org.jetbrains.exposed.v1.sql.json
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.ColumnType
-import org.jetbrains.exposed.v1.sql.JsonColumnMarker
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.statements.api.PreparedStatementApi
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ColumnType
+import org.jetbrains.exposed.v1.core.JsonColumnMarker
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.postgresql.util.PGobject
 
 /**

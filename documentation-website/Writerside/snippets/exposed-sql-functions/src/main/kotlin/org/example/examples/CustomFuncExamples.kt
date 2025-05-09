@@ -1,18 +1,17 @@
 package org.example.examples
 
 import org.example.tables.FilmBoxOfficeTable
+import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.sql.CustomFunction
 import org.jetbrains.exposed.v1.sql.CustomStringFunction
 import org.jetbrains.exposed.v1.sql.TextColumnType
 import org.jetbrains.exposed.v1.sql.deleteAll
-import org.jetbrains.exposed.v1.sql.function
 import org.jetbrains.exposed.v1.sql.insert
-import org.jetbrains.exposed.v1.sql.intLiteral
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentDate
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.CustomDateFunction
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.month
 import org.jetbrains.exposed.v1.sql.selectAll
-import org.jetbrains.exposed.v1.sql.stringLiteral
 
 /*
     Important: This file is referenced by line number in `SQL-Functions.md`.

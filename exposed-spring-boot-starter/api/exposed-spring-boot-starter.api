@@ -20,9 +20,9 @@ public final class org/jetbrains/exposed/v1/spring/ExposedAotContribution : org/
 
 public class org/jetbrains/exposed/v1/spring/autoconfigure/ExposedAutoConfiguration {
 	public fun <init> (Lorg/springframework/context/ApplicationContext;)V
-	public fun databaseConfig ()Lorg/jetbrains/exposed/v1/sql/DatabaseConfig;
+	public fun databaseConfig ()Lorg/jetbrains/exposed/v1/core/DatabaseConfig;
 	public fun databaseInitializer ()Lorg/jetbrains/exposed/v1/spring/DatabaseInitializer;
 	public fun exposedSpringTransactionAttributeSource ()Lorg/jetbrains/exposed/v1/spring/ExposedSpringTransactionAttributeSource;
-	public fun springTransactionManager (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/sql/DatabaseConfig;)Lorg/jetbrains/exposed/v1/spring/SpringTransactionManager;
+	public fun springTransactionManager (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/core/DatabaseConfig;)Lorg/jetbrains/exposed/v1/spring/SpringTransactionManager;
 }
 

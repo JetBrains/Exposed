@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.spring
 
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.Table
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Qualifier

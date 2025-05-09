@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.statements
 
+import org.jetbrains.exposed.v1.core.statements.BatchUpsertStatement
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcPreparedStatementApi
-import org.jetbrains.exposed.v1.sql.statements.BatchUpsertStatement
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 
 open class BatchUpsertSuspendExecutable(
     override val statement: BatchUpsertStatement

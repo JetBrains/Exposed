@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.v1.sql.javatime
 
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.ColumnType
-import org.jetbrains.exposed.v1.sql.IDateColumnType
-import org.jetbrains.exposed.v1.sql.InternalApi
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.statements.api.RowApi
-import org.jetbrains.exposed.v1.sql.transactions.CoreTransactionManager
-import org.jetbrains.exposed.v1.sql.vendors.*
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ColumnType
+import org.jetbrains.exposed.v1.core.IDateColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.api.RowApi
+import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.vendors.*
 import java.time.*
 import java.time.ZoneOffset.UTC
 import java.time.format.DateTimeFormatter

@@ -1,6 +1,16 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNull
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.doubleLiteral
+import org.jetbrains.exposed.v1.core.floatLiteral
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
@@ -22,16 +32,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.ReferenceOption
-import org.jetbrains.exposed.v1.sql.Schema
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.isNull
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.doubleLiteral
-import org.jetbrains.exposed.v1.sql.floatLiteral
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.PrimaryKeyMetadata
 import org.junit.Test
 import java.math.BigDecimal
 import java.util.*

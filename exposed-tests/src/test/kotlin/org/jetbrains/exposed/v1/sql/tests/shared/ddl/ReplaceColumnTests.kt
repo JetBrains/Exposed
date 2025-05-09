@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.ddl
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.DuplicateColumnException
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.EntityIDColumnType
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
 import org.junit.Test

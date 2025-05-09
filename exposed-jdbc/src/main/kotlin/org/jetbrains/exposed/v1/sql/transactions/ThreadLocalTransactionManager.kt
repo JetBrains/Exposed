@@ -1,11 +1,13 @@
 package org.jetbrains.exposed.v1.sql.transactions
 
 import org.jetbrains.annotations.TestOnly
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
+import org.jetbrains.exposed.v1.core.transactions.TransactionInterface
+import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.sql.Database
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.Transaction
 import org.jetbrains.exposed.v1.sql.statements.api.ExposedConnection
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedSavepoint
 
 @Deprecated(
     message = "This class will be removed entirely in future releases.",

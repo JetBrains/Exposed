@@ -1,9 +1,9 @@
 package org.example.examples
 
 import org.example.tables.StarWarsFilmsIntIdTable
+import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.sql.Query
-import org.jetbrains.exposed.v1.sql.QueryBuilder
-import org.jetbrains.exposed.v1.sql.Table
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.jetbrains.exposed.v1.sql.transactions.transaction
 

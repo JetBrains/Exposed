@@ -13,6 +13,12 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcScope
 import org.jetbrains.exposed.v1.r2dbc.sql.mappers.TypeMapperRegistry
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcDatabaseMetadataImpl
@@ -21,12 +27,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcSavepoint
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.getBoolean
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.getString
 import org.jetbrains.exposed.v1.r2dbc.sql.vendors.metadata.MetadataProvider
-import org.jetbrains.exposed.v1.sql.statements.StatementType
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedSavepoint
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.reactivestreams.Publisher
 import java.util.*
 

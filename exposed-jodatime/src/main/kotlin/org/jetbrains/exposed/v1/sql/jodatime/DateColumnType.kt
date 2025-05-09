@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1.sql.jodatime
 
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.ColumnType
-import org.jetbrains.exposed.v1.sql.IDateColumnType
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.statements.api.RowApi
-import org.jetbrains.exposed.v1.sql.vendors.*
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ColumnType
+import org.jetbrains.exposed.v1.core.IDateColumnType
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.api.RowApi
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.Instant

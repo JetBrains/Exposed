@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.v1.sql.tests
 
 import org.h2.engine.Mode
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.sql.Database
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
-import org.jetbrains.exposed.v1.sql.exposedLogger
 import org.jetbrains.exposed.v1.sql.transactions.transaction
 import java.sql.Connection
 import java.util.*

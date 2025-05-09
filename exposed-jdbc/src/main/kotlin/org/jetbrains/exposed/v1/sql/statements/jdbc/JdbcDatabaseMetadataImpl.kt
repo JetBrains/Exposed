@@ -1,12 +1,14 @@
 package org.jetbrains.exposed.v1.sql.statements.jdbc
 
 import org.intellij.lang.annotations.Language
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.Sequence
+import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.vendors.*
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect.H2CompatibilityMode
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.vendors.*
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect.H2CompatibilityMode
 import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet

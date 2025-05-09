@@ -1,8 +1,8 @@
 package org.example.examples
 
-import org.jetbrains.exposed.v1.sql.Expression
-import org.jetbrains.exposed.v1.sql.Function
-import org.jetbrains.exposed.v1.sql.QueryBuilder
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.Function
+import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.sql.TextColumnType
 import org.jetbrains.exposed.v1.sql.append
 

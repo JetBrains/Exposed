@@ -1,12 +1,14 @@
 package org.jetbrains.exposed.v1.sql.statements
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.InsertStatement
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.sql.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.sql.statements.jdbc.inProperCase
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import java.sql.ResultSet
 import java.sql.SQLException
 
@@ -63,7 +65,7 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
             }
         }
 
-    private fun processResults(rs: ResultSet?, inserted: Int): List<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> {
+    private fun processResults(rs: ResultSet?, inserted: Int): List<ResultRow> {
         val allResultSetsValues = rs?.returnedValues(inserted)
 
         @Suppress("UNCHECKED_CAST")
@@ -78,7 +80,7 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
                 argumentValues + resultSetValues
             }
             .map { unwrapColumnValues(defaultAndNullableValues(exceptColumns = it.keys)) + it }
-            .map { _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow.createAndFillValues(it as Map<Expression<*>, Any?>) }
+            .map { ResultRow.createAndFillValues(it as Map<Expression<*>, Any?>) }
     }
 
     private fun defaultAndNullableValues(exceptColumns: Collection<Column<*>>): Map<Column<*>, Any?> {

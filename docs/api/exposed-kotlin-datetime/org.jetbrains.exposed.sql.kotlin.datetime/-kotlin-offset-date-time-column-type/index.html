@@ -96,11 +96,11 @@
     <h1 class="cover"><span>Kotlin</span><wbr><span>Offset</span><wbr><span>Date</span><wbr><span>Time</span><wbr><span>Column</span><wbr><span><span>Type</span></span></h1>
     <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-kotlin-datetime/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">KotlinOffsetDateTimeColumnType</a> : <a href="../../../exposed-core/org.jetbrains.exposed.v1.sql/-column-type/index.html">ColumnType</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/time/OffsetDateTime.html">OffsetDateTime</a><span class="token operator">&gt; </span>, <a href="../../../exposed-core/org.jetbrains.exposed.v1.sql/-i-date-column-type/index.html">IDateColumnType</a></div><p class="paragraph">Column for storing dates and times with time zone, as <a href="https://docs.oracle.com/javase/8/docs/api/java/time/OffsetDateTime.html">OffsetDateTime</a>.</p><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import kotlinx.datetime.*
 import kotlinx.datetime.TimeZone
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.ColumnType
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ColumnType
 import org.jetbrains.exposed.v1.sql.IDateColumnType
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.vendors.*
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.*
 import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.time.ZoneId

@@ -1,13 +1,17 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.TestDB.ORACLE
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists

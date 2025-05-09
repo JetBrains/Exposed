@@ -1,12 +1,12 @@
 package org.example.examples
 
 import org.example.tables.FilmsTable
-import org.jetbrains.exposed.v1.sql.BooleanColumnType
+import org.jetbrains.exposed.v1.core.BooleanColumnType
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.sql.DoubleColumnType
-import org.jetbrains.exposed.v1.sql.StdOutSqlLogger
 import org.jetbrains.exposed.v1.sql.addLogger
 import org.jetbrains.exposed.v1.sql.insert
-import org.jetbrains.exposed.v1.sql.statements.StatementType
 import org.jetbrains.exposed.v1.sql.transactions.transaction
 
 /*

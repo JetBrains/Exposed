@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.ReferenceOption
-import org.jetbrains.exposed.v1.sql.SortOrder
-import org.jetbrains.exposed.v1.sql.alias
 import org.jetbrains.exposed.v1.sql.batchInsert
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.selectAll

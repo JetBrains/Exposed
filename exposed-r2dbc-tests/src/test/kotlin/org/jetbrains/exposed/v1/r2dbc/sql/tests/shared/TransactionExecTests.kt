@@ -3,6 +3,9 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
@@ -11,9 +14,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.getInt
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.getString
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.inProperCase
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.autoIncColumnType
-import org.jetbrains.exposed.v1.sql.statements.StatementType
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull

@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.statements.api
 
 import io.r2dbc.spi.IsolationLevel
+import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.R2dbcPreparedStatementImpl
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedSavepoint
 
 /** Represents a wrapper for a database connection. */
 @Suppress("TooManyFunctions")

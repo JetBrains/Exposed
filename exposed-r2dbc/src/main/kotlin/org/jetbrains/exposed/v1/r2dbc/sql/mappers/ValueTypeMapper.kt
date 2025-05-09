@@ -2,9 +2,9 @@ package org.jetbrains.exposed.v1.r2dbc.sql.mappers
 
 import io.r2dbc.postgresql.codec.Json
 import io.r2dbc.spi.Statement
-import org.jetbrains.exposed.v1.sql.IColumnType
-import org.jetbrains.exposed.v1.sql.vendors.DatabaseDialect
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.postgresql.util.PGobject
 import java.sql.Date
 import java.sql.Time

@@ -1,6 +1,8 @@
 package org.jetbrains.exposed.v1.sql
 
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 
 /** Represents the iterable elements of a database result. */
 interface SizedIterable<out T> : Iterable<T> {
@@ -104,7 +106,7 @@ class LazySizedCollection<out T>(_delegate: SizedIterable<T>) : SizedIterable<T>
     override fun empty() = _wrapper?.isEmpty() ?: emptyInternal()
     override fun forUpdate(option: ForUpdateOption): SizedIterable<T> {
         val localDelegate = delegate
-        if (_wrapper != null && localDelegate is org.jetbrains.exposed.v1.sql.Query && localDelegate.hasCustomForUpdateState() && !localDelegate.isForUpdate()) {
+        if (_wrapper != null && localDelegate is Query && localDelegate.hasCustomForUpdateState() && !localDelegate.isForUpdate()) {
             error("Impossible to change forUpdate state for loaded data")
         }
         if (_wrapper == null) {

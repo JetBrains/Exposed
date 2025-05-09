@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.sql
 
 import io.r2dbc.spi.ConnectionFactoryOptions
-import org.jetbrains.exposed.v1.sql.vendors.*
+import org.jetbrains.exposed.v1.core.vendors.*
 
 val ConnectionFactoryOptions.dialect: VendorDialect.DialectNameProvider
     get() {

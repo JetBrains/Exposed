@@ -3,6 +3,12 @@ package org.jetbrains.exposed.v1.r2dbc.sql
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import org.jetbrains.exposed.v1.core.ExplainQuery
+import org.jetbrains.exposed.v1.core.ExplainResultRow
+import org.jetbrains.exposed.v1.core.statements.IStatementBuilder
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.exceptions.getContexts
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.SuspendExecutable
@@ -10,12 +16,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcPreparedStatementA
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.metadata
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.ExplainQuery
-import org.jetbrains.exposed.v1.sql.ExplainResultRow
-import org.jetbrains.exposed.v1.sql.statements.IStatementBuilder
-import org.jetbrains.exposed.v1.sql.statements.Statement
-import org.jetbrains.exposed.v1.sql.statements.api.ResultApi
-import org.jetbrains.exposed.v1.sql.statements.buildStatement
 
 open class ExplainSuspendExecutable(
     override val statement: ExplainQuery

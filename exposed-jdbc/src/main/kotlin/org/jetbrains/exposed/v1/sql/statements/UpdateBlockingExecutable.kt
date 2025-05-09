@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.sql.statements
 
-import org.jetbrains.exposed.v1.sql.InternalApi
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.statements.UpdateStatement
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
 

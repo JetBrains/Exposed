@@ -1,11 +1,12 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.vendors.*
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertNotNull

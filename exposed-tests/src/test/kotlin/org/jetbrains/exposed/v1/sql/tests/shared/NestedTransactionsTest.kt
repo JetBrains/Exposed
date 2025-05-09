@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.sql.tests.shared
 
+import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.sql.Database
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
 import org.jetbrains.exposed.v1.sql.SchemaUtils
 import org.jetbrains.exposed.v1.sql.deleteAll
 import org.jetbrains.exposed.v1.sql.insert

@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.vendors
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
+import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.vendors.ColumnMetadata
-import org.jetbrains.exposed.v1.sql.vendors.PrimaryKeyMetadata
 import java.util.concurrent.ConcurrentHashMap
 
 /**

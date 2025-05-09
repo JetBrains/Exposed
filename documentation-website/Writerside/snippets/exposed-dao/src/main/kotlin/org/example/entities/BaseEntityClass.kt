@@ -5,8 +5,8 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.example.tables.BaseTable
+import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.dao.*
-import org.jetbrains.exposed.v1.sql.Column
 import org.jetbrains.exposed.v1.sql.exposedLogger
 
 abstract class BaseEntityClass<out E : BaseEntity>(

@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.mappers
 
 import io.r2dbc.spi.Statement
-import org.jetbrains.exposed.v1.sql.IColumnType
-import org.jetbrains.exposed.v1.sql.IDateColumnType
-import org.jetbrains.exposed.v1.sql.vendors.DatabaseDialect
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.IDateColumnType
+import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp

@@ -2,8 +2,8 @@ package org.example.examples
 
 import kotlinx.datetime.LocalDateTime
 import org.example.tables.StarWarsFilmsTable
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentDateTime
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.datetime
 

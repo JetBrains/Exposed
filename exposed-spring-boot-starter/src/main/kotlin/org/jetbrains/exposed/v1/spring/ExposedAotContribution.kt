@@ -1,13 +1,14 @@
 package org.jetbrains.exposed.v1.spring
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
+import org.jetbrains.exposed.v1.core.transactions.TransactionStore
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.Statement
-import org.jetbrains.exposed.v1.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.transactions.TransactionStore
 import org.springframework.aot.hint.MemberCategory
 import org.springframework.aot.hint.RuntimeHints
 import org.springframework.aot.hint.TypeReference
@@ -54,7 +55,7 @@ class ExposedAotContribution : BeanFactoryInitializationAotProcessor {
         listOf(
             "META-INF/services/org.jetbrains.exposed.v1.dao.id.EntityIDFactory",
             "META-INF/services/org.jetbrains.exposed.v1.sql.DatabaseConnectionAutoRegistration",
-            "META-INF/services/org.jetbrains.exposed.v1.sql.statements.GlobalStatementInterceptor"
+            "META-INF/services/org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor"
         ).forEach { resource ->
             resources().registerResource(ClassPathResource(resource))
         }

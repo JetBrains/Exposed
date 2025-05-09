@@ -4,8 +4,8 @@
 package org.example
 
 import Tasks
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.sql.transactions.transaction
 
 fun main() {

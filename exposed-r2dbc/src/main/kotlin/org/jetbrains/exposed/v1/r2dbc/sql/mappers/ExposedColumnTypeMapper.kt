@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.mappers
 
 import io.r2dbc.spi.Statement
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.vendors.DatabaseDialect
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import kotlin.reflect.KClass
 
 /**

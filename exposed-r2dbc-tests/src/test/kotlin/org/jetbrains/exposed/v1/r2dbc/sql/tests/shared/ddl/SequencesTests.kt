@@ -1,6 +1,13 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Sequence
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.nextIntVal
+import org.jetbrains.exposed.v1.core.nextLongVal
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
@@ -18,13 +25,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.Sequence
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.autoIncColumnType
-import org.jetbrains.exposed.v1.sql.nextIntVal
-import org.jetbrains.exposed.v1.sql.nextLongVal
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull

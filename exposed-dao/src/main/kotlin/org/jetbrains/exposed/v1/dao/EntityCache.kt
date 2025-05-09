@@ -1,9 +1,13 @@
 package org.jetbrains.exposed.v1.dao
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.exposedLogger
+import org.jetbrains.exposed.v1.core.transactions.transactionScope
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.transactions.transactionScope
 import java.util.*
 
 /** The current [EntityCache] for [this][Transaction] scope, or a new instance if none exists. */

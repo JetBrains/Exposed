@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.vendors.metadata
 
-import org.jetbrains.exposed.v1.sql.ReferenceOption
+import org.jetbrains.exposed.v1.core.ReferenceOption
 
 @Suppress("MagicNumber")
 internal object SQLServerPropertyProvider : PropertyProvider() {

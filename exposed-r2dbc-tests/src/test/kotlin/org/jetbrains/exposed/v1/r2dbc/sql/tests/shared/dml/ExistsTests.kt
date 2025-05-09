@@ -2,23 +2,23 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.case
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.booleanLiteral
+import org.jetbrains.exposed.v1.core.exists
+import org.jetbrains.exposed.v1.core.notExists
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.select
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.Expression
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.case
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.sql.and
-import org.jetbrains.exposed.v1.sql.booleanLiteral
-import org.jetbrains.exposed.v1.sql.exists
-import org.jetbrains.exposed.v1.sql.notExists
-import org.jetbrains.exposed.v1.sql.or
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Test
 
 class ExistsTests : R2dbcDatabaseTestsBase() {

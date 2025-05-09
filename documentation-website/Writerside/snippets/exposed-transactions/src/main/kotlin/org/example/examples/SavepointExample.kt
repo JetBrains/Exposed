@@ -1,7 +1,7 @@
 package org.example.examples
 
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.Table
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.jetbrains.exposed.v1.sql.transactions.transaction

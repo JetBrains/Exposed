@@ -1,9 +1,17 @@
 package org.jetbrains.exposed.v1.sql.transactions
 
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.SqlLogger
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.exposedLogger
+import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
+import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.sql.Database
+import org.jetbrains.exposed.v1.sql.JdbcTransaction
+import org.jetbrains.exposed.v1.sql.SchemaUtils
 import org.jetbrains.exposed.v1.sql.statements.api.ExposedConnection
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedSavepoint
 import java.sql.SQLException
 import java.util.concurrent.ThreadLocalRandom
 
@@ -113,7 +121,9 @@ class TransactionManager(
 
             @Synchronized
             @OptIn(InternalApi::class)
-            set(value) { CoreTransactionManager.setDefaultDatabase(value) }
+            set(value) {
+                CoreTransactionManager.setDefaultDatabase(value)
+            }
 
         /** Associates the provided [database] with a specific [manager]. */
         // TODO `manager` parameter could have `TransactionManagerApi` type instead of `TransactionManager`

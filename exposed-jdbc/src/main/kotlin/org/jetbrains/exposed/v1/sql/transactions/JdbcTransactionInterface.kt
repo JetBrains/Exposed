@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.sql.transactions
 
+import org.jetbrains.exposed.v1.core.transactions.TransactionInterface
 import org.jetbrains.exposed.v1.sql.Database
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
 import org.jetbrains.exposed.v1.sql.statements.api.ExposedConnection

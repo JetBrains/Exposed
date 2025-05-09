@@ -1,7 +1,7 @@
 package org.example.tables
 
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.Table
 
 const val MAX_VARCHAR_LENGTH = 50
 

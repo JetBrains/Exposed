@@ -1,10 +1,11 @@
 package org.jetbrains.exposed.v1.sql
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.jetbrains.exposed.v1.sql.vendors.currentDialectMetadata
 
 /** Utility functions that assist with creating, altering, and dropping database schema objects. */
@@ -41,7 +42,7 @@ object SchemaUtils : SchemaUtilityApi() {
     }
 
     /** Creates the provided sequences, using a batch execution if [inBatch] is set to `true`. */
-    fun createSequence(vararg seq: Sequence, inBatch: Boolean = false) {
+    fun createSequence(vararg seq: org.jetbrains.exposed.v1.core.Sequence, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
             val createStatements = seq.flatMap { it.createStatement() }
             execStatements(inBatch, createStatements)

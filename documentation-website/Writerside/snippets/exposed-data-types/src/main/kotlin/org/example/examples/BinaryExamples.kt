@@ -1,7 +1,7 @@
 package org.example.examples
 
+import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.sql.transactions.transaction
 
 /*

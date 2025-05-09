@@ -1,11 +1,14 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.sql.statements.ReturningBlockingExecutable
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB

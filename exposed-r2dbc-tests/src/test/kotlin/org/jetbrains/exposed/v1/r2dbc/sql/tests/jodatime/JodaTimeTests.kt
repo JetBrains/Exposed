@@ -12,6 +12,11 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.castTo
+import org.jetbrains.exposed.v1.core.get
+import org.jetbrains.exposed.v1.core.slice
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
@@ -26,14 +31,9 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.castTo
-import org.jetbrains.exposed.v1.sql.get
 import org.jetbrains.exposed.v1.sql.jodatime.*
 import org.jetbrains.exposed.v1.sql.json.extract
 import org.jetbrains.exposed.v1.sql.json.jsonb
-import org.jetbrains.exposed.v1.sql.slice
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime

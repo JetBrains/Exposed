@@ -1,9 +1,9 @@
 package org.jetbrains.exposed.v1.sql.money
 
-import org.jetbrains.exposed.v1.sql.BiCompositeColumn
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.DecimalColumnType
-import org.jetbrains.exposed.v1.sql.Table
+import org.jetbrains.exposed.v1.core.BiCompositeColumn
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.DecimalColumnType
+import org.jetbrains.exposed.v1.core.Table
 import java.math.BigDecimal
 import javax.money.CurrencyUnit
 import javax.money.Monetary

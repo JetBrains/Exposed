@@ -1,8 +1,9 @@
 package org.jetbrains.exposed.v1.sql.statements
 
+import org.jetbrains.exposed.v1.core.statements.BatchUpsertStatement
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 
 // TODO KDocs should be added
 open class BatchUpsertBlockingExecutable(

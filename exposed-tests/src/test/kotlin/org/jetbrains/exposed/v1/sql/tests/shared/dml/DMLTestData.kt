@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.Column
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.ResultRow
-import org.jetbrains.exposed.v1.sql.Table
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
@@ -221,4 +221,4 @@ class Org(id: EntityID<Int>) : IntEntity(id) {
     var name by Orgs.name
 }
 
-internal fun Iterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>.toCityNameList(): List<String> = map { it[DMLTestsData.Cities.name] }
+internal fun Iterable<ResultRow>.toCityNameList(): List<String> = map { it[DMLTestsData.Cities.name] }

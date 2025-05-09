@@ -1,6 +1,11 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.ddl
 
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
@@ -26,10 +31,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.tests.shared.ddl.EnumerationTests.Foo
 import org.jetbrains.exposed.v1.sql.tests.shared.ddl.EnumerationTests.PGEnum
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.sql.vendors.PrimaryKeyMetadata
 import org.junit.Before
 import org.junit.Test
 import java.io.File

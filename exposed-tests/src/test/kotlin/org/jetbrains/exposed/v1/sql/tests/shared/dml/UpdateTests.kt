@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException

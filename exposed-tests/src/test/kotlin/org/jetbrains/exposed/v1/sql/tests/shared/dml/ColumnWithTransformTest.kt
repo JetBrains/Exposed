@@ -1,5 +1,12 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ColumnTransformer
+import org.jetbrains.exposed.v1.core.ColumnWithTransform
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.TextColumnType
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.entityCache
@@ -7,7 +14,6 @@ import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.api.RowApi
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals

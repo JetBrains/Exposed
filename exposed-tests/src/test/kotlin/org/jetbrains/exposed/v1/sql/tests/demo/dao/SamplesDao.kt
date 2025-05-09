@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.sql.tests.demo.dao
 
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass

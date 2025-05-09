@@ -1,22 +1,22 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.types
 
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.blobParam
+import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.alias
-import org.jetbrains.exposed.v1.sql.blobParam
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.select
 import org.jetbrains.exposed.v1.sql.selectAll
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.vendors.PostgreSQLDialect
 import org.junit.Test
 import java.nio.charset.Charset
 import kotlin.random.Random

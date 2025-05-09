@@ -6,6 +6,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.emptyFlow
 import org.intellij.lang.annotations.Language
+import org.jetbrains.exposed.v1.core.CompositeSqlLogger
+import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.Key
+import org.jetbrains.exposed.v1.core.SqlLogger
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.exposedLogger
+import org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
+import org.jetbrains.exposed.v1.core.statements.StatementResult
+import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.exceptions.LongQueryException
 import org.jetbrains.exposed.v1.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.SuspendExecutable
@@ -15,17 +26,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.origin
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.executeIn
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.R2dbcTransactionInterface
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.transactionManager
-import org.jetbrains.exposed.v1.sql.CompositeSqlLogger
-import org.jetbrains.exposed.v1.sql.IColumnType
-import org.jetbrains.exposed.v1.sql.Key
-import org.jetbrains.exposed.v1.sql.SqlLogger
-import org.jetbrains.exposed.v1.sql.Transaction
-import org.jetbrains.exposed.v1.sql.exposedLogger
-import org.jetbrains.exposed.v1.sql.statements.GlobalStatementInterceptor
-import org.jetbrains.exposed.v1.sql.statements.Statement
-import org.jetbrains.exposed.v1.sql.statements.StatementInterceptor
-import org.jetbrains.exposed.v1.sql.statements.StatementResult
-import org.jetbrains.exposed.v1.sql.statements.StatementType
 import java.util.*
 import java.util.concurrent.TimeUnit
 

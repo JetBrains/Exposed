@@ -57,7 +57,7 @@ Example:
 
 ```kotlin
 import org.jetbrains.exposed.v1.spring.autoconfigure.ExposedAutoConfiguration
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
+import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.context.annotation.Bean

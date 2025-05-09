@@ -402,7 +402,7 @@
                 parameter lambda block will require inclusion of an import statement:
             </p>
             <code-block lang="kotlin">
-                import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.*
+                import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.*
             </code-block>
         </chapter>
         <chapter title="Delete and ignore" id="deleteIgnoreWhere">

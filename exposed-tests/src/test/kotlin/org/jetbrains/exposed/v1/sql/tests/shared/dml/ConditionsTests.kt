@@ -1,15 +1,16 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.case
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.case
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.less
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists

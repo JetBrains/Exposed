@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.types
 
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.Table
 import org.jetbrains.exposed.v1.sql.insert
 import org.jetbrains.exposed.v1.sql.selectAll
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
@@ -11,8 +13,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
 import org.junit.Test
 
 class UnsignedColumnTypeTests : DatabaseTestsBase() {

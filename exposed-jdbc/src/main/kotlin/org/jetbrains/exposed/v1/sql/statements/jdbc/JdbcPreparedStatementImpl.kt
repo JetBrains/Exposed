@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.v1.sql.statements.jdbc
 
-import org.jetbrains.exposed.v1.sql.ArrayColumnType
-import org.jetbrains.exposed.v1.sql.BinaryColumnType
-import org.jetbrains.exposed.v1.sql.BlobColumnType
-import org.jetbrains.exposed.v1.sql.IColumnType
-import org.jetbrains.exposed.v1.sql.statements.StatementResult
+import org.jetbrains.exposed.v1.core.ArrayColumnType
+import org.jetbrains.exposed.v1.core.BinaryColumnType
+import org.jetbrains.exposed.v1.core.BlobColumnType
+import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.statements.StatementResult
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
-import org.jetbrains.exposed.v1.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import java.io.InputStream
 import java.sql.PreparedStatement
 import java.sql.Statement

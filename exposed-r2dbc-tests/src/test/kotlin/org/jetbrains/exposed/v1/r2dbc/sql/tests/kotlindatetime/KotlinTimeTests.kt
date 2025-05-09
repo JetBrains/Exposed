@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
@@ -26,7 +28,6 @@ import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.json.extract
 import org.jetbrains.exposed.v1.sql.json.jsonb
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.*
-import org.jetbrains.exposed.v1.sql.vendors.*
 import org.junit.Assert.fail
 import org.junit.Test
 import java.math.BigDecimal

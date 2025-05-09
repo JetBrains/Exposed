@@ -8,6 +8,10 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import org.jetbrains.exposed.v1.core.Cast
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
@@ -1275,7 +1279,7 @@ object Misc : MiscTable() {
 
 @Suppress("LongParameterList")
 fun Misc.checkRowFull(
-    row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow,
+    row: ResultRow,
     by: Byte,
     byn: Byte?,
     sm: Short,
@@ -1311,7 +1315,7 @@ fun Misc.checkRowFull(
 
 @Suppress("LongParameterList")
 fun Misc.checkRowDates(
-    row: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow,
+    row: ResultRow,
     d: LocalDate,
     dn: LocalDate?,
     t: LocalTime,

@@ -1,5 +1,12 @@
 package org.jetbrains.exposed.v1.sql.tests.h2
 
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.avg
+import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
@@ -8,12 +15,8 @@ import org.jetbrains.exposed.v1.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.sql.tests.inProperCase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.sql.transactions.transactionManager
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 import org.junit.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit

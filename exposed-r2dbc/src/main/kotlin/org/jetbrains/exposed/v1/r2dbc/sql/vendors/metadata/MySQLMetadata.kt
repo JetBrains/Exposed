@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.vendors.metadata
 
 import io.r2dbc.spi.IsolationLevel
+import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.ReferenceOption
 import java.math.BigDecimal
 
 @Suppress("MagicNumber")

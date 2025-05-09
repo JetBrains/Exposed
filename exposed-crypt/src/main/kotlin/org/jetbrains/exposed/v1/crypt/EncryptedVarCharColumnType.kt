@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.crypt
 
-import org.jetbrains.exposed.v1.sql.ColumnTransformer
-import org.jetbrains.exposed.v1.sql.ColumnWithTransform
-import org.jetbrains.exposed.v1.sql.VarCharColumnType
+import org.jetbrains.exposed.v1.core.ColumnTransformer
+import org.jetbrains.exposed.v1.core.ColumnWithTransform
+import org.jetbrains.exposed.v1.core.VarCharColumnType
 
 /**
  * Character column for storing encrypted strings, using the provided [encryptor],

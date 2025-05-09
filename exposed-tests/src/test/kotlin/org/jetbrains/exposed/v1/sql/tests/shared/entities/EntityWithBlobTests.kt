@@ -1,12 +1,12 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.entities
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
-import org.jetbrains.exposed.v1.sql.Column
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTestsData.YTable

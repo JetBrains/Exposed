@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1.spring
 
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.sql.Database
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.StdOutSqlLogger
 import org.jetbrains.exposed.v1.sql.addLogger
-import org.jetbrains.exposed.v1.sql.exposedLogger
 import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import org.jetbrains.exposed.v1.sql.transactions.transactionManager
 import org.springframework.transaction.TransactionDefinition

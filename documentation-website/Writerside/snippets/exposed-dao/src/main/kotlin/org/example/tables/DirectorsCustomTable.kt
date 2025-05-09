@@ -1,8 +1,8 @@
 package org.example.tables
 
+import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IdTable
-import org.jetbrains.exposed.v1.sql.Column
 
 const val MAX_ID_LENGTH = 32
 const val MAX_DIRECTOR_NAME_LENGTH = 32

@@ -1,9 +1,14 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.functions
-
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.coalesce
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.concat
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.coalesce
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
@@ -11,11 +16,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.sql.tests.shared.dml.withCitiesAndUsers
-import org.jetbrains.exposed.v1.sql.vendors.H2Dialect
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.OracleDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.vendors.h2Mode
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -487,7 +487,7 @@ class FunctionsTests : DatabaseTestsBase() {
             val secondOp = Op.build { DMLTestsData.Cities.name.isNotNull() }
             assertEquals("($initialOp) AND ($secondOp)", (initialOp and secondOp).toString())
 
-            val thirdOp = org.jetbrains.exposed.v1.sql.exists(DMLTestsData.Cities.selectAll())
+            val thirdOp = exists(DMLTestsData.Cities.selectAll())
             assertEquals("($initialOp) AND $thirdOp", (initialOp and thirdOp).toString())
 
             assertEquals(
@@ -505,7 +505,7 @@ class FunctionsTests : DatabaseTestsBase() {
             val secondOp = Op.build { DMLTestsData.Cities.name.isNotNull() }
             assertEquals("($initialOp) OR ($secondOp)", (initialOp or secondOp).toString())
 
-            val thirdOp = org.jetbrains.exposed.v1.sql.exists(DMLTestsData.Cities.selectAll())
+            val thirdOp = exists(DMLTestsData.Cities.selectAll())
             assertEquals("($initialOp) OR $thirdOp", (initialOp or thirdOp).toString())
 
             assertEquals(
@@ -519,7 +519,7 @@ class FunctionsTests : DatabaseTestsBase() {
     fun testAndOrCombinations() {
         withDb {
             val initialOp = Op.build { DMLTestsData.Cities.name eq "foo" }
-            val secondOp = org.jetbrains.exposed.v1.sql.exists(DMLTestsData.Cities.selectAll())
+            val secondOp = exists(DMLTestsData.Cities.selectAll())
             assertEquals("(($initialOp) OR ($initialOp)) AND ($initialOp)", (initialOp or initialOp and initialOp).toString())
             assertEquals("(($initialOp) OR ($initialOp)) AND $secondOp", (initialOp or initialOp and secondOp).toString())
             assertEquals("(($initialOp) AND ($initialOp)) OR ($initialOp)", (initialOp and initialOp or initialOp).toString())

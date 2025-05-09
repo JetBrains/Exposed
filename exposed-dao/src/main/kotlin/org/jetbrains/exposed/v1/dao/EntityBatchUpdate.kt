@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1.dao
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.statements.BatchUpdateStatement
 import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.sql.Column
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.Transaction
 import org.jetbrains.exposed.v1.sql.statements.BatchUpdateBlockingExecutable
-import org.jetbrains.exposed.v1.sql.statements.BatchUpdateStatement
 import java.util.*
 
 /**

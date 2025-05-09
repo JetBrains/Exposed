@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.sql.statements.jdbc
 
-import org.jetbrains.exposed.v1.sql.statements.api.ExposedSavepoint
+import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import java.sql.Savepoint
 
 /**

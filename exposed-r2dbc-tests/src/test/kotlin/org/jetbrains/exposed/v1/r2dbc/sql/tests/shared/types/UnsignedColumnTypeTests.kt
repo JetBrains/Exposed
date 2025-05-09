@@ -3,6 +3,9 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.types
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
@@ -13,9 +16,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.Table
-import org.jetbrains.exposed.v1.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.sql.vendors.SQLServerDialect
 import org.junit.Test
 
 class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {

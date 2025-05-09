@@ -6,6 +6,12 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.single
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
+import org.jetbrains.exposed.v1.core.statements.api.ResultApi
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.r2dbc.exceptions.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.exceptions.getContexts
@@ -14,12 +20,6 @@ import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcPreparedStatementA
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.rowsCount
 import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.less
-import org.jetbrains.exposed.v1.sql.statements.api.ResultApi
-import org.jetbrains.exposed.v1.sql.vendors.ForUpdateOption
-import org.jetbrains.exposed.v1.sql.vendors.currentDialect
 
 /** Class representing an SQL `SELECT` statement on which query clauses can be built. */
 open class Query(
@@ -27,7 +27,7 @@ open class Query(
     where: Op<Boolean>?
 ) : AbstractQuery<Query>(set.source.targetTables()),
     SuspendExecutable<ResultApi, Query>,
-    SizedIterable<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow> {
+    SizedIterable<ResultRow> {
 
     override val statement: Query = this
 
@@ -151,7 +151,7 @@ open class Query(
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
      * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
-    fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Flow<Flow<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>> {
+    fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Flow<Flow<ResultRow>> {
         require(batchSize > 0) { "Batch size should be greater than 0." }
         require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
         require(orderByExpressions.isEmpty()) {
@@ -168,8 +168,8 @@ open class Query(
         val whereOp = where ?: Op.TRUE
         val fetchInAscendingOrder = sortOrder in listOf(SortOrder.ASC, SortOrder.ASC_NULLS_FIRST, SortOrder.ASC_NULLS_LAST)
 
-        return object : Flow<Flow<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>> {
-            override suspend fun collect(collector: FlowCollector<Flow<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>>) {
+        return object : Flow<Flow<ResultRow>> {
+            override suspend fun collect(collector: FlowCollector<Flow<ResultRow>>) {
                 var lastOffset = if (fetchInAscendingOrder) 0L else null
                 while (true) {
                     val query = this@Query.copy().adjustWhere {
@@ -201,7 +201,7 @@ open class Query(
                     }
 
                     var resultCount = 0
-                    var lastResult: _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow? = null
+                    var lastResult: ResultRow? = null
 
                     val results = flow { query.collect(this) }.onEach {
                         resultCount++
@@ -310,7 +310,7 @@ open class Query(
             }
         }
 
-    override suspend fun collect(collector: FlowCollector<_root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow>) {
+    override suspend fun collect(collector: FlowCollector<ResultRow>) {
         val fieldIndex = set.realFields.toSet()
             .mapIndexed { index, expression -> expression to index }
             .toMap()
@@ -319,7 +319,7 @@ open class Query(
 
         try {
             rs.mapRows {
-                val resultRow = _root_ide_package_.org.jetbrains.exposed.v1.sql.ResultRow.create(it, fieldIndex)
+                val resultRow = ResultRow.create(it, fieldIndex)
                 trackResultSet(tx)
                 resultRow
             }.collect { rr -> rr?.let { collector.emit(it) } }

@@ -4,10 +4,10 @@ import org.example.examples.ExecExamples
 import org.example.examples.ExecMySQLExamples
 import org.example.examples.SavepointExample
 import org.example.tables.FilmsTable
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.sql.Database
-import org.jetbrains.exposed.v1.sql.DatabaseConfig
 import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.StdOutSqlLogger
 import org.jetbrains.exposed.v1.sql.addLogger
 import org.jetbrains.exposed.v1.sql.transactions.transaction
 

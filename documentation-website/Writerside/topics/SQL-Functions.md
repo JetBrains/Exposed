@@ -58,7 +58,7 @@ function returns a string value that concatenates the text representations of al
             include-lines="53-57"/>
 
 <note>
-This <code>concat()</code> requires import statement <code>import org.jetbrains.exposed.v1.sql.SqlExpressionBuilder.concat</code>.
+This <code>concat()</code> requires import statement <code>import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.concat</code>.
 </note>
 
 ### Locate
@@ -153,7 +153,7 @@ to provide a specific substring other than spaces to remove. The custom function
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomTrimFunction.kt" />
 
 <note>
-Ensure that the correct import statement is used: <code>import org.jetbrains.exposed.v1.sql.Function</code>. Otherwise <code>Function</code> 
+Ensure that the correct import statement is used: <code>import org.jetbrains.exposed.v1.core.Function</code>. Otherwise <code>Function</code> 
 from <code>kotlin-stdlib</code> may be resolved instead and cause compilation errors.
 </note>
 

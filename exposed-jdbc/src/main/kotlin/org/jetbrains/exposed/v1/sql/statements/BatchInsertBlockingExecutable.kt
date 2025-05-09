@@ -1,8 +1,11 @@
 package org.jetbrains.exposed.v1.sql.statements
 
-import org.jetbrains.exposed.v1.sql.InternalApi
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.statements.BaseBatchInsertStatement
+import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.statements.SQLServerBatchInsertStatement
 import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.ResultRow
 import org.jetbrains.exposed.v1.sql.statements.api.JdbcPreparedStatementApi
 import java.sql.ResultSet
 

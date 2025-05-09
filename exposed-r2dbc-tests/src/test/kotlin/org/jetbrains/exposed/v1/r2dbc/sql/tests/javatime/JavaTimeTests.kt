@@ -13,6 +13,8 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
@@ -31,7 +33,6 @@ import org.jetbrains.exposed.v1.sql.*
 import org.jetbrains.exposed.v1.sql.javatime.*
 import org.jetbrains.exposed.v1.sql.json.extract
 import org.jetbrains.exposed.v1.sql.json.jsonb
-import org.jetbrains.exposed.v1.sql.vendors.*
 import org.junit.Assert.fail
 import org.junit.Test
 import java.math.BigDecimal
