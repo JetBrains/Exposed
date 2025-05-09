@@ -471,7 +471,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
         }
 
         // TODO MYSQL_V8 test does not work on R2DBC now. The problem is that received timestamp is shifted by timezone.
-        withTables(excludeSettings = TestDB.ALL - TestDB.MYSQL_V8, tester) {
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V8), tester) {
             // Cairo time zone
             java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
