@@ -290,7 +290,7 @@ fun AbstractQuery<*>.union(other: Query): Union = Union(this, other)
 /**
  * Combines all results from [this] query with the results of [other], WITH duplicates included.
  *
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.UnionTests.testUnionWithAllResults
+ * @sample org.jetbrains.exposed.v1.tests.shared.dml.UnionTests.testUnionWithAllResults
  */
 fun AbstractQuery<*>.unionAll(other: Query): UnionAll = UnionAll(this, other)
 

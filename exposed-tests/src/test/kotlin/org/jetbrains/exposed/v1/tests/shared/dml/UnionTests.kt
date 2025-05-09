@@ -14,7 +14,6 @@ import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.Test
-import kotlin.collections.intersect
 import kotlin.test.assertTrue
 
 class UnionTests : DatabaseTestsBase() {
