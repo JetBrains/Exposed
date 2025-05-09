@@ -7,7 +7,7 @@
     <p>
         If a database-specific data type is not supported by Exposed, you can extend any existing and open column type
         or implement a custom
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-column-type/index.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-column-type/index.html">
             <code>ColumnType</code>
         </a>
         class to achieve the same functionality.

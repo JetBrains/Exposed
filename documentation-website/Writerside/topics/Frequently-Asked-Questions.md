@@ -22,9 +22,9 @@ Exposed supports a variety of data types, including [basic data types](Numeric-B
 ### How can I create a custom column type?
 
 You can implement a custom column type using the
-[`IColumnType`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-column-type/index.html)
+[`IColumnType`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-i-column-type/index.html)
 interface and
-[`registerColumn()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/register-column.html)
+[`registerColumn()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/register-column.html)
 to register it to a table. For more information, refer to the [custom data types](Custom-data-types.topic) documentation.
 
 ### Is it possible to generate SQL without a database connection?
@@ -37,7 +37,7 @@ necessary even if the query is never executed.
 ### How do I get a plain SQL query which will be executed?
 
 To get the SQL representation of a query without executing it, use the
-[`prepareSQL()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-abstract-query/prepare-s-q-l.html)
+[`prepareSQL()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-abstract-query/prepare-s-q-l.html)
 method:
 
 ```kotlin
@@ -55,7 +55,7 @@ Yes. You can achieve this by using the `.update()` function with the `SqlExpress
 ### How do I prepare query like `SELECT * FROM table WHERE (x,y) IN ((1, 2), (3, 4), (5, 6))`?
 
 Exposed provides the
-[`inList()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/in-list.html)
+[`inList()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-i-sql-expression-builder/in-list.html)
 function that works with pairs of columns. For more details, see
 [](DSL-Querying-data.topic#collection-condition-pairs-or-triples).
 
@@ -106,8 +106,8 @@ transaction {
 ### How can I add another type of database?
 
 To add another type of database that is not currently supported by Exposed, implement the
-[`DatabaseDialect`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.vendors/-database-dialect/index.html)
+[`DatabaseDialect`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql.vendors/-database-dialect/index.html)
 interface and register it with
-[`Database.registerDialect()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-database/-companion/register-dialect.html).
+[`Database.registerDialect()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-database/-companion/register-dialect.html).
 
 If the implementation adds a lot of value, consider [contributing](Contributing.md) it to Exposed.

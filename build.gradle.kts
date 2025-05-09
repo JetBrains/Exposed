@@ -38,13 +38,13 @@ repositories {
 }
 
 allprojects {
-    if (this.name != "exposed-tests" && this.name != "exposed-bom" && this != rootProject) {
+    if (this.name != "exposed-tests" && this.name != "exposed-bom" && this.name != "exposed-r2dbc-tests" && this != rootProject) {
         configurePublishing()
     }
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom"))
+    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests"))
 }
 
 subprojects {
@@ -125,7 +125,6 @@ subprojects {
 
     testDb("oracle") {
         port = 3003
-        colima = true
         dialects("ORACLE")
         dependencies {
             dependency(rootProject.libs.oracle19)

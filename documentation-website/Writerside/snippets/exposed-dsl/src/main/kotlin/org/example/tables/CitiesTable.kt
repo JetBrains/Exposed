@@ -1,6 +1,6 @@
 package org.example.tables
 
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 const val MAX_CITY_NAME_LENGTH = 50
 

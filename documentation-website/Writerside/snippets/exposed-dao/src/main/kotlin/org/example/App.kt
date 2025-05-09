@@ -2,12 +2,12 @@ package org.example
 
 import org.example.examples.*
 import org.example.tables.*
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.Database
+import org.jetbrains.exposed.v1.SchemaUtils
+import org.jetbrains.exposed.v1.addLogger
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.transactions.transaction
 
 fun main() {
     Database.connect(

@@ -1,0 +1,988 @@
+public final class org/jetbrains/exposed/v1/r2dbc/ConnectionFactoryOptionsUtilsKt {
+	public static final fun getDialect (Lio/r2dbc/spi/ConnectionFactoryOptions;)Lorg/jetbrains/exposed/v1/core/vendors/VendorDialect$DialectNameProvider;
+	public static final fun getDialectName (Lio/r2dbc/spi/ConnectionFactoryOptions;)Ljava/lang/String;
+	public static final fun getUrlString (Lio/r2dbc/spi/ConnectionFactoryOptions;)Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/EmptySizedIterable : org/jetbrains/exposed/v1/r2dbc/SizedIterable {
+	public fun <init> ()V
+	public fun collect (Lkotlinx/coroutines/flow/FlowCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun count (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun empty (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun limit (I)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun notForUpdate ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun offset (J)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/Except : org/jetbrains/exposed/v1/r2dbc/SetOperation {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
+	public fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/Intersect;
+	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun getOperationName ()Ljava/lang/String;
+	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
+	public fun withDistinct (Z)Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/ExplainSuspendExecutable : kotlinx/coroutines/flow/Flow, org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/ExplainQuery;)V
+	public fun collect (Lkotlinx/coroutines/flow/FlowCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/ExplainQuery;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/ExplainSuspendExecutableKt {
+	public static final fun explain (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;ZLjava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/ExplainSuspendExecutable;
+	public static synthetic fun explain$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;ZLjava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/ExplainSuspendExecutable;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/ExposedR2dbcException : io/r2dbc/spi/R2dbcException {
+	public fun <init> (Ljava/lang/Throwable;Ljava/util/List;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)V
+	public final fun causedByQueries ()Ljava/util/List;
+	public final fun getContexts ()Ljava/util/List;
+	public final fun getSQLState ()Ljava/lang/String;
+	public final fun getSpecificErrorCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/Intersect : org/jetbrains/exposed/v1/r2dbc/SetOperation {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
+	public fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/Intersect;
+	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
+	public fun withDistinct (Z)Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/IterableExKt {
+	public static final fun emptySized ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public static final fun mapLazy (Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/LazySizedCollection : org/jetbrains/exposed/v1/r2dbc/SizedIterable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;)V
+	public fun collect (Lkotlinx/coroutines/flow/FlowCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun count (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun empty (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public final fun isLoaded ()Z
+	public fun limit (I)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun notForUpdate ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun offset (J)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public final fun wrapper (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/LazySizedIterable : org/jetbrains/exposed/v1/r2dbc/SizedIterable {
+	public abstract fun getLoadedResult ()Ljava/util/List;
+	public abstract fun setLoadedResult (Ljava/util/List;)V
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/LazySizedIterable$DefaultImpls {
+	public static fun forUpdate (Lorg/jetbrains/exposed/v1/r2dbc/LazySizedIterable;Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public static fun notForUpdate (Lorg/jetbrains/exposed/v1/r2dbc/LazySizedIterable;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/MetadataQueriesKt {
+	public static final fun exists (Lorg/jetbrains/exposed/v1/core/Schema;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun exists (Lorg/jetbrains/exposed/v1/core/Sequence;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun exists (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/QueriesKt {
+	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun batchInsert (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun batchInsert$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun batchReplace (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun batchReplace (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun batchReplace$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun batchUpsert (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun batchUpsert (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun batchUpsert$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Iterable;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun batchUpsert$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/sequences/Sequence;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;ZLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun delete (Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun delete (Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun delete$default (Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun delete$default (Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun deleteAll (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun deleteIgnoreWhere (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun deleteIgnoreWhere$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun deleteJoinNullableParam (Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun deleteJoinNullableParam$default (Lorg/jetbrains/exposed/v1/core/Join;Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Table;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun deleteReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static final fun deleteReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static synthetic fun deleteReturning$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static synthetic fun deleteReturning$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static final fun deleteReturningNullableParam (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static synthetic fun deleteReturningNullableParam$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static final fun deleteWhere (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun deleteWhere$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun insert (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun insert (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun insert$default (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun insertAndGetId (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun insertIgnore (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun insertIgnore (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun insertIgnore$default (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun insertIgnoreAndGetId (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun insertReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;ZLkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static synthetic fun insertReturning$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;ZLkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static final fun mergeFrom (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/QueryAlias;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun mergeFrom (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun mergeFrom (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun mergeFromNullableParam (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun mergeFromNullableParam$default (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun replace (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun replace (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun replace$default (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun select (Lorg/jetbrains/exposed/v1/core/ColumnSet;Ljava/util/List;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public static final fun select (Lorg/jetbrains/exposed/v1/core/ColumnSet;Lorg/jetbrains/exposed/v1/core/Expression;[Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public static final fun selectAll (Lorg/jetbrains/exposed/v1/core/FieldSet;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public static final fun update (Lorg/jetbrains/exposed/v1/core/Join;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun update (Lorg/jetbrains/exposed/v1/core/Join;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun update (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun update (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun update$default (Lorg/jetbrains/exposed/v1/core/Join;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun update$default (Lorg/jetbrains/exposed/v1/core/Join;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun update$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun update$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun updateJoinNullableParam (Lorg/jetbrains/exposed/v1/core/Join;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun updateJoinNullableParam$default (Lorg/jetbrains/exposed/v1/core/Join;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun updateNullableParam (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun updateNullableParam$default (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/jvm/functions/Function1;Ljava/lang/Integer;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun updateReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static final fun updateReturning (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static synthetic fun updateReturning$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static synthetic fun updateReturning$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static final fun updateReturningNullableParam (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static synthetic fun updateReturningNullableParam$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static final fun upsert (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun upsert$default (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun upsertReturning (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+	public static synthetic fun upsertReturning$default (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lkotlin/jvm/functions/Function2;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/Query : org/jetbrains/exposed/v1/core/AbstractQuery, org/jetbrains/exposed/v1/r2dbc/SizedIterable, org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
+	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/Query$Companion;
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/FieldSet;Lorg/jetbrains/exposed/v1/core/Op;)V
+	public final fun adjustColumnSet (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public final fun adjustSelect (Lkotlin/jvm/functions/Function2;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public final fun adjustWhere (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public fun collect (Lkotlinx/coroutines/flow/FlowCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun count (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun empty (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun fetchBatchedResults (ILorg/jetbrains/exposed/v1/core/SortOrder;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun fetchBatchedResults$default (Lorg/jetbrains/exposed/v1/r2dbc/Query;ILorg/jetbrains/exposed/v1/core/SortOrder;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public synthetic fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun getSet ()Lorg/jetbrains/exposed/v1/core/FieldSet;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	protected final fun getTransaction ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public fun isAlwaysBatch ()Z
+	public fun limit (I)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public synthetic fun limit (I)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun notForUpdate ()Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public synthetic fun notForUpdate ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun offset (J)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public synthetic fun offset (J)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public final fun orderBy (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/SortOrder;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public synthetic fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public static synthetic fun orderBy$default (Lorg/jetbrains/exposed/v1/r2dbc/Query;Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/SortOrder;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setSet (Lorg/jetbrains/exposed/v1/core/FieldSet;)V
+	public final fun where (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public final fun where (Lorg/jetbrains/exposed/v1/core/Op;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public final fun withDistinctOn ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/Query$Companion {
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/QueryKt {
+	public static final fun andHaving (Lorg/jetbrains/exposed/v1/r2dbc/Query;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public static final fun andWhere (Lorg/jetbrains/exposed/v1/r2dbc/Query;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public static final fun orHaving (Lorg/jetbrains/exposed/v1/r2dbc/Query;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+	public static final fun orWhere (Lorg/jetbrains/exposed/v1/r2dbc/Query;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/Query;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabase : org/jetbrains/exposed/v1/core/DatabaseApi {
+	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getConnector ()Lkotlin/jvm/functions/Function0;
+	public fun getDialect ()Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;
+	public final fun getDialectMetadata ()Lorg/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata;
+	public fun getDialectMode ()Ljava/lang/String;
+	public fun getFullVersion ()Ljava/lang/String;
+	public fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
+	public final fun getMajorVersion ()I
+	public final fun getMinorVersion ()I
+	public fun getSupportsAlterTableWithAddColumn ()Z
+	public fun getSupportsAlterTableWithDropColumn ()Z
+	public fun getSupportsMultipleResultSets ()Z
+	public fun getUrl ()Ljava/lang/String;
+	public fun getVendor ()Ljava/lang/String;
+	public fun getVersion ()Ljava/math/BigDecimal;
+	public fun isVersionCovers (II)Z
+	public fun isVersionCovers (Ljava/math/BigDecimal;)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion {
+	public final fun connect (Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun connect (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun connect (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun connect (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public static synthetic fun connect$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion;Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public static synthetic fun connect$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public static synthetic fun connect$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public static synthetic fun connect$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun getDefaultIsolationLevel (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Lio/r2dbc/spi/IsolationLevel;
+	public final fun registerDialectMetadata (Ljava/lang/String;Lkotlin/jvm/functions/Function0;)V
+}
+
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig : org/jetbrains/exposed/v1/core/DatabaseConfig {
+	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Companion;
+	public abstract fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
+	public abstract fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
+	public abstract fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
+	public abstract fun getTypeMapperRegistry ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;
+	public abstract fun getUseExposedCodecs ()Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder : org/jetbrains/exposed/v1/core/DatabaseConfig$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;
+	public final fun connectionFactoryOptions (Lkotlin/jvm/functions/Function1;)V
+	public final fun getConnectionFactoryOptions ()Lio/r2dbc/spi/ConnectionFactoryOptions;
+	public fun getDefaultIsolationLevel ()I
+	public final fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
+	public final fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
+	public final fun getTypeMapperRegistry ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;
+	public final fun getUseExposedCodecs ()Z
+	public final fun setConnectionFactoryOptions (Lio/r2dbc/spi/ConnectionFactoryOptions;)V
+	public fun setDefaultIsolationLevel (I)V
+	public final fun setDefaultR2dbcIsolationLevel (Lio/r2dbc/spi/IsolationLevel;)V
+	public final fun setDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public final fun setTypeMapperRegistry (Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;)V
+	public final fun setUrl (Ljava/lang/String;)V
+	public final fun setUseExposedCodecs (Z)V
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Companion {
+	public final fun invoke (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;
+	public static synthetic fun invoke$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Companion;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseKt {
+	public static final fun getName (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcScope : kotlinx/coroutines/CoroutineScope {
+	public fun <init> (Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public fun getCoroutineContext ()Lkotlin/coroutines/CoroutineContext;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exposed/v1/core/Transaction, org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterface {
+	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion;
+	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterface;)V
+	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun closeExecutedStatements (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun exec (Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun exec (Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun exec (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun exec (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;Lkotlin/jvm/functions/Function3;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun exec$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun exec$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Ljava/lang/Iterable;Lorg/jetbrains/exposed/v1/core/statements/StatementType;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun execInBatch (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getConnection ()Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection;
+	public final fun getCurrentStatement ()Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;
+	public synthetic fun getDb ()Lorg/jetbrains/exposed/v1/core/DatabaseApi;
+	public final fun getDb ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun getMaxAttempts ()I
+	public final fun getMaxRetryDelay ()J
+	public final fun getMinRetryDelay ()J
+	public synthetic fun getOuterTransaction ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public fun getOuterTransaction ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public fun getReadOnly ()Z
+	public fun getTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
+	public final fun registerInterceptor (Lorg/jetbrains/exposed/v1/core/statements/StatementInterceptor;)Z
+	public fun rollback (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setCurrentStatement (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;)V
+	public final fun setMaxAttempts (I)V
+	public final fun setMaxRetryDelay (J)V
+	public final fun setMinRetryDelay (J)V
+	public final fun unregisterInterceptor (Lorg/jetbrains/exposed/v1/core/statements/StatementInterceptor;)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion {
+	public final fun getGlobalInterceptors ()Ljava/util/ArrayList;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransactionKt {
+	public static final fun addLogger (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;[Lorg/jetbrains/exposed/v1/core/SqlLogger;)Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/SchemaUtils : org/jetbrains/exposed/v1/core/SchemaUtilityApi {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;
+	public final fun addMissingColumnsStatements ([Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun addMissingColumnsStatements$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun checkCycle ([Lorg/jetbrains/exposed/v1/core/Table;)Z
+	public final fun checkExcessiveForeignKeyConstraints ([Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun checkExcessiveIndices ([Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun checkMappingConsistence ([Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun checkMappingConsistence$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun create ([Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun create$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createDatabase ([Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createDatabase$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createFKey (Lorg/jetbrains/exposed/v1/core/ForeignKeyConstraint;)Ljava/util/List;
+	public final fun createIndex (Lorg/jetbrains/exposed/v1/core/Index;)Ljava/util/List;
+	public final fun createMissingTablesAndColumns ([Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createMissingTablesAndColumns$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createSchema ([Lorg/jetbrains/exposed/v1/core/Schema;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createSchema$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Schema;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createSequence ([Lorg/jetbrains/exposed/v1/core/Sequence;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createSequence$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Sequence;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createStatements ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun drop ([Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun drop$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun dropDatabase ([Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun dropDatabase$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun dropSchema ([Lorg/jetbrains/exposed/v1/core/Schema;ZZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun dropSchema$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Schema;ZZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun dropSequence ([Lorg/jetbrains/exposed/v1/core/Sequence;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun dropSequence$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Sequence;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun listDatabases (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun listTables (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun listTablesInAllSchemas (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setSchema (Lorg/jetbrains/exposed/v1/core/Schema;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun setSchema$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;Lorg/jetbrains/exposed/v1/core/Schema;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun sortTablesByReferences (Ljava/lang/Iterable;)Ljava/util/List;
+	public final fun statementsRequiredToActualizeScheme ([Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun statementsRequiredToActualizeScheme$default (Lorg/jetbrains/exposed/v1/r2dbc/SchemaUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun withDataBaseLock (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/jvm/functions/Function0;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/r2dbc/SetOperation : org/jetbrains/exposed/v1/core/AbstractQuery, org/jetbrains/exposed/v1/r2dbc/SizedIterable, org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
+	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/SetOperation$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun collect (Lkotlinx/coroutines/flow/FlowCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun count (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun empty (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public final fun getFirstStatement ()Lorg/jetbrains/exposed/v1/core/AbstractQuery;
+	public fun getOperationName ()Ljava/lang/String;
+	public final fun getSecondStatement ()Lorg/jetbrains/exposed/v1/core/AbstractQuery;
+	public fun getSet ()Lorg/jetbrains/exposed/v1/core/FieldSet;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;
+	protected final fun getTransaction ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public fun isAlwaysBatch ()Z
+	public fun limit (I)Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;
+	public synthetic fun limit (I)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun notForUpdate ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun offset (J)Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;
+	public synthetic fun offset (J)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public final fun orderBy (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/SortOrder;)Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;
+	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;
+	public synthetic fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public static synthetic fun orderBy$default (Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/SortOrder;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;
+	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)Ljava/lang/String;
+	protected fun prepareStatementSQL (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/SetOperation$Companion {
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/SetOperationsKt {
+	public static final fun except (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/r2dbc/Query;)Lorg/jetbrains/exposed/v1/r2dbc/Except;
+	public static final fun intersect (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/r2dbc/Query;)Lorg/jetbrains/exposed/v1/r2dbc/Intersect;
+	public static final fun union (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/r2dbc/Query;)Lorg/jetbrains/exposed/v1/r2dbc/Union;
+	public static final fun unionAll (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/r2dbc/Query;)Lorg/jetbrains/exposed/v1/r2dbc/UnionAll;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/SizedCollection : org/jetbrains/exposed/v1/r2dbc/SizedIterable {
+	public fun <init> (Ljava/util/Collection;)V
+	public fun <init> ([Ljava/lang/Object;)V
+	public fun collect (Lkotlinx/coroutines/flow/FlowCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun count (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun empty (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public final fun getDelegate ()Ljava/util/Collection;
+	public fun limit (I)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun notForUpdate ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun offset (J)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/SizedIterable : kotlinx/coroutines/flow/Flow {
+	public abstract fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public abstract fun count (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun empty (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun forUpdate (Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public abstract fun limit (I)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public abstract fun notForUpdate ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public abstract fun offset (J)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public abstract fun orderBy ([Lkotlin/Pair;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/SizedIterable$DefaultImpls {
+	public static fun forUpdate (Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public static synthetic fun forUpdate$default (Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;Lorg/jetbrains/exposed/v1/core/vendors/ForUpdateOption;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public static fun notForUpdate (Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;)Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/Union : org/jetbrains/exposed/v1/r2dbc/SetOperation {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
+	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/Union;
+	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
+	public fun withDistinct (Z)Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/UnionAll : org/jetbrains/exposed/v1/r2dbc/SetOperation {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/AbstractQuery;Lorg/jetbrains/exposed/v1/core/AbstractQuery;)V
+	public synthetic fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/SizedIterable;
+	public fun copy ()Lorg/jetbrains/exposed/v1/r2dbc/UnionAll;
+	public synthetic fun withDistinct (Z)Lorg/jetbrains/exposed/v1/core/AbstractQuery;
+	public fun withDistinct (Z)Lorg/jetbrains/exposed/v1/r2dbc/SetOperation;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/ArrayTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/BinaryTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/DateTimeTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/DefaultTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/ExposedColumnTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/PostgresSpecificTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/PrimitiveTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public abstract fun getColumnTypes ()Ljava/util/List;
+	public abstract fun getDialects ()Ljava/util/List;
+	public abstract fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper$DefaultImpls {
+	public static fun getColumnTypes (Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper;)Ljava/util/List;
+	public static fun getDialects (Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper;)Ljava/util/List;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry {
+	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun register (Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper;)Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;
+	public final fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry$Companion {
+	public final fun default ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/ValueTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mtc/ThreadLocalMap : java/lang/InheritableThreadLocal {
+	public fun <init> ()V
+	public synthetic fun childValue (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/BatchInsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/InsertSuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;)V
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/BatchUpdateSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/UpdateSuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/BatchUpdateStatement;)V
+	public fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchUpdateStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/UpdateStatement;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/BatchUpsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/BatchInsertSuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;)V
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/DeleteSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;)V
+	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/InsertSelectSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/InsertSelectStatement;)V
+	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertSelectStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/InsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;)V
+	protected fun execInsertFunction (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getAutoIncColumns ()Ljava/util/List;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/MergeSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/MergeStatement;)V
+	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/MergeStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection {
+	public fun <init> (Lorg/reactivestreams/Publisher;Ljava/lang/String;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcScope;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;)V
+	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInBatch (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getAutoCommit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCatalog (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getConnection ()Ljava/lang/Object;
+	public fun getConnection ()Lorg/reactivestreams/Publisher;
+	public fun getReadOnly (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getTransactionIsolation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isClosed (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun metadata (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun prepareStatement (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun prepareStatement (Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun releaseSavepoint (Lorg/jetbrains/exposed/v1/core/statements/api/ExposedSavepoint;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun rollback (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun rollback (Lorg/jetbrains/exposed/v1/core/statements/api/ExposedSavepoint;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setAutoCommit (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setCatalog (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setReadOnly (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setSavepoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setTransactionIsolation (Lio/r2dbc/spi/IsolationLevel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcPreparedStatementImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi {
+	public fun <init> (Lio/r2dbc/spi/Statement;Lio/r2dbc/spi/Connection;ZLorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapperRegistry;)V
+	public fun addBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun cancel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun closeIfPossible (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeMultiple (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeQuery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeUpdate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun fillParameters (Ljava/lang/Iterable;)I
+	public final fun getConnection ()Lio/r2dbc/spi/Connection;
+	public fun getResultRow (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getWasGeneratedKeysRequested ()Z
+	public fun set (ILjava/lang/Object;)V
+	public fun setArray (ILorg/jetbrains/exposed/v1/core/ArrayColumnType;[Ljava/lang/Object;)V
+	public fun setFetchSize (Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setInputStream (ILjava/io/InputStream;Z)V
+	public fun setNull (ILorg/jetbrains/exposed/v1/core/IColumnType;)V
+	public fun setTimeout (Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutable : kotlinx/coroutines/flow/Flow, org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;)V
+	public fun collect (Lkotlinx/coroutines/flow/FlowCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/ReturningStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/SQLServerBatchInsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/BatchInsertSuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/SQLServerBatchInsertStatement;)V
+	protected fun execInsertFunction (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/SQLServerBatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun isAlwaysBatch ()Z
+}
+
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
+	public abstract fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public abstract fun isAlwaysBatch ()Z
+	public abstract fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable$DefaultImpls {
+	public static fun execute (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun isAlwaysBatch (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;)Z
+	public static fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/UpdateSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/UpdateStatement;)V
+	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeInternal (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/UpdateStatement;
+	public fun isAlwaysBatch ()Z
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/statements/UpsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/InsertSuspendExecutable {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/UpsertStatement;)V
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/UpsertStatement;
+	public fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2DBCRow : org/jetbrains/exposed/v1/core/statements/api/RowApi {
+	public static final synthetic fun box-impl (Lio/r2dbc/spi/Row;)Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2DBCRow;
+	public static fun constructor-impl (Lio/r2dbc/spi/Row;)Lio/r2dbc/spi/Row;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Lio/r2dbc/spi/Row;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Lio/r2dbc/spi/Row;Lio/r2dbc/spi/Row;)Z
+	public fun getObject (I)Ljava/lang/Object;
+	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
+	public fun getObject (Ljava/lang/String;)Ljava/lang/Object;
+	public fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+	public static fun getObject-impl (Lio/r2dbc/spi/Row;I)Ljava/lang/Object;
+	public static fun getObject-impl (Lio/r2dbc/spi/Row;ILjava/lang/Class;)Ljava/lang/Object;
+	public static fun getObject-impl (Lio/r2dbc/spi/Row;Ljava/lang/String;)Ljava/lang/Object;
+	public static fun getObject-impl (Lio/r2dbc/spi/Row;Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+	public final fun getRow ()Lio/r2dbc/spi/Row;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Lio/r2dbc/spi/Row;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Lio/r2dbc/spi/Row;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Lio/r2dbc/spi/Row;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedDatabaseMetadata {
+	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl$Companion;
+	public fun <init> (Ljava/lang/String;Lio/r2dbc/spi/Connection;Ljava/lang/String;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcScope;)V
+	public fun cleanCache ()V
+	public fun columns ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun existingIndices ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun existingPrimaryKeys ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun existingSequences ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getDatabaseDialectMode (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getDatabaseDialectName ()Ljava/lang/String;
+	public fun getDatabaseProductVersion ()Ljava/lang/String;
+	public fun getDefaultIsolationLevel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
+	public fun getMajorVersion ()I
+	public fun getMinorVersion ()I
+	public fun getSupportsAlterTableWithAddColumn ()Z
+	public fun getSupportsAlterTableWithDropColumn ()Z
+	public fun getSupportsLimitWithUpdateOrDelete ()Z
+	public fun getSupportsMultipleResultSets ()Z
+	public fun getSupportsSelectForUpdate ()Z
+	public fun getVersion ()Ljava/math/BigDecimal;
+	public fun resetCurrentScheme ()V
+	public fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
+	public fun schemaNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun tableNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun tableNamesByCurrentSchema (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl$Companion {
+}
+
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection {
+	public abstract fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun executeInBatch (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getAutoCommit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getCatalog (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getConnection ()Ljava/lang/Object;
+	public abstract fun getReadOnly (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getTransactionIsolation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isClosed (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun metadata (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun prepareStatement (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun prepareStatement (Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun releaseSavepoint (Lorg/jetbrains/exposed/v1/core/statements/api/ExposedSavepoint;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun rollback (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun rollback (Lorg/jetbrains/exposed/v1/core/statements/api/ExposedSavepoint;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setAutoCommit (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setCatalog (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setReadOnly (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setSavepoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setTransactionIsolation (Lio/r2dbc/spi/IsolationLevel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedDatabaseMetadata : org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun columns ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun existingIndices ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun existingPrimaryKeys ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun existingSequences ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getDatabaseDialectMode (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getDatabaseDialectName ()Ljava/lang/String;
+	public abstract fun getDatabaseProductVersion ()Ljava/lang/String;
+	public abstract fun getDefaultIsolationLevel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getMajorVersion ()I
+	public abstract fun getMinorVersion ()I
+	public abstract fun getSupportsAlterTableWithAddColumn ()Z
+	public abstract fun getSupportsAlterTableWithDropColumn ()Z
+	public abstract fun getSupportsLimitWithUpdateOrDelete ()Z
+	public abstract fun getSupportsMultipleResultSets ()Z
+	public abstract fun getSupportsSelectForUpdate ()Z
+	public abstract fun getVersion ()Ljava/math/BigDecimal;
+	public abstract fun schemaNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun tableNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun tableNamesByCurrentSchema (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi : org/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi {
+	public abstract fun addBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun cancel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun closeIfPossible (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun executeBatch (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun executeMultiple (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun executeQuery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun executeUpdate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getResultRow (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setFetchSize (Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setTimeout (Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi$DefaultImpls {
+	public static fun fillParameters (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Ljava/lang/Iterable;)I
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcResult : org/jetbrains/exposed/v1/core/statements/api/ResultApi {
+	public fun close ()V
+	public final fun collect (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun mapRows (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+	public final fun mapSegments (Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+	public final fun rowsUpdated ()Lkotlinx/coroutines/flow/Flow;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcResultKt {
+	public static final fun getMetadata (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;)Lio/r2dbc/spi/RowMetadata;
+	public static final fun getOrigin (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;)Lio/r2dbc/spi/Row;
+	public static final fun rowsCount (Lorg/jetbrains/exposed/v1/core/statements/api/ResultApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcSavepoint : org/jetbrains/exposed/v1/core/statements/api/ExposedSavepoint {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract interface class org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterface : org/jetbrains/exposed/v1/core/transactions/TransactionInterface {
+	public abstract fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getConnection ()Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection;
+	public abstract fun getDb ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public abstract fun getOuterTransaction ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public abstract fun getTransactionIsolation ()Lio/r2dbc/spi/IsolationLevel;
+	public abstract fun rollback (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterfaceKt {
+	public static final fun getTransactionManager (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager : org/jetbrains/exposed/v1/core/transactions/TransactionManagerApi {
+	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion;
+	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun bindTransactionToThread (Lorg/jetbrains/exposed/v1/core/Transaction;)V
+	public synthetic fun currentOrNull ()Lorg/jetbrains/exposed/v1/core/Transaction;
+	public fun currentOrNull ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public final fun getDefaultIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
+	public fun getDefaultMaxAttempts ()I
+	public fun getDefaultMaxRetryDelay ()J
+	public fun getDefaultMinRetryDelay ()J
+	public fun getDefaultReadOnly ()Z
+	public final fun getThreadLocal ()Ljava/lang/ThreadLocal;
+	public final fun newTransaction (Lio/r2dbc/spi/IsolationLevel;ZLorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public static synthetic fun newTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;Lio/r2dbc/spi/IsolationLevel;ZLorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public final fun setDefaultIsolationLevel (Lio/r2dbc/spi/IsolationLevel;)V
+	public fun setDefaultMaxAttempts (I)V
+	public fun setDefaultMaxRetryDelay (J)V
+	public fun setDefaultMinRetryDelay (J)V
+	public fun setDefaultReadOnly (Z)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager$Companion {
+	public final fun closeAndUnregister (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)V
+	public final fun current ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public final fun currentOrNew (Lio/r2dbc/spi/IsolationLevel;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public final fun currentOrNull ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;
+	public final fun getDefaultDatabase ()Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun getManager ()Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
+	public final fun isInitialized ()Z
+	public final fun managerFor (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;
+	public final fun registerManager (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;)V
+	public final fun resetCurrent (Lorg/jetbrains/exposed/v1/r2dbc/transactions/TransactionManager;)V
+	public final fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)V
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/transactions/TransactionManagerKt {
+	public static final fun suspendTransaction (Lkotlin/coroutines/CoroutineContext;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendTransaction (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendTransaction$default (Lkotlin/coroutines/CoroutineContext;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun suspendTransaction$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun suspendTransactionAsync (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendTransactionAsync$default (Lkotlin/coroutines/CoroutineContext;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;Lio/r2dbc/spi/IsolationLevel;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {
+	public fun <init> ()V
+	public final fun allTablesNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun allTablesNamesInAllSchemas (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun catalog (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun columnConstraints ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun existingIndices ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun existingPrimaryKeys ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun existingSequences ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected fun fillConstraintCacheForTables (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getAllTableNamesCache (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getColumnConstraintsCache ()Ljava/util/Map;
+	public final fun getDatabase (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected fun metadataMatchesTable (Ljava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Table;)Z
+	public final fun resetCaches (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun resetSchemaCaches (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun schemaExists (Lorg/jetbrains/exposed/v1/core/Schema;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun sequenceExists (Lorg/jetbrains/exposed/v1/core/Sequence;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun supportsLimitWithUpdateOrDelete (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun tableColumns ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun tableExists (Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadataKt {
+	public static final fun getCurrentDialectMetadata ()Lorg/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/vendors/H2DialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {
+	public fun <init> ()V
+	public fun existingIndices ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/vendors/MariaDBDialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/MysqlDialectMetadata {
+	public fun <init> ()V
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/vendors/MysqlDialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {
+	public fun <init> ()V
+	protected fun metadataMatchesTable (Ljava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Table;)Z
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/vendors/OracleDialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {
+	public fun <init> ()V
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/vendors/PostgreSQLDialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {
+	public fun <init> ()V
+	public fun supportsLimitWithUpdateOrDelete (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/vendors/PostgreSQLNGDialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/PostgreSQLDialectMetadata {
+	public fun <init> ()V
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/vendors/SQLServerDialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {
+	public fun <init> ()V
+}
+
+public class org/jetbrains/exposed/v1/r2dbc/vendors/SQLiteDialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {
+	public fun <init> ()V
+	public fun supportsLimitWithUpdateOrDelete (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

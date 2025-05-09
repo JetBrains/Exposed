@@ -19,6 +19,7 @@ kotlin {
 dependencies {
     api(project(":exposed-core"))
     api(libs.kotlinx.jvm.datetime)
+    testCompileOnly(project(":exposed-jdbc"))
     testImplementation(project(":exposed-dao"))
     testImplementation(project(":exposed-tests"))
     testImplementation(project(":exposed-json"))

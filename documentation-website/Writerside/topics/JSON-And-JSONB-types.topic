@@ -13,11 +13,11 @@
     <p>
         Exposed works together with the JSON serialization library of your choice by allowing column
         definitions that accept generic serializer and deserializer arguments through the
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/json.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/json.html">
             <code>json()</code>
         </a>
         and
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/jsonb.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/jsonb.html">
             <code>jsonb()</code>
         </a>
         functions.
@@ -56,7 +56,7 @@
         <deflist type="medium">
             <def id="json-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/json.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/json.html">
                         <code>json()</code>
                     </a>
                 </title>
@@ -70,7 +70,7 @@
             </def>
             <def id="jsonb-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/jsonb.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/jsonb.html">
                         <code>jsonb()</code>
                     </a>
                 </title>
@@ -90,7 +90,7 @@
             <p>
                 You can use JSON path strings to extract values as JSON or as a scalar value at a specific
                 field/key. To do this, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/extract.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/extract.html">
                     <code>.extract()</code>
                 </a>
                 function:
@@ -109,7 +109,7 @@
         <chapter title="Check if data exists">
             <p>
                 To check whether data exists within a JSON expression, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/exists.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/exists.html">
                     <code>.exists()</code>
                 </a>
                 function:
@@ -129,7 +129,7 @@
         <chapter title="Check if JSON contains an expression">
             <p>
                 To check whether an expression is contained within a JSON, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/contains.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/contains.html">
                     <code>.contains()</code>
                 </a>
                 function:
@@ -154,7 +154,7 @@
         </p>
         <p>
             To define a JSON column that holds an array, use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.sql.json/json.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/json.html">
                 <code>json()</code>
             </a>
             function with the appropriate type. The following example defines JSON columns for arrays of primitive

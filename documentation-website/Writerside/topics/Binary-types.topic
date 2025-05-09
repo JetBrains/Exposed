@@ -23,7 +23,7 @@
         <deflist type="medium">
             <def id="blob-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/blob.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/blob.html">
                         <code>blob()</code>
                     </a>
                 </title>
@@ -37,7 +37,7 @@
 
             <def id="binary-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/binary.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/binary.html">
                         <code>binary()</code>
                     </a>
                 </title>

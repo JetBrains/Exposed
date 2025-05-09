@@ -54,7 +54,7 @@
             You can implement this relationship by using a reference column in the child table
             (<code>UserRatingsTable</code>) that links to the parent table (<code>UsersTable</code>). To create a
             reference column, use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/reference.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/reference.html">
                 <code>reference()</code>
             </a>
             function:
@@ -128,7 +128,7 @@
         <p>
             For example, if you want to include anonymous user ratings to your table, you can do so by setting
             the reference field as optional using
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/opt-reference.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/opt-reference.html">
                 <code>optReference()</code>
             </a>
             in your table and
@@ -399,7 +399,7 @@
             </p>
             <p>
                 To make content available outside the transaction, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-text-column-type/eager-loading.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-text-column-type/eager-loading.html">
                     <code>eagerLoading</code>
                 </a>
                 parameter in your field definition:

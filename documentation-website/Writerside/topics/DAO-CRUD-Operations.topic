@@ -228,18 +228,18 @@
             Suppose that you want to sort cities by the number of users in each city. To achieve this, you can write a
             subquery which counts the users in each city and
             then order the result by that count. To do so, however, you need to convert the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/index.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/index.html">
                 <code>Query</code>
             </a>
             to an
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-expression/index.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-expression/index.html">
                 <code>Expression</code>
             </a>
             .
         </p>
         <p>
             This can be done using the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/wrap-as-expression.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/wrap-as-expression.html">
                 <code>wrapAsExpression()</code>
             </a>
             function:
@@ -293,7 +293,7 @@
         <p>
             Whenever a new entity is instantiated, the <code>created</code> column will be filled with the database
             default defined by
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.sql.kotlin.datetime/-current-date-time/index.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.sql.kotlin.datetime/-current-date-time/index.html">
                 <code>CurrentDateTime</code>
             </a>
             , while the <code>modified</code> column will be filled with a null value.
@@ -326,7 +326,7 @@
         </p>
         <p>
             Additionally, every change (creation, update, or deletion) is logged using the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/exposed-logger.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/exposed-logger.html">
                 <code>exposedLogger</code>
             </a>
             .

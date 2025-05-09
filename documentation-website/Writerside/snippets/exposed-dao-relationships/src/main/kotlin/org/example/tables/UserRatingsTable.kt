@@ -1,6 +1,6 @@
 package org.example.tables
 
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.id.IntIdTable
 
 object UserRatingsTable : IntIdTable() {
     val value = long("value")

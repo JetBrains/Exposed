@@ -2,8 +2,8 @@ package org.example.examples
 
 import org.example.entities.UserEntity
 import org.example.entities.UserRatingEntity
-import org.jetbrains.exposed.dao.load
-import org.jetbrains.exposed.dao.with
+import org.jetbrains.exposed.v1.dao.load
+import org.jetbrains.exposed.v1.dao.with
 
 class EagerLoadingExamples {
     fun load() {

@@ -4,7 +4,7 @@ import org.example.entities.DirectorEntity
 import org.example.entities.StarWarsFilmEntity
 import org.example.tables.DirectorsTable
 import org.example.tables.Genre
-import org.jetbrains.exposed.dao.id.CompositeID
+import org.jetbrains.exposed.v1.dao.id.CompositeID
 import java.util.*
 
 const val MOVIE_SEQUEL_ID = 8

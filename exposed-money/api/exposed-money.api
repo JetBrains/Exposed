@@ -1,24 +1,24 @@
-public final class org/jetbrains/exposed/sql/money/CompositeMoneyColumn : org/jetbrains/exposed/sql/BiCompositeColumn {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Column;Z)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Column;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getAmount ()Lorg/jetbrains/exposed/sql/Column;
-	public final fun getCurrency ()Lorg/jetbrains/exposed/sql/Column;
+public final class org/jetbrains/exposed/v1/money/CompositeMoneyColumn : org/jetbrains/exposed/v1/core/BiCompositeColumn {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Column;Z)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Column;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAmount ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getCurrency ()Lorg/jetbrains/exposed/v1/core/Column;
 }
 
-public final class org/jetbrains/exposed/sql/money/CompositeMoneyColumnKt {
-	public static final fun CompositeMoneyColumn (Lorg/jetbrains/exposed/sql/Table;IILjava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/money/CompositeMoneyColumn;
-	public static final fun nullable (Lorg/jetbrains/exposed/sql/money/CompositeMoneyColumn;)Lorg/jetbrains/exposed/sql/money/CompositeMoneyColumn;
+public final class org/jetbrains/exposed/v1/money/CompositeMoneyColumnKt {
+	public static final fun CompositeMoneyColumn (Lorg/jetbrains/exposed/v1/core/Table;IILjava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/money/CompositeMoneyColumn;
+	public static final fun nullable (Lorg/jetbrains/exposed/v1/money/CompositeMoneyColumn;)Lorg/jetbrains/exposed/v1/money/CompositeMoneyColumn;
 }
 
-public final class org/jetbrains/exposed/sql/money/CompositeMoneyColumnTypeKt {
-	public static final fun compositeMoney (Lorg/jetbrains/exposed/sql/Table;IILjava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/money/CompositeMoneyColumn;
-	public static final fun compositeMoney (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/money/CompositeMoneyColumn;
-	public static synthetic fun compositeMoney$default (Lorg/jetbrains/exposed/sql/Table;IILjava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/sql/money/CompositeMoneyColumn;
-	public static final fun compositeMoneyNullable (Lorg/jetbrains/exposed/sql/Table;Lorg/jetbrains/exposed/sql/Column;Lorg/jetbrains/exposed/sql/Column;)Lorg/jetbrains/exposed/sql/money/CompositeMoneyColumn;
+public final class org/jetbrains/exposed/v1/money/CompositeMoneyColumnTypeKt {
+	public static final fun compositeMoney (Lorg/jetbrains/exposed/v1/core/Table;IILjava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/money/CompositeMoneyColumn;
+	public static final fun compositeMoney (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/money/CompositeMoneyColumn;
+	public static synthetic fun compositeMoney$default (Lorg/jetbrains/exposed/v1/core/Table;IILjava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/money/CompositeMoneyColumn;
+	public static final fun compositeMoneyNullable (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/money/CompositeMoneyColumn;
 }
 
-public final class org/jetbrains/exposed/sql/money/CurrencyColumnType : org/jetbrains/exposed/sql/ColumnType {
-	public static final field Companion Lorg/jetbrains/exposed/sql/money/CurrencyColumnType$Companion;
+public final class org/jetbrains/exposed/v1/money/CurrencyColumnType : org/jetbrains/exposed/v1/core/ColumnType {
+	public static final field Companion Lorg/jetbrains/exposed/v1/money/CurrencyColumnType$Companion;
 	public fun <init> ()V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
@@ -33,10 +33,10 @@ public final class org/jetbrains/exposed/sql/money/CurrencyColumnType : org/jetb
 	public fun valueFromDB (Ljava/lang/Object;)Ljavax/money/CurrencyUnit;
 }
 
-public final class org/jetbrains/exposed/sql/money/CurrencyColumnType$Companion {
+public final class org/jetbrains/exposed/v1/money/CurrencyColumnType$Companion {
 }
 
-public final class org/jetbrains/exposed/sql/money/CurrencyColumnTypeKt {
-	public static final fun currency (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/sql/Column;
+public final class org/jetbrains/exposed/v1/money/CurrencyColumnTypeKt {
+	public static final fun currency (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 }
 

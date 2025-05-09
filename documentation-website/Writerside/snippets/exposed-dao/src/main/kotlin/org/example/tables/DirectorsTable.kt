@@ -1,6 +1,6 @@
 package org.example.tables
 
-import org.jetbrains.exposed.dao.id.CompositeIdTable
+import org.jetbrains.exposed.v1.dao.id.CompositeIdTable
 
 enum class Genre { HORROR, DRAMA, THRILLER, SCI_FI }
 

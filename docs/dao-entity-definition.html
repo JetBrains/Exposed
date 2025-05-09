@@ -16,9 +16,9 @@
 }</script><!-- End Schema.org --></head><body data-id="DAO-Entity-definition" data-main-title="Entity definition" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs="Deep Dive into DAO"><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 0.58.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="DAO-Entity-definition" id="DAO-Entity-definition.topic">Entity definition</h1><p id="-l0vm7j_3">An <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity/index.html" id="-l0vm7j_4" data-external="true" rel="noopener noreferrer"><code class="code" id="-l0vm7j_5">Entity</code></a> in Exposed maps a database table record to a Kotlin object. This ensures type safety and allows you to work with database records just like regular Kotlin objects, taking full advantage of Kotlin's language features.</p><p id="-l0vm7j_6">When you use the Data Access Object (DAO) approach, the <code class="code" id="-l0vm7j_7">IdTable</code> needs to be associated with an <code class="code" id="-l0vm7j_8">Entity</code>. This is because every database record in this table needs to be mapped to an <code class="code" id="-l0vm7j_9">Entity</code> instance, identified by its primary key.</p><section class="chapter"><h2 id="defining-entity-class" data-toc="defining-entity-class">Defining an Entity</h2><p id="-l0vm7j_10">You define an entity instance by creating a class. In the following example, <code class="code" id="-l0vm7j_11">StarWarsFilmEntity</code> is the entity class linked to the table <code class="code" id="-l0vm7j_12">StarWarsFilmsTable</code>:</p><div class="tabs" id="-l0vm7j_13" data-anchors="[StarWarsFilmEntity,StarWarsFilmsTable]"><div class="tabs__content" data-gtm="tab" id="StarWarsFilmEntity" data-title="StarWarsFilmEntity"><div class="code-block" data-lang="kotlin" data-title="Kotlin" data-disable-link-processing="true">package org.example.entities
 
 import org.example.tables.StarWarsFilmsTable
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.id.EntityID
 
 class StarWarsFilmEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
     companion object : IntEntityClass&lt;StarWarsFilmEntity&gt;(StarWarsFilmsTable)
@@ -27,7 +27,7 @@ class StarWarsFilmEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
     var name by StarWarsFilmsTable.name
     var director by StarWarsFilmsTable.director
 }
-</div></div><div class="tabs__content" data-gtm="tab" id="StarWarsFilmsTable" data-title="StarWarsFilmsTable"><div class="code-block" data-lang="kotlin" id="StarWarsFilmsTable-dao-code-block" data-title="Kotlin" data-disable-link-processing="true">import org.jetbrains.exposed.dao.id.IntIdTable
+</div></div><div class="tabs__content" data-gtm="tab" id="StarWarsFilmsTable" data-title="StarWarsFilmsTable"><div class="code-block" data-lang="kotlin" id="StarWarsFilmsTable-dao-code-block" data-title="Kotlin" data-disable-link-processing="true">import org.jetbrains.exposed.v1.dao.id.IntIdTable
 
 const val MAX_VARCHAR_LENGTH = 50
 
@@ -41,9 +41,9 @@ object StarWarsFilmsTable : IntIdTable() {
     var director by StarWarsFilmsTable.director</div></section><p id="-l0vm7j_79">Once the entity class is defined, instances of this class allow you to manipulate individual records from the corresponding table. For example, by <a href="dao-crud-operations.html#create" id="-l0vm7j_80" data-tooltip="To create a new table row, use the .new() function on the entity class:">creating a new record</a>, <a href="dao-crud-operations.html#read" id="-l0vm7j_81" data-tooltip="To read a value from a property, simply access it as you would with any property in a Kotlin class:">retrieving a row based on its primary key</a>, <a href="dao-crud-operations.html#update" id="-l0vm7j_82" data-tooltip="You can update the value of a property just as you would with any property in a Kotlin class:">updating values</a>, or <a href="dao-crud-operations.html#delete" id="-l0vm7j_83" data-tooltip="To delete a record, use the .delete() function:">deleting records</a>.</p></section><section class="chapter"><h2 id="immutable-entities" data-toc="immutable-entities">Immutable entities</h2><p id="-l0vm7j_84">For defining entities that are immutable, Exposed provides the additional <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-immutable-entity-class/index.html" id="-l0vm7j_85" data-external="true" rel="noopener noreferrer"><code class="code" id="-l0vm7j_86">ImmutableEntityClass</code></a> and <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-immutable-cached-entity-class/index.html" id="-l0vm7j_87" data-external="true" rel="noopener noreferrer"><code class="code" id="-l0vm7j_88">ImmutableCachedEntityClass</code></a>.</p><p id="-l0vm7j_89">The <code class="code" id="-l0vm7j_90">ImmutableCachedEntityClass</code> uses an internal cache to store entity loading states by the associated database. This ensures that entity updates are synchronized with this class as the lock object.</p><p id="-l0vm7j_91">To create an immutable entity, use either <code class="code" id="-l0vm7j_92">ImmutableEntityClass</code> or <code class="code" id="-l0vm7j_93">ImmutableCachedEntityClass</code> as a companion object in your entity class. For example, here&rsquo;s how to define a <code class="code" id="-l0vm7j_94">CityEntity</code> class:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">package org.example.entities
 
 import org.example.tables.CitiesTable
-import org.jetbrains.exposed.dao.ImmutableEntityClass
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.ImmutableEntityClass
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.id.EntityID
 
 class CityEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
     val name by CitiesTable.name
@@ -53,9 +53,9 @@ class CityEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
 </div><ul class="list _bullet" id="-l0vm7j_96"><li class="list__item" id="-l0vm7j_97"><p>Properties are defined using <code class="code" id="-l0vm7j_98">val</code> instead of <code class="code" id="-l0vm7j_99">var</code>. This enforces immutability, as <code class="code" id="-l0vm7j_100">val</code> properties cannot be reassigned after initial assignment.</p></li><li class="list__item" id="-l0vm7j_101"><p>The primary function of the entity class in this context is to query data from the associated table, not to modify it. Therefore, inserts can only be performed using the DSL <a href="dsl-crud-operations.html#insert" id="-l0vm7j_102" data-tooltip="To create a new table row, use the .insert() function. If the same row already exists in the table, it throws an exception."><code class="code" id="-l0vm7j_103">.insert()</code></a> method and updates can be done either through the DSL <a href="dsl-crud-operations.html#update" id="-l0vm7j_104" data-tooltip="To update a record, use the .update() function. By default, it returns the number of updated rows."><code class="code" id="-l0vm7j_105">.update()</code></a> or the <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-immutable-entity-class/force-update-entity.html" id="-l0vm7j_106" data-external="true" rel="noopener noreferrer"><code class="code" id="-l0vm7j_107">ImmutableEntityClass.forceUpdateEntity()</code></a> methods.</p></li></ul></section><section class="chapter"><h2 id="class-method-overrides" data-toc="class-method-overrides">Class method overrides</h2><p id="-l0vm7j_108">You can use override methods in both the <code class="code" id="-l0vm7j_109">Entity</code> class and the <code class="code" id="-l0vm7j_110">EntityClass</code> companion object to extend functionality or manage entity behavior.</p><p id="-l0vm7j_111">For example, here&rsquo;s how to override the <code class="code" id="-l0vm7j_112">delete()</code> method in a <code class="code" id="-l0vm7j_113">User</code> entity:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">package org.example.entities
 
 import org.example.tables.UsersTable
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.id.EntityID
 
 class UserEntityWithOverride(id: EntityID&lt;Int&gt;) : IntEntity(id) {
     companion object : IntEntityClass&lt;UserEntityWithOverride&gt;(UsersTable)
@@ -70,10 +70,10 @@ class UserEntityWithOverride(id: EntityID&lt;Int&gt;) : IntEntity(id) {
 }
 </div><p id="-l0vm7j_115">In this example, a custom message is printed before the <code class="code" id="-l0vm7j_116">.delete()</code> function of the superclass (<code class="code" id="-l0vm7j_117">IntEntity</code>) completes the deletion.</p></section><section class="chapter"><h2 id="field-transformations" data-toc="field-transformations">Field transformations</h2><p id="-l0vm7j_118">As databases typically store only basic types, such as integers and strings, it's not always convenient to keep the same simplicity on DAO level.</p><p id="-l0vm7j_119">For example, you might need to parse JSON from a <code class="code" id="-l0vm7j_120">VARCHAR</code> column, or retrieve values from a cache based on data from the database. In such cases, we recommend to use column transformations.</p><section class="chapter"><h3 id="defining-unsigned-int-field" data-toc="defining-unsigned-int-field">Example: Defining an Unsigned Integer field</h3><p id="-l0vm7j_121">Suppose that you want to define an unsigned integer field on an entity, but Exposed doesn't have such a column type yet. You can achieve this by using the following implementation:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">package org.example.entities
 
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.id.IntIdTable
 
 object TableWithUnsignedInteger : IntIdTable() {
     val uint = integer(&quot;uint&quot;)
@@ -86,10 +86,10 @@ class EntityWithUInt(id: EntityID&lt;Int&gt;) : IntEntity(id) {
 }
 </div><p id="-l0vm7j_123">The <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/transform.html" id="-l0vm7j_124" data-external="true" rel="noopener noreferrer"><code class="code" id="-l0vm7j_125">.transform()</code></a> function accepts two lambdas that convert values to and from the original column type. In this case, you make sure to store only <code class="code" id="-l0vm7j_126">UInt</code> instances in the <code class="code" id="-l0vm7j_127">uint</code> field.</p><p id="-l0vm7j_128">Although it is still possible to insert or update values with negative integers via DAO, this approach assures a cleaner business logic.</p></section><section class="chapter"><h3 id="memoized-transformations" data-toc="memoized-transformations">Memoized transformations</h3><p id="-l0vm7j_129">If your transformation function involves complex operations that impact performance, you can use <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/memoized-transform.html" id="-l0vm7j_130" data-external="true" rel="noopener noreferrer"><code class="code" id="-l0vm7j_131">.memoizedTransform()</code></a> to cache the result of the transformation.</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">package org.example.entities
 
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import java.util.Base64
 
 object TableWithText : IntIdTable() {

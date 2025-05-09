@@ -6,9 +6,9 @@ import org.example.tables.StarWarsFilmsTable
 import org.example.tables.StarWarsFilmsWithCompositeRefTable
 import org.example.tables.StarWarsFilmsWithDirectorTable
 import org.example.tables.UserRatingsTable
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.id.EntityID
 
 /*
     Important: This file is referenced by line number in `DAO-Relationships.topic`.
