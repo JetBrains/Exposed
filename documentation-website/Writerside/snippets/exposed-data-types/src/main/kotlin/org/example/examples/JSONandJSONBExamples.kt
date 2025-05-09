@@ -7,13 +7,13 @@ import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.lowerCase
-import org.jetbrains.exposed.v1.sql.insert
-import org.jetbrains.exposed.v1.sql.json.contains
-import org.jetbrains.exposed.v1.sql.json.exists
-import org.jetbrains.exposed.v1.sql.json.extract
-import org.jetbrains.exposed.v1.sql.json.json
-import org.jetbrains.exposed.v1.sql.selectAll
-import org.jetbrains.exposed.v1.sql.update
+import org.jetbrains.exposed.v1.insert
+import org.jetbrains.exposed.v1.json.contains
+import org.jetbrains.exposed.v1.json.exists
+import org.jetbrains.exposed.v1.json.extract
+import org.jetbrains.exposed.v1.json.json
+import org.jetbrains.exposed.v1.selectAll
+import org.jetbrains.exposed.v1.update
 
 const val GROUP_ID_LENGTH = 32
 const val INT_ARRAY_ITEM_1 = 1

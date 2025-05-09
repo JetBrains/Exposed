@@ -11,12 +11,12 @@ import org.jetbrains.exposed.v1.core.statements.IStatementBuilder
 import org.jetbrains.exposed.v1.core.statements.Statement
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.r2dbc.sql.*
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.*
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.junit.Test
 
 class ExplainTests : R2dbcDatabaseTestsBase() {

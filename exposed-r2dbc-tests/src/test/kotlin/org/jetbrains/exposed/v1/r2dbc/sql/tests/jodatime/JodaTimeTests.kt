@@ -19,21 +19,21 @@ import org.jetbrains.exposed.v1.core.get
 import org.jetbrains.exposed.v1.core.slice
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
-import org.jetbrains.exposed.v1.r2dbc.sql.select
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.jodatime.*
-import org.jetbrains.exposed.v1.sql.json.extract
-import org.jetbrains.exposed.v1.sql.json.jsonb
+import org.jetbrains.exposed.v1.jodatime.*
+import org.jetbrains.exposed.v1.json.extract
+import org.jetbrains.exposed.v1.json.jsonb
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.select
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
@@ -303,7 +303,8 @@ class JodaTimeTests : R2dbcDatabaseTestsBase() {
 
         withTables(fakeTestTable) {
             suspend fun currentDbDateTime(): DateTime {
-                return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
+                return fakeTestTable.select(CurrentDateTime)
+                    .first()[CurrentDateTime]
             }
 
             fakeTestTable.insert {}

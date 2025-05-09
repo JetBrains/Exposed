@@ -16,13 +16,12 @@ import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.rank
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.rowNumber
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.r2dbc.sql.select
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.withSales
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.junit.Test
 import java.math.BigDecimal
 import java.math.RoundingMode

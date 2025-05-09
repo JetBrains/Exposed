@@ -2,11 +2,10 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.types
 
 import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.Test
 
 class DoubleColumnTypeTests : R2dbcDatabaseTestsBase() {
@@ -46,7 +45,7 @@ class DoubleColumnTypeTests : R2dbcDatabaseTestsBase() {
                 assertEquals(9.23, it[TestTable.amount])
             }
 
-            SchemaUtils.drop(TestTable)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(TestTable)
         }
     }
 }

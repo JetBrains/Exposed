@@ -8,14 +8,13 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.update
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.Test
 
 class EnumerationTests : R2dbcDatabaseTestsBase() {
@@ -88,7 +87,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
                     exec("CREATE TYPE fooenum AS ENUM ('Bar', 'Baz');")
                 }
                 EnumTable.initEnumColumn(sqlType)
-                SchemaUtils.create(EnumTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(EnumTable)
                 // drop shared table object's unique index if created in other test
                 if (EnumTable.indices.isNotEmpty()) {
                     exec(EnumTable.indices.first().dropStatement().single())
@@ -124,7 +123,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
 //                assertEquals(Foo.Bar, enumClass.reload(entity, true)!!.enum)
             } finally {
                 try {
-                    SchemaUtils.drop(EnumTable)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
         }
@@ -147,7 +146,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
                 with(EnumTable) {
                     enumColumn.default(Foo.Bar)
                 }
-                SchemaUtils.create(EnumTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(EnumTable)
                 // drop shared table object's unique index if created in other test
                 if (EnumTable.indices.isNotEmpty()) {
                     exec(EnumTable.indices.first().dropStatement().single())
@@ -158,7 +157,7 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
                 assertEquals(Foo.Bar, default)
             } finally {
                 try {
-                    SchemaUtils.drop(EnumTable)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
         }
@@ -190,10 +189,10 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
                 with(EnumTable) {
                     if (indices.isEmpty()) enumColumn.uniqueIndex()
                 }
-                SchemaUtils.create(EnumTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(EnumTable)
 
                 referenceTable.initRefColumn()
-                SchemaUtils.create(referenceTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(referenceTable)
 
                 val fooBar = Foo.Bar
                 val id1 = EnumTable.insert {
@@ -206,9 +205,9 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
                 assertEquals(fooBar, EnumTable.selectAll().single()[EnumTable.enumColumn])
                 assertEquals(fooBar, referenceTable.selectAll().single()[referenceTable.referenceColumn])
             } finally {
-                SchemaUtils.drop(referenceTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(referenceTable)
                 exec(EnumTable.indices.first().dropStatement().single())
-                SchemaUtils.drop(EnumTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(EnumTable)
             }
         }
     }

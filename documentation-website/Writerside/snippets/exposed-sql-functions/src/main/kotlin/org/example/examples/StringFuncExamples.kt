@@ -1,6 +1,8 @@
 package org.example.examples
 
 import org.example.tables.FilmBoxOfficeTable
+import org.jetbrains.exposed.v1.Concat
+import org.jetbrains.exposed.v1.charLength
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.concat
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.lowerCase
@@ -8,10 +10,8 @@ import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.core.trim
 import org.jetbrains.exposed.v1.core.upperCase
-import org.jetbrains.exposed.v1.sql.Concat
-import org.jetbrains.exposed.v1.sql.charLength
-import org.jetbrains.exposed.v1.sql.insert
-import org.jetbrains.exposed.v1.sql.locate
+import org.jetbrains.exposed.v1.insert
+import org.jetbrains.exposed.v1.locate
 
 /*
     Important: This file is referenced by line number in `SQL-Functions.md`.

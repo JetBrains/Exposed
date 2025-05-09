@@ -9,11 +9,11 @@ import org.jetbrains.exposed.v1.javatime.dateTimeLiteral
 import org.jetbrains.exposed.v1.javatime.datetime
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.javatime.timestampLiteral
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.select
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.select
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate

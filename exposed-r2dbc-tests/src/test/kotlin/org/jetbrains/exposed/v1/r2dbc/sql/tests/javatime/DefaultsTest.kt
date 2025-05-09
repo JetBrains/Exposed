@@ -14,19 +14,17 @@ import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.h2Mode
 import org.jetbrains.exposed.v1.javatime.*
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.*
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.r2dbc.sql.update
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.javatime.*
+import org.jetbrains.exposed.v1.r2dbc.batchInsert
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.*
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
+import org.jetbrains.exposed.v1.r2dbc.tests.sorted
+import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.Test
 import java.time.*
 import java.time.temporal.ChronoUnit
@@ -313,7 +311,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(foo) {
-            val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
+            val actual = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(foo)
 
             assertTrue(actual.isEmpty())
         }
@@ -420,7 +418,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -435,7 +433,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -450,7 +448,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -464,7 +462,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -480,7 +478,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
         val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
         withTables(excludeSettings = unsupportedDatabases, tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }

@@ -225,9 +225,9 @@ By contributing to the Exposed project, you agree that your contributions will b
 ### SQL DSL
 
 ```kotlin
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.sql.transactions.transaction
+import org.jetbrains.exposed.v1.transactions.transaction
 
 object Users : Table() {
     val id: Column<String> = varchar("id", 10)
@@ -398,8 +398,8 @@ Generated SQL:
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.transactions.transaction
+import org.jetbrains.exposed.v1.*
+import org.jetbrains.exposed.v1.transactions.transaction
 
 object Users : IntIdTable() {
     val name = varchar("name", 50).index()

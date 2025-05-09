@@ -13,7 +13,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.crypt
 // import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
 // import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
 // import org.jetbrains.exposed.v1.r2dbc.sql.update
-// import org.jetbrains.exposed.v1.sql.exposedLogger
+// import org.jetbrains.exposed.v1.exposedLogger
 // import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
 // import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
 // import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue

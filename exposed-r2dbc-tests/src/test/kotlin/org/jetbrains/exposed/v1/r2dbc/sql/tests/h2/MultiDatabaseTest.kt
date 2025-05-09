@@ -10,22 +10,22 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.invoke
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.runTest
-import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcDatabase
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.exists
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.name
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.getInt
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFalse
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.exists
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.name
+import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.DMLTestsData
-import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.r2dbc.sql.transactions.suspendTransaction
-import org.jetbrains.exposed.v1.r2dbc.sql.transactions.transactionManager
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.getInt
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import org.junit.After
 import org.junit.Assume
 import org.junit.Before
@@ -266,16 +266,22 @@ class MultiDatabaseTest {
 //        assertEquals("jdbc:h2:mem:db2", db2.name) // but if you run just these tests one at a time, they pass.
         val coroutineDispatcher1 = newSingleThreadContext("first")
         TransactionManager.defaultDatabase = db1
-        suspendTransaction(coroutineDispatcher1) {
-            assertEquals(db1.name, TransactionManager.current().db.name) // when running all tests together, this one usually fails
-            TransactionManager.current().exec("SELECT 1") { row ->
+        org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction(coroutineDispatcher1) {
+            assertEquals(
+                db1.name,
+                org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.name
+            ) // when running all tests together, this one usually fails
+            org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().exec("SELECT 1") { row ->
                 assertEquals(1, row.getInt(1))
             }
         }
         TransactionManager.defaultDatabase = db2
-        suspendTransaction(coroutineDispatcher1) {
-            assertEquals(db2.name, TransactionManager.current().db.name) // fails??
-            TransactionManager.current().exec("SELECT 1") { row ->
+        org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction(coroutineDispatcher1) {
+            assertEquals(
+                db2.name,
+                org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.name
+            ) // fails??
+            org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().exec("SELECT 1") { row ->
                 assertEquals(1, row.getInt(1))
             }
         }
@@ -290,18 +296,18 @@ class MultiDatabaseTest {
         val threadpool = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         TransactionManager.defaultDatabase = db1
         threadpool.invoke {
-            suspendTransaction {
-                assertEquals(db1.name, TransactionManager.current().db.name)
-                TransactionManager.current().exec("SELECT 1") { row ->
+            org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction {
+                assertEquals(db1.name, org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.name)
+                org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().exec("SELECT 1") { row ->
                     assertEquals(1, row.getInt(1))
                 }
             }
         }
         TransactionManager.defaultDatabase = db2
         threadpool.invoke {
-            suspendTransaction {
-                assertEquals(db2.name, TransactionManager.current().db.name)
-                TransactionManager.current().exec("SELECT 1") { row ->
+            org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction {
+                assertEquals(db2.name, org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.name)
+                org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().exec("SELECT 1") { row ->
                     assertEquals(1, row.getInt(1))
                 }
             }

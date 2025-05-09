@@ -1,12 +1,12 @@
 package org.example.examples
 
+import org.jetbrains.exposed.v1.DoubleColumnType
+import org.jetbrains.exposed.v1.addLogger
 import org.jetbrains.exposed.v1.core.BooleanColumnType
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementType
-import org.jetbrains.exposed.v1.sql.DoubleColumnType
-import org.jetbrains.exposed.v1.sql.addLogger
-import org.jetbrains.exposed.v1.sql.transactions.transaction
+import org.jetbrains.exposed.v1.transactions.transaction
 
 /*
     Important: This file is referenced by line number in `Working-with-SQL-Strings.md`.

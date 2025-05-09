@@ -3,7 +3,7 @@ package org.example.examples
 import org.example.tables.CitiesTable
 import org.example.tables.StarWarsFilmsIntIdTable
 import org.example.tables.StarWarsFilmsTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.*
 
 /*
     Important: The contents of this file are referenced by line number in `DSL-CRUD-Operations.topic`.

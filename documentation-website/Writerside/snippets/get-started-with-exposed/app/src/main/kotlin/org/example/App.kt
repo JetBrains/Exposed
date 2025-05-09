@@ -4,9 +4,9 @@
 package org.example
 
 import Tasks
+import org.jetbrains.exposed.v1.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.transactions.transaction
+import org.jetbrains.exposed.v1.transactions.transaction
 
 fun main() {
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")

@@ -8,11 +8,11 @@ import org.jetbrains.exposed.v1.core.decimalLiteral
 import org.jetbrains.exposed.v1.core.doubleLiteral
 import org.jetbrains.exposed.v1.core.functions.math.*
 import org.jetbrains.exposed.v1.core.intLiteral
-import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.junit.Test
 import java.math.BigDecimal
 

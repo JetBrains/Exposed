@@ -6,9 +6,9 @@ import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
-import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.Test
 import kotlin.test.assertEquals
 

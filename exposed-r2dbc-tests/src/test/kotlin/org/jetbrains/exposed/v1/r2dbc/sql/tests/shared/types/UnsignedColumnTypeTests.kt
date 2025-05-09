@@ -6,16 +6,15 @@ import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualCollections
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFailAndRollback
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.junit.Test
 
 class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
@@ -105,7 +104,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                 val result2 = UByteTable.selectAll().map { it[UByteTable.unsignedByte] }.toList()
                 assertEqualCollections(listOf(number1, number2), result2)
             } finally {
-                SchemaUtils.drop(UByteTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(UByteTable)
             }
         }
     }
@@ -182,7 +181,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                     assertEqualCollections(listOf(number1, number2), result2)
                 }
             } finally {
-                SchemaUtils.drop(UShortTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(UShortTable)
             }
         }
     }
@@ -257,7 +256,7 @@ class UnsignedColumnTypeTests : R2dbcDatabaseTestsBase() {
                 val result2 = UIntTable.selectAll().map { it[UIntTable.unsignedInt] }.toList()
                 assertEqualCollections(listOf(number1, number2), result2)
             } finally {
-                SchemaUtils.drop(UIntTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(UIntTable)
             }
         }
     }

@@ -4,13 +4,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.singleOrNull
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
-import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.batchInsert
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.Test
 
 class CharColumnType : R2dbcDatabaseTestsBase() {

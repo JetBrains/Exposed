@@ -14,11 +14,11 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.r2dbc.sql.select
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.select
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.Test
 
 class ExistsTests : R2dbcDatabaseTestsBase() {

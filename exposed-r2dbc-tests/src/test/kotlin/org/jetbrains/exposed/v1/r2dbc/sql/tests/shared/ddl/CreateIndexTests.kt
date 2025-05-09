@@ -7,17 +7,15 @@ import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.exists
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectMetadataTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.getString
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.exists
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectMetadataTest
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.getString
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.junit.Test
 import kotlin.test.expect
 
@@ -34,9 +32,9 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.H2_V2_MYSQL), tables = arrayOf(testTable)) {
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
-            SchemaUtils.drop(testTable)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(testTable)
         }
     }
 
@@ -54,7 +52,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
             excludeSettings = listOf(TestDB.H2_V2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE),
             tables = arrayOf(testTable)
         ) {
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
         }
     }
@@ -70,9 +68,9 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
         }
 
         withDb(TestDB.SQLSERVER) {
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
-            SchemaUtils.drop(testTable)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(testTable)
         }
     }
 
@@ -89,12 +87,12 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
         val schema1 = Schema("Schema1")
         val schema2 = Schema("Schema2")
         withSchemas(listOf(TestDB.SQLSERVER), schema1, schema2) {
-            SchemaUtils.setSchema(schema1)
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.setSchema(schema1)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(testTable)
             assertEquals(true, testTable.exists())
-            SchemaUtils.setSchema(schema2)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.setSchema(schema2)
             assertEquals(false, testTable.exists())
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(testTable)
             assertEquals(true, testTable.exists())
         }
     }
@@ -119,7 +117,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
         }
 
         withDb(TestDB.ALL_POSTGRES) {
-            SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
             assertTrue(partialIndexTable.exists())
 
             // check that indexes are created and contain the proper filtering conditions
@@ -164,7 +162,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
             execInBatch(listOf(dropUniqueConstraint, dropIndex))
 
             assertEquals(getIndices(partialIndexTable).size, 1)
-            SchemaUtils.drop(partialIndexTable)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(partialIndexTable)
         }
     }
 
@@ -182,10 +180,10 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
         }
 
         withDb(TestDB.ALL_POSTGRES + TestDB.SQLSERVER) {
-            SchemaUtils.createMissingTablesAndColumns(tester)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(tester)
             assertTrue(tester.exists())
 
-            val createdStatements = tester.indices.map { SchemaUtils.createIndex(it).first() }
+            val createdStatements = tester.indices.map { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(it).first() }
             assertEquals(3, createdStatements.size)
             assertEquals(2, createdStatements.count { it.startsWith("CREATE ") })
             assertEquals(1, createdStatements.count { it.startsWith("ALTER TABLE ") })
@@ -221,12 +219,12 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
                 type,
                 tester.name neq "Default"
             )
-            val createdIndex = SchemaUtils.createIndex(typedPartialIndex).single()
+            val createdIndex = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(typedPartialIndex).single()
             assertTrue(createdIndex.startsWith("CREATE "))
             assertTrue(" WHERE " in createdIndex)
             assertTrue(typedPartialIndex.dropStatement().first().startsWith("DROP INDEX "))
 
-            SchemaUtils.drop(tester)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tester)
         }
     }
 
@@ -241,7 +239,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            SchemaUtils.createMissingTablesAndColumns()
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())
 
             val expectedIndexCount = when (currentDialectTest) {
@@ -269,7 +267,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
 
         val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
         withTables(excludeSettings = functionsNotSupported, tester) {
-            SchemaUtils.createMissingTablesAndColumns()
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())
 
             var indices = getIndices(tester)

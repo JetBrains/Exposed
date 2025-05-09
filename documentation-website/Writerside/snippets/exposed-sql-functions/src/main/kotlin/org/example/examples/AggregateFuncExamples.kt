@@ -1,12 +1,12 @@
 package org.example.examples
 
 import org.example.tables.FilmBoxOfficeTable
+import org.jetbrains.exposed.v1.avg
 import org.jetbrains.exposed.v1.core.count
 import org.jetbrains.exposed.v1.core.stdDevPop
-import org.jetbrains.exposed.v1.sql.avg
-import org.jetbrains.exposed.v1.sql.max
-import org.jetbrains.exposed.v1.sql.min
-import org.jetbrains.exposed.v1.sql.sum
+import org.jetbrains.exposed.v1.max
+import org.jetbrains.exposed.v1.min
+import org.jetbrains.exposed.v1.sum
 
 /*
     Important: This file is referenced by line number in `SQL-Functions.md`.

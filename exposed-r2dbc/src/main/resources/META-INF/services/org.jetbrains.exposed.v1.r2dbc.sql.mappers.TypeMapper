@@ -1,8 +1,0 @@
-org.jetbrains.exposed.v1.r2dbc.sql.mappers.ExposedColumnTypeMapper
-org.jetbrains.exposed.v1.r2dbc.sql.mappers.PrimitiveTypeMapper
-org.jetbrains.exposed.v1.r2dbc.sql.mappers.DateTimeTypeMapper
-org.jetbrains.exposed.v1.r2dbc.sql.mappers.BinaryTypeMapper
-org.jetbrains.exposed.v1.r2dbc.sql.mappers.ArrayTypeMapper
-org.jetbrains.exposed.v1.r2dbc.sql.mappers.PostgresSpecificTypeMapper
-org.jetbrains.exposed.v1.r2dbc.sql.mappers.ValueTypeMapper
-org.jetbrains.exposed.v1.r2dbc.sql.mappers.DefaultTypeMapper

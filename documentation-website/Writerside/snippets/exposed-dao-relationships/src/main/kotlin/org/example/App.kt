@@ -2,12 +2,12 @@ package org.example
 
 import org.example.examples.*
 import org.example.tables.*
+import org.jetbrains.exposed.v1.Database
+import org.jetbrains.exposed.v1.SchemaUtils
+import org.jetbrains.exposed.v1.addLogger
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
-import org.jetbrains.exposed.v1.sql.Database
-import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.addLogger
-import org.jetbrains.exposed.v1.sql.transactions.transaction
+import org.jetbrains.exposed.v1.transactions.transaction
 import java.util.*
 
 fun main() {

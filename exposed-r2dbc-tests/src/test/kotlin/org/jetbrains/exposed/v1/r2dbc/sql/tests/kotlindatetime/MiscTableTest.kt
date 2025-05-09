@@ -14,17 +14,16 @@ import org.jetbrains.exposed.v1.core.Cast
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.substring
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.MiscTable
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.checkInsert
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.checkRow
-import org.jetbrains.exposed.v1.r2dbc.sql.update
-import org.jetbrains.exposed.v1.sql.kotlin.datetime.*
+import org.jetbrains.exposed.v1.datetime.*
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.MiscTable
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.checkInsert
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.checkRow
+import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -1254,7 +1253,7 @@ class MiscTableTest : R2dbcDatabaseTestsBase() {
                 }
                 commit() // Need commit to persist data before drop tables
             } finally {
-                SchemaUtils.drop(ZeroDateTimeTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(ZeroDateTimeTable)
                 commit()
             }
         }

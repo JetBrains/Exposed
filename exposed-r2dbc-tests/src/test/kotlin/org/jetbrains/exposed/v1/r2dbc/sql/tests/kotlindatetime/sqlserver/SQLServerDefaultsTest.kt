@@ -7,13 +7,12 @@ import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.sql.kotlin.datetime.KotlinLocalDateTimeColumnType
-import org.jetbrains.exposed.v1.sql.kotlin.datetime.datetime
+import org.jetbrains.exposed.v1.datetime.KotlinLocalDateTimeColumnType
+import org.jetbrains.exposed.v1.datetime.datetime
+import org.jetbrains.exposed.v1.r2dbc.batchInsert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -58,7 +57,7 @@ class SQLServerDefaultsTest : R2dbcDatabaseTestsBase() {
                 assertNotNull(result[temporalTable.sysStart])
                 assertNotNull(result[temporalTable.sysEnd])
             } finally {
-                SchemaUtils.drop(temporalTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(temporalTable)
             }
         }
     }

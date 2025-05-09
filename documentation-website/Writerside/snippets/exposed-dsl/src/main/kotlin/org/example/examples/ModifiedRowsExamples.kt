@@ -2,10 +2,10 @@ package org.example.examples
 
 import kotlinx.datetime.LocalDateTime
 import org.example.tables.StarWarsFilmsTable
+import org.jetbrains.exposed.v1.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentDateTime
-import org.jetbrains.exposed.v1.sql.kotlin.datetime.datetime
+import org.jetbrains.exposed.v1.kotlin.datetime.CurrentDateTime
+import org.jetbrains.exposed.v1.kotlin.datetime.datetime
 
 private const val TITLE_MAX_LENGTH = 64
 private const val MOVIE_SEQUEL_3_ID = 8

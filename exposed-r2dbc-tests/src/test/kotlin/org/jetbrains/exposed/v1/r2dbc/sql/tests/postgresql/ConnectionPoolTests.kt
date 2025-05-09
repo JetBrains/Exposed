@@ -5,13 +5,13 @@ import io.r2dbc.spi.IsolationLevel
 import io.r2dbc.spi.Option
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.test.runTest
-import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcDatabase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.LogDbInTestName
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.getString
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.r2dbc.sql.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.tests.LogDbInTestName
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.getString
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.Assume
 import org.junit.Test
 

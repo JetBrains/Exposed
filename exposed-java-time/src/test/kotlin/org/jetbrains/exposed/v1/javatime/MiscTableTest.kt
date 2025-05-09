@@ -9,11 +9,11 @@ import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
-import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.sql.tests.TestDB
-import org.jetbrains.exposed.v1.sql.tests.shared.MiscTable
-import org.jetbrains.exposed.v1.sql.tests.shared.checkInsert
-import org.jetbrains.exposed.v1.sql.tests.shared.checkRow
+import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.TestDB
+import org.jetbrains.exposed.v1.tests.shared.MiscTable
+import org.jetbrains.exposed.v1.tests.shared.checkInsert
+import org.jetbrains.exposed.v1.tests.shared.checkRow
 import org.junit.Test
 import java.math.BigDecimal
 import java.time.Duration

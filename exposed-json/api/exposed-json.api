@@ -1,4 +1,4 @@
-public final class org/jetbrains/exposed/v1/sql/json/Contains : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression {
+public final class org/jetbrains/exposed/v1/json/Contains : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
 	public final fun getCandidate ()Lorg/jetbrains/exposed/v1/core/Expression;
 	public final fun getJsonType ()Lorg/jetbrains/exposed/v1/core/IColumnType;
@@ -7,7 +7,7 @@ public final class org/jetbrains/exposed/v1/sql/json/Contains : org/jetbrains/ex
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/v1/sql/json/Exists : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression {
+public final class org/jetbrains/exposed/v1/json/Exists : org/jetbrains/exposed/v1/core/Op, org/jetbrains/exposed/v1/core/ComplexExpression {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;[Ljava/lang/String;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
 	public final fun getExpression ()Lorg/jetbrains/exposed/v1/core/Expression;
 	public final fun getJsonType ()Lorg/jetbrains/exposed/v1/core/IColumnType;
@@ -16,7 +16,7 @@ public final class org/jetbrains/exposed/v1/sql/json/Exists : org/jetbrains/expo
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/v1/sql/json/Extract : org/jetbrains/exposed/v1/core/Function {
+public final class org/jetbrains/exposed/v1/json/Extract : org/jetbrains/exposed/v1/core/Function {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;[Ljava/lang/String;ZLorg/jetbrains/exposed/v1/core/IColumnType;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
 	public final fun getExpression ()Lorg/jetbrains/exposed/v1/core/Expression;
 	public final fun getJsonType ()Lorg/jetbrains/exposed/v1/core/IColumnType;
@@ -25,17 +25,17 @@ public final class org/jetbrains/exposed/v1/sql/json/Extract : org/jetbrains/exp
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
-public final class org/jetbrains/exposed/v1/sql/json/JsonBColumnType : org/jetbrains/exposed/v1/sql/json/JsonColumnType {
+public final class org/jetbrains/exposed/v1/json/JsonBColumnType : org/jetbrains/exposed/v1/json/JsonColumnType {
 	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public fun getUsesBinaryFormat ()Z
 	public fun sqlType ()Ljava/lang/String;
 }
 
-public final class org/jetbrains/exposed/v1/sql/json/JsonBColumnTypeKt {
+public final class org/jetbrains/exposed/v1/json/JsonBColumnTypeKt {
 	public static final fun jsonb (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/Column;
 }
 
-public class org/jetbrains/exposed/v1/sql/json/JsonColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/JsonColumnMarker {
+public class org/jetbrains/exposed/v1/json/JsonColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/JsonColumnMarker {
 	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public final fun getDeserialize ()Lkotlin/jvm/functions/Function1;
 	public final fun getSerialize ()Lkotlin/jvm/functions/Function1;
@@ -50,16 +50,16 @@ public class org/jetbrains/exposed/v1/sql/json/JsonColumnType : org/jetbrains/ex
 	public fun valueToString (Ljava/lang/Object;)Ljava/lang/String;
 }
 
-public final class org/jetbrains/exposed/v1/sql/json/JsonColumnTypeKt {
+public final class org/jetbrains/exposed/v1/json/JsonColumnTypeKt {
 	public static final fun json (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/Column;
 }
 
-public final class org/jetbrains/exposed/v1/sql/json/JsonConditionsKt {
-	public static final fun contains (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/sql/json/Contains;
-	public static final fun contains (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/sql/json/Contains;
-	public static synthetic fun contains$default (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/sql/json/Contains;
-	public static synthetic fun contains$default (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/sql/json/Contains;
-	public static final fun exists (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;[Ljava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/sql/json/Exists;
-	public static synthetic fun exists$default (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;[Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/sql/json/Exists;
+public final class org/jetbrains/exposed/v1/json/JsonConditionsKt {
+	public static final fun contains (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/json/Contains;
+	public static final fun contains (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/json/Contains;
+	public static synthetic fun contains$default (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/json/Contains;
+	public static synthetic fun contains$default (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/json/Contains;
+	public static final fun exists (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;[Ljava/lang/String;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/json/Exists;
+	public static synthetic fun exists$default (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;[Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/json/Exists;
 }
 

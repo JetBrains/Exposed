@@ -75,8 +75,8 @@ import org.example.tables.StarWarsFilmsWithRankTable
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.sql.Op
-import org.jetbrains.exposed.v1.sql.Query
+import org.jetbrains.exposed.v1.Op
+import org.jetbrains.exposed.v1.Query
 
 class StarWarsFilmWithRankEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
     var sequelId by StarWarsFilmsWithRankTable.sequelId
@@ -97,7 +97,7 @@ class StarWarsFilmWithRankEntity(id: EntityID&lt;Int&gt;) : IntEntity(id) {
 </div></div><div class="tabs__content" data-gtm="tab" id="table-definition" data-title="StarWarsFilmsWithRankTable"><div class="code-block" data-lang="kotlin" data-title="Kotlin" data-disable-link-processing="true">package org.example.tables
 
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.Rank
+import org.jetbrains.exposed.v1.Rank
 import org.jetbrains.exposed.v1.core.SortOrder
 
 const val MAX_NAME_LENGTH = 32
@@ -129,8 +129,8 @@ object StarWarsFilmsWithRankTable : IntIdTable() {
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentDateTime
-import org.jetbrains.exposed.v1.sql.kotlin.datetime.datetime
+import org.jetbrains.exposed.v1.kotlin.datetime.CurrentDateTime
+import org.jetbrains.exposed.v1.kotlin.datetime.datetime
 
 abstract class BaseTable(name: String = &quot;&quot;) : IntIdTable(name) {
     val created: Column&lt;LocalDateTime&gt; = datetime(&quot;created&quot;)
@@ -157,7 +157,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.example.tables.BaseTable
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.sql.exposedLogger
+import org.jetbrains.exposed.v1.exposedLogger
 
 abstract class BaseEntityClass&lt;out E : BaseEntity&gt;(
     table: BaseTable

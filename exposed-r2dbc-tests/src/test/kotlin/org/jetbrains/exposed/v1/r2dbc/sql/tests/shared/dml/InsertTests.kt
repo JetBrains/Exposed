@@ -15,19 +15,18 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
-import org.jetbrains.exposed.v1.r2dbc.sql.*
-import org.jetbrains.exposed.v1.r2dbc.sql.statements.BatchInsertSuspendExecutable
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentTestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.inProperCase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFailAndRollback
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentTimestamp
-import org.jetbrains.exposed.v1.sql.kotlin.datetime.timestamp
+import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
+import org.jetbrains.exposed.v1.datetime.timestamp
+import org.jetbrains.exposed.v1.r2dbc.*
+import org.jetbrains.exposed.v1.r2dbc.statements.BatchInsertSuspendExecutable
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentTestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.junit.Assume
 import org.junit.Test
 import java.util.*
@@ -493,7 +492,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         dbToTest.forEach { db ->
             try {
                 withDb(db) {
-                    SchemaUtils.create(testTable)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(testTable)
                 }
                 try {
                     withDb(db) {
@@ -511,7 +510,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                 }
             } finally {
                 withDb(db) {
-                    SchemaUtils.drop(testTable)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(testTable)
                 }
             }
         }
@@ -602,7 +601,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                         exec("${createStatement.trimIndent()} $computedName AS ($computation))")
                     }
 
-                    else -> SchemaUtils.create(generatedTable)
+                    else -> org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(generatedTable)
                 }
 
                 assertFailAndRollback("Generated columns are auto-derived and read-only") {
@@ -627,7 +626,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
                 assertNull(result2[generatedTable.amount])
                 assertNull(result2[generatedTable.computedAmount])
             } finally {
-                SchemaUtils.drop(generatedTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(generatedTable)
             }
         }
     }

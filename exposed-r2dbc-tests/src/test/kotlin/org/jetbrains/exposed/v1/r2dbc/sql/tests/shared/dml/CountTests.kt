@@ -4,15 +4,14 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.select
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.batchInsert
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.select
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.Test
 
 class CountTests : R2dbcDatabaseTestsBase() {
@@ -38,7 +37,7 @@ class CountTests : R2dbcDatabaseTestsBase() {
         }
 
         withSchemas(custom) {
-            SchemaUtils.create(tester)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(tester)
 
             repeat(3) {
                 tester.insert {
@@ -50,7 +49,7 @@ class CountTests : R2dbcDatabaseTestsBase() {
             assertEquals(1, tester.select(tester.amount).withDistinct().count())
 
             if (currentDialectTest is SQLServerDialect) {
-                SchemaUtils.drop(tester)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tester)
             }
         }
     }

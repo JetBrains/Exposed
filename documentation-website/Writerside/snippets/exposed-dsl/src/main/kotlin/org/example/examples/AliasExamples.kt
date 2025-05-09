@@ -3,7 +3,7 @@ package org.example.examples
 import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.alias
-import org.jetbrains.exposed.v1.sql.selectAll
+import org.jetbrains.exposed.v1.selectAll
 
 class AliasExamples {
     fun useAlias() {

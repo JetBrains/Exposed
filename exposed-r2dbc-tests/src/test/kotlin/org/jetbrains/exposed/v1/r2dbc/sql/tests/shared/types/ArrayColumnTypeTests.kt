@@ -8,16 +8,14 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.r2dbc.exceptions.ExposedR2dbcException
-import org.jetbrains.exposed.v1.r2dbc.sql.*
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.r2dbc.*
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
@@ -37,10 +35,10 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
     fun testCreateAndDropArrayColumns() {
         withDb(excludeSettings = arrayTypeUnsupportedDb) {
             try {
-                SchemaUtils.create(ArrayTestTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(ArrayTestTable)
                 assertTrue(ArrayTestTable.exists())
             } finally {
-                SchemaUtils.drop(ArrayTestTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(ArrayTestTable)
             }
         }
     }
@@ -49,10 +47,10 @@ class ArrayColumnTypeTests : R2dbcDatabaseTestsBase() {
     fun testCreateMissingColumnsWithArrayDefaults() {
         withTestTableAndExcludeSettings {
             try {
-                SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
-                assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).isEmpty())
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
+                assertTrue(org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).isEmpty())
             } finally {
-                SchemaUtils.drop(ArrayTestTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(ArrayTestTable)
             }
         }
     }

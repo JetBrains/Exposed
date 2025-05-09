@@ -57,13 +57,13 @@
         import org.jetbrains.exposed.v1.core.Table
 
         // For exposed-kotlin-datetime (recommended)
-        import org.jetbrains.exposed.v1.sql.kotlin.datetime.*
+        import org.jetbrains.exposed.v1.kotlin.datetime.*
 
         // For exposed-java-time
-        import org.jetbrains.exposed.v1.sql.javatime.*
+        import org.jetbrains.exposed.v1.javatime.*
 
         // For exposed-jodatime
-        import org.jetbrains.exposed.v1.sql.jodatime.*
+        import org.jetbrains.exposed.v1.jodatime.*
 
         object Events : Table() {
             val id = integer("id").autoIncrement()

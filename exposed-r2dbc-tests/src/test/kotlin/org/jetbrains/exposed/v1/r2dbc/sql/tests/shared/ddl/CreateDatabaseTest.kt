@@ -1,10 +1,9 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 
 import io.r2dbc.spi.R2dbcException
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.junit.Test
 import kotlin.test.assertFailsWith
 
@@ -23,12 +22,12 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
 
             val dbName = "jetbrains"
             try {
-                SchemaUtils.dropDatabase(dbName)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropDatabase(dbName)
             } catch (cause: R2dbcException) {
                 // ignore
             }
-            SchemaUtils.createDatabase(dbName)
-            SchemaUtils.dropDatabase(dbName)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createDatabase(dbName)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropDatabase(dbName)
         }
     }
 
@@ -36,7 +35,7 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
     fun testListDatabasesOracle() {
         withDb(TestDB.ORACLE) {
             assertFailsWith<IllegalStateException> {
-                SchemaUtils.listDatabases()
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.listDatabases()
             }
         }
     }
@@ -51,16 +50,16 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
 
             connection.setAutoCommit(true)
             val dbName = "jetbrains"
-            val initial = SchemaUtils.listDatabases()
+            val initial = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.listDatabases()
             if (dbName in initial) {
-                SchemaUtils.dropDatabase(dbName)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropDatabase(dbName)
             }
 
-            SchemaUtils.createDatabase(dbName)
-            val created = SchemaUtils.listDatabases()
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createDatabase(dbName)
+            val created = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.listDatabases()
             assertTrue(dbName in created)
-            SchemaUtils.dropDatabase(dbName)
-            val deleted = SchemaUtils.listDatabases()
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropDatabase(dbName)
+            val deleted = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.listDatabases()
             assertTrue(dbName !in deleted)
             connection.setAutoCommit(false)
         }
@@ -70,16 +69,16 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
     fun testListDatabases() {
         withDb(excludeSettings = TestDB.ALL_POSTGRES + TestDB.SQLSERVER + TestDB.ORACLE) {
             val dbName = "jetbrains"
-            val initial = SchemaUtils.listDatabases()
+            val initial = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.listDatabases()
             if (dbName in initial) {
-                SchemaUtils.dropDatabase(dbName)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropDatabase(dbName)
             }
 
-            SchemaUtils.createDatabase(dbName)
-            val created = SchemaUtils.listDatabases()
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createDatabase(dbName)
+            val created = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.listDatabases()
             assertTrue(dbName in created)
-            SchemaUtils.dropDatabase(dbName)
-            val deleted = SchemaUtils.listDatabases()
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropDatabase(dbName)
+            val deleted = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.listDatabases()
             assertTrue(dbName !in deleted)
         }
     }
@@ -90,8 +89,8 @@ class CreateDatabaseTest : R2dbcDatabaseTestsBase() {
         withDb(TestDB.ALL_POSTGRES) { testDb ->
             connection.setAutoCommit(true)
             val dbName = "jetbrains"
-            SchemaUtils.createDatabase(dbName)
-            SchemaUtils.dropDatabase(dbName)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createDatabase(dbName)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropDatabase(dbName)
             connection.setAutoCommit(false)
         }
     }

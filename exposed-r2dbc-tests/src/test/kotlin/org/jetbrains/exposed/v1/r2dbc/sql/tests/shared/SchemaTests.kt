@@ -6,14 +6,17 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.exists
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.r2dbc.sql.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.exists
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.Assume
 import org.junit.Test
 
@@ -53,7 +56,10 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
                 try {
                     SchemaUtils.createSchema(schema)
                     SchemaUtils.setSchema(schema)
-                    assertEquals(TransactionManager.current().db.identifierManager.inProperCase(schema.identifier), connection.getSchema())
+                    assertEquals(
+                        org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.identifierManager.inProperCase(schema.identifier),
+                        connection.getSchema()
+                    )
                 } finally {
                     SchemaUtils.dropSchema(schema)
                 }

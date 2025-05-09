@@ -12,19 +12,19 @@ import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.nextIntVal
 import org.jetbrains.exposed.v1.core.nextLongVal
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.exists
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
-import org.jetbrains.exposed.v1.r2dbc.sql.select
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectMetadataTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.inProperCase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFalse
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.exists
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.select
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectMetadataTest
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -54,7 +54,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
         withTables(Developer) {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
-                    SchemaUtils.createSequence(myseq)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createSequence(myseq)
 
                     var developerId = Developer.insert {
                         it[Developer.id] = myseq.nextIntVal()
@@ -70,7 +70,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
 
                     assertEquals(myseq.startWith!! + myseq.incrementBy!!, developerId.toLong())
                 } finally {
-                    SchemaUtils.dropSequence(myseq)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropSequence(myseq)
                 }
             }
         }
@@ -87,7 +87,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
         withDb {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
-                    SchemaUtils.create(tester)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(tester)
                     assertTrue(myseq.exists())
 
                     var testerId = tester.insert {
@@ -102,7 +102,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
 
                     assertEquals(myseq.startWith!! + myseq.incrementBy!!, testerId.toLong())
                 } finally {
-                    SchemaUtils.drop(tester)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tester)
                     assertFalse(myseq.exists())
                 }
             }
@@ -114,7 +114,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
         withTables(DeveloperWithLongId) {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
-                    SchemaUtils.createSequence(myseq)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createSequence(myseq)
 
                     var developerId = DeveloperWithLongId.insertAndGetId {
                         it[id] = myseq.nextLongVal()
@@ -129,7 +129,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
                     }
                     assertEquals(myseq.startWith!! + myseq.incrementBy!!, developerId.value)
                 } finally {
-                    SchemaUtils.dropSequence(myseq)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropSequence(myseq)
                 }
             }
         }
@@ -146,7 +146,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
         withDb {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
-                    SchemaUtils.create(tester)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(tester)
                     assertTrue(myseq.exists())
 
                     var testerId = tester.insert {
@@ -161,7 +161,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
 
                     assertEquals(myseq.startWith!! + myseq.incrementBy!!, testerId.value)
                 } finally {
-                    SchemaUtils.drop(tester)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tester)
                     assertFalse(myseq.exists())
                 }
             }
@@ -173,7 +173,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
         withDb {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
-                    SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
                     val developerId = DeveloperWithAutoIncrementBySequence.insertAndGetId {
                         it[name] = "Hichem"
                     }
@@ -185,7 +185,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
                     }
                     assertEquals(developerId.value + 1, developerId2.value)
                 } finally {
-                    SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
                 }
             }
         }
@@ -196,7 +196,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
         withTables(Developer) {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
-                    SchemaUtils.createSequence(myseq)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createSequence(myseq)
                     val nextVal = myseq.nextIntVal()
                     Developer.insert {
                         it[Developer.id] = nextVal
@@ -212,7 +212,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
                     val expSecondValue = expFirstValue + myseq.incrementBy!!
                     assertEquals(expSecondValue, secondValue.toLong())
                 } finally {
-                    SchemaUtils.dropSequence(myseq)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropSequence(myseq)
                 }
             }
         }
@@ -223,11 +223,11 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
         withDb {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
-                    SchemaUtils.createSequence(myseq)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createSequence(myseq)
 
                     assertTrue(myseq.exists())
                 } finally {
-                    SchemaUtils.dropSequence(myseq)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.dropSequence(myseq)
                 }
             }
         }
@@ -242,14 +242,14 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
         withDb {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
-                    SchemaUtils.create(tableWithExplicitSequenceName)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(tableWithExplicitSequenceName)
 
                     val sequences = currentDialectMetadataTest.sequences()
 
                     assertTrue(sequences.isNotEmpty())
                     assertTrue(sequences.any { it == myseq.name.inProperCase() })
                 } finally {
-                    SchemaUtils.drop(tableWithExplicitSequenceName)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tableWithExplicitSequenceName)
                 }
             }
         }
@@ -265,14 +265,14 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
         withDb {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
-                    SchemaUtils.create(tableWithExplicitSequenceName)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(tableWithExplicitSequenceName)
 
                     val sequences = currentDialectMetadataTest.sequences()
 
                     assertTrue(sequences.isNotEmpty())
                     assertTrue(sequences.any { it == sequenceName.inProperCase() })
                 } finally {
-                    SchemaUtils.drop(tableWithExplicitSequenceName)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tableWithExplicitSequenceName)
                 }
             }
         }
@@ -287,7 +287,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
         withDb { testDb ->
             if (currentDialect.needsSequenceToAutoInc) {
                 try {
-                    SchemaUtils.create(tableWithoutExplicitSequenceName)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(tableWithoutExplicitSequenceName)
 
                     val sequences = currentDialectMetadataTest.sequences()
 
@@ -296,7 +296,7 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
                     val expected = tableWithoutExplicitSequenceName.id.autoIncColumnType!!.autoincSeq!!
                     assertTrue(sequences.any { it == if (testDb == TestDB.ORACLE) expected.inProperCase() else expected })
                 } finally {
-                    SchemaUtils.drop(tableWithoutExplicitSequenceName)
+                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tableWithoutExplicitSequenceName)
                 }
             }
         }
@@ -316,7 +316,11 @@ class SequencesTests : R2dbcDatabaseTestsBase() {
                 exec("DROP TABLE ${DeveloperWithAutoIncrementBySequence.nameInDatabaseCase()}")
 
                 assertNull(SchemaUtils.createStatements(DeveloperWithAutoIncrementBySequence).find { it.startsWith(createSequencePrefix) })
-                assertNull(SchemaUtils.statementsRequiredToActualizeScheme(DeveloperWithAutoIncrementBySequence).find { it.startsWith(createSequencePrefix) })
+                assertNull(
+                    SchemaUtils.statementsRequiredToActualizeScheme(DeveloperWithAutoIncrementBySequence).find {
+                        it.startsWith(createSequencePrefix)
+                    }
+                )
 
                 // Clean up: create table and drop it for removing sequence
                 SchemaUtils.create(DeveloperWithAutoIncrementBySequence)

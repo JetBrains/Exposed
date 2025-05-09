@@ -4,10 +4,10 @@ package org.jetbrains.exposed.samples.ktor
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.v1.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.v1.sql.transactions.transaction
+import org.jetbrains.exposed.v1.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.transactions.transaction
 
 @Serializable
 data class ExposedUser(val name: String, val age: Int)

@@ -5,7 +5,7 @@ import org.example.tables.RolesTable
 import org.example.tables.StarWarsFilmsIntIdTable
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.count
-import org.jetbrains.exposed.v1.sql.unionAll
+import org.jetbrains.exposed.v1.unionAll
 
 /*
     Important: The contents of this file are referenced by line number in `DSL-Joining-Tables.topic`.

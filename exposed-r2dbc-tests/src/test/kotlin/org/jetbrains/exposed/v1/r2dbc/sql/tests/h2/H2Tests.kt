@@ -10,21 +10,19 @@ import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.replace
-import org.jetbrains.exposed.v1.r2dbc.sql.select
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectMetadataTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.getString
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.inProperCase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.r2dbc.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.r2dbc.sql.transactions.transactionManager
+import org.jetbrains.exposed.v1.r2dbc.batchInsert
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.replace
+import org.jetbrains.exposed.v1.r2dbc.select
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectMetadataTest
+import org.jetbrains.exposed.v1.r2dbc.tests.getString
+import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import org.junit.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -80,17 +78,17 @@ class H2Tests : R2dbcDatabaseTestsBase() {
     @Test
     fun closeAndUnregister() {
         withDb(TestDB.H2_V2) { testDB ->
-            val originalManager = TransactionManager.manager
+            val originalManager = org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.manager
             val db = requireNotNull(testDB.db) { "testDB.db cannot be null" }
             try {
                 @OptIn(InternalApi::class)
                 CoreTransactionManager.registerDatabaseManager(db, WrappedTransactionManager(db.transactionManager))
                 Executors.newSingleThreadExecutor().apply {
-                    submit { TransactionManager.closeAndUnregister(db) }
+                    submit { org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.closeAndUnregister(db) }
                         .get(1, TimeUnit.SECONDS)
                 }.shutdown()
             } finally {
-                TransactionManager.registerManager(db, originalManager)
+                org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.registerManager(db, originalManager)
             }
         }
     }
@@ -105,7 +103,7 @@ class H2Tests : R2dbcDatabaseTestsBase() {
 
         withDb(listOf(TestDB.H2_V2, TestDB.H2_V2_MYSQL)) {
             try {
-                SchemaUtils.createMissingTablesAndColumns(initialTable)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(initialTable)
                 assertEquals(
                     "ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}",
                     t.id.ddl.first()
@@ -115,10 +113,10 @@ class H2Tests : R2dbcDatabaseTestsBase() {
                     t.id.ddl[1]
                 )
                 assertEquals(1, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
-                SchemaUtils.createMissingTablesAndColumns(t)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(t)
                 assertEquals(2, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
             } finally {
-                SchemaUtils.drop(t)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(t)
             }
         }
     }

@@ -4,28 +4,26 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
+import org.jetbrains.exposed.v1.*
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.vendors.*
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.batchInsert
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
+import org.jetbrains.exposed.v1.jodatime.*
+import org.jetbrains.exposed.v1.r2dbc.batchInsert
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.*
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.inProperCase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.insertAndWait
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.r2dbc.sql.update
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.jodatime.*
+import org.jetbrains.exposed.v1.r2dbc.tests.*
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
+import org.jetbrains.exposed.v1.r2dbc.update
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalTime
@@ -292,7 +290,8 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
         assertEquals("UTC", DateTimeZone.getDefault().id)
 
         val nowWithTimeZone = DateTime.parse("2024-07-18T13:19:44.000").withZone(DateTimeZone.UTC)
-        val timestampWithTimeZoneLiteral = timestampWithTimeZoneLiteral(nowWithTimeZone)
+        val timestampWithTimeZoneLiteral =
+            timestampWithTimeZoneLiteral(nowWithTimeZone)
 
         val testTable = object : IntIdTable("t") {
             val t1 = timestampWithTimeZone("t1").default(nowWithTimeZone)
@@ -356,7 +355,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(foo) {
-            val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
+            val actual = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(foo)
 
             assertTrue(actual.isEmpty())
         }
@@ -368,11 +367,13 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
 
         val tester = object : Table("tester") {
             val datetimeWithDefault = datetime("datetimeWithDefault").default(datetime)
-            val datetimeWithDefaultExpression = datetime("datetimeWithDefaultExpression").defaultExpression(CurrentDateTime)
+            val datetimeWithDefaultExpression = datetime("datetimeWithDefaultExpression").defaultExpression(
+                CurrentDateTime
+            )
         }
 
         withTables(tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -386,7 +387,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
         }
 
         withTables(tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -403,7 +404,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
         val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
         withTables(excludeSettings = unsupportedDatabases, tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }

@@ -2,7 +2,7 @@ package org.example.examples
 
 import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
-import org.jetbrains.exposed.v1.sql.update
+import org.jetbrains.exposed.v1.update
 
 private const val MOVIE_SEQUEL_ID = 7
 

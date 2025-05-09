@@ -9,21 +9,20 @@ import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.stringLiteral
-import org.jetbrains.exposed.v1.r2dbc.sql.Query
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.R2dbcResult
-import org.jetbrains.exposed.v1.r2dbc.sql.statements.api.origin
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.distinct
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.getBoolean
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.getInt
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.getString
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFalse
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
+import org.jetbrains.exposed.v1.r2dbc.Query
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
+import org.jetbrains.exposed.v1.r2dbc.statements.api.origin
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.distinct
+import org.jetbrains.exposed.v1.r2dbc.tests.getBoolean
+import org.jetbrains.exposed.v1.r2dbc.tests.getInt
+import org.jetbrains.exposed.v1.r2dbc.tests.getString
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.junit.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
@@ -41,7 +40,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
         val columnCommentSupportedDB = TestDB.ALL_H2 + TestDB.ALL_MYSQL_MARIADB
 
         withTables(excludeSettings = TestDB.ALL - columnCommentSupportedDB, tester) { testDb ->
-            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+            assertTrue { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
 
             tester.insert { it[amount] = 9 }
             assertEquals(9, tester.selectAll().single()[tester.amount])
@@ -71,7 +70,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(TestDB.ALL - TestDB.SQLSERVER, tester) {
-            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+            assertTrue { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
 
             val testEmail = "mysecretemail123@gmail.com"
             tester.insert {
@@ -108,11 +107,11 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                     }
                 }
             }
-            SchemaUtils.create(tester)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(tester)
 
             if (testDb != TestDB.ORACLE) {
                 // Oracle would not work with this use case as special DEFAULT syntax is not registered & causes mismatch
-                assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+                assertTrue { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
             }
 
             tester.insert {
@@ -152,7 +151,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
                 assertEquals(itemA, singleItem)
             }
 
-            SchemaUtils.drop(tester)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tester)
         }
     }
 
@@ -178,7 +177,7 @@ class ColumnDefinitionTests : R2dbcDatabaseTestsBase() {
             if (testDb == TestDB.MYSQL_V8 || testDb == TestDB.ORACLE) {
                 // H2 metadata query does not return invisible column info
                 // Bug in MariaDB with nullable column - metadata default value returns as NULL - EXPOSED-415
-                assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+                assertTrue { org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
             }
 
             tester.insert {

@@ -3,13 +3,13 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.jodatime
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.select
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.jodatime.dateTimeLiteral
-import org.jetbrains.exposed.v1.sql.jodatime.datetime
+import org.jetbrains.exposed.v1.jodatime.dateTimeLiteral
+import org.jetbrains.exposed.v1.jodatime.datetime
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.select
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.junit.Test
@@ -32,7 +32,11 @@ class JodaDateTimeLiteralTest : R2dbcDatabaseTestsBase() {
                 it[datetime] = defaultDatetime
             }
 
-            val query = TableWithDatetime.select(TableWithDatetime.datetime).where { TableWithDatetime.datetime eq dateTimeLiteral(defaultDatetime) }
+            val query = TableWithDatetime.select(TableWithDatetime.datetime).where {
+                TableWithDatetime.datetime eq dateTimeLiteral(
+                    defaultDatetime
+                )
+            }
             assertEquals(defaultDatetime, query.single()[TableWithDatetime.datetime])
         }
     }
@@ -43,7 +47,11 @@ class JodaDateTimeLiteralTest : R2dbcDatabaseTestsBase() {
             TableWithDatetime.insert {
                 it[datetime] = defaultDatetime
             }
-            val query = TableWithDatetime.selectAll().where { TableWithDatetime.datetime less dateTimeLiteral(futureDatetime) }
+            val query = TableWithDatetime.selectAll().where {
+                TableWithDatetime.datetime less dateTimeLiteral(
+                    futureDatetime
+                )
+            }
             assertNotNull(query.firstOrNull())
         }
     }

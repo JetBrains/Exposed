@@ -14,19 +14,18 @@ import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.v1.r2dbc.sql.*
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEqualCollections
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.json.contains
-import org.jetbrains.exposed.v1.sql.json.exists
-import org.jetbrains.exposed.v1.sql.json.extract
-import org.jetbrains.exposed.v1.sql.json.jsonb
+import org.jetbrains.exposed.v1.json.contains
+import org.jetbrains.exposed.v1.json.exists
+import org.jetbrains.exposed.v1.json.extract
+import org.jetbrains.exposed.v1.json.jsonb
+import org.jetbrains.exposed.v1.r2dbc.*
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
@@ -220,10 +219,10 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
             } else {
-                SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 assertTrue(defaultTester.exists())
                 // ensure defaults match returned metadata defaults
-                val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
+                val alters = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
                 assertTrue(alters.isEmpty())
 
                 defaultTester.insert {}
@@ -236,7 +235,7 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
                     assertEquals(defaultUser.team, it[defaultTester.user2].team)
                 }
 
-                SchemaUtils.drop(defaultTester)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(defaultTester)
             }
         }
     }

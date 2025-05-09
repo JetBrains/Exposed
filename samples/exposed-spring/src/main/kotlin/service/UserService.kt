@@ -3,13 +3,13 @@
 package org.jetbrains.exposed.samples.spring.service
 
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.deleteWhere
+import org.jetbrains.exposed.v1.insertAndGetId
 import org.jetbrains.exposed.v1.samples.spring.domain.User
 import org.jetbrains.exposed.v1.samples.spring.domain.UserEntity
 import org.jetbrains.exposed.v1.samples.spring.domain.UserId
-import org.jetbrains.exposed.v1.sql.deleteWhere
-import org.jetbrains.exposed.v1.sql.insertAndGetId
-import org.jetbrains.exposed.v1.sql.selectAll
-import org.jetbrains.exposed.v1.sql.update
+import org.jetbrains.exposed.v1.selectAll
+import org.jetbrains.exposed.v1.update
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 

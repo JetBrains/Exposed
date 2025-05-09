@@ -17,15 +17,16 @@ import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.*
-import org.jetbrains.exposed.v1.sql.json.extract
-import org.jetbrains.exposed.v1.sql.json.jsonb
-import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.sql.tests.TestDB
-import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
-import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
-import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.tests.shared.expectException
+import org.jetbrains.exposed.v1.json.extract
+import org.jetbrains.exposed.v1.json.jsonb
+import org.jetbrains.exposed.v1.migration.MigrationUtils
+import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
+import org.jetbrains.exposed.v1.tests.TestDB
+import org.jetbrains.exposed.v1.tests.currentDialectTest
+import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
+import org.jetbrains.exposed.v1.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.tests.shared.expectException
 import org.junit.Assert.fail
 import org.junit.Test
 import java.math.BigDecimal
@@ -443,7 +444,7 @@ class JavaTimeTests : DatabaseTestsBase() {
 
         withDb(db = timestampWithTimeZoneUnsupportedDB) {
             expectException<UnsupportedByDialectException> {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
+                SchemaUtils.create(testTable)
             }
         }
     }

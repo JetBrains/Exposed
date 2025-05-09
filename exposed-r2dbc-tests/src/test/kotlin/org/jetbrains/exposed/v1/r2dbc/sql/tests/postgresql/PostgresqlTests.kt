@@ -8,18 +8,17 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.PostgreSQL
-import org.jetbrains.exposed.v1.r2dbc.sql.Query
-import org.jetbrains.exposed.v1.r2dbc.sql.R2dbcTransaction
-import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.sql.insert
-import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.R2dbcDatabaseTestsBase
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.RepeatableTestRule
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.any
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.getString
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFailAndRollback
-import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.assertFalse
+import org.jetbrains.exposed.v1.r2dbc.Query
+import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
+import org.jetbrains.exposed.v1.r2dbc.tests.RepeatableTestRule
+import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.any
+import org.jetbrains.exposed.v1.r2dbc.tests.getString
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -106,30 +105,30 @@ class PostgresqlTests : R2dbcDatabaseTestsBase() {
         }
         withDb(TestDB.ALL_POSTGRES) {
             val defaultPKName = "tester_pkey"
-            SchemaUtils.createMissingTablesAndColumns(tester1)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(tester1)
             assertFalse(assertPrimaryKey { it.getString(1)!! }?.any() == true)
 
-            SchemaUtils.createMissingTablesAndColumns(tester2)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(tester2)
             val defaultPK = assertPrimaryKey {
                 it.getString("PK_NAME")!!
             }?.single()
             assertEquals(defaultPKName, defaultPK)
 
             assertFailAndRollback("Multiple primary keys are not allowed") {
-                SchemaUtils.createMissingTablesAndColumns(tester3)
+                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(tester3)
             }
 
-            SchemaUtils.drop(tester1)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tester1)
         }
     }
 
     private suspend fun R2dbcTransaction.withTable(statement: suspend R2dbcTransaction.() -> Unit) {
-        SchemaUtils.create(table)
+        org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(table)
         try {
             statement()
             commit() // Need commit to persist data before drop tables
         } finally {
-            SchemaUtils.drop(table)
+            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(table)
             commit()
         }
     }
