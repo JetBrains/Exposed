@@ -1,15 +1,15 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.entities
 
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.ImmutableCachedEntityClass
 import org.jetbrains.exposed.v1.dao.ImmutableEntityClass
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IdTable
-import org.jetbrains.exposed.v1.sql.insert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.transactions.transaction
-import org.jetbrains.exposed.v1.sql.update
 import org.junit.Test
 
 class ImmutableEntityTest : DatabaseTestsBase() {

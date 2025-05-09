@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1.core
 
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.vendors.withDialect
-import org.jetbrains.exposed.v1.dao.id.CompositeID
-import org.jetbrains.exposed.v1.dao.id.CompositeIdTable
-import org.jetbrains.exposed.v1.dao.id.EntityID
 
 /** A row of data representing a single record retrieved from a database result set. */
 class ResultRow(

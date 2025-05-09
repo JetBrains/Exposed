@@ -2,6 +2,8 @@ package org.jetbrains.exposed.v1.sql.kotlin.datetime
 
 import kotlinx.datetime.*
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -15,9 +17,7 @@ import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.flushCache
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.constraintNamePart
@@ -398,7 +398,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
 
         withTables(foo) {
-            val actual = SchemaUtils.statementsRequiredToActualizeScheme(foo)
+            val actual = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(foo)
 
             assertTrue(actual.isEmpty())
         }
@@ -509,7 +509,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         // SQLite does not support ALTER TABLE on a column that has a default value
         withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -524,7 +524,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         // SQLite does not support ALTER TABLE on a column that has a default value
         withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -539,7 +539,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         // SQLite does not support ALTER TABLE on a column that has a default value
         withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -557,7 +557,7 @@ class DefaultsTest : DatabaseTestsBase() {
 
         // SQLite does not support ALTER TABLE on a column that has a default value
         withTables(excludeSettings = listOf(TestDB.SQLITE), tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -574,7 +574,7 @@ class DefaultsTest : DatabaseTestsBase() {
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
         val unsupportedDatabases = TestDB.ALL_MARIADB + TestDB.SQLITE + TestDB.MYSQL_V5
         withTables(excludeSettings = unsupportedDatabases, tester) {
-            val statements = SchemaUtils.addMissingColumnsStatements(tester)
+            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(tester)
             assertEquals(0, statements.size)
         }
     }
@@ -587,7 +587,7 @@ class DefaultsTest : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = TestDB.ALL - TestDB.ALL_MYSQL_LIKE.toSet(), tester) {
-            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+            assertTrue { org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
 
             tester.insert {
                 it[amount] = 999

@@ -2,6 +2,10 @@ package org.jetbrains.exposed.v1.sql.tests.shared
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
@@ -9,19 +13,15 @@ import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IdTable
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.sql.tests.inProperCase
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.transactions.transaction
 import org.junit.Assume
 import org.junit.Test
 import java.util.*
@@ -122,7 +122,7 @@ class DDLTests : DatabaseTestsBase() {
         withDb { testDb ->
             assertTrue(db.config.preserveKeywordCasing)
 
-            SchemaUtils.create(keywordTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(keywordTable)
             assertTrue(keywordTable.exists())
 
             val (tableName, publicName, dataName, constraintName) = keywords.map {
@@ -157,10 +157,10 @@ class DDLTests : DatabaseTestsBase() {
             }
 
             // check that identifiers match with returned jdbc metadata
-            val statements = SchemaUtils.statementsRequiredToActualizeScheme(keywordTable, withLogs = false)
+            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(keywordTable, withLogs = false)
             assertTrue(statements.isEmpty())
 
-            SchemaUtils.drop(keywordTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(keywordTable)
         }
     }
 
@@ -350,7 +350,7 @@ class DDLTests : DatabaseTestsBase() {
 
         withDb(TestDB.SQLITE) {
             expectException<UnsupportedByDialectException> {
-                SchemaUtils.create(foo)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(foo)
             }
         }
     }
@@ -372,12 +372,12 @@ class DDLTests : DatabaseTestsBase() {
 
             if (h2Dialect.isSecondVersion && !isOracleMode) {
                 expect(Unit) {
-                    SchemaUtils.create(testTable)
-                    SchemaUtils.drop(testTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
                 }
             } else {
                 expectException<ExposedSQLException> {
-                    SchemaUtils.create(testTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
                 }
             }
         }
@@ -393,7 +393,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = SchemaUtils.createIndex(t.indices[0])
+            val alter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
         }
@@ -415,11 +415,11 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val a1 = SchemaUtils.createIndex(t.indices[0])
+            val a1 = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"t2_name".inProperCase()} ON ${"t2".inProperCase()} ($q${"name".inProperCase()}$q)", a1)
 
-            val a2 = SchemaUtils.createIndex(t.indices[1])
+            val a2 = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[1])
             assertEquals(
                 "CREATE INDEX ${"t2_lvalue_rvalue".inProperCase()} ON ${"t2".inProperCase()} " +
                     "(${"lvalue".inProperCase()}, ${"rvalue".inProperCase()})",
@@ -445,7 +445,7 @@ class DDLTests : DatabaseTestsBase() {
             val columnProperName = testTable.columns.single().name.inProperCase()
             val indexProperName = "${tableProperName}_$columnProperName"
 
-            val indexStatement = SchemaUtils.createIndex(testTable.indices.single())
+            val indexStatement = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(testTable.indices.single())
 
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + tableProperName +
@@ -474,7 +474,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = SchemaUtils.createIndex(t.indices[0])
+            val alter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             if (currentDialectTest is SQLiteDialect) {
                 assertEquals("CREATE UNIQUE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
@@ -495,7 +495,7 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val q = db.identifierManager.quoteString
-            val alter = SchemaUtils.createIndex(t.indices[0])
+            val alter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
             if (currentDialectTest is SQLiteDialect) {
                 assertEquals("CREATE UNIQUE INDEX ${"U_T1_NAME"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
             } else {
@@ -518,8 +518,8 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val indexAlter = SchemaUtils.createIndex(t.indices[0])
-            val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
+            val indexAlter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
+            val uniqueAlter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals(
                 "CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)",
@@ -552,8 +552,8 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val indexAlter = SchemaUtils.createIndex(t.indices[0])
-            val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
+            val indexAlter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
+            val uniqueAlter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"I_T1_NAME_TYPE"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter)
             if (currentDialectTest is SQLiteDialect) {
@@ -616,7 +616,7 @@ class DDLTests : DatabaseTestsBase() {
             }
 
             repeat(3) { i ->
-                val actualStatement = SchemaUtils.createIndex(tester.indices[i])
+                val actualStatement = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(tester.indices[i])
                 assertEquals(expectedStatements[i], actualStatement)
             }
         }
@@ -881,7 +881,7 @@ class DDLTests : DatabaseTestsBase() {
     fun testDeleteMissingTable() {
         val missingTable = Table("missingTable")
         withDb {
-            SchemaUtils.drop(missingTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(missingTable)
         }
     }
 
@@ -1055,13 +1055,13 @@ class DDLTests : DatabaseTestsBase() {
         val one = prepareSchemaForTest("one")
         val two = prepareSchemaForTest("two")
         withSchemas(two, one) {
-            SchemaUtils.create(TableFromSchemeOne)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(TableFromSchemeOne)
 
             if (currentDialectTest is OracleDialect) {
                 exec("GRANT REFERENCES ON ${TableFromSchemeOne.tableName} to TWO")
             }
 
-            SchemaUtils.create(TableFromSchemeTwo)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(TableFromSchemeTwo)
             val idFromOne = TableFromSchemeOne.insertAndGetId { }
 
             TableFromSchemeTwo.insert {
@@ -1072,7 +1072,7 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(1L, TableFromSchemeTwo.selectAll().count())
 
             if (currentDialectTest is SQLServerDialect) {
-                SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
             }
         }
     }
@@ -1241,7 +1241,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withSchemas(one) {
-            SchemaUtils.create(tableA, tableB)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tableA, tableB)
             tableA.insert {
                 it[idA] = 1
                 it[idB] = 1
@@ -1255,7 +1255,7 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(1, tableB.selectAll().count())
 
             if (currentDialectTest is SQLServerDialect) {
-                SchemaUtils.drop(tableA, tableB)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableA, tableB)
             }
         }
     }

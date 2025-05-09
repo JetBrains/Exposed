@@ -3,11 +3,11 @@ package org.jetbrains.exposed.v1.dao
 import org.jetbrains.exposed.v1.core.AbstractQuery
 import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.statements.*
 import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.core.targetTables
 import org.jetbrains.exposed.v1.core.transactions.transactionScope
-import org.jetbrains.exposed.v1.dao.id.IdTable
 
 private var isExecutedWithinEntityLifecycle by transactionScope { false }
 

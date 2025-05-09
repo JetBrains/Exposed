@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.v1.sql.tests.shared
 
-import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.insert
-import org.jetbrains.exposed.v1.sql.selectAll
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
-import org.jetbrains.exposed.v1.sql.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.v1.sql.transactions.transaction
-import org.jetbrains.exposed.v1.sql.transactions.transactionManager
 import org.junit.Assume
 import org.junit.Test
 import java.sql.SQLException

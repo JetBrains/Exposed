@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.spring
 
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.UUIDTable
-import org.jetbrains.exposed.v1.sql.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.annotation.Commit

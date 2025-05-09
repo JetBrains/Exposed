@@ -3,9 +3,8 @@ package org.jetbrains.exposed.v1.sql.tests.shared.types
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.insert
-import org.jetbrains.exposed.v1.sql.selectAll
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
@@ -105,7 +104,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                     assertEqualCollections(listOf(number1, number2), result2)
                 }
             } finally {
-                SchemaUtils.drop(UByteTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(UByteTable)
             }
         }
     }
@@ -182,7 +181,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                     assertEqualCollections(listOf(number1, number2), result2)
                 }
             } finally {
-                SchemaUtils.drop(UShortTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(UShortTable)
             }
         }
     }
@@ -260,7 +259,7 @@ class UnsignedColumnTypeTests : DatabaseTestsBase() {
                     assertEqualCollections(listOf(number1, number2), result2)
                 }
             } finally {
-                SchemaUtils.drop(UIntTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(UIntTable)
             }
         }
     }

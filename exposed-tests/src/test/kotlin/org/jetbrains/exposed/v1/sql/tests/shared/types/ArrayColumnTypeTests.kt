@@ -1,14 +1,14 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.types
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
@@ -35,10 +35,10 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
     fun testCreateAndDropArrayColumns() {
         withDb(excludeSettings = arrayTypeUnsupportedDb) {
             try {
-                SchemaUtils.create(ArrayTestTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(ArrayTestTable)
                 assertTrue(ArrayTestTable.exists())
             } finally {
-                SchemaUtils.drop(ArrayTestTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(ArrayTestTable)
             }
         }
     }
@@ -47,10 +47,10 @@ class ArrayColumnTypeTests : DatabaseTestsBase() {
     fun testCreateMissingColumnsWithArrayDefaults() {
         withTestTableAndExcludeSettings {
             try {
-                SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
-                assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).isEmpty())
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
+                assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).isEmpty())
             } finally {
-                SchemaUtils.drop(ArrayTestTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(ArrayTestTable)
             }
         }
     }

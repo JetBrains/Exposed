@@ -3,19 +3,19 @@ package org.jetbrains.exposed.v1.sql.tests.mysql
 import com.mysql.cj.conf.PropertyKey
 import com.mysql.cj.jdbc.ConnectionImpl
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL.ForUpdate
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.MySQL.MODE
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.dml.DMLTestsData
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -54,9 +54,9 @@ class MysqlTests : DatabaseTestsBase() {
     }
 
     private class IndexHintQuery(
-        val source: org.jetbrains.exposed.v1.sql.Query,
+        val source: Query,
         val indexHint: String
-    ) : org.jetbrains.exposed.v1.sql.Query(source.set, source.where) {
+    ) : Query(source.set, source.where) {
 
         init {
             source.copyTo(this)
@@ -73,7 +73,7 @@ class MysqlTests : DatabaseTestsBase() {
         }
     }
 
-    private fun org.jetbrains.exposed.v1.sql.Query.indexHint(hint: String) = IndexHintQuery(this, hint)
+    private fun Query.indexHint(hint: String) = IndexHintQuery(this, hint)
 
     @Test
     fun testCustomSelectQueryWithHint() {
@@ -149,7 +149,7 @@ class MysqlTests : DatabaseTestsBase() {
 
         val id = 1
 
-        fun org.jetbrains.exposed.v1.sql.Query.city() = map { it[table.name] }.single()
+        fun Query.city() = map { it[table.name] }.single()
 
         fun select(option: ForUpdateOption): String {
             return table.selectAll().where { table.id eq id }.forUpdate(option).city()

@@ -2,12 +2,14 @@ package org.jetbrains.exposed.v1.sql.tests.shared.entities
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.*
-import org.jetbrains.exposed.v1.dao.id.CompositeID
-import org.jetbrains.exposed.v1.dao.id.CompositeIdTable
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentTestDB
@@ -16,8 +18,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.transactions.inTopLevelTransaction
 import org.junit.Test
 import java.sql.Connection
 import java.util.*
@@ -130,12 +130,12 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
     fun testCreateAndDropCompositeIdTable() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
             try {
-                SchemaUtils.create(tables = allTables)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tables = allTables)
 
                 allTables.forEach { assertTrue(it.exists()) }
-                assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(tables = allTables).isEmpty())
+                assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tables = allTables).isEmpty())
             } finally {
-                SchemaUtils.drop(tables = allTables)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tables = allTables)
             }
         }
     }
@@ -150,14 +150,14 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
 
         withDb {
             // table can be created with no issue
-            SchemaUtils.create(missingIdsTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(missingIdsTable)
 
             expectException<IllegalStateException> {
                 // but trying to use id property requires idColumns not being empty
                 missingIdsTable.select(missingIdsTable.id).toList()
             }
 
-            SchemaUtils.drop(missingIdsTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(missingIdsTable)
         }
     }
 

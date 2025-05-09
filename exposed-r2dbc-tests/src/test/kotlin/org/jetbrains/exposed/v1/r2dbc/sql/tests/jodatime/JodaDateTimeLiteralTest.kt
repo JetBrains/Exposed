@@ -2,7 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.jodatime
 
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.single
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.insert
 import org.jetbrains.exposed.v1.r2dbc.sql.select
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll

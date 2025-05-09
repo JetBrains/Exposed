@@ -1,13 +1,11 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.dml
 
-import kotlinx.coroutines.selects.select
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.Table.Dual.innerJoin
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -203,7 +201,7 @@ class AdjustQueryTests : DatabaseTestsBase() {
         nameCheck and cityCheck
     }
 
-    private fun assertQueryResultValid(query: org.jetbrains.exposed.v1.sql.Query) {
+    private fun assertQueryResultValid(query: Query) {
         val users = DMLTestsData.Users
         val cities = DMLTestsData.Cities
         query.forEach { row ->

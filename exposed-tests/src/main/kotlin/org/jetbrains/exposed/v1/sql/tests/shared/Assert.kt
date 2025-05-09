@@ -1,6 +1,6 @@
 package org.jetbrains.exposed.v1.sql.tests.shared
 
-import org.jetbrains.exposed.v1.sql.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.sql.tests.currentDialectIfAvailableTest
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.sql.tests.currentTestDB

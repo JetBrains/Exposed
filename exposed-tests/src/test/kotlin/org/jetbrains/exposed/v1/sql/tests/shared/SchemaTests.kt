@@ -3,17 +3,16 @@ package org.jetbrains.exposed.v1.sql.tests.shared
 import org.jetbrains.exposed.v1.core.Schema
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.exists
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.exists
-import org.jetbrains.exposed.v1.sql.insert
-import org.jetbrains.exposed.v1.sql.selectAll
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.exists
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.transactions.transaction
 import org.junit.Assume
 import org.junit.Test
 
@@ -23,14 +22,14 @@ class SchemaTests : DatabaseTestsBase() {
         withDb(TestDB.ALL_MYSQL_MARIADB) {
             val schema = Schema("MYSCHEMA")
             try {
-                SchemaUtils.createSchema(schema)
-                SchemaUtils.setSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
 
                 val catalogName = connection.catalog
 
                 assertEquals(catalogName, schema.identifier)
             } finally {
-                SchemaUtils.dropSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema)
             }
         }
     }
@@ -51,11 +50,11 @@ class SchemaTests : DatabaseTestsBase() {
                 }
 
                 try {
-                    SchemaUtils.createSchema(schema)
-                    SchemaUtils.setSchema(schema)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(schema)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
                     assertEquals(TransactionManager.current().db.identifierManager.inProperCase(schema.identifier), connection.schema)
                 } finally {
-                    SchemaUtils.dropSchema(schema)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema)
                 }
             }
         }
@@ -66,10 +65,10 @@ class SchemaTests : DatabaseTestsBase() {
         withDb {
             if (currentDialect.supportsCreateSchema) {
                 val schema = Schema("TEST_SCHEMA")
-                SchemaUtils.createSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(schema)
                 assertTrue(schema.exists())
 
-                SchemaUtils.dropSchema(schema, cascade = true)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema, cascade = true)
                 assertFalse(schema.exists())
             }
         }
@@ -80,13 +79,13 @@ class SchemaTests : DatabaseTestsBase() {
         withDb(TestDB.ALL_MYSQL_MARIADB) {
             val schema = Schema("MYSCHEMA")
             try {
-                SchemaUtils.createSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(schema)
 
                 val firstCatalogName = connection.catalog
 
                 exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT PRIMARY KEY)")
-                SchemaUtils.setSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
                 exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT REFERENCES $firstCatalogName.test(id))")
 
@@ -94,7 +93,7 @@ class SchemaTests : DatabaseTestsBase() {
 
                 assertEquals(catalogName, schema.identifier)
             } finally {
-                SchemaUtils.dropSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema)
             }
         }
     }
@@ -108,15 +107,15 @@ class SchemaTests : DatabaseTestsBase() {
                 /** Assert that schema initially doesn't exist */
                 assertFalse(schema.exists())
 
-                SchemaUtils.createSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(schema)
                 /** Assert that schema exists after creation */
                 assertTrue(schema.exists())
 
-                SchemaUtils.dropSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema)
                 /** Assert that schema doesn't exist after dropping */
                 assertFalse(schema.exists())
             } finally {
-                SchemaUtils.dropSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema)
             }
         }
     }
@@ -133,7 +132,7 @@ class SchemaTests : DatabaseTestsBase() {
             assertTrue(toCreate.isEmpty())
 
             /** schema1 and schema2 variables have the same schema name */
-            SchemaUtils.dropSchema(schema1)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema1)
             assertFalse(schema2.exists())
         }
     }
@@ -198,8 +197,8 @@ class SchemaTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.SQLITE, TestDB.MYSQL_V5)) { testDb ->
             val schema = prepareSchemaForTest(schemaName)
             try {
-                SchemaUtils.createSchema(schema)
-                SchemaUtils.create(tester)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(schema)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
 
                 tester.insert {
                     it[amount1] = 99u
@@ -223,10 +222,10 @@ class SchemaTests : DatabaseTestsBase() {
                 }
             } finally {
                 if (testDb == TestDB.SQLSERVER) {
-                    SchemaUtils.drop(tester)
-                    SchemaUtils.dropSchema(schema)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema)
                 } else {
-                    SchemaUtils.dropSchema(schema, cascade = true)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema, cascade = true)
                 }
             }
         }

@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
-import org.jetbrains.exposed.v1.sql.SizedIterable
+import org.jetbrains.exposed.v1.jdbc.SizedIterable
 import kotlin.reflect.KProperty
 
 /**

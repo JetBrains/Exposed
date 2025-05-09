@@ -3,20 +3,20 @@ package org.jetbrains.exposed.v1.sql.tests.h2
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.avg
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.sql.tests.inProperCase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.transactions.transactionManager
 import org.junit.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -98,7 +98,7 @@ class H2Tests : DatabaseTestsBase() {
 
         withDb(listOf(TestDB.H2_V2, TestDB.H2_V2_MYSQL)) {
             try {
-                SchemaUtils.createMissingTablesAndColumns(initialTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(initialTable)
                 assertEquals(
                     "ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}",
                     t.id.ddl.first()
@@ -108,10 +108,10 @@ class H2Tests : DatabaseTestsBase() {
                     t.id.ddl[1]
                 )
                 assertEquals(1, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
-                SchemaUtils.createMissingTablesAndColumns(t)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t)
                 assertEquals(2, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
             } finally {
-                SchemaUtils.drop(t)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(t)
             }
         }
     }

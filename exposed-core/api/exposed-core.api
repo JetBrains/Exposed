@@ -692,13 +692,13 @@ public final class org/jetbrains/exposed/v1/core/EntityIDColumnType : org/jetbra
 	public final fun getIdColumn ()Lorg/jetbrains/exposed/v1/core/Column;
 	public fun hashCode ()I
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Lorg/jetbrains/exposed/v1/dao/id/EntityID;)Ljava/lang/String;
+	public fun nonNullValueToString (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun notNullValueToDB (Lorg/jetbrains/exposed/v1/dao/id/EntityID;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)Ljava/lang/Object;
 	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun valueFromDB (Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/dao/id/EntityID;
+	public fun valueFromDB (Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;
 }
 
 public final class org/jetbrains/exposed/v1/core/EnumerationColumnType : org/jetbrains/exposed/v1/core/ColumnType {
@@ -1603,7 +1603,7 @@ public final class org/jetbrains/exposed/v1/core/OpKt {
 	public static final fun exists (Lorg/jetbrains/exposed/v1/core/AbstractQuery;)Lorg/jetbrains/exposed/v1/core/Exists;
 	public static final fun floatLiteral (F)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun floatParam (F)Lorg/jetbrains/exposed/v1/core/Expression;
-	public static final fun idParam (Lorg/jetbrains/exposed/v1/dao/id/EntityID;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Expression;
+	public static final fun idParam (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Expression;
 	public static final fun intLiteral (I)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun intParam (I)Lorg/jetbrains/exposed/v1/core/Expression;
 	public static final fun longLiteral (J)Lorg/jetbrains/exposed/v1/core/LiteralOp;
@@ -2151,7 +2151,7 @@ public class org/jetbrains/exposed/v1/core/Table : org/jetbrains/exposed/v1/core
 	public final fun double (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public fun dropStatement ()Ljava/util/List;
 	public final fun entityId (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun entityId (Ljava/lang/String;Lorg/jetbrains/exposed/v1/dao/id/IdTable;)Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun entityId (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun entityId (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun enumeration (Ljava/lang/String;Lkotlin/reflect/KClass;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun enumerationByName (Ljava/lang/String;ILkotlin/reflect/KClass;)Lorg/jetbrains/exposed/v1/core/Column;
@@ -2199,15 +2199,15 @@ public class org/jetbrains/exposed/v1/core/Table : org/jetbrains/exposed/v1/core
 	public final fun nullable (Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun nullable (Lorg/jetbrains/exposed/v1/core/CompositeColumn;)Lorg/jetbrains/exposed/v1/core/CompositeColumn;
 	public final fun optReference (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun optReference (Ljava/lang/String;Lorg/jetbrains/exposed/v1/dao/id/IdTable;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun optReference (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static synthetic fun optReference$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
-	public static synthetic fun optReference$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lorg/jetbrains/exposed/v1/dao/id/IdTable;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
+	public static synthetic fun optReference$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun optReferenceByIdColumn (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static synthetic fun optReferenceByIdColumn$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun reference (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun reference (Ljava/lang/String;Lorg/jetbrains/exposed/v1/dao/id/IdTable;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun reference (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static synthetic fun reference$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
-	public static synthetic fun reference$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lorg/jetbrains/exposed/v1/dao/id/IdTable;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
+	public static synthetic fun reference$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun referenceByIdColumn (Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static synthetic fun referenceByIdColumn$default (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Lorg/jetbrains/exposed/v1/core/ReferenceOption;Ljava/lang/String;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Column;
 	public final fun references (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Column;)Lorg/jetbrains/exposed/v1/core/Column;
@@ -2495,6 +2495,100 @@ public final class org/jetbrains/exposed/v1/core/XorBitOp : org/jetbrains/expose
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
+public final class org/jetbrains/exposed/v1/core/dao/id/CompositeID {
+	public static final field Companion Lorg/jetbrains/exposed/v1/core/dao/id/CompositeID$Companion;
+	public final fun contains (Lorg/jetbrains/exposed/v1/core/Column;)Z
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun get (Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/Object;
+	public fun hashCode ()I
+	public final fun setWithEntityID (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)V
+	public final fun setWithEntityIdValue (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Object;)V
+	public final fun setWithNullableEntityIdValue (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Object;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/dao/id/CompositeID$Companion {
+	public final fun invoke (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/core/dao/id/CompositeID;
+}
+
+public class org/jetbrains/exposed/v1/core/dao/id/CompositeIdTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
+}
+
+public class org/jetbrains/exposed/v1/core/dao/id/EntityID {
+	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;)V
+	protected fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Object;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTable ()Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;
+	public final fun getValue ()Ljava/lang/Object;
+	public final fun get_value ()Ljava/lang/Object;
+	public fun hashCode ()I
+	protected fun invokeOnNoValue ()V
+	public final fun set_value (Ljava/lang/Object;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/core/dao/id/EntityIDFactory {
+	public abstract fun createEntityID (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;)Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;
+}
+
+public final class org/jetbrains/exposed/v1/core/dao/id/EntityIDFunctionProvider {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/dao/id/EntityIDFunctionProvider;
+	public final fun createEntityID (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;)Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;
+}
+
+public abstract class org/jetbrains/exposed/v1/core/dao/id/IdTable : org/jetbrains/exposed/v1/core/Table {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	protected final fun addIdColumn (Lorg/jetbrains/exposed/v1/core/Column;)V
+	public abstract fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getIdColumns ()Ljava/util/Set;
+}
+
+public class org/jetbrains/exposed/v1/core/dao/id/IntIdTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
+}
+
+public class org/jetbrains/exposed/v1/core/dao/id/LongIdTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
+}
+
+public class org/jetbrains/exposed/v1/core/dao/id/UIntIdTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
+}
+
+public class org/jetbrains/exposed/v1/core/dao/id/ULongIdTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
+}
+
+public class org/jetbrains/exposed/v1/core/dao/id/UUIDTable : org/jetbrains/exposed/v1/core/dao/id/IdTable {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
+}
+
 public final class org/jetbrains/exposed/v1/core/functions/array/ArrayGet : org/jetbrains/exposed/v1/core/Function {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;ILorg/jetbrains/exposed/v1/core/IColumnType;)V
 	public final fun getExpression ()Lorg/jetbrains/exposed/v1/core/Expression;
@@ -2696,12 +2790,12 @@ public class org/jetbrains/exposed/v1/core/statements/BatchReplaceStatement : or
 }
 
 public class org/jetbrains/exposed/v1/core/statements/BatchUpdateStatement : org/jetbrains/exposed/v1/core/statements/UpdateStatement {
-	public fun <init> (Lorg/jetbrains/exposed/v1/dao/id/IdTable;)V
-	public final fun addBatch (Lorg/jetbrains/exposed/v1/dao/id/EntityID;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;)V
+	public final fun addBatch (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)V
 	public fun arguments ()Ljava/lang/Iterable;
 	public final fun getData ()Ljava/util/ArrayList;
 	public fun getFirstDataSet ()Ljava/util/List;
-	public final fun getTable ()Lorg/jetbrains/exposed/v1/dao/id/IdTable;
+	public final fun getTable ()Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
 	public fun update (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Expression;)Ljava/lang/Void;
 	public synthetic fun update (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Expression;)V
@@ -3903,100 +3997,6 @@ public abstract class org/jetbrains/exposed/v1/core/vendors/VendorDialect : org/
 public abstract class org/jetbrains/exposed/v1/core/vendors/VendorDialect$DialectNameProvider {
 	public fun <init> (Ljava/lang/String;)V
 	public final fun getDialectName ()Ljava/lang/String;
-}
-
-public final class org/jetbrains/exposed/v1/dao/id/CompositeID {
-	public static final field Companion Lorg/jetbrains/exposed/v1/dao/id/CompositeID$Companion;
-	public final fun contains (Lorg/jetbrains/exposed/v1/core/Column;)Z
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun get (Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/Object;
-	public fun hashCode ()I
-	public final fun setWithEntityID (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/dao/id/EntityID;)V
-	public final fun setWithEntityIdValue (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Object;)V
-	public final fun setWithNullableEntityIdValue (Lorg/jetbrains/exposed/v1/core/Column;Ljava/lang/Object;)V
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/jetbrains/exposed/v1/dao/id/CompositeID$Companion {
-	public final fun invoke (Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/dao/id/CompositeID;
-}
-
-public class org/jetbrains/exposed/v1/dao/id/CompositeIdTable : org/jetbrains/exposed/v1/dao/id/IdTable {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
-}
-
-public class org/jetbrains/exposed/v1/dao/id/EntityID {
-	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/dao/id/IdTable;)V
-	protected fun <init> (Lorg/jetbrains/exposed/v1/dao/id/IdTable;Ljava/lang/Object;)V
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getTable ()Lorg/jetbrains/exposed/v1/dao/id/IdTable;
-	public final fun getValue ()Ljava/lang/Object;
-	public final fun get_value ()Ljava/lang/Object;
-	public fun hashCode ()I
-	protected fun invokeOnNoValue ()V
-	public final fun set_value (Ljava/lang/Object;)V
-	public fun toString ()Ljava/lang/String;
-}
-
-public abstract interface class org/jetbrains/exposed/v1/dao/id/EntityIDFactory {
-	public abstract fun createEntityID (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/dao/id/IdTable;)Lorg/jetbrains/exposed/v1/dao/id/EntityID;
-}
-
-public final class org/jetbrains/exposed/v1/dao/id/EntityIDFunctionProvider {
-	public static final field INSTANCE Lorg/jetbrains/exposed/v1/dao/id/EntityIDFunctionProvider;
-	public final fun createEntityID (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/dao/id/IdTable;)Lorg/jetbrains/exposed/v1/dao/id/EntityID;
-}
-
-public abstract class org/jetbrains/exposed/v1/dao/id/IdTable : org/jetbrains/exposed/v1/core/Table {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	protected final fun addIdColumn (Lorg/jetbrains/exposed/v1/core/Column;)V
-	public abstract fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun getIdColumns ()Ljava/util/Set;
-}
-
-public class org/jetbrains/exposed/v1/dao/id/IntIdTable : org/jetbrains/exposed/v1/dao/id/IdTable {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
-}
-
-public class org/jetbrains/exposed/v1/dao/id/LongIdTable : org/jetbrains/exposed/v1/dao/id/IdTable {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
-}
-
-public class org/jetbrains/exposed/v1/dao/id/UIntIdTable : org/jetbrains/exposed/v1/dao/id/IdTable {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
-}
-
-public class org/jetbrains/exposed/v1/dao/id/ULongIdTable : org/jetbrains/exposed/v1/dao/id/IdTable {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
-}
-
-public class org/jetbrains/exposed/v1/dao/id/UUIDTable : org/jetbrains/exposed/v1/dao/id/IdTable {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getId ()Lorg/jetbrains/exposed/v1/core/Column;
-	public final fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
 }
 
 public final class org/jetbrains/exposed/v1/exceptions/DuplicateColumnException : java/lang/ExceptionInInitializerError {

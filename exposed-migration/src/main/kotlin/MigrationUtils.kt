@@ -2,16 +2,11 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils.checkMappingConsistence
+import org.jetbrains.exposed.v1.jdbc.exists
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata
 import org.jetbrains.exposed.v1.sql.MigrationUtilityApi
-import org.jetbrains.exposed.v1.sql.SchemaUtils.checkMappingConsistence
-import org.jetbrains.exposed.v1.sql.SchemaUtils.createTablesLogMessage
-import org.jetbrains.exposed.v1.sql.SchemaUtils.logTimeSpent
-import org.jetbrains.exposed.v1.sql.SchemaUtils.mapMissingColumnStatementsTo
-import org.jetbrains.exposed.v1.sql.SchemaUtils.sortByReferences
-import org.jetbrains.exposed.v1.sql.SchemaUtils.tableDdlWithoutExistingSequence
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.vendors.currentDialectMetadata
 import java.io.File
 
 // TODO MigrationUtils needs jdbc || r2bdc; add a exposed-migration-r2dbc module?

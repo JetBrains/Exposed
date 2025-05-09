@@ -1,13 +1,13 @@
 package org.jetbrains.exposed.v1.core
 
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialectIfAvailable
-import org.jetbrains.exposed.v1.dao.id.CompositeID
-import org.jetbrains.exposed.v1.dao.id.CompositeIdTable
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IdTable
 
 /** Represents a temporary SQL identifier, [alias], for a [delegate] table. */
 class Alias<out T : Table>(val delegate: T, val alias: String) : Table() {

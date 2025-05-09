@@ -2,9 +2,9 @@ package org.jetbrains.exposed.v1.sql.tests.demo.sql
 
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.sql.tests.TestDB
-import org.jetbrains.exposed.v1.sql.transactions.transaction
 import org.junit.Assume
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -51,38 +51,38 @@ fun main() {
         Users.insert {
             it[id] = "andrey"
             it[name] = "Andrey"
-            it[Users.cityId] = saintPetersburgId
+            it[cityId] = saintPetersburgId
         }
 
         Users.insert {
             it[id] = "sergey"
             it[name] = "Sergey"
-            it[Users.cityId] = munichId
+            it[cityId] = munichId
         }
 
         Users.insert {
             it[id] = "eugene"
             it[name] = "Eugene"
-            it[Users.cityId] = munichId
+            it[cityId] = munichId
         }
 
         Users.insert {
             it[id] = "alex"
             it[name] = "Alex"
-            it[Users.cityId] = null
+            it[cityId] = null
         }
 
         Users.insert {
             it[id] = "smth"
             it[name] = "Something"
-            it[Users.cityId] = null
+            it[cityId] = null
         }
 
         Users.update({ Users.id eq "alex" }) {
             it[name] = "Alexey"
         }
 
-        Users.deleteWhere { Users.name like "%thing" }
+        Users.deleteWhere { name like "%thing" }
 
         println("All cities:")
 

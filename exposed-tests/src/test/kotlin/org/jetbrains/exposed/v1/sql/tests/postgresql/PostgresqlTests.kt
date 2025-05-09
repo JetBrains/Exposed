@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.sql.tests.postgresql
 
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption.PostgreSQL
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.RepeatableTestRule
 import org.jetbrains.exposed.v1.sql.tests.TestDB
@@ -28,7 +28,7 @@ class PostgresqlTests : DatabaseTestsBase() {
     fun testForUpdateOptionsSyntax() {
         val id = 1
 
-        fun org.jetbrains.exposed.v1.sql.Query.city() = map { it[table.name] }.single()
+        fun Query.city() = map { it[table.name] }.single()
 
         fun select(option: ForUpdateOption): String {
             return table.selectAll().where { table.id eq id }.forUpdate(option).city()
@@ -96,22 +96,22 @@ class PostgresqlTests : DatabaseTestsBase() {
         }
         withDb(TestDB.ALL_POSTGRES) {
             val defaultPKName = "tester_pkey"
-            SchemaUtils.createMissingTablesAndColumns(tester1)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(tester1)
             assertPrimaryKey {
                 assertFalse(it.next())
             }
 
-            SchemaUtils.createMissingTablesAndColumns(tester2)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(tester2)
             assertPrimaryKey {
                 assertTrue(it.next())
                 assertEquals(defaultPKName, it.getString("PK_NAME"))
             }
 
             assertFailAndRollback("Multiple primary keys are not allowed") {
-                SchemaUtils.createMissingTablesAndColumns(tester3)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(tester3)
             }
 
-            SchemaUtils.drop(tester1)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester1)
         }
     }
 }

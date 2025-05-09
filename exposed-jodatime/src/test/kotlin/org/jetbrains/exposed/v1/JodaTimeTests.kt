@@ -14,13 +14,13 @@ import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.TextColumnType
 import org.jetbrains.exposed.v1.core.castTo
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.get
 import org.jetbrains.exposed.v1.core.slice
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.sql.jodatime.*
 import org.jetbrains.exposed.v1.sql.jodatime.CurrentDate
 import org.jetbrains.exposed.v1.sql.jodatime.DateColumnType
@@ -113,7 +113,7 @@ class JodaTimeTests : DatabaseTestsBase() {
                 val result2 = testTable.select(lastDayOfMonth).single()
                 assertEquals(expectedLastDayOfMonth, result2[lastDayOfMonth])
             } finally {
-                SchemaUtils.drop(testTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
             }
         }
     }
@@ -166,7 +166,7 @@ class JodaTimeTests : DatabaseTestsBase() {
 
                 assertEquals(2, testTable.selectAll().count())
             } finally {
-                SchemaUtils.drop(testTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
             }
         }
     }
@@ -360,7 +360,7 @@ class JodaTimeTests : DatabaseTestsBase() {
 
         withDb(db = timestampWithTimeZoneUnsupportedDB) {
             expectException<UnsupportedByDialectException> {
-                SchemaUtils.create(testTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
             }
         }
     }

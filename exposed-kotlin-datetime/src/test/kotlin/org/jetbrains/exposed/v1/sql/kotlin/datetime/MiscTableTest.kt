@@ -12,7 +12,9 @@ import org.jetbrains.exposed.v1.core.Cast
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.substring
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
@@ -1253,7 +1255,7 @@ class MiscTableTest : DatabaseTestsBase() {
                 }
                 commit() // Need commit to persist data before drop tables
             } finally {
-                SchemaUtils.drop(ZeroDateTimeTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(ZeroDateTimeTable)
                 commit()
             }
         }

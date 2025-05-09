@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.dao
 
-import org.jetbrains.exposed.v1.dao.id.CompositeID
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
 /** Base class for an [Entity] instance identified by an [id] comprised of multiple wrapped values. */
 abstract class CompositeEntity(id: EntityID<CompositeID>) : Entity<CompositeID>(id)

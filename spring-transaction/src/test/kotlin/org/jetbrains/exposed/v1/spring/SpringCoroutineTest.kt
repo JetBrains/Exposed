@@ -3,10 +3,12 @@ package org.jetbrains.exposed.v1.spring
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.suspendedTransactionAsync
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.sql.tests.RepeatableTest
-import org.jetbrains.exposed.v1.sql.transactions.experimental.suspendedTransactionAsync
-import org.jetbrains.exposed.v1.sql.transactions.transaction
 import org.junit.Rule
 import org.junit.Test
 import org.springframework.test.annotation.Commit

@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.decimalLiteral
-import org.jetbrains.exposed.v1.sql.select
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals

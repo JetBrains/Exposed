@@ -6,8 +6,10 @@ import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.stringLiteral
-import org.jetbrains.exposed.v1.sql.*
-import org.jetbrains.exposed.v1.sql.statements.jdbc.JdbcResult
+import org.jetbrains.exposed.v1.jdbc.Query
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
@@ -30,7 +32,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
         val columnCommentSupportedDB = TestDB.ALL_H2 + TestDB.ALL_MYSQL_MARIADB + TestDB.SQLITE
 
         withTables(excludeSettings = TestDB.ALL - columnCommentSupportedDB, tester) { testDb ->
-            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+            assertTrue { org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
 
             tester.insert { it[amount] = 9 }
             assertEquals(9, tester.selectAll().single()[tester.amount])
@@ -63,7 +65,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
         }
 
         withTables(TestDB.ALL - TestDB.SQLSERVER, tester) {
-            assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+            assertTrue { org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
 
             val testEmail = "mysecretemail123@gmail.com"
             tester.insert {
@@ -100,11 +102,11 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
                     }
                 }
             }
-            SchemaUtils.create(tester)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
 
             if (testDb != TestDB.ORACLE) {
                 // Oracle would not work with this use case as special DEFAULT syntax is not registered & causes mismatch
-                assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+                assertTrue { org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
             }
 
             tester.insert {
@@ -144,7 +146,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
                 assertEquals(itemA, singleItem)
             }
 
-            SchemaUtils.drop(tester)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
         }
     }
 
@@ -156,13 +158,13 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
         }
 
         // this Query uses SELECT * FROM instead of the usual SELECT column_1, column_2, ... FROM
-        class ImplicitQuery(set: FieldSet, where: Op<Boolean>?) : org.jetbrains.exposed.v1.sql.Query(set, where) {
+        class ImplicitQuery(set: FieldSet, where: Op<Boolean>?) : Query(set, where) {
             override fun prepareSQL(builder: QueryBuilder): String {
                 return super.prepareSQL(builder).replaceBefore(" FROM ", "SELECT *")
             }
         }
 
-        fun FieldSet.selectImplicitAll(): org.jetbrains.exposed.v1.sql.Query = ImplicitQuery(this, null)
+        fun FieldSet.selectImplicitAll(): Query = ImplicitQuery(this, null)
 
         val invisibilitySupportedDB = TestDB.ALL_H2 + TestDB.ALL_MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE
 
@@ -170,7 +172,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
             if (testDb == TestDB.MYSQL_V8 || testDb == TestDB.ORACLE) {
                 // H2 metadata query does not return invisible column info
                 // Bug in MariaDB with nullable column - metadata default value returns as NULL - EXPOSED-415
-                assertTrue { SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
+                assertTrue { org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
             }
 
             tester.insert {

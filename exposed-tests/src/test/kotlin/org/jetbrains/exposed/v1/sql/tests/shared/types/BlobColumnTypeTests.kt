@@ -3,14 +3,13 @@ package org.jetbrains.exposed.v1.sql.tests.shared.types
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.blobParam
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.insert
-import org.jetbrains.exposed.v1.sql.select
-import org.jetbrains.exposed.v1.sql.selectAll
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
@@ -94,19 +93,19 @@ class BlobColumnTypeTests : DatabaseTestsBase() {
             when (testDb) {
                 TestDB.MYSQL_V5, TestDB.MYSQL_V8 -> {
                     expectException<ExposedSQLException> {
-                        SchemaUtils.create(testTable)
+                        org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
                     }
                 }
 
                 else -> {
-                    SchemaUtils.create(testTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
 
                     testTable.insert {
                         it[number] = 1
                     }
                     assertEquals(defaultBlobStr, String(testTable.selectAll().first()[testTable.blobWithDefault].bytes))
 
-                    SchemaUtils.drop(testTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
                 }
             }
         }
@@ -123,11 +122,11 @@ class BlobColumnTypeTests : DatabaseTestsBase() {
         withDb {
             if (currentDialectTest !is PostgreSQLDialect) {
                 expectException<IllegalStateException> {
-                    SchemaUtils.create(tester)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
                 }
             } else {
                 assertEquals("oid", tester.blobCol.descriptionDdl().split(" ")[1])
-                SchemaUtils.create(tester)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
 
                 tester.insert {}
 
@@ -147,7 +146,7 @@ class BlobColumnTypeTests : DatabaseTestsBase() {
                 assertEquals(3, result2.count())
                 assertTrue(result2.all { it[tester.blobCol].bytes.contentEquals(defaultBytes) })
 
-                SchemaUtils.drop(tester)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
             }
         }
     }

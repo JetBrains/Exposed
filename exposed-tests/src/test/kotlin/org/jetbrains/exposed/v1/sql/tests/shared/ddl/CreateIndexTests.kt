@@ -3,11 +3,12 @@ package org.jetbrains.exposed.v1.sql.tests.shared.ddl
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectMetadataTest
@@ -30,9 +31,9 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.H2_V2_MYSQL), tables = arrayOf(testTable)) {
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
-            SchemaUtils.drop(testTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
         }
     }
 
@@ -50,7 +51,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             excludeSettings = listOf(TestDB.H2_V2_MYSQL, TestDB.SQLSERVER, TestDB.ORACLE),
             tables = arrayOf(testTable)
         ) {
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
         }
     }
@@ -66,9 +67,9 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withDb(TestDB.SQLSERVER) {
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
-            SchemaUtils.drop(testTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
         }
     }
 
@@ -85,12 +86,12 @@ class CreateIndexTests : DatabaseTestsBase() {
         val schema1 = Schema("Schema1")
         val schema2 = Schema("Schema2")
         withSchemas(listOf(TestDB.SQLITE, TestDB.SQLSERVER), schema1, schema2) {
-            SchemaUtils.setSchema(schema1)
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema1)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
             assertEquals(true, testTable.exists())
-            SchemaUtils.setSchema(schema2)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema2)
             assertEquals(false, testTable.exists())
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
             assertEquals(true, testTable.exists())
         }
     }
@@ -115,7 +116,7 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withDb(TestDB.ALL_POSTGRES) {
-            SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
             assertTrue(partialIndexTable.exists())
 
             // check that indexes are created and contain the proper filtering conditions
@@ -163,7 +164,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             execInBatch(listOf(dropUniqueConstraint, dropIndex))
 
             assertEquals(getIndices(partialIndexTable).size, 1)
-            SchemaUtils.drop(partialIndexTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(partialIndexTable)
         }
     }
 
@@ -181,10 +182,10 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withDb(TestDB.ALL_POSTGRES + TestDB.SQLITE + TestDB.SQLSERVER) {
-            SchemaUtils.createMissingTablesAndColumns(tester)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(tester)
             assertTrue(tester.exists())
 
-            val createdStatements = tester.indices.map { SchemaUtils.createIndex(it).first() }
+            val createdStatements = tester.indices.map { org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(it).first() }
             assertEquals(3, createdStatements.size)
             if (currentDialectTest is SQLiteDialect) {
                 assertTrue(createdStatements.all { it.startsWith("CREATE ") })
@@ -224,12 +225,12 @@ class CreateIndexTests : DatabaseTestsBase() {
                 type,
                 tester.name neq "Default"
             )
-            val createdIndex = SchemaUtils.createIndex(typedPartialIndex).single()
+            val createdIndex = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(typedPartialIndex).single()
             assertTrue(createdIndex.startsWith("CREATE "))
             assertTrue(" WHERE " in createdIndex)
             assertTrue(typedPartialIndex.dropStatement().first().startsWith("DROP INDEX "))
 
-            SchemaUtils.drop(tester)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
         }
     }
 
@@ -244,7 +245,7 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
 
         withTables(tester) {
-            SchemaUtils.createMissingTablesAndColumns()
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())
 
             val expectedIndexCount = when (currentDialectTest) {
@@ -272,7 +273,7 @@ class CreateIndexTests : DatabaseTestsBase() {
 
         val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
         withTables(excludeSettings = functionsNotSupported, tester) {
-            SchemaUtils.createMissingTablesAndColumns()
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())
 
             var indices = getIndices(tester)

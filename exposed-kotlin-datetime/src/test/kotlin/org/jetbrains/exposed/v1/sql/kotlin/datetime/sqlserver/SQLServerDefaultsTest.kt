@@ -5,8 +5,9 @@ import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
 import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.dao.id.UUIDTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.KotlinLocalDateTimeColumnType
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.datetime
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
@@ -56,7 +57,7 @@ class SQLServerDefaultsTest : DatabaseTestsBase() {
                 assertNotNull(result[temporalTable.sysStart])
                 assertNotNull(result[temporalTable.sysEnd])
             } finally {
-                SchemaUtils.drop(temporalTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(temporalTable)
             }
         }
     }

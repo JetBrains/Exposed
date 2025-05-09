@@ -2,17 +2,18 @@ package org.jetbrains.exposed.v1.sql.tests.shared.ddl
 
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.UIntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.ULongIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IdTable
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.dao.id.UIntIdTable
-import org.jetbrains.exposed.v1.dao.id.ULongIdTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.exists
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.sql.json.json
 import org.jetbrains.exposed.v1.sql.json.jsonb
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.*
@@ -244,11 +245,11 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                     }
                 }
 
-                SchemaUtils.create(table)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(table)
                 val actual = MigrationUtils.statementsRequiredForDatabaseMigration(table, withLogs = false)
                 assertEqualLists(emptyList(), actual)
             } finally {
-                SchemaUtils.drop(table)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(table)
             }
         }
     }
@@ -471,7 +472,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         tableWithAutoIncrement
                     }
 
-                    SchemaUtils.create(tableWithAutoIncrement)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tableWithAutoIncrement)
 
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrement, withLogs = false).size)
 
@@ -494,7 +495,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         }
                     }
                 } finally {
-                    SchemaUtils.drop(tableWithAutoIncrement)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithAutoIncrement)
                 }
             }
         }
@@ -505,7 +506,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
-                    SchemaUtils.create(tableWithAutoIncrementSequenceName)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tableWithAutoIncrementSequenceName)
 
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementSequenceName, withLogs = false).size)
 
@@ -524,7 +525,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         }
                     }
                 } finally {
-                    SchemaUtils.drop(tableWithAutoIncrementSequenceName)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithAutoIncrementSequenceName)
                 }
             }
         }
@@ -535,7 +536,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
-                    SchemaUtils.create(tableWithAutoIncrementSequenceName)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tableWithAutoIncrementSequenceName)
 
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementSequenceName).size)
 
@@ -576,7 +577,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         }
                     }
                 } finally {
-                    SchemaUtils.drop(tableWithAutoIncrementSequenceName)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithAutoIncrementSequenceName)
                 }
             }
         }
@@ -587,7 +588,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
-                    SchemaUtils.create(tableWithAutoIncrementSequenceName)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tableWithAutoIncrementSequenceName)
 
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementSequenceName, withLogs = false).size)
 
@@ -609,7 +610,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         }
                     }
                 } finally {
-                    SchemaUtils.drop(tableWithAutoIncrementSequenceName)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithAutoIncrementSequenceName)
                 }
             }
         }
@@ -620,7 +621,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
-                    SchemaUtils.create(tableWithAutoIncrementCustomSequence)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tableWithAutoIncrementCustomSequence)
 
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementCustomSequence, withLogs = false).size)
 
@@ -636,7 +637,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         }
                     }
                 } finally {
-                    SchemaUtils.drop(tableWithAutoIncrementCustomSequence)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithAutoIncrementCustomSequence)
                 }
             }
         }
@@ -647,7 +648,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
-                    SchemaUtils.create(tableWithAutoIncrementCustomSequence)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tableWithAutoIncrementCustomSequence)
 
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementCustomSequence).size)
 
@@ -688,7 +689,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         }
                     }
                 } finally {
-                    SchemaUtils.drop(tableWithAutoIncrementCustomSequence)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithAutoIncrementCustomSequence)
                 }
             }
         }
@@ -699,7 +700,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.SQLITE)) { testDb ->
             if (currentDialectTest.supportsCreateSequence) {
                 try {
-                    SchemaUtils.create(tableWithAutoIncrementCustomSequence)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tableWithAutoIncrementCustomSequence)
 
                     assertEquals(0, MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementCustomSequence).size)
 
@@ -721,7 +722,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                         }
                     }
                 } finally {
-                    SchemaUtils.drop(tableWithAutoIncrementCustomSequence)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithAutoIncrementCustomSequence)
                 }
             }
         }
@@ -745,7 +746,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
         withDb(TestDB.ALL_POSTGRES) {
             try {
-                SchemaUtils.create(
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(
                     tableWithAutoIncrement, // uses SERIAL column
                     tableWithExplSequence, // uses Sequence 'my_sequence'
                     tableWithImplSequence // uses SERIAL column
@@ -767,7 +768,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 assertTrue(sequence.exists())
                 assertTrue(implicitSeq.exists())
             } finally {
-                SchemaUtils.drop(tableWithAutoIncrement, tableWithExplSequence, tableWithImplSequence)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableWithAutoIncrement, tableWithExplSequence, tableWithImplSequence)
             }
         }
     }
@@ -797,7 +798,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
     fun testNoColumnTypeChangeStatementsGenerated() {
         withDb(excludeSettings = columnTypeChangeUnsupportedDb) {
             try {
-                SchemaUtils.create(columnTypesTester)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(columnTypesTester)
 
                 val columns = columnTypesTester.columns.sortedBy { it.name.uppercase() }
                 val columnsMetadata = connection.metadata {
@@ -812,7 +813,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                 val statements = MigrationUtils.statementsRequiredForDatabaseMigration(columnTypesTester, withLogs = false)
                 assertTrue(statements.isEmpty())
             } finally {
-                SchemaUtils.drop(columnTypesTester)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(columnTypesTester)
             }
         }
     }

@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.spring
 
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.sql.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner

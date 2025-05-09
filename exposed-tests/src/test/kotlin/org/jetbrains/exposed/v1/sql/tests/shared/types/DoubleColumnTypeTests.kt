@@ -1,7 +1,8 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.types
 
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.junit.Test
@@ -43,7 +44,7 @@ class DoubleColumnTypeTests : DatabaseTestsBase() {
                 assertEquals(9.23, it[TestTable.amount])
             }
 
-            SchemaUtils.drop(TestTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(TestTable)
         }
     }
 }

@@ -3,8 +3,8 @@ package org.jetbrains.exposed.v1.sql.tests
 import org.h2.engine.Mode
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.sql.Database
-import org.jetbrains.exposed.v1.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.sql.Connection
 import java.util.*
 import kotlin.reflect.KMutableProperty1

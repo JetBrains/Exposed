@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.types
 
 import kotlinx.coroutines.flow.singleOrNull
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll

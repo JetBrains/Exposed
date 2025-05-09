@@ -2,16 +2,16 @@
 
 package org.jetbrains.exposed.v1.core
 
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.EntityIDFunctionProvider
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.functions.array.ArrayGet
 import org.jetbrains.exposed.v1.core.functions.array.ArraySlice
 import org.jetbrains.exposed.v1.core.ops.*
 import org.jetbrains.exposed.v1.core.vendors.FunctionProvider
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.dao.id.CompositeID
-import org.jetbrains.exposed.v1.dao.id.CompositeIdTable
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.EntityIDFunctionProvider
-import org.jetbrains.exposed.v1.dao.id.IdTable
 import java.math.BigDecimal
 import kotlin.internal.LowPriorityInOverloadResolution
 

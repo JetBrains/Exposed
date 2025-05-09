@@ -7,10 +7,10 @@ import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
@@ -241,13 +241,13 @@ class JsonBColumnTests : DatabaseTestsBase() {
         withDb(excludeSettings = listOf(TestDB.MYSQL_V5)) { testDb ->
             if (testDb in binaryJsonNotSupportedDB) {
                 expectException<UnsupportedByDialectException> {
-                    SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
             } else {
-                SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 assertTrue(defaultTester.exists())
                 // ensure defaults match returned metadata defaults
-                val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
+                val alters = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
                 assertTrue(alters.isEmpty())
 
                 defaultTester.insert {}
@@ -260,7 +260,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
                     assertEquals(defaultUser.team, it[defaultTester.user2].team)
                 }
 
-                SchemaUtils.drop(defaultTester)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(defaultTester)
             }
         }
     }

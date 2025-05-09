@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1.spring
 
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.spring.tables.TestTable
 import org.jetbrains.exposed.v1.spring.tables.ignore.IgnoreTable
-import org.jetbrains.exposed.v1.sql.Database
-import org.jetbrains.exposed.v1.sql.selectAll
-import org.jetbrains.exposed.v1.sql.transactions.transaction
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

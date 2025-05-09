@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.core
 
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
+import org.jetbrains.exposed.v1.core.dao.id.CompositeID
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.core.vendors.*
-import org.jetbrains.exposed.v1.dao.id.CompositeID
-import org.jetbrains.exposed.v1.dao.id.EntityID
 import java.math.BigDecimal
 
 /**

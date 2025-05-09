@@ -5,16 +5,17 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IdTable
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.statements.BatchInsertBlockingExecutable
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.sql.kotlin.datetime.timestamp
-import org.jetbrains.exposed.v1.sql.statements.BatchInsertBlockingExecutable
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentTestDB
@@ -25,7 +26,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
-import org.jetbrains.exposed.v1.sql.transactions.experimental.newSuspendedTransaction
 import org.junit.Assume
 import org.junit.Test
 import java.sql.SQLException
@@ -511,7 +511,7 @@ class InsertTests : DatabaseTestsBase() {
             try {
                 try {
                     withDb(db) {
-                        SchemaUtils.create(testTable)
+                        org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
                         testTable.insert { it[foo] = 1 }
                         testTable.insert { it[foo] = 0 }
                     }
@@ -524,7 +524,7 @@ class InsertTests : DatabaseTestsBase() {
                 }
             } finally {
                 withDb(db) {
-                    SchemaUtils.drop(testTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
                 }
             }
         }
@@ -544,7 +544,7 @@ class InsertTests : DatabaseTestsBase() {
             try {
                 try {
                     withDb(db) {
-                        SchemaUtils.create(testTable)
+                        org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
                     }
                     runBlocking {
                         newSuspendedTransaction(db = db.db) {
@@ -562,7 +562,7 @@ class InsertTests : DatabaseTestsBase() {
                 }
             } finally {
                 withDb(db) {
-                    SchemaUtils.drop(testTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
                 }
             }
         }
@@ -683,7 +683,7 @@ class InsertTests : DatabaseTestsBase() {
                     TestDB.SQLSERVER -> {
                         exec("${createStatement.trimIndent()} $computedName AS ($computation))")
                     }
-                    else -> SchemaUtils.create(generatedTable)
+                    else -> org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(generatedTable)
                 }
 
                 assertFailAndRollback("Generated columns are auto-derived and read-only") {
@@ -708,7 +708,7 @@ class InsertTests : DatabaseTestsBase() {
                 assertNull(result2[generatedTable.amount])
                 assertNull(result2[generatedTable.computedAmount])
             } finally {
-                SchemaUtils.drop(generatedTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(generatedTable)
             }
         }
     }

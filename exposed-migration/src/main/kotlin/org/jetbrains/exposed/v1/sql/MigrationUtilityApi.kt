@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.core.SchemaUtilityApi
 import org.jetbrains.exposed.v1.core.Sequence
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.io.File
 
 abstract class MigrationUtilityApi : SchemaUtilityApi() {

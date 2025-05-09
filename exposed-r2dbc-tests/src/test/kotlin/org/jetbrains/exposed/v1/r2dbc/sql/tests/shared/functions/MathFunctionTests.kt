@@ -3,11 +3,11 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.functions
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.decimalLiteral
 import org.jetbrains.exposed.v1.core.doubleLiteral
 import org.jetbrains.exposed.v1.core.functions.math.*
 import org.jetbrains.exposed.v1.core.intLiteral
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.r2dbc.sql.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.sql.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.TestDB

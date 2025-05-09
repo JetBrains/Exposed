@@ -7,11 +7,11 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.between
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.*
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.sql.json.extract
 import org.jetbrains.exposed.v1.sql.json.jsonb
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
@@ -87,7 +87,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
                 assertEquals(now.hour, result[hour])
                 assertEquals(now.minute, result[minute])
             } finally {
-                SchemaUtils.drop(testDate)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testDate)
             }
         }
     }
@@ -187,7 +187,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
                 val result2 = testTable.select(lastDayOfMonth).single()
                 assertEquals(expectedLastDayOfMonth, result2[lastDayOfMonth])
             } finally {
-                SchemaUtils.drop(testTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
             }
         }
     }
@@ -240,7 +240,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
 
                 assertEquals(2, testTable.selectAll().count())
             } finally {
-                SchemaUtils.drop(testTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
             }
         }
     }
@@ -441,7 +441,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
 
         withDb(db = timestampWithTimeZoneUnsupportedDB) {
             expectException<UnsupportedByDialectException> {
-                SchemaUtils.create(testTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
             }
         }
     }

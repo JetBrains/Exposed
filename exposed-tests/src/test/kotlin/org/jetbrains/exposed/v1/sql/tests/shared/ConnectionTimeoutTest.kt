@@ -2,9 +2,9 @@ package org.jetbrains.exposed.v1.sql.tests.shared
 
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.jetbrains.exposed.v1.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
-import org.jetbrains.exposed.v1.sql.transactions.transaction
 import org.junit.Test
 import java.sql.Connection
 import java.sql.SQLTransientException

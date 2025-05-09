@@ -7,11 +7,11 @@ import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.stringLiteral
-import org.jetbrains.exposed.v1.dao.id.IdTable
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.TestDB.ORACLE
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
@@ -410,7 +410,7 @@ class MergeTableTest : MergeBaseTest() {
 
                 assertEquals(sequenceStartNumber, dest.selectAll().single()[dest.id].value)
             } finally {
-                SchemaUtils.drop(dest)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(dest)
                 exec("drop sequence if exists testOverridingUserValueSequence")
             }
         }

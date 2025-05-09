@@ -3,9 +3,9 @@ package org.jetbrains.exposed.v1.sql.tests.shared
 import com.impossibl.postgres.jdbc.PGSQLSimpleException
 import com.microsoft.sqlserver.jdbc.SQLServerException
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import org.junit.Assert.fail
 import org.junit.Test
 import org.postgresql.util.PSQLException

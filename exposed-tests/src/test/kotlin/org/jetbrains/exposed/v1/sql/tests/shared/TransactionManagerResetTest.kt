@@ -1,10 +1,10 @@
 package org.jetbrains.exposed.v1.sql.tests.shared
 
 import junit.framework.TestCase.assertSame
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.sql.tests.LogDbInTestName
 import org.jetbrains.exposed.v1.sql.tests.TestDB
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.transactions.transaction
 import org.junit.Assume
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicReference

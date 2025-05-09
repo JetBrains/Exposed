@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualCollections
@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.expectException
 import org.junit.Test
+import kotlin.collections.intersect
 import kotlin.test.assertTrue
 
 class UnionTests : DatabaseTestsBase() {
@@ -158,7 +159,7 @@ class UnionTests : DatabaseTestsBase() {
     @Test
     fun testUnionOfSortedQueries() {
         withCitiesAndUsers { _, users, _ ->
-            val andreyOrSergeyQuery: org.jetbrains.exposed.v1.sql.Query =
+            val andreyOrSergeyQuery: Query =
                 users.selectAll().where { users.id inList setOf("andrey", "sergey") }.orderBy(users.id to SortOrder.DESC)
 
             if (currentDialect.supportsSubqueryUnions) {

@@ -6,11 +6,11 @@ import org.jetbrains.exposed.v1.core.Schema
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
 import org.jetbrains.exposed.v1.core.transactions.nullableTransactionScope
-import org.jetbrains.exposed.v1.sql.JdbcTransaction
-import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.v1.sql.transactions.transaction
-import org.jetbrains.exposed.v1.sql.transactions.transactionManager
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.Assume
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -132,17 +132,17 @@ abstract class DatabaseTestsBase {
 
         withDb(dialect, configure = configure) {
             try {
-                SchemaUtils.drop(*tables)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(*tables)
             } catch (_: Throwable) {
             }
 
-            SchemaUtils.create(*tables)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(*tables)
             try {
                 statement(dialect)
                 commit() // Need commit to persist data before drop tables
             } finally {
                 try {
-                    SchemaUtils.drop(*tables)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(*tables)
                     commit()
                 } catch (_: Exception) {
                     val database = dialect.db!!
@@ -173,13 +173,13 @@ abstract class DatabaseTestsBase {
 
         withDb(dialect, configure) {
             if (currentDialectTest.supportsCreateSchema) {
-                SchemaUtils.createSchema(*schemas)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(*schemas)
                 try {
                     statement()
                     commit() // Need commit to persist data before drop schemas
                 } finally {
                     val cascade = it != TestDB.SQLSERVER
-                    SchemaUtils.dropSchema(*schemas, cascade = cascade)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(*schemas, cascade = cascade)
                     commit()
                 }
             }

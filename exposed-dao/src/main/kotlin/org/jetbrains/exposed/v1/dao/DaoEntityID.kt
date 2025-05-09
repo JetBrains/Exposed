@@ -1,8 +1,8 @@
 package org.jetbrains.exposed.v1.dao
 
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IdTable
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 
 /**
  * Class representing a wrapper for a stored identity value of type [T], which is managed and cached

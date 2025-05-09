@@ -1,12 +1,12 @@
 package org.jetbrains.exposed.v1.spring
 
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.deleteAll
-import org.jetbrains.exposed.v1.sql.insertAndGetId
-import org.jetbrains.exposed.v1.sql.selectAll
-import org.jetbrains.exposed.v1.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.Assert
 import org.junit.Test
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -162,13 +162,13 @@ open class Orders {
 
     open fun findAll(): List<ResultRow> = Order.selectAll().toList()
 
-    open fun findAllWithExposedTrxBlock() = org.jetbrains.exposed.v1.sql.transactions.transaction { findAll() }
+    open fun findAllWithExposedTrxBlock() = org.jetbrains.exposed.v1.jdbc.transactions.transaction { findAll() }
 
     open fun create() = Order.insertAndGetId {
         it[buyer] = 123
     }.value
 
-    open fun createWithExposedTrxBlock() = org.jetbrains.exposed.v1.sql.transactions.transaction { create() }
+    open fun createWithExposedTrxBlock() = org.jetbrains.exposed.v1.jdbc.transactions.transaction { create() }
 
     open fun init() {
         SchemaUtils.create(Order)

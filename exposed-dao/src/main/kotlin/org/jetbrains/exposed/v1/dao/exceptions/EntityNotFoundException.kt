@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.dao.exceptions
 
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.EntityClass
-import org.jetbrains.exposed.v1.dao.id.EntityID
 
 /**
  * An exception that provides information about an [entity] that could not be accessed

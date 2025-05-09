@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.sql.tests.shared.ddl
 
-import org.jetbrains.exposed.v1.sql.SchemaUtils
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
@@ -16,12 +15,12 @@ class CreateDatabaseTest : DatabaseTestsBase() {
         withDb(excludeSettings = TestDB.ALL_POSTGRES + TestDB.ORACLE) {
             val dbName = "jetbrains"
             try {
-                SchemaUtils.dropDatabase(dbName)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropDatabase(dbName)
             } catch (cause: SQLException) {
                 // ignore
             }
-            SchemaUtils.createDatabase(dbName)
-            SchemaUtils.dropDatabase(dbName)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createDatabase(dbName)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropDatabase(dbName)
         }
     }
 
@@ -29,7 +28,7 @@ class CreateDatabaseTest : DatabaseTestsBase() {
     fun testListDatabasesOracle() {
         withDb(TestDB.ORACLE) {
             assertFailsWith<IllegalStateException> {
-                SchemaUtils.listDatabases()
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.listDatabases()
             }
         }
     }
@@ -39,16 +38,16 @@ class CreateDatabaseTest : DatabaseTestsBase() {
         withDb(TestDB.ALL_POSTGRES + TestDB.SQLSERVER) {
             connection.autoCommit = true
             val dbName = "jetbrains"
-            val initial = SchemaUtils.listDatabases()
+            val initial = org.jetbrains.exposed.v1.jdbc.SchemaUtils.listDatabases()
             if (dbName in initial) {
-                SchemaUtils.dropDatabase(dbName)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropDatabase(dbName)
             }
 
-            SchemaUtils.createDatabase(dbName)
-            val created = SchemaUtils.listDatabases()
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createDatabase(dbName)
+            val created = org.jetbrains.exposed.v1.jdbc.SchemaUtils.listDatabases()
             assertTrue(dbName in created)
-            SchemaUtils.dropDatabase(dbName)
-            val deleted = SchemaUtils.listDatabases()
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropDatabase(dbName)
+            val deleted = org.jetbrains.exposed.v1.jdbc.SchemaUtils.listDatabases()
             assertTrue(dbName !in deleted)
             connection.autoCommit = false
         }
@@ -58,16 +57,16 @@ class CreateDatabaseTest : DatabaseTestsBase() {
     fun testListDatabases() {
         withDb(excludeSettings = TestDB.ALL_POSTGRES + TestDB.SQLSERVER + TestDB.ORACLE) {
             val dbName = "jetbrains"
-            val initial = SchemaUtils.listDatabases()
+            val initial = org.jetbrains.exposed.v1.jdbc.SchemaUtils.listDatabases()
             if (dbName in initial) {
-                SchemaUtils.dropDatabase(dbName)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropDatabase(dbName)
             }
 
-            SchemaUtils.createDatabase(dbName)
-            val created = SchemaUtils.listDatabases()
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createDatabase(dbName)
+            val created = org.jetbrains.exposed.v1.jdbc.SchemaUtils.listDatabases()
             assertTrue(dbName in created)
-            SchemaUtils.dropDatabase(dbName)
-            val deleted = SchemaUtils.listDatabases()
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropDatabase(dbName)
+            val deleted = org.jetbrains.exposed.v1.jdbc.SchemaUtils.listDatabases()
             assertTrue(dbName !in deleted)
         }
     }
@@ -78,8 +77,8 @@ class CreateDatabaseTest : DatabaseTestsBase() {
         withDb(TestDB.ALL_POSTGRES) {
             connection.autoCommit = true
             val dbName = "jetbrains"
-            SchemaUtils.createDatabase(dbName)
-            SchemaUtils.dropDatabase(dbName)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createDatabase(dbName)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropDatabase(dbName)
             connection.autoCommit = false
         }
     }

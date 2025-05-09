@@ -4,14 +4,15 @@ import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
-import org.jetbrains.exposed.v1.dao.id.IdTable
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
@@ -22,7 +23,6 @@ import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertFails
@@ -35,13 +35,13 @@ class CreateTableTests : DatabaseTestsBase() {
 
         withDb {
             assertFails(assertionFailureMessage) {
-                SchemaUtils.create(TableWithDuplicatedColumn)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(TableWithDuplicatedColumn)
             }
             assertFails(assertionFailureMessage) {
-                SchemaUtils.create(TableDuplicatedColumnRefereToIntIdTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(TableDuplicatedColumnRefereToIntIdTable)
             }
             assertFails(assertionFailureMessage) {
-                SchemaUtils.create(TableDuplicatedColumnRefereToTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(TableDuplicatedColumnRefereToTable)
             }
         }
     }
@@ -626,23 +626,23 @@ class CreateTableTests : DatabaseTestsBase() {
             assertEquals(false, OneTable.exists())
             assertEquals(false, OneOneTable.exists())
             try {
-                SchemaUtils.create(OneTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(OneTable)
                 assertEquals(true, OneTable.exists())
                 assertEquals(false, OneOneTable.exists())
 
                 val schemaPrefixedName = testDb.getDefaultSchemaPrefixedTableName(OneTable.tableName)
-                assertTrue(SchemaUtils.listTables().any { it.equals(schemaPrefixedName, ignoreCase = true) })
+                assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.listTables().any { it.equals(schemaPrefixedName, ignoreCase = true) })
 
-                SchemaUtils.createSchema(one)
-                SchemaUtils.create(OneOneTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(one)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(OneOneTable)
                 assertEquals(true, OneTable.exists())
                 assertEquals(true, OneOneTable.exists())
 
-                assertTrue(SchemaUtils.listTablesInAllSchemas().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
+                assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.listTablesInAllSchemas().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
             } finally {
-                SchemaUtils.drop(OneTable, OneOneTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(OneTable, OneOneTable)
                 val cascade = testDb != TestDB.SQLSERVER
-                SchemaUtils.dropSchema(one, cascade = cascade)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(one, cascade = cascade)
             }
         }
     }
@@ -650,17 +650,17 @@ class CreateTableTests : DatabaseTestsBase() {
     @Test
     fun testListTablesInCurrentSchema() {
         withDb { testDb ->
-            SchemaUtils.create(OneTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(OneTable)
 
             val schemaPrefixedName = testDb.getDefaultSchemaPrefixedTableName(OneTable.tableName)
-            assertTrue(SchemaUtils.listTables().any { it.equals(schemaPrefixedName, ignoreCase = true) })
+            assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.listTables().any { it.equals(schemaPrefixedName, ignoreCase = true) })
         }
 
         withDb { testDb ->
             // ensures that db connection has not been lost by calling listTables()
             assertEquals(testDb != TestDB.SQLITE, OneTable.exists())
 
-            SchemaUtils.drop(OneTable)
+            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(OneTable)
         }
     }
 
@@ -679,20 +679,20 @@ class CreateTableTests : DatabaseTestsBase() {
                 val one = prepareSchemaForTest("one")
 
                 try {
-                    SchemaUtils.createSchema(one)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.createSchema(one)
                     // table "one.one" is created in new schema by db because of name
                     // even though current schema has not been set to the new one above
-                    SchemaUtils.create(OneOneTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(OneOneTable)
 
                     // so new table will not appear in list of tables in current schema
-                    assertFalse(SchemaUtils.listTables().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
+                    assertFalse(org.jetbrains.exposed.v1.jdbc.SchemaUtils.listTables().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
                     // but new table appears in list of tables from all schema
-                    assertTrue(SchemaUtils.listTablesInAllSchemas().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
+                    assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.listTablesInAllSchemas().any { it.equals(OneOneTable.tableName, ignoreCase = true) })
                     assertTrue(OneOneTable.exists())
                 } finally {
-                    SchemaUtils.drop(OneOneTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(OneOneTable)
                     val cascade = testDb != TestDB.SQLSERVER
-                    SchemaUtils.dropSchema(one, cascade = cascade)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(one, cascade = cascade)
                 }
             }
         }
@@ -706,12 +706,12 @@ class CreateTableTests : DatabaseTestsBase() {
 
         withDb {
             try {
-                SchemaUtils.create(testTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
                 assertTrue(testTable.exists())
                 testTable.insert { it[int] = 10 }
                 assertEquals(10, testTable.selectAll().singleOrNull()?.get(testTable.int))
             } finally {
-                SchemaUtils.drop(testTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
             }
         }
     }
@@ -736,14 +736,14 @@ class CreateTableTests : DatabaseTestsBase() {
             }
 
             try {
-                SchemaUtils.create(tester)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
                 assertTrue(tester.exists())
 
                 val id = tester.insertAndGetId { it[text_col] = "Inserted text" }
                 tester.update({ tester.id eq id }) { it[text_col] = "Updated text" }
                 tester.deleteWhere { tester.id eq id }
             } finally {
-                SchemaUtils.drop(tester)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
             }
         }
     }

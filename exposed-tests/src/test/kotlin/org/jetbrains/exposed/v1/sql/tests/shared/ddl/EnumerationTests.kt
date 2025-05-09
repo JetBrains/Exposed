@@ -2,21 +2,20 @@ package org.jetbrains.exposed.v1.sql.tests.shared.ddl
 
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.SchemaUtils
-import org.jetbrains.exposed.v1.sql.insert
-import org.jetbrains.exposed.v1.sql.selectAll
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.currentDialectTest
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
-import org.jetbrains.exposed.v1.sql.update
 import org.junit.Test
 import org.postgresql.util.PGobject
 
@@ -75,7 +74,7 @@ class EnumerationTests : DatabaseTestsBase() {
                     exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
                 }
                 EnumTable.initEnumColumn(sqlType)
-                SchemaUtils.create(EnumTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(EnumTable)
                 // drop shared table object's unique index if created in other test
                 if (EnumTable.indices.isNotEmpty()) {
                     exec(EnumTable.indices.first().dropStatement().single())
@@ -100,7 +99,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 assertEquals(Foo.Bar, enumClass.reload(entity, true)!!.enum)
             } finally {
                 try {
-                    SchemaUtils.drop(EnumTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
         }
@@ -123,7 +122,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 with(EnumTable) {
                     enumColumn.default(Foo.Bar)
                 }
-                SchemaUtils.create(EnumTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(EnumTable)
                 // drop shared table object's unique index if created in other test
                 if (EnumTable.indices.isNotEmpty()) {
                     exec(EnumTable.indices.first().dropStatement().single())
@@ -134,7 +133,7 @@ class EnumerationTests : DatabaseTestsBase() {
                 assertEquals(Foo.Bar, default)
             } finally {
                 try {
-                    SchemaUtils.drop(EnumTable)
+                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
         }
@@ -166,10 +165,10 @@ class EnumerationTests : DatabaseTestsBase() {
                 with(EnumTable) {
                     if (indices.isEmpty()) enumColumn.uniqueIndex()
                 }
-                SchemaUtils.create(EnumTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(EnumTable)
 
                 referenceTable.initRefColumn()
-                SchemaUtils.create(referenceTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(referenceTable)
 
                 val fooBar = Foo.Bar
                 val id1 = EnumTable.insert {
@@ -182,9 +181,9 @@ class EnumerationTests : DatabaseTestsBase() {
                 assertEquals(fooBar, EnumTable.selectAll().single()[EnumTable.enumColumn])
                 assertEquals(fooBar, referenceTable.selectAll().single()[referenceTable.referenceColumn])
             } finally {
-                SchemaUtils.drop(referenceTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(referenceTable)
                 exec(EnumTable.indices.first().dropStatement().single())
-                SchemaUtils.drop(EnumTable)
+                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(EnumTable)
             }
         }
     }

@@ -1,11 +1,11 @@
 package org.jetbrains.exposed.v1
 
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.sql.insert
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.sql.jodatime.dateTimeLiteral
 import org.jetbrains.exposed.v1.sql.jodatime.datetime
-import org.jetbrains.exposed.v1.sql.select
-import org.jetbrains.exposed.v1.sql.selectAll
 import org.jetbrains.exposed.v1.sql.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.joda.time.DateTime

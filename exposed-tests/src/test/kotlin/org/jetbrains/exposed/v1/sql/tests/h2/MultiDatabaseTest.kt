@@ -6,18 +6,18 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.DatabaseConfig
-import org.jetbrains.exposed.v1.sql.*
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.withSuspendTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.sql.tests.TestDB
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.sql.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.sql.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.sql.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.sql.tests.shared.dml.DMLTestsData
-import org.jetbrains.exposed.v1.sql.transactions.TransactionManager
-import org.jetbrains.exposed.v1.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.v1.sql.transactions.experimental.withSuspendTransaction
-import org.jetbrains.exposed.v1.sql.transactions.transaction
-import org.jetbrains.exposed.v1.sql.transactions.transactionManager
 import org.junit.After
 import org.junit.Assume
 import org.junit.Before
@@ -82,7 +82,7 @@ class MultiDatabaseTest {
             SchemaUtils.create(DMLTestsData.Cities)
             assertTrue(DMLTestsData.Cities.selectAll().empty())
             DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city1"
+                it[name] = "city1"
             }
         }
 
@@ -90,7 +90,7 @@ class MultiDatabaseTest {
             assertFalse(DMLTestsData.Cities.exists())
             SchemaUtils.create(DMLTestsData.Cities)
             DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city2"
+                it[name] = "city2"
             }
         }
 
@@ -113,17 +113,17 @@ class MultiDatabaseTest {
             SchemaUtils.create(DMLTestsData.Cities)
             assertTrue(DMLTestsData.Cities.selectAll().empty())
             DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city1"
+                it[name] = "city1"
             }
 
             transaction(db2) {
                 assertFalse(DMLTestsData.Cities.exists())
                 SchemaUtils.create(DMLTestsData.Cities)
                 DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city2"
+                    it[name] = "city2"
                 }
                 DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city3"
+                    it[name] = "city3"
                 }
                 assertEquals(2L, DMLTestsData.Cities.selectAll().count())
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
@@ -142,17 +142,17 @@ class MultiDatabaseTest {
             SchemaUtils.create(DMLTestsData.Cities)
             assertTrue(DMLTestsData.Cities.selectAll().empty())
             DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city1"
+                it[name] = "city1"
             }
 
             transaction(db2) {
                 assertFalse(DMLTestsData.Cities.exists())
                 SchemaUtils.create(DMLTestsData.Cities)
                 DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city2"
+                    it[name] = "city2"
                 }
                 DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city3"
+                    it[name] = "city3"
                 }
                 assertEquals(2L, DMLTestsData.Cities.selectAll().count())
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
@@ -160,10 +160,10 @@ class MultiDatabaseTest {
                 transaction(db1) {
                     assertEquals(1L, DMLTestsData.Cities.selectAll().count())
                     DMLTestsData.Cities.insert {
-                        it[DMLTestsData.Cities.name] = "city4"
+                        it[name] = "city4"
                     }
                     DMLTestsData.Cities.insert {
-                        it[DMLTestsData.Cities.name] = "city5"
+                        it[name] = "city5"
                     }
                     assertEquals(3L, DMLTestsData.Cities.selectAll().count())
                 }
@@ -186,17 +186,17 @@ class MultiDatabaseTest {
             SchemaUtils.create(DMLTestsData.Cities)
             assertTrue(DMLTestsData.Cities.selectAll().empty())
             DMLTestsData.Cities.insert {
-                it[DMLTestsData.Cities.name] = "city1"
+                it[name] = "city1"
             }
 
             newSuspendedTransaction(Dispatchers.IO, db2) {
                 assertFalse(DMLTestsData.Cities.exists())
                 SchemaUtils.create(DMLTestsData.Cities)
                 DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city2"
+                    it[name] = "city2"
                 }
                 DMLTestsData.Cities.insert {
-                    it[DMLTestsData.Cities.name] = "city3"
+                    it[name] = "city3"
                 }
                 assertEquals(2L, DMLTestsData.Cities.selectAll().count())
                 assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
@@ -204,10 +204,10 @@ class MultiDatabaseTest {
                 tr1.withSuspendTransaction {
                     assertEquals(1L, DMLTestsData.Cities.selectAll().count())
                     DMLTestsData.Cities.insert {
-                        it[DMLTestsData.Cities.name] = "city4"
+                        it[name] = "city4"
                     }
                     DMLTestsData.Cities.insert {
-                        it[DMLTestsData.Cities.name] = "city5"
+                        it[name] = "city5"
                     }
                     assertEquals(3L, DMLTestsData.Cities.selectAll().count())
                 }
