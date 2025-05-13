@@ -1,3 +1,26 @@
+# 1.0.0-Beta1
+
+## What's Changed
+
+Infrastructure:
+* kotlinCoroutines 1.10.2
+* Foojay Toolchains Plugin 0.10.0
+* junit-bom 5.12.2
+* Spring Framework 6.2.6
+* io.github.hakky54:logcaptor 2.11.0
+* Spring Boot 3.4.5
+
+Breaking changes:
+* feat!: R2DBC by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2474
+
+Docs:
+* docs: EXPOSED-756 Add documentation for SQL migration options  by @vnikolova in https://github.com/JetBrains/Exposed/pull/2471
+
+Bug fixes:
+* fix: EXPOSED-762 [MariaDB] Fix UUIDColumType to make it working with own UUID type by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2468
+* fix: EXPOSED-772 Add an option to specify column type for Case() expression by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2469
+* fix: EXPOSED-713 Allow entity batchInsert() to generate SQL for column values that match the default by @Avi18971911 in https://github.com/JetBrains/Exposed/pull/2420
+
 # 0.61.0
 ## What's Changed
 Infrastructure:
@@ -20,8 +43,6 @@ Docs:
 * docs: Fix text that says Exposed is not an official JetBrains library by @joc-a in https://github.com/JetBrains/Exposed/pull/2439
 * docs: EXPOSED-673 Update and extend the "Data types" topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2437
 * docs: EXPOSED-567 Update the FAQ topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2449
-
-**Full Changelog**: https://github.com/JetBrains/Exposed/compare/0.60.0...0.61.0
 
 # 0.60.0
 Infrastructure:

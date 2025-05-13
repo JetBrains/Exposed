@@ -10,9 +10,9 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.exposed:exposed-core:0.61.0")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.61.0")
-    implementation("org.jetbrains.exposed:exposed-dao:0.61.0") // Optional
+    implementation("org.jetbrains.exposed:exposed-core:1.0.0-Beta1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:1.0.0-Beta1")
+    implementation("org.jetbrains.exposed:exposed-dao:1.0.0-Beta1") // Optional
     implementation("com.h2database:h2:2.2.224")
     implementation("org.slf4j:slf4j-nop:1.7.30")
     testImplementation(kotlin("test"))
