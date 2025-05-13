@@ -153,7 +153,7 @@
         <chapter title="Range conditions" id="range-conditions">
             <p>
                 To check if a value lies within a specified range, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-i-sql-expression-builder/between.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-i-sql-expression-builder/between.html">
                     <code>.between()</code>
                 </a>
                 function.
@@ -200,11 +200,11 @@
                             src="exposed-dsl/src/main/kotlin/org/example/examples/QueryingExamples.kt"
                             include-symbol="anyFromArray"/>
                 <p>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/any-from.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/any-from.html">
                         <code>anyFrom()</code>
                     </a>
                     and
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/all-from.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/all-from.html">
                         <code>allFrom()</code>
                     </a>
                     also accept subqueries, tables, and array expressions
@@ -223,7 +223,7 @@
         <p>
             Imagine a form on a website where a user can optionally filter "Star Wars" films by a director and/or a
             sequel. To construct such a query, you can use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/and-where.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/and-where.html">
                 <code>.andWhere()</code>
             </a>
             function:
@@ -245,11 +245,11 @@
             </p>
             <p>
                 In these cases, you can use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/adjust-column-set.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/adjust-column-set.html">
                     <code>.adjustColumnSet()</code>
                 </a>
                 and
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/adjust-select.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/adjust-select.html">
                     <code>.adjustSelect()</code>
                 </a> functions,
                 which allow to extend and modify <code>JOIN</code> and <code>SELECT</code> parts of a query:
@@ -263,7 +263,7 @@
         <chapter title="Count" id="count">
             <p>
                 The
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/count.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/count.html">
                     <code>.count()</code>
                 </a>
                 method is used to determine the number of rows matching a query.
@@ -279,7 +279,7 @@
         <chapter title="Order by" id="order-by">
             <p>
                 The
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-abstract-query/order-by.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-abstract-query/order-by.html">
                     <code>.orderBy()</code>
                 </a>
                 function allows you to sort query results by specifying a list of
@@ -296,7 +296,7 @@
         <chapter title="Group by" id="group-by">
             <p>
                 In
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/group-by.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/group-by.html">
                     <code>.groupBy()</code>
                 </a>
                 , define fields and their functions by the <code>.select()</code>
@@ -315,11 +315,11 @@
     <chapter title="Limiting result sets" id="limit-result-sets">
         <p>
             You can use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-abstract-query/limit.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-abstract-query/limit.html">
                 <code>.limit()</code>
             </a>
             function to prevent loading large data sets or to accomplish pagination by using the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-abstract-query/offset.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-abstract-query/offset.html">
                 <code>.offset()</code>
             </a>
             function.
@@ -332,7 +332,7 @@
         <p>
             Aliases allow preventing ambiguity between field names and table names.
             To use the aliased <code>var</code> instead of the original one, use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/alias.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/alias.html">
                 <code>.alias()</code>
             </a>
             function:
@@ -354,7 +354,7 @@
     <chapter title="Custom Select Queries" id="custom-select-queries">
         <p>
             A
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/index.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/index.html">
                 <code>Query</code>
             </a>
             instance, which can be instantiated by calling <code>.selectAll()</code> or <code>.select()</code>

@@ -1,9 +1,9 @@
 package org.example.examples
 
 import kotlinx.datetime.LocalDate
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.kotlin.datetime.KotlinLocalDateColumnType
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.*
+import org.jetbrains.exposed.v1.kotlin.datetime.KotlinLocalDateColumnType
+import org.jetbrains.exposed.v1.transactions.transaction
 import java.util.*
 
 /*

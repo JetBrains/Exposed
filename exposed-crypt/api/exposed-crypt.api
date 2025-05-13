@@ -1,28 +1,28 @@
-public final class org/jetbrains/exposed/crypt/Algorithms {
-	public static final field INSTANCE Lorg/jetbrains/exposed/crypt/Algorithms;
-	public final fun AES_256_PBE_CBC (Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Lorg/jetbrains/exposed/crypt/Encryptor;
-	public final fun AES_256_PBE_GCM (Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Lorg/jetbrains/exposed/crypt/Encryptor;
-	public final fun BLOW_FISH (Ljava/lang/CharSequence;)Lorg/jetbrains/exposed/crypt/Encryptor;
-	public final fun TRIPLE_DES (Ljava/lang/CharSequence;)Lorg/jetbrains/exposed/crypt/Encryptor;
+public final class org/jetbrains/exposed/v1/crypt/Algorithms {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/crypt/Algorithms;
+	public final fun AES_256_PBE_CBC (Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Lorg/jetbrains/exposed/v1/crypt/Encryptor;
+	public final fun AES_256_PBE_GCM (Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Lorg/jetbrains/exposed/v1/crypt/Encryptor;
+	public final fun BLOW_FISH (Ljava/lang/CharSequence;)Lorg/jetbrains/exposed/v1/crypt/Encryptor;
+	public final fun TRIPLE_DES (Ljava/lang/CharSequence;)Lorg/jetbrains/exposed/v1/crypt/Encryptor;
 }
 
-public final class org/jetbrains/exposed/crypt/ByteArrayEncryptionTransformer : org/jetbrains/exposed/sql/ColumnTransformer {
-	public fun <init> (Lorg/jetbrains/exposed/crypt/Encryptor;)V
+public final class org/jetbrains/exposed/v1/crypt/ByteArrayEncryptionTransformer : org/jetbrains/exposed/v1/core/ColumnTransformer {
+	public fun <init> (Lorg/jetbrains/exposed/v1/crypt/Encryptor;)V
 	public synthetic fun unwrap (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun unwrap ([B)[B
 	public synthetic fun wrap (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun wrap ([B)[B
 }
 
-public final class org/jetbrains/exposed/crypt/EncryptedBinaryColumnType : org/jetbrains/exposed/sql/ColumnWithTransform {
-	public fun <init> (Lorg/jetbrains/exposed/crypt/Encryptor;I)V
+public final class org/jetbrains/exposed/v1/crypt/EncryptedBinaryColumnType : org/jetbrains/exposed/v1/core/ColumnWithTransform {
+	public fun <init> (Lorg/jetbrains/exposed/v1/crypt/Encryptor;I)V
 }
 
-public final class org/jetbrains/exposed/crypt/EncryptedVarCharColumnType : org/jetbrains/exposed/sql/ColumnWithTransform {
-	public fun <init> (Lorg/jetbrains/exposed/crypt/Encryptor;I)V
+public final class org/jetbrains/exposed/v1/crypt/EncryptedVarCharColumnType : org/jetbrains/exposed/v1/core/ColumnWithTransform {
+	public fun <init> (Lorg/jetbrains/exposed/v1/crypt/Encryptor;I)V
 }
 
-public final class org/jetbrains/exposed/crypt/Encryptor {
+public final class org/jetbrains/exposed/v1/crypt/Encryptor {
 	public fun <init> (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public final fun decrypt (Ljava/lang/String;)Ljava/lang/String;
 	public final fun encrypt (Ljava/lang/String;)Ljava/lang/String;
@@ -32,16 +32,16 @@ public final class org/jetbrains/exposed/crypt/Encryptor {
 	public final fun maxColLength (I)I
 }
 
-public final class org/jetbrains/exposed/crypt/StringEncryptionTransformer : org/jetbrains/exposed/sql/ColumnTransformer {
-	public fun <init> (Lorg/jetbrains/exposed/crypt/Encryptor;)V
+public final class org/jetbrains/exposed/v1/crypt/StringEncryptionTransformer : org/jetbrains/exposed/v1/core/ColumnTransformer {
+	public fun <init> (Lorg/jetbrains/exposed/v1/crypt/Encryptor;)V
 	public synthetic fun unwrap (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun unwrap (Ljava/lang/String;)Ljava/lang/String;
 	public synthetic fun wrap (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun wrap (Ljava/lang/String;)Ljava/lang/String;
 }
 
-public final class org/jetbrains/exposed/crypt/TablesKt {
-	public static final fun encryptedBinary (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;ILorg/jetbrains/exposed/crypt/Encryptor;)Lorg/jetbrains/exposed/sql/Column;
-	public static final fun encryptedVarchar (Lorg/jetbrains/exposed/sql/Table;Ljava/lang/String;ILorg/jetbrains/exposed/crypt/Encryptor;)Lorg/jetbrains/exposed/sql/Column;
+public final class org/jetbrains/exposed/v1/crypt/TablesKt {
+	public static final fun encryptedBinary (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;ILorg/jetbrains/exposed/v1/crypt/Encryptor;)Lorg/jetbrains/exposed/v1/core/Column;
+	public static final fun encryptedVarchar (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;ILorg/jetbrains/exposed/v1/crypt/Encryptor;)Lorg/jetbrains/exposed/v1/core/Column;
 }
 

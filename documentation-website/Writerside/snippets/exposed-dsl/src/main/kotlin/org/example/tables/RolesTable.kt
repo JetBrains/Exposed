@@ -1,6 +1,6 @@
 package org.example.tables
 
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.id.IntIdTable
 
 const val MAX_CHARACTER_NAME_LENGTH = 50
 

@@ -842,7 +842,7 @@ Infrastructure:
 Feature:
 * Read-only transactions/connections support. Read-Only option can be set on all levels (via `DatabaseConfig`, `transaction`, `TransactionManager`). Thanks [Alex Shubert](https://github.com/lure) for the improvement
 * `Table.deleteWhere` now captures receiver table and allows to omit the table in a lambda. Greetings to [Alexey Soshin](https://github.com/AlexeySoshin) for the first PR in the project!  
-    * **Breaking change**: Code using `deleteWhere` with `eq` will need to `import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq`.
+    * **Breaking change**: Code using `deleteWhere` with `eq` will need to `import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq`.
       Lambdas previously using an implicit `it` reference from an outer scope will also need to introduce an explicit name to access that binding.
 * New `mediumText` and `largeText` columns were introduced by [Alex Shubert](https://github.com/lure) to allow use more suitable data types for databases where they are supported.
 * `ForUpdateOption` (like `ForUpdateOption.PostgreSQL.ForKeyShare`) added for more flexible management of locks in your `SELECT` queries. You can set it as a parameter via `Query.forUpdate` function. Another kudos goes to [Alex Shubert](https://github.com/lure)
@@ -1066,7 +1066,7 @@ Deprecations:
 * `ResiltSet.create(rs: ResultSet, fields: List<Expression<*>>)` was removed
 * `Seq` data class was removed
 * `EntityID`, `IdTable`, `IntIdTable`, `LongIdTable`, `UUIDTable`  from `org.jetbrains.exposed.dao` package were removed
-* All classes and functions from `org.jetbrains.exposed.sql.java-time` were removed in favour to `org.jetbrains.exposed.sql.javatime`
+* All classes and functions from `org.jetbrains.exposed.v1.sql.java-time` were removed in favour to `org.jetbrains.exposed.v1.sql.javatime`
 * `Column.primaryKey` function was removed in favor to explicit `Table.primaryKey` declaration  
 
 Breaking Changes:
@@ -1164,7 +1164,7 @@ Breaking Changes:
 when working with references. `EntityCache.inserts` and `EntityCache.referrers` fields are not publicly available anymore. 
 
 Features:
-* Different math and trigonometrical functions were added. Check `org.jetbrains.exposed.sql.functions.math` package
+* Different math and trigonometrical functions were added. Check `org.jetbrains.exposed.v1.sql.functions.math` package
 * Bitwise AND, OR and, XOR were added by [Max Rumpf](https://github.com/Maxr1998)
 * `PrepareStatement` can be cancelled, thanks [Alex Shubert](https://github.com/lure) for supporting it
 * `ForeignKeyConstraint.customFkName` was added by [spand](https://github.com/spand)

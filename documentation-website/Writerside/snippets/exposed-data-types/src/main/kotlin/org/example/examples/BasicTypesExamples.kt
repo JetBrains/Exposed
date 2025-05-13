@@ -1,6 +1,6 @@
 package org.example.examples
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.v1.*
 
 /*
     Important: The code in this file is referenced by line number in `Numeric-Boolean-String-types.topic`.

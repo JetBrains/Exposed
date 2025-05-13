@@ -56,8 +56,8 @@ When using this starter, you can customize the default Exposed configuration by 
 Example:
 
 ```kotlin
-import org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration
-import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.v1.spring.autoconfigure.ExposedAutoConfiguration
+import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.context.annotation.Bean
@@ -81,7 +81,7 @@ This can be done as part of a custom configuration, as shown above.
 Alternatively, auto-configuration can be detailed directly on the Spring configuration class that is annotated using `@SpringBootApplication`:
 
 ```kotlin
-import org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration
+import org.jetbrains.exposed.v1.spring.autoconfigure.ExposedAutoConfiguration
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
@@ -130,7 +130,7 @@ This ensures that the annotated transaction manager will be the autowired value 
 See the [official documentation](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html#tx-multiple-tx-mgrs-with-attransactional) for more details about handling multiple transaction managers.
 
 ## Automatic Schema Creation
-Including the property `spring.exposed.generate-ddl` enables this starter to create the database schema automatically using any class that extends `org.jetbrains.exposed.sql.Table`.
+Including the property `spring.exposed.generate-ddl` enables this starter to create the database schema automatically using any class that extends `org.jetbrains.exposed.v1.sql.Table`.
 
 Sometimes you will want to exclude packages from the list of auto-created schemas. In this event, the property `spring.exposed.excluded-packages` can be used to exclude everything under the provided packages.
 
