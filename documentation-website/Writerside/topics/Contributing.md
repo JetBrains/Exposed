@@ -91,28 +91,14 @@ Test functions:
   [YouTrack issue](https://youtrack.jetbrains.com/issues/EXPOSED) code.
 * An example could be: `fix: EXPOSED-123 Fix a specific bug`
 
-### Setup
+### Test Coverage
 
-#### Testing on Apple Silicon
-To run Oracle XE tests, you need to install [Colima](https://github.com/abiosoft/colima) container runtime. It will work in pair with your docker installation.
+Exposed project has configures test coverage tasks.
+
+To generate a test coverage report, run:
 ```shell
-brew install colima
-```
-
-After installing, you need to start the colima daemon in arch x86_64 mode:
-```Bash
-colima start --arch x86_64 --memory 4 --network-address
-```
-
-The test task can automatically use colima context when needed, and it's better to use default context for other tasks.
-To switch the context to default, run:
-```shell
-docker context use default
-```
-
-Make sure that default is used as default docker context:
-```shell
-docker context list
+./gradlew :exposed-tests:koverHtmlReport
+./gradlew :exposed-r2dbc-tests:koverHtmlReport
 ```
 
 ## Community Support
