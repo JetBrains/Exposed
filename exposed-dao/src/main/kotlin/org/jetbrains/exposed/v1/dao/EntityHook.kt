@@ -1,9 +1,11 @@
 package org.jetbrains.exposed.v1.dao
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.transactionScope
-import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import java.util.Deque
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -115,13 +117,12 @@ fun Transaction.registeredChanges() = entityEvents.toList()
  *
  * The [action] will be unregistered at the end of the call to the [body] block.
  */
-// TODO add tests, at the current moment it's not used anywhere
 fun <T> withHook(action: (EntityChange) -> Unit, body: () -> T): T {
     EntityHook.subscribe(action)
     try {
         return body().apply {
-            // TODO Could it be replaces with CoreTransactionsManager?
-            TransactionManager.current().commit()
+            @OptIn(InternalApi::class)
+            (CoreTransactionManager.currentTransactionOrNull() as? JdbcTransaction?)?.commit()
         }
     } finally {
         EntityHook.unsubscribe(action)

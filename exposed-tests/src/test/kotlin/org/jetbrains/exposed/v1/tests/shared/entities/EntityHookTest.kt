@@ -1,4 +1,5 @@
 package org.jetbrains.exposed.v1.tests.shared.entities
+
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -329,6 +330,32 @@ class EntityHookTest : DatabaseTestsBase() {
             assertEquals(1, hookCalls)
 
             commit()
+            assertEquals(2, hookCalls)
+        }
+    }
+
+    @Test
+    fun testWithHook() {
+        withTables(EntityHookTestData.User.table) {
+            var hookCalls = 0
+
+            withHook({ hookCalls++ }) {
+                val user = EntityHookTestData.User.new {
+                    name = "name 1"
+                    age = 25
+                }
+                user.flush()
+
+                user.name = "name 2"
+            }
+
+            assertEquals(2, hookCalls)
+
+            // Change value outside the 'withHook'
+            val user = EntityHookTestData.User.all().first()
+            user.name = "name 3"
+            user.flush()
+
             assertEquals(2, hookCalls)
         }
     }

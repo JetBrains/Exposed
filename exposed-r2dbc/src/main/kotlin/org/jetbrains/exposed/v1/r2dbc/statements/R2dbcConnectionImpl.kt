@@ -12,7 +12,6 @@ import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.collect
-import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
@@ -216,14 +215,26 @@ class R2dbcConnectionImpl(
 
     private var localConnection: Connection? = null
 
-    private suspend fun <T> withConnection(body: suspend Connection.() -> T): T = withContext(scope.coroutineContext) {
+    // TODO Recheck the reason of creating new context with `scope.coroutineContext`
+    //   It couses the issues `No transaction in context` if Exposed is used inside ktor server
+    //   To reproduce the problem it's enough to run the following script with any table Customers inside the server code
+    //   runBlocking {
+    //        val database = R2dbcDatabase.connect("r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1")
+    //        suspendTransaction(db = database) {
+    //            SchemaUtils.create(Customers)
+    //        }
+    //    }
+    //
+    //    Old function definition
+    //    private suspend fun <T> withConnection(body: suspend Connection.() -> T): T = withContext(scope.coroutineContext) {
+    private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
         if (localConnection == null) {
             localConnection = connection.awaitFirst().also {
                 // this starts an explicit transaction with autoCommit mode off
                 it.beginTransaction().awaitFirstOrNull()
             }
         }
-        localConnection!!.body()
+        return localConnection!!.body()
     }
 }
 
