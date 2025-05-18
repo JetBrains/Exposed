@@ -360,8 +360,8 @@ private suspend fun <T> withTransactionScope(
 
     @OptIn(InternalApi::class)
     suspend fun newScope(currentTransaction: R2dbcTransaction?): T {
-        val currentDatabase: R2dbcDatabase? = currentTransaction?.db
-            ?: db
+        val currentDatabase: R2dbcDatabase? = db
+            ?: currentTransaction?.db
             ?: CoreTransactionManager.getDefaultDatabase() as? R2dbcDatabase
         val manager = currentDatabase?.transactionManager ?: TransactionManager.manager
 
