@@ -1,5 +1,7 @@
 # Breaking Changes
 
+## 1.0.0-beta-1
+
 ## 0.60.0
 * In H2, the `timestamp()` column now maps to data type `TIMESTAMP(9)` instead of `DATETIME(9)`.
 * The names of the CHECK constraints created for the `ushort()` and `uinteger()` columns have been modified for consistency.

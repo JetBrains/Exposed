@@ -9,12 +9,12 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.json.contains
 import org.jetbrains.exposed.v1.json.exists
 import org.jetbrains.exposed.v1.json.extract
 import org.jetbrains.exposed.v1.json.json
-import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.update
 
 const val GROUP_ID_LENGTH = 32
 const val INT_ARRAY_ITEM_1 = 1

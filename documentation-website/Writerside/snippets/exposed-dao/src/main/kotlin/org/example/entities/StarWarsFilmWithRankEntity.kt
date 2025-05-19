@@ -2,9 +2,9 @@ package org.example.entities
 
 import org.example.tables.StarWarsFilmsWithRankTable
 import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.select
 
