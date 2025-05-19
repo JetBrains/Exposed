@@ -14,6 +14,5 @@ kotlin {
 dependencies {
     api(project(":exposed-core"))
 
-    // TODO change dependency level (use api or at minimum implementation dep)
-    compileOnly(project(":exposed-jdbc"))
+    implementation(project(":exposed-jdbc"))
 }
