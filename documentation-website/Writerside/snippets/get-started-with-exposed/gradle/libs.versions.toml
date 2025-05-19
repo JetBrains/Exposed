@@ -4,7 +4,7 @@
 [versions]
 guava = "33.0.0-jre"
 junit-jupiter-engine = "5.10.2"
-exposed = "1.0.0-beta-1"
+exposed = "1.0.0-beta-2"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }

@@ -1,3 +1,15 @@
+# 1.0.0-beta-2
+
+## What's Changed
+Infrastructure:
+* Spring Framework 6.2.7
+
+Features:
+* Initialize JetBrains Junie 🚀 by @jetbrains-junie in https://github.com/JetBrains/Exposed/pull/2481
+
+Bug fixes:
+* fix: Fix `No transaction in context` for ktor by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2483
+
 # 1.0.0-beta-1
 
 ## What's Changed
