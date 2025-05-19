@@ -75,7 +75,7 @@ function:
 
 ```Kotlin
 ```
-{src="exposed-migrations/src/main/kotlin/org/example/GenerateMigrationScript.kt" include-lines="35-39"}
+{src="exposed-migrations/src/main/kotlin/org/example/GenerateMigrationScript.kt" include-lines="36-40"}
 
 This method allows you to see what the migration script will look like before applying the migration. If a migration script with the same name already exists,
 its content will be overwritten.

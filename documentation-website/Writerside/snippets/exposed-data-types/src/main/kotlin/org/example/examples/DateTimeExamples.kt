@@ -2,13 +2,13 @@ package org.example.examples
 
 import kotlinx.datetime.*
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.insert
-import org.jetbrains.exposed.v1.kotlin.datetime.CurrentDateTime
-import org.jetbrains.exposed.v1.kotlin.datetime.CurrentTimestamp
-import org.jetbrains.exposed.v1.kotlin.datetime.date
-import org.jetbrains.exposed.v1.kotlin.datetime.datetime
-import org.jetbrains.exposed.v1.kotlin.datetime.time
-import org.jetbrains.exposed.v1.kotlin.datetime.timestamp
+import org.jetbrains.exposed.v1.datetime.CurrentDateTime
+import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
+import org.jetbrains.exposed.v1.datetime.date
+import org.jetbrains.exposed.v1.datetime.datetime
+import org.jetbrains.exposed.v1.datetime.time
+import org.jetbrains.exposed.v1.datetime.timestamp
+import org.jetbrains.exposed.v1.jdbc.insert
 
 class DateTimeExamples {
     companion object {

@@ -168,7 +168,7 @@
                 function:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-lines="31-35"/>
+                        include-lines="32-36"/>
             <p>Some SQL dialects, such as PostgreSQL and H2, also support the <code>DISTINCT ON</code> clause.
                 You can use this clause with the
                 <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/with-distinct-on.html">
@@ -177,7 +177,7 @@
                 function:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-lines="45-53"/>
+                        include-lines="46-54"/>
         </chapter>
         <chapter title="Retrieve all records" id="selectAll">
             <p>
@@ -189,14 +189,14 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-lines="99-100"/>
+                        include-lines="100-101"/>
             <p>
                 <code>Query</code> inherits <code>Iterable</code> so it is possible to traverse it using <code>.map()</code>
                 or <code>.forEach()</code>:
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
-                        include-lines="102-104"/>
+                        include-lines="103-105"/>
         </chapter>
         <chapter id="insertedCount" title="Retrieve the count of modified rows">
             <p>Some databases return a count of the number of rows inserted, updated, or deleted by the CRUD operation.
@@ -356,7 +356,7 @@
 
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                        include-lines="26-39"
+                        include-lines="30-43"
             />
             <p>Unlike <code>.upsert()</code>, none of the supporting databases allows a <code>WHERE</code> clause.
                 Also, the constraints used to assess a violation are limited to the primary key and unique indexes, so there
@@ -373,7 +373,7 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                        include-lines="43-46"
+                        include-lines="47-50"
             />
             <p>By default, it will try to insert into all non auto-increment <code>Table</code> columns in the order they
                 are defined in the <code>Table</code> instance.
@@ -381,7 +381,7 @@
                 parameter:</p>
             <code-block lang="kotlin"
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReplaceExamples.kt"
-                        include-lines="50-62"
+                        include-lines="54-66"
             />
         </chapter>
     </chapter>

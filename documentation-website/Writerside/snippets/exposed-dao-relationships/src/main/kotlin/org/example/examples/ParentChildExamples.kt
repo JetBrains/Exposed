@@ -3,7 +3,7 @@ package org.example.examples
 import org.example.entities.DirectorEntity
 import org.example.entities.StarWarsFilmWithParentAndChildEntity
 import org.example.tables.Genre
-import org.jetbrains.exposed.v1.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
 
 /*
     Important: This file is referenced by line number in `DAO-Relationships.topic`.

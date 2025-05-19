@@ -1,11 +1,11 @@
 package org.example.examples
 
 import org.example.tables.StarWarsFilmsIntIdTable
-import org.jetbrains.exposed.v1.Query
+import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.selectAll
-import org.jetbrains.exposed.v1.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /*
     Important: The contents of this file are referenced by line number in `DSL-Querying-Data.topic`.

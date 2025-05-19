@@ -4,7 +4,7 @@ import org.example.tables.UserRatingsTable
 import org.example.tables.UserRatingsWithOptionalUserTable
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 
 /*
     Important: This file is referenced by line number in `DAO-Relationships.topic`.
