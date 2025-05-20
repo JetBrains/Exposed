@@ -10,7 +10,7 @@ This starter will give you the latest version of [Exposed](https://github.com/Je
   <dependency>
     <groupId>org.jetbrains.exposed</groupId>
     <artifactId>exposed-spring-boot-starter</artifactId>
-    <version>1.0.0-beta-1</version>
+    <version>1.0.0-beta-2</version>
   </dependency>
 </dependencies>
 ```
@@ -20,7 +20,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:1.0.0-beta-1'
+    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:1.0.0-beta-2'
 }
 ```
 ### Gradle Kotlin DSL
@@ -36,7 +36,7 @@ dependencies {
 ```
 In `gradle.properties`
 ```properties
-exposedVersion=1.0.0-beta-1
+exposedVersion=1.0.0-beta-2
 ```
 
 ## Setting up a database connection

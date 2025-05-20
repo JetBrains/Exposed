@@ -4,7 +4,7 @@
 [versions]
 guava = "33.0.0-jre"
 junit-jupiter-engine = "5.10.2"
-exposed = "1.0.0-beta-1"
+exposed = "1.0.0-beta-2"
 h2 = "2.2.224"
 mysql ="8.0.33"
 postgres = "42.7.3"
