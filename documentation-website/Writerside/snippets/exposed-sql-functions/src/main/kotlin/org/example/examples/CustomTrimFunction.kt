@@ -1,10 +1,10 @@
 package org.example.examples
 
-import org.jetbrains.exposed.v1.TextColumnType
-import org.jetbrains.exposed.v1.append
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.TextColumnType
+import org.jetbrains.exposed.v1.core.append
 
 enum class TrimSpecifier { BOTH, LEADING, TRAILING }
 

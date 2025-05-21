@@ -82,12 +82,12 @@ To get the minimum, maximum, and average values, use the
 and [`.avg()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/avg.html) functions
 respectively. These functions can be applied to any comparable expression:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="19-27"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="20-28"/>
 
 ### Sum/Count
 You can use SQL functions like `SUM()` and `COUNT()` directly with a column expression:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="30-37"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="31-38"/>
 
 ### Statistics
 Some databases provide aggregate functions specifically for statistics and Exposed provides support for four of these:
@@ -97,7 +97,7 @@ Some databases provide aggregate functions specifically for statistics and Expos
 [`.varSamp()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/var-samp.html).
 The following example retrieves the population standard deviation of values stored in the `revenue` column:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="40-44"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/AggregateFuncExamples.kt" include-lines="41-45"/>
 
 ## Custom functions
 If you can't find your most loved function used in your database (as Exposed provides only basic support for classic SQL functions), you can define your own functions.
@@ -113,7 +113,7 @@ There are multiple options to define custom functions:
 [`.function()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/function.html) simply wraps the column expression 
 in parentheses with the string argument as the function name:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="28-33"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="29-34"/>
 
 ### Functions with additional parameters
 
@@ -121,7 +121,7 @@ The [`CustomFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.
 a function name as the first argument and the column type that should be used to handle its results as the second.
 After that, you can provide any amount of additional parameters separated by a comma:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="36-42"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="37-43"/>
 
 There are also shortcuts for `String`, `Long`, and `DateTime` functions:
 * [`CustomStringFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-custom-string-function.html)
@@ -130,14 +130,14 @@ There are also shortcuts for `String`, `Long`, and `DateTime` functions:
 
 Using one of these shortcuts, the example above could be simplified to:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="45-47"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="46-48"/>
 
 In the following example, [`CustomDateFunction`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.sql.kotlin.datetime/-custom-date-function.html) 
 is used in an H2 database to mimic its `DATEADD()` function in order to calculate a date three months before the current one.
 In is then chained with Exposed's built-in [`.month()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.sql.kotlin.datetime/month.html) 
 function to return the month of the date found, so it can be used in a query:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="54-64"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="55-65"/>
 
 ### Functions that require more complex query building
 
@@ -159,7 +159,7 @@ from <code>kotlin-stdlib</code> may be resolved instead and cause compilation er
 
 This custom function can then be used to achieve the exact trim that is needed:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="71-80,82-84"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="72-81,83-85"/>
 
 ## Window functions
 
@@ -185,7 +185,7 @@ A `PARTITION BY` and `ORDER BY` clause can be optionally chained using
 and [`.orderBy()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-window-function-definition/order-by.html), 
 taking multiple arguments:
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/WindowFuncExamples.kt" include-lines="17-21,23-28,30-34"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/WindowFuncExamples.kt" include-lines="18-22,24-29,31-35"/>
 
 Frame clause functions, such as [`rows()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-window-function-definition/rows.html), 
 [`range()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-window-function-definition/range.html), 
@@ -198,7 +198,7 @@ option depending on the expected result:
 * [`WindowFrameBound.offsetPreceding()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-window-frame-bound/-companion/offset-preceding.html)
 * [`WindowFrameBound.offsetFollowing()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-window-frame-bound/-companion/offset-following.html)
 
-<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/WindowFuncExamples.kt" include-lines="37-42"/>
+<code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/WindowFuncExamples.kt" include-lines="38-43"/>
 
 <note>
 If multiple frame clause functions are chained together, only the last one will be used.

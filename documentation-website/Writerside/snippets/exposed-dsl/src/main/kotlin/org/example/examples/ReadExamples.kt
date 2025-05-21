@@ -2,7 +2,8 @@ package org.example.examples
 
 import org.example.tables.StarWarsFilmsTable
 import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.selectAll
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 
 private const val MOVIE_SEQUEL_ID = 5
 private const val MOVIE_SEQUEL_2_ID = 6

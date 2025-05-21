@@ -1,13 +1,13 @@
 package org.example
 
-import MigrationUtils
 import org.example.tables.UsersTable
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata
+import org.jetbrains.exposed.v1.migration.MigrationUtils
 import java.util.*
 
 /*
@@ -39,7 +39,7 @@ fun main() {
 
     transaction(h2db) {
         println("*** Before migration ***")
-        println("Primary key: ${currentDialect.existingPrimaryKeys(UsersTable)[UsersTable]}")
+        println("Primary key: ${currentDialectMetadata.existingPrimaryKeys(UsersTable)[UsersTable]}")
 
         // Generate a migration script
         generateMigrationScript()
@@ -78,7 +78,7 @@ fun main() {
 
     transaction(h2db) {
         println("*** After migration ***")
-        println("Primary key: ${currentDialect.existingPrimaryKeys(UsersTable)[UsersTable]}")
+        println("Primary key: ${currentDialectMetadata.existingPrimaryKeys(UsersTable)[UsersTable]}")
 
         UsersTable.insert {
             it[id] = UUID.randomUUID()

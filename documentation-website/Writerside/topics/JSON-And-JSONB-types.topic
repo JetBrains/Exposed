@@ -38,7 +38,7 @@
 
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                    include-lines="5-6,8,13,17-18,28-37" />
+                    include-lines="5-6,8,13,18-19,29-38" />
         <p>
             Here's how the same <code>Project</code> and <code>Teams</code> would be defined using <a
             href="https://github.com/FasterXML/jackson">Jackson</a>
@@ -46,7 +46,7 @@
         </p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                    include-lines="3-4,17-18,28-30,40-47"
+                    include-lines="3-4,18-19,29-31,41-48"
         />
     </chapter>
     <chapter title="Supported types" id="supported-types">
@@ -97,7 +97,7 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="78-81"
+                        include-lines="79-82"
             />
             <p>
                 Databases that support a path context root <code>$</code> will have this value appended to the generated
@@ -116,14 +116,14 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="84-86"
+                        include-lines="85-87"
             />
             <p>
                 Depending on the database, filter paths can be provided instead, as well as optional arguments:
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="92-94"
+                        include-lines="93-95"
             />
         </chapter>
         <chapter title="Check if JSON contains an expression">
@@ -136,14 +136,14 @@
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="99-101"
+                        include-lines="100-102"
             />
             <p>
                 Depending on the database, you could also provide an optional path:
             </p>
             <code-block lang="kotlin"
                         src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                        include-lines="107-109"
+                        include-lines="108-110"
             />
         </chapter>
     </chapter>
@@ -169,14 +169,14 @@
         </p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                    include-lines="119-125"
+                    include-lines="120-126"
         />
         <p>
             This results in the following SQL query:
         </p>
         <code-block lang="sql"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
-                    include-lines="115-116"
+                    include-lines="116-117"
         />
     </chapter>
 </topic>

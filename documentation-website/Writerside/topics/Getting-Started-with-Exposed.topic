@@ -214,7 +214,7 @@
                 </p>
                 <code-block lang="kotlin"
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="4-5,7,10-12,53"
+                            include-lines="4-5,9,18-20,61"
                 />
                 <p>
                     The <code>Database.connect()</code> function creates an instance of a class that represents
@@ -334,7 +334,7 @@
                 </p>
                 <code-block lang="kotlin"
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="4-14,20-37,52-53"
+                            include-lines="4-22,28-45,60-61"
                 />
                 <p>Let's break down the code and go over each section.</p>
                 <p>
@@ -347,7 +347,7 @@
                     to add two new Task records.</p>
                 <code-block lang="kotlin"
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="22-31"
+                            include-lines="30-39"
                 />
                 <p>
                     Within the <code>insert</code> block, you set the values for
@@ -370,7 +370,7 @@
                 </p>
                 <code-block lang="kotlin"
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="35-37"
+                            include-lines="43-45"
                 />
                 <p>
                     Using <code>groupBy()</code> groups the results of the query by the <code>isCompleted</code>
@@ -398,7 +398,7 @@
         </p>
         <code-block lang="kotlin"
                     src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                    include-lines="14-18,52"
+                    include-lines="22-26,60"
         />
     </chapter>
     <chapter title="Run the application" id="run-in-intellij-idea">
@@ -427,7 +427,7 @@
                 <p>In the same <code>transaction()</code> function, add the following code to your implementation:</p>
                 <code-block lang="kotlin"
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="14,18,38-52"
+                            include-lines="22,26,46-60"
                 />
                 <p>Here's the breakdown:</p>
                 <p>
@@ -437,7 +437,7 @@
                 </p>
                 <code-block lang="kotlin"
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="40-43"
+                            include-lines="48-51"
                 />
                 <p>
                     Unlike the <code>insert()</code> function, <code>update()</code> returns the number of updated rows.
@@ -447,7 +447,7 @@
                 </p>
                 <code-block lang="kotlin"
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="44"
+                            include-lines="52"
                 />
                 <p>
                     Using the <code>single()</code> extension function
@@ -458,7 +458,7 @@
                 </p>
                 <code-block lang="kotlin"
                             src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="49"
+                            include-lines="57"
                 />
                 <p>
                     Similarly to <code>update()</code>, it returns the number of rows that have been deleted.

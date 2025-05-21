@@ -2,7 +2,12 @@ package org.example.examples
 
 import org.example.tables.CitiesTable
 import org.example.tables.UsersTable
-import org.jetbrains.exposed.v1.*
+import org.jetbrains.exposed.v1.core.Random
+import org.jetbrains.exposed.v1.core.VarCharColumnType
+import org.jetbrains.exposed.v1.core.castTo
+import org.jetbrains.exposed.v1.core.stringParam
+import org.jetbrains.exposed.v1.core.substring
+import org.jetbrains.exposed.v1.jdbc.*
 
 private const val MAX_VARCHAR_LENGTH = 10
 

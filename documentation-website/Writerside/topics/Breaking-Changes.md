@@ -1,5 +1,69 @@
 # Breaking Changes
 
+## 1.0.0-beta-1
+
+The 1.0.0-beta-1 release introduces support for R2DBC and includes breaking changes to import paths.
+
+### Updated JDBC imports
+
+Imports of the `exposed-jdbc` package previously under `org.jetbrains.exposed.sql.*` are now
+located under `org.jetbrains.exposed.v1.jdbc.*`. The table below shows example changes:
+
+| 0.61.0                                   | 1.0.0-beta-1                                 |
+|------------------------------------------|----------------------------------------------|
+| `org.jetbrains.exposed.sql.Database`     | `org.jetbrains.exposed.v1.jdbc.Database`     |
+| `org.jetbrains.exposed.sql.SchemaUtils`  | `org.jetbrains.exposed.v1.jdbc.SchemaUtils`  |
+| `org.jetbrains.exposed.sql.Query`        | `org.jetbrains.exposed.v1.jdbc.Query`        |
+| `org.jetbrains.exposed.sql.transactions` | `org.jetbrains.exposed.v1.jdbc.transactions` |
+| `org.jetbrains.exposed.sql.vendors`      | `org.jetbrains.exposed.v1.jdbc.vendors`      |
+| `org.jetbrains.exposed.sql.select`       | `org.jetbrains.exposed.v1.jdbc.select`       |
+| `org.jetbrains.exposed.sql.selectAll`    | `org.jetbrains.exposed.v1.jdbc.selectAll`    |
+| `org.jetbrains.exposed.sql.andWhere`     | `org.jetbrains.exposed.v1.jdbc.andWhere`     |
+
+
+### Updated core imports
+
+Imports of the `exposed-core` package previously under `org.jetbrains.exposed.sql.*` are now
+located under `org.jetbrains.exposed.v1.core.*`. The table below shows example changes:
+
+| 0.61.0                                           | 1.0.0-beta-1                                         |
+|--------------------------------------------------|------------------------------------------------------|
+| `org.jetbrains.exposed.sql.Table`                | `org.jetbrains.exposed.v1.core.Table`                |
+| `org.jetbrains.exposed.sql.SqlExpressionBuilder` | `org.jetbrains.exposed.v1.core.SqlExpressionBuilder` |
+| `org.jetbrains.exposed.sql.innerJoin`            | `org.jetbrains.exposed.v1.core.innerJoin`            |
+| `org.jetbrains.exposed.sql.SortOrder`            | `org.jetbrains.exposed.v1.core.SortOrder`            |
+| `org.jetbrains.exposed.sql.Op`                   | `org.jetbrains.exposed.v1.core.Op`                   |
+| `org.jetbrains.exposed.sql.alias`                | `org.jetbrains.exposed.v1.core.alias`                |
+| `org.jetbrains.exposed.sql.anyFrom`              | `org.jetbrains.exposed.v1.core.anyFrom`              |
+| `org.jetbrains.exposed.sql.count`                | `org.jetbrains.exposed.v1.core.count`                |
+| `org.jetbrains.exposed.sql.sum`                  | `org.jetbrains.exposed.v1.core.sum`                  |
+
+
+### Updated DAO imports
+
+Classes related to entity IDs, such as `EntityID`, `CompositeEntityID`, and other ID-related types, are now located in
+the `org.jetbrains.exposed.v1.core.dao.id` package.
+
+The rest of the DAO types retain their original structure, but their imports now include the `v1` namespace:
+
+| 0.61.0                                           | 1.0.0-beta-1                                        |
+|--------------------------------------------------|-----------------------------------------------------|
+| `org.jetbrains.exposed.dao.CompositeEntity`      | `org.jetbrains.exposed.v1.dao.CompositeEntity`      |
+| `org.jetbrains.exposed.dao.IntEntity`            | `org.jetbrains.exposed.v1.dao.IntEntity`            |
+| `org.jetbrains.exposed.dao.LongEntity`           | `org.jetbrains.exposed.v1.dao.LongEntity`           |
+| `org.jetbrains.exposed.dao.UIntEntity`           | `org.jetbrains.exposed.v1.dao.UIntEntity`           |
+| `org.jetbrains.exposed.dao.ULongEntity`          | `org.jetbrains.exposed.v1.dao.ULongEntity`          |
+| `org.jetbrains.exposed.dao.UUIDEntity`           | `org.jetbrains.exposed.v1.dao.UUIDEntity`           |
+| `org.jetbrains.exposed.dao.CompositeEntityClass` | `org.jetbrains.exposed.v1.dao.CompositeEntityClass` |
+| `org.jetbrains.exposed.dao.IntEntityClass`       | `org.jetbrains.exposed.v1.dao.IntEntityClass`       |
+| `org.jetbrains.exposed.dao.LongEntityClass`      | `org.jetbrains.exposed.v1.dao.LongEntityClass`      |
+| `org.jetbrains.exposed.dao.UIntEntityClass`      | `org.jetbrains.exposed.v1.dao.UIntEntityClass`      |
+| `org.jetbrains.exposed.dao.ULongEntityClass`     | `org.jetbrains.exposed.v1.dao.ULongEntityClass`     |
+| `org.jetbrains.exposed.dao.UUIDEntityClass`      | `org.jetbrains.exposed.v1.dao.UUIDEntityClass`      |
+| `org.jetbrains.exposed.dao.id.EntityID`          | `org.jetbrains.exposed.v1.core.dao.id.EntityID`     |
+| `org.jetbrains.exposed.dao.id.CompositeID`       | `org.jetbrains.exposed.v1.core.dao.id.CompositeID`  |
+
+
 ## 0.60.0
 * In H2, the `timestamp()` column now maps to data type `TIMESTAMP(9)` instead of `DATETIME(9)`.
 * The names of the CHECK constraints created for the `ushort()` and `uinteger()` columns have been modified for consistency.
