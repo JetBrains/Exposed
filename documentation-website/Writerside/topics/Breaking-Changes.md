@@ -4,12 +4,10 @@
 
 The 1.0.0-beta-1 release introduces support for R2DBC and includes breaking changes to import paths.
 
-### Updated import paths
+### Updated JDBC imports
 
-Many core types and utilities have been moved under new package paths. Most JDBC-specific APIs are now available 
-under `org.jetbrains.exposed.v1.jdbc`, while core functionality is available under `org.jetbrains.exposed.v1.core`.
-
-#### Updated JDBC imports
+Imports of the `exposed-jdbc` package previously under `org.jetbrains.exposed.sql.*` are now
+located under `org.jetbrains.exposed.v1.jdbc.*`. The table below shows example changes:
 
 | 0.61.0                                   | 1.0.0-beta-1                                 |
 |------------------------------------------|----------------------------------------------|
@@ -23,7 +21,10 @@ under `org.jetbrains.exposed.v1.jdbc`, while core functionality is available und
 | `org.jetbrains.exposed.sql.andWhere`     | `org.jetbrains.exposed.v1.jdbc.andWhere`     |
 
 
-#### Updated core imports
+### Updated core imports
+
+Imports of the `exposed-core` package previously under `org.jetbrains.exposed.sql.*` are now
+located under `org.jetbrains.exposed.v1.core.*`. The table below shows example changes:
 
 | 0.61.0                                           | 1.0.0-beta-1                                         |
 |--------------------------------------------------|------------------------------------------------------|
@@ -32,22 +33,35 @@ under `org.jetbrains.exposed.v1.jdbc`, while core functionality is available und
 | `org.jetbrains.exposed.sql.innerJoin`            | `org.jetbrains.exposed.v1.core.innerJoin`            |
 | `org.jetbrains.exposed.sql.SortOrder`            | `org.jetbrains.exposed.v1.core.SortOrder`            |
 | `org.jetbrains.exposed.sql.Op`                   | `org.jetbrains.exposed.v1.core.Op`                   |
-| `org.jetbrains.exposed.sql.count`                | `org.jetbrains.exposed.v1.core.count`                |
+| `org.jetbrains.exposed.sql.alias`                | `org.jetbrains.exposed.v1.core.alias`                |
 | `org.jetbrains.exposed.sql.anyFrom`              | `org.jetbrains.exposed.v1.core.anyFrom`              |
+| `org.jetbrains.exposed.sql.count`                | `org.jetbrains.exposed.v1.core.count`                |
+| `org.jetbrains.exposed.sql.sum`                  | `org.jetbrains.exposed.v1.core.sum`                  |
 
-#### Updated DAO imports
+
+### Updated DAO imports
 
 Classes related to entity IDs, such as `EntityID`, `CompositeEntityID`, and other ID-related types, are now located in
 the `org.jetbrains.exposed.v1.core.dao.id` package.
 
 The rest of the DAO types retain their original structure, but their imports now include the `v1` namespace:
 
-| 0.61.0                                     | 1.0.0-beta-1                                       |
-|--------------------------------------------|----------------------------------------------------|
-| `org.jetbrains.exposed.dao.IntEntity`      | `org.jetbrains.exposed.v1.dao.IntEntity`           |
-| `org.jetbrains.exposed.dao.IntEntityClass` | `org.jetbrains.exposed.v1.dao.IntEntityClass`      |
-| `org.jetbrains.exposed.dao.id.EntityID`    | `org.jetbrains.exposed.v1.core.dao.id.EntityID`    |
-| `org.jetbrains.exposed.dao.id.CompositeID` | `org.jetbrains.exposed.v1.core.dao.id.CompositeID` |
+| 0.61.0                                           | 1.0.0-beta-1                                        |
+|--------------------------------------------------|-----------------------------------------------------|
+| `org.jetbrains.exposed.dao.CompositeEntity`      | `org.jetbrains.exposed.v1.dao.CompositeEntity`      |
+| `org.jetbrains.exposed.dao.IntEntity`            | `org.jetbrains.exposed.v1.dao.IntEntity`            |
+| `org.jetbrains.exposed.dao.LongEntity`           | `org.jetbrains.exposed.v1.dao.LongEntity`           |
+| `org.jetbrains.exposed.dao.UIntEntity`           | `org.jetbrains.exposed.v1.dao.UIntEntity`           |
+| `org.jetbrains.exposed.dao.ULongEntity`          | `org.jetbrains.exposed.v1.dao.ULongEntity`          |
+| `org.jetbrains.exposed.dao.UUIDEntity`           | `org.jetbrains.exposed.v1.dao.UUIDEntity`           |
+| `org.jetbrains.exposed.dao.CompositeEntityClass` | `org.jetbrains.exposed.v1.dao.CompositeEntityClass` |
+| `org.jetbrains.exposed.dao.IntEntityClass`       | `org.jetbrains.exposed.v1.dao.IntEntityClass`       |
+| `org.jetbrains.exposed.dao.LongEntityClass`      | `org.jetbrains.exposed.v1.dao.LongEntityClass`      |
+| `org.jetbrains.exposed.dao.UIntEntityClass`      | `org.jetbrains.exposed.v1.dao.UIntEntityClass`      |
+| `org.jetbrains.exposed.dao.ULongEntityClass`     | `org.jetbrains.exposed.v1.dao.ULongEntityClass`     |
+| `org.jetbrains.exposed.dao.UUIDEntityClass`      | `org.jetbrains.exposed.v1.dao.UUIDEntityClass`      |
+| `org.jetbrains.exposed.dao.id.EntityID`          | `org.jetbrains.exposed.v1.core.dao.id.EntityID`     |
+| `org.jetbrains.exposed.dao.id.CompositeID`       | `org.jetbrains.exposed.v1.core.dao.id.CompositeID`  |
 
 
 ## 0.60.0
