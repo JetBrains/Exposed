@@ -74,6 +74,7 @@ The Maven Central repository is enabled by default for Maven users.
 * exposed-money - extensions to support MonetaryAmount from "javax.money:money-api"
 * exposed-spring-boot-starter - a starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM instead
   of [Hibernate](https://hibernate.org/)
+* exposed-version-catalog - a Gradle version catalog for all Exposed modules
 
 ```xml
 
@@ -140,13 +141,13 @@ dependencies {
     implementation 'org.jetbrains.exposed:exposed-crypt:1.0.0-beta-2'
     implementation 'org.jetbrains.exposed:exposed-dao:1.0.0-beta-2'
     implementation 'org.jetbrains.exposed:exposed-jdbc:1.0.0-beta-2'
-    
+
     implementation 'org.jetbrains.exposed:exposed-jodatime:1.0.0-beta-2'
     // or
     implementation 'org.jetbrains.exposed:exposed-java-time:1.0.0-beta-2'
     // or
     implementation 'org.jetbrains.exposed:exposed-kotlin-datetime:1.0.0-beta-2'
-    
+
     implementation 'org.jetbrains.exposed:exposed-json:1.0.0-beta-2'
     implementation 'org.jetbrains.exposed:exposed-money:1.0.0-beta-2'
     implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:1.0.0-beta-2'
@@ -164,13 +165,13 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-crypt:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    
+
     implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVersion")
     // or
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
     // or
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
-    
+
     implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-money:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")
@@ -181,6 +182,42 @@ and in `gradle.properties`
 
 ```
 exposedVersion=1.0.0-beta-2
+```
+
+#### Using Version Catalog
+
+Exposed provides a Gradle version catalog that can be used to manage dependencies in a more convenient way. To use it, add the following to your `settings.gradle.kts` file:
+
+```kotlin
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("exposed") {
+            from("org.jetbrains.exposed:exposed-version-catalog:1.0.0-beta-2")
+        }
+    }
+}
+```
+
+Then, in your `build.gradle.kts` file, you can reference the dependencies using the version catalog:
+
+```kotlin
+dependencies {
+    implementation(exposed.core)
+    implementation(exposed.dao)
+    implementation(exposed.jdbc)
+
+    // Use one of the date-time extensions
+    implementation(exposed.jodatime)
+    // or
+    implementation(exposed.java.time)
+    // or
+    implementation(exposed.kotlin.datetime)
+
+    // Other modules as needed
+    implementation(exposed.json)
+    implementation(exposed.money)
+    implementation(exposed.crypt)
+}
 ```
 
 ## Samples
@@ -310,7 +347,7 @@ fun main() {
         }
 
         println("Manual join:")
-        
+
         (Users innerJoin Cities)
             .select(Users.name, Cities.name)
             .where {
