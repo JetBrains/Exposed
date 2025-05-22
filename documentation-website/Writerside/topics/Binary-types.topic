@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Binary" id="Binary-types">
+    <show-structure for="chapter" depth="2" />
+    <tldr>
+        <p>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
+        </p>
+    </tldr>
+
+    <p>
+        Exposed provides support for storing and handling binary data through the <code>ExposedBlob</code> type, 
+        which efficiently wraps binary content using <code>InputStream</code>. This approach ensures optimal memory usage 
+        when working with large binary objects.
+    </p>
+    <chapter title="Supported types" id="supported-types">
+        <p>
+            The <code>exposed-core</code> module provides the following binary types:
+        </p>
+        <deflist type="medium">
+            <def id="blob-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/blob.html">
+                        <code>blob()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>BLOB</code> (or equivalent type depending on the database). Used for storing binary objects of any size.</p>
+                <p>Database-specific mappings:</p>
+                <list type="bullet">
+                    <li>PostgreSQL: Maps to <code>bytea</code></li>
+                    <li>SQLServer: Maps to <code>VARBINARY(MAX)</code></li>
+                </list>
+            </def>
+
+            <def id="binary-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/binary.html">
+                        <code>binary()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>VARBINARY</code>. Available in two forms:</p>
+                <list type="bullet">
+                    <li>
+                        Simple version: Takes only the column name parameter and maps to <code>VARBINARY</code> with
+                        database-specific default length.
+                        <code-block lang="kotlin"
+                                    src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
+                                    include-symbol="simpleData"
+                        />
+                        <p>Database-specific mappings:</p>
+                        <list type="bullet">
+                            <li>PostgreSQL: Maps to <code>bytea</code></li>
+                            <li>SQLite: Maps to <code>BLOB</code></li>
+                            <li>SQLServer, MySQL, and Oracle: Not supported</li>
+                        </list>
+                    </li>
+                    <li>
+                        Length-specified version: Takes both name and length parameters, maps to <code>VARBINARY(MAX)</code>
+                        where <code>MAX</code> is the specified maximum length. Used for storing fixed-size binary data.
+                        <code-block lang="kotlin"
+                                    src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
+                                    include-symbol="thumbnail"
+                        />
+                        <p>Database-specific mappings:</p>
+                        <list type="bullet">
+                            <li>PostgreSQL: Maps to <code>bytea</code></li>
+                            <li>Oracle: Maps to <code>RAW</code> if the provided length is lower than 2000, otherwise not
+                                supported.</li>
+                        </list>
+                    </li>
+                </list>
+            </def>
+        </deflist>
+    </chapter>
+    <chapter title="Basic usage" id="basic-usage">
+        <p>Here's a simple example of using binary types in a table definition:</p>
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
+                    include-symbol="Files"
+        />
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/BinaryExamples.kt"
+                    include-lines="25-44,48"
+        />
+    </chapter>
+    <chapter title="PostgreSQL Object Identifiers" id="object-identifiers">
+        <p>PostgreSQL supports storing large objects using Object Identifiers (OIDs):</p>
+        <code-block lang="kotlin">
+        val content = blob("content", useObjectIdentifier = true)
+        </code-block>
+        <note>
+            <p>
+                This feature is specific to PostgreSQL and will throw <code>IllegalStateException</code> if used with
+                other databases.</p>
+        </note>
+    </chapter>
+</topic>

@@ -11,7 +11,7 @@
     <chapter title="Define a schema" id="define-a-sequence">
         <p>
             To define a schema in Exposed, use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema/index.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema/index.html">
                 <code>Schema</code>
             </a>
             class:
@@ -28,7 +28,7 @@
     <chapter title="Create a new schema" id="create-schema">
         <p>
             To create a new schema, use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/create-schema.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/create-schema.html">
                 <code>.createSchema()</code>
             </a>
             method provided by <code>SchemaUtils</code>:
@@ -39,7 +39,7 @@
     </chapter>
     <chapter title="Set a default schema" id="default-schema">
         <p>If you have many schemas, and you want to set a default one, you can use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/set-schema.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/set-schema.html">
                 <code>.setSchema()</code>
             </a>
             method from <code>SchemaUtils</code>:
@@ -51,7 +51,7 @@
     <chapter title="Drop a schema" id="drop-schema">
         <p>
             To drop a schema, use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/drop-schema.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/drop-schema.html">
                 <code>.dropSchema()</code>
             </a>
             method provided by <code>SchemaUtils</code>:

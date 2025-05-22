@@ -16,7 +16,7 @@
     <build-profile instance="hi">
         <variables>
             <noindex-content>true</noindex-content>
-            <product-web-url>https://www.jetbrains.com/help/exposed/</product-web-url>
+            <product-web-url>https://www.jetbrains.com/exposed/</product-web-url>
         </variables>
     </build-profile>
 

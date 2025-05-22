@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Date and time" id="Date-and-time-types">
+    <show-structure for="chapter" depth="2" />
+    <tldr>
+        <p>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-kotlin-datetime</code>,
+            <code>org.jetbrains.exposed:exposed-java-time</code>, or
+            <code>org.jetbrains.exposed:exposed-jodatime</code>
+        </p>
+    </tldr>
+
+    <p>
+        Exposed provides comprehensive support for date and time operations through three additional modules. Each module is based on a different date-time library, offering different features and type support:
+    </p>
+    <table>
+        <tr>
+            <td>Module</td>
+            <td>Based on</td>
+            <td>Use</td>
+        </tr>
+        <tr>
+            <td>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.sql.kotlin.datetime/index.html">
+                    <code>exposed-kotlin-datetime</code>
+                </a>
+            </td>
+            <td><a href="https://kotlinlang.org/api/kotlinx-datetime/"><code>kotlinx-datetime</code></a> library</td>
+            <td>Modern Kotlin-first approach, recommended for new projects.</td>
+        </tr>
+        <tr>
+            <td>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.sql.javatime/index.html">
+                    <code>exposed-java-time</code>
+                </a>
+            </td>
+            <td><a href="https://docs.oracle.com/javase/8/docs/api/java/time/package-summary.html">Java 8 Time API</a></td>
+            <td>Good choice when integrating with Java code or when you need Java 8 Time API compatibility.</td>
+        </tr>
+        <tr>
+            <td>
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.sql.jodatime/index.html">
+                    <code>exposed-jodatime</code>
+                </a>
+            </td>
+            <td><a href="https://www.joda.org/joda-time/">Joda-Time</a> library</td>
+            <td>Legacy support, includes additional functions for extracting time parts (year, month, day, hour, minute, second). Consider using newer modules for new projects.</td>
+        </tr>
+    </table>
+
+    <chapter title="Basic usage" id="basic-usage">
+        <p>Here are examples of using date and time types. The imports will vary based on your chosen module:</p>
+        <code-block lang="kotlin">
+        import org.jetbrains.exposed.v1.core.Table
+
+        // For exposed-kotlin-datetime (recommended)
+        import org.jetbrains.exposed.v1.kotlin.datetime.*
+
+        // For exposed-java-time
+        import org.jetbrains.exposed.v1.javatime.*
+
+        // For exposed-jodatime
+        import org.jetbrains.exposed.v1.jodatime.*
+
+        object Events : Table() {
+            val id = integer("id").autoIncrement()
+            val name = varchar("name", 50)
+            val startDate = date("start_date")                                    // maps to LocalDate
+            val startTime = time("start_time")                                    // maps to LocalTime
+            val createdAt = datetime("created_at")                               // maps to LocalDateTime
+                .defaultExpression(CurrentDateTime)
+            val updatedAt = timestamp("updated_at")                              // maps to Instant
+            val scheduledAt = timestampWithTimeZone("scheduled_at")              // maps to OffsetDateTime
+
+            override val primaryKey = PrimaryKey(id)
+        }</code-block>
+    </chapter>
+
+    <chapter title="Supported types" id="supported-types">
+        <p>
+            Each date-time module provides its own set of types. Below are the details for each supported type across all modules:
+        </p>
+
+        <deflist type="medium">
+            <def id="date-type">
+                <title><code>date()</code></title>
+                <p>Maps to database <code>DATE</code>. Used for storing date values without time component.</p>
+                <code-block lang="kotlin">
+                    val birthDate = date("birth_date")
+
+                    // Using exposed-kotlin-datetime (recommended)
+                    Events.insert {
+                        it[birthDate] = LocalDate(1990, 1, 1)
+                    }
+
+                    // Using exposed-java-time
+                    Events.insert {
+                        it[birthDate] = LocalDate.of(1990, 1, 1)
+                    }
+
+                    // Using exposed-jodatime
+                    Events.insert {
+                        it[birthDate] = org.joda.time.LocalDate(1990, 1, 1)
+                    }
+                </code-block>
+            </def>
+            <def id="datetime-type">
+                <title><code>datetime()</code></title>
+                <p>Maps to database <code>DATETIME</code>. Used for storing both date and time values.</p>
+                <code-block lang="kotlin">
+                    val createdAt = datetime("created_at")
+                        .defaultExpression(CurrentDateTime) // Sets current date/time when inserting new records
+
+                    // Using exposed-kotlin-datetime (recommended)
+                    Events.insert {
+                        it[createdAt] = Clock.System.now()
+                            .toLocalDateTime(TimeZone.UTC)
+                    }
+
+                    // Note: CurrentDateTime is available in all date-time modules
+
+                    // Using exposed-java-time
+                    Events.insert {
+                        it[createdAt] = LocalDateTime.now()
+                    }
+
+                    // Using exposed-jodatime
+                    Events.insert {
+                        it[createdAt] = DateTime.now()
+                    }
+                </code-block>
+                <note>
+                    <p>
+                        When using <code>exposed-jodatime</code>, you can extract time parts using these functions:
+                        <code>year()</code>, <code>month()</code>, <code>day()</code>, <code>hour()</code>,
+                        <code>minute()</code>, and <code>second()</code>.
+                    </p>
+                </note>
+            </def>
+            <def id="time-type">
+                <title><code>time()</code></title>
+                <p>Maps to database <code>TIME</code>. Used for storing time values without date component.</p>
+                <code-block lang="kotlin">
+                    val startTime = time("start_time")
+
+                    // Using exposed-kotlin-datetime (recommended)
+                    Events.insert {
+                        it[startTime] = LocalTime(9, 0) // 09:00
+                    }
+
+                    // Using exposed-java-time
+                    Events.insert {
+                        it[startTime] = LocalTime.of(9, 0) // 09:00
+                    }
+
+                    // Using exposed-jodatime
+                    Events.insert {
+                        it[startTime] = org.joda.time.LocalTime(9, 0) // 09:00
+                    }
+                </code-block>
+            </def>
+            <def id="timestamp-type">
+                <title><code>timestamp()</code></title>
+                <p>
+                    Maps to database <code>TIMESTAMP</code>. Used for storing both date and time values. Not supported
+                    by <code>exposed-jodatime</code>.
+                </p>
+                <code-block lang="kotlin">
+                    val lastModified = timestamp("last_modified")
+
+                    // Using exposed-kotlin-datetime (recommended)
+                    Events.insert {
+                        it[lastModified] = Clock.System.now()
+                    }
+
+                    // Using exposed-java-time
+                    Events.insert {
+                        it[lastModified] = Instant.now()
+                    }
+                </code-block>
+            </def>
+            <def id="timestamp-with-timezone">
+                <title><code>timestampWithTimeZone()</code></title>
+                <p>
+                    Maps to database <code>TIMESTAMP WITH TIME ZONE</code>. Used for storing both date and time values
+                    while preserving timezone information. Not supported by <code>exposed-jodatime</code>.
+                </p>
+                <code-block lang="kotlin">
+                    val scheduledAt = timestampWithTimeZone("scheduled_at")
+
+                    // Using exposed-kotlin-datetime (recommended)
+                    Events.insert {
+                        it[scheduledAt] = Clock.System.now().toOffsetDateTime(TimeZone.UTC)
+                    }
+
+                    // Using exposed-java-time
+                    Events.insert {
+                        it[scheduledAt] = OffsetDateTime.now(ZoneOffset.UTC)
+                    }
+                </code-block>
+                <warning>
+                    <p>
+                        PostgreSQL and MySQL store timestamps in UTC, thereby losing the original timezone information.
+                        To preserve the original timezone in these databases, you need to store the timezone information
+                        in a separate column.
+                    </p>
+                </warning>
+            </def>
+        </deflist>
+
+        <note>
+            <p>
+                Some types may differ for specific database dialects. Refer to your database documentation for exact
+                type mappings.
+            </p>
+        </note>
+
+        <tip>
+            <p>
+                Some databases provide specific interval types (like PostgreSQL's <code>INTERVAL</code>) for storing
+                time intervals. Refer to your database documentation for supported time interval types.
+            </p>
+            <p>
+                For more details on handling custom time-based values, see the
+                <a href="Custom-data-types.topic" anchor="date-and-time-data">
+                    custom date and time types
+                </a>
+                section.
+            </p>
+        </tip>
+    </chapter>
+</topic>

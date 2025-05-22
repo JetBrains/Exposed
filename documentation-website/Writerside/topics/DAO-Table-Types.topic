@@ -79,7 +79,7 @@
                 <code>CompositeIdTable</code>
             </a>
             and mark each composite column using
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-table/entity-id.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/entity-id.html">
                 <code>.entityId()</code>
             </a>
             .Each component column will be available for CRUD operations either individually (as for any standard column)
@@ -133,7 +133,6 @@
     <seealso style="cards">
         <category ref="related">
             <a href="Working-with-Tables.topic"/>
-            <a href="Data-Types.topic"/>
         </category>
     </seealso>
 </topic>

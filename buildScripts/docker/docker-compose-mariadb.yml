@@ -1,6 +1,6 @@
 services:
     mariadb:
-        image: mariadb
+        image: mariadb:11.7.2
         restart: always
         ports:
             - "3000:3306"

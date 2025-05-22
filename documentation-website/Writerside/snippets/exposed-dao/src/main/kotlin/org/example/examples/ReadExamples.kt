@@ -2,14 +2,14 @@ package org.example.examples
 
 import org.example.entities.*
 import org.example.tables.*
-import org.jetbrains.exposed.dao.id.CompositeID
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.count
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.wrapAsExpression
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.wrapAsExpression
+import org.jetbrains.exposed.v1.dao.id.CompositeID
+import org.jetbrains.exposed.v1.insert
+import org.jetbrains.exposed.v1.selectAll
+import org.jetbrains.exposed.v1.transactions.transaction
 import java.util.*
 
 const val MOVIE_SEQUELID = 8
@@ -56,7 +56,7 @@ class ReadExamples {
         val query = UsersTable.innerJoin(UserRatingsTable).innerJoin(StarWarsFilmsTable)
             .select(UsersTable.columns)
             .where {
-                StarWarsFilmsTable.sequelId eq MOVIE_SEQUELID and (UserRatingsTable.value greater MIN_MOVIE_RATING)
+                StarWarsFilmsTable.sequelId eq MOVIE_SEQUELID and (UserRatingsTable.value greater MIN_MOVIE_RATING.toLong())
             }.withDistinct()
 
         val users = UserEntity.wrapRows(query).toList()

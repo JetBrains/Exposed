@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="JSON and JSONB" id="JSON-And-JSONB-types">
+    <show-structure for="chapter" depth="2" />
+    <tldr>
+        <p>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-json</code>
+        </p>
+    </tldr>
+    <p>
+        Exposed works together with the JSON serialization library of your choice by allowing column
+        definitions that accept generic serializer and deserializer arguments through the
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/json.html">
+            <code>json()</code>
+        </a>
+        and
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/jsonb.html">
+            <code>jsonb()</code>
+        </a>
+        functions.
+    </p>
+    <p>
+        As databases store JSON values either in text or binary format, Exposed provides two types to
+        account for any potential differences, if they exist.
+    </p>
+    <chapter title="Basic usage" id="basic-usage">
+        <p>
+            The following example leverages
+            <a href="https://github.com/Kotlin/kotlinx.serialization">
+                <code>kotlinx.serialization</code>
+            </a>
+            to support
+            <code>@Serializable</code> classes. It uses a simpler form of <code>json()</code> that relies on the
+            library's <code>KSerializer</code> interface:</p>
+
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                    include-lines="5-6,8,13,17-18,28-37" />
+        <p>
+            Here's how the same <code>Project</code> and <code>Teams</code> would be defined using <a
+            href="https://github.com/FasterXML/jackson">Jackson</a>
+            with the <code>jackson-module-kotlin</code> dependency and the full form of <code>json()</code>:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                    include-lines="3-4,17-18,28-30,40-47"
+        />
+    </chapter>
+    <chapter title="Supported types" id="supported-types">
+        <p>
+            The <code>exposed-json</code> extension provides the following additional types:
+        </p>
+        <deflist type="medium">
+            <def id="json-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/json.html">
+                        <code>json()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>JSON</code>. Used for storing JSON data in text format.</p>
+                <p>Database-specific mappings:</p>
+                <list>
+                    <li>SQLite: Maps to <code>TEXT</code></li>
+                    <li>SQLServer: Maps to <code>NVARCHAR(MAX)</code></li>
+                    <li>Oracle: Maps to <code>VARCHAR2(4000)</code></li>
+                </list>
+            </def>
+            <def id="jsonb-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/jsonb.html">
+                        <code>jsonb()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>JSONB</code>. Used for storing JSON data in binary format (supported by
+                    PostgreSQL).</p>
+                <p>Database-specific mappings:</p>
+                <list>
+                    <li>MySQL and H2: Maps to <code>JSON</code></li>
+                    <li>SQLite and Oracle: Not supported</li>
+                </list>
+            </def>
+        </deflist>
+    </chapter>
+    <chapter title="JSON functions" id="json-functions">
+
+        <chapter title="Extract data">
+            <p>
+                You can use JSON path strings to extract values as JSON or as a scalar value at a specific
+                field/key. To do this, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/extract.html">
+                    <code>.extract()</code>
+                </a>
+                function:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="78-81"
+            />
+            <p>
+                Databases that support a path context root <code>$</code> will have this value appended to the generated
+                SQL path expression by default, so it is not necessary to include it in the provided argument string.
+                In the above example, if MySQL is being used, the provided path arguments should be
+                <code>.name</code> and <code>.language</code> respectively.
+            </p>
+        </chapter>
+        <chapter title="Check if data exists">
+            <p>
+                To check whether data exists within a JSON expression, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/exists.html">
+                    <code>.exists()</code>
+                </a>
+                function:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="84-86"
+            />
+            <p>
+                Depending on the database, filter paths can be provided instead, as well as optional arguments:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="92-94"
+            />
+        </chapter>
+        <chapter title="Check if JSON contains an expression">
+            <p>
+                To check whether an expression is contained within a JSON, use the
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/contains.html">
+                    <code>.contains()</code>
+                </a>
+                function:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="99-101"
+            />
+            <p>
+                Depending on the database, you could also provide an optional path:
+            </p>
+            <code-block lang="kotlin"
+                        src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                        include-lines="107-109"
+            />
+        </chapter>
+    </chapter>
+    <chapter title="JSON arrays" id="json-arrays">
+        <p>
+            JSON columns also accept JSON arrays as input values, allowing structured data to be stored and manipulated
+            directly in the database.
+        </p>
+        <p>
+            To define a JSON column that holds an array, use the
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-json/org.jetbrains.exposed.v1.sql.json/json.html">
+                <code>json()</code>
+            </a>
+            function with the appropriate type. The following example defines JSON columns for arrays of primitive
+            values and objects using the serializable data class <code>Project</code>:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                    include-symbol="Project, TeamProjectsTable"
+        />
+        <p>
+            To insert data into the JSON array columns, use standard Kotlin collections:
+        </p>
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                    include-lines="119-125"
+        />
+        <p>
+            This results in the following SQL query:
+        </p>
+        <code-block lang="sql"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/JSONandJSONBExamples.kt"
+                    include-lines="115-116"
+        />
+    </chapter>
+</topic>

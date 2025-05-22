@@ -4,7 +4,7 @@
 
 CRUD operations in Exposed must be called from within a _transaction._ Transactions encapsulate a set of DSL operations.
 To create and execute a transaction with default parameters, simply pass a function block to the
-[`transaction()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.transactions/transaction.html)
+[`transaction()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql.transactions/transaction.html)
 function:
 
 ```kotlin
@@ -86,12 +86,13 @@ TransactionManager.defaultDatabase = db
 
 ## Using nested transactions
 
-By default, a nested `transaction()` block shares the transaction resources of its parent `transaction()` block, so any
-effect on the child affects the parent:
+By default, a nested `transaction {}` block shares the transaction resources of its parent `transaction {}` block. This
+means that any changes within the nested transaction affect the outer transaction. If a rollback occurs inside the 
+nested block, it will roll back changes in the parent transaction as well:
 
 ```kotlin
 val db = Database.connect()
-db.useNestedTransactions = false // set by default
+db.useNestedTransactions = false // Default setting
 
 transaction {
     println("Transaction # ${this.id}") // Transaction # 1
@@ -109,16 +110,8 @@ transaction {
     println(FooTable.selectAll().count()) // 0
 }
 ```
-
-Since Exposed 0.16.1 it is possible to use nested transactions as separate transactions by
-setting `useNestedTransactions = true` on the desired `Database` instance.
-
-After that any exception or rollback operation that happens within a transaction block will not roll back the whole
-transaction but only the code inside the current transaction.
-Exposed uses SQL `SAVEPOINT` functionality to mark the current transaction at the beginning of a `transaction()` block and
-release it on exit.
-
-Using `SAVEPOINT` could affect performance, so please read the documentation of the DBMS you use for more details.
+### Independent nested transactions
+To allow nested transactions to function independently, set `useNestedTransactions = true` on the `Database` instance:
 
 ```kotlin
 val db = Database.connect(
@@ -142,6 +135,28 @@ transaction {
     println(FooTable.selectAll().count()) // 1
 }
 ```
+With this, any rollback or exception inside a nested `transaction {}` affects only that block, without rolling back the
+outer transaction.
+
+Exposed achieves this by using SQL `SAVEPOINT` to mark transaction states at the beginning of each `transaction {}`
+block, releasing them on exit.
+
+> Using `SAVEPOINT` may affect performance. For more details, refer to your DBMS documentation.
+
+## Using savepoints
+
+To roll back to a specific point without affecting the entire transaction, you can set a savepoint through the
+transaction's `connection` property. The `connection` property provides access to an
+[`ExposedConnection`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql.statements.api/-exposed-connection/index.html)
+, which acts as a wrapper around the underlying JDBC connection.
+
+To manually create a savepoint within a transaction, use the
+[`.setSavepoint()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql.statements.api/-exposed-connection/set-savepoint.html)
+method:
+
+```Kotlin
+```
+{src="exposed-transactions/src/main/kotlin/org/example/examples/SavepointExample.kt" include-lines="39,41-50"}
 
 ## Working with Coroutines
 
@@ -159,8 +174,8 @@ Exposed stores some values in thread-local variables while coroutines could (and
 Starting from Exposed 0.15.1,
 bridge functions are available that give you a safe way to interact with Exposed within `suspend`
 blocks:
-[`newSuspendedTransaction()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.transactions.experimental/new-suspended-transaction.html)
-and [`Transaction.withSuspendTransaction()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.transactions.experimental/with-suspend-transaction.html).
+[`newSuspendedTransaction()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql.transactions.experimental/new-suspended-transaction.html)
+and [`Transaction.withSuspendTransaction()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql.transactions.experimental/with-suspend-transaction.html).
 These have the same parameters as a
 blocking `transaction()` but allow you to provide a `CoroutineContext` argument that explicitly specifies
 the `CoroutineDispatcher` in which the function will be executed.
@@ -207,7 +222,7 @@ Please note that such code remains blocking (as it still uses JDBC) and you shou
 between multiple threads as it may lead to undefined behavior.
 
 If you desire to execute some code asynchronously and use the result later, take a look at
-[`suspendedTransactionAsync()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.transactions.experimental/suspended-transaction-async.html):
+[`suspendedTransactionAsync()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql.transactions.experimental/suspended-transaction-async.html):
 
 ```kotlin
 runBlocking {
@@ -277,7 +292,7 @@ settled ([see the section above](#working-with-multiple-databases)).
 Transactions also provide a property, `maxAttempts`, which sets the maximum number of attempts that should be made to perform a transaction block.
 If this value is set to 1 and an SQLException occurs inside the transaction block, the exception will be thrown without performing a retry.
 If this property is not set, any default value provided in
-[`DatabaseConfig`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-database-config/index.html)
+[`DatabaseConfig`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-database-config/index.html)
 will be used instead:
 
 ```kotlin

@@ -9,7 +9,7 @@
         useful in generating unique identifiers and primary keys.</p>
     <chapter title="Define a sequence" id="define-a-sequence">
         To define a sequence in Exposed, use the
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-sequence/index.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-sequence/index.html">
             <code>Sequence</code>
         </a>
         class:
@@ -33,11 +33,11 @@
     </chapter>
     <chapter title="Create a sequence" id="create-a-sequence">
         To create a sequence, use the
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/create-sequence.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/create-sequence.html">
             <code>.createSequence()</code>
         </a>
         method provided by
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/index.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/index.html">
             <code>SchemaUtils</code>
         </a>
         :
@@ -47,11 +47,11 @@
     </chapter>
     <chapter title="Drop a sequence" id="drop-a-sequence">
         To drop a sequence, use the
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/drop-sequence.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/drop-sequence.html">
             <code>.dropSequence()</code>
         </a>
         method provided by
-        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/index.html">
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-schema-utils/index.html">
             <code>SchemaUtils</code>
         </a>
         :
@@ -62,7 +62,7 @@
     <chapter title="Access the next value" id="access-next-value">
         <p>
             You can access the next value in a sequence by using the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/next-int-val.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/next-int-val.html">
                 <code>.nextIntVal()</code>
             </a>
             function:

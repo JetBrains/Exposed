@@ -1,7 +1,6 @@
 rootProject.name = "exposed"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-
 include("exposed-core")
 include("exposed-dao")
 include("exposed-jodatime")
@@ -16,6 +15,8 @@ include("exposed-kotlin-datetime")
 include("exposed-crypt")
 include("exposed-json")
 include("exposed-migration")
+include("exposed-r2dbc")
+include("exposed-r2dbc-tests")
 
 pluginManagement {
     repositories {
@@ -33,7 +34,7 @@ dependencyResolutionManagement {
 }
 
 plugins {
-    id("org.gradle.toolchains.foojay-resolver") version "0.9.0"
+    id("org.gradle.toolchains.foojay-resolver") version "0.10.0"
 }
 
 toolchainManagement {

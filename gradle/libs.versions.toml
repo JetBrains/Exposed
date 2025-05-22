@@ -1,11 +1,11 @@
 [versions]
 kotlin = "2.0.0"
 dokka = "2.0.0"
-detekt = "1.23.7" # When upgrading, also upgrade in detekt.yml and add corresponding detekt-formatting jar file.
+detekt = "1.23.8" # When upgrading, also upgrade in detekt.yml and add corresponding detekt-formatting jar file.
 binary-compatibility-validator = "0.17.0"
 docker-compose = "0.17.5"
-kotlinCoroutines = "1.10.1"
-kotlinxSerialization = "1.8.0"
+kotlinCoroutines = "1.10.2"
+kotlinxSerialization = "1.8.1"
 
 slf4j = "2.0.9"
 log4j2 = "2.24.3"
@@ -19,20 +19,29 @@ mysql80 = "8.0.33"
 oracle19 = "19.24.0.0"
 postgre = "42.7.5"
 postgreNG = "0.8.9"
-sqlite3 = "3.49.0.0"
+sqlite3 = "3.49.1.0"
 sqlserver = "9.4.1.jre8"
 
-springFramework = "6.2.2"
-springBoot = "3.4.2"
+r2dbc-spi = "1.0.0.RELEASE"
+r2dbc-pool = "1.0.2.RELEASE"
+h2-r2dbc = "1.0.0.RELEASE"
+mariadb-r2dbc = "1.3.0"
+mysql-r2dbc = "1.3.2"
+oracle-r2dbc = "1.3.0"
+postgresql-r2dbc = "1.0.7.RELEASE"
+sqlserver-r2dbc = "1.0.2.RELEASE"
+
+springFramework = "6.2.7"
+springBoot = "3.4.5"
 
 spring-security-crypto = "6.2.1"
-joda-time = "2.13.1"
+joda-time = "2.14.0"
 junit = "4.13.2"
 kotlinx-datetime = "0.6.2"
 javax-money = "1.1"
-moneta = "1.4.4"
+moneta = "1.4.5"
 hikariCP = "4.0.3"
-logcaptor = "2.10.1"
+logcaptor = "2.11.0"
 
 [libraries]
 jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
@@ -43,6 +52,7 @@ detekt-formatting = { group = "io.gitlab.arturbosch.detekt", name = "detekt-form
 kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
 kotlinx-coroutines-debug = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-debug", version.ref = "kotlinCoroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinCoroutines" }
+kotlinx-coroutines-reactive = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-reactive", version.ref = "kotlinCoroutines" }
 kotlinx-jvm-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime-jvm", version.ref = "kotlinx-datetime" }
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
@@ -80,6 +90,15 @@ maria-db2 = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.
 maria-db3 = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariaDB_v3" }
 oracle19 = { group = "com.oracle.database.jdbc", name = "ojdbc8", version.ref = "oracle19" }
 mssql = { group = "com.microsoft.sqlserver", name = "mssql-jdbc", version.ref = "sqlserver" }
+
+r2dbc-spi = { group = "io.r2dbc", name = "r2dbc-spi", version.ref = "r2dbc-spi" }
+r2dbc-pool = { group = "io.r2dbc", name = "r2dbc-pool", version.ref = "r2dbc-pool" }
+r2dbc-h2 = { group = "io.r2dbc", name = "r2dbc-h2", version.ref = "h2-r2dbc" }
+r2dbc-mariadb = { group = "org.mariadb", name = "r2dbc-mariadb", version.ref = "mariadb-r2dbc" }
+r2dbc-mysql = { group = "io.asyncer", name = "r2dbc-mysql", version.ref = "mysql-r2dbc" }
+r2dbc-oracle = { group = "com.oracle.database.r2dbc", name = "oracle-r2dbc", version.ref = "oracle-r2dbc" }
+r2dbc-postgresql = { group = "org.postgresql", name = "r2dbc-postgresql", version.ref = "postgresql-r2dbc" }
+r2dbc-sqlserver = { group = "io.r2dbc", name = "r2dbc-mssql", version.ref = "sqlserver-r2dbc" }
 
 logcaptor = { group = "io.github.hakky54", name = "logcaptor", version.ref = "logcaptor" }
 

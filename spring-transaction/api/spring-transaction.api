@@ -1,5 +1,12 @@
-public final class org/jetbrains/exposed/spring/SpringTransactionManager : org/springframework/transaction/support/AbstractPlatformTransactionManager {
-	public fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;Z)V
-	public synthetic fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/sql/DatabaseConfig;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+public final class org/jetbrains/exposed/v1/spring/transaction/ExposedSpringTransactionAttributeSource : org/springframework/transaction/interceptor/TransactionAttributeSource {
+	public fun <init> ()V
+	public fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/springframework/transaction/interceptor/TransactionAttributeSource;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getTransactionAttribute (Ljava/lang/reflect/Method;Ljava/lang/Class;)Lorg/springframework/transaction/interceptor/TransactionAttribute;
+}
+
+public final class org/jetbrains/exposed/v1/spring/transaction/SpringTransactionManager : org/springframework/transaction/support/AbstractPlatformTransactionManager {
+	public fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/core/DatabaseConfig;Z)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Lorg/jetbrains/exposed/v1/core/DatabaseConfig;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 

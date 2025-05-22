@@ -2,7 +2,7 @@ package org.example.examples
 
 import org.example.tables.CitiesTable
 import org.example.tables.UsersTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.v1.*
 
 private const val MAX_VARCHAR_LENGTH = 10
 

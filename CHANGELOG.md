@@ -1,3 +1,95 @@
+# 1.0.0-beta-2
+
+## What's Changed
+Infrastructure:
+* Spring Framework 6.2.7
+
+Features:
+* Initialize JetBrains Junie 🚀 by @jetbrains-junie in https://github.com/JetBrains/Exposed/pull/2481
+
+Bug fixes:
+* fix: Fix `No transaction in context` for ktor by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2483
+
+# 1.0.0-beta-1
+
+## What's Changed
+
+Infrastructure:
+* kotlinCoroutines 1.10.2
+* Foojay Toolchains Plugin 0.10.0
+* junit-bom 5.12.2
+* Spring Framework 6.2.6
+* io.github.hakky54:logcaptor 2.11.0
+* Spring Boot 3.4.5
+
+Breaking changes:
+* feat!: R2DBC by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2474
+
+Docs:
+* docs: EXPOSED-756 Add documentation for SQL migration options  by @vnikolova in https://github.com/JetBrains/Exposed/pull/2471
+
+Bug fixes:
+* fix: EXPOSED-762 [MariaDB] Fix UUIDColumType to make it working with own UUID type by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2468
+* fix: EXPOSED-772 Add an option to specify column type for Case() expression by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2469
+* fix: EXPOSED-713 Allow entity batchInsert() to generate SQL for column values that match the default by @Avi18971911 in https://github.com/JetBrains/Exposed/pull/2420
+
+# 0.61.0
+## What's Changed
+Infrastructure:
+* Spring Framework 6.2.5
+* junit-bom 5.12.1
+* Spring Boot 3.4.4
+* moneta 1.4.5
+* Joda Time 2.14.0
+* Kotlinx Serialization 1.8.1
+* logcaptor 2.10.2
+
+Features:
+* feat: EXPOSED-733 Detect column type change for migrations in H2 by @joc-a in https://github.com/JetBrains/Exposed/pull/2419
+
+Bug fixes:
+* fix: EXPOSED-739 support actively cached null values in entity-local cache by @bystam in https://github.com/JetBrains/Exposed/pull/2424
+* fix: EXPOSED-761 Forward ColumnWithTransform.readObject to delegate by @Maxr1998 in https://github.com/JetBrains/Exposed/pull/2455
+
+Docs:
+* docs: Fix text that says Exposed is not an official JetBrains library by @joc-a in https://github.com/JetBrains/Exposed/pull/2439
+* docs: EXPOSED-673 Update and extend the "Data types" topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2437
+* docs: EXPOSED-567 Update the FAQ topic by @vnikolova in https://github.com/JetBrains/Exposed/pull/2449
+
+# 0.60.0
+Infrastructure:
+* Joda Time 2.13.1
+* SQLite driver 3.49.1.0
+* Kotlinx Datetime JVM 0.6.2
+* Spring Framework 6.2.3
+* Spring Boot 3.4.3
+* detekt 1.23.8
+* junit-bom 5.12.0
+
+Breaking changes:
+* chore!: EXPOSED-727 Change timestamp column type for H2 from "DATETIME(9)" to "TIMESTAMP(9)" by @joc-a in https://github.com/JetBrains/Exposed/pull/2401
+* chore!: EXPOSED-741 Fix inconsistent CHECK constraint names for UShort and UInt columns by @joc-a in https://github.com/JetBrains/Exposed/pull/2426
+* feat!: EXPOSED-740  Add support for modes (SKIP LOCKED or NOWAIT) with ForUpdate and ForShare Option for MySQL by @mfazalul in https://github.com/JetBrains/Exposed/pull/2421
+
+Features:
+* feat: EXPOSED-729 [Oracle] Allow setting limit with DELETE by @bog-walk in https://github.com/JetBrains/Exposed/pull/2403
+* feat: EXPOSED-742 Allow customizing the CHECK constraint name of `long()` column by @joc-a in https://github.com/JetBrains/Exposed/pull/2428
+
+Bug fixes:
+* fix: EXPOSED-723 Reading databaseGenerated value from entity fails and does not trigger flush cache by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2391
+* fix: EXPOSED-719 H2 upsert operation converts arrays to string by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2395
+* fix: EXPOSED-737 Timestamp column broken for MySQL 8.0 by @joc-a in https://github.com/JetBrains/Exposed/pull/2410
+* fix: EXPOSED-736 Unnecessary ALTER statement generated for binary column in PostgreSQL by @joc-a in https://github.com/JetBrains/Exposed/pull/2408
+* fix: EXPOSED-593 Rollback ExposedSQLException when use SpringTransactionManager by @FullOfOrange in https://github.com/JetBrains/Exposed/pull/2398
+
+Docs:
+* docs: Change urls for site pages in Changelog and ReadMe by @bog-walk in https://github.com/JetBrains/Exposed/pull/2394
+* docs: Fix link in FAQ by @fatalistt in https://github.com/JetBrains/Exposed/pull/2427
+* EXPOSED-738 Update landing page link by @vnikolova in https://github.com/JetBrains/Exposed/pull/2433
+
+Refactors:
+* refactor: EXPOSED-728 [SQLite] Remove ENABLE_UPDATE_DELETE_LIMIT metadata check from core function provider by @bog-walk in https://github.com/JetBrains/Exposed/pull/2402
+
 # 0.59.0
 Infrastructure:
 * Spring Framework 6.2.2
@@ -783,7 +875,7 @@ Infrastructure:
 Feature:
 * Read-only transactions/connections support. Read-Only option can be set on all levels (via `DatabaseConfig`, `transaction`, `TransactionManager`). Thanks [Alex Shubert](https://github.com/lure) for the improvement
 * `Table.deleteWhere` now captures receiver table and allows to omit the table in a lambda. Greetings to [Alexey Soshin](https://github.com/AlexeySoshin) for the first PR in the project!  
-    * **Breaking change**: Code using `deleteWhere` with `eq` will need to `import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq`.
+    * **Breaking change**: Code using `deleteWhere` with `eq` will need to `import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq`.
       Lambdas previously using an implicit `it` reference from an outer scope will also need to introduce an explicit name to access that binding.
 * New `mediumText` and `largeText` columns were introduced by [Alex Shubert](https://github.com/lure) to allow use more suitable data types for databases where they are supported.
 * `ForUpdateOption` (like `ForUpdateOption.PostgreSQL.ForKeyShare`) added for more flexible management of locks in your `SELECT` queries. You can set it as a parameter via `Query.forUpdate` function. Another kudos goes to [Alex Shubert](https://github.com/lure)
@@ -1007,7 +1099,7 @@ Deprecations:
 * `ResiltSet.create(rs: ResultSet, fields: List<Expression<*>>)` was removed
 * `Seq` data class was removed
 * `EntityID`, `IdTable`, `IntIdTable`, `LongIdTable`, `UUIDTable`  from `org.jetbrains.exposed.dao` package were removed
-* All classes and functions from `org.jetbrains.exposed.sql.java-time` were removed in favour to `org.jetbrains.exposed.sql.javatime`
+* All classes and functions from `org.jetbrains.exposed.v1.sql.java-time` were removed in favour to `org.jetbrains.exposed.v1.sql.javatime`
 * `Column.primaryKey` function was removed in favor to explicit `Table.primaryKey` declaration  
 
 Breaking Changes:
@@ -1105,7 +1197,7 @@ Breaking Changes:
 when working with references. `EntityCache.inserts` and `EntityCache.referrers` fields are not publicly available anymore. 
 
 Features:
-* Different math and trigonometrical functions were added. Check `org.jetbrains.exposed.sql.functions.math` package
+* Different math and trigonometrical functions were added. Check `org.jetbrains.exposed.v1.sql.functions.math` package
 * Bitwise AND, OR and, XOR were added by [Max Rumpf](https://github.com/Maxr1998)
 * `PrepareStatement` can be cancelled, thanks [Alex Shubert](https://github.com/lure) for supporting it
 * `ForeignKeyConstraint.customFkName` was added by [spand](https://github.com/spand)

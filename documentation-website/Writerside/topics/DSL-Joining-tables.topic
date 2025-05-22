@@ -24,7 +24,7 @@
         </tabs>
         <p>
             In the following example, the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-column-set/join.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-column-set/join.html">
                 <code>.join()</code>
             </a>
             function is used to count how many actors star in each movie:
@@ -42,7 +42,7 @@
         <chapter title="Join on a foreign key" id="inner-join">
             <p>
                 When joining on a foreign key, the more concise
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-column-set/inner-join.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-column-set/inner-join.html">
                     <code>innerJoin</code>
                 </a>
                 can be used:
@@ -61,7 +61,7 @@
     <chapter title="Union" id="union">
         <p>
             To combine the results of multiple queries, use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/union.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/union.html">
                 <code>.union()</code>
             </a>
             function. Per the SQL specification, the queries must have the same number of columns, and not be marked for update.
@@ -73,7 +73,7 @@
         <chapter title="Include duplicates" id="union-all">
             <p>
                 By default, <code>.union()</code> returns only unique rows. To include duplicates in the results, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/union-all.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/union-all.html">
                     <code>.unionAll()</code>
                 </a>
                 function instead.

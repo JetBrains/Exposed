@@ -2,7 +2,7 @@ package org.example.examples
 
 import org.example.entities.StarWarsFilmEntity
 import org.example.tables.StarWarsFilmsTable
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 
 class UpdateExamples {
     fun updateFilmProperty() {

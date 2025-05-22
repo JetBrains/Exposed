@@ -13,4 +13,6 @@ kotlin {
 
 dependencies {
     api(project(":exposed-core"))
+
+    implementation(project(":exposed-jdbc"))
 }

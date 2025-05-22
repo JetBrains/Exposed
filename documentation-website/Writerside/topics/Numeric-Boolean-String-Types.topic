@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Numeric, boolean, and string" id="Numeric-Boolean-String-Types">
+    <show-structure for="chapter" depth="2"/>
+    <tldr>
+        <p>
+            <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
+        </p>
+    </tldr>
+     <p>
+         The <code>exposed-core</code> module provides support for various
+         <a anchor="numeric-types">numeric</a>
+         ,
+         <a anchor="bool-type">boolean</a>
+         , and
+         <a anchor="string-types">string types</a>
+         .
+     </p>
+    <chapter title="Basic usage" id="basic-usage">
+        <p>Here's an example of using different data types in a table definition:</p>
+        <code-block lang="kotlin"
+                    src="exposed-data-types/src/main/kotlin/org/example/examples/BasicTypesExamples.kt"
+                    include-lines="3,10-28"
+        />
+    </chapter>
+    <chapter title="Numeric types" id="numeric-types">
+        <deflist type="medium">
+            <def id="integer-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/integer.html">
+                        <code>integer()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>INT</code>. Used for storing whole numbers within the range of -2^31 to
+                    2^31-1.</p>
+            </def>
+            <def id="short-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/short.html">
+                        <code>short()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>SMALLINT</code>. Used for storing smaller whole numbers within the range of
+                    -32,768 to 32,767.</p>
+            </def>
+            <def id="long-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/long.html">
+                        <code>long()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>BIGINT</code>. Used for storing large whole numbers within the range of -2^63
+                    to 2^63-1.</p>
+            </def>
+            <def id="float-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/float.html">
+                        <code>float()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>FLOAT</code>. Used for storing approximate decimal numbers.</p>
+                <list>
+                    <li>PostgreSQL: Maps to <code>REAL</code></li>
+                </list>
+            </def>
+            <def id="decimal-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/decimal.html">
+                        <code>decimal()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>DECIMAL</code> with specified scale and precision. Used for storing exact
+                    decimal numbers where precision is important.</p>
+            </def>
+        </deflist>
+    </chapter>
+    <chapter title="Boolean type" id="boolean-type">
+        <deflist type="medium">
+            <def id="bool-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/bool.html">
+                        <code>bool()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>BOOLEAN</code>. Used for storing true/false values.</p>
+                <p>Database-specific mappings:</p>
+                <list>
+                    <li>Oracle: Maps to <code>CHAR(1)</code></li>
+                    <li>SQLServer: Maps to <code>BIT</code></li>
+                </list>
+            </def>
+        </deflist>
+    </chapter>
+    <chapter title="String types" id="string-types">
+        <deflist type="medium">
+            <def id="char-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/char.html">
+                        <code>char()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>CHAR</code>. Used for storing fixed-length character strings.</p>
+            </def>
+            <def id="varchar-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/varchar.html">
+                        <code>varchar()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>VARCHAR</code> with specified length. Used for storing variable-length
+                    character strings with a maximum length limit.</p>
+            </def>
+            <def id="text-type">
+                <title>
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/text.html">
+                        <code>text()</code>
+                    </a>
+                </title>
+                <p>Maps to database <code>TEXT</code>. Used for storing large variable-length character strings without
+                    length limit.</p>
+            </def>
+        </deflist>
+    </chapter>
+</topic>

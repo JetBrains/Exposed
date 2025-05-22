@@ -15,7 +15,7 @@
         <chapter title="Insert a single row" id="insert">
             <p>
                 To create a new table row, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert.html">
                     <code>.insert()</code>
                 </a>
                 function. If the same row already exists in the table, it throws an exception.
@@ -32,7 +32,7 @@
                     <p> Supported table types: <code>IdTable()</code> </p>
                 </tldr>
                 <p>To add a new row and return its ID, use
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-and-get-id.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert-and-get-id.html">
                         <code>.insertAndGetId()</code>
                     </a>. If the same row already exists in
                     the table, it throws an exception.</p>
@@ -49,7 +49,7 @@
         <chapter title="Insert from select" id="insert-from-select">
             <p>
                 For the <code>INSERT INTO ... SELECT </code> SQL clause, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert.html">
                     <code>.insert()</code>
                 </a>
                 function with a <code>Query</code> parameter:
@@ -72,7 +72,7 @@
                 <p>Supported on: MySQL, MariaDB, PostgreSQL, and SQLite</p>
             </tldr>
             <p>To allow insert statements to be executed without throwing any errors, use
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-ignore.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert-ignore.html">
                     <code>.insertIgnore()</code>
                 </a>.
                 This may be useful, for example, when insertion conflicts are possible:</p>
@@ -90,7 +90,7 @@
                     <p>Table types: <code>IdTable()</code> </p>
                 </tldr>
                 <p>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-ignore-and-get-id.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert-ignore-and-get-id.html">
                         <code>.insertIgnoreAndGetId()</code>
                     </a>
                     adds a new row and returns its ID. If the same row already
@@ -107,7 +107,7 @@
 
         <chapter title="Batch insert" id="batch-insert">
             <p>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/batch-insert.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/batch-insert.html">
                     <code>.batchInsert()</code>
                 </a>
                 allows mapping a list of entities into table rows in a single SQL statement.
@@ -154,7 +154,7 @@
     <chapter title="Read" id="read">
         <chapter title="Retrieve a record" id="select">
             <p>The
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-column-set/select.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-column-set/select.html">
                     <code>.select()</code>
                 </a>
                 function allows you to select specific columns or/and expressions.</p>
@@ -162,7 +162,7 @@
                         src="exposed-dsl/src/main/kotlin/org/example/examples/ReadExamples.kt"
                         include-symbol="filmAndDirector"/>
             <p>If you want to select only distinct value then use
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/with-distinct.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/with-distinct.html">
                     <code>.withDistinct()</code>
                 </a>
                 function:</p>
@@ -171,7 +171,7 @@
                         include-lines="31-35"/>
             <p>Some SQL dialects, such as PostgreSQL and H2, also support the <code>DISTINCT ON</code> clause.
                 You can use this clause with the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-query/with-distinct-on.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-query/with-distinct-on.html">
                     <code>.withDistinctOn()</code>
                 </a>
                 function:</p>
@@ -182,7 +182,7 @@
         <chapter title="Retrieve all records" id="selectAll">
             <p>
                 To retrieve all records from a table, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/select-all.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/select-all.html">
                     <code>.selectAll()</code>
                 </a>
                 method:
@@ -218,22 +218,22 @@
             </p>
             <list>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/insert-returning.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/insert-returning.html">
                         <code>.insertReturning()</code>
                     </a>
                 </li>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upsert-returning.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/upsert-returning.html">
                         <code>.upsertReturning()</code>
                     </a>
                 </li>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/update-returning.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/update-returning.html">
                         <code>.updateReturning()</code>
                     </a>
                 </li>
                 <li>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-returning.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/delete-returning.html">
                         <code>.deleteReturning()</code>
                     </a>
                 </li>
@@ -257,7 +257,7 @@
     <chapter title="Update" id="update">
         <chapter title="Update a record" id="update-record">
             <p>To update a record, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/update.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/update.html">
                     <code>.update()</code>
                 </a>
                 function. By default, it returns the number of updated rows.
@@ -279,7 +279,7 @@
                 Insert or update (Upsert) is a database operation that either inserts a new row or updates an existing row if
                 a duplicate constraint already exists.
                 The supported functionality of
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/upsert.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/upsert.html">
                     <code>.upsert()</code>
                 </a>
                 is dependent on the specific database being used.
@@ -347,7 +347,7 @@
             </tldr>
             <p>
                 The
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/replace.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/replace.html">
                     <code>.replace()</code>
                 </a>
                 method acts in a similar manner to an <code>.upsert()</code>. The only difference is that
@@ -388,7 +388,7 @@
     <chapter title="Delete" id="delete">
         <chapter title="Delete with a condition" id="deleteWhere">
             <p>To delete records and return the count of deleted rows, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-where.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/delete-where.html">
                     <code>.deleteWhere()</code>
                 </a>
                 function.
@@ -402,7 +402,7 @@
                 parameter lambda block will require inclusion of an import statement:
             </p>
             <code-block lang="kotlin">
-                import org.jetbrains.exposed.sql.SqlExpressionBuilder.*
+                import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.*
             </code-block>
         </chapter>
         <chapter title="Delete and ignore" id="deleteIgnoreWhere">
@@ -411,7 +411,7 @@
             </tldr>
             <p>
                 To delete records while ignoring any possible errors that occur during the process, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-ignore-where.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/delete-ignore-where.html">
                     <code>.deleteIgnoreWhere()</code>
                 </a>
                 function. The function will return the count of deleted rows.
@@ -423,7 +423,7 @@
         </chapter>
         <chapter title="Delete all" id="deleteAll">
             <p>To delete all rows in a table and return the count of deleted rows, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete-all.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/delete-all.html">
                     <code>.deleteAll()</code>
                 </a>
                 function.</p>
@@ -434,7 +434,7 @@
         </chapter>
         <chapter title="Join delete" id="join-delete">
             <p>To delete records from a table in a join relation, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/delete.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/delete.html">
                     <code>.delete()</code>
                 </a>
                 function with a

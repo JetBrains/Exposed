@@ -2,8 +2,8 @@
 
 package org.jetbrains.exposed.samples.spring.support
 
-import org.jetbrains.exposed.samples.spring.domain.UserEntity
-import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.v1.SchemaUtils
+import org.jetbrains.exposed.v1.samples.spring.domain.UserEntity
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component
