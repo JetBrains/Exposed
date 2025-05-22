@@ -38,13 +38,13 @@ repositories {
 }
 
 allprojects {
-    if (this.name != "exposed-tests" && this.name != "exposed-bom" && this.name != "exposed-r2dbc-tests" && this != rootProject) {
+    if (this.name != "exposed-tests" && this.name != "exposed-bom" && this.name != "exposed-r2dbc-tests" && this.name != "exposed-version-catalog" && this != rootProject) {
         configurePublishing()
     }
 }
 
 apiValidation {
-    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests"))
+    ignoredProjects.addAll(listOf("exposed-tests", "exposed-bom", "exposed-r2dbc-tests", "exposed-version-catalog"))
 }
 
 subprojects {
