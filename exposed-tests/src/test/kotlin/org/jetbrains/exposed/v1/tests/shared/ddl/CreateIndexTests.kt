@@ -287,6 +287,25 @@ class CreateIndexTests : DatabaseTestsBase() {
         }
     }
 
+    @Test
+    fun testCreateAndDropIndexWithLongName() {
+        // Long index name
+        val indexName = "index-" + (0..100).joinToString(separator = "-") { "$it" }
+
+        val tester = object : Table("tester") {
+            val value = integer("value").index(indexName)
+        }
+
+        withDb {
+            val createStatement = tester.indices.single().createStatement().single()
+
+            val dropStatement = tester.indices.single().dropStatement().single()
+
+            // Both statements must have either full index name or shortened index name
+            assertEquals(createStatement.contains(indexName), dropStatement.contains(indexName))
+        }
+    }
+
     private fun JdbcTransaction.getIndices(table: Table): List<Index> {
         db.dialectMetadata.resetCaches()
         return currentDialectMetadataTest.existingIndices(table)[table].orEmpty()

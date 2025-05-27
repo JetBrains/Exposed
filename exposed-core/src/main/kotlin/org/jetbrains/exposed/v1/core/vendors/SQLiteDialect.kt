@@ -255,7 +255,9 @@ internal object SQLiteFunctionProvider : FunctionProvider() {
         toString()
     }
 
-    override fun insertValue(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"EXCLUDED.$columnName" } }
+    override fun insertValue(columnName: String, queryBuilder: QueryBuilder) {
+        queryBuilder { +"EXCLUDED.$columnName" }
+    }
 
     override fun queryLimitAndOffset(size: Int?, offset: Long, alreadyOrdered: Boolean): String {
         @OptIn(InternalApi::class)
@@ -321,7 +323,7 @@ open class SQLiteDialect : VendorDialect(dialectName, SQLiteDataTypeProvider, SQ
     }
 
     override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String {
-        return "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
+        return "DROP INDEX IF EXISTS ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
     }
 
     override fun createDatabase(name: String) = "ATTACH DATABASE '${name.lowercase()}.db' AS ${name.inProperCase()}"
