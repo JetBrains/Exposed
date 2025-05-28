@@ -20,26 +20,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build docs using Writerside Docker builder
-        uses: JetBrains/writerside-github-action@v4
-        with:
-          instance: ${{ env.INSTANCE }}
-          artifact: ${{ env.ARTIFACT }}
-          docker-version: ${{ env.DOCKER_VERSION }}
-          location: documentation-website
-
-      - name: Remove docs folder
-        run: rm -rf docs
-
-      - name: Unzip artifact
-        run: unzip -O UTF-8 -qq 'artifacts/${{ env.ARTIFACT }}' -d docs
-
-      - name: Revert logos
-        run: git checkout docs/logo-dark.png docs/logo-light.png docs/site.webmanifest
-
-      - name: Remove artifacts
-        run: rm -rf artifacts
-
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
