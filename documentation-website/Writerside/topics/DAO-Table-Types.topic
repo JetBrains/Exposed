@@ -81,8 +81,8 @@
             and mark each composite column using
             <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/entity-id.html">
                 <code>.entityId()</code>
-            </a>
-            .Each component column will be available for CRUD operations either individually (as for any standard column)
+            </a>.
+            Each component column will be available for CRUD operations either individually (as for any standard column)
             or all together as part of the <code>id</code> column:
         </p>
         <tabs>
