@@ -1,0 +1,202 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>ExposedAutoConfiguration</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+<a class="library-name--link" href="../../../index.html">
+                    exposed
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.0.0-beta-2
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":exposed-spring-boot-starter/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":exposed-spring-boot-starter/main" data-filter=":exposed-spring-boot-starter/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    exposed
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="exposed-spring-boot-starter::org.jetbrains.exposed.v1.spring.boot.autoconfigure/ExposedAutoConfiguration///PointingToDeclaration//1273116405">
+  <div class="breadcrumbs"><a href="../../index.html">exposed-spring-boot-starter</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.spring.boot.autoconfigure</a><span class="delimiter">/</span><span class="current">ExposedAutoConfiguration</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Exposed</span><wbr><span>Auto</span><wbr><span><span>Configuration</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-spring-boot-starter/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.springframework.boot.autoconfigure/AutoConfiguration///PointingToDeclaration/"><span class="token annotation builtin">AutoConfiguration</span></span><span class="token punctuation">(</span><span>after<span class="token operator"> = </span><span class="token punctuation">[</span><span><span data-unresolved-link="org.springframework.boot.autoconfigure.jdbc/DataSourceAutoConfiguration///PointingToDeclaration/">DataSourceAutoConfiguration::class</span></span><wbr><span class="token punctuation">]</span></span><wbr><span class="token punctuation">)</span></div><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.springframework.transaction.annotation/EnableTransactionManagement///PointingToDeclaration/"><span class="token annotation builtin">EnableTransactionManagement</span></span></div></div><span class="token keyword">open </span><span class="token keyword">class </span><a href="index.html">ExposedAutoConfiguration</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationContext<span class="token operator">: </span><span data-unresolved-link="org.springframework.context/ApplicationContext///PointingToDeclaration/">ApplicationContext</span></span></span><span class="token punctuation">)</span></div><p class="paragraph">Main configuration class for Exposed that can be automatically applied by Spring Boot.</p><p class="paragraph">This should be applied on a Spring configuration class using: <code class="lang-kotlin">@ImportAutoConfiguration(ExposedAutoConfiguration::class)</code></p><p class="paragraph"><strong>Note</strong> As part of the configuration, <code class="lang-kotlin">@EnableTransactionManagement</code> is added without setting any attributes. This means that all attributes have their default values, including <code class="lang-kotlin">mode = AdviceMode.PROXY</code> and <code class="lang-kotlin">proxyTargetClass = false</code>. If the type of proxy mechanism is unexpected, the attributes can be set to the required values in a separate <code class="lang-kotlin">@EnableTransactionManagement</code> on the main configuration class or in a configuration file using <code class="lang-kotlin">spring.aop.proxy-target-class</code>.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="582307231%2FConstructors%2F1273116405" anchor-label="ExposedAutoConfiguration" id="582307231%2FConstructors%2F1273116405" data-filterable-set=":exposed-spring-boot-starter/main"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":exposed-spring-boot-starter/main" data-filterable-set=":exposed-spring-boot-starter/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-exposed-auto-configuration.html"><span>Exposed</span><wbr><span>Auto</span><wbr><span><span>Configuration</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="582307231%2FConstructors%2F1273116405"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-spring-boot-starter/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationContext<span class="token operator">: </span><span data-unresolved-link="org.springframework.context/ApplicationContext///PointingToDeclaration/">ApplicationContext</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="875046990%2FFunctions%2F1273116405" anchor-label="databaseConfig" id="875046990%2FFunctions%2F1273116405" data-filterable-set=":exposed-spring-boot-starter/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-spring-boot-starter/main" data-filterable-set=":exposed-spring-boot-starter/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="database-config.html"><span>database</span><wbr><span><span>Config</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="875046990%2FFunctions%2F1273116405"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-spring-boot-starter/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.springframework.context.annotation/Bean///PointingToDeclaration/"><span class="token annotation builtin">Bean</span></span></div><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.springframework.boot.autoconfigure.condition/ConditionalOnMissingBean///PointingToDeclaration/"><span class="token annotation builtin">ConditionalOnMissingBean</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="token punctuation">[</span><span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-database-config/index.html">DatabaseConfig::class</a></span><wbr><span class="token punctuation">]</span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">open </span><span class="token keyword">fun </span><a href="database-config.html"><span class="token function">databaseConfig</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-database-config/index.html">DatabaseConfig</a></div><div class="brief "><p class="paragraph">Database config with default values</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1409226392%2FFunctions%2F1273116405" anchor-label="databaseInitializer" id="-1409226392%2FFunctions%2F1273116405" data-filterable-set=":exposed-spring-boot-starter/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-spring-boot-starter/main" data-filterable-set=":exposed-spring-boot-starter/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="database-initializer.html"><span>database</span><wbr><span><span>Initializer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1409226392%2FFunctions%2F1273116405"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-spring-boot-starter/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.springframework.context.annotation/Bean///PointingToDeclaration/"><span class="token annotation builtin">Bean</span></span></div><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.springframework.boot.autoconfigure.condition/ConditionalOnProperty///PointingToDeclaration/"><span class="token annotation builtin">ConditionalOnProperty</span></span><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="token punctuation">[</span><span><span class="breakable-word"><span class="token string">"spring.exposed.generate-ddl"</span></span></span><wbr><span class="token punctuation">]</span><span class="token punctuation">, </span></span><wbr><span>havingValue<span class="token operator"> = </span><span class="breakable-word"><span class="token string">"true"</span></span><span class="token punctuation">, </span></span><wbr><span>matchIfMissing<span class="token operator"> = </span><span class="breakable-word"><span class="token boolean">false</span></span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">open </span><span class="token keyword">fun </span><a href="database-initializer.html"><span class="token function">databaseInitializer</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../org.jetbrains.exposed.v1.spring.boot/-database-initializer/index.html">DatabaseInitializer</a></div><div class="brief "><p class="paragraph">Returns a <a href="../../org.jetbrains.exposed.v1.spring.boot/-database-initializer/index.html">DatabaseInitializer</a> that auto-creates the database schema, if enabled by the property <code class="lang-kotlin">spring.exposed.generate-ddl</code> in the application.properties file.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="520646505%2FFunctions%2F1273116405" anchor-label="exposedSpringTransactionAttributeSource" id="520646505%2FFunctions%2F1273116405" data-filterable-set=":exposed-spring-boot-starter/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-spring-boot-starter/main" data-filterable-set=":exposed-spring-boot-starter/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="exposed-spring-transaction-attribute-source.html"><span>exposed</span><wbr><span>Spring</span><wbr><span>Transaction</span><wbr><span>Attribute</span><wbr><span><span>Source</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="520646505%2FFunctions%2F1273116405"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-spring-boot-starter/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.springframework.context.annotation/Bean///PointingToDeclaration/"><span class="token annotation builtin">Bean</span></span></div><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.springframework.context.annotation/Primary///PointingToDeclaration/"><span class="token annotation builtin">Primary</span></span></div></div><span class="token keyword">open </span><span class="token keyword">fun </span><a href="exposed-spring-transaction-attribute-source.html"><span class="token function">exposedSpringTransactionAttributeSource</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../spring-transaction/org.jetbrains.exposed.v1.spring.transaction/-exposed-spring-transaction-attribute-source/index.html">ExposedSpringTransactionAttributeSource</a></div><div class="brief "><p class="paragraph">Returns an <a href="../../../spring-transaction/org.jetbrains.exposed.v1.spring.transaction/-exposed-spring-transaction-attribute-source/index.html">ExposedSpringTransactionAttributeSource</a> instance.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="536576676%2FFunctions%2F1273116405" anchor-label="springTransactionManager" id="536576676%2FFunctions%2F1273116405" data-filterable-set=":exposed-spring-boot-starter/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-spring-boot-starter/main" data-filterable-set=":exposed-spring-boot-starter/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="spring-transaction-manager.html"><span>spring</span><wbr><span>Transaction</span><wbr><span><span>Manager</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="536576676%2FFunctions%2F1273116405"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-spring-boot-starter/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.springframework.context.annotation/Bean///PointingToDeclaration/"><span class="token annotation builtin">Bean</span></span></div></div><span class="token keyword">open </span><span class="token keyword">fun </span><a href="spring-transaction-manager.html"><span class="token function">springTransactionManager</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">datasource<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.sql/javax/sql/DataSource.html">DataSource</a><span class="token punctuation">, </span></span><span class="parameter ">databaseConfig<span class="token operator">: </span><a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-database-config/index.html">DatabaseConfig</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../spring-transaction/org.jetbrains.exposed.v1.spring.transaction/-spring-transaction-manager/index.html">SpringTransactionManager</a></div><div class="brief "><p class="paragraph">Returns a <a href="../../../spring-transaction/org.jetbrains.exposed.v1.spring.transaction/-spring-transaction-manager/index.html">SpringTransactionManager</a> instance using the specified <a href="spring-transaction-manager.html">datasource</a> and <a href="spring-transaction-manager.html">databaseConfig</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
