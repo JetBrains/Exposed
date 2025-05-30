@@ -29,7 +29,7 @@ dependencies {
     dokka(projects.exposed.exposedMigration)
     dokka(projects.exposed.exposedMoney)
     dokka(projects.exposed.exposedSpringBootStarter)
-    dokka(projects.exposed.springTransaction)
+    dokka(projects.exposed.exposedSpringTransaction)
 }
 
 repositories {

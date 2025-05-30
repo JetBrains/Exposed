@@ -99,7 +99,7 @@ private fun Project.createDbTestTaskByDialect(db: TestDb, taskName: String, dial
 
         if (db.ignoresSpringTests) {
             filter {
-                // exclude all test classes in (spring-transaction, exposed-spring-boot-starter) modules
+                // exclude all test classes in (exposed-spring-transaction, exposed-spring-boot-starter) modules
                 exclude("org/jetbrains/exposed/spring/*", "org/jetbrains/exposed/jdbc-template/*")
                 isFailOnNoMatchingTests = false
             }

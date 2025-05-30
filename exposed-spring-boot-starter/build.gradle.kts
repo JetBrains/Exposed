@@ -20,7 +20,7 @@ kotlin {
 dependencies {
     api(project(":exposed-core"))
     api(project(":exposed-dao"))
-    api(project(":spring-transaction"))
+    api(project(":exposed-spring-transaction"))
     // TODO how to avoid this
     //  Should we create r2dbc-spring-boot-starter module?
     compileOnly(project(":exposed-jdbc"))
