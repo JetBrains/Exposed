@@ -17,6 +17,7 @@ include("exposed-json")
 include("exposed-migration")
 include("exposed-r2dbc")
 include("exposed-r2dbc-tests")
+include("exposed-version-catalog")
 
 pluginManagement {
     repositories {
