@@ -19,18 +19,22 @@ A real connection will be instantiated later by calling the `transaction` lambda
 
 Use the following to get a Database instance by simply providing connection parameters:
 
-```kotlin
-val db = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
-```
+<tabs group="connectivity">
+    <tab id="jdbc-connect" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin"
+                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    include-symbol="h2db" />
+    </tab>
+    <tab id="r2dbc-connect" title="R2DBC" group-key="r2dbc">
+        <code-block lang="kotlin"
+                    src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
+                    include-symbol="h2db" />
+    </tab>
+</tabs>
 
 <note>Executing this code more than once per database will create leaks in your application, hence it is recommended to store it for later use:
-<code-block lang="kotlin">
-object DbSettings {
-    val db by lazy {
-        Database.connect(/* setup connection */)
-    }
-}
-</code-block>
+<code-block lang="kotlin" src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+ include-symbol="DbSettings"/>
 </note>
 
 <note>
@@ -47,21 +51,48 @@ object DbSettings {
 
 In order to use H2, you need to add the H2 driver dependency:
 
-```kotlin
-implementation("com.h2database:h2:2.2.224")
-```
+<tabs group="connectivity">
+    <tab id="jdbc-h2-db" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin">
+            implementation("com.h2database:h2:%h2_db_version%")
+        </code-block>
+    </tab>
+    <tab id="r2dbc-h2-db" title="R2DBC" group-key="r2dbc">
+        <code-block lang="kotlin">
+            implementation("io.r2dbc:r2dbc-h2:%mariadb_r2dbc%")
+        </code-block>
+    </tab>
+</tabs>
 
 Then connect to a database:
 
-```kotlin
-Database.connect("jdbc:h2:./myh2file", "org.h2.Driver")
-```
+<tabs group="connectivity">
+    <tab id="jdbc-h2-driver-connect" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin"
+                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    include-symbol="h2dbFromFile" />
+    </tab>
+    <tab id="r2dbc-h2-driver-connect" title="R2DBC" group-key="r2dbc">
+     <code-block lang="kotlin"
+                        src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                        include-symbol="h2dbFromFile" />
+        </tab>
+</tabs>
 
 Or in-memory database:
 
-```kotlin
-Database.connect("jdbc:h2:mem:regular", "org.h2.Driver")  
-```  
+<tabs group="connectivity">
+    <tab id="jdbc-h2-db-in-memory" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin"
+                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    include-symbol="h2db" />
+    </tab>
+    <tab id="r2dbc-h2-db-in-memory" title="R2DBC" group-key="r2dbc">
+     <code-block lang="kotlin"
+                        src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                        include-symbol="h2db" />
+        </tab>
+</tabs>
 
 By default, H2 closes the database when the last connection is closed. If you want to keep the database open, you can use the `DB_CLOSE_DELAY=-1`
 option:
@@ -72,131 +103,193 @@ Database.connect("jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;", "org.h2.Driver")
 
 ### MariaDB
 
-Add dependency:
+Add the required dependency:
 
-```kotlin
-implementation("org.mariadb.jdbc:mariadb-java-client:3.3.1")
-```
-Connect to database:
+<tabs group="connectivity">
+    <tab id="jdbc-maria-db" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin">
+            implementation("org.mariadb.jdbc:mariadb-java-client:%mariadb%")
+        </code-block>
+    </tab>
+    <tab id="r2dbc-maria-db" title="R2DBC" group-key="r2dbc">
+        <code-block lang="kotlin">
+            implementation("org.mariadb:r2dbc-mariadb:%mariadb_r2dbc%")
+        </code-block>
+    </tab>
+</tabs>
 
-```kotlin
-Database.connect("jdbc:mariadb://localhost:3306/test",
-    driver = "org.mariadb.jdbc.Driver",
-    user = "root",
-    password = "your_pwd"
-)
-```
+Connect to a database:
+
+<tabs group="connectivity">
+    <tab id="jdbc-maria-db-connect" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin"
+                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    include-symbol="mariadb" />
+    </tab>
+    <tab id="r2dbc-maria-db-connect" title="R2DBC" group-key="r2dbc">
+     <code-block lang="kotlin"
+                        src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
+                        include-symbol="mariadb" />
+        </tab>
+</tabs>
 
 ### MySQL
 
-Add dependency:
+Add the required dependency:
 
-```kotlin
-implementation("mysql:mysql-connector-java:8.0.33")
-```
+<tabs group="connectivity">
+    <tab id="jdbc-mysql" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin">
+            implementation("mysql:mysql-connector-java:%mysql%")
+        </code-block>
+    </tab>
+    <tab id="r2dbc-mysql" title="R2DBC" group-key="r2dbc">
+        <code-block lang="kotlin">
+            implementation("io.asyncer:r2dbc-mysql:%mysql_r2dbc%")
+        </code-block>
+    </tab>
+</tabs>
 
-Connect to database:
+Connect to a database:
 
-```kotlin
-Database.connect(
-    "jdbc:mysql://localhost:3306/test",
-    driver = "com.mysql.cj.jdbc.Driver",
-    user = "user",
-    password = "password"
-)  
-```
+<tabs group="connectivity">
+    <tab id="jdbc-mysql-connect" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin"
+                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    include-symbol="mysqldb" />
+    </tab>
+    <tab id="r2dbc-mysql-connect" title="R2DBC" group-key="r2dbc">
+     <code-block lang="kotlin"
+                        src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
+                        include-symbol="mysqldb" />
+        </tab>
+</tabs>
 
 ### Oracle
 
-Add dependency:
+Add the required dependency:
 
-```kotlin
-implementation("com.oracle.database.jdbc:ojdbc8:12.2.0.1")
-```
+<tabs group="connectivity">
+    <tab id="jdbc-oracle" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin">
+            implementation("com.oracle.database.jdbc:ojdbc8:%oracle%")
+        </code-block>
+    </tab>
+    <tab id="r2dbc-oracle" title="R2DBC" group-key="r2dbc">
+        <code-block lang="kotlin">
+            implementation("com.oracle.database.r2dbc:oracle-r2dbc:%oracle_r2dbc%")
+        </code-block>
+    </tab>
+</tabs>
 
-Connect to database:
+Connect to a database:
 
-```kotlin
-Database.connect(
-    "jdbc:oracle:thin:@//localhost:1521/test",
-    driver = "oracle.jdbc.OracleDriver",
-    user = "user",
-    password = "password"
-)  
-```
+<tabs group="connectivity">
+    <tab id="jdbc-oracle-connect" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin"
+                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    include-symbol="oracledb" />
+    </tab>
+    <tab id="r2dbc-oracle-connect" title="R2DBC" group-key="r2dbc">
+     <code-block lang="kotlin"
+                        src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
+                        include-symbol="oracledb" />
+        </tab>
+</tabs>
 
 ### PostgreSQL
 
-Add dependency:
+Add the required dependency:
 
-```kotlin
-implementation("org.postgresql:postgresql:42.7.1")  
-```
+<tabs group="connectivity">
+    <tab id="jdbc-postgresql" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin">
+            implementation("org.postgresql:postgresql:%postgresql%")
+        </code-block>
+    </tab>
+    <tab id="r2dbc-postgresql" title="R2DBC" group-key="r2dbc">
+        <code-block lang="kotlin">
+            implementation("org.postgresql:r2dbc-postgresql:%postgresql_r2dbc%")
+        </code-block>
+    </tab>
+</tabs>
 
-Connect to database:
+Connect to a database:
 
-```kotlin
-Database.connect(
-    "jdbc:postgresql://localhost:12346/test",
-    driver = "org.postgresql.Driver",
-    user = "user",
-    password = "password"
-)  
-```
+<tabs group="connectivity">
+    <tab id="jdbc-postgresql-connect" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin"
+                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    include-symbol="postgresqldb" />
+    </tab>
+    <tab id="r2dbc-postgresql-connect" title="R2DBC" group-key="r2dbc">
+     <code-block lang="kotlin"
+                        src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
+                        include-symbol="postgresqldb" />
+        </tab>
+</tabs>
 
 ### PostgreSQL using the pgjdbc-ng JDBC driver
 
-Add dependency:
+Add the required dependency:
 
 ```kotlin
-implementation("com.impossibl.pgjdbc-ng", "pgjdbc-ng", "0.8.9")  
+implementation("com.impossibl.pgjdbc-ng:pgjdbc-ng:%postgreNG%")
 ```
 
-Connect to database:
+Connect to a database:
 
 ```kotlin
-Database.connect(
-    "jdbc:pgsql://localhost:12346/test",
-    driver = "com.impossibl.postgres.jdbc.PGDriver",
-    user = "user",
-    password = "password"
-)  
 ```
+{src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt" include-symbol="postgresqldbNG"}
 
 ### SQL Server
 
-Add dependency:
+Add the required dependency:
 
-```kotlin
-implementation("com.microsoft.sqlserver:mssql-jdbc:9.4.1.jre8")
-```
+<tabs group="connectivity">
+    <tab id="jdbc-sqlserver" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin">
+            implementation("com.microsoft.sqlserver:mssql-jdbc:%sqlserver%")
+        </code-block>
+    </tab>
+    <tab id="r2dbc-sqlserver" title="R2DBC" group-key="r2dbc">
+        <code-block lang="kotlin">
+            implementation("io.r2dbc:r2dbc-mssql:%sqlserver_r2dbc%")
+        </code-block>
+    </tab>
+</tabs>
 
-Connect to database:
+Connect to a database:
 
-```kotlin
-Database.connect(
-    "jdbc:sqlserver://localhost:32768;databaseName=test",
-    "com.microsoft.sqlserver.jdbc.SQLServerDriver",
-    user = "user",
-    password = "password"
-)  
-```
+<tabs group="connectivity">
+    <tab id="jdbc-sqlserver-connect" title="JDBC" group-key="jdbc">
+        <code-block lang="kotlin"
+                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    include-symbol="sqlserverdb" />
+    </tab>
+    <tab id="r2dbc-sqlserver-connect" title="R2DBC" group-key="r2dbc">
+     <code-block lang="kotlin"
+                        src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
+                        include-symbol="sqlserverdb" />
+        </tab>
+</tabs>
 
 ### SQLite
 
-Add the dependency:
+Add the required dependency:
 
 ```kotlin
-implementation("org.xerial:sqlite-jdbc:3.44.1.0")
+implementation("org.xerial:sqlite-jdbc:%sqlite%")
 ```
 
-Connect to database:
+Connect to a database:
 
 ```kotlin
 Database.connect("jdbc:sqlite:/data/data.db", "org.sqlite.JDBC")  
 ```
 
-Or in-memory database:
+Or an in-memory database:
 
 ```kotlin
 Database.connect("jdbc:sqlite:file:test?mode=memory&cache=shared", "org.sqlite.JDBC")  

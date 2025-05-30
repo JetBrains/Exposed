@@ -14,6 +14,7 @@ rootProject.name = "snippets"
 include("exposed-dao")
 include("exposed-dao-relationships")
 include("exposed-data-types")
+include("exposed-databases")
 include("exposed-dsl")
 include("exposed-modules-maven")
 include("exposed-modules-kotlin-gradle")
