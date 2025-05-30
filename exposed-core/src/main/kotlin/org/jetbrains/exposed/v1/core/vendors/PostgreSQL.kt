@@ -441,7 +441,7 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
         return if (isUnique && !isPartialOrFunctional) {
             "ALTER TABLE IF EXISTS ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
         } else {
-            "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
+            "DROP INDEX IF EXISTS ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
         }
     }
 

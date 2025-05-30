@@ -393,7 +393,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
     }
 
     override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String =
-        "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP INDEX ${identifierManager.quoteIfNecessary(indexName)}"
+        "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP INDEX ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
 
     override fun setSchema(schema: Schema): String = "USE ${schema.identifier}"
 

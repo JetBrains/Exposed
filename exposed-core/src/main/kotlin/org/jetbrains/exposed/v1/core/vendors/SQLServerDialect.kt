@@ -466,7 +466,7 @@ open class SQLServerDialect : VendorDialect(dialectName, SQLServerDataTypeProvid
         return if (isUnique && !isPartialOrFunctional) {
             "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT IF EXISTS ${identifierManager.quoteIfNecessary(indexName)}"
         } else {
-            "DROP INDEX IF EXISTS ${identifierManager.quoteIfNecessary(indexName)} ON ${identifierManager.quoteIfNecessary(tableName)}"
+            "DROP INDEX IF EXISTS ${identifierManager.cutIfNecessaryAndQuote(indexName)} ON ${identifierManager.quoteIfNecessary(tableName)}"
         }
     }
 
