@@ -17,7 +17,7 @@
     </p>
     <chapter id="defining-entity-class" title="Defining an Entity">
         <p>
-            You define an entity instance by creating a class.
+            You define an entity by creating a class.
             In the following example, <code>StarWarsFilmEntity</code> is the entity class linked to the table
             <code>StarWarsFilmsTable</code>:
         </p>
