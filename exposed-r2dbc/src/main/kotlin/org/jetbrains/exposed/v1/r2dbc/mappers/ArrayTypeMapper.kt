@@ -10,6 +10,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlin.reflect.KClass
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Mapper for array types.
@@ -195,6 +196,7 @@ private fun java.sql.Timestamp.toLocalDateTime(): LocalDateTime = toInstant().at
 /**
  * Extension function to get the Java class type for an array column type.
  */
+@OptIn(ExperimentalUuidApi::class)
 private fun ArrayColumnType<*, *>.arrayDeclaration(): Class<out Array<out Any>> = when (delegate) {
     is ByteColumnType -> Array<Byte>::class.java
     is UByteColumnType -> Array<UByte>::class.java
@@ -209,6 +211,7 @@ private fun ArrayColumnType<*, *>.arrayDeclaration(): Class<out Array<out Any>> 
     is DecimalColumnType -> Array<java.math.BigDecimal>::class.java
     is BasicBinaryColumnType, is BlobColumnType -> Array<ByteArray>::class.java
     is UUIDColumnType -> Array<java.util.UUID>::class.java
+    is UuidKtColumnType -> Array<kotlin.uuid.Uuid>::class.java
     is CharacterColumnType -> Array<Char>::class.java
     is BooleanColumnType -> Array<Boolean>::class.java
     is IDateColumnType -> {

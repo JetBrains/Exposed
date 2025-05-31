@@ -3,6 +3,8 @@ package org.jetbrains.exposed.v1.core.dao.id
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.wrap
 import java.util.*
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /** Base class representing a producer of [EntityID] instances.  */
 interface EntityIDFactory {
@@ -118,6 +120,22 @@ open class ULongIdTable(name: String = "", columnName: String = "id") : IdTable<
 open class UUIDTable(name: String = "", columnName: String = "id") : IdTable<UUID>(name) {
     /** The identity column of this [UUIDTable], for storing UUIDs wrapped as [EntityID] instances. */
     final override val id: Column<EntityID<UUID>> = uuid(columnName).autoGenerate().entityId()
+    final override val primaryKey = PrimaryKey(id)
+}
+
+/**
+ * Identity table with a primary key consisting of an auto-generating [Uuid] value.
+ *
+ * **Note** The specific Uuid column type used depends on the database.
+ * The stored identity value will be auto-generated on the client side just before insertion of a new row.
+ *
+ * @param name Table name. By default, this will be resolved from any class name with a "Table" suffix removed (if present).
+ * @param columnName Name for the primary key column. By default, "id" is used.
+ */
+@OptIn(ExperimentalUuidApi::class)
+open class UuidKtTable(name: String = "", columnName: String = "id") : IdTable<Uuid>(name) {
+    /** The identity column of this [UuidTable], for storing UUIDs wrapped as [EntityID] instances. */
+    final override val id: Column<EntityID<Uuid>> = uuidKt(columnName).autoGenerate().entityId()
     final override val primaryKey = PrimaryKey(id)
 }
 
