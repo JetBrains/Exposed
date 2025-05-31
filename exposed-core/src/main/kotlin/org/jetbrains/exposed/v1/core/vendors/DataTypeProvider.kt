@@ -5,6 +5,8 @@ import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import java.nio.ByteBuffer
 import java.util.*
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Provides definitions for all the supported SQL data types.

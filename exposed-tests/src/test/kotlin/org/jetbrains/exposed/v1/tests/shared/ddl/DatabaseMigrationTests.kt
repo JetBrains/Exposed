@@ -39,8 +39,10 @@ import java.io.File
 import java.util.*
 import kotlin.properties.Delegates
 import kotlin.test.assertNull
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalDatabaseMigrationApi::class)
+@OptIn(ExperimentalDatabaseMigrationApi::class, ExperimentalUuidApi::class)
 @Suppress("LargeClass")
 class DatabaseMigrationTests : DatabaseTestsBase() {
 
@@ -1105,6 +1107,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val binary2 = binary("binary_col_2", 456)
             val blob = blob("blob_col")
             val uuid = uuid("uuid_col")
+            val uuidKt = uuidKt("uuidkt_col")
             val bool = bool("boolean_col")
             val enum1 = enumeration("enum_col_1", TestEnum::class)
             val enum2 = enumeration<TestEnum>("enum_col_2")
@@ -1157,6 +1160,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val binaryArray = array("binaryArray", BinaryColumnType(123), 120)
             val blobArray = array("blobArray", BlobColumnType(), 130)
             val uuidArray = array<UUID>("uuidArray", 140)
+            val uuidKtArray = array<Uuid>("uuidKtArray", 140)
             val booleanArray = array<Boolean>("booleanArray", 150)
             val currencyArray = array("currencyArray", CurrencyColumnType(), 25)
             val dateArray = array("dateArray", KotlinLocalDateColumnType(), 366)
