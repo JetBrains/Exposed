@@ -1082,6 +1082,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     fun Column<UUID>.autoGenerate(): Column<UUID> = clientDefault { UUID.randomUUID() }
 
     @OptIn(ExperimentalUuidApi::class)
+    @JvmName("ktAutoGenerate")
     fun Column<Uuid>.autoGenerate(): Column<Uuid> = clientDefault { Uuid.random() }
 
     // Column references
