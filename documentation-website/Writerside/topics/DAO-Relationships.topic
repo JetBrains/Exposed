@@ -182,7 +182,7 @@
             intermediate table to link the two tables.
         </p>
         <p>
-            Consider the following table, <code>ActorsTable</code>, and it's corresponding entity:
+            Consider the following table, <code>ActorsTable</code>, and its corresponding entity:
         </p>
         <tabs>
             <tab id="actors-table" title="ActorsTable">
@@ -200,7 +200,7 @@
         </tabs>
 
         <p>
-            Suppose you now want to extend this table to include a reference of to the <code>StarWarsFilmEntity</code>
+            Suppose you now want to extend this table to include a reference to the <code>StarWarsFilmEntity</code>
             class. To achieve this, you can create an additional intermediate table to store the references:
         </p>
 
