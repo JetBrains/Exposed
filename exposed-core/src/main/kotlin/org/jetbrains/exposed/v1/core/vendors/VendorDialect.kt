@@ -105,7 +105,7 @@ abstract class VendorDialect(
     }
 
     override fun dropIndex(tableName: String, indexName: String, isUnique: Boolean, isPartialOrFunctional: Boolean): String {
-        return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.quoteIfNecessary(indexName)}"
+        return "ALTER TABLE ${identifierManager.quoteIfNecessary(tableName)} DROP CONSTRAINT ${identifierManager.cutIfNecessaryAndQuote(indexName)}"
     }
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> =
