@@ -44,7 +44,7 @@
             <a href="Contributing.md" summary="Learn how to contribute to Exposed">
                 Contributing to Exposed
             </a>
-            <a href="Migration-Guide.md" summary="Check how to update to the latest Exposed version">
+            <a href="Migration-Guide-1-0-0.md" summary="Check how to update to the latest Exposed version">
                 Migration Guide
             </a>
         </secondary>
