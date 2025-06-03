@@ -23,6 +23,7 @@ dependencies {
     dokka(projects.exposed.exposedDao)
     dokka(projects.exposed.exposedJavaTime)
     dokka(projects.exposed.exposedJdbc)
+    dokka(projects.exposed.exposedR2dbc)
     dokka(projects.exposed.exposedJodatime)
     dokka(projects.exposed.exposedJson)
     dokka(projects.exposed.exposedKotlinDatetime)
