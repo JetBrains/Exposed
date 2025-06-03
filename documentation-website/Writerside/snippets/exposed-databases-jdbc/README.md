@@ -1,11 +1,11 @@
-# Exposed databases
+# Exposed JDBC databases
 
-A Gradle application that shows how to define and connect to databases in Exposed.
+A Gradle application that shows how to define and connect to a Database in Exposed.
 The files are referenced in the [Working with Database](../../topics/Working-with-Database.md) topic.
 
 ## Configure
 
-Navigate to the `JDBCExamples.kt` and `R2DBCExamples.kt` files and ensure that the database connection credentials match
+Navigate to the `Databases.kt` file and ensure that the database connection credentials match
 your setup. For example:
 
 ```Kotlin
@@ -22,7 +22,7 @@ your setup. For example:
 To build the application, run the following terminal command in the `snippets` folder:
 
 ```shell
-./gradlew :exposed-databases:build
+./gradlew :exposed-databases-jdbc:build
 ```
 
 ## Run
@@ -30,8 +30,7 @@ To build the application, run the following terminal command in the `snippets` f
 To run the application, in a terminal window navigate to the `snippets` folder and run the following command:
 
 ```shell
-./gradlew :exposed-databases:run
+./gradlew :exposed-databases-jdbc:run
 ```
 
-This will run all functions in the `/examples` folder.
 To only run a specific example, modify the `App.kt` file and re-run the project.

@@ -22,19 +22,20 @@ Use the following to get a Database instance by simply providing connection para
 <tabs group="connectivity">
     <tab id="jdbc-connect" title="JDBC" group-key="jdbc">
         <code-block lang="kotlin"
-                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt"
                     include-symbol="h2db" />
     </tab>
     <tab id="r2dbc-connect" title="R2DBC" group-key="r2dbc">
         <code-block lang="kotlin"
-                    src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
+                    src="exposed-databases-r2dbc/src/main/kotlin/org/example/R2DBCDatabases.kt"
                     include-symbol="h2db" />
     </tab>
 </tabs>
 
 <note>Executing this code more than once per database will create leaks in your application, hence it is recommended to store it for later use:
-<code-block lang="kotlin" src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
- include-symbol="DbSettings"/>
+<code-block lang="kotlin"
+            src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt"
+            include-symbol="DbSettings"/>
 </note>
 
 <note>
@@ -69,13 +70,13 @@ Then connect to a database:
 <tabs group="connectivity">
     <tab id="jdbc-h2-driver-connect" title="JDBC" group-key="jdbc">
         <code-block lang="kotlin"
-                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt"
                     include-symbol="h2dbFromFile" />
     </tab>
     <tab id="r2dbc-h2-driver-connect" title="R2DBC" group-key="r2dbc">
-     <code-block lang="kotlin"
-                        src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
-                        include-symbol="h2dbFromFile" />
+        <code-block lang="kotlin"
+                    src="exposed-databases-r2dbc/src/main/kotlin/org/example/R2DBCDatabases.kt" 
+                    include-symbol="h2dbFromFile" />
         </tab>
 </tabs>
 
@@ -84,14 +85,14 @@ Or in-memory database:
 <tabs group="connectivity">
     <tab id="jdbc-h2-db-in-memory" title="JDBC" group-key="jdbc">
         <code-block lang="kotlin"
-                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt"
                     include-symbol="h2db" />
     </tab>
     <tab id="r2dbc-h2-db-in-memory" title="R2DBC" group-key="r2dbc">
-     <code-block lang="kotlin"
-                        src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
-                        include-symbol="h2db" />
-        </tab>
+        <code-block lang="kotlin"
+                    src="exposed-databases-r2dbc/src/main/kotlin/org/example/R2DBCDatabases.kt"
+                    include-symbol="h2db" />
+    </tab>
 </tabs>
 
 By default, H2 closes the database when the last connection is closed. If you want to keep the database open, you can use the `DB_CLOSE_DELAY=-1`
@@ -123,14 +124,14 @@ Connect to a database:
 <tabs group="connectivity">
     <tab id="jdbc-maria-db-connect" title="JDBC" group-key="jdbc">
         <code-block lang="kotlin"
-                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt"
                     include-symbol="mariadb" />
     </tab>
     <tab id="r2dbc-maria-db-connect" title="R2DBC" group-key="r2dbc">
-     <code-block lang="kotlin"
-                        src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
-                        include-symbol="mariadb" />
-        </tab>
+        <code-block lang="kotlin"
+                    src="exposed-databases-r2dbc/src/main/kotlin/org/example/R2DBCDatabases.kt"
+                    include-symbol="mariadb" />
+    </tab>
 </tabs>
 
 ### MySQL
@@ -155,14 +156,14 @@ Connect to a database:
 <tabs group="connectivity">
     <tab id="jdbc-mysql-connect" title="JDBC" group-key="jdbc">
         <code-block lang="kotlin"
-                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt"
                     include-symbol="mysqldb" />
     </tab>
     <tab id="r2dbc-mysql-connect" title="R2DBC" group-key="r2dbc">
-     <code-block lang="kotlin"
-                        src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
-                        include-symbol="mysqldb" />
-        </tab>
+        <code-block lang="kotlin"
+                    src="exposed-databases-r2dbc/src/main/kotlin/org/example/R2DBCDatabases.kt"
+                    include-symbol="mysqldb" />
+    </tab>
 </tabs>
 
 ### Oracle
@@ -187,14 +188,14 @@ Connect to a database:
 <tabs group="connectivity">
     <tab id="jdbc-oracle-connect" title="JDBC" group-key="jdbc">
         <code-block lang="kotlin"
-                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt"
                     include-symbol="oracledb" />
     </tab>
     <tab id="r2dbc-oracle-connect" title="R2DBC" group-key="r2dbc">
-     <code-block lang="kotlin"
-                        src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
-                        include-symbol="oracledb" />
-        </tab>
+        <code-block lang="kotlin"
+                    src="exposed-databases-r2dbc/src/main/kotlin/org/example/R2DBCDatabases.kt"
+                    include-symbol="oracledb" />
+    </tab>
 </tabs>
 
 ### PostgreSQL
@@ -219,14 +220,14 @@ Connect to a database:
 <tabs group="connectivity">
     <tab id="jdbc-postgresql-connect" title="JDBC" group-key="jdbc">
         <code-block lang="kotlin"
-                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt"
                     include-symbol="postgresqldb" />
     </tab>
     <tab id="r2dbc-postgresql-connect" title="R2DBC" group-key="r2dbc">
-     <code-block lang="kotlin"
-                        src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
-                        include-symbol="postgresqldb" />
-        </tab>
+        <code-block lang="kotlin"
+                    src="exposed-databases-r2dbc/src/main/kotlin/org/example/R2DBCDatabases.kt"
+                    include-symbol="postgresqldb" />
+    </tab>
 </tabs>
 
 ### PostgreSQL using the pgjdbc-ng JDBC driver
@@ -241,7 +242,7 @@ Connect to a database:
 
 ```kotlin
 ```
-{src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt" include-symbol="postgresqldbNG"}
+{src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt" include-symbol="postgresqldbNG"}
 
 ### SQL Server
 
@@ -265,14 +266,14 @@ Connect to a database:
 <tabs group="connectivity">
     <tab id="jdbc-sqlserver-connect" title="JDBC" group-key="jdbc">
         <code-block lang="kotlin"
-                    src="exposed-databases/src/main/kotlin/org/example/examples/JDBCExamples.kt"
+                    src="exposed-databases-jdbc/src/main/kotlin/org/example/Databases.kt"
                     include-symbol="sqlserverdb" />
     </tab>
     <tab id="r2dbc-sqlserver-connect" title="R2DBC" group-key="r2dbc">
-     <code-block lang="kotlin"
-                        src="exposed-databases/src/main/kotlin/org/example/examples/R2DBCExamples.kt"
-                        include-symbol="sqlserverdb" />
-        </tab>
+        <code-block lang="kotlin"
+                    src="exposed-databases-r2dbc/src/main/kotlin/org/example/R2DBCDatabases.kt"
+                    include-symbol="sqlserverdb" />
+    </tab>
 </tabs>
 
 ### SQLite
