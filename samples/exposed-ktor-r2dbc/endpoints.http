@@ -1,0 +1,190 @@
+# PROJECTS
+
+### Create new project for Ktor
+POST http://localhost:8080/projects
+Content-Type: application/json
+
+{
+  "name": "Ktor",
+  "code": "KTOR"
+}
+
+### Create new project for Exposed
+POST http://localhost:8080/projects
+Content-Type: application/json
+
+{
+  "name": "Exposed",
+  "code": "EXPOSED"
+}
+
+### Retrieve all created projects
+GET http://localhost:8080/projects
+
+### Retrieve Exposed project
+GET http://localhost:8080/projects/2
+
+# USERS
+
+### Create new user Jane Doe
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "fullName": "Jane Doe",
+  "username": "jane.doe",
+  "settings": {
+    "defaultProject": {
+      "id": 1,
+      "name": "Ktor",
+      "code": "KTOR"
+    },
+    "defaultSort": "RELEVANCE"
+  }
+}
+
+### Create new user John Smith
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "fullName": "John Smith",
+  "username": "john.smith",
+  "settings": {
+    "defaultProject": {
+      "id": 2,
+      "name": "Exposed",
+      "code": "EXPOSED"
+    },
+    "defaultSort": "RELEVANCE"
+  }
+}
+
+### Retrieve all created users
+GET http://localhost:8080/users
+
+### Retrieve user Jane Doe
+GET http://localhost:8080/users/1
+
+### Update settings for Jane Doe
+PUT http://localhost:8080/users/1
+Content-Type: application/json
+
+{
+  "defaultProject": {
+    "id": 2,
+    "name": "Exposed",
+    "code": "EXPOSED"
+  },
+  "defaultSort": "UPDATED"
+}
+
+### Retrieve updated user Jane Doe
+GET http://localhost:8080/users/1
+
+# ISSUES
+
+### Create new issue in Exposed project
+POST http://localhost:8080/projects/2/issues
+Content-Type: application/json
+
+{
+  "projectId": 2,
+  "code": "EXPOSED",
+  "authorId": 1,
+  "assigneeId": 2,
+  "title": "Add a sample project",
+  "priority": "NORMAL",
+  "state": "IN_PROGRESS",
+  "watchers": [1, 2],
+  "upvotes": []
+}
+
+### Create another new issue in Exposed project
+POST http://localhost:8080/projects/2/issues
+Content-Type: application/json
+
+{
+  "projectId": 2,
+  "code": "EXPOSED",
+  "authorId": 1,
+  "title": "Update sample documentation",
+  "description": "Add a README",
+  "priority": "MAJOR",
+  "state": "SUBMITTED",
+  "watchers": [],
+  "upvotes": []
+}
+
+### Retrieve a count of created issues in Exposed project
+GET http://localhost:8080/projects/2/issues/count
+
+### Retrieve all created issues in Exposed project
+GET http://localhost:8080/projects/2/issues
+
+### Retrieve most recent issue in Exposed project
+GET http://localhost:8080/projects/2/issues?limit=1&offset=0
+
+### Retrieve specific issue in Exposed project
+GET http://localhost:8080/projects/2/issues/EXPOSED-100
+
+### Update state of specific issue
+PUT http://localhost:8080/projects/2/issues/EXPOSED-100
+Content-Type: application/json
+
+{
+  "number": 100,
+  "projectId": 2,
+  "code": "EXPOSED-100",
+  "authorId": 1,
+  "assigneeId": 2,
+  "title": "Add a sample project",
+  "description": "",
+  "priority": "NORMAL",
+  "state": "COMPLETED",
+  "watchers": [1, 2],
+  "upvotes": []
+}
+
+### Retrieve specific issue in Exposed project
+GET http://localhost:8080/projects/2/issues/EXPOSED-100
+
+# COMMENTS
+
+### Retrieve specific issue in Exposed project
+GET http://localhost:8080/projects/2/issues/EXPOSED-101
+
+### Create new comment in specific issue
+POST http://localhost:8080/projects/2/issues/EXPOSED-101/comments
+Content-Type: application/json
+
+{
+  "issueNumber": 101,
+  "projectId": 2,
+  "authorId": 2,
+  "content": "Any updates?"
+}
+
+### Retrieve specific issue in Exposed project
+GET http://localhost:8080/projects/2/issues/EXPOSED-101
+
+### Update comment content of specific issue
+PUT http://localhost:8080/projects/2/issues/EXPOSED-101/comments/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "issueNumber": 101,
+  "projectId": 2,
+  "authorId": 2,
+  "content": "Any updates? @jane.doe"
+}
+
+### Retrieve specific issue in Exposed project
+GET http://localhost:8080/projects/2/issues/EXPOSED-101
+
+### Delete specific comment
+DELETE http://localhost:8080/projects/2/issues/EXPOSED-101/comments/1
+
+### Retrieve specific issue in Exposed project
+GET http://localhost:8080/projects/2/issues/EXPOSED-101

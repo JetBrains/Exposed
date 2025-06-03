@@ -1,0 +1,10 @@
+ktor:
+    application:
+        modules:
+            - org.jetbrains.exposed.samples.r2dbc.ApplicationKt.module
+    deployment:
+        port: 8080
+
+database:
+    name: "sample_ekr"
+    user: "postgres"
