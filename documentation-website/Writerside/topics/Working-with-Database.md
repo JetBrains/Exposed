@@ -3,21 +3,22 @@
 # Working with Databases
 
 In Exposed, the [`Database`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-database/index.html)
-class represents a database instance, and encapsulates the necessary connection details and configuration required to
+and [`R2DBCDatabase`]() classes represent a database instance, and encapsulates the necessary connection details and configuration required to
 interact with a specific database.
 
 ## Connecting to a Database
 
-Every database access using Exposed is started by obtaining a connection and creating a transaction.
+Every database access in Exposed begins by establishing a connection and creating a transaction.
 
-First of all, you have to tell Exposed how to connect to a database by using the
-[`Database.connect()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-database/-companion/connect.html)
-function. It won't create a real database connection but will only provide a descriptor for future usage.
+To connect to a database, you first need to tell Exposed of the connection details. You have two options:
 
-A real connection will be instantiated later by calling the `transaction` lambda
-(see [Transactions](Transactions.md) for more details).
+- Use [`Database.connect()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-database/-companion/connect.html) for traditional JDBC-based access.
+- Use [`R2DBCDatabase.connect()`]() for reactive, non-blocking access with R2DBC.
 
-Use the following to get a Database instance by simply providing connection parameters:
+These functions do not immediately establish a connection. Instead, they provide a descriptor for future usage. An
+actual connection is only established when a [transaction](Transactions.md) is initiated.
+
+To get a database instance using simple connection parameters, use the following approach:
 
 <tabs group="connectivity">
     <tab id="jdbc-connect" title="JDBC" group-key="jdbc">
