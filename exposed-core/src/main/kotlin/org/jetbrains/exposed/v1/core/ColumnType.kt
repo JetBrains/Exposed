@@ -91,7 +91,7 @@ interface IColumnType<T> {
         if (value == null || value is Op.NULL) {
             stmt.setNull(index, this)
         } else {
-            stmt[index] = value
+            stmt.set(index, value, this)
         }
     }
 

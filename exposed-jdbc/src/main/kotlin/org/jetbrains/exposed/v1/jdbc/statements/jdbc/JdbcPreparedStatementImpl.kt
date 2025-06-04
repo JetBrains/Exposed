@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.BinaryColumnType
 import org.jetbrains.exposed.v1.core.BlobColumnType
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -65,7 +66,16 @@ class JdbcPreparedStatementImpl(
         }
     }
 
+    @Deprecated(
+        message = "This operator function will be removed in future releases. " +
+            "Replace with the `set(index, value, this)` operator that accepts a third argument for the IColumnType of the parameter value being bound.",
+        level = DeprecationLevel.WARNING
+    )
     override fun set(index: Int, value: Any) {
+        set(index, value, VarCharColumnType())
+    }
+
+    override fun set(index: Int, value: Any, columnType: IColumnType<*>) {
         statement.setObject(index, value)
     }
 

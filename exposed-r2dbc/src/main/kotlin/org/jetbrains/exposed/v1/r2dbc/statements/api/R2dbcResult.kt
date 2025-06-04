@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.reactivestreams.Publisher
 import java.sql.Date
@@ -81,8 +82,9 @@ class R2dbcResult internal constructor(
 value class R2DBCRow(val row: Row) : RowApi {
     override fun getObject(index: Int): Any? {
         val result = row.get(index - 1)
-        return when (result) {
-            is Json -> result.asString()
+        // the only way to avoid this would be to introduce getValue() functionality to TypeMapper
+        return when {
+            currentDialect is PostgreSQLDialect && result is Json -> result.asString()
             else -> result
         }
     }

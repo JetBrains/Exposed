@@ -1,11 +1,8 @@
 package org.jetbrains.exposed.v1.r2dbc.mappers
 
-import io.r2dbc.postgresql.codec.Json
 import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
-import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.postgresql.util.PGobject
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp
@@ -34,8 +31,6 @@ class ValueTypeMapper : TypeMapper {
             value is Time -> value.toLocalTime()
             value is Date -> value.toLocalDate()
             value is Timestamp -> value.toLocalDateTime()
-            // TODO should it be inside PostgresSpecificTypeMapper
-            dialect is PostgreSQLDialect && value is PGobject -> Json.of(value.value!!)
             else -> value
         }
 

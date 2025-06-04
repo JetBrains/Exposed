@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.core.statements.api
 
 import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.VarCharColumnType
 import java.io.InputStream
 
 /** Represents a precompiled SQL statement. */
@@ -19,10 +20,16 @@ interface PreparedStatementApi {
         return args.count() + 1
     }
 
-    operator fun set(index: Int, value: Any)
+    @Deprecated(
+        message = "This operator function will be removed in future releases. " +
+            "Replace with the `set(index, value, this)` operator that accepts a third argument for the IColumnType of the parameter value being bound.",
+        level = DeprecationLevel.WARNING
+    )
+    operator fun set(index: Int, value: Any) {
+        set(index, value, VarCharColumnType())
+    }
 
-    // TODO Could we add method `set()` that could pass `columnType` (actually for r2dbc mappers now)?
-    //  fun set(index: Int, value: Any, columnType: IColumnType<*>) = set(index, value)
+    fun set(index: Int, value: Any, columnType: IColumnType<*>)
 
     /** Sets the statement parameter at the [index] position to SQL NULL, if allowed wih the specified [columnType]. */
     fun setNull(index: Int, columnType: IColumnType<*>)
