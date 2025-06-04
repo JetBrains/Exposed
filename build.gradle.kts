@@ -28,6 +28,7 @@ dependencies {
     dokka(projects.exposed.exposedKotlinDatetime)
     dokka(projects.exposed.exposedMigration)
     dokka(projects.exposed.exposedMoney)
+    dokka(projects.exposed.exposedR2dbc)
     dokka(projects.exposed.exposedSpringBootStarter)
     dokka(projects.exposed.springTransaction)
 }
