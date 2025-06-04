@@ -2,6 +2,7 @@ import org.gradle.api.tasks.testing.logging.*
 
 plugins {
     kotlin("jvm") apply true
+    alias(libs.plugins.kover)
 }
 
 kotlin {
@@ -26,6 +27,14 @@ dependencies {
     implementation(project(":exposed-kotlin-datetime"))
     implementation(project(":exposed-money"))
     implementation(project(":exposed-migration"))
+
+    kover(project(":exposed-core"))
+    kover(project(":exposed-jdbc"))
+    kover(project(":exposed-dao"))
+    kover(project(":exposed-json"))
+    kover(project(":exposed-kotlin-datetime"))
+    kover(project(":exposed-money"))
+    kover(project(":exposed-migration"))
 
     implementation(libs.slf4j)
     implementation(libs.log4j.slf4j.impl)
