@@ -8,6 +8,7 @@ import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.BinaryColumnType
 import org.jetbrains.exposed.v1.core.BlobColumnType
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
@@ -119,13 +120,23 @@ class R2dbcPreparedStatementImpl(
         throw IllegalArgumentException("Unsupported InputStream for column type: ${columnType::class.qualifiedName}")
     }
 
-    override fun setArray(index: Int, arrayType: ArrayColumnType<*, *>, array: Array<*>) {
+    @Deprecated(
+        message = "This function will be removed in future releases. " +
+            "Replace with the method `setArray(index, this, array)` that accepts an ArrayColumnType as the second argument instead of a string type representation.",
+        level = DeprecationLevel.WARNING
+    )
+    override fun setArray(index: Int, type: String, array: Array<*>) {
+        @OptIn(InternalApi::class)
+        setArray(index, getArrayColumnType(type), array)
+    }
+
+    override fun setArray(index: Int, type: ArrayColumnType<*, *>, array: Array<*>) {
         // Try to use the type mappers first
-        if (typeMapping.setValue(statement, currentDialect, arrayType, array, index)) {
+        if (typeMapping.setValue(statement, currentDialect, type, array, index)) {
             return
         }
 
-        throw IllegalArgumentException("Unsupported array type: ${arrayType::class.qualifiedName}")
+        throw IllegalArgumentException("Unsupported array type: ${type::class.qualifiedName}")
     }
 
     override suspend fun closeIfPossible() {
