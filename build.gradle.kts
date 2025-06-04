@@ -30,7 +30,7 @@ dependencies {
     dokka(projects.exposed.exposedMoney)
     dokka(projects.exposed.exposedR2dbc)
     dokka(projects.exposed.exposedSpringBootStarter)
-    dokka(projects.exposed.springTransaction)
+    dokka(projects.exposed.exposedSpringTransaction)
 }
 
 repositories {

@@ -67,7 +67,7 @@ and date-time handling:
 | `exposed-kotlin-datetime`     | Date-time extensions based on the [`kotlinx-datetime`](https://kotlinlang.org/api/kotlinx-datetime/) library                                                                    |
 | `exposed-money`               | Extensions to support [`MonetaryAmount`](https://javamoney.github.io/apidocs/java.money/javax/money/MonetaryAmount.html) from the [JavaMoney API](https://javamoney.github.io/) |
 | `exposed-spring-boot-starter` | A starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM instead of [Hibernate](https://hibernate.org/)                                |
-| `spring-transaction`          | Transaction manager that builds on top of Spring's standard transaction workflow                                                                                                |
+| `exposed-spring-transaction`  | Transaction manager that builds on top of Spring's standard transaction workflow                                                                                                |
 | `exposed-migration`           | Provides utilities to support database schema migrations                                                                                                                        |
 
 
