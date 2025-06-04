@@ -344,6 +344,15 @@ public abstract class org/jetbrains/exposed/v1/dao/UUIDEntityClass : org/jetbrai
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
+public abstract class org/jetbrains/exposed/v1/dao/UuidKtEntity : org/jetbrains/exposed/v1/dao/Entity {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/EntityID;)V
+}
+
+public abstract class org/jetbrains/exposed/v1/dao/UuidKtEntityClass : org/jetbrains/exposed/v1/dao/EntityClass {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/dao/id/IdTable;Ljava/lang/Class;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
 public final class org/jetbrains/exposed/v1/dao/View : org/jetbrains/exposed/v1/jdbc/SizedIterable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Op;Lorg/jetbrains/exposed/v1/dao/EntityClass;)V
 	public fun copy ()Lorg/jetbrains/exposed/v1/jdbc/SizedIterable;
