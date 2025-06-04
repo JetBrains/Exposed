@@ -40,6 +40,9 @@ To use Exposed in your application you need the following core modules:
 | `exposed-jdbc`  | Provides support for Java Database Connectivity (JDBC) with a transport-level implementation based on the Java JDBC API                                       |
 | `exposed-r2dbc` | Provides support for Reactive Relational Database Connectivity (R2DBC)                                                                                        |
 
+> You only need one transport module – either `exposed-jdbc` or `exposed-r2dbc`, not both.
+> {style="note"}
+
 Add the required Exposed modules to your project's dependencies:
 
 <tabs>
@@ -72,9 +75,9 @@ and date-time handling:
 | `exposed-migration`           | Provides utilities to support database schema migrations                                                                                                                        |
 
 
-## Add a JDBC driver
+## Add a JDBC/R2DBC driver
 
-You also need a JDBC driver for the database system you are using. For example, the following dependency
+You also need a JDBC or R2DBC driver for the database system you are using. For example, the following dependency
 adds a JDBC driver for the H2 database:
 
 <tabs>
