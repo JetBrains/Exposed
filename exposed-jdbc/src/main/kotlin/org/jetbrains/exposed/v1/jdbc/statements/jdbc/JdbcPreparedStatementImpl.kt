@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.BinaryColumnType
 import org.jetbrains.exposed.v1.core.BlobColumnType
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
@@ -95,8 +96,16 @@ class JdbcPreparedStatementImpl(
         }
     }
 
-    // TODO we changed interface here, it's breaking change.
-    // TODO Could we avoid it by creating separate method, and deprecating this one?
+    @Deprecated(
+        message = "This function will be removed in future releases. " +
+            "Replace with the method `setArray(index, this, array)` that accepts an ArrayColumnType as the second argument instead of a string type representation.",
+        level = DeprecationLevel.WARNING
+    )
+    override fun setArray(index: Int, type: String, array: Array<*>) {
+        @OptIn(InternalApi::class)
+        setArray(index, getArrayColumnType(type), array)
+    }
+
     override fun setArray(index: Int, type: ArrayColumnType<*, *>, array: Array<*>) {
         statement.setArray(index, statement.connection.createArrayOf(type.delegateType, array))
     }
