@@ -4,7 +4,11 @@ import io.r2dbc.spi.Connection
 import io.r2dbc.spi.Statement
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.ArrayColumnType
+import org.jetbrains.exposed.v1.core.BinaryColumnType
+import org.jetbrains.exposed.v1.core.BlobColumnType
+import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapperRegistry
@@ -79,10 +83,18 @@ class R2dbcPreparedStatementImpl(
 //        }
     }
 
+    @Deprecated(
+        message = "This operator function will be removed in future releases. " +
+            "Replace with the method `set(index, value, this)` that accepts a third argument for the IColumnType of the parameter value being bound.",
+        level = DeprecationLevel.WARNING
+    )
     override fun set(index: Int, value: Any) {
+        set(index, value, VarCharColumnType())
+    }
+
+    override fun set(index: Int, value: Any, columnType: IColumnType<*>) {
         // Try to use the type mappers first
-        // We use VarCharColumnType as a placeholder since we don't have a real column type
-        if (typeMapperRegistry.setValue(statement, currentDialect, VarCharColumnType(), value, index)) {
+        if (typeMapperRegistry.setValue(statement, currentDialect, columnType, value, index)) {
             return
         }
 

@@ -1,5 +1,11 @@
 # Breaking Changes
 
+## 1.0.0-beta-3
+
+* `exposed-core` interface `PreparedStatementApi` has a new `set()` method that will require an override if implemented.
+  This method accepts a third argument for the column type associated with the value being bound to the statement,
+  and is meant to replace the existing `operator fun set(index: Int, value: Any)`, which is now deprecated.
+
 ## 1.0.0-beta-1
 
 The 1.0.0-beta-1 release introduces support for R2DBC and includes breaking changes to import paths.
