@@ -9,6 +9,8 @@
         <p>
             <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-json</code>
         </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-driver-specific"/>
     </tldr>
     <p>
         Exposed works together with the JSON serialization library of your choice by allowing column

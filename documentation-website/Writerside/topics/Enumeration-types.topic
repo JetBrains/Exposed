@@ -9,6 +9,8 @@
         <p>
             <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
         </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-not-supported"/>
     </tldr>
 
     <p>
