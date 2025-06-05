@@ -634,6 +634,7 @@ public abstract interface class org/jetbrains/exposed/v1/jdbc/statements/api/Jdb
 
 public final class org/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi$DefaultImpls {
 	public static fun fillParameters (Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;Ljava/lang/Iterable;)I
+	public static fun getArrayColumnType (Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ArrayColumnType;
 	public static fun set (Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;ILjava/lang/Object;)V
 }
 
@@ -712,6 +713,7 @@ public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcPreparedSta
 	public fun executeQuery ()Lorg/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcResult;
 	public fun executeUpdate ()I
 	public fun fillParameters (Ljava/lang/Iterable;)I
+	public fun getArrayColumnType (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ArrayColumnType;
 	public fun getFetchSize ()Ljava/lang/Integer;
 	public fun getResultSet ()Lorg/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcResult;
 	public final fun getStatement ()Ljava/sql/PreparedStatement;
@@ -719,6 +721,7 @@ public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcPreparedSta
 	public final fun getWasGeneratedKeysRequested ()Z
 	public fun set (ILjava/lang/Object;)V
 	public fun set (ILjava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
+	public fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
 	public fun setArray (ILorg/jetbrains/exposed/v1/core/ArrayColumnType;[Ljava/lang/Object;)V
 	public fun setFetchSize (Ljava/lang/Integer;)V
 	public fun setInputStream (ILjava/io/InputStream;Z)V
