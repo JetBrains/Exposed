@@ -26,7 +26,7 @@
         </tr>
         <tr>
             <td>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.sql.kotlin.datetime/index.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/index.html">
                     <code>exposed-kotlin-datetime</code>
                 </a>
             </td>
@@ -35,7 +35,7 @@
         </tr>
         <tr>
             <td>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.sql.javatime/index.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-java-time/org.jetbrains.exposed.v1.javatime/index.html">
                     <code>exposed-java-time</code>
                 </a>
             </td>
@@ -44,7 +44,7 @@
         </tr>
         <tr>
             <td>
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.sql.jodatime/index.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-jodatime/org.jetbrains.exposed.v1.jodatime/index.html">
                     <code>exposed-jodatime</code>
                 </a>
             </td>

@@ -26,7 +26,7 @@
         <deflist type="medium">
             <def id="enumeration-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/enumeration.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/enumeration.html">
                         <code>enumeration()</code>
                     </a>
                 </title>
@@ -38,7 +38,7 @@
             </def>
             <def id="enumerationByName-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/enumeration-by-name.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/enumeration-by-name.html">
                         <code>enumerationByName()</code>
                     </a>
                 </title>
@@ -50,7 +50,7 @@
             </def>
             <def id="customEnumeration-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/custom-enumeration.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/custom-enumeration.html">
                         <code>customEnumeration()</code>
                     </a>
                 </title>

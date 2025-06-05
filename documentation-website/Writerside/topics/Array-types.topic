@@ -21,7 +21,7 @@
     <chapter title="Supported types" id="supported-types">
         <p>
             The <code>exposed-core</code> module supports two main ways to define array columns using the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/array.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/array.html">
                 <code>.array()</code>
             </a>
             function:
@@ -84,7 +84,7 @@
     <chapter title="Array slicing" id="array-slicing">
         <p>
             Use
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/slice.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/slice.html">
                 <code>.slice()</code>
             </a>
             to extract subarrays:

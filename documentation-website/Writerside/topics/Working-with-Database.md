@@ -2,8 +2,9 @@
 
 # Working with Databases
 
-In Exposed, the [`Database`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-database/index.html)
-and [`R2DBCDatabase`]() classes represent a database instance, and encapsulates the necessary connection details and configuration required to
+In Exposed, the [`Database`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/-database/index.html)
+and [`R2DBCDatabase`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-database/index.html)
+classes represent a database instance, and encapsulates the necessary connection details and configuration required to
 interact with a specific database.
 
 ## Connecting to a Database
@@ -12,8 +13,8 @@ Every database access in Exposed begins by establishing a connection and creatin
 
 To connect to a database, you first need to tell Exposed of the connection details. You have two options:
 
-- Use [`Database.connect()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-database/-companion/connect.html) for traditional JDBC-based access.
-- Use [`R2DBCDatabase.connect()`]() for reactive, non-blocking access with R2DBC.
+- Use [`Database.connect()`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/-database/-companion/connect.html) for traditional JDBC-based access.
+- Use [`R2DBCDatabase.connect()`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-r2dbc-database/-companion/connect.html) for reactive, non-blocking access with R2DBC.
 
 These functions do not immediately establish a connection. Instead, they provide a descriptor for future usage. An
 actual connection is only established when a [transaction](Transactions.md) is initiated.
@@ -41,7 +42,7 @@ To get a database instance using simple connection parameters, use the following
 
 <note>
     By default, Exposed uses a <code>ServiceLoader</code> to get an implementation of the
-    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-database-connection-auto-registration/index.html">
+    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-database-connection-auto-registration/index.html">
         <code>DatabaseConnectionAutoRegistration</code>
     </a>
     interface that represents a connection accessed by the <code>Database</code> instance.

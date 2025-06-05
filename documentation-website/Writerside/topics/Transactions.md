@@ -7,7 +7,7 @@ CRUD operations in Exposed must be called from within a _transaction._ Transacti
 ## Create a transaction
 
 To create and execute a transaction with default parameters, simply pass a function block to the
-[`transaction()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.jdbc.transactions/transaction.html)
+[`transaction()`](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.transactions/transaction.html)
 function:
 
 ```kotlin
@@ -310,7 +310,7 @@ If it is set to a value greater than 1, `minRetryDelay` and `maxRetryDelay` can 
 transaction block to indicate the minimum and maximum number of milliseconds to wait before retrying.
 
 If not set, any default value provided in
-[`DatabaseConfig`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-database-config/index.html)
+[`DatabaseConfig`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-database-config/index.html)
 will be used instead:
 
 ```kotlin

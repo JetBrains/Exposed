@@ -224,7 +224,7 @@
             <code-block lang="kotlin" src="exposed-dao/src/main/kotlin/org/example/entities/EntityWithUInt.kt"/>
             <p>
                 The
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/transform.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/transform.html">
                     <code>.transform()</code>
                 </a>
                 function accepts two lambdas that convert values to and from the original column type.
@@ -241,7 +241,7 @@
             <p>
                 If your transformation function involves complex operations that impact performance,
                 you can use
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/memoized-transform.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/memoized-transform.html">
                     <code>.memoizedTransform()</code>
                 </a>
                 to cache the result of the transformation.
