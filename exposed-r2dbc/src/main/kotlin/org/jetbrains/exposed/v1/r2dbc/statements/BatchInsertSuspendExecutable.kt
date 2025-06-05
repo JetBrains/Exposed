@@ -9,6 +9,9 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 
+/**
+ * Represents the execution logic for an SQL statement that batch inserts new rows into a table.
+ */
 open class BatchInsertSuspendExecutable<S : BaseBatchInsertStatement>(
     override val statement: S
 ) : InsertSuspendExecutable<List<ResultRow>, S>(statement) {
@@ -23,6 +26,10 @@ open class BatchInsertSuspendExecutable<S : BaseBatchInsertStatement>(
     }
 }
 
+/**
+ * Represents the execution logic for an SQL statement that batch inserts new rows into a table,
+ * specifically for the SQL Server database.
+ */
 open class SQLServerBatchInsertSuspendExecutable(
     override val statement: SQLServerBatchInsertStatement
 ) : BatchInsertSuspendExecutable<SQLServerBatchInsertStatement>(statement) {

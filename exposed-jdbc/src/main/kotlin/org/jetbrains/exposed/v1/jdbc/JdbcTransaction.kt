@@ -7,7 +7,6 @@ import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.SqlLogger
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.exposedLogger
-import org.jetbrains.exposed.v1.core.statements.*
 import org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor
 import org.jetbrains.exposed.v1.core.statements.Statement
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
@@ -24,6 +23,7 @@ import java.sql.ResultSet
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+/** Class representing a unit block of work that is performed on a database using a JDBC driver. */
 open class JdbcTransaction(
     private val transactionImpl: JdbcTransactionInterface
 ) : Transaction(), JdbcTransactionInterface by transactionImpl {
@@ -54,7 +54,7 @@ open class JdbcTransaction(
     /** The current statement for which an execution plan should be queried, but which should never itself be executed. */
     internal var explainStatement: Statement<*>? = null
 
-    /** Whether this [Transaction] should prevent any statement execution from proceeding. */
+    /** Whether this [JdbcTransaction] should prevent any statement execution from proceeding. */
     internal var blockStatementExecution: Boolean = false
 
     internal val executedStatements: MutableList<JdbcPreparedStatementApi> = arrayListOf()
@@ -179,7 +179,7 @@ open class JdbcTransaction(
     /**
      * Executes the provided [Statement] object and returns the generated value.
      *
-     * This function also updates its calling [Transaction] instance's statement count and overall duration,
+     * This function also updates its calling [JdbcTransaction] instance's statement count and overall duration,
      * as well as whether the execution time for [stmt] exceeds the threshold set by
      * `DatabaseConfig.warnLongQueriesDuration`. If [Transaction.debug] is set to `true`, these tracked values
      * are stored for each call in [Transaction.statementStats].
@@ -198,7 +198,7 @@ open class JdbcTransaction(
      * Executes the provided [Statement] object, retrieves the generated value, then calls the specified
      * function [body] with this generated value as its argument and returns its result.
      *
-     * This function also updates its calling [Transaction] instance's statement count and overall duration,
+     * This function also updates its calling [JdbcTransaction] instance's statement count and overall duration,
      * as well as whether the execution time for [stmt] exceeds the threshold set by
      * `DatabaseConfig.warnLongQueriesDuration`. If [Transaction.debug] is set to `true`, these tracked values
      * are stored for each call in [Transaction.statementStats].
@@ -259,7 +259,7 @@ open class JdbcTransaction(
     }
 }
 
-/** Adds one or more [SqlLogger]s to [this] transaction. */
+/** Adds one or more [SqlLogger]s to this [JdbcTransaction]. */
 fun JdbcTransaction.addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
     return CompositeSqlLogger().apply {
         logger.forEach { this.addLogger(it) }

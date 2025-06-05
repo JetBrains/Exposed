@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 
+/** Represents a unit block of work that is performed on a database using an R2DBC driver. */
 interface R2dbcTransactionInterface : TransactionInterface {
     override val db: R2dbcDatabase
 
@@ -29,13 +30,13 @@ interface R2dbcTransactionInterface : TransactionInterface {
 }
 
 /**
- * The [TransactionManager] instance that is associated with this [Database].
+ * The [TransactionManager] instance that is associated with this [R2dbcDatabase].
  *
  * @throws [RuntimeException] If a manager has not been registered for the database.
  */
 @Suppress("TooGenericExceptionThrown")
 val R2dbcDatabase?.transactionManager: TransactionManager
-    get() = org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.managerFor(this)
+    get() = TransactionManager.managerFor(this)
         ?: throw RuntimeException("Database $this does not have any transaction manager")
 
 @Suppress("TooGenericExceptionCaught")

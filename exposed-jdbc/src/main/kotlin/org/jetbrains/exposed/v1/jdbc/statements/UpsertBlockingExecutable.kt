@@ -5,7 +5,10 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 
-// TODO KDocs should be added
+/**
+ * Represents the execution logic for an SQL statement that either inserts a new row into a table,
+ * or updates the existing row if insertion would violate a unique constraint.
+ */
 open class UpsertBlockingExecutable<Key : Any>(
     override val statement: UpsertStatement<Key>
 ) : InsertBlockingExecutable<Key, UpsertStatement<Key>>(statement) {

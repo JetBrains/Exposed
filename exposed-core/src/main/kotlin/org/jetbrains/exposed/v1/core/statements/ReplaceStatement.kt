@@ -37,7 +37,7 @@ open class ReplaceStatement<Key : Any>(table: Table) : InsertStatement<Key>(tabl
 open class ReplaceSelectStatement(
     columns: List<Column<*>>,
     selectQuery: AbstractQuery<*>
-) : org.jetbrains.exposed.v1.core.statements.InsertSelectStatement(columns, selectQuery) {
+) : InsertSelectStatement(columns, selectQuery) {
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val querySql = selectQuery.prepareSQL(transaction, prepared)
         val dialect = transaction.db.dialect

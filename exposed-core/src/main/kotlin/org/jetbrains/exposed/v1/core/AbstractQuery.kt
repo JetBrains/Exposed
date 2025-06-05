@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
 @Suppress("ForbiddenComment")
 // TODO: check if Statement<T> is limited to ResultApi & if we can introduce typed exec()s to avoid casting ResultApi
 // TODO: consider naming this as QueryState (or something related to state of the query) and check that it has only single responsibility
-/** Base class representing an SQL query that returns a [ResultSet] when executed. */
+/** Base class representing an SQL query that returns a database result when executed. */
 abstract class AbstractQuery<T : AbstractQuery<T>>(
     targets: List<Table>
 ) : Statement<ResultApi>(StatementType.SELECT, targets) {
