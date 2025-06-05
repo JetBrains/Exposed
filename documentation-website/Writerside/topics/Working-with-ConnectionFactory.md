@@ -1,5 +1,7 @@
 # Working with ConnectionFactory
 
+<primary-label ref="r2dbc"/>
+
 In R2DBC, [`ConnectionFactory`](https://javadoc.io/doc/io.r2dbc/r2dbc-spi/latest/io/r2dbc/spi/ConnectionFactory.html)
 from the `io.r2dbc.spi` package is the reactive equivalent of a [`DataSource`](Working-with-DataSource.md) in JDBC.
 It is responsible for producing non-blocking `Connection` instances that support reactive and coroutine-based database
