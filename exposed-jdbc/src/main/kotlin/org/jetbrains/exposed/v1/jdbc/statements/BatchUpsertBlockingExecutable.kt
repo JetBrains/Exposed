@@ -5,7 +5,10 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 
-// TODO KDocs should be added
+/**
+ * Represents the execution logic for an SQL statement that either batch inserts new rows into a table,
+ * or updates the existing rows if insertions violate unique constraints.
+ */
 open class BatchUpsertBlockingExecutable(
     override val statement: BatchUpsertStatement
 ) : BatchInsertBlockingExecutable<BatchUpsertStatement>(statement) {

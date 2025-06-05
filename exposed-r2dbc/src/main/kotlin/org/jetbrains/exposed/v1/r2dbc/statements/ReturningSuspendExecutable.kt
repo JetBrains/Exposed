@@ -13,6 +13,9 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 
+/**
+ * Represents the execution logic for an underlying SQL statement that also returns a result with data from any modified rows.
+ */
 open class ReturningSuspendExecutable(
     override val statement: ReturningStatement
 ) : SuspendExecutable<ResultApi, ReturningStatement>, Flow<ResultRow> {

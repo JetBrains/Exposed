@@ -13,6 +13,9 @@ import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.sql.ResultSet
 
+/**
+ * Represents the execution logic for an SQL statement that obtains information about a statement execution plan.
+ */
 open class ExplainBlockingExecutable(
     override val statement: ExplainQuery
 ) : BlockingExecutable<ResultApi, ExplainQuery>, Iterable<ExplainResultRow> {

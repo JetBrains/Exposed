@@ -5,6 +5,10 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 
+/**
+ * Represents the execution logic for an SQL statement that either batch inserts new rows into a table,
+ * or updates the existing rows if insertions violate unique constraints.
+ */
 open class BatchUpsertSuspendExecutable(
     override val statement: BatchUpsertStatement
 ) : BatchInsertSuspendExecutable<BatchUpsertStatement>(statement) {

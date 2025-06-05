@@ -8,10 +8,9 @@ import java.util.ServiceLoader
 /**
  * Registry for type mappers.
  * This class holds a list of type mappers and provides methods to register and use them.
- *
- * TODO add hint about `mappers` ordering
- * TODO TypeMapperRegistry should become interface to allow users create own registries
  */
+// TODO add hint about `mappers` ordering
+// TODO TypeMapperRegistry should become interface to allow users create own registries
 class TypeMapperRegistry(private val mappers: MutableList<TypeMapper> = mutableListOf()) {
 
     /**

@@ -168,14 +168,14 @@ class TransactionManager(
             CoreTransactionManager.resetCurrentThreadManager(manager)
         }
 
-        /** Returns the current [Transaction], or creates a new transaction with the provided [isolation] level. */
+        /** Returns the current [JdbcTransaction], or creates a new transaction with the provided [isolation] level. */
         fun currentOrNew(isolation: Int): JdbcTransaction = currentOrNull() ?: manager.newTransaction(isolation)
 
-        /** Returns the current [Transaction], or `null` if none exists. */
+        /** Returns the current [JdbcTransaction], or `null` if none exists. */
         fun currentOrNull(): JdbcTransaction? = manager.currentOrNull()
 
         /**
-         * Returns the current [Transaction].
+         * Returns the current [JdbcTransaction].
          *
          * @throws [IllegalStateException] If no transaction exists.
          */

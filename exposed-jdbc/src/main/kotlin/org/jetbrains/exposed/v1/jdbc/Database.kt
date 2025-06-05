@@ -19,7 +19,9 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.sql.DataSource
 
 /**
- * Class representing the underlying database to which connections are made and on which transaction tasks are performed.
+ * Class representing the underlying JDBC database to which connections are made and on which transaction tasks are performed.
+ *
+ * @param connector Accessor for retrieving database connections wrapped as [ExposedConnection]
  */
 class Database private constructor(
     resolvedVendor: String? = null,
