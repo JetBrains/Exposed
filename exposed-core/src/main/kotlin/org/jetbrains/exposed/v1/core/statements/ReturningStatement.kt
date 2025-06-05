@@ -7,10 +7,10 @@ import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 
 /**
- * Represents the underlying SQL [mainStatement] that also returns a result set with data from any modified rows.
+ * Represents the underlying SQL [mainStatement] that also returns a result with data from any modified rows.
  *
  * @param table Table to perform the main statement on and return results from.
- * @param returningExpressions Columns or expressions to include in the returned result set.
+ * @param returningExpressions Columns or expressions to include in the returned result.
  * @param mainStatement The statement to append the RETURNING clause to. This may be an insert, update, or delete statement.
  */
 open class ReturningStatement(

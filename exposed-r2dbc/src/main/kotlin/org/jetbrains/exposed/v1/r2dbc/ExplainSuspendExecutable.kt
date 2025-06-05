@@ -15,6 +15,9 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.statements.api.metadata
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 
+/**
+ * Represents the execution logic for an SQL statement that obtains information about a statement execution plan.
+ */
 open class ExplainSuspendExecutable(
     override val statement: ExplainQuery
 ) : SuspendExecutable<ResultApi, ExplainQuery>, Flow<ExplainResultRow> {

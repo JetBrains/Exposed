@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 
-// TODO add missed KDocs
+/** Represents a unit block of work that is performed on a database using a JDBC driver. */
 interface JdbcTransactionInterface : TransactionInterface {
     override val db: Database
 
@@ -35,7 +35,7 @@ interface JdbcTransactionInterface : TransactionInterface {
 // TODO check if we can move it to Database to make it field/method there.
 @Suppress("TooGenericExceptionThrown")
 val Database?.transactionManager: TransactionManager
-    get() = org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager.managerFor(this)
+    get() = TransactionManager.managerFor(this)
         ?: throw RuntimeException("Database $this does not have any transaction manager")
 
 @Suppress("TooGenericExceptionCaught")

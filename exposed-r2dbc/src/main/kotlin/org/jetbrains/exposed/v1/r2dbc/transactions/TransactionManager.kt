@@ -47,6 +47,7 @@ class TransactionManager(
 
     override var defaultReadOnly: Boolean = db.config.defaultReadOnly
 
+    /** A thread local variable storing the current transaction. */
     val threadLocal = ThreadLocal<R2dbcTransaction>()
 
     override fun toString(): String {
@@ -54,7 +55,7 @@ class TransactionManager(
     }
 
     /**
-     * Returns a [R2dbcTransaction] instance.
+     * Returns an [R2dbcTransaction] instance.
      *
      * The returned value may be a new transaction, or it may return the [outerTransaction] if called from within
      * an existing transaction with the database not configured to `useNestedTransactions`.
@@ -152,14 +153,14 @@ class TransactionManager(
             CoreTransactionManager.resetCurrentThreadManager(manager)
         }
 
-        /** Returns the current [Transaction], or creates a new transaction with the provided [isolation] level. */
+        /** Returns the current [R2dbcTransaction], or creates a new transaction with the provided [isolation] level. */
         fun currentOrNew(isolation: IsolationLevel): R2dbcTransaction = currentOrNull() ?: manager.newTransaction(isolation)
 
-        /** Returns the current [Transaction], or `null` if none exists. */
+        /** Returns the current [R2dbcTransaction], or `null` if none exists. */
         fun currentOrNull(): R2dbcTransaction? = manager.currentOrNull()
 
         /**
-         * Returns the current [Transaction].
+         * Returns the current [R2dbcTransaction].
          *
          * @throws [IllegalStateException] If no transaction exists.
          */
@@ -335,16 +336,16 @@ suspend fun <T> suspendTransactionAsync(
 }
 
 private suspend fun R2dbcTransaction.closeAsync() {
-    val currentTransaction = org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.currentOrNull()
+    val currentTransaction = TransactionManager.currentOrNull()
     try {
         val temporaryManager = this.db.transactionManager
         temporaryManager.bindTransactionToThread(this)
-        org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.resetCurrent(temporaryManager)
+        TransactionManager.resetCurrent(temporaryManager)
     } finally {
         closeStatementsAndConnection(this)
         val transactionManager = currentTransaction?.db?.transactionManager
         transactionManager?.bindTransactionToThread(currentTransaction)
-        org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.resetCurrent(transactionManager)
+        TransactionManager.resetCurrent(transactionManager)
     }
 }
 
@@ -400,7 +401,7 @@ private suspend fun R2dbcTransaction.resetIfClosed(): R2dbcTransaction {
         // unless the transaction is reset before every attempt (after the 1st failed attempt)
         val currentManager = db.transactionManager
         currentManager.bindTransactionToThread(this)
-        org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.resetCurrent(currentManager)
+        TransactionManager.resetCurrent(currentManager)
         currentManager.newTransaction(transactionIsolation, readOnly, outerTransaction)
     } else {
         this

@@ -15,11 +15,11 @@ internal object DefaultValueMarker {
 /**
  * Executable provides a customizable execution mechanism for SQL statements within a transaction.
  *
- * This interface allows implementing classes to define specific execution logic specific to R2DBC
+ * This interface allows implementing classes to define specific execution logic specific to an R2DBC driver
  * and customize how the return value is handled.
  * It is primarily used when fine-grained control over statement execution is required.
  *
- * For the blocking JDBC alternative of this interface, see [BlockingExecutable].
+ * For the blocking JDBC alternative of this interface, see `BlockingExecutable` provided with a dependency on `exposed-jdbc`.
  *
  * ## Usage Example:
  * ```kotlin
@@ -37,12 +37,13 @@ internal object DefaultValueMarker {
  * }
  * ```
  *
- * The implemented Executable can be later used in the utility functions like [Table.batchUpsert].
+ * The implemented Executable can be later used in the utility functions like `Table.batchUpsert()`.
  *
  * @param T The return type of the SQL execution result.
  * @param S The type of SQL statement that is executed.
  */
 interface SuspendExecutable<out T, S : Statement<T>> {
+    /** The actual Exposed [Statement] on which the specific execution logic should be used. */
     val statement: S
 
     /**
@@ -53,7 +54,7 @@ interface SuspendExecutable<out T, S : Statement<T>> {
 
     /**
      * Uses a [transaction] connection and an [sql] string representation to return a precompiled SQL statement,
-     * stored as an implementation of [PreparedStatementApi].
+     * stored as an implementation of [R2dbcPreparedStatementApi].
      */
     suspend fun prepared(
         transaction: R2dbcTransaction,

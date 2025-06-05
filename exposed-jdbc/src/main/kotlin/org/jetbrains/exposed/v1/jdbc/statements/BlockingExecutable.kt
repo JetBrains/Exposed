@@ -3,7 +3,6 @@ package org.jetbrains.exposed.v1.jdbc.statements
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.statements.Statement
 import org.jetbrains.exposed.v1.core.statements.StatementContext
-import org.jetbrains.exposed.v1.core.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
@@ -16,11 +15,11 @@ internal object DefaultValueMarker {
 /**
  * Executable provides a customizable execution mechanism for SQL statements within a transaction.
  *
- * This interface allows implementing classes to define specific execution logic specific to JDBC
+ * This interface allows implementing classes to define specific execution logic specific to a JDBC driver
  * and customize how the return value is handled.
  * It is primarily used when fine-grained control over statement execution is required.
  *
- * For the suspend alternative of this interface, see [SuspendExecutable].
+ * For the suspend R2DBC alternative of this interface, see `SuspendExecutable` provided with a dependency on `exposed-r2dbc`.
  *
  * ## Usage Example:
  * ```kotlin
@@ -38,12 +37,13 @@ internal object DefaultValueMarker {
  * }
  * ```
  *
- * The implemented Executable can be later used in the utility functions like [Table.batchUpsert].
+ * The implemented Executable can be later used in utility functions like `Table.batchUpsert()`.
  *
  * @param T The return type of the SQL execution result.
  * @param S The type of SQL statement that is executed.
  */
 interface BlockingExecutable<out T, S : Statement<T>> {
+    /** The actual Exposed [Statement] on which the specific execution logic should be used. */
     val statement: S
 
     /**
@@ -54,7 +54,7 @@ interface BlockingExecutable<out T, S : Statement<T>> {
 
     /**
      * Uses a [transaction] connection and an [sql] string representation to return a precompiled SQL statement,
-     * stored as an implementation of [PreparedStatementApi].
+     * stored as an implementation of [JdbcPreparedStatementApi].
      */
     fun prepared(
         transaction: JdbcTransaction,

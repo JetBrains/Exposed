@@ -10,7 +10,9 @@ import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.sql.ResultSet
 
-// TODO KDocs should be added
+/**
+ * Represents the execution logic for an underlying SQL statement that also returns a result with data from any modified rows.
+ */
 open class ReturningBlockingExecutable(
     override val statement: ReturningStatement
 ) : BlockingExecutable<ResultApi, ReturningStatement>, Iterable<ResultRow> {

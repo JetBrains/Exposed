@@ -17,7 +17,7 @@ open class InsertSelectStatement(
     val columns: List<Column<*>>,
     val selectQuery: AbstractQuery<*>,
     val isIgnore: Boolean = false
-) : org.jetbrains.exposed.v1.core.statements.Statement<Int>(org.jetbrains.exposed.v1.core.statements.StatementType.INSERT, listOf(columns.first().table)) {
+) : Statement<Int>(StatementType.INSERT, listOf(columns.first().table)) {
 
     init {
         if (columns.isEmpty()) error("Can't insert without provided columns")

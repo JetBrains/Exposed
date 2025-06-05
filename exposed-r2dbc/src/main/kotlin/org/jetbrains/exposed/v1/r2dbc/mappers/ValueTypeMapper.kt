@@ -9,7 +9,7 @@ import java.sql.Timestamp
 
 /**
  * Mapper for values without a column type.
- * This mapper is used by the set method in R2dbcPreparedStatementImpl.
+ * This mapper is used by the set method in `R2dbcPreparedStatementImpl`.
  */
 class ValueTypeMapper : TypeMapper {
     // This mapper handles all column types, but only for specific value types

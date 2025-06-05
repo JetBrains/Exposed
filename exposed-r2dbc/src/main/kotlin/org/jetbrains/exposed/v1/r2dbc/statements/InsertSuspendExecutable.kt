@@ -21,6 +21,9 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.metadata
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.inProperCase
 
+/**
+ * Represents the execution logic for an SQL statement that inserts a new row into a table.
+ */
 open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
 ) : SuspendExecutable<Int, S> {

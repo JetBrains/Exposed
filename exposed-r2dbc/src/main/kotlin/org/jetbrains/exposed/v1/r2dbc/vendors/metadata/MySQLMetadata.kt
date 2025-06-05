@@ -91,7 +91,7 @@ internal open class MySQLTypeProvider : SqlTypeProvider() {
 }
 
 internal open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), MySQLTypeProvider()) {
-    // REVIEW potential mismatch: MariaDB R2DBC returns User@Host, but MariaDB JDBC returns just User
+    // TODO potential mismatch: MariaDB R2DBC returns User@Host, but MariaDB JDBC returns just User
     override fun getUsername(): String {
         return "SELECT USER() AS USER_NAME"
     }

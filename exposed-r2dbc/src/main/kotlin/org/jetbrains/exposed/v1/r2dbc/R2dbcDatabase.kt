@@ -20,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Class representing the underlying R2DBC database to which connections are made and on which transaction tasks are performed.
+ *
+ * @param connector Accessor for retrieving database connections wrapped as [R2dbcExposedConnection]
  */
 class R2dbcDatabase private constructor(
     resolvedVendor: String? = null,
@@ -65,29 +67,29 @@ class R2dbcDatabase private constructor(
             ?: error("No dialect metadata registered for $name. URL=$url")
     }
 
-    // REVIEW: usage in core H2Dialect
+    // TODO usage in core H2Dialect
     override val dialectMode: String? by lazy { runBlocking { metadata { getDatabaseDialectMode() } } }
 
-    // cleanup -> getVersion() does not actually need suspend; relocate or refactor?
+    // TODO cleanup -> getVersion() does not actually need suspend; relocate or refactor?
     override val version: BigDecimal by lazy { runBlocking { metadata { getVersion() } } }
 
     override fun isVersionCovers(version: BigDecimal): Boolean = this.version >= version
 
     /** The major version number of the database as a [Int]. */
-    // cleanup -> getMajorVersion() does not actually need suspend; relocate or refactor?
+    // TODO cleanup -> getMajorVersion() does not actually need suspend; relocate or refactor?
     val majorVersion: Int by lazy { runBlocking { metadata { getMajorVersion() } } }
 
     /** The minor version number of the database as a [Int]. */
-    // cleanup -> getMinorVersion() does not actually need suspend; relocate or refactor?
+    // TODO cleanup -> getMinorVersion() does not actually need suspend; relocate or refactor?
     val minorVersion: Int by lazy { runBlocking { metadata { getMinorVersion() } } }
 
     override fun isVersionCovers(majorVersion: Int, minorVersion: Int): Boolean =
         this.majorVersion > majorVersion || (this.majorVersion == majorVersion && this.minorVersion >= minorVersion)
 
-    // cleanup -> getDatabaseProductVersion() does not actually need suspend; relocate or refactor?
+    // TODO cleanup -> getDatabaseProductVersion() does not actually need suspend; relocate or refactor?
     override val fullVersion: String by lazy { runBlocking { metadata { getDatabaseProductVersion() } } }
 
-    // cleanup -> none of these properties need suspend; better to call MetadataProvider directly?
+    // TODO cleanup -> none of these properties need suspend; better to call MetadataProvider directly?
     // TODO for properties that do not actually query metadata (hard-coded), switch to metadat property
     override val supportsAlterTableWithAddColumn: Boolean by lazy { runBlocking { metadata { supportsAlterTableWithAddColumn } } }
 
@@ -95,7 +97,7 @@ class R2dbcDatabase private constructor(
 
     override val supportsMultipleResultSets: Boolean by lazy { runBlocking { metadata { supportsMultipleResultSets } } }
 
-    // cleanup -> definitely does not actually need suspend; relocate or refactor?
+    // TODO cleanup -> definitely does not actually need suspend; relocate or refactor?
     override val identifierManager: IdentifierManagerApi by lazy { runBlocking { metadata { identifierManager } } }
 
     companion object {
@@ -207,7 +209,7 @@ class R2dbcDatabase private constructor(
         }
 
         /**
-         * Creates a [R2dbcDatabase] instance.
+         * Creates an [R2dbcDatabase] instance.
          *
          * **Note:** This function does not immediately instantiate an actual connection to a database,
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.

@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 internal const val DEFAULT_MAX_ATTEMPTS = 3
 
 /**
- * A configuration for a [DatabaseApi] instance.
+ * Base configuration for a [DatabaseApi] instance.
  *
  * Parameters set in this class apply to all transactions that use the [DatabaseApi] instance,
  * unless an applicable override is specified in an individual transaction block.
@@ -28,6 +28,9 @@ interface DatabaseConfig {
     val logTooMuchResultSetsThreshold: Int
     val preserveKeywordCasing: Boolean
 
+    /**
+     * Builder API responsible for constructing a custom [DatabaseApi] configuration parameter state.
+     */
     open class Builder {
         /**
          * SQLLogger to be used to log all SQL statements. [Slf4jSqlDebugLogger] by default.
@@ -48,7 +51,10 @@ interface DatabaseConfig {
          * Default transaction isolation level. If not specified, the database-specific level will be used.
          * This can be overridden on a per-transaction level by specifying the `transactionIsolation` parameter of
          * the `transaction` function.
-         * Check [Database.getDefaultIsolationLevel] for the database defaults.
+         *
+         * Check `Database.getDefaultIsolationLevel()` for the database defaults.
+         *
+         * If using Exposed with an R2DBC driver, `defaultR2dbcIsolationLevel` should be used directly instead.
          */
         open var defaultIsolationLevel: Int = -1
 

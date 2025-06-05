@@ -50,14 +50,14 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
     suspend fun close()
 
     /**
-     * Returns a precompiled [sql] statement stored as a [PreparedStatementApi] implementation.
+     * Returns a precompiled [sql] statement stored as an [R2dbcPreparedStatementImpl] implementation.
      *
      * To indicate that auto-generated keys should be made available for retrieval, set [returnKeys] to `true`.
      */
     suspend fun prepareStatement(sql: String, returnKeys: Boolean): R2dbcPreparedStatementImpl
 
     /**
-     * Returns a precompiled [sql] statement stored as a [PreparedStatementApi] implementation.
+     * Returns a precompiled [sql] statement stored as an [R2dbcPreparedStatementImpl] implementation.
      *
      * To indicate that auto-generated keys should be made available for retrieval, provide the names of
      * the target [columns] that contain the keys to be returned.
@@ -68,7 +68,7 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
     suspend fun executeInBatch(sqls: List<String>)
 
     /**
-     * Calls the specified function [body] with an [ExposedDatabaseMetadata] implementation as its receiver and
+     * Calls the specified function [body] with an [R2dbcExposedDatabaseMetadata] implementation as its receiver and
      * returns the retrieved metadata as a result.
      */
     suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T
