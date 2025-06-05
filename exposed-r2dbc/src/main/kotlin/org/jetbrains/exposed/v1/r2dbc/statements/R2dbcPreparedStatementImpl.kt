@@ -87,7 +87,7 @@ class R2dbcPreparedStatementImpl(
     @Deprecated(
         message = "This operator function will be removed in future releases. " +
             "Replace with the method `set(index, value, this)` that accepts a third argument for the IColumnType of the parameter value being bound.",
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     override fun set(index: Int, value: Any) {
         set(index, value, VarCharColumnType())
@@ -123,7 +123,7 @@ class R2dbcPreparedStatementImpl(
     @Deprecated(
         message = "This function will be removed in future releases. " +
             "Replace with the method `setArray(index, this, array)` that accepts an ArrayColumnType as the second argument instead of a string type representation.",
-        level = DeprecationLevel.WARNING
+        level = DeprecationLevel.ERROR
     )
     override fun setArray(index: Int, type: String, array: Array<*>) {
         @OptIn(InternalApi::class)
