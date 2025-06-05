@@ -38,8 +38,6 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
      */
     val connectionFactoryOptions: ConnectionFactoryOptions
 
-    val useExposedCodecs: Boolean
-
     /**
      * Registry storing all built-in [org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapper] classes, as well as any
      * custom mappers implemented and detected by a `ServiceLoader`.
@@ -64,8 +62,6 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
      * Builder API responsible for constructing a custom [R2dbcDatabase] configuration parameter state.
      */
     class Builder : DatabaseConfig.Builder() {
-        var useExposedCodecs: Boolean = true
-
         /**
          * The [ConnectionFactoryOptions] state holder that should be associated to a [io.r2dbc.spi.ConnectionFactory]
          * when creating connections.
@@ -167,8 +163,6 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
                     get() = this@Builder.dispatcher
                 override val connectionFactoryOptions: ConnectionFactoryOptions
                     get() = this@Builder.connectionFactoryOptions
-                override val useExposedCodecs: Boolean
-                    get() = this@Builder.useExposedCodecs
                 override val typeMapping: R2dbcTypeMapping
                     get() = this@Builder.typeMapping
                 override val defaultR2dbcIsolationLevel: IsolationLevel?
