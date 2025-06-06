@@ -1,4 +1,5 @@
 @file:Suppress("InvalidPackageDeclaration", "MatchingDeclarationName", "MagicNumber")
+
 package org.example
 
 import org.jetbrains.exposed.v1.core.Table

@@ -4,6 +4,7 @@
     <var name="product" value="Writerside"/>
     <var name="exposed_version" value="1.0.0-beta-2"/>
     <var name="h2_db_version" value="2.2.224"/>
+    <var name="h2_r2dbc_version" value="1.0.0.RELEASE"/>
     <var name="mariadb" value="3.3.1"/>
     <var name="mariadb_r2dbc" value="1.3.0" />
     <var name="mysql" value="8.0.33"/>

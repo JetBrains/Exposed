@@ -62,7 +62,7 @@ In order to use H2, you need to add the H2 driver dependency:
     </tab>
     <tab id="r2dbc-h2-db" title="R2DBC" group-key="r2dbc">
         <code-block lang="kotlin">
-            implementation("io.r2dbc:r2dbc-h2:%mariadb_r2dbc%")
+            implementation("io.r2dbc:r2dbc-h2:%h2_r2dbc_version%")
         </code-block>
     </tab>
 </tabs>
