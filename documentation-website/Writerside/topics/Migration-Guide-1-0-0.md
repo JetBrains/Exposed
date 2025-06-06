@@ -3,13 +3,14 @@
 # Migrating from 0.61.0 to 1.0.0
 
 This guide provides instructions on how to migrate from Exposed version 0.61.0 to the version 1.0.0,
-which provides additional R2DBC support on top of the existing JDBC support.
+which primarily provides additional R2DBC support on top of the existing JDBC support.
 
 ## Import versioning and package renaming
 
 ### Updated imports
 
 All dependencies have been updated to follow the import path pattern of `org.jetbrains.exposed.v1.packageName.*`.
+
 This means that imports from `exposed-core`, for example, which were previously located under `org.jetbrains.exposed.sql.*`,
 are now located under `org.jetbrains.exposed.v1.core.*`. The table below shows example changes:
 
@@ -55,15 +56,16 @@ These changes to the import paths will present as multiple unresolved errors in 
 
 If IntelliJ IDEA is being used, a shortcut to resolving these import errors may be to rely on the [automatic addition](https://www.jetbrains.com/help/idea/creating-and-optimizing-imports.html#automatically-add-import-statements)
 of import statements by temporarily enabling 'Add unambiguous imports' in `Settings | Editor | General | Auto Import`.
-With that option checked, deletion of any unresolved import statements should trigger the automatic addition of the correct paths,
+With that option checked, the deletion of any unresolved import statements should trigger the automatic addition of the correct paths,
 which can then be confirmed manually.
 
 ### Implicit imports and naming conflicts
 
 Prior to version 1.0.0, it was possible to create custom extension functions and class methods with identical names to existing
-query and statement functions, like `selectAll()` and `insert()`. This is still possible with version 1.0.0, but the use
-of wildcard imports may lead to unexpected invocation behavior. It is recommended to explicitly import these custom functions
-in the event that renaming is not a feasible option.
+query and statement functions, like `selectAll()` and `insert()`. This is still possible with version 1.0.0; however, due to
+the new import paths of these Exposed functions, the use of wildcard imports may lead to unexpected invocation behavior
+if such custom functions are also being used. It is recommended to explicitly import these custom functions in the event
+that renaming is not a feasible option.
 
 ## Transactions
 
@@ -75,9 +77,10 @@ The following shows some examples of the ownership changes:
 |---------------------------|------------------------------------|
 | `Transaction.connection`  | `JdbcTransaction.connection`       |
 | `Transaction.db`          | `JdbcTransaction.db`               |
-| `Transaction.maxAttempts` | `JdbcTransaction.maxAttempts`      |
 | `Transaction.exec()`      | `JdbcTransaction.exec()`           |
 | `Transaction.rollback()`  | `JdbcTransaction.rollback()`       |
+
+### Custom functions
 
 Any custom transaction-scoped extension functions will most likely require the receiver to be changed from `Transaction`
 to `JdbcTransaction`, as may any functions that used to accept a `Transaction` as an argument:
@@ -117,66 +120,53 @@ fun JdbcTransaction.getVersionString(): String {
 ### Transaction managers
 
 The `TransactionManager` interface has undergone a similar redesign, except that the interface remaining in `exposed-core`
-is now `TransactionManagerApi`. The latter only holds the properties and methods common to both drivers.
+has been renamed to `TransactionManagerApi`. The latter only holds the properties and methods common to both JDBC and R2DBC drivers.
 
 With version 1.0.0, it is still possible to call the companion object methods on `TransactionManager` because new implementations
-have been introduced to both `exposed-jdbc` and `exposed-r2dbc`.
-
-### JDBC `suspend` functions deprecated
-
-The original top-level suspend transaction functions, namely `newSuspendedTransaction()`, `withSuspendTransaction()`, and
-`suspendedTransactionAsync()`, have been moved out of `exposed-core` and into `exposed-jdbc` and have been deprecated.
-
-To properly open a suspending transaction block, these should be replaced with `suspendTransaction()` from `exposed-r2dbc`.
-Please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
-with a use case if you believe these method should remain available for blocking JDBC connections.
-
-## Queries
-
-While the `AbstractQuery` class remains in `exposed-core`, its `Query` implementation is now in `exposed-jdbc`, with the
-R2DBC variant located in `exposed-r2dbc.` Certain `Query` properties, like `where` and `having` (as well as their associated
-adjustment methods), have been pulled down from the subclass into `AbstractQuery` so that they remain common to both driver
-approaches. This also includes the `comments` property and the related enum class `CommentPosition`, which is now only
-accessible from `AbstractQuery`:
+have been introduced to both `exposed-jdbc` and `exposed-r2dbc`. The return type of some of these methods may have changed to
+reflect the exact `Transaction` implementation:
 
 <compare first-title="0.61.0" second-title="1.0.0-beta-1">
 
 ```kotlin
-import org.jetbrains.exposed.sql.Query
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 
-val queryWithHint = TableA
-    .selectAll()
-    .comment(
-        content = "+ MAX_EXECUTION_TIME(1000) ",
-        position = Query.CommentPosition.AFTER_SELECT
-    )
+val tx1: Transaction? = TransactionManager.currentOrNull()
+val tx2: Transaction = TransactionManager.current()
 ```
 
 ```kotlin
-import org.jetbrains.exposed.v1.core.AbstractQuery
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 
-val queryWithHint = TableA
-    .selectAll()
-    .comment(
-        content = "+ MAX_EXECUTION_TIME(1000) ",
-        position = AbstractQuery.CommentPosition.AFTER_SELECT
-    )
+val tx1: R2dbcTransaction? = TransactionManager.currentOrNull()
+val tx2: R2dbcTransaction = TransactionManager.current()
 ```
 
 </compare>
+
+### JDBC `suspend` functions deprecated
+
+The original top-level suspend transaction functions, namely `newSuspendedTransaction()`, `withSuspendTransaction()`, and
+`suspendedTransactionAsync()`, have been moved out of `exposed-core` and into `exposed-jdbc`. They have also been deprecated.
+
+To properly open a suspend transaction block, these functions should be replaced with `suspendTransaction()` and
+`suspendTransactionAsync()` from `exposed-r2dbc`.
+
+Please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
+with a use case if you believe these methods should remain available for blocking JDBC connections.
 
 ## Statement builders and executables
 
 The abstract class `Statement` remains in `exposed-core`, along with all its original implementations, like `InsertStatement`.
 But from version 1.0.0, these statement classes no longer hold any logic pertaining to their specific execution in the database
-nor any knowledge of the transaction they are created in. These classes are now only responsible for SQL syntax building
+nor store any knowledge of the transaction they are created in. These classes are now only responsible for SQL syntax building
 and parameter binding.
 
 The original extracted logic is now owned by a newly introduced interface, `BlockingExecutable`, in `exposed-jdbc`.
 The R2DBC variant is `SuspendExecutable` in `exposed-r2dbc`. Each core statement implementation now has an associated
-executable implementation, like `InsertBlockingExecutable`, that stores the original core class in its `statement` property.
+executable implementation, like `InsertBlockingExecutable`, which stores the former in its `statement` property.
 The following shows some examples of the ownership changes:
 
 | 0.61.0                                                       | 1.0.0-beta-1                                                              |
@@ -188,10 +178,11 @@ The following shows some examples of the ownership changes:
 
 If a statement implementation originally held a protected `transaction` property, this is now also owned by the executable implementation.
 
-### Custom statement classes
+### Custom statements
 
-This separation of responsibility means that any custom `Statement` implementation will now require a custom `BlockingExecutable`
-implementation, regardless of whether execution logic has been defined:
+This separation of responsibility means that any custom `Statement` implementation will now require an associated `BlockingExecutable`
+implementation to be sent to the database. The `BlockingExecutable` may be custom or an existing class may provide sufficient
+execution logic, as shown in the following example:
 
 <compare first-title="0.61.0" second-title="1.0.0-beta-1">
 
@@ -212,6 +203,8 @@ class BatchInsertOnConflictDoNothing(
         append(insertStatement)
         append(" ON CONFLICT (id) DO NOTHING")
     }
+
+    // optional custom execute logic
 }
 
 transaction {
@@ -247,11 +240,13 @@ class BatchInsertOnConflictDoNothing(
         append(insertStatement)
         append(" ON CONFLICT (id) DO NOTHING")
     }
+
+    // optional custom execute logic -> create custom Executable
 }
 
 transaction {
     val executable = BatchInsertBlockingExecutable(
-        statement = BatchInsertOnConflictDoNothing(Books)
+        statement = BatchInsertOnConflictDoNothing(TableA)
     )
     val insertedCount: Int? = executable.run {
         statement.addBatch()
@@ -267,40 +262,136 @@ transaction {
 
 </compare>
 
+### `exec()` parameter type changed
+
+Prior to version 1.0.0, it was possible to create a `Statement` instance, using a built-in or custom implementation,
+and send it to the database by passing it as an argument to `exec()`.
+
+In version 1.0.0, since statements are no longer responsible for execution, the same `exec()` method only accepts a
+`BlockingExecutable` as its argument:
+
+<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+
+```kotlin
+import org.jetbrains.exposed.sql.statements.DeleteStatement
+import org.jetbrains.exposed.sql.transactions.transaction
+
+transaction {
+    val delete = DeleteStatement(
+        targetsSet = TableA,
+        where = null
+    )
+    val result = exec(delete) {
+        // do something with deleted row count
+    }
+}
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.statements.DeleteStatement
+import org.jetbrains.exposed.v1.jdbc.statements.DeleteBlockingExecutable
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+
+transaction {
+    val deleteStmt = DeleteStatement(
+        targetsSet = TableA,
+        where = null
+    )
+    val delete = DeleteBlockingExecutable(
+        statement = deleteStmt
+    )
+    val result = exec(delete) {
+        // do something with deleted row count
+    }
+}
+```
+
+</compare>
+
+This signature change does not affect the method's use with a `Query` argument, since the latter implements `BlockingExecutable` directly.
+
 ### `ReturningStatement` return type changed
 
-Prior to version 1.0.0, extension functions that returned values for specified columns, like `insertReturning()` and `updateReturning()`,
-returned a value of type `ReturningStatement`, so that they could be sent to the database only at the moment a terminal operation
-attempted to iterate over the results. Now that execution logic has been removed from `ReturningStatement` in version 1.0.0,
-these functions instead return a value of type `ReturningBlockingExecutable`. Other than the return type change, the return
-value can be iterated over in the same manner as previously.
+Prior to version 1.0.0, table extension functions that returned values for specified columns, like `insertReturning()` and 
+`updateReturning()`, returned a value of type `ReturningStatement`.
+This return type ensured that such statements would be sent to the database only at the moment a terminal operation
+attempted to iterate over the results.
 
-### `insert()` argument type changed
-
-The type of the `body` parameter lambda block for `insert()` has been changed to take `UpdateBuilder` as its argument,
-instead of `InsertStatement` directly. This applies to its variants as well, like `insertIgnore()` and `insertAndGetId()`.
+In version 1.0.0, since all execution logic has been removed from the core `ReturningStatement`, these functions instead return
+a value of type `ReturningBlockingExecutable`. Other than this return type change, the return value can be iterated over in
+the same manner as previously.
 
 ### `DeleteStatement` companion methods deprecated
 
 Prior to version 1.0.0, the companion object of `DeleteStatement` provided methods `all()` and `where()` as alternatives
-to calling `Table.deleteAll()` or `Table.deleteWhere()`. Following version 1.0.0's removal of statement execution logic from
+to calling `Table.deleteAll()` or `Table.deleteWhere()`.
+
+Following version 1.0.0's removal of statement execution logic from
 `exposed-core`, these companion methods have now been deprecated. It is recommended to use the table extension functions
-directly or combine `DeleteStatement` with `DeleteBlockingExecutable`.
+directly or combine a `DeleteStatement` constructor with `DeleteBlockingExecutable`.
 
-## Wrappers for results
+### `insert()` parameter type changed
 
-Two new interfaces, `ResultApi` and `RowApi`, have been introduced to represent commonalities between the results of query
-execution with JDBC (`java.sql.ResultSet`) and with R2DBC (`io.r2dbc.spi.Result`). These are both implemented by the new
-wrapper classes, `JdbcResult` and `R2dbcResult`.
+The type of the `body` parameter lambda block for `insert()` has been changed to take `UpdateBuilder` as its argument,
+instead of `InsertStatement` directly. This applies to its variants as well, like `insertIgnore()` and `insertAndGetId()`.
+
+## Queries
+
+While the `AbstractQuery` class remains in `exposed-core`, its `Query` implementation is now in `exposed-jdbc`, with the
+R2DBC variant located in `exposed-r2dbc.` This restructuring was necessary to allow for the required differences in the
+underlying implementations of each class, with the JDBC `Query` ultimately implementing `Iterable`, and the R2DBC `Query`
+implementing `Flow`.
+
+### `CommentPosition` ownership changed
+
+Certain `Query` properties, like `where` and `having` (as well as their associated adjustment methods), have been pulled
+down from the subclass into superclass `AbstractQuery` so that they remain common to both drivers.
+
+This also includes the`comments` property and its related enum class `CommentPosition`,
+which is now only accessible from `AbstractQuery`:
+
+<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+
+```kotlin
+import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.selectAll
+
+val queryWithHint = TableA
+    .selectAll()
+    .comment(
+        content = "+ MAX_EXECUTION_TIME(1000) ",
+        position = Query.CommentPosition.AFTER_SELECT
+    )
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.AbstractQuery
+import org.jetbrains.exposed.v1.jdbc.selectAll
+
+val queryWithHint = TableA
+    .selectAll()
+    .comment(
+        content = "+ MAX_EXECUTION_TIME(1000) ",
+        position = AbstractQuery.CommentPosition.AFTER_SELECT
+    )
+```
+
+</compare>
+
+## Result wrappers
+
+Two new `exposed-core` interfaces, `ResultApi` and `RowApi`, have been introduced to represent commonalities between the
+results of query execution with JDBC (`java.sql.ResultSet`) and with R2DBC (`io.r2dbc.spi.Result`).
+These are both implemented by new driver-specific wrapper classes, `JdbcResult` and `R2dbcResult`.
 
 ### `readObject()` parameter type changed {id = read-object}
 
 Since driver-specific results, like `java.sql.ResultSet`, are no longer supported in `exposed-core`, they are instead wrapped
 by common interfaces, like `RowApi`.
 
-The `IColumnType` interface has a method `readObject()` for performing any special logic
-when accessing an object at a specific index in the result. The signature of this method has changed to use `RowApi` instead
-of `ResultSet`, which still allows access via `getObject()`:
+The `IColumnType` interface has a method `readObject()` for performing any special read and/or conversion logic when
+accessing an object at a specific index in the result.
+The signature of this method has changed to use `RowApi` instead of `ResultSet`, which still allows access via `getObject()`:
 
 <compare first-title="0.61.0" second-title="1.0.0-beta-1">
 
@@ -349,13 +440,13 @@ class ShortTextColumnType : TextColumnType() {
 ### `ResultRow.create()` parameter type changed
 
 As mentioned in the section on [`readObject()`](#read-object), all usage of `java.sql.ResultSet` has been removed from
-`exposed-core`. The companion method to create a `ResultRow` directly from the result of a query or statement execution
-now accepts a `RowApi` as an argument.
+`exposed-core`. The companion method to create an Exposed `ResultRow` directly from the result of a query or statement
+execution now accepts a `RowApi` as an argument.
 
 ### `execute()` return type changed
 
-Calling `execute()` directly on a `Query` will no longer return a `ResultSet`, but will instead return a `ResultApi`,
-which must be cast to access the expected wrapped result type:
+Calling `execute()` directly on a `Query` will no longer return a `ResultSet`. It will instead return a `ResultApi`,
+which must be cast if needing to access the original wrapped result type:
 
 <compare first-title="0.61.0" second-title="1.0.0-beta-1">
 
@@ -391,14 +482,15 @@ transaction {
 
 ### `StatementResult.Object` property type changed
 
-The `Object` type from the sealed class `StatementResult` no longer has a property of type `java.sql.ResultSet`.
+The `Object` type from the `exposed-core` sealed class `StatementResult` no longer has a property of type `java.sql.ResultSet`.
 Its property is now of type `ResultApi`.
 
 ## `DatabaseDialect` and `VendorDialect`
 
-Any method from the `exposed-core` interface `DatabaseDialect` that required driver-specific metadata queries has been removed
-and is now accessible from the new abstract class `DatabaseDialectMetadata` found in `exposed-jdbc`. This also applies to such
-methods and properties from its core `VendorDialect` implementations. The following shows some examples of the ownership changes:
+Any method from the `exposed-core` interface `DatabaseDialect` that required driver-specific metadata queries has been extracted.
+If moved, the method is now accessible from the new abstract class `DatabaseDialectMetadata` found in `exposed-jdbc`.
+This also applies to such methods and properties from the core `VendorDialect` implementations.
+The following shows some examples of the ownership changes:
 
 | 0.61.0                                              | 1.0.0-beta-1                                                |
 |-----------------------------------------------------|-------------------------------------------------------------|
@@ -410,11 +502,11 @@ methods and properties from its core `VendorDialect` implementations. The follow
 <note>
 Corresponding ownership changes for the underlying metadata query functions originally called by the above <code>DatabaseDialect</code> methods
 have also been introduced. This means that the abstract class <code>ExposedDatabaseMetadata</code> in <code>exposed-core</code> additionally has
-had some of its functions extracted to the driver-specific implementations in <code>exposed-jdbc</code> and <code>exposed-r2dbc</code>.
+had some of its methods extracted to the driver-specific implementations in <code>exposed-jdbc</code> and <code>exposed-r2dbc</code>.
 </note>
 
-These methods would have previously been most commonly called from the top-level property `currentDialect`, so a similar
-property, `currentDialectMetadata`, has been added to replace the original call:
+These methods would have previously been most commonly invoked on the top-level property `currentDialect`.
+To follow a similar patter, a related property, `currentDialectMetadata`, has been added to replace the original call:
 
 <compare first-title="0.61.0" second-title="1.0.0-beta-1">
 
@@ -434,16 +526,21 @@ transaction {
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.vendors.currentDialectMetadata
 
-val tableKeys = currentDialectMetadata.existingPrimaryKeys(TableA)[TableA]
-if (TableA.tableName in currentDialectMetadata.allTablesNames()) {
-    // do something
+transaction {
+    val tableKeys = currentDialectMetadata.existingPrimaryKeys(TableA)[TableA]
+    if (TableA.tableName in currentDialectMetadata.allTablesNames()) {
+        // do something
+    }
 }
 ```
 
 </compare>
 
+### Custom dialects
+
 In the same way as how there are database-specific implementations for further extensibility in `exposed-core`, like `H2Dialect`,
-the new class also comes with open implementations for metadata extensions, like `H2DialectMetadata`.
+the new class also comes with open implementations for metadata extensions, like `H2DialectMetadata`. These new classes should
+be extended to hold any custom overrides for the metadata methods that have been moved.
 
 Any custom database dialect implementation can be registered as before via `Database.registerDialect()`. With version 1.0.0,
 an additional call to `Database.registerDialectMetadata()` should be used to ensure that the newly associated metadata implementation
@@ -451,17 +548,18 @@ is also registered.
 
 ### `resolveRefOptionFromJdbc()` removed
 
-Given the original intention behind this method, `DatabaseDialect.resolveRefOptionFromJdbc()` has been replaced by `resolveReferenceOption()`
-found under `org.jetbrains.exposed.v1.core.statements.api.ExposedDatabaseMetadata`, so that driver-specific variants can be
-enforced for both JDBC and R2DBC.
+Given the original intention behind this method, `DatabaseDialect.resolveRefOptionFromJdbc()` has been removed and replaced
+by a driver-agnostic variant `resolveReferenceOption()` found under `org.jetbrains.exposed.v1.core.statements.api.ExposedDatabaseMetadata`.
+Driver-specific variants have been introduced both in `exposed-jdbc` and `exposed-r2dbc`.
 
 ### Property `ENABLE_UPDATE_DELETE_LIMIT` removed
 
-This property in the companion object of `SQLiteDialect()` has been replaced entirely by `DatabaseDialectMetadata.supportsLimitWithUpdateOrDelete()`.
+This property in the companion object of `SQLiteDialect()` has been removed and replaced entirely by
+`DatabaseDialectMetadata.supportsLimitWithUpdateOrDelete()`.
 
 ## Additional core class restructuring
 
-Other public classes have been restructured to remove any driver-specific logic from `exposed-core`.
+Some other public classes have been restructured to remove any driver-specific logic from `exposed-core`.
 
 ### `Database`
 
@@ -471,9 +569,10 @@ to `exposed-jdbc`, and a new class `R2dbcDatabase` has been introduced to `expos
 
 ### `PreparedStatementApi`
 
-The `PreparedStatementApi` interface no longer holds methods that perform any statement execution logic. With version 1.0.0,
-these are now only accessible from the new driver-specific interface implementation, `JdbcPreparedStatementApi`.
-The following shows some examples of the ownership changes:
+The `PreparedStatementApi` interface no longer holds methods that perform any statement execution logic.
+
+With version 1.0.0, these are now only accessible from the new driver-specific interface implementation,
+`JdbcPreparedStatementApi`. The following shows some examples of the ownership changes:
 
 | 0.61.0                                       | 1.0.0-beta-1                                 |
 |----------------------------------------------|----------------------------------------------|
@@ -482,6 +581,15 @@ The following shows some examples of the ownership changes:
 | `PreparedStatementApi.addBatch()`            | `JdbcPreparedStatementApi.addBatch()`        |
 | `PreparedStatementApi.cancel()`              | `JdbcPreparedStatementApi.cancel()`          |
 
-#### `PreparedStatementApi.setArray()` parameter type changed
+#### `set()` deprecated
 
-The `type` parameter of `setArray()` was of type `String` prior to version 1.0.0, but is now of type `ArrayColumnType`.
+The original `operator fun set(index: Int, value: Any)` has been deprecated. It should be replaced by a new variant
+that accepts a third argument for the column type associated with the value being bound to the statement.
+This new `set()` method will require an override if the interface is implemented directly.
+
+#### `setArray()` deprecated
+
+The original `setArray(index: Int, type: String, array: Array<*>)` has been deprecated. It should be replaced by a new variant
+that accepts the actual `ArrayColumnType` associated with the array value being bound to the statement as the second argument,
+instead of a string representation of the type. This new `setArray()` method will require an override if the interface is
+implemented directly.
