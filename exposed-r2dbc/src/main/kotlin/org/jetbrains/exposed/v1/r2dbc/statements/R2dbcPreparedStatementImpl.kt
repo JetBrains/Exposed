@@ -36,7 +36,7 @@ class R2dbcPreparedStatementImpl(
     override suspend fun getResultRow(): R2dbcResult? {
         if (resultRow == null && wasGeneratedKeysRequested) {
             val resultPublisher = statement.execute()
-            resultRow = R2dbcResult(resultPublisher)
+            resultRow = R2dbcResult(resultPublisher, typeMapperRegistry)
         }
 
         return resultRow
@@ -56,11 +56,11 @@ class R2dbcPreparedStatementImpl(
         statement.add()
     }
 
-    override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute())
+    override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute(), typeMapperRegistry)
 
     override suspend fun executeUpdate(): Int {
         val result = statement.execute()
-        val r2dbcResult = R2dbcResult(result)
+        val r2dbcResult = R2dbcResult(result, typeMapperRegistry)
         resultRow = r2dbcResult
 
         // Todo discuss if a return value is even necessary (since never used)
@@ -69,7 +69,7 @@ class R2dbcPreparedStatementImpl(
 
     override suspend fun executeMultiple(): List<StatementResult> {
         val result = statement.execute()
-        val r2dbcResult = R2dbcResult(result)
+        val r2dbcResult = R2dbcResult(result, typeMapperRegistry)
         return listOf(StatementResult.Object(r2dbcResult))
         // full JDBC logic does not seem possible here
 //        return if (statement.execute()) {
@@ -134,7 +134,7 @@ class R2dbcPreparedStatementImpl(
 
     override suspend fun executeBatch(): List<Int> {
         val result = statement.execute()
-        val r2dbcResult = R2dbcResult(result)
+        val r2dbcResult = R2dbcResult(result, typeMapperRegistry)
 
         return if (wasGeneratedKeysRequested) {
             resultRow = r2dbcResult

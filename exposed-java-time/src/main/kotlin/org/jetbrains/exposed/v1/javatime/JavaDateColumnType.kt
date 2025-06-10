@@ -215,7 +215,7 @@ class JavaLocalDateColumnType : ColumnType<LocalDate>(), IDateColumnType {
     override fun readObject(rs: RowApi, index: Int): Any? {
         val dialect = currentDialect
         return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-            rs.getObject(index, java.sql.Timestamp::class.java)
+            rs.getObject(index, java.sql.Timestamp::class.java, this)
         } else {
             super.readObject(rs, index)
         }
@@ -374,7 +374,7 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
     override fun readObject(rs: RowApi, index: Int): Any? {
         val dialect = currentDialect
         return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-            rs.getObject(index, java.sql.Timestamp::class.java)
+            rs.getObject(index, java.sql.Timestamp::class.java, this)
         } else {
             super.readObject(rs, index)
         }
@@ -420,7 +420,7 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     }
 
     override fun readObject(rs: RowApi, index: Int): Any? {
-        return rs.getObject(index, java.sql.Timestamp::class.java)
+        return rs.getObject(index, java.sql.Timestamp::class.java, this)
     }
 
     @Suppress("MagicNumber")
@@ -491,8 +491,8 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
 
     override fun readObject(rs: RowApi, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
-        is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java)
-        else -> rs.getObject(index, OffsetDateTime::class.java)
+        is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java, this)
+        else -> rs.getObject(index, OffsetDateTime::class.java, this)
     }
 
     override fun notNullValueToDB(value: OffsetDateTime): Any = when (currentDialect) {

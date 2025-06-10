@@ -10,20 +10,13 @@ import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactive.asPublisher
 import kotlinx.coroutines.reactive.collect
+import org.jetbrains.exposed.v1.core.ColumnType
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
-import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapperRegistry
 import org.reactivestreams.Publisher
-import java.sql.Date
-import java.sql.Time
-import java.sql.Timestamp
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
@@ -33,7 +26,8 @@ import kotlin.jvm.optionals.getOrNull
  * @property resultPublisher The actual [Result] returned by the database after statement execution.
  */
 class R2dbcResult internal constructor(
-    private val resultPublisher: Publisher<out Result>
+    private val resultPublisher: Publisher<out Result>,
+    internal val typeMapperRegistry: TypeMapperRegistry
 ) : ResultApi {
     private var consumed = false
 
@@ -44,7 +38,7 @@ class R2dbcResult internal constructor(
         return flow {
             resultPublisher.collect { result ->
                 result.map { row, rm ->
-                    Optional.ofNullable(block(R2DBCRow(row)))
+                    Optional.ofNullable(block(R2DBCRow(row, typeMapperRegistry)))
                 }.collect { emit(it.getOrNull()) }
             }
         }
@@ -78,8 +72,7 @@ class R2dbcResult internal constructor(
     override fun close() = Unit
 }
 
-@JvmInline
-value class R2DBCRow(val row: Row) : RowApi {
+class R2DBCRow(val row: Row, private val typeMapperRegistry: TypeMapperRegistry) : RowApi {
     override fun getObject(index: Int): Any? {
         val result = row.get(index - 1)
         // the only way to avoid this would be to introduce getValue() functionality to TypeMapper
@@ -91,42 +84,15 @@ value class R2DBCRow(val row: Row) : RowApi {
 
     override fun getObject(name: String): Any? = row.get(name)
 
-    override fun <T> getObject(index: Int, type: Class<T>): T? = when (type) {
-        Time::class.java -> {
-            val result: LocalTime = row.get(index - 1, LocalTime::class.java) ?: return null
-            @Suppress("UNCHECKED_CAST")
-            Time.valueOf(result) as T
-        }
-        Date::class.java -> {
-            val result: LocalDate? = row.get(index - 1, LocalDate::class.java) ?: return null
-            @Suppress("UNCHECKED_CAST")
-            Date.valueOf(result) as T
-        }
-        Timestamp::class.java -> {
-            // It is tricky, probably the reason for MySql special case is not here but in `KotlinInstantColumnType`
-            // The problem is that the line `rs.getObject(index, java.sql.Timestamp::class.java)` in method `valueFromDB()` inside
-            // the column type changes the time according to the time zone, and reverts it back in `valueFromDB`
-            // But for R2DBC it does not happen. This line changes that behaviour to match it to JDBC behaviour.
-            if (currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
-                val result: Instant = row.get(index - 1, Instant::class.java) ?: return null
-                @Suppress("UNCHECKED_CAST")
-                Timestamp.from(result) as T
-            } else {
-                try {
-                    val result: LocalDateTime = row.get(index - 1, LocalDateTime::class.java) ?: return null
-                    @Suppress("UNCHECKED_CAST")
-                    Timestamp.valueOf(result) as T
-                } catch (_: Exception) {
-                    val result: String = row.get(index - 1, String::class.java) ?: return null
-                    @Suppress("UNCHECKED_CAST")
-                    Timestamp.valueOf(result) as T
-                }
-            }
-        }
-        else -> row.get(index - 1, type) as T
+    override fun <T> getObject(index: Int, type: Class<T>): T? {
+        return row.get(index - 1, type) as T
     }
 
     override fun <T> getObject(name: String, type: Class<T>): T? = row.get(name, type)
+
+    override fun <T> getObject(index: Int, type: Class<T>, columnType: ColumnType<*>): T? {
+        return typeMapperRegistry.getValue(row, type, index, currentDialect, columnType)
+    }
 }
 
 suspend fun ResultApi.rowsCount() = mapRows { }.count()

@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.r2dbc.mappers
 
+import io.r2dbc.spi.Row
 import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
@@ -40,16 +41,45 @@ class TypeMapperRegistry(private val mappers: MutableList<TypeMapper> = mutableL
         value: Any?,
         index: Int
     ): Boolean {
-        for (mapper in mappers) {
-            // Check if the mapper supports this dialect
-            val supportsDialect = mapper.dialects.isEmpty() || mapper.dialects.any { it.isInstance(dialect) }
-            val supportsColumnType = mapper.columnTypes.isEmpty() || mapper.columnTypes.any { it.isInstance(columnType) }
-            if (!supportsDialect || !supportsColumnType) continue
-
+        for (mapper in getMatchingMappers(dialect, columnType)) {
             // Try to set the value
             if (mapper.setValue(statement, dialect, this, columnType, value, index)) return true
         }
         return false
+    }
+
+    /**
+     * Tries to get a value using the registered mappers.
+     * @param row The row to get the value from.
+     * @param type The target type class to convert the value to.
+     * @param index The index of the column in the row.
+     * @param dialect The database dialect.
+     * @param columnType The column type.
+     * @return The converted value of type T, or null.
+     */
+    fun <T> getValue(
+        row: Row,
+        type: Class<T>,
+        index: Int,
+        dialect: DatabaseDialect,
+        columnType: IColumnType<*>,
+    ): T? {
+        for (mapper in getMatchingMappers(dialect, columnType)) {
+            val result = mapper.getValue(row, type, index, dialect, columnType)
+            if (result.isPresent) {
+                return result.value() as T?
+            }
+        }
+        return row.get(index - 1, type)
+    }
+
+    private fun getMatchingMappers(
+        dialect: DatabaseDialect,
+        columnType: IColumnType<*>,
+    ): List<TypeMapper> {
+        return mappers
+            .filter { mapper -> mapper.dialects.isEmpty() || mapper.dialects.any { it.isInstance(dialect) } }
+            .filter { mapper -> mapper.columnTypes.isEmpty() || mapper.columnTypes.any { it.isInstance(columnType) } }
     }
 
     companion object {

@@ -139,9 +139,9 @@ class DateColumnType(val time: Boolean) : ColumnType<DateTime>(), IDateColumnTyp
         val dialect = currentDialect
         return when {
             time && dialect is MysqlDialect -> {
-                rs.getObject(index, java.time.LocalDateTime::class.java)
+                rs.getObject(index, java.time.LocalDateTime::class.java, this)
             }
-            time && dialect is OracleDialect -> rs.getObject(index, java.sql.Timestamp::class.java)
+            time && dialect is OracleDialect -> rs.getObject(index, java.sql.Timestamp::class.java, this)
             else -> super.readObject(rs, index)
         }
     }
@@ -298,8 +298,8 @@ class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
 
     override fun readObject(rs: RowApi, index: Int): Any? = when (currentDialect) {
         is SQLiteDialect -> super.readObject(rs, index)
-        is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java)
-        else -> rs.getObject(index, OffsetDateTime::class.java)
+        is OracleDialect -> rs.getObject(index, ZonedDateTime::class.java, this)
+        else -> rs.getObject(index, OffsetDateTime::class.java, this)
     }
 
     override fun notNullValueToDB(value: DateTime): Any = when (currentDialect) {
