@@ -1132,26 +1132,19 @@ abstract class ImmutableCachedEntityClass<ID : Any, out T : Entity<ID>>(
         val tr = TransactionManager.current()
         val db = tr.db
         val transactionCache = super.warmCache()
-        if (_cachedValues[db] == null) {
-            synchronized(this) {
-                val cachedValues = _cachedValues[db]
-                when {
-                    cachedValues != null -> {
-                    } // already loaded in another transaction
-                    tr.getUserData(cacheLoadingState) != null -> {
-                        return transactionCache // prevent recursive call to warmCache() in .all()
-                    }
 
-                    else -> {
-                        tr.putUserData(cacheLoadingState, this)
-                        super.all().toList() // force iteration to initialize lazy collection
-                        _cachedValues[db] = transactionCache.data[table] ?: mutableMapOf()
-                        tr.removeUserData(cacheLoadingState)
-                    }
-                }
-            }
+        // prevent recursive call to warmCache() in .all()
+        if (tr.getUserData(cacheLoadingState) != null) {
+            return transactionCache
         }
-        transactionCache.data[table] = _cachedValues[db]!!
+
+        transactionCache.data[table] = _cachedValues.computeIfAbsent(db) {
+            tr.putUserData(cacheLoadingState, this)
+            super.all().toList() // force iteration to initialize lazy collection
+            val entityMap = transactionCache.data[table] ?: mutableMapOf()
+            tr.removeUserData(cacheLoadingState)
+            entityMap
+        }
         return transactionCache
     }
 
