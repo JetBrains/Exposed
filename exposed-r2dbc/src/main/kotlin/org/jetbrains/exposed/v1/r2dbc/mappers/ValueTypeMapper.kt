@@ -15,10 +15,13 @@ class ValueTypeMapper : TypeMapper {
     // This mapper handles all column types, but only for specific value types
     // It's a fallback for values that don't have a specific mapper
 
+    @Suppress("MagicNumber")
+    override val priority = 0.1
+
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int

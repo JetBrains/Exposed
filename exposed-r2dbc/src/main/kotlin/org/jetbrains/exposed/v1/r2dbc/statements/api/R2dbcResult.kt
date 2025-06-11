@@ -15,7 +15,7 @@ import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapperRegistry
+import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
 import org.reactivestreams.Publisher
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
@@ -27,7 +27,7 @@ import kotlin.jvm.optionals.getOrNull
  */
 class R2dbcResult internal constructor(
     private val resultPublisher: Publisher<out Result>,
-    internal val typeMapperRegistry: TypeMapperRegistry
+    internal val typeMapping: R2dbcTypeMapping
 ) : ResultApi {
     private var consumed = false
 
@@ -38,7 +38,7 @@ class R2dbcResult internal constructor(
         return flow {
             resultPublisher.collect { result ->
                 result.map { row, rm ->
-                    Optional.ofNullable(block(R2DBCRow(row, typeMapperRegistry)))
+                    Optional.ofNullable(block(R2DBCRow(row, typeMapping)))
                 }.collect { emit(it.getOrNull()) }
             }
         }
@@ -72,7 +72,7 @@ class R2dbcResult internal constructor(
     override fun close() = Unit
 }
 
-class R2DBCRow(val row: Row, private val typeMapperRegistry: TypeMapperRegistry) : RowApi {
+class R2DBCRow(val row: Row, private val typeMapping: R2dbcTypeMapping) : RowApi {
     override fun getObject(index: Int): Any? {
         val result = row.get(index - 1)
         // the only way to avoid this would be to introduce getValue() functionality to TypeMapper
@@ -91,7 +91,7 @@ class R2DBCRow(val row: Row, private val typeMapperRegistry: TypeMapperRegistry)
     override fun <T> getObject(name: String, type: Class<T>): T? = row.get(name, type)
 
     override fun <T> getObject(index: Int, type: Class<T>, columnType: ColumnType<*>): T? {
-        return typeMapperRegistry.getValue(row, type, index, currentDialect, columnType)
+        return typeMapping.getValue(row, type, index, currentDialect, columnType)
     }
 }
 

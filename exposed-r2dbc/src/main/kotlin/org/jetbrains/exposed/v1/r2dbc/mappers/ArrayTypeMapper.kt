@@ -15,6 +15,9 @@ import kotlin.reflect.KClass
  * Mapper for array types.
  */
 class ArrayTypeMapper : TypeMapper {
+    @Suppress("MagicNumber")
+    override val priority = 0.2
+
     override val columnTypes: List<KClass<out IColumnType<*>>>
         get() = listOf(ArrayColumnType::class)
 
@@ -24,7 +27,7 @@ class ArrayTypeMapper : TypeMapper {
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
@@ -63,23 +66,24 @@ class ArrayTypeMapper : TypeMapper {
 
         val dimension = columnType.dimensions
         val result = when (dimension) {
-            1 -> mapPgArray(dialect, mapperRegistry, columnType, value)
+            1 -> mapPgArray(dialect, typeMapping, columnType, value)
             else -> error("Unsupported array dimension: $dimension. https://github.com/pgjdbc/r2dbc-postgresql#data-type-mapping")
         }
         statement.bind(index - 1, result)
         return true
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun mapPgArray(
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: ArrayColumnType<*, *>,
         value: Array<*>
     ): Any {
         val list = value.toList()
         val itemType = columnType.delegate
 
-        // Map each element using the mapperRegistry
+        // Map each element using the typeMapping
         val mappedList = list.map { element ->
             if (element == null) return@map null
 
@@ -87,8 +91,8 @@ class ArrayTypeMapper : TypeMapper {
             val tempStatement = TempStatement()
             val tempIndex = 1
 
-            // Try to map the element using the mapperRegistry
-            if (mapperRegistry.setValue(tempStatement, dialect, itemType, element, tempIndex)) {
+            // Try to map the element using the typeMapping
+            if (typeMapping.setValue(tempStatement, dialect, itemType, element, tempIndex)) {
                 tempStatement.getValue(tempIndex - 1)
             } else {
                 element

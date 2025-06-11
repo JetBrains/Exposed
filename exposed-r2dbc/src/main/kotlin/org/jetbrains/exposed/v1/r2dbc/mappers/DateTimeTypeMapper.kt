@@ -27,10 +27,13 @@ class DateTimeTypeMapper : TypeMapper {
     // We don't specify columnTypes because IDateColumnType is an interface, not a class that extends IColumnType<*>
     // Instead, we'll check for IDateColumnType in the setValue method
 
+    @Suppress("MagicNumber")
+    override val priority = 0.2
+
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int

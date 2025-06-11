@@ -6,7 +6,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
-import org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapperRegistry
+import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcRegistryTypeMapping
+import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
 import org.jetbrains.exposed.v1.r2dbc.statements.asInt
 
 // TODO add KDocs
@@ -18,7 +19,7 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
 
     val useExposedCodecs: Boolean
 
-    val typeMapperRegistry: TypeMapperRegistry
+    val typeMapping: R2dbcTypeMapping
 
     val defaultR2dbcIsolationLevel: IsolationLevel?
 
@@ -30,7 +31,7 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
 
         var dispatcher: CoroutineDispatcher = Dispatchers.IO
 
-        var typeMapperRegistry: TypeMapperRegistry = TypeMapperRegistry.default()
+        var typeMapping: R2dbcTypeMapping = R2dbcRegistryTypeMapping.default()
 
         var defaultR2dbcIsolationLevel: IsolationLevel? = null
 
@@ -92,8 +93,8 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
                     get() = this@Builder.connectionFactoryOptions
                 override val useExposedCodecs: Boolean
                     get() = this@Builder.useExposedCodecs
-                override val typeMapperRegistry: TypeMapperRegistry
-                    get() = this@Builder.typeMapperRegistry
+                override val typeMapping: R2dbcTypeMapping
+                    get() = this@Builder.typeMapping
                 override val defaultR2dbcIsolationLevel: IsolationLevel?
                     get() = this@Builder.defaultR2dbcIsolationLevel
             }
