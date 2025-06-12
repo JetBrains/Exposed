@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.r2dbc.mappers
 
+import io.r2dbc.spi.Row
 import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.IDateColumnType
@@ -8,9 +9,14 @@ import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 private const val ORACLE_START_YEAR = 1970
 
@@ -92,5 +98,49 @@ class DateTimeTypeMapper : TypeMapper {
         }
         statement.bind(index - 1, convertedValue)
         return true
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> getValue(
+        row: Row,
+        type: Class<T>,
+        index: Int,
+        dialect: DatabaseDialect,
+        columnType: IColumnType<*>
+    ): TypeMapper.ValueContainer<T?> {
+        return when (type) {
+            Time::class.java -> {
+                TypeMapper.ValueContainer.PresentValue(
+                    row.get(index - 1, LocalTime::class.java)?.let { Time.valueOf(it) as T }
+                )
+            }
+            Date::class.java -> {
+                TypeMapper.ValueContainer.PresentValue(
+                    row.get(index - 1, LocalDate::class.java)?.let { Date.valueOf(it) as T }
+                )
+            }
+            Timestamp::class.java -> {
+                // It is tricky, probably the reason for MySql special case is not here but in `KotlinInstantColumnType`
+                // The problem is that the line `rs.getObject(index, java.sql.Timestamp::class.java)` in method `valueFromDB()` inside
+                // the column type changes the time according to the time zone, and reverts it back in `valueFromDB`
+                // But for R2DBC it does not happen. This line changes that behaviour to match it to JDBC behaviour.
+                if (currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
+                    TypeMapper.ValueContainer.PresentValue(
+                        row.get(index - 1, Instant::class.java)?.let { Timestamp.from(it) as T }
+                    )
+                } else {
+                    try {
+                        TypeMapper.ValueContainer.PresentValue(
+                            row.get(index - 1, LocalDateTime::class.java)?.let { Timestamp.valueOf(it) as T }
+                        )
+                    } catch (_: Exception) {
+                        TypeMapper.ValueContainer.PresentValue(
+                            row.get(index - 1, String::class.java)?.let { Timestamp.valueOf(it) as T }
+                        )
+                    }
+                }
+            }
+            else -> TypeMapper.ValueContainer.NoValue()
+        }
     }
 }

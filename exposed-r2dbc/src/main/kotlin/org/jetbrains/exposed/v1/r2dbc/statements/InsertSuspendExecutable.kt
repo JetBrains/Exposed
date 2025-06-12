@@ -151,7 +151,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
 
             if (segment is Result.RowSegment) {
-                val row = R2DBCRow(segment.row())
+                val row = R2DBCRow(segment.row(), typeMapperRegistry)
 
                 if (columnIndexesInResultSet == null) {
                     columnIndexesInResultSet = row.metadata.returnedColumns()
