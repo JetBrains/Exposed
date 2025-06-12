@@ -18,12 +18,67 @@ interface ResultApi : AutoCloseable {
  * type conversion for strongly-typed results.
  */
 interface RowApi {
+    /**
+     * Retrieves an object from the row at the specified column index.
+     *
+     * @param index The zero-based column index
+     * @return The object at the specified index
+     */
     fun getObject(index: Int): Any?
+
+    /**
+     * Retrieves an object from the row with the specified column name.
+     *
+     * @param name The column name
+     * @return The object in the specified column
+     */
     fun getObject(name: String): Any?
 
+    /**
+     * Retrieves an object from the row at the specified column index with type conversion.
+     *
+     * @param T The target type for conversion
+     * @param index The zero-based column index
+     * @param type The class representing the target type
+     * @return The object converted to the specified type
+     */
     fun <T> getObject(index: Int, type: Class<T>): T?
+
+    /**
+     * Retrieves an object from the row with the specified column name with type conversion.
+     *
+     * @param T The target type for conversion
+     * @param name The column name
+     * @param type The class representing the target type
+     * @return The object converted to the specified type
+     */
     fun <T> getObject(name: String, type: Class<T>): T?
 
+    /**
+     * Retrieves an object from the row at the specified column index with type conversion and column type hint.
+     *
+     * This method provides additional type information through the columnType parameter, which can be used
+     * for more precise type conversion.
+     *
+     * @param T The target type for conversion
+     * @param index The zero-based column index
+     * @param type The class representing the target type
+     * @param columnType Additional type information for the column (currently unused in default implementation)
+     * @return The object converted to the specified type
+     */
     fun <T> getObject(index: Int, type: Class<T>, columnType: ColumnType<*>): T? = getObject(index, type)
+
+    /**
+     * Retrieves an object from the row with the specified column name with type conversion and column type hint.
+     *
+     * This method provides additional type information through the columnType parameter, which can be used
+     * for more precise type conversion.
+     *
+     * @param T The target type for conversion
+     * @param name The column name
+     * @param type The class representing the target type
+     * @param columnType Additional type information for the column (currently unused in default implementation)
+     * @return The object converted to the specified type
+     */
     fun <T> getObject(name: String, type: Class<T>, columnType: ColumnType<*>): T? = getObject(name, type)
 }
