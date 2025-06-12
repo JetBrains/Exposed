@@ -54,7 +54,7 @@
             You can implement this relationship by using a reference column in the child table
             (<code>UserRatingsTable</code>) that links to the parent table (<code>UsersTable</code>). To create a
             reference column, use the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/reference.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/reference.html">
                 <code>reference()</code>
             </a>
             function:
@@ -88,7 +88,7 @@
             <p>
                 If you wanted to get all the ratings for a film, you could do that by using the <code>.find()</code>
                 function of the entity class. However, it is much easier to add a
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/referrers-on.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/referrers-on.html">
                     <code>referrersOn</code>
                 </a>
                 field to the class representing the film, <code>StarWarsFilmEntity</code>:
@@ -108,7 +108,7 @@
         <chapter title="Back reference" id="back-reference">
             <p>
                 If each user rates only one film, you can define a
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/back-referenced-on.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/back-referenced-on.html">
                     <code>backReferencedOn</code>
                 </a>
                 field to the entity class to access the <code>UserRatingsTable</code> data:
@@ -128,11 +128,11 @@
         <p>
             For example, if you want to include anonymous user ratings to your table, you can do so by setting
             the reference field as optional using
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/opt-reference.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/opt-reference.html">
                 <code>optReference()</code>
             </a>
             in your table and
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/optional-referenced-on.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/optional-referenced-on.html">
                 <code>optionalReferencedOn</code>
             </a>
             in your entity definition:
@@ -210,7 +210,7 @@
         />
         <p>
             Add a reference to the <code>ActorEntity</code> in the <code>StarWarsFilmEntity</code> using the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity/via.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity/via.html">
                 <code>via</code>
             </a>
             function:
@@ -294,7 +294,7 @@
         />
         <p>
             Then, add the field to the entity using the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/-entity-class/referenced-on.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/-entity-class/referenced-on.html">
                 <code>referencedOn</code>
             </a>
             function:
@@ -373,7 +373,7 @@
             <p>
                 To eagerly load references on <code>Collections</code> of DAO's such as <code>List</code>
                 and <code>SizedIterable</code>, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.dao/with.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-dao/org.jetbrains.exposed.v1.dao/with.html">
                     <code>.with()</code>
                 </a>
                 function and pass each reference as <code>KProperty</code>:
@@ -399,7 +399,7 @@
             </p>
             <p>
                 To make content available outside the transaction, use the
-                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-text-column-type/eager-loading.html">
+                <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-text-column-type/eager-loading.html">
                     <code>eagerLoading</code>
                 </a>
                 parameter in your field definition:

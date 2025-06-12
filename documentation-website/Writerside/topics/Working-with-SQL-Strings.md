@@ -3,7 +3,7 @@
 # Working with SQL Strings
 
 Using an SQL string to perform a database operation is possible from inside a transaction block with 
-[`.exec()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-transaction/exec.html). 
+[`.exec()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-transaction/exec.html). 
 This function accepts and executes a `String` value argument, which may be useful when specific database commands are required:
 
 <code-block lang="kotlin"
