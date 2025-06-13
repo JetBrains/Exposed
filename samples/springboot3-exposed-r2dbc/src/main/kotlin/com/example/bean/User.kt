@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     isGetterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE,
-    fieldVisibility = JsonAutoDetect.Visibility.ANY // 允许访问所有字段
+    fieldVisibility = JsonAutoDetect.Visibility.ANY // Enable access to all fields.
 )
 @ConsistentCopyVisibility
 internal data class User internal constructor(

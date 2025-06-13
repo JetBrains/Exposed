@@ -18,7 +18,7 @@ https://github.com/myfaverate/KotlinWeb/tree/master/spring_boot_modern
 
 ## Run
 ```shell
-./graldew nativeRun
+./gradlew nativeRun
 ```
 
 > Enjoy the fun of Kotlin programming and experience ultimate performance!, If you like it, please give it a thumbs up.
