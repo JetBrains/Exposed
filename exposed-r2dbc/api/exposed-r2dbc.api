@@ -481,6 +481,33 @@ public final class org/jetbrains/exposed/v1/r2dbc/mappers/BinaryTypeMapper : org
 	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
 }
 
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/DateTimeMySqlTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun getPriority ()D
+	public fun getValue (Lio/r2dbc/spi/Row;Ljava/lang/Class;ILorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/r2dbc/mappers/ValueContainer;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/DateTimeNullTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun getPriority ()D
+	public fun getValue (Lio/r2dbc/spi/Row;Ljava/lang/Class;ILorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/r2dbc/mappers/ValueContainer;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
+public final class org/jetbrains/exposed/v1/r2dbc/mappers/DateTimeOracleTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
+	public fun <init> ()V
+	public fun getColumnTypes ()Ljava/util/List;
+	public fun getDialects ()Ljava/util/List;
+	public fun getPriority ()D
+	public fun getValue (Lio/r2dbc/spi/Row;Ljava/lang/Class;ILorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/r2dbc/mappers/ValueContainer;
+	public fun setValue (Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
+}
+
 public final class org/jetbrains/exposed/v1/r2dbc/mappers/DateTimeTypeMapper : org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper {
 	public fun <init> ()V
 	public fun getColumnTypes ()Ljava/util/List;
@@ -573,6 +600,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper$DefaultImpl
 	public static fun getDialects (Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper;)Ljava/util/List;
 	public static fun getPriority (Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper;)D
 	public static fun getValue (Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper;Lio/r2dbc/spi/Row;Ljava/lang/Class;ILorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/r2dbc/mappers/ValueContainer;
+	public static fun setValue (Lorg/jetbrains/exposed/v1/r2dbc/mappers/TypeMapper;Lio/r2dbc/spi/Statement;Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;Lorg/jetbrains/exposed/v1/core/IColumnType;Ljava/lang/Object;I)Z
 }
 
 public abstract interface class org/jetbrains/exposed/v1/r2dbc/mappers/ValueContainer {
