@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.tests.shared.ddl
 
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -1165,6 +1166,34 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val timestampArray = array("timestampArray", KotlinInstantColumnType(), 10)
             val timestampWithTimeZoneArray = array("timestampWithTimeZoneArray", KotlinOffsetDateTimeColumnType(), 10)
             val durationArray = array("durationArray", KotlinDurationColumnType(), 7)
+        }
+    }
+
+    @Serializable
+    class TestClient(val id: String, val name: String)
+
+    @Test
+    fun testMigrationGenerationForDatabaseGeneratedColumn() {
+        val tester = object : Table("tester") {
+            val doc = jsonb<TestClient>("doc", Json.Default)
+            val id = text("id")
+                .databaseGenerated()
+                .withDefinition("GENERATED ALWAYS AS (doc ->> 'id') stored")
+                .uniqueIndex()
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            assertEqualLists(MigrationUtils.statementsRequiredForDatabaseMigration(tester), emptyList())
+
+            val testerWithAnotherDefinition = object : Table("tester") {
+                val doc = jsonb<TestClient>("doc", Json.Default)
+                val id = text("id")
+                    .databaseGenerated()
+                    .withDefinition("GENERATED ALWAYS AS (doc ->> 'name') stored")
+                    .uniqueIndex()
+            }
+
+            assertEqualLists(MigrationUtils.statementsRequiredForDatabaseMigration(testerWithAnotherDefinition), emptyList())
         }
     }
 }
