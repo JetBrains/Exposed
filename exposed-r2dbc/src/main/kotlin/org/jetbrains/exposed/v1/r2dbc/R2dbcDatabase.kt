@@ -111,7 +111,8 @@ class R2dbcDatabase private constructor(
             "r2dbc:mysql" to "mysql",
             "r2dbc:mariadb" to "mariadb",
             "r2dbc:oracle" to "oracle",
-            "r2dbc:mssql" to "sqlserver"
+            "r2dbc:mssql" to "sqlserver",
+            "r2dbc:pool" to "pool",
         )
 
         init {
