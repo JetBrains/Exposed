@@ -61,7 +61,9 @@ interface TypeMapper {
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
-    ): Boolean
+    ): Boolean {
+        return false
+    }
 
     /**
      * Retrieves a value from the given row at the specified index.
