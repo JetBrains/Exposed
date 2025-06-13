@@ -110,15 +110,15 @@ class DateTimeTypeMapper : TypeMapper {
         index: Int,
         dialect: DatabaseDialect,
         columnType: IColumnType<*>
-    ): TypeMapper.ValueContainer<T?> {
+    ): ValueContainer<T?> {
         return when (type) {
             Time::class.java -> {
-                TypeMapper.ValueContainer.PresentValue(
+                PresentValueContainer(
                     row.get(index - 1, LocalTime::class.java)?.let { Time.valueOf(it) as T }
                 )
             }
             Date::class.java -> {
-                TypeMapper.ValueContainer.PresentValue(
+                PresentValueContainer(
                     row.get(index - 1, LocalDate::class.java)?.let { Date.valueOf(it) as T }
                 )
             }
@@ -128,22 +128,22 @@ class DateTimeTypeMapper : TypeMapper {
                 // the column type changes the time according to the time zone, and reverts it back in `valueFromDB`
                 // But for R2DBC it does not happen. This line changes that behaviour to match it to JDBC behaviour.
                 if (currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
-                    TypeMapper.ValueContainer.PresentValue(
+                    PresentValueContainer(
                         row.get(index - 1, Instant::class.java)?.let { Timestamp.from(it) as T }
                     )
                 } else {
                     try {
-                        TypeMapper.ValueContainer.PresentValue(
+                        PresentValueContainer(
                             row.get(index - 1, LocalDateTime::class.java)?.let { Timestamp.valueOf(it) as T }
                         )
                     } catch (_: Exception) {
-                        TypeMapper.ValueContainer.PresentValue(
+                        PresentValueContainer(
                             row.get(index - 1, String::class.java)?.let { Timestamp.valueOf(it) as T }
                         )
                     }
                 }
             }
-            else -> TypeMapper.ValueContainer.NoValue()
+            else -> NoValueContainer()
         }
     }
 }
