@@ -49,7 +49,7 @@ internal class UserDaoImpl internal constructor(): UserDao {
         val rows: Int = UserEntity.update(where = { UserEntity.id eq user.id }) { updateStatement: UpdateStatement ->
             updateStatement[UserEntity.account] = user.account
             updateStatement[UserEntity.password] = user.password
-            updateStatement[UserEntity.nickname] = nickname
+            updateStatement[UserEntity.nickname] = user.nickname
         }
         return rows > 0
     }
