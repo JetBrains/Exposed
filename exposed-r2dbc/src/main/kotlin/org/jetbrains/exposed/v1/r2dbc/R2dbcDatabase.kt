@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc
 
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
+import io.r2dbc.spi.ConnectionFactoryOptions
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.DatabaseApi
@@ -104,6 +105,15 @@ class R2dbcDatabase private constructor(
 
         private val dialectsMetadata = ConcurrentHashMap<String, () -> DatabaseDialectMetadata>()
 
+        private val driverMapping = mutableMapOf(
+            "r2dbc:h2" to "h2",
+            "r2dbc:postgresql" to "postgresql",
+            "r2dbc:mysql" to "mysql",
+            "r2dbc:mariadb" to "mariadb",
+            "r2dbc:oracle" to "oracle",
+            "r2dbc:mssql" to "sqlserver"
+        )
+
         init {
             registerDialect(H2Dialect.dialectName) { H2Dialect() }
             registerDialect(MysqlDialect.dialectName) { MysqlDialect() }
@@ -175,13 +185,14 @@ class R2dbcDatabase private constructor(
          *
          * @param connectionFactory The [ConnectionFactory] entry point for an R2DBC driver when getting a connection.
          * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
-         * @param databaseConfig Builder of configuration parameters for this [R2dbcDatabase] instance.
+         * @param databaseConfig Configuration parameters for this [R2dbcDatabase] instance. At minimum,
+         * a value for `explicitDialect` must be provided to prevent throwing an exception.
          * @throws IllegalStateException If a corresponding database dialect cannot be resolved from the [connectionFactory]
          * or from values provided to [databaseConfig].
          */
         fun connect(
             connectionFactory: ConnectionFactory,
-            databaseConfig: R2dbcDatabaseConfig = R2dbcDatabaseConfig.invoke(),
+            databaseConfig: R2dbcDatabaseConfig,
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) }
         ): R2dbcDatabase = doConnect(manager, connectionFactory, databaseConfig)
 
@@ -192,17 +203,31 @@ class R2dbcDatabase private constructor(
          * but instead provides the details necessary to do so whenever a connection is required by a transaction.
          *
          * @param url The URL that represents the database when getting a connection.
+         * @param driver The R2DBC driver class. If not provided, the specified [url] will be used to find
+         * a match from the existing driver mappings.
+         * @param user The database user that owns the new connections.
+         * @param password The password specific for the database [user].
          * @param databaseConfig Configuration parameters for this [R2dbcDatabase] instance.
          * @param manager The [TransactionManager] responsible for new transactions that use this [R2dbcDatabase] instance.
          * @throws IllegalStateException If a corresponding database dialect cannot be resolved from the provided [url].
          */
         fun connect(
             url: String,
+            driver: String = getDriver(url),
+            user: String = "",
+            password: String = "",
             manager: (R2dbcDatabase) -> TransactionManagerApi = { TransactionManager(it) },
             databaseConfig: R2dbcDatabaseConfig.Builder.() -> Unit = {},
         ): R2dbcDatabase {
             val builder = R2dbcDatabaseConfig.Builder()
             builder.setUrl(url)
+            builder.connectionFactoryOptions {
+                option(ConnectionFactoryOptions.DRIVER, driver)
+                user.takeUnless { it.isEmpty() }
+                    ?.let { option(ConnectionFactoryOptions.USER, it) }
+                password.takeUnless { it.isEmpty() }
+                    ?.let { option(ConnectionFactoryOptions.PASSWORD, it) }
+            }
             databaseConfig(builder)
 
             return doConnect(manager, null, builder.build())
@@ -233,6 +258,10 @@ class R2dbcDatabase private constructor(
                 is MysqlDialect -> IsolationLevel.REPEATABLE_READ
                 else -> IsolationLevel.READ_COMMITTED
             }
+
+        private fun getDriver(url: String) = driverMapping.entries.firstOrNull { (prefix, _) ->
+            url.startsWith(prefix)
+        }?.value ?: error("Database driver not found for $url")
     }
 }
 

@@ -46,7 +46,7 @@ dependencies {
     // --- end ----
 
     testRuntimeOnly(libs.r2dbc.pool)
-    testRuntimeOnly(libs.r2dbc.h2) {
+    testImplementation(libs.r2dbc.h2) {
         exclude(group = "com.h2database", module = "h2")
     }
     testRuntimeOnly(libs.r2dbc.mariadb)
