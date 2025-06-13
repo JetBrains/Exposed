@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration
+import io.r2dbc.postgresql.PostgresqlConnectionFactory
 import io.r2dbc.postgresql.codec.EnumCodec
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.Column
@@ -8,12 +9,16 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.Test
 
@@ -26,26 +31,26 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
         Bar, Baz
     }
 
-    @Suppress("UnusedPrivateProperty")
-    private val pgOptionsWithEnumCodec by lazy {
-        PostgresqlConnectionConfiguration.builder()
+    private fun connectWithEnumCodec(enum: String): R2dbcDatabase {
+        val options = PostgresqlConnectionConfiguration.builder()
             .host("127.0.0.1")
             .port(3004)
             .username(TestDB.POSTGRESQL.user)
             .password(TestDB.POSTGRESQL.pass)
             .database("postgres")
             .options(mapOf("lc_messages" to "en_US.UTF-8"))
-            .codecRegistrar(EnumCodec.builder().withEnum("fooenum", Foo::class.java).build())
+            // registered SQL enum name must match final name in database (PG always lower-case wrapped)
+            .codecRegistrar(EnumCodec.builder().withEnum(enum.lowercase(), Foo::class.java).build())
             .build()
-    }
+        val cxFactory = PostgresqlConnectionFactory(options)
 
-//    private val pgDB by lazy {
-//        R2dbcDatabase.connect(
-//            connectioNFactory = PostgresqlConnectionFactory(pgOptionsWithEnumCodec)
-//        ) {
-//            explicitDialect = PostgreSQLDialect()
-//        }
-//    }
+        return R2dbcDatabase.connect(
+            connectionFactory = cxFactory,
+            databaseConfig = R2dbcDatabaseConfig {
+                explicitDialect = PostgreSQLDialect()
+            }
+        )
+    }
 
     object EnumTable : IntIdTable("EnumTable") {
         internal var enumColumn: Column<Foo> = enumeration("enumColumn")
@@ -68,10 +73,10 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
     // NOTE: DAO part of test uncommented
     @Test
     fun testCustomEnumeration01() {
-        withDb(supportsCustomEnumerationDB, excludeSettings = TestDB.ALL_POSTGRES) {
+        withDb(supportsCustomEnumerationDB) { testDb ->
             val sqlType = when (currentDialectTest) {
                 is MysqlDialect -> "ENUM('Bar', 'Baz')"
-                is PostgreSQLDialect -> "fooenum"
+                is PostgreSQLDialect -> "FooEnum"
                 else -> error("Unsupported case")
             }
 
@@ -82,35 +87,30 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
 //            val enumClass = object : IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
 
             try {
+                // PG enum codec can only be registered on connection if enum type already exists in database
                 if (currentDialectTest is PostgreSQLDialect) {
-                    exec("DROP TYPE IF EXISTS fooenum;")
-                    exec("CREATE TYPE fooenum AS ENUM ('Bar', 'Baz');")
+                    exec("DROP TYPE IF EXISTS FooEnum;")
+                    exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
                 }
                 EnumTable.initEnumColumn(sqlType)
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(EnumTable)
+                SchemaUtils.create(EnumTable)
                 // drop shared table object's unique index if created in other test
                 if (EnumTable.indices.isNotEmpty()) {
                     exec(EnumTable.indices.first().dropStatement().single())
                 }
-                EnumTable.insert {
-                    it[EnumTable.enumColumn] = Foo.Bar
-                }
-                assertEquals(Foo.Bar, EnumTable.selectAll().single()[EnumTable.enumColumn])
 
-                // low-level bind works fine with PG-specific options, as does higher-level insert().
-                // cache issue remains when trying to get resultPublisher from the stored R2dbcResult;
-                // need to create an alt R2dbcDatabase.connect(connectionFactory = ?) to handle this.
-//                val cx = (connection.connection as Publisher<out Connection>).awaitFirst()
-//                val stmt = cx.createStatement("INSERT INTO enumtable (\"enumColumn\") VALUES ($1)")
-//                stmt.bind("$1", Foo.Bar)
-//                stmt.execute().awaitFirst().map {  }.collect {  }
-//
-//                EnumTable.selectAll().single()[EnumTable.enumColumn].also { println("Retrieved $it") }
+                suspendTransaction(
+                    db = if (testDb in TestDB.ALL_POSTGRES) connectWithEnumCodec(sqlType) else this.db
+                ) {
+                    EnumTable.insert {
+                        it[EnumTable.enumColumn] = Foo.Bar
+                    }
+                    assertEquals(Foo.Bar, EnumTable.selectAll().single()[EnumTable.enumColumn])
 
-                EnumTable.update {
-                    it[enumColumn] = Foo.Baz
-                }
-                assertEquals(Foo.Baz, EnumTable.selectAll().single()[EnumTable.enumColumn])
+                    EnumTable.update {
+                        it[enumColumn] = Foo.Baz
+                    }
+                    assertEquals(Foo.Baz, EnumTable.selectAll().single()[EnumTable.enumColumn])
 
 //                val entity = enumClass.new {
 //                    enum = Foo.Baz
@@ -121,9 +121,10 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
 //                assertEquals(Foo.Baz, enumClass.reload(entity)!!.enum)
 //                entity.enum = Foo.Bar
 //                assertEquals(Foo.Bar, enumClass.reload(entity, true)!!.enum)
+                }
             } finally {
                 try {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(EnumTable)
+                    SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
         }
@@ -134,30 +135,31 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
         withDb(supportsCustomEnumerationDB) {
             val sqlType = when (currentDialectTest) {
                 is MysqlDialect -> "ENUM('Bar', 'Baz')"
-                is PostgreSQLDialect -> "fooenum"
+                is PostgreSQLDialect -> "FooEnum2"
                 else -> error("Unsupported case")
             }
             try {
                 if (currentDialectTest is PostgreSQLDialect) {
-                    exec("DROP TYPE IF EXISTS fooenum;")
-                    exec("CREATE TYPE fooenum AS ENUM ('Bar', 'Baz');")
+                    exec("DROP TYPE IF EXISTS FooEnum2;")
+                    exec("CREATE TYPE FooEnum2 AS ENUM ('Bar', 'Baz');")
                 }
                 EnumTable.initEnumColumn(sqlType)
                 with(EnumTable) {
                     enumColumn.default(Foo.Bar)
                 }
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(EnumTable)
+                SchemaUtils.create(EnumTable)
                 // drop shared table object's unique index if created in other test
                 if (EnumTable.indices.isNotEmpty()) {
                     exec(EnumTable.indices.first().dropStatement().single())
                 }
 
+                // No need for use of PG DB with enum codec because insert statement relies on database defaults (no binding)
                 EnumTable.insert { }
                 val default = EnumTable.selectAll().single()[EnumTable.enumColumn]
                 assertEquals(Foo.Bar, default)
             } finally {
                 try {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(EnumTable)
+                    SchemaUtils.drop(EnumTable)
                 } catch (ignore: Exception) {}
             }
         }
@@ -174,10 +176,10 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
             }
         }
 
-        withDb(supportsCustomEnumerationDB, excludeSettings = TestDB.ALL_POSTGRES) {
+        withDb(supportsCustomEnumerationDB) { testDb ->
             val sqlType = when (currentDialectTest) {
                 is MysqlDialect -> "ENUM('Bar', 'Baz')"
-                is PostgreSQLDialect -> "fooenum"
+                is PostgreSQLDialect -> "RefEnum"
                 else -> error("Unsupported case")
             }
             try {
@@ -189,25 +191,29 @@ class EnumerationTests : R2dbcDatabaseTestsBase() {
                 with(EnumTable) {
                     if (indices.isEmpty()) enumColumn.uniqueIndex()
                 }
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(EnumTable)
+                SchemaUtils.create(EnumTable)
 
                 referenceTable.initRefColumn()
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(referenceTable)
+                SchemaUtils.create(referenceTable)
 
-                val fooBar = Foo.Bar
-                val id1 = EnumTable.insert {
-                    it[enumColumn] = fooBar
-                } get EnumTable.enumColumn
-                referenceTable.insert {
-                    it[referenceColumn] = id1
+                suspendTransaction(
+                    db = if (testDb in TestDB.ALL_POSTGRES) connectWithEnumCodec(sqlType) else this.db
+                ) {
+                    val fooBar = Foo.Bar
+                    val id1 = EnumTable.insert {
+                        it[enumColumn] = fooBar
+                    } get EnumTable.enumColumn
+                    referenceTable.insert {
+                        it[referenceColumn] = id1
+                    }
+
+                    assertEquals(fooBar, EnumTable.selectAll().single()[EnumTable.enumColumn])
+                    assertEquals(fooBar, referenceTable.selectAll().single()[referenceTable.referenceColumn])
                 }
-
-                assertEquals(fooBar, EnumTable.selectAll().single()[EnumTable.enumColumn])
-                assertEquals(fooBar, referenceTable.selectAll().single()[referenceTable.referenceColumn])
             } finally {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(referenceTable)
+                SchemaUtils.drop(referenceTable)
                 exec(EnumTable.indices.first().dropStatement().single())
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(EnumTable)
+                SchemaUtils.drop(EnumTable)
             }
         }
     }
