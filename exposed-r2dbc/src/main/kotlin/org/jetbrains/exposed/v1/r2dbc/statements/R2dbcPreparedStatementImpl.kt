@@ -11,7 +11,7 @@ import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementResult
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
-import org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapperRegistry
+import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import java.io.InputStream
@@ -29,14 +29,14 @@ class R2dbcPreparedStatementImpl(
     val connection: Connection,
     val wasGeneratedKeysRequested: Boolean,
     private val currentDialect: DatabaseDialect,
-    private val typeMapperRegistry: TypeMapperRegistry
+    private val typeMapping: R2dbcTypeMapping
 ) : R2dbcPreparedStatementApi {
     private var resultRow: R2dbcResult? = null
 
     override suspend fun getResultRow(): R2dbcResult? {
         if (resultRow == null && wasGeneratedKeysRequested) {
             val resultPublisher = statement.execute()
-            resultRow = R2dbcResult(resultPublisher, typeMapperRegistry)
+            resultRow = R2dbcResult(resultPublisher, typeMapping)
         }
 
         return resultRow
@@ -56,11 +56,11 @@ class R2dbcPreparedStatementImpl(
         statement.add()
     }
 
-    override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute(), typeMapperRegistry)
+    override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute(), typeMapping)
 
     override suspend fun executeUpdate(): Int {
         val result = statement.execute()
-        val r2dbcResult = R2dbcResult(result, typeMapperRegistry)
+        val r2dbcResult = R2dbcResult(result, typeMapping)
         resultRow = r2dbcResult
 
         // Todo discuss if a return value is even necessary (since never used)
@@ -69,7 +69,7 @@ class R2dbcPreparedStatementImpl(
 
     override suspend fun executeMultiple(): List<StatementResult> {
         val result = statement.execute()
-        val r2dbcResult = R2dbcResult(result, typeMapperRegistry)
+        val r2dbcResult = R2dbcResult(result, typeMapping)
         return listOf(StatementResult.Object(r2dbcResult))
         // full JDBC logic does not seem possible here
 //        return if (statement.execute()) {
@@ -94,7 +94,7 @@ class R2dbcPreparedStatementImpl(
 
     override fun set(index: Int, value: Any, columnType: IColumnType<*>) {
         // Try to use the type mappers first
-        if (typeMapperRegistry.setValue(statement, currentDialect, columnType, value, index)) {
+        if (typeMapping.setValue(statement, currentDialect, columnType, value, index)) {
             return
         }
 
@@ -103,7 +103,7 @@ class R2dbcPreparedStatementImpl(
 
     override fun setNull(index: Int, columnType: IColumnType<*>) {
         // Try to use the type mappers first
-        if (typeMapperRegistry.setValue(statement, currentDialect, columnType, null, index)) {
+        if (typeMapping.setValue(statement, currentDialect, columnType, null, index)) {
             return
         }
 
@@ -112,7 +112,7 @@ class R2dbcPreparedStatementImpl(
 
     override fun setInputStream(index: Int, inputStream: InputStream, setAsBlobObject: Boolean) {
         val columnType = if (setAsBlobObject) BlobColumnType() else BinaryColumnType(Int.MAX_VALUE)
-        if (typeMapperRegistry.setValue(statement, currentDialect, columnType, inputStream, index)) {
+        if (typeMapping.setValue(statement, currentDialect, columnType, inputStream, index)) {
             return
         }
 
@@ -121,7 +121,7 @@ class R2dbcPreparedStatementImpl(
 
     override fun setArray(index: Int, arrayType: ArrayColumnType<*, *>, array: Array<*>) {
         // Try to use the type mappers first
-        if (typeMapperRegistry.setValue(statement, currentDialect, arrayType, array, index)) {
+        if (typeMapping.setValue(statement, currentDialect, arrayType, array, index)) {
             return
         }
 
@@ -134,7 +134,7 @@ class R2dbcPreparedStatementImpl(
 
     override suspend fun executeBatch(): List<Int> {
         val result = statement.execute()
-        val r2dbcResult = R2dbcResult(result, typeMapperRegistry)
+        val r2dbcResult = R2dbcResult(result, typeMapping)
 
         return if (wasGeneratedKeysRequested) {
             resultRow = r2dbcResult

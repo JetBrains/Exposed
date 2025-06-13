@@ -12,6 +12,10 @@ import kotlin.reflect.KClass
  * Mapper for PostgreSQL-specific types.
  */
 class PostgresSpecificTypeMapper : TypeMapper {
+
+    @Suppress("MagicNumber")
+    override val priority = 0.2
+
     override val dialects: List<KClass<out DatabaseDialect>>
         get() = listOf(PostgreSQLDialect::class)
 
@@ -21,7 +25,7 @@ class PostgresSpecificTypeMapper : TypeMapper {
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int

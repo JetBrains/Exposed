@@ -6,25 +6,7 @@ import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import java.util.ServiceLoader
 
-/**
- * Registry for type mappers.
- * This class holds a list of type mappers and provides methods to register and use them.
- *
- * TODO add hint about `mappers` ordering
- * TODO TypeMapperRegistry should become interface to allow users create own registries
- */
-class TypeMapperRegistry(private val mappers: MutableList<TypeMapper> = mutableListOf()) {
-
-    /**
-     * Registers a new type mapper.
-     * @param mapper The mapper to register.
-     * @return This registry for chaining.
-     */
-    fun register(mapper: TypeMapper): TypeMapperRegistry {
-        mappers.add(mapper)
-        return this
-    }
-
+interface R2dbcTypeMapping {
     /**
      * Tries to set a value using the registered mappers.
      * @param statement The statement to set the value in.
@@ -40,13 +22,7 @@ class TypeMapperRegistry(private val mappers: MutableList<TypeMapper> = mutableL
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
-    ): Boolean {
-        for (mapper in getMatchingMappers(dialect, columnType)) {
-            // Try to set the value
-            if (mapper.setValue(statement, dialect, this, columnType, value, index)) return true
-        }
-        return false
-    }
+    ): Boolean
 
     /**
      * Tries to get a value using the registered mappers.
@@ -58,6 +34,87 @@ class TypeMapperRegistry(private val mappers: MutableList<TypeMapper> = mutableL
      * @return The converted value of type T, or null.
      */
     fun <T> getValue(
+        row: Row,
+        type: Class<T>,
+        index: Int,
+        dialect: DatabaseDialect,
+        columnType: IColumnType<*>,
+    ): T?
+}
+
+interface R2dbcRegistryTypeMapping : R2dbcTypeMapping {
+    /**
+     * Registers a new type mapper.
+     * @param mapper The mapper to register.
+     * @return This registry for chaining.
+     */
+    fun register(mapper: TypeMapper): R2dbcRegistryTypeMappingImpl
+
+    companion object {
+        /**
+         * Lazy-loaded list of mappers from ServiceLoader.
+         * This will only be initialized when needed.
+         */
+        private val serviceLoaderMappers by lazy {
+            ServiceLoader.load(TypeMapper::class.java).toList()
+        }
+
+        /**
+         * Creates a default registry with all the standard mappers.
+         * Mappers are loaded using ServiceLoader if available, otherwise falls back to hardcoded defaults.
+         * @return A new [R2dbcTypeMapping] with all the standard mappers registered.
+         */
+        fun default(): R2dbcTypeMapping {
+            val registry = R2dbcRegistryTypeMappingImpl()
+
+            // If service loader found mappers, use them
+            if (serviceLoaderMappers.isNotEmpty()) {
+                serviceLoaderMappers.forEach { registry.register(it) }
+            } else {
+                // Fallback to hardcoded defaults
+                registry.register(ExposedColumnTypeMapper())
+                    .register(PrimitiveTypeMapper())
+                    .register(DateTimeTypeMapper())
+                    .register(BinaryTypeMapper())
+                    .register(ArrayTypeMapper())
+                    .register(PostgresSpecificTypeMapper())
+                    .register(ValueTypeMapper())
+                    .register(DefaultTypeMapper())
+            }
+
+            return registry
+        }
+    }
+}
+
+/**
+ * Registry for type mappers.
+ * This class holds a list of type mappers and provides methods to register and use them.
+ */
+class R2dbcRegistryTypeMappingImpl : R2dbcRegistryTypeMapping {
+    private val mappers: MutableList<TypeMapper> = mutableListOf()
+
+    override fun register(mapper: TypeMapper): R2dbcRegistryTypeMappingImpl {
+        mappers.add(mapper)
+        mappers.sortBy { -it.priority }
+        return this
+    }
+
+    override fun setValue(
+        statement: Statement,
+        dialect: DatabaseDialect,
+        columnType: IColumnType<*>,
+        value: Any?,
+        index: Int
+    ): Boolean {
+        for (mapper in getMatchingMappers(dialect, columnType)) {
+            // Try to set the value
+            if (mapper.setValue(statement, dialect, this, columnType, value, index)) return true
+        }
+        return false
+    }
+
+    override fun <T> getValue(
         row: Row,
         type: Class<T>,
         index: Int,
@@ -80,42 +137,5 @@ class TypeMapperRegistry(private val mappers: MutableList<TypeMapper> = mutableL
         return mappers
             .filter { mapper -> mapper.dialects.isEmpty() || mapper.dialects.any { it.isInstance(dialect) } }
             .filter { mapper -> mapper.columnTypes.isEmpty() || mapper.columnTypes.any { it.isInstance(columnType) } }
-    }
-
-    companion object {
-        /**
-         * Lazy-loaded list of mappers from ServiceLoader.
-         * This will only be initialized when needed.
-         */
-        private val serviceLoaderMappers by lazy {
-            ServiceLoader.load(TypeMapper::class.java).toList()
-        }
-
-        /**
-         * Creates a default registry with all the standard mappers.
-         * Mappers are loaded using ServiceLoader if available, otherwise falls back to hardcoded defaults.
-         * @return A new TypeMapperRegistry with all the standard mappers registered.
-         */
-        fun default(): TypeMapperRegistry {
-            val registry = TypeMapperRegistry()
-
-            // If service loader found mappers, use them
-            if (serviceLoaderMappers.isNotEmpty()) {
-                // TODO sort these mappers somehow to keep it deterministic
-                serviceLoaderMappers.forEach { registry.register(it) }
-            } else {
-                // Fallback to hardcoded defaults
-                registry.register(ExposedColumnTypeMapper())
-                    .register(PrimitiveTypeMapper())
-                    .register(DateTimeTypeMapper())
-                    .register(BinaryTypeMapper())
-                    .register(ArrayTypeMapper())
-                    .register(PostgresSpecificTypeMapper())
-                    .register(ValueTypeMapper())
-                    .register(DefaultTypeMapper())
-            }
-
-            return registry
-        }
     }
 }

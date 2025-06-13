@@ -27,10 +27,13 @@ class DateTimeTypeMapper : TypeMapper {
     // We don't specify columnTypes because IDateColumnType is an interface, not a class that extends IColumnType<*>
     // Instead, we'll check for IDateColumnType in the setValue method
 
+    @Suppress("MagicNumber")
+    override val priority = 0.2
+
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
@@ -107,15 +110,15 @@ class DateTimeTypeMapper : TypeMapper {
         index: Int,
         dialect: DatabaseDialect,
         columnType: IColumnType<*>
-    ): TypeMapper.ValueContainer<T?> {
+    ): ValueContainer<T?> {
         return when (type) {
             Time::class.java -> {
-                TypeMapper.ValueContainer.PresentValue(
+                PresentValueContainer(
                     row.get(index - 1, LocalTime::class.java)?.let { Time.valueOf(it) as T }
                 )
             }
             Date::class.java -> {
-                TypeMapper.ValueContainer.PresentValue(
+                PresentValueContainer(
                     row.get(index - 1, LocalDate::class.java)?.let { Date.valueOf(it) as T }
                 )
             }
@@ -125,22 +128,22 @@ class DateTimeTypeMapper : TypeMapper {
                 // the column type changes the time according to the time zone, and reverts it back in `valueFromDB`
                 // But for R2DBC it does not happen. This line changes that behaviour to match it to JDBC behaviour.
                 if (currentDialect is MysqlDialect && currentDialect !is MariaDBDialect) {
-                    TypeMapper.ValueContainer.PresentValue(
+                    PresentValueContainer(
                         row.get(index - 1, Instant::class.java)?.let { Timestamp.from(it) as T }
                     )
                 } else {
                     try {
-                        TypeMapper.ValueContainer.PresentValue(
+                        PresentValueContainer(
                             row.get(index - 1, LocalDateTime::class.java)?.let { Timestamp.valueOf(it) as T }
                         )
                     } catch (_: Exception) {
-                        TypeMapper.ValueContainer.PresentValue(
+                        PresentValueContainer(
                             row.get(index - 1, String::class.java)?.let { Timestamp.valueOf(it) as T }
                         )
                     }
                 }
             }
-            else -> TypeMapper.ValueContainer.NoValue()
+            else -> NoValueContainer()
         }
     }
 }

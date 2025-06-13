@@ -10,6 +10,9 @@ import kotlin.reflect.KClass
  * This mapper should be registered first in the registry.
  */
 class ExposedColumnTypeMapper : TypeMapper {
+    @Suppress("MagicNumber")
+    override val priority = 0.5
+
     override val columnTypes: List<KClass<out IColumnType<*>>>
         get() = listOf(
             EntityIDColumnType::class,
@@ -19,17 +22,17 @@ class ExposedColumnTypeMapper : TypeMapper {
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
     ): Boolean {
         when (columnType) {
             is EntityIDColumnType<*> -> {
-                return mapperRegistry.setValue(statement, dialect, columnType.idColumn.columnType, value, index)
+                return typeMapping.setValue(statement, dialect, columnType.idColumn.columnType, value, index)
             }
             is ColumnWithTransform<*, *> -> {
-                return mapperRegistry.setValue(statement, dialect, columnType.delegate, value, index)
+                return typeMapping.setValue(statement, dialect, columnType.delegate, value, index)
             }
         }
         return false

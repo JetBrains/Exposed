@@ -15,6 +15,9 @@ import kotlin.reflect.KClass
  * Mapper for binary data types.
  */
 class BinaryTypeMapper : TypeMapper {
+    @Suppress("MagicNumber")
+    override val priority = 0.2
+
     override val columnTypes: List<KClass<out IColumnType<*>>>
         get() = listOf(
             BasicBinaryColumnType::class,
@@ -24,7 +27,7 @@ class BinaryTypeMapper : TypeMapper {
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int

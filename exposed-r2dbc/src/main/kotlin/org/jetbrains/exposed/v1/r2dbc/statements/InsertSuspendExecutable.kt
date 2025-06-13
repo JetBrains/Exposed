@@ -151,7 +151,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             }
 
             if (segment is Result.RowSegment) {
-                val row = R2DBCRow(segment.row(), typeMapperRegistry)
+                val row = R2DBCRow(segment.row(), typeMapping)
 
                 if (columnIndexesInResultSet == null) {
                     columnIndexesInResultSet = row.metadata.returnedColumns()
@@ -279,6 +279,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
     @OptIn(InternalApi::class)
     private fun columnsGeneratedOnDB(): Collection<Column<*>> = (autoIncColumns + statement.columnsWithDatabaseDefaults()).toSet()
 
+    @Suppress("UNCHECKED_CAST")
     private fun <T : Expression<*>> unwrapColumnValues(values: Map<T, Any?>): Map<T, Any?> = values.mapValues { (col, value) ->
         if (col !is ExpressionWithColumnType<*>) return@mapValues value
 

@@ -15,13 +15,13 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
  */
 class DefaultTypeMapper : TypeMapper {
 
-    // TODO we could add ordering for column mappers based on priority
-    //  fun priority(): Double = 0.5
+    @Suppress("MagicNumber")
+    override val priority: Double = 0.01
 
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int

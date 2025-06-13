@@ -12,6 +12,24 @@ import kotlin.reflect.KClass
  * based on the column type and dialect.
  */
 interface TypeMapper {
+
+    /**
+     * The priority of this type mapper used for ordering during mapper resolution.
+     *
+     * Mappers with higher priority values are consulted first when the registry
+     * searches for a suitable mapper. This allows more specific or custom mappers
+     * to override default implementations. The default priority is 0.
+     *
+     * Common priority ranges:
+     * - High priority (0.5+, 1.]: Custom user mappers that should override defaults
+     * - Standard priority (0., 0.5]: Priority of default Exposed type mappers
+     * - Default priority (0.)
+     *
+     * @return The priority value, with higher values indicating higher priority
+     */
+    val priority: Double
+        get() = 0.0
+
     /**
      * List of dialects this mapper supports.
      * If empty, the mapper supports all dialects.
@@ -30,7 +48,7 @@ interface TypeMapper {
      * Sets a value in the statement.
      * @param statement The statement to set the value in.
      * @param dialect The database dialect.
-     * @param mapperRegistry The registry of type mappers.
+     * @param typeMapping The registry of type mappers.
      * @param columnType The column type.
      * @param value The value to set (can be null).
      * @param index The index of the parameter in the statement.
@@ -39,44 +57,11 @@ interface TypeMapper {
     fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
     ): Boolean
-
-    /**
-     * Sealed class representing the result of a getValue operation.
-     * Contains either a present value or indicates that no value was provided.
-     *
-     * @param T The type of the value being retrieved.
-     * @param isPresent True if the container holds a value, false otherwise.
-     */
-    sealed class ValueContainer<T>(val isPresent: Boolean) {
-        /**
-         * Retrieves the present value from the container.
-         * @return The present value if [isPresent] is true.
-         * @throws IllegalStateException if called on a container with no present value.
-         */
-        abstract fun value(): T
-
-        /**
-         * Represents a container with no present value.
-         * This is used when the mapper cannot or should not provide a value.
-         */
-        class NoValue<T> : ValueContainer<T>(false) {
-            override fun value(): T = error("No value provided")
-        }
-
-        /**
-         * Represents a container with a present value.
-         *
-         * @param value The present value to be contained.
-         */
-        class PresentValue<T>(val value: T) : ValueContainer<T>(true) {
-            override fun value() = value
-        }
-    }
 
     /**
      * Retrieves a value from the given row at the specified index.
@@ -101,6 +86,6 @@ interface TypeMapper {
         dialect: DatabaseDialect,
         columnType: IColumnType<*>,
     ): ValueContainer<T?> {
-        return ValueContainer.NoValue()
+        return NoValueContainer()
     }
 }

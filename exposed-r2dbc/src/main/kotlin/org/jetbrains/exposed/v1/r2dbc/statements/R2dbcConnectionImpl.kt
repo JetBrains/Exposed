@@ -19,7 +19,7 @@ import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcScope
-import org.jetbrains.exposed.v1.r2dbc.mappers.TypeMapperRegistry
+import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcDatabaseMetadataImpl
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedDatabaseMetadata
@@ -38,7 +38,7 @@ class R2dbcConnectionImpl(
     override val connection: Publisher<out Connection>,
     private val vendorDialect: String,
     private val scope: R2dbcScope,
-    private val typeMapperRegistry: TypeMapperRegistry
+    private val typeMapping: R2dbcTypeMapping
 ) : R2dbcExposedConnection<Publisher<out Connection>> {
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
 
@@ -114,7 +114,7 @@ class R2dbcConnectionImpl(
 //        TODO
 //        val r2dbcQuery = if (returnKeys) "$preparedSql RETURNING *" else preparedSql
 //        R2dbcPreparedStatementImpl(createStatement(r2dbcQuery), this, returnKeys, isInsert = r2dbcQuery.startsWith("INSERT"))
-        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys, currentDialect, typeMapperRegistry)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys, currentDialect, typeMapping)
     }
 
     override suspend fun prepareStatement(
@@ -123,7 +123,7 @@ class R2dbcConnectionImpl(
     ): R2dbcPreparedStatementImpl = withConnection {
         val preparedSql = r2dbcPreparedSql(sql)
         val r2dbcStatement = createStatement(preparedSql).returnGeneratedValues(*columns)
-        R2dbcPreparedStatementImpl(r2dbcStatement, this, true, currentDialect, typeMapperRegistry)
+        R2dbcPreparedStatementImpl(r2dbcStatement, this, true, currentDialect, typeMapping)
     }
 
     private fun r2dbcPreparedSql(sql: String): String {
