@@ -1,5 +1,8 @@
 org.jetbrains.exposed.v1.r2dbc.mappers.ExposedColumnTypeMapper
 org.jetbrains.exposed.v1.r2dbc.mappers.PrimitiveTypeMapper
+org.jetbrains.exposed.v1.r2dbc.mappers.DateTimeMySqlTypeMapper
+org.jetbrains.exposed.v1.r2dbc.mappers.DateTimeNullTypeMapper
+org.jetbrains.exposed.v1.r2dbc.mappers.DateTimeOracleTypeMapper
 org.jetbrains.exposed.v1.r2dbc.mappers.DateTimeTypeMapper
 org.jetbrains.exposed.v1.r2dbc.mappers.BinaryTypeMapper
 org.jetbrains.exposed.v1.r2dbc.mappers.ArrayTypeMapper
