@@ -52,18 +52,18 @@ This also applies to certain class methods that perform metadata query checks, n
 
 ### IDE auto-import assistance
 
-These changes to the import paths will present as multiple unresolved errors in the IDE and may be tedious to resolve and add manually.
+The above changes to the import paths will present as multiple unresolved errors in your IDE and may be tedious to resolve and add manually.
 
-If IntelliJ IDEA is being used, a shortcut to resolving these import errors may be to rely on the [automatic addition](https://www.jetbrains.com/help/idea/creating-and-optimizing-imports.html#automatically-add-import-statements)
-of import statements by temporarily enabling 'Add unambiguous imports' in `Settings | Editor | General | Auto Import`.
+In IntelliJ IDEA, a shortcut to resolving these import errors may be to rely on the [automatic addition](https://www.jetbrains.com/help/idea/creating-and-optimizing-imports.html#automatically-add-import-statements)
+of import statements by temporarily enabling the **Add unambiguous imports** option in **Settings | Editor | General | Auto Import**.
 With that option checked, the deletion of any unresolved import statements should trigger the automatic addition of the correct paths,
 which can then be confirmed manually.
 
 ### Implicit imports and naming conflicts
 
 Prior to version 1.0.0, it was possible to create custom extension functions and class methods with identical names to existing
-query and statement functions, like `selectAll()` and `insert()`. This is still possible with version 1.0.0; however, due to
-the new import paths of these Exposed functions, the use of wildcard imports may lead to unexpected invocation behavior
+query and statement functions, like `selectAll()` and `insert()`. This is still possible with version 1.0.0. However, due to
+the import paths of these Exposed functions, using wildcard imports may lead to unexpected invocation behavior
 if such custom functions are also being used. It is recommended to explicitly import these custom functions in the event
 that renaming is not a feasible option.
 
@@ -120,9 +120,9 @@ fun JdbcTransaction.getVersionString(): String {
 ### Transaction managers
 
 The `TransactionManager` interface has undergone a similar redesign, except that the interface remaining in `exposed-core`
-has been renamed to `TransactionManagerApi`. The latter only holds the properties and methods common to both JDBC and R2DBC drivers.
+has been renamed to `TransactionManagerApi`. This interface contains only the properties and methods common to both JDBC and R2DBC drivers.
 
-With version 1.0.0, it is still possible to call the companion object methods on `TransactionManager` because new implementations
+With version 1.0.0, you can still call companion object methods on `TransactionManager` because new implementations
 have been introduced to both `exposed-jdbc` and `exposed-r2dbc`. The return type of some of these methods may have changed to
 reflect the exact `Transaction` implementation:
 
@@ -180,8 +180,8 @@ If a statement implementation originally held a protected `transaction` property
 
 ### Custom statements
 
-This separation of responsibility means that any custom `Statement` implementation will now require an associated `BlockingExecutable`
-implementation to be sent to the database. The `BlockingExecutable` may be custom or an existing class may provide sufficient
+This separation of responsibility means that any custom `Statement` implementation now requires an associated `BlockingExecutable`
+implementation to be sent to the database. This `BlockingExecutable` can be custom or you can use an existing class if it provides sufficient
 execution logic, as shown in the following example:
 
 <compare first-title="0.61.0" second-title="1.0.0-beta-1">
@@ -308,7 +308,7 @@ transaction {
 
 </compare>
 
-This signature change does not affect the method's use with a `Query` argument, since the latter implements `BlockingExecutable` directly.
+This signature change does not affect the method's use with a `Query` argument, as `Query` implements `BlockingExecutable` directly.
 
 ### `ReturningStatement` return type changed
 
@@ -319,11 +319,11 @@ attempted to iterate over the results.
 
 In version 1.0.0, since all execution logic has been removed from the core `ReturningStatement`, these functions instead return
 a value of type `ReturningBlockingExecutable`. Other than this return type change, the return value can be iterated over in
-the same manner as previously.
+the same way as before.
 
 ### `DeleteStatement` companion methods deprecated
 
-Prior to version 1.0.0, the companion object of `DeleteStatement` provided methods `all()` and `where()` as alternatives
+Prior to version 1.0.0, the companion object of `DeleteStatement` provided the `.all()` and `.where()` methods as alternatives
 to calling `Table.deleteAll()` or `Table.deleteWhere()`.
 
 Following version 1.0.0's removal of statement execution logic from
@@ -344,7 +344,7 @@ implementing `Flow`.
 
 ### `CommentPosition` ownership changed
 
-Certain `Query` properties, like `where` and `having` (as well as their associated adjustment methods), have been pulled
+Certain `Query` properties, like `where` and `having` (as well as their associated adjustment methods), have been moved
 down from the subclass into superclass `AbstractQuery` so that they remain common to both drivers.
 
 This also includes the`comments` property and its related enum class `CommentPosition`,
@@ -389,7 +389,7 @@ These are both implemented by new driver-specific wrapper classes, `JdbcResult` 
 Since driver-specific results, like `java.sql.ResultSet`, are no longer supported in `exposed-core`, they are instead wrapped
 by common interfaces, like `RowApi`.
 
-The `IColumnType` interface has a method `readObject()` for performing any special read and/or conversion logic when
+The `IColumnType` interface has a method `readObject()` for performing any special read or conversion logic when
 accessing an object at a specific index in the result.
 The signature of this method has changed to use `RowApi` instead of `ResultSet`, which still allows access via `getObject()`:
 
@@ -445,8 +445,8 @@ execution now accepts a `RowApi` as an argument.
 
 ### `execute()` return type changed
 
-Calling `execute()` directly on a `Query` will no longer return a `ResultSet`. It will instead return a `ResultApi`,
-which must be cast if needing to access the original wrapped result type:
+Calling `execute()` directly on a `Query` no longer returns a `ResultSet`. It instead returns a `ResultApi`,
+which must be cast if you need to access the original wrapped result type:
 
 <compare first-title="0.61.0" second-title="1.0.0-beta-1">
 
@@ -506,7 +506,7 @@ had some of its methods extracted to the driver-specific implementations in <cod
 </note>
 
 These methods would have previously been most commonly invoked on the top-level property `currentDialect`.
-To follow a similar patter, a related property, `currentDialectMetadata`, has been added to replace the original call:
+To follow a similar pattern, a related property, `currentDialectMetadata`, has been added to replace the original call:
 
 <compare first-title="0.61.0" second-title="1.0.0-beta-1">
 
