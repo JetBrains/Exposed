@@ -2,8 +2,9 @@
 
 # Migrating from 0.61.0 to 1.0.0
 
-This guide provides instructions on how to migrate from Exposed version 0.61.0 to the version 1.0.0,
-which primarily provides additional R2DBC support on top of the existing JDBC support.
+This guide provides instructions on how to migrate from Exposed version 0.61.0 to the version 1.0.0.
+Version 1.0.0 introduces R2DBC support on top of the existing JDBC support. Most of the changes in this release were made
+to accommodate reactive database access while preserving existing functionality.
 
 ## Import versioning and package renaming
 
@@ -49,6 +50,11 @@ This also applies to certain class methods that perform metadata query checks, n
 | `org.jetbrains.exposed.sql.exists`    | `org.jetbrains.exposed.v1.jdbc.exists`    |
 | `org.jetbrains.exposed.sql.insert`    | `org.jetbrains.exposed.v1.jdbc.insert`    |
 | `org.jetbrains.exposed.sql.update`    | `org.jetbrains.exposed.v1.jdbc.update`    |
+
+<note>
+This means that a project with a dependency on <code>exposed-spring-boot-starter</code>, for example, will now most likely require an
+additional dependency on <code>exposed-jdbc</code>.
+</note>
 
 ### IDE auto-import assistance
 
@@ -154,8 +160,11 @@ The original top-level suspend transaction functions, namely `newSuspendedTransa
 To properly open a suspend transaction block, these functions should be replaced with `suspendTransaction()` and
 `suspendTransactionAsync()` from `exposed-r2dbc`.
 
-Please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
-with a use case if you believe these methods should remain available for blocking JDBC connections.
+> If you believe these methods should remain available for blocking JDBC connections,
+> please leave a comment on [YouTrack](https://youtrack.jetbrains.com/issue/EXPOSED-74/Add-R2DBC-Support)
+> with your use case.
+>
+{style="tip"}
 
 ## Statement builders and executables
 
@@ -329,11 +338,6 @@ to calling `Table.deleteAll()` or `Table.deleteWhere()`.
 Following version 1.0.0's removal of statement execution logic from
 `exposed-core`, these companion methods have now been deprecated. It is recommended to use the table extension functions
 directly or combine a `DeleteStatement` constructor with `DeleteBlockingExecutable`.
-
-### `insert()` parameter type changed
-
-The type of the `body` parameter lambda block for `insert()` has been changed to take `UpdateBuilder` as its argument,
-instead of `InsertStatement` directly. This applies to its variants as well, like `insertIgnore()` and `insertAndGetId()`.
 
 ## Queries
 
