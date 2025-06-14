@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.orgGraalvmBuildtoolsNative)
 }
 
-group = "com.example"
+group = "org.jetbrains.exposed.samples.springboot3.r2dbc"
 version = "0.0.1-SNAPSHOT"
 
 java {
