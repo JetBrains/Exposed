@@ -1,9 +1,6 @@
 package com.example.support
 
-import com.example.entity.UserEntity
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransactionAsync
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
