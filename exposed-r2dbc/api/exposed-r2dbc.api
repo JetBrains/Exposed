@@ -701,11 +701,13 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcPreparedStatem
 	public fun executeQuery (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeUpdate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun fillParameters (Ljava/lang/Iterable;)I
+	public fun getArrayColumnType (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ArrayColumnType;
 	public final fun getConnection ()Lio/r2dbc/spi/Connection;
 	public fun getResultRow (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getWasGeneratedKeysRequested ()Z
 	public fun set (ILjava/lang/Object;)V
 	public fun set (ILjava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
+	public fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
 	public fun setArray (ILorg/jetbrains/exposed/v1/core/ArrayColumnType;[Ljava/lang/Object;)V
 	public fun setFetchSize (Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun setInputStream (ILjava/io/InputStream;Z)V
@@ -876,6 +878,7 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi$DefaultImpls {
 	public static fun fillParameters (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Ljava/lang/Iterable;)I
+	public static fun getArrayColumnType (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ArrayColumnType;
 	public static fun set (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;ILjava/lang/Object;)V
 }
 

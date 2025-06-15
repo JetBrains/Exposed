@@ -3307,8 +3307,10 @@ protected final class org/jetbrains/exposed/v1/core/statements/api/IdentifierMan
 
 public abstract interface class org/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi {
 	public abstract fun fillParameters (Ljava/lang/Iterable;)I
+	public abstract fun getArrayColumnType (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ArrayColumnType;
 	public abstract fun set (ILjava/lang/Object;)V
 	public abstract fun set (ILjava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
+	public abstract fun setArray (ILjava/lang/String;[Ljava/lang/Object;)V
 	public abstract fun setArray (ILorg/jetbrains/exposed/v1/core/ArrayColumnType;[Ljava/lang/Object;)V
 	public abstract fun setInputStream (ILjava/io/InputStream;Z)V
 	public abstract fun setNull (ILorg/jetbrains/exposed/v1/core/IColumnType;)V
@@ -3316,6 +3318,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/statements/api/Pre
 
 public final class org/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi$DefaultImpls {
 	public static fun fillParameters (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;Ljava/lang/Iterable;)I
+	public static fun getArrayColumnType (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ArrayColumnType;
 	public static fun set (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 }
 
