@@ -81,7 +81,7 @@ object CoreTransactionManager {
 
     /**
      * Returns the transaction manager instance that is associated with the provided database key,
-     * `null` if  a manager has not been registered for the database.
+     * or `null` if  a manager has not been registered for the database.
      */
     fun getDatabaseManager(db: DatabaseApi): TransactionManagerApi? = registeredDatabases[db]
 

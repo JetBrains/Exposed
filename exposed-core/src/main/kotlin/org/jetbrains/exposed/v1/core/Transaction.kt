@@ -54,7 +54,7 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
 
     /**
      * The number of seconds the driver should wait for a statement to execute in a transaction before timing out.
-     * Note Not all drivers implement this limit. Please check the driver documentation.
+     * Note that not all drivers implement this limit. For more information, refer to the relevant driver documentation.
      */
     var queryTimeout: Int? = null
 

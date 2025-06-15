@@ -11,7 +11,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.sql.ResultSet
 
 /**
- * Represents the execution logic for an underlying SQL statement that also returns a result with data from any modified rows.
+ * Represents the execution logic for an underlying SQL statement that returns a result with data from any modified rows.
  */
 open class ReturningBlockingExecutable(
     override val statement: ReturningStatement

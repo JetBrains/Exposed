@@ -15,9 +15,9 @@ interface ResultApi : AutoCloseable {
 }
 
 /**
- * Base representation of accessors to data rows, by index or column name.
+ * Base representation for accessing data rows by column index or name.
  *
- * This API allows retrieving objects from a row, either by the one-based index of the column or by its name,
+ * Provides methods to retrieve objects from a row using a one-based column index or a column name,
  * with optional type conversion for strongly-typed results.
  */
 interface RowApi {

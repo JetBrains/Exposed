@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 
 /**
- * Represents the underlying SQL [mainStatement] that also returns a result with data from any modified rows.
+ * Represents the underlying SQL [mainStatement] that returns a result with data from any modified rows.
  *
  * @param table Table to perform the main statement on and return results from.
  * @param returningExpressions Columns or expressions to include in the returned result.
