@@ -81,7 +81,7 @@ class R2dbcResult internal constructor(
 }
 
 /**
- * Represents accessors for retrieving objects from a [Row], by index or column name.
+ * Represents the access methods for retrieving objects from a [Row], by index or column name.
  *
  * @param row The actual underlying wrapped [Row] that is being accessed.
  * @param typeMapping The type mapper logic being used to get values from a [Row].

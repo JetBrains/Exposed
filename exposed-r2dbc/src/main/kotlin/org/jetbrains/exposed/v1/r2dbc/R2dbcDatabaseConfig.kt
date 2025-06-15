@@ -43,9 +43,6 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
      * custom mappers implemented and detected by a `ServiceLoader`.
      *
      * By default, the registry includes all Exposed type mappers and any custom loaded classes.
-     *
-     * More type mappers can be configured for a specific `R2dbcDatabase` by passing them to
-     * `TypeMapperRegistry.default().register(mapper)`.
      */
     val typeMapping: R2dbcTypeMapping
 
@@ -84,9 +81,6 @@ interface R2dbcDatabaseConfig : DatabaseConfig {
          * custom mappers implemented and detected by a `ServiceLoader`.
          *
          * By default, the registry includes all Exposed type mappers and any custom loaded classes.
-         *
-         * More type mappers can be configured for a specific `R2dbcDatabase` by passing them to
-         * `TypeMapperRegistry.default().register(mapper)`.
          */
         var typeMapping: R2dbcTypeMapping = R2dbcRegistryTypeMapping.default()
 
