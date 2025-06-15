@@ -242,11 +242,11 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabase : org/jetbrains/
 
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion {
 	public final fun connect (Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
-	public final fun connect (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public final fun connect (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun connect (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun connect (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;Lkotlin/jvm/functions/Function1;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public static synthetic fun connect$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion;Lio/r2dbc/spi/ConnectionFactory;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
-	public static synthetic fun connect$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
+	public static synthetic fun connect$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public static synthetic fun connect$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public static synthetic fun connect$default (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;
 	public final fun getDefaultIsolationLevel (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Lio/r2dbc/spi/IsolationLevel;
