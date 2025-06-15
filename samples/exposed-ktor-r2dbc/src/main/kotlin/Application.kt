@@ -12,7 +12,7 @@ fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
 }
 
-fun Application.module() {
+suspend fun Application.module() {
     configureMonitoring()
     configureSerialization()
     configureDatabase()

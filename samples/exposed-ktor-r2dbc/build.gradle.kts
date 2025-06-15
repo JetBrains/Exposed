@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.ktor.server.host.common)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.config.yaml)
+    implementation(libs.ktor.server.di)
     implementation(libs.ktor.serialization)
 
     implementation(libs.exposed.core)
