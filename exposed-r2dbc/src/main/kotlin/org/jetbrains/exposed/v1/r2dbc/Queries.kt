@@ -216,7 +216,7 @@ suspend fun Join.delete(
  * @sample org.jetbrains.exposed.r2dbc.sql.tests.h2.H2Tests.insertInH2
  */
 suspend fun <T : Table> T.insert(
-    body: T.(UpdateBuilder<*>) -> Unit
+    body: T.(InsertStatement<Number>) -> Unit
 ): InsertStatement<Number> {
     val stmt = buildStatement { insert(body) }
     return InsertSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
@@ -229,9 +229,9 @@ suspend fun <T : Table> T.insert(
  * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.InsertTests.testGeneratedKey04
  */
 suspend fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
-    body: T.(UpdateBuilder<*>) -> Unit
+    body: T.(InsertStatement<EntityID<Key>>) -> Unit
 ): EntityID<Key> {
-    val stmt = buildStatement { insert(body) }
+    val stmt = buildStatement { insert(body as T.(InsertStatement<*>) -> Unit) }
     return InsertSuspendExecutable(stmt).run {
         execute(TransactionManager.current())
         statement[id]

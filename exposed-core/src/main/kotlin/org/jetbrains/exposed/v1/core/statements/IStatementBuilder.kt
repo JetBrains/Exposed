@@ -90,7 +90,7 @@ interface IStatementBuilder {
      * @return Am [InsertStatement] that can be executed.
      */
     fun <T : Table> T.insert(
-        body: T.(UpdateBuilder<*>) -> Unit
+        body: T.(InsertStatement<Number>) -> Unit
     ): InsertStatement<Number> {
         return InsertStatement<Number>(this).apply { body(this) }
     }
