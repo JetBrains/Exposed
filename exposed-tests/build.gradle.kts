@@ -2,6 +2,8 @@ import org.gradle.api.tasks.testing.logging.*
 
 plugins {
     kotlin("jvm") apply true
+
+    alias(libs.plugins.serialization)
 }
 
 kotlin {
