@@ -226,7 +226,7 @@ fun Join.delete(
  * @sample org.jetbrains.exposed.v1.sql.tests.h2.H2Tests.insertInH2
  */
 fun <T : Table> T.insert(
-    body: T.(UpdateBuilder<*>) -> Unit
+    body: T.(InsertStatement<Number>) -> Unit
 ): InsertStatement<Number> {
     val stmt = buildStatement { insert(body) }
     return InsertBlockingExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
@@ -239,9 +239,9 @@ fun <T : Table> T.insert(
  * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.InsertTests.testGeneratedKey04
  */
 fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
-    body: T.(UpdateBuilder<*>) -> Unit
+    body: T.(InsertStatement<EntityID<Key>>) -> Unit
 ): EntityID<Key> {
-    val stmt = buildStatement { insert(body) }
+    val stmt = buildStatement { insert(body as T.(InsertStatement<*>) -> Unit) }
     return InsertBlockingExecutable(stmt).run {
         execute(TransactionManager.current())
         statement[id]
