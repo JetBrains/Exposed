@@ -35,7 +35,7 @@ open class UserDataHolder {
     fun <T : Any> getOrCreate(key: Key<T>, init: () -> T): T = userdata.getOrPut(key, init) as T
 }
 
-/** Class representing a unit block of work that is performed on a database. */
+/** Base class representing a unit block of work that is performed on a database. */
 abstract class Transaction : UserDataHolder(), TransactionInterface {
     /** The current number of statements executed in this transaction. */
     var statementCount: Int = 0
@@ -53,8 +53,8 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     var debug = false
 
     /**
-     * The number of seconds the JDBC driver should wait for a statement to execute in [Transaction] transaction before timing out.
-     * Note Not all JDBC drivers implement this limit. Please check the driver documentation.
+     * The number of seconds the driver should wait for a statement to execute in a transaction before timing out.
+     * Note that not all drivers implement this limit. For more information, refer to the relevant driver documentation.
      */
     var queryTimeout: Int? = null
 

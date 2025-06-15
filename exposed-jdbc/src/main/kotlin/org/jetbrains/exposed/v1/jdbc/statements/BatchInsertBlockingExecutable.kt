@@ -9,7 +9,9 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import java.sql.ResultSet
 
-// TODO KDocs should be added
+/**
+ * Represents the execution logic for an SQL statement that batch inserts new rows into a table.
+ */
 open class BatchInsertBlockingExecutable<S : BaseBatchInsertStatement>(
     override val statement: S
 ) : InsertBlockingExecutable<List<ResultRow>, S>(statement) {
@@ -24,6 +26,10 @@ open class BatchInsertBlockingExecutable<S : BaseBatchInsertStatement>(
     }
 }
 
+/**
+ * Represents the execution logic for an SQL statement that batch inserts new rows into a table,
+ * specifically for the SQL Server database.
+ */
 open class SQLServerBatchInsertBlockingExecutable(
     override val statement: SQLServerBatchInsertStatement
 ) : BatchInsertBlockingExecutable<SQLServerBatchInsertStatement>(statement) {

@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Base class representing the underlying database to which connections are made
  * and on which transaction tasks are performed.
+ *
+ * @param config Configuration holding all parameters that apply to a transaction using this database instance.
  */
 abstract class DatabaseApi protected constructor(
     protected val resolvedVendor: String? = null,
@@ -22,7 +24,7 @@ abstract class DatabaseApi protected constructor(
     /** The connection URL for the database. */
     abstract val url: String
 
-    /** The name of the database based on the name of the underlying JDBC driver. */
+    /** The name of the database based on the name of the underlying driver implementation. */
     abstract val vendor: String
 
     /** The name of the database as a [DatabaseDialect]. */

@@ -3,6 +3,9 @@ package org.jetbrains.exposed.v1.r2dbc.vendors
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 
+/**
+ * MySQL dialect metadata implementation.
+ */
 open class MysqlDialectMetadata : DatabaseDialectMetadata() {
     @OptIn(InternalApi::class)
     override fun String.metadataMatchesTable(schema: String, table: Table): Boolean {

@@ -28,6 +28,7 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.transactionManager
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+/** Class representing a unit block of work that is performed on a database using an R2DBC driver. */
 open class R2dbcTransaction(
     private val transactionImpl: R2dbcTransactionInterface
 ) : Transaction(), R2dbcTransactionInterface by transactionImpl {
@@ -58,7 +59,7 @@ open class R2dbcTransaction(
     /** The current statement for which an execution plan should be queried, but which should never itself be executed. */
     internal var explainStatement: Statement<*>? = null
 
-    /** Whether this [Transaction] should prevent any statement execution from proceeding. */
+    /** Whether this [R2dbcTransaction] should prevent any statement execution from proceeding. */
     internal var blockStatementExecution: Boolean = false
 
     internal val executedStatements: MutableList<R2dbcPreparedStatementApi> = arrayListOf()
@@ -179,7 +180,7 @@ open class R2dbcTransaction(
     /**
      * Executes the provided [Statement] object and returns the generated value.
      *
-     * This function also updates its calling [Transaction] instance's statement count and overall duration,
+     * This function also updates its calling [R2dbcTransaction] instance's statement count and overall duration,
      * as well as whether the execution time for [stmt] exceeds the threshold set by
      * `R2dbcDatabaseConfig.warnLongQueriesDuration`. If [debug] is set to `true`, these tracked values
      * are stored for each call in [statementStats].
@@ -198,7 +199,7 @@ open class R2dbcTransaction(
      * Executes the provided [Statement] object, retrieves the generated value, then calls the specified
      * function [body] with this generated value as its argument and returns its result.
      *
-     * This function also updates its calling [Transaction] instance's statement count and overall duration,
+     * This function also updates its calling [R2dbcTransaction] instance's statement count and overall duration,
      * as well as whether the execution time for [stmt] exceeds the threshold set by [R2dbcDatabaseConfig.warnLongQueriesDuration].
      * If [debug] is set to `true`, these tracked values
      * are stored for each call in [statementStats].
@@ -259,7 +260,7 @@ open class R2dbcTransaction(
 }
 
 // TODO Check why separated and if could be returned to single place in core (Transaction?)
-/** Adds one or more [org.jetbrains.exposed.v1.sql.SqlLogger]s to [this] transaction. */
+/** Adds one or more [SqlLogger]s to this [R2dbcTransaction]. */
 fun R2dbcTransaction.addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
     return CompositeSqlLogger().apply {
         logger.forEach { this.addLogger(it) }

@@ -19,10 +19,12 @@ private object NotInitializedTransactionManager : TransactionManagerApi {
 
     override var defaultMaxRetryDelay: Long = 0
 
-    override fun currentOrNull(): Transaction = error("Please call Database.connect() before using this code")
+    override fun currentOrNull(): Transaction = error(
+        "Please call Database.connect() or R2dbcDatabase.connect() before using this code"
+    )
 
     override fun bindTransactionToThread(transaction: Transaction?) {
-        error("Please call Database.connect() before using this code")
+        error("Please call Database.connect() or R2dbcDatabase.connect() before using this code")
     }
 }
 
@@ -55,27 +57,37 @@ interface TransactionManagerApi {
  * and its transaction manager.
  */
 @Suppress("ForbiddenComment")
-// TODO: move/add kdocs from TransactionManager
 @InternalApi
 object CoreTransactionManager {
     private val databases = ConcurrentLinkedDeque<DatabaseApi>()
 
     private val currentDefaultDatabase = AtomicReference<DatabaseApi>()
 
+    /** Returns the database that has been set as the default for all transactions. */
     fun getDefaultDatabase(): DatabaseApi? = currentDefaultDatabase.get()
 
+    /**
+     * Returns the database that has been set as the default for all transactions, or, if none was set,
+     * the last instance created.
+     */
     fun getDefaultDatabaseOrFirst(): DatabaseApi? = getDefaultDatabase() ?: databases.firstOrNull()
 
+    /** Sets the specified database instance as the default for all transactions. */
     fun setDefaultDatabase(db: DatabaseApi?) {
         currentDefaultDatabase.set(db)
     }
 
     private val registeredDatabases = ConcurrentHashMap<DatabaseApi, TransactionManagerApi>()
 
+    /**
+     * Returns the transaction manager instance that is associated with the provided database key,
+     * or `null` if  a manager has not been registered for the database.
+     */
     fun getDatabaseManager(db: DatabaseApi): TransactionManagerApi? = registeredDatabases[db]
 
     private val currentThreadManager = TransactionManagerThreadLocal()
 
+    /** Stores the specified database instance as a key for the provided transaction manager value. */
     fun registerDatabaseManager(db: DatabaseApi, manager: TransactionManagerApi) {
         if (getDefaultDatabaseOrFirst() == null) {
             currentThreadManager.remove()
@@ -87,6 +99,10 @@ object CoreTransactionManager {
         registeredDatabases[db] = manager
     }
 
+    /**
+     * Clears any association between the provided database instance and its transaction manager,
+     * and completely removes the database instance from the internal storage.
+     */
     fun closeAndUnregisterDatabase(db: DatabaseApi) {
         val manager = getDatabaseManager(db)
         manager?.let {
@@ -99,14 +115,28 @@ object CoreTransactionManager {
         }
     }
 
+    /** Returns the transaction manager instance stored in the current thread's copy of its thread-local variable. */
     fun getCurrentThreadManager(): TransactionManagerApi = currentThreadManager.get()
 
+    /**
+     * Sets the current thread's copy of its thread-local variable to the specified [manager] instance,
+     * or removes the value entirely if a `null` instance is provided.
+     */
     fun resetCurrentThreadManager(manager: TransactionManagerApi?) {
         manager?.let { currentThreadManager.set(it) } ?: currentThreadManager.remove()
     }
 
+    /**
+     * Returns the current [Transaction] from the current transaction manager instance,
+     * or `null` if none exists.
+     */
     fun currentTransactionOrNull(): Transaction? = getCurrentThreadManager().currentOrNull()
 
+    /**
+     * Returns the current [Transaction] from the current transaction manager instance.
+     *
+     * @throws IllegalStateException If a transaction is not currently open.
+     */
     fun currentTransaction(): Transaction = currentTransactionOrNull() ?: error("No transaction in context.")
 
     private class TransactionManagerThreadLocal : ThreadLocal<TransactionManagerApi>() {
