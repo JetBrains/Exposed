@@ -29,13 +29,12 @@ suspend fun Application.issueRoutes() {
                 call.respond(HttpStatusCode.OK, issueCount)
             }
 
-
             get {
                 val parentId = call.parameters["id"]?.toInt()
                     ?: return@get call.respondText("Missing or invalid ID value for parent Project", status = HttpStatusCode.BadRequest)
 
                 val qp = call.queryParameters
-                val limit= qp["limit"]?.toInt() ?: 50
+                val limit = qp["limit"]?.toInt() ?: 50
                 val offset = qp["offset"]?.toInt() ?: 0
 
                 val allIssues = issueService.getIssuesInProject(ProjectId(parentId), limit, offset)
@@ -50,7 +49,6 @@ suspend fun Application.issueRoutes() {
                 if (issue == null) {
                     call.respondText("Issue $code not found", status = HttpStatusCode.NotFound)
                     return@get
-
                 }
 
                 call.respond(HttpStatusCode.OK, issue)

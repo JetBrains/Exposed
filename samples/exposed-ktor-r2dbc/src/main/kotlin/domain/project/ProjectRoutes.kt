@@ -37,7 +37,6 @@ suspend fun Application.projectRoutes() {
                 if (project == null) {
                     call.respondText("Project with ID = $id not found", status = HttpStatusCode.NotFound)
                     return@get
-
                 }
 
                 call.respond(HttpStatusCode.OK, project)
