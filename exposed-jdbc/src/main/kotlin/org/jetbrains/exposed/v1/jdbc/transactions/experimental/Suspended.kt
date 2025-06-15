@@ -20,8 +20,6 @@ import java.util.concurrent.ThreadLocalRandom
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
-// TODO should we deprecate it and remove it?
-
 internal class TransactionContext(val manager: TransactionManager?, val transaction: JdbcTransaction?)
 
 internal class TransactionScope(

@@ -259,7 +259,6 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConf
 	public abstract fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
 	public abstract fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public abstract fun getTypeMapping ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;
-	public abstract fun getUseExposedCodecs ()Z
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder : org/jetbrains/exposed/v1/core/DatabaseConfig$Builder {
@@ -271,14 +270,12 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Builder : 
 	public final fun getDefaultR2dbcIsolationLevel ()Lio/r2dbc/spi/IsolationLevel;
 	public final fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public final fun getTypeMapping ()Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;
-	public final fun getUseExposedCodecs ()Z
 	public final fun setConnectionFactoryOptions (Lio/r2dbc/spi/ConnectionFactoryOptions;)V
 	public fun setDefaultIsolationLevel (I)V
 	public final fun setDefaultR2dbcIsolationLevel (Lio/r2dbc/spi/IsolationLevel;)V
 	public final fun setDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public final fun setTypeMapping (Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
 	public final fun setUrl (Ljava/lang/String;)V
-	public final fun setUseExposedCodecs (Z)V
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseConfig$Companion {

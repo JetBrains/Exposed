@@ -223,7 +223,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
      * This can be disabled by setting [withLogs] to `false`.
      *
-     * **Note:** This functionality is reliant on retrieving JDBC metadata, which might be a bit slow. It is recommended
+     * **Note:** This functionality is reliant on retrieving R2DBC metadata, which might be a bit slow. It is recommended
      * to call this function only once at application startup and to provide all tables that need to be actualized.
      *
      * **Note:** Execution of this function concurrently might lead to unpredictable state in the database due to

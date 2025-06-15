@@ -6,6 +6,10 @@ import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import java.util.ServiceLoader
 
+/**
+ * Base representation of a type mapper that allows logic for setting a value in a [Statement] and getting a value
+ * from a [Row].
+ */
 interface R2dbcTypeMapping {
     /**
      * Tries to set a value using the registered mappers.
@@ -42,6 +46,9 @@ interface R2dbcTypeMapping {
     ): T?
 }
 
+/**
+ * Base registry for type mappers.
+ */
 interface R2dbcRegistryTypeMapping : R2dbcTypeMapping {
     /**
      * Registers a new type mapper.

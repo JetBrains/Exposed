@@ -5,6 +5,10 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 
+/**
+ * Represents the execution logic for an SQL statement that either inserts a new row into a table,
+ * or updates the existing row if insertion would violate a unique constraint.
+ */
 open class UpsertSuspendExecutable<Key : Any>(
     override val statement: UpsertStatement<Key>
 ) : InsertSuspendExecutable<Key, UpsertStatement<Key>>(statement) {

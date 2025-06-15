@@ -12,7 +12,9 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.sql.ResultSet
 import java.sql.SQLException
 
-// TODO KDocs should be added
+/**
+ * Represents the execution logic for an SQL statement that inserts a new row into a table.
+ */
 open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
     override val statement: S
 ) : BlockingExecutable<Int, S> {

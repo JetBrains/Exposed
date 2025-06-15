@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import kotlin.reflect.KClass
 
 /**
- * Mapper for special column types like EntityIDColumnType and ColumnWithTransform.
+ * Mapper for special column types like [EntityIDColumnType] and [ColumnWithTransform].
  * This mapper should be registered first in the registry.
  */
 class ExposedColumnTypeMapper : TypeMapper {
