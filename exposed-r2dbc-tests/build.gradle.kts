@@ -6,6 +6,7 @@ plugins {
 
     // exposed-json dependencies
     alias(libs.plugins.serialization)
+    alias(libs.plugins.kover)
 }
 
 kotlin {
@@ -23,18 +24,20 @@ dependencies {
     implementation(libs.kotlinx.coroutines.debug)
     implementation(libs.kotlinx.coroutines.test)
     implementation(libs.r2dbc.spi)
-
-    implementation(kotlin("test-junit"))
+    implementation(libs.slf4j)
+    implementation(libs.log4j.slf4j.impl)
+    implementation(libs.log4j.api)
+    implementation(libs.log4j.core)
     implementation(libs.junit)
+    implementation(kotlin("test-junit"))
 
     implementation(project(":exposed-core"))
     implementation(project(":exposed-r2dbc"))
     implementation(project(":exposed-kotlin-datetime"))
 
-    implementation(libs.slf4j)
-    implementation(libs.log4j.slf4j.impl)
-    implementation(libs.log4j.api)
-    implementation(libs.log4j.core)
+    kover(project(":exposed-core"))
+    kover(project(":exposed-r2dbc"))
+    kover(project(":exposed-kotlin-datetime"))
 
     // non-exposed-tests module dependencies
     // --- start ---
