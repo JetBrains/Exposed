@@ -293,7 +293,12 @@ abstract class SchemaUtilityApi {
             val incorrectType = if (currentDialect.supportsColumnTypeChange) isIncorrectType(existingCol, col) else false
             val incorrectNullability = existingCol.nullable != colNullable
             val incorrectAutoInc = isIncorrectAutoInc(existingCol, col)
-            val incorrectDefaults = isIncorrectDefault(dialect, existingCol, col, columnDbDefaultIsAllowed)
+            // 'isDatabaseGenerated' property means that the column has generation of the value on the database side,
+            // and it could be default value, trigger or something else,
+            // but we don't specify the default value on the table object.
+            // So it could be better to avoid checking for changes in defaults for such columns, because in the most part
+            // of cases we would try to remove existing (in database, but not in table object) default value
+            val incorrectDefaults = if (col.isDatabaseGenerated) false else isIncorrectDefault(dialect, existingCol, col, columnDbDefaultIsAllowed)
             val incorrectCaseSensitiveName = existingCol.name.inProperCase() != col.nameUnquoted().inProperCase()
             val incorrectSizeOrScale = if (incorrectType) false else isIncorrectSizeOrScale(existingCol, columnType)
             ColumnDiff(
