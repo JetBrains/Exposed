@@ -27,22 +27,15 @@ class DefaultTypeMapper : TypeMapper {
         index: Int
     ): Boolean {
         if (value == null) {
-            // TODO this code could be simplified
             if (currentDialect is PostgreSQLDialect) {
-                val typeProvider = currentDialect.dataTypeProvider
-                when (columnType.sqlType()) {
-                    typeProvider.integerType() -> statement.bindNull(index - 1, Int::class.java)
-                    typeProvider.longType() -> statement.bindNull(index - 1, Long::class.java)
-                    else -> statement.bindNull(index - 1, String::class.java)
-                }
-                return true
+                statement.bindNull(index - 1, Object::class.java)
             } else {
                 statement.bindNull(index - 1, String::class.java)
-                return true
             }
         } else {
             statement.bind(index - 1, value)
-            return true
         }
+
+        return true
     }
 }
