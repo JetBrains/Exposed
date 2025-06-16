@@ -430,7 +430,7 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
         return when {
             dialect is SQLiteDialect ->
                 SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value)
-            dialect is MysqlDialect && dialect !is MariaDBDialect && !CoreTransactionManager.currentTransaction().db.isVersionCovers(8, 0) -> {
+            dialect is MysqlDialect && dialect !is MariaDBDialect && !CoreTransactionManager.currentTransaction().db.version.covers(8) -> {
                 val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER else MYSQL_TIMESTAMP_STRING_FORMATTER
                 formatter.format(value)
             }

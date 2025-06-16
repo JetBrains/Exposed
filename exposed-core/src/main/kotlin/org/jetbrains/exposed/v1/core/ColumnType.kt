@@ -1068,7 +1068,7 @@ class UUIDColumnType : ColumnType<UUID>() {
     override fun readObject(rs: RowApi, index: Int): Any? {
         @OptIn(InternalApi::class)
         val db = CoreTransactionManager.currentTransaction().db
-        if (currentDialect is MariaDBDialect && !db.isVersionCovers(10, 0)) {
+        if (currentDialect is MariaDBDialect && !db.version.covers(10)) {
             return rs.getObject(index, java.sql.Array::class.java)
         }
         return super.readObject(rs, index)

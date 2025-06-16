@@ -567,9 +567,7 @@ public abstract class org/jetbrains/exposed/v1/core/DatabaseApi {
 	public abstract fun getUrl ()Ljava/lang/String;
 	public final fun getUseNestedTransactions ()Z
 	public abstract fun getVendor ()Ljava/lang/String;
-	public abstract fun getVersion ()Ljava/math/BigDecimal;
-	public abstract fun isVersionCovers (II)Z
-	public abstract fun isVersionCovers (Ljava/math/BigDecimal;)Z
+	public abstract fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -2426,6 +2424,32 @@ public final class org/jetbrains/exposed/v1/core/VarSamp : org/jetbrains/exposed
 	public final fun getExpression ()Lorg/jetbrains/exposed/v1/core/Expression;
 	public fun over ()Lorg/jetbrains/exposed/v1/core/WindowFunctionDefinition;
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
+public final class org/jetbrains/exposed/v1/core/Version {
+	public static final field Companion Lorg/jetbrains/exposed/v1/core/Version$Companion;
+	public fun <init> (III)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun copy (III)Lorg/jetbrains/exposed/v1/core/Version;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/v1/core/Version;IIIILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Version;
+	public final fun covers (III)Z
+	public final fun covers (Ljava/lang/String;)Z
+	public final fun covers (Ljava/math/BigDecimal;)Z
+	public final fun covers (Lorg/jetbrains/exposed/v1/core/Version;)Z
+	public static synthetic fun covers$default (Lorg/jetbrains/exposed/v1/core/Version;IIIILjava/lang/Object;)Z
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMajor ()I
+	public final fun getMinor ()I
+	public final fun getPatch ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/Version$Companion {
+	public final fun from (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Version;
+	public final fun from (Ljava/math/BigDecimal;)Lorg/jetbrains/exposed/v1/core/Version;
 }
 
 public abstract interface class org/jetbrains/exposed/v1/core/WindowFrameBound {
