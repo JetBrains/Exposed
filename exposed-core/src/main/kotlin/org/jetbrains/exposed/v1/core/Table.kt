@@ -528,6 +528,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Returns the table name in proper case.
      * Should be called within transaction or default [tableName] will be returned.
      */
+    @OptIn(InternalApi::class)
     fun nameInDatabaseCase(): String = tableName.inProperCase()
 
     /**

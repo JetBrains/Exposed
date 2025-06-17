@@ -259,6 +259,7 @@ data class Index(
     val table: Table
 
     /** Name of the index. */
+    @OptIn(InternalApi::class)
     val indexName: String
         get() = customName ?: buildString {
             append(table.nameInDatabaseCaseUnquoted())

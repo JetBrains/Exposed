@@ -9,8 +9,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.vendors.DatabaseDialectMetadata
 import java.util.*
 
-fun String.inProperCase(): String = TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this) ?: this
-
 val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
 
 val currentDialectMetadataTest: DatabaseDialectMetadata

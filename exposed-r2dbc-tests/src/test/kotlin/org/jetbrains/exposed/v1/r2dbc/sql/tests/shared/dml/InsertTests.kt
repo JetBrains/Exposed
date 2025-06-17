@@ -15,6 +15,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.r2dbc.*
@@ -22,7 +23,6 @@ import org.jetbrains.exposed.v1.r2dbc.statements.BatchInsertSuspendExecutable
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentTestDB
-import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
@@ -566,6 +566,7 @@ class InsertTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testInsertIntoNullableGeneratedColumn() {
         withDb { testDb ->

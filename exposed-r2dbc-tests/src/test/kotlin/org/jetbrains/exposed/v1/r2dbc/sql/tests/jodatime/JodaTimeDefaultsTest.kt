@@ -77,6 +77,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testDefaults01() {
         val currentDT = CurrentDateTime
@@ -283,6 +284,7 @@ class JodaTimeDefaultsTest : R2dbcDatabaseTestsBase() {
         assertEquals(date.millis, list1?.get(testData.dateTime)?.millis)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testTimestampWithTimeZoneDefaults() {
         // UTC time zone

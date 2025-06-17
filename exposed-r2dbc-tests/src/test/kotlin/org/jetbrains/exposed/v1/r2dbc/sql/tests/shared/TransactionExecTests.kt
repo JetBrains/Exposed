@@ -3,9 +3,11 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.autoIncColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -13,7 +15,6 @@ import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.getInt
 import org.jetbrains.exposed.v1.r2dbc.tests.getString
-import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.junit.Test
@@ -27,6 +28,7 @@ class TransactionExecTests : R2dbcDatabaseTestsBase() {
         override val primaryKey = PrimaryKey(id)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testExecWithSingleStatementQuery() {
         withTables(ExecTable) {
@@ -81,6 +83,7 @@ class TransactionExecTests : R2dbcDatabaseTestsBase() {
 //        TransactionManager.closeAndUnregister(db)
 //    }
 
+    @OptIn(InternalApi::class)
     private suspend fun R2dbcTransaction.testInsertAndSelectInSingleExec(testDb: TestDB) {
         ExecTable.insert {
             it[amount] = 99
@@ -127,6 +130,7 @@ class TransactionExecTests : R2dbcDatabaseTestsBase() {
         assertEquals(2, result)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testExecWithNullableAndEmptyResultSets() {
         val tester = object : Table("tester") {

@@ -78,6 +78,7 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
     val statementStats by lazy { hashMapOf<String, Pair<Int, Long>>() }
 
     /** Returns the string identifier of a [table], based on its [Table.tableName] and [Table.alias], if applicable. */
+    @OptIn(InternalApi::class)
     fun identity(table: Table): String =
         (table as? Alias<*>)?.let { "${identity(it.delegate)} ${db.identifierManager.quoteIfNecessary(it.alias)}" }
             ?: db.identifierManager.quoteIfNecessary(table.tableName.inProperCase())
@@ -87,6 +88,7 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
         fullIdentity(column, it)
     }.toString()
 
+    @OptIn(InternalApi::class)
     internal fun fullIdentity(column: Column<*>, queryBuilder: QueryBuilder) = queryBuilder {
         if (column.table is Alias<*>) {
             append(db.identifierManager.quoteIfNecessary(column.table.alias))

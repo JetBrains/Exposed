@@ -15,12 +15,12 @@ import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
 import org.jetbrains.exposed.v1.r2dbc.tests.forEach
-import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
@@ -173,6 +173,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         override val primaryKey = PrimaryKey(id)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun unnamedTableWithQuotesSQL() {
         withTables(tables = arrayOf(unnamedTable)) { testDb ->
@@ -198,6 +199,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun namedEmptyTableWithoutQuotesSQL() {
         val testTable = object : Table("test_named_table") {}
@@ -207,6 +209,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun tableWithDifferentColumnTypesSQL01() {
         val testTable = object : Table("different_column_types") {
@@ -230,6 +233,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun tableWithDifferentColumnTypesSQL02() {
         val testTable = object : Table("with_different_column_types") {
@@ -333,6 +337,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndices01() {
         val t = object : Table("t1") {
@@ -343,12 +348,13 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
+            val alter = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndices02() {
         val t = object : Table("t2") {
@@ -365,17 +371,18 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(t) {
-            val a1 = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
+            val a1 = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"t2_name".inProperCase()} ON ${"t2".inProperCase()} ($q${"name".inProperCase()}$q)", a1)
 
-            val a2 = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[1])
+            val a2 = SchemaUtils.createIndex(t.indices[1])
             assertEquals(
                 "CREATE INDEX ${"t2_lvalue_rvalue".inProperCase()} ON ${"t2".inProperCase()} " + "(${"lvalue".inProperCase()}, ${"rvalue".inProperCase()})", a2
             )
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndexOnTextColumnInH2() {
         val testTable = object : Table("test_index_table") {
@@ -393,7 +400,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             val columnProperName = testTable.columns.single().name.inProperCase()
             val indexProperName = "${tableProperName}_$columnProperName"
 
-            val indexStatement = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(testTable.indices.single())
+            val indexStatement = SchemaUtils.createIndex(testTable.indices.single())
 
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + tableProperName + " (" + testTable.columns.single().descriptionDdl(false) + ")", testTable.ddl
@@ -409,6 +416,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testUniqueIndices01() {
         val t = object : Table("t1") {
@@ -419,12 +427,13 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
+            val alter = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"t1_name_unique".inProperCase()} UNIQUE ($q${"name".inProperCase()}$q)", alter)
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testUniqueIndicesCustomName() {
         val t = object : Table("t1") {
@@ -436,11 +445,12 @@ class DDLTests : R2dbcDatabaseTestsBase() {
 
         withTables(t) {
             val q = db.identifierManager.quoteString
-            val alter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
+            val alter = SchemaUtils.createIndex(t.indices[0])
             assertEquals("ALTER TABLE ${"t1".inProperCase()} ADD CONSTRAINT ${"U_T1_NAME"} UNIQUE ($q${"name".inProperCase()}$q)", alter)
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     @Suppress("MaximumLineLength")
     fun testMultiColumnIndex() {
@@ -455,8 +465,8 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(t) {
-            val indexAlter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
-            val uniqueAlter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[1])
+            val indexAlter = SchemaUtils.createIndex(t.indices[0])
+            val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals(
                 "CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter
@@ -468,6 +478,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testMultiColumnIndexCustomName() {
         val t = object : Table("t1") {
@@ -481,8 +492,8 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withTables(t) {
-            val indexAlter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[0])
-            val uniqueAlter = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(t.indices[1])
+            val indexAlter = SchemaUtils.createIndex(t.indices[0])
+            val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"I_T1_NAME_TYPE"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter)
             assertEquals(
@@ -492,6 +503,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndexWithFunctions() {
         val tester = object : Table("tester") {
@@ -536,7 +548,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             }
 
             repeat(3) { i ->
-                val actualStatement = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createIndex(tester.indices[i])
+                val actualStatement = SchemaUtils.createIndex(tester.indices[i])
                 assertEquals(expectedStatements[i], actualStatement)
             }
         }
@@ -746,6 +758,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun tableWithDifferentTextTypes() {
         val testTable = object : Table("different_text_column_types") {
@@ -870,6 +883,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testCreateAndDropCheckConstraint() {
         val tester = object : Table("tester") {

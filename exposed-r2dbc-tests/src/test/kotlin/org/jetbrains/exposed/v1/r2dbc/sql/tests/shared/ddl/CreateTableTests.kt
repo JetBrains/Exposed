@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.ddl
 
 import kotlinx.coroutines.flow.singleOrNull
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.Table
@@ -11,6 +12,7 @@ import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.deleteWhere
 import org.jetbrains.exposed.v1.r2dbc.exists
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -20,7 +22,6 @@ import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectTest
-import org.jetbrains.exposed.v1.r2dbc.tests.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.Category
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.Item
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualCollections
@@ -51,6 +52,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testCreateIdTableWithPrimaryKeyByEntityID() {
         val testTable = object : IdTable<String>("test_table") {
@@ -73,6 +75,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testCreateIdTableWithPrimaryKeyByColumn() {
         val testTable = object : IdTable<String>("test_table") {
@@ -95,6 +98,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testCreateIdTableWithNamedPrimaryKeyByColumn() {
         val pkConstraintName = "PK_Constraint_name"
@@ -118,6 +122,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testCreateTableWithSingleColumnPrimaryKey() {
         val stringPKTable = object : Table("string_pk_table") {
@@ -157,6 +162,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun primaryKeyCreateTableTest() {
         val account = object : Table("Account") {
@@ -186,6 +192,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun primaryKeyWithConstraintNameCreateTableTest() {
         val pkConstraintName = "PKConstraintName"
@@ -232,6 +239,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun addCompositePrimaryKeyToTableTest() {
         withDb { testDb ->
@@ -264,6 +272,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun addOneColumnPrimaryKeyToTableTest() {
         withTables(Book) { testDb ->
@@ -316,6 +325,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         val reference = reference("id", TableWithDuplicatedColumn.id1)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun createTableWithExplicitForeignKeyName1() {
         val fkName = "MyForeignKey1"
@@ -349,6 +359,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun createTableWithQuotes() {
         val parent = object : LongIdTable("\"Parent\"") {}
@@ -376,6 +387,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun createTableWithSingleQuotes() {
         val parent = object : LongIdTable("'Parent2'") {}
@@ -403,6 +415,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun createTableWithExplicitForeignKeyName2() {
         val fkName = "MyForeignKey2"
@@ -438,6 +451,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun createTableWithExplicitForeignKeyName3() {
         val fkName = "MyForeignKey3"
@@ -471,6 +485,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun createTableWithExplicitForeignKeyName4() {
         val fkName = "MyForeignKey4"
@@ -507,6 +522,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun createTableWithExplicitCompositeForeignKeyName1() {
         val fkName = "MyForeignKey1"
@@ -552,6 +568,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun createTableWithExplicitCompositeForeignKeyName2() {
         val fkName = "MyForeignKey2"
@@ -597,6 +614,7 @@ class CreateTableTests : R2dbcDatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun createTableWithOnDeleteSetDefault() {
         withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB + listOf(TestDB.ORACLE)) { testDb ->

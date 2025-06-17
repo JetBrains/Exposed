@@ -4,10 +4,10 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
-import org.jetbrains.exposed.v1.jdbc.statements.jdbc.inProperCase
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -40,6 +40,7 @@ open class InsertBlockingExecutable<Key : Any, S : InsertStatement<Key>>(
         }
     }
 
+    @OptIn(InternalApi::class)
     override fun prepared(transaction: JdbcTransaction, sql: String): JdbcPreparedStatementApi = when {
         // https://github.com/pgjdbc/pgjdbc/issues/1168
         // Column names always escaped/quoted in RETURNING clause

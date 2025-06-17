@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.core.SchemaUtilityApi
 import org.jetbrains.exposed.v1.core.Sequence
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.io.File
 
@@ -68,9 +69,4 @@ abstract class MigrationUtilityApi : SchemaUtilityApi() {
         unmappedSequences.addAll(subtract(mappedSequencesNames).map { Sequence(it) })
         return unmappedSequences.toList()
     }
-
-    /** Returns an identity in a casing appropriate for its identifier status and the database, then caches the returned value. */
-    @InternalApi
-    protected fun String.inProperCase(): String =
-        TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this
 }

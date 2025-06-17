@@ -1,25 +1,20 @@
 package org.jetbrains.exposed.v1.tests.shared.ddl
 
-import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNull
-import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.core.doubleLiteral
-import org.jetbrains.exposed.v1.core.floatLiteral
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.currentDialectTest
-import org.jetbrains.exposed.v1.tests.inProperCase
 import org.jetbrains.exposed.v1.tests.shared.assertEqualCollections
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
@@ -46,9 +41,9 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withTables(excludeSettings = listOf(TestDB.H2_V2_MYSQL), tables = arrayOf(testTable)) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+            SchemaUtils.drop(testTable)
         }
     }
 
@@ -65,12 +60,12 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
             assertTrue(testTable.exists())
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(testTable)
+                SchemaUtils.createMissingTablesAndColumns(testTable)
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+                SchemaUtils.drop(testTable)
             }
         }
     }
@@ -86,25 +81,25 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t1)
+            SchemaUtils.createMissingTablesAndColumns(t1)
             t1.insert { it[foo] = "ABC" }
             assertFailAndRollback("Can't insert to not-null column") {
                 t2.insert { it[foo] = null }
             }
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t2)
+            SchemaUtils.createMissingTablesAndColumns(t2)
             t2.insert { it[foo] = null }
             assertFailAndRollback("Can't make column non-null while has null value") {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t1)
+                SchemaUtils.createMissingTablesAndColumns(t1)
             }
 
             t2.deleteWhere { t2.foo.isNull() }
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t1)
+            SchemaUtils.createMissingTablesAndColumns(t1)
             assertFailAndRollback("Can't insert to nullable column") {
                 t2.insert { it[foo] = null }
             }
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(t1)
+            SchemaUtils.drop(t1)
         }
     }
 
@@ -125,10 +120,10 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb(db = listOf(TestDB.H2_V2)) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t1)
+            SchemaUtils.createMissingTablesAndColumns(t1)
             t1.insert { it[foo] = "ABC" }
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t2)
+            SchemaUtils.createMissingTablesAndColumns(t2)
             assertFailAndRollback("Can't insert without primaryKey value") {
                 t2.insert { it[foo] = "ABC" }
             }
@@ -138,7 +133,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                 it[foo] = "ABC"
             }
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(t1)
+            SchemaUtils.drop(t1)
         }
     }
 
@@ -158,7 +153,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         withDb {
             if (db.supportsAlterTableWithAddColumn) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t1)
+                SchemaUtils.createMissingTablesAndColumns(t1)
 
                 val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(t2)
 
@@ -176,7 +171,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
                 assertEquals(expected, missingStatements.firstOrNull())
 
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(t1)
+                SchemaUtils.drop(t1)
             }
         }
     }
@@ -196,13 +191,13 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t1)
+            SchemaUtils.createMissingTablesAndColumns(t1)
 
             val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(t2)
 
             assertEqualCollections(missingStatements, emptyList())
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(t1)
+            SchemaUtils.drop(t1)
         }
     }
 
@@ -221,13 +216,13 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t1)
+            SchemaUtils.createMissingTablesAndColumns(t1)
 
             val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(t2)
 
             assertEqualCollections(missingStatements, emptyList())
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(t1)
+            SchemaUtils.drop(t1)
         }
     }
 
@@ -246,10 +241,11 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withTables(fooTable, barTable1) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(barTable2)
+            SchemaUtils.createMissingTablesAndColumns(barTable2)
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun addAutoPrimaryKey() {
         val tableName = "Foo"
@@ -261,11 +257,12 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLITE, tables = arrayOf(initialTable)) {
             assertEquals("ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY", t.id.ddl)
             assertEquals(1, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t)
+            SchemaUtils.createMissingTablesAndColumns(t)
             assertEquals(2, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testAddNewPrimaryKeyOnExistingColumn() {
         val tableName = "tester"
@@ -280,20 +277,20 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb(excludeSettings = listOf(TestDB.SQLITE)) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(noPKTable)
+            SchemaUtils.createMissingTablesAndColumns(noPKTable)
             var primaryKey: PrimaryKeyMetadata? = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             assertNull(primaryKey)
 
             val expected = "ALTER TABLE ${tableName.inProperCase()} ADD PRIMARY KEY (${noPKTable.bar.nameInDatabaseCase()})"
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(singlePKTable)
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(singlePKTable)
             assertEquals(expected, statements.single())
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(singlePKTable)
+            SchemaUtils.createMissingTablesAndColumns(singlePKTable)
             primaryKey = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             assertNotNull(primaryKey)
             assertEquals("bar".inProperCase(), primaryKey.columnNames.single())
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(noPKTable)
+            SchemaUtils.drop(noPKTable)
         }
     }
 
@@ -315,10 +312,10 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                 }
 
                 org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(table)
-                val actual = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(table)
+                val actual = SchemaUtils.statementsRequiredToActualizeScheme(table)
                 assertEqualLists(emptyList(), actual)
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(table)
+                SchemaUtils.drop(table)
             }
         }
     }
@@ -363,7 +360,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                         }.single()[whiteSpaceTable.column]
                     )
 
-                    val actual = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(emptyTable)
+                    val actual = SchemaUtils.statementsRequiredToActualizeScheme(emptyTable)
                     val expected = if (testDb == TestDB.SQLSERVER) 2 else 1
                     assertEquals(expected, actual.size)
 
@@ -372,7 +369,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                         // Apply changes
                         actual.forEach { exec(it) }
                     } else {
-                        org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(whiteSpaceTable)
+                        SchemaUtils.drop(whiteSpaceTable)
                         org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(emptyTable)
                     }
 
@@ -389,7 +386,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                         emptyTable.selectAll().where { emptyTable.id eq emptyId }.single()[emptyTable.column]
                     )
                 } finally {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(whiteSpaceTable, emptyTable)
+                    SchemaUtils.drop(whiteSpaceTable, emptyTable)
                 }
             }
         }
@@ -418,7 +415,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         val complexAlterTable = TestDB.ALL_POSTGRES_LIKE + TestDB.ORACLE + TestDB.SQLSERVER
         withDb(excludeSettings = excludeSettings) { testDb ->
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t1)
+                SchemaUtils.createMissingTablesAndColumns(t1)
 
                 val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(t2)
 
@@ -441,13 +438,13 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                     exec(it)
                 }
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(t1)
+                SchemaUtils.drop(t1)
             }
         }
 
         withDb(excludeSettings = excludeSettings) { testDb ->
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t2)
+                SchemaUtils.createMissingTablesAndColumns(t2)
 
                 val missingStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.addMissingColumnsStatements(t1)
 
@@ -470,7 +467,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                     exec(it)
                 }
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(t2)
+                SchemaUtils.drop(t2)
             }
         }
     }
@@ -495,7 +492,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                 org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(table)
                 assertEqualLists(emptyList(), SchemaUtils.statementsRequiredToActualizeScheme(table))
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(table)
+                SchemaUtils.drop(table)
             }
         }
     }
@@ -504,9 +501,9 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     fun createTableWithMultipleIndexes() {
         withDb {
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(MultipleIndexesTable)
+                SchemaUtils.createMissingTablesAndColumns(MultipleIndexesTable)
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(MultipleIndexesTable)
+                SchemaUtils.drop(MultipleIndexesTable)
             }
         }
     }
@@ -519,10 +516,10 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
 
         withDb {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(usersTable, spacesTable)
+            SchemaUtils.createMissingTablesAndColumns(usersTable, spacesTable)
             assertTrue(usersTable.exists())
             assertTrue(spacesTable.exists())
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(usersTable, spacesTable)
+            SchemaUtils.drop(usersTable, spacesTable)
         }
     }
 
@@ -537,10 +534,10 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         // Oracle metadata only returns foreign keys that reference primary keys
         withDb(excludeSettings = listOf(TestDB.ORACLE)) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(ordersTable, receiptsTable)
+            SchemaUtils.createMissingTablesAndColumns(ordersTable, receiptsTable)
             assertTrue(ordersTable.exists())
             assertTrue(receiptsTable.exists())
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(ordersTable, receiptsTable)
+            SchemaUtils.drop(ordersTable, receiptsTable)
         }
     }
 
@@ -557,8 +554,8 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     @Test
     fun testCreateTableWithReferenceMultipleTimes() {
         withTables(PlayerTable, SessionsTable) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
+            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
+            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
         }
     }
 
@@ -573,13 +570,13 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     @Test
     fun createTableWithReservedIdentifierInColumnName() {
         withDb(TestDB.MYSQL_V5) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(T1, T2)
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(T1, T2)
+            SchemaUtils.createMissingTablesAndColumns(T1, T2)
+            SchemaUtils.createMissingTablesAndColumns(T1, T2)
 
             assertTrue(T1.exists())
             assertTrue(T2.exists())
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(T1, T2)
+            SchemaUtils.drop(T1, T2)
         }
     }
 
@@ -617,10 +614,10 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
         }
         withDb {
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(usersTable)
+                SchemaUtils.createMissingTablesAndColumns(usersTable)
                 assertTrue(usersTable.exists())
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(usersTable)
+                SchemaUtils.drop(usersTable)
             }
         }
     }
@@ -643,9 +640,9 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     @Test
     fun testCreateCompositePrimaryKeyTableAndCompositeForeignKeyTableMultipleTimes() {
         withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+            SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+            SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(CompositePrimaryKeyTable, CompositeForeignKeyTable)
             assertTrue(statements.isEmpty())
         }
     }
@@ -659,13 +656,13 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         withDb {
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(quotedTable)
+                SchemaUtils.createMissingTablesAndColumns(quotedTable)
                 assertTrue(quotedTable.exists())
 
-                val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(quotedTable)
+                val statements = SchemaUtils.statementsRequiredToActualizeScheme(quotedTable)
                 assertTrue(statements.isEmpty())
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(quotedTable)
+                SchemaUtils.drop(quotedTable)
             }
         }
     }
@@ -673,16 +670,16 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
     @Test
     fun testCreateCompositePrimaryKeyTableAndCompositeForeignKeyInVariousOrder() {
         withTables(CompositeForeignKeyTable, CompositePrimaryKeyTable) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+            SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
         }
         withTables(CompositeForeignKeyTable, CompositePrimaryKeyTable) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(CompositeForeignKeyTable, CompositePrimaryKeyTable)
+            SchemaUtils.createMissingTablesAndColumns(CompositeForeignKeyTable, CompositePrimaryKeyTable)
         }
         withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
+            SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
         }
         withTables(CompositePrimaryKeyTable, CompositeForeignKeyTable) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(CompositeForeignKeyTable, CompositePrimaryKeyTable)
+            SchemaUtils.createMissingTablesAndColumns(CompositeForeignKeyTable, CompositePrimaryKeyTable)
         }
     }
 
@@ -713,23 +710,23 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
             try {
                 // Try in different schema
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
+                SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
                 assertTrue(parentTable.exists())
                 assertTrue(childTable.exists())
 
                 // Try in the same schema
                 if (testDb != TestDB.ORACLE) {
                     org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
+                    SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
                     assertTrue(parentTable.exists())
                     assertTrue(childTable.exists())
                 }
             } finally {
                 if (testDb == TestDB.SQLSERVER) {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(childTable, parentTable)
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema)
+                    SchemaUtils.drop(childTable, parentTable)
+                    SchemaUtils.dropSchema(schema)
                 } else {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.dropSchema(schema, cascade = true)
+                    SchemaUtils.dropSchema(schema, cascade = true)
                 }
             }
         }
@@ -762,7 +759,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             testerWithoutDefaults to testerWithoutDefaults
         ).forEach { (existingTable, definedTable) ->
             withTables(existingTable) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
+                SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
                     assertTrue(it.isEmpty())
                 }
             }
@@ -788,7 +785,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             testerWithoutDefaults to testerWithDefaults,
         ).forEach { (existingTable, definedTable) ->
             withTables(excludeSettings = listOf(TestDB.SQLITE), existingTable) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
+                SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
                     assertTrue(it.isNotEmpty())
                 }
             }
@@ -799,7 +796,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
             testerWithoutDefaults to testerWithoutDefaults
         ).forEach { (existingTable, definedTable) ->
             withTables(excludeSettings = listOf(TestDB.SQLITE), existingTable) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
+                SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
                     assertTrue(it.isEmpty())
                 }
             }
@@ -841,7 +838,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
 
         // SQLite doesn't support alter table with add column, so it doesn't generate alter statements
         withTables(excludeSettings = listOf(TestDB.SQLITE), originalTable) { testDb ->
-            assertTrue(org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(originalTable, withLogs = false).isEmpty())
+            assertTrue(SchemaUtils.statementsRequiredToActualizeScheme(originalTable, withLogs = false).isEmpty())
 
             expectException<IllegalArgumentException> {
                 originalTable.insert {
@@ -852,7 +849,7 @@ class CreateMissingTablesAndColumnsTests : DatabaseTestsBase() {
                 }
             }
 
-            val alterStatements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(newTable, withLogs = false)
+            val alterStatements = SchemaUtils.statementsRequiredToActualizeScheme(newTable, withLogs = false)
             val expectedSize = if (testDb in TestDB.ALL_POSTGRES_LIKE) {
                 3
             } else {

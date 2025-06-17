@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.jdbc.vendors
 
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 
 /**
  * Mysql dialect metadata implementation.

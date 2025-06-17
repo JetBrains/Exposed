@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.vendors
 
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 
 /**
  * MySQL dialect metadata implementation.

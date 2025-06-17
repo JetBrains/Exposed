@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -21,7 +22,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectTest
-import org.jetbrains.exposed.v1.tests.inProperCase
 import org.junit.Assume
 import org.junit.Test
 import java.util.*
@@ -172,6 +172,7 @@ class DDLTests : DatabaseTestsBase() {
         override val primaryKey = PrimaryKey(id)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun unnamedTableWithQuotesSQL() {
         withTables(excludeSettings = listOf(TestDB.SQLITE), tables = arrayOf(unnamedTable)) { testDb ->
@@ -196,6 +197,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun unnamedTableWithQuotesSQLInSQLite() {
         withDb(TestDB.SQLITE) {
@@ -216,6 +218,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun namedEmptyTableWithoutQuotesSQL() {
         val testTable = object : Table("test_named_table") {}
@@ -225,6 +228,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun tableWithDifferentColumnTypesSQL01() {
         val testTable = object : Table("different_column_types") {
@@ -247,6 +251,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun tableWithDifferentColumnTypesSQL02() {
         val testTable = object : Table("with_different_column_types") {
@@ -276,6 +281,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun tableWithDifferentColumnTypesInSQLite() {
         val testTable = object : Table("with_different_column_types") {
@@ -383,6 +389,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndices01() {
         val t = object : Table("t1") {
@@ -393,12 +400,13 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
+            val alter = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndices02() {
         val t = object : Table("t2") {
@@ -415,11 +423,11 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val a1 = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
+            val a1 = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"t2_name".inProperCase()} ON ${"t2".inProperCase()} ($q${"name".inProperCase()}$q)", a1)
 
-            val a2 = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[1])
+            val a2 = SchemaUtils.createIndex(t.indices[1])
             assertEquals(
                 "CREATE INDEX ${"t2_lvalue_rvalue".inProperCase()} ON ${"t2".inProperCase()} " +
                     "(${"lvalue".inProperCase()}, ${"rvalue".inProperCase()})",
@@ -428,6 +436,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndexOnTextColumnInH2() {
         val testTable = object : Table("test_index_table") {
@@ -445,7 +454,7 @@ class DDLTests : DatabaseTestsBase() {
             val columnProperName = testTable.columns.single().name.inProperCase()
             val indexProperName = "${tableProperName}_$columnProperName"
 
-            val indexStatement = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(testTable.indices.single())
+            val indexStatement = SchemaUtils.createIndex(testTable.indices.single())
 
             assertEquals(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + tableProperName +
@@ -464,6 +473,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testUniqueIndices01() {
         val t = object : Table("t1") {
@@ -474,7 +484,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val alter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
+            val alter = SchemaUtils.createIndex(t.indices[0])
             val q = db.identifierManager.quoteString
             if (currentDialectTest is SQLiteDialect) {
                 assertEquals("CREATE UNIQUE INDEX ${"t1_name".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
@@ -484,6 +494,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testUniqueIndicesCustomName() {
         val t = object : Table("t1") {
@@ -495,7 +506,7 @@ class DDLTests : DatabaseTestsBase() {
 
         withTables(t) {
             val q = db.identifierManager.quoteString
-            val alter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
+            val alter = SchemaUtils.createIndex(t.indices[0])
             if (currentDialectTest is SQLiteDialect) {
                 assertEquals("CREATE UNIQUE INDEX ${"U_T1_NAME"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q)", alter)
             } else {
@@ -504,6 +515,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     @Suppress("MaximumLineLength")
     fun testMultiColumnIndex() {
@@ -518,8 +530,8 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val indexAlter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
-            val uniqueAlter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[1])
+            val indexAlter = SchemaUtils.createIndex(t.indices[0])
+            val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals(
                 "CREATE INDEX ${"t1_name_type".inProperCase()} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)",
@@ -539,6 +551,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testMultiColumnIndexCustomName() {
         val t = object : Table("t1") {
@@ -552,8 +565,8 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withTables(t) {
-            val indexAlter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[0])
-            val uniqueAlter = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(t.indices[1])
+            val indexAlter = SchemaUtils.createIndex(t.indices[0])
+            val uniqueAlter = SchemaUtils.createIndex(t.indices[1])
             val q = db.identifierManager.quoteString
             assertEquals("CREATE INDEX ${"I_T1_NAME_TYPE"} ON ${"t1".inProperCase()} ($q${"name".inProperCase()}$q, $q${"type".inProperCase()}$q)", indexAlter)
             if (currentDialectTest is SQLiteDialect) {
@@ -570,6 +583,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testIndexWithFunctions() {
         val tester = object : Table("tester") {
@@ -616,7 +630,7 @@ class DDLTests : DatabaseTestsBase() {
             }
 
             repeat(3) { i ->
-                val actualStatement = org.jetbrains.exposed.v1.jdbc.SchemaUtils.createIndex(tester.indices[i])
+                val actualStatement = SchemaUtils.createIndex(tester.indices[i])
                 assertEquals(expectedStatements[i], actualStatement)
             }
         }
@@ -828,6 +842,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun tableWithDifferentTextTypes() {
         val testTable = object : Table("different_text_column_types") {
@@ -951,6 +966,7 @@ class DDLTests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testCreateAndDropCheckConstraint() {
         val tester = object : Table("tester") {
