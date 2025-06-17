@@ -13,12 +13,18 @@ internal final class SchemaInitializer : ApplicationRunner {
     private final val logger: Logger = LoggerFactory.getLogger(this.javaClass)
     override fun run(args: ApplicationArguments?): Unit = runBlocking {
         suspendTransactionAsync {
-            logger.info("Starting application before sourceArgs: {}, nonOptionArgs: {}, optionNames: {}, thread: {}", args?.sourceArgs, args?.nonOptionArgs, args?.optionNames,
-                Thread.currentThread())
+            logger.info(
+                "Starting application before sourceArgs: {}, nonOptionArgs: {}, optionNames: {}, thread: {}",
+                args?.sourceArgs, args?.nonOptionArgs, args?.optionNames,
+                Thread.currentThread()
+            )
             // TODO https://youtrack.jetbrains.com/issue/EXPOSED-804/How-to-use-org.jetbrains.exposed.v1.r2dbc.SchemaUtils-and-Blocking-issue
             // SchemaUtils.create(tables = arrayOf<Table>(UserEntity))
-            logger.info("Starting application after sourceArgs: {}, nonOptionArgs: {}, optionNames: {}, thread: {}", args?.sourceArgs, args?.nonOptionArgs, args?.optionNames,
-                Thread.currentThread())
+            logger.info(
+                "Starting application after sourceArgs: {}, nonOptionArgs: {}, optionNames: {}, thread: {}",
+                args?.sourceArgs, args?.nonOptionArgs, args?.optionNames,
+                Thread.currentThread()
+            )
         }
     }
 }

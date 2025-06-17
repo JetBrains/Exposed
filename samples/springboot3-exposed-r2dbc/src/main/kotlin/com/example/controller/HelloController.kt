@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping(value = ["/hello"])
-private final class HelloController(
+internal final class HelloController(
     private val emailUser: EmailUser
 ) {
-    private final val logger: Logger = LoggerFactory.getLogger(this.javaClass)
+    internal final val logger: Logger = LoggerFactory.getLogger(this.javaClass)
     @GetMapping(value = ["/hello"])
-    private final suspend fun hello(): String {
+    internal final suspend fun hello(): String {
         delay(timeMillis = 100)
         logger.info("HELLO WORLD emailUser: $emailUser")
         return "Hello World!"

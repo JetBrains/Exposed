@@ -17,7 +17,8 @@ import org.springframework.stereotype.Repository
 @Repository // not use final
 internal class UserDaoImpl internal constructor(): UserDao {
     override suspend fun findUserById(id: Int): User {
-        val user: User = UserEntity.selectAll().where { UserEntity.id eq id }.firstOrNull() ?.let { resultRow: ResultRow ->
+        val user: User = UserEntity.selectAll().where { UserEntity.id eq id }
+            .firstOrNull() ?.let { resultRow: ResultRow ->
             User(
                 id = resultRow[UserEntity.id].value,
                 account = resultRow[UserEntity.account],

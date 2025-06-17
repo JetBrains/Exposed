@@ -31,7 +31,10 @@ repositories {
 
 dependencies {
     implementation(libs.springBootStarterWebFlux) {
-        exclude(group = libs.springBootStarterReactorNetty.get().group, module = libs.springBootStarterReactorNetty.get().name)
+        exclude(
+            group = libs.springBootStarterReactorNetty.get().group,
+            module = libs.springBootStarterReactorNetty.get().name
+        )
     }
     implementation(libs.springBootStarterJetty)
     implementation(libs.jacksonModuleKotlin)

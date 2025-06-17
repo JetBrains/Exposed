@@ -15,5 +15,6 @@ import org.springframework.context.annotation.ImportRuntimeHints
 private class Application
 
 internal suspend fun main(args: Array<String>) : Unit = coroutineScope {
+    @Suppress("SpreadOperator")
     runApplication<Application>(*args)
 }
