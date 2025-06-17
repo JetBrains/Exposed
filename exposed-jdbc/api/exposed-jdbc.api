@@ -817,7 +817,7 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager
 	public final fun getManager ()Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
 	public final fun isInitialized ()Z
 	public final fun managerFor (Lorg/jetbrains/exposed/v1/jdbc/Database;)Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
-	public final fun registerManager (Lorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;)V
+	public final fun registerManager (Lorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V
 	public final fun resetCurrent (Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;)V
 	public final fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/jdbc/Database;)V
 }
