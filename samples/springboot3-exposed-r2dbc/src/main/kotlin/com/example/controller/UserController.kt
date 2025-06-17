@@ -4,20 +4,30 @@ import com.example.bean.User
 import com.example.service.UserService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
+@CrossOrigin
 @RestController
 @RequestMapping(value = ["/user"])
 internal final class UserController private constructor(
     private val userService: UserService
 ) {
     private final val logger: Logger = LoggerFactory.getLogger(this.javaClass)
+    @GetMapping(value = ["/findAll"])
+    internal final suspend fun findAll(
+        @RequestHeader headers: Map<String, String>
+    ): List<User> {
+        logger.info("findAll ${Thread.currentThread()}, headers: $headers")
+        return userService.findAll().await()
+    }
     @GetMapping(value = ["/findUserById"])
     internal final suspend fun findUserById(
         @RequestParam(value = "id") id: Int

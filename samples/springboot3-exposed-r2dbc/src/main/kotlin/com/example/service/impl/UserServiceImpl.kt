@@ -12,6 +12,10 @@ internal final class UserServiceImpl internal constructor(
     private val userDao: UserDao
 ) : UserService {
 
+    override suspend fun findAll(): Deferred<List<User>> = suspendTransactionAsync{
+        userDao.findAll()
+    }
+
     override suspend fun findUserById(id: Int): Deferred<User> = suspendTransactionAsync {
         return@suspendTransactionAsync userDao.findUserById(id = id)
     }

@@ -3,7 +3,10 @@ package com.example.dao.impl
 import com.example.bean.User
 import com.example.dao.UserDao
 import com.example.entity.UserEntity
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
@@ -33,6 +36,19 @@ internal class UserDaoImpl internal constructor(): UserDao {
         )
         return user
     }
+
+    override suspend fun findAll(): List<User> {
+        val users: Flow<User> =  UserEntity.selectAll().map { resultRow: ResultRow ->
+            User(
+                id = resultRow[UserEntity.id].value,
+                account = resultRow[UserEntity.account],
+                password = resultRow[UserEntity.password],
+                nickname = resultRow[UserEntity.nickname],
+            )
+        }
+        return users.toList()
+    }
+
     override suspend fun insetUser(user: User): Boolean {
         val id: Int = UserEntity.insert { updateBuilder: UpdateBuilder<*> ->
             updateBuilder[UserEntity.account] = user.account

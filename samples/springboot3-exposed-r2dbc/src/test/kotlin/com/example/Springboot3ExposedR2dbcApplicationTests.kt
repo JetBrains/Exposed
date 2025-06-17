@@ -33,6 +33,21 @@ internal final class Springboot3ExposedR2dbcApplicationTests(
             .isEqualTo("Hello World!")
     }
 
+
+    @Test
+    internal final fun `find all`() = runTest(timeout = 5.seconds) {
+        webTestClient.get()
+            .uri("/user/findAll")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody<List<User>>()
+            .consumeWith { response ->
+                val users: List<User>? = response.responseBody
+                assert(!users.isNullOrEmpty())
+                logger.info("Found users: $users")
+            }
+    }
+
     @Test
     internal final fun `add user`() = runTest(timeout = 5.seconds) {
         val testUser = User(
