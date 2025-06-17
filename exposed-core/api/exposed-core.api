@@ -2761,7 +2761,11 @@ public final class org/jetbrains/exposed/v1/core/ops/TripleInListOp : org/jetbra
 	public synthetic fun registerValues (Lorg/jetbrains/exposed/v1/core/QueryBuilder;Ljava/lang/Object;)V
 }
 
-public abstract class org/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement : org/jetbrains/exposed/v1/core/statements/InsertStatement {
+public final class org/jetbrains/exposed/v1/core/statements/BatchDataInconsistentException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public class org/jetbrains/exposed/v1/core/statements/BatchInsertStatement : org/jetbrains/exposed/v1/core/statements/InsertStatement {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZZ)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun addBatch ()V
@@ -2774,16 +2778,7 @@ public abstract class org/jetbrains/exposed/v1/core/statements/BaseBatchInsertSt
 	public fun validateLastBatch ()V
 }
 
-public final class org/jetbrains/exposed/v1/core/statements/BatchDataInconsistentException : java/lang/Exception {
-	public fun <init> (Ljava/lang/String;)V
-}
-
-public class org/jetbrains/exposed/v1/core/statements/BatchInsertStatement : org/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZZ)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
-public class org/jetbrains/exposed/v1/core/statements/BatchReplaceStatement : org/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement {
+public class org/jetbrains/exposed/v1/core/statements/BatchReplaceStatement : org/jetbrains/exposed/v1/core/statements/BatchInsertStatement {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;Z)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun prepareSQL (Lorg/jetbrains/exposed/v1/core/Transaction;Z)Ljava/lang/String;
@@ -2801,7 +2796,7 @@ public class org/jetbrains/exposed/v1/core/statements/BatchUpdateStatement : org
 	public synthetic fun update (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/Expression;)V
 }
 
-public class org/jetbrains/exposed/v1/core/statements/BatchUpsertStatement : org/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement, org/jetbrains/exposed/v1/core/statements/UpsertBuilder {
+public class org/jetbrains/exposed/v1/core/statements/BatchUpsertStatement : org/jetbrains/exposed/v1/core/statements/BatchInsertStatement, org/jetbrains/exposed/v1/core/statements/UpsertBuilder {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;Z)V
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;Z)V
 	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Table;[Lorg/jetbrains/exposed/v1/core/Column;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Op;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V

@@ -2,7 +2,6 @@ package org.jetbrains.exposed.v1.r2dbc.statements
 
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.statements.BaseBatchInsertStatement
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.statements.SQLServerBatchInsertStatement
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
@@ -12,7 +11,7 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 /**
  * Represents the execution logic for an SQL statement that batch inserts new rows into a table.
  */
-open class BatchInsertSuspendExecutable<S : BaseBatchInsertStatement>(
+open class BatchInsertSuspendExecutable<S : BatchInsertStatement>(
     override val statement: S
 ) : InsertSuspendExecutable<List<ResultRow>, S>(statement) {
     override val isAlwaysBatch = true

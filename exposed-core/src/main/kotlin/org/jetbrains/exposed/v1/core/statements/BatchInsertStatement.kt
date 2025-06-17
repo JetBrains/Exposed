@@ -1,70 +1,120 @@
 package org.jetbrains.exposed.v1.core.statements
 
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.isAutoInc
+import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 
 /** An exception thrown when the provided data cannot be validated or processed to prepare a batch statement. */
 class BatchDataInconsistentException(message: String) : Exception(message)
 
-/** Represents the SQL statement that batch inserts new rows into a table. */
+/**
+ * Represents the SQL statement that batch inserts new rows into a table.
+ *
+ * @param shouldReturnGeneratedValues Specifies whether newly generated values (for example, auto-incremented IDs)
+ * should be returned. See [Batch Insert](https://github.com/JetBrains/Exposed/wiki/DSL#batch-insert) for more details.
+ */
+@Suppress("ForbiddenComment")
 open class BatchInsertStatement(
     table: Table,
     ignore: Boolean = false,
-    shouldReturnGeneratedValues: Boolean = true
-) : BaseBatchInsertStatement(table, ignore, shouldReturnGeneratedValues)
+    val shouldReturnGeneratedValues: Boolean = true
+) : InsertStatement<List<ResultRow>>(table, ignore) {
+    @InternalApi
+    val data = ArrayList<MutableMap<Column<*>, Any?>>()
 
-private const val OUTPUT_ROW_LIMIT = 1000
+    private fun Column<*>.isDefaultable() = columnType.nullable || defaultValueFun != null || isDatabaseGenerated
 
-/**
- * Represents the SQL statement that batch inserts new rows into a table, specifically for the SQL Server database.
- *
- * Before adding each new batch, the class validates that the database's maximum number of inserted rows (1000)
- * is not being exceeded.
- */
-open class SQLServerBatchInsertStatement(
-    table: Table,
-    ignore: Boolean = false,
-    shouldReturnGeneratedValues: Boolean = true
-) : BatchInsertStatement(table, ignore, shouldReturnGeneratedValues) {
-    @OptIn(InternalApi::class)
-    override fun validateLastBatch() {
-        super.validateLastBatch()
-        if (data.size > OUTPUT_ROW_LIMIT) {
-            throw BatchDataInconsistentException("Too much rows in one batch. Exceed $OUTPUT_ROW_LIMIT limit")
+    override operator fun <S> set(column: Column<S>, value: S) {
+        @OptIn(InternalApi::class)
+        if (data.size > 1 && column !in data[data.size - 2] && !column.isDefaultable()) {
+            val fullIdentity = CoreTransactionManager.currentTransaction().fullIdentity(column)
+            throw BatchDataInconsistentException("Can't set $value for $fullIdentity because previous insertion can't be defaulted for that column.")
         }
+        super.set(column, value)
+    }
+
+    /**
+     * Adds the most recent batch to the current list of insert statements.
+     *
+     * This function uses the mapping of columns scheduled for change with their new values, which is
+     * provided by the implementing `BatchInsertStatement` instance.
+     */
+    fun addBatch() {
+        @OptIn(InternalApi::class)
+        if (data.isNotEmpty()) {
+            validateLastBatch()
+            data[data.size - 1] = LinkedHashMap(values)
+            allColumnsInDataSet.addAll(values.keys)
+            values.clear()
+            hasBatchedValues = true
+        }
+        @OptIn(InternalApi::class)
+        data.add(values)
+        arguments = null
+    }
+
+    @OptIn(InternalApi::class)
+    fun removeLastBatch() {
+        data.removeAt(data.size - 1)
+        allColumnsInDataSet.clear()
+        data.flatMapTo(allColumnsInDataSet) { it.keys }
+        values.clear()
+        values.putAll(data.last())
+        arguments = null
+        hasBatchedValues = data.size > 0
     }
 
     @InternalApi
-    val columnToReturnValue = table.autoIncColumn?.takeIf {
-        shouldReturnGeneratedValues && it.autoIncColumnType?.nextValExpression == null
-    }
-
-    override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
-        val values = arguments!!
-        val sql = if (values.isEmpty()) {
-            ""
-        } else {
-            @OptIn(InternalApi::class)
-            val output = columnToReturnValue?.let {
-                " OUTPUT inserted.${transaction.identity(it)} AS GENERATED_KEYS"
-            }.orEmpty()
-
-            QueryBuilder(prepared).apply {
-                values.appendTo(prefix = "$output VALUES") {
-                    it.appendTo(prefix = "(", postfix = ")") { (col, value) ->
-                        registerArgument(col, value)
-                    }
-                }
-            }.toString()
+    open fun validateLastBatch() {
+        val tr = CoreTransactionManager.currentTransaction()
+        val cantBeDefaulted = (allColumnsInDataSet - values.keys).filterNot { it.isDefaultable() }
+        if (cantBeDefaulted.isNotEmpty()) {
+            val columnList = cantBeDefaulted.joinToString { tr.fullIdentity(it) }
+            throw BatchDataInconsistentException(
+                "Can't add a new batch because columns: $columnList don't have client default values. DB defaults are not supported in batch inserts"
+            )
         }
-        return transaction.db.dialect.functionProvider.insert(isIgnore, table, values.firstOrNull()?.map { it.first }.orEmpty(), sql, transaction)
+        val requiredInTargets = (targets.flatMap { it.columns } - values.keys).filter {
+            !it.isDefaultable() && !it.columnType.isAutoInc && it.dbDefaultValue == null && it.columnType !is EntityIDColumnType<*>
+        }
+        if (requiredInTargets.any()) {
+            val columnList = requiredInTargets.joinToString { tr.fullIdentity(it) }
+            throw BatchDataInconsistentException(
+                "Can't add a new batch because columns: $columnList don't have default values. DB defaults are not supported in batch inserts"
+            )
+        }
     }
 
-    override fun arguments() = listOfNotNull(
-        @OptIn(InternalApi::class)
-        super.arguments().flatten().takeIf { data.isNotEmpty() }
-    )
+    private val allColumnsInDataSet = mutableSetOf<Column<*>>()
+
+    @OptIn(InternalApi::class)
+    private fun allColumnsInDataSet() = allColumnsInDataSet +
+        (data.lastOrNull()?.keys ?: throw BatchDataInconsistentException("No data provided for inserting into ${table.tableName}"))
+
+    override var arguments: List<List<Pair<Column<*>, Any?>>>? = null
+        get() = field ?: run {
+            val columnsToInsert = (allColumnsInDataSet() + clientDefaultColumns()).toSet()
+            @OptIn(InternalApi::class)
+            data
+                .map { valuesAndClientDefaults(it) as MutableMap }
+                .map { values ->
+                    columnsToInsert.map { column ->
+                        column to when {
+                            values.contains(column) -> values[column]
+                            column.dbDefaultValue != null || column.isDatabaseGenerated -> DefaultValueMarker
+                            else -> {
+                                require(column.columnType.nullable) {
+                                    "The value for the column ${column.name} was not provided. " +
+                                        "The value for non-nullable column without defaults must be specified."
+                                }
+                                null
+                            }
+                        }
+                    }
+                }.apply { field = this }
+        }
 }

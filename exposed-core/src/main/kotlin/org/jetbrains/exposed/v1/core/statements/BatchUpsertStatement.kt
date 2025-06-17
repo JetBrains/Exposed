@@ -27,7 +27,7 @@ open class BatchUpsertStatement(
     val onUpdateExclude: List<Column<*>>?,
     val where: Op<Boolean>?,
     shouldReturnGeneratedValues: Boolean = true
-) : BaseBatchInsertStatement(table, ignore = false, shouldReturnGeneratedValues), UpsertBuilder {
+) : BatchInsertStatement(table, ignore = false, shouldReturnGeneratedValues), UpsertBuilder {
     @Deprecated(
         "This constructor with `onUpdate` that takes a List may be removed in future releases.",
         level = DeprecationLevel.ERROR

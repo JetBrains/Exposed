@@ -228,6 +228,7 @@ suspend fun <T : Table> T.insert(
  * @return The generated ID for the new row.
  * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.InsertTests.testGeneratedKey04
  */
+@Suppress("UNCHECKED_CAST")
 suspend fun <Key : Any, T : IdTable<Key>> T.insertAndGetId(
     body: T.(InsertStatement<EntityID<Key>>) -> Unit
 ): EntityID<Key> {
@@ -458,7 +459,7 @@ private suspend fun <T : Table, E> T.batchReplace(
 }
 
 @OptIn(InternalApi::class)
-private suspend fun <E, S1 : BaseBatchInsertStatement, S2 : BatchInsertSuspendExecutable<S1>> executeBatch(
+private suspend fun <E, S1 : BatchInsertStatement, S2 : BatchInsertSuspendExecutable<S1>> executeBatch(
     data: Iterator<E>,
     body: S1.(E) -> Unit,
     newBatchStatement: () -> S2

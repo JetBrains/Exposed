@@ -149,6 +149,7 @@ open class Query(
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
      * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
+    @Suppress("UNCHECKED_CAST")
     fun fetchBatchedResults(batchSize: Int = 1000, sortOrder: SortOrder = SortOrder.ASC): Flow<Flow<ResultRow>> {
         require(batchSize > 0) { "Batch size should be greater than 0." }
         require(limit == null) { "A manual `LIMIT` clause should not be set. By default, `batchSize` will be used." }
