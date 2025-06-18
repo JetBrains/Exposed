@@ -14,6 +14,7 @@ internal final class HelloController(
     private val emailUser: EmailUser
 ) {
     internal final val logger: Logger = LoggerFactory.getLogger(this.javaClass)
+
     @GetMapping(value = ["/hello"])
     internal final suspend fun hello(): String {
         delay(timeMillis = 100)

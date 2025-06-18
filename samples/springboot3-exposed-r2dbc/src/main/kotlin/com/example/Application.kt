@@ -14,7 +14,8 @@ import org.springframework.context.annotation.ImportRuntimeHints
 @EnableConfigurationProperties(value = [EmailUser::class])
 private class Application
 
-internal suspend fun main(args: Array<String>) : Unit = coroutineScope {
+//  detekt --build-upon-default-config --config ..\..\detekt\detekt-config.yml --plugins ..\..\detekt\detekt-formatting-1.23.8.jar  --input .
+internal suspend fun main(args: Array<String>): Unit = coroutineScope {
     @Suppress("SpreadOperator")
     runApplication<Application>(*args)
 }

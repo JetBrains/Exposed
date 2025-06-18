@@ -18,17 +18,17 @@ import org.jetbrains.exposed.v1.r2dbc.update
 import org.springframework.stereotype.Repository
 
 @Repository // not use final
-internal class UserDaoImpl internal constructor(): UserDao {
+internal class UserDaoImpl internal constructor() : UserDao {
     override suspend fun findUserById(id: Int): User {
         val user: User = UserEntity.selectAll().where { UserEntity.id eq id }
-            .firstOrNull() ?.let { resultRow: ResultRow ->
-            User(
-                id = resultRow[UserEntity.id].value,
-                account = resultRow[UserEntity.account],
-                password = resultRow[UserEntity.password],
-                nickname = resultRow[UserEntity.nickname],
-            )
-        } ?: User (
+            .firstOrNull()?.let { resultRow: ResultRow ->
+                User(
+                    id = resultRow[UserEntity.id].value,
+                    account = resultRow[UserEntity.account],
+                    password = resultRow[UserEntity.password],
+                    nickname = resultRow[UserEntity.nickname],
+                )
+            } ?: User(
             id = 0,
             account = "default",
             password = "default",
@@ -38,7 +38,7 @@ internal class UserDaoImpl internal constructor(): UserDao {
     }
 
     override suspend fun findAll(): List<User> {
-        val users: Flow<User> =  UserEntity.selectAll().map { resultRow: ResultRow ->
+        val users: Flow<User> = UserEntity.selectAll().map { resultRow: ResultRow ->
             User(
                 id = resultRow[UserEntity.id].value,
                 account = resultRow[UserEntity.account],
@@ -62,6 +62,7 @@ internal class UserDaoImpl internal constructor(): UserDao {
         val rows: Int = UserEntity.deleteWhere { UserEntity.id eq id }
         return rows > 0
     }
+
     override suspend fun updateUser(user: User): Boolean {
         val rows: Int = UserEntity.update(where = { UserEntity.id eq user.id }) { updateStatement: UpdateStatement ->
             updateStatement[UserEntity.account] = user.account

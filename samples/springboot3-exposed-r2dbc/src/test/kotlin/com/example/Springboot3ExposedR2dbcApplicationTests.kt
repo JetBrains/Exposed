@@ -5,24 +5,22 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.DurationUnit
 
 @SpringBootTest
 @AutoConfigureWebTestClient
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 internal final class Springboot3ExposedR2dbcApplicationTests(
     private val webTestClient: WebTestClient,
-){
+) {
     private final val logger: Logger = LoggerFactory.getLogger(this.javaClass)
+
     @Test
     internal final fun contextLoads() = runTest {
         webTestClient.get()
@@ -32,7 +30,6 @@ internal final class Springboot3ExposedR2dbcApplicationTests(
             .expectBody<String>()
             .isEqualTo("Hello World!")
     }
-
 
     @Test
     internal final fun `find all`() = runTest(timeout = 5.seconds) {
@@ -99,7 +96,6 @@ internal final class Springboot3ExposedR2dbcApplicationTests(
             }
     }
 
-
     @Test
     internal final fun `delete user`() = runTest {
         webTestClient.get()
@@ -109,5 +105,4 @@ internal final class Springboot3ExposedR2dbcApplicationTests(
             .expectBody<Boolean>()
             .isEqualTo(true)
     }
-
 }

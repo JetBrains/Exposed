@@ -21,6 +21,7 @@ internal final class UserController private constructor(
     private val userService: UserService
 ) {
     private final val logger: Logger = LoggerFactory.getLogger(this.javaClass)
+
     @GetMapping(value = ["/findAll"])
     internal final suspend fun findAll(
         @RequestHeader headers: Map<String, String>
@@ -28,6 +29,7 @@ internal final class UserController private constructor(
         logger.info("findAll ${Thread.currentThread()}, headers: $headers")
         return userService.findAll().await()
     }
+
     @GetMapping(value = ["/findUserById"])
     internal final suspend fun findUserById(
         @RequestParam(value = "id") id: Int
@@ -35,18 +37,21 @@ internal final class UserController private constructor(
         logger.info("${Thread.currentThread()} found user with id: $id")
         return userService.findUserById(id = id).await()
     }
+
     @PostMapping(value = ["/insert"])
     internal final suspend fun insert(
         @RequestBody user: User
     ): Boolean {
         return userService.insetUser(user = user).await()
     }
+
     @PutMapping(value = ["/update"])
     internal final suspend fun update(
         @RequestBody user: User
     ): Boolean {
         return userService.updateUser(user = user).await()
     }
+
     @GetMapping(value = ["/deleteById"])
     internal final suspend fun update(
         @RequestParam(value = "id") id: Int
