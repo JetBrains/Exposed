@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.r2dbc.vendors
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import java.util.concurrent.ConcurrentHashMap
@@ -60,6 +61,7 @@ abstract class DatabaseDialectMetadata {
     }
 
     /** Checks if the specified table exists in the database. */
+    @OptIn(InternalApi::class)
     suspend fun tableExists(table: Table): Boolean {
         return table.schemaName?.let { schema ->
             getAllTableNamesCache().getValue(schema.inProperCase()).any {
@@ -75,6 +77,7 @@ abstract class DatabaseDialectMetadata {
         }
     }
 
+    @OptIn(InternalApi::class)
     protected open fun String.metadataMatchesTable(schema: String, table: Table): Boolean {
         return when {
             schema.isEmpty() -> this == table.nameInDatabaseCaseUnquoted()
@@ -88,12 +91,14 @@ abstract class DatabaseDialectMetadata {
     }
 
     /** Checks if the specified schema exists. */
+    @OptIn(InternalApi::class)
     suspend fun schemaExists(schema: Schema): Boolean {
         val allSchemas = getAllSchemaNamesCache()
         return allSchemas.any { it == schema.identifier.inProperCase() }
     }
 
     /** Returns whether the specified sequence exists. */
+    @OptIn(InternalApi::class)
     suspend fun sequenceExists(sequence: Sequence): Boolean {
         return sequences().any { it == sequence.identifier.inProperCase() }
     }
@@ -180,6 +185,3 @@ private val explicitDialect = ThreadLocal<DatabaseDialectMetadata?>()
 /** Returns the dialect used in the current transaction, may throw an exception if there is no current transaction. */
 val currentDialectMetadata: DatabaseDialectMetadata
     get() = explicitDialect.get() ?: TransactionManager.current().db.dialectMetadata
-
-internal fun String.inProperCase(): String =
-    TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this@inProperCase) ?: this

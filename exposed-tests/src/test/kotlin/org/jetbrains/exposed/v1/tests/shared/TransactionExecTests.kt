@@ -1,14 +1,15 @@
 package org.jetbrains.exposed.v1.tests.shared
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.autoIncColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
-import org.jetbrains.exposed.v1.tests.inProperCase
 import org.junit.Assume
 import org.junit.Test
 import kotlin.test.assertNotNull
@@ -21,6 +22,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         override val primaryKey = PrimaryKey(id)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testExecWithSingleStatementQuery() {
         withTables(ExecTable) {
@@ -84,6 +86,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         TransactionManager.closeAndUnregister(db)
     }
 
+    @OptIn(InternalApi::class)
     private fun JdbcTransaction.testInsertAndSelectInSingleExec(testDb: TestDB) {
         ExecTable.insert {
             it[amount] = 99
@@ -130,6 +133,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         assertEquals(2, result)
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testExecWithNullableAndEmptyResultSets() {
         val tester = object : Table("tester") {

@@ -280,6 +280,7 @@ abstract class SchemaUtilityApi {
         }
     }
 
+    @OptIn(InternalApi::class)
     private fun Map<Column<*>, ColumnMetadata>.mapColumnDiffs(): Map<Column<*>, ColumnDiff> {
         val dialect = currentDialect
         return mapValues { (col, existingCol) ->

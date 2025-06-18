@@ -49,6 +49,7 @@ class Column<T>(
     }
 
     /** Returns the column name in proper case. */
+    @OptIn(InternalApi::class)
     fun nameInDatabaseCase(): String = name.inProperCase()
 
     /**

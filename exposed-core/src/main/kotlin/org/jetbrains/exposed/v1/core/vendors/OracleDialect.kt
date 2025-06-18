@@ -469,6 +469,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
         }
     }
 
+    @OptIn(InternalApi::class)
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
     override fun listDatabases(): String = error("This operation is not supported by Oracle dialect")

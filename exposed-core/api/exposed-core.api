@@ -3530,6 +3530,7 @@ public final class org/jetbrains/exposed/v1/core/vendors/DatabaseDialect$Default
 
 public final class org/jetbrains/exposed/v1/core/vendors/DatabaseDialectKt {
 	public static final fun getCurrentDialect ()Lorg/jetbrains/exposed/v1/core/vendors/DatabaseDialect;
+	public static final fun inProperCase (Ljava/lang/String;)Ljava/lang/String;
 }
 
 public abstract class org/jetbrains/exposed/v1/core/vendors/ForUpdateOption {

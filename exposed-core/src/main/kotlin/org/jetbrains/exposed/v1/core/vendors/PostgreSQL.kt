@@ -19,6 +19,7 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
         exposedLogger.warn("The length of the binary column is not required.")
         return binaryType()
     }
+
     override fun blobType(): String = "bytea"
     override fun uuidToDB(value: UUID): Any = value
     override fun dateTimeType(): String = "TIMESTAMP"
@@ -292,7 +293,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun insertValue(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"EXCLUDED.$columnName" } }
+    override fun insertValue(columnName: String, queryBuilder: QueryBuilder) {
+        queryBuilder { +"EXCLUDED.$columnName" }
+    }
 
     override fun delete(
         ignore: Boolean,
@@ -340,7 +343,9 @@ internal object PostgreSQLFunctionProvider : FunctionProvider() {
         }
     }
 
-    override fun StringBuilder.appendOptionsToExplain(options: String) { append("($options) ") }
+    override fun StringBuilder.appendOptionsToExplain(options: String) {
+        append("($options) ")
+    }
 
     override fun returning(
         mainSql: String,
@@ -425,10 +430,12 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
         return list
     }
 
+    @OptIn(InternalApi::class)
     override fun createDatabase(name: String): String = "CREATE DATABASE ${name.inProperCase()}"
 
     override fun listDatabases(): String = "SELECT datname FROM pg_database"
 
+    @OptIn(InternalApi::class)
     override fun dropDatabase(name: String): String = "DROP DATABASE ${name.inProperCase()}"
 
     override fun setSchema(schema: Schema): String = "SET search_path TO ${schema.identifier}"

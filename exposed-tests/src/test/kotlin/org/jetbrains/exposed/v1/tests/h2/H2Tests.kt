@@ -8,13 +8,13 @@ import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
-import org.jetbrains.exposed.v1.tests.inProperCase
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.Test
@@ -88,6 +88,7 @@ class H2Tests : DatabaseTestsBase() {
         }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun addAutoPrimaryKey() {
         val tableName = "Foo"
@@ -98,7 +99,7 @@ class H2Tests : DatabaseTestsBase() {
 
         withDb(listOf(TestDB.H2_V2, TestDB.H2_V2_MYSQL)) {
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(initialTable)
+                SchemaUtils.createMissingTablesAndColumns(initialTable)
                 assertEquals(
                     "ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()}",
                     t.id.ddl.first()
@@ -108,10 +109,10 @@ class H2Tests : DatabaseTestsBase() {
                     t.id.ddl[1]
                 )
                 assertEquals(1, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns(t)
+                SchemaUtils.createMissingTablesAndColumns(t)
                 assertEquals(2, currentDialectMetadataTest.tableColumns(t)[t]!!.size)
             } finally {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(t)
+                SchemaUtils.drop(t)
             }
         }
     }
