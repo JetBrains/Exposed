@@ -50,7 +50,8 @@
     </toc-element>
     <toc-element toc-title="Releases">
         <toc-element topic="Breaking-Changes.md"/>
-        <toc-element topic="Migration-Guide.md"/>
+        <toc-element topic="Migration-Guide-0-46-0.md"/>
+        <toc-element topic="Migration-Guide-1-0-0.md"/>
     </toc-element>
     <toc-element topic="Frequently-Asked-Questions.md"/>
     <toc-element toc-title="Samples" href="https://github.com/JetBrains/Exposed/tree/main/samples"/>
