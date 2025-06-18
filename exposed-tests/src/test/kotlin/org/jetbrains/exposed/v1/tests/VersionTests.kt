@@ -1,5 +1,6 @@
 package org.jetbrains.exposed.v1.tests
 
+import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Version
 import org.junit.Test
 import java.math.BigDecimal
@@ -9,6 +10,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class VersionTests {
+    @OptIn(InternalApi::class)
     @Test
     fun testFromString() {
         assertEquals(Version(1, 0, 0), Version.from("1"))
@@ -29,6 +31,7 @@ class VersionTests {
         assertFails { Version.from("version") }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testFromBigInteger() {
         assertEquals(Version(1, 0, 0), Version.from(BigDecimal("1")))
@@ -51,6 +54,7 @@ class VersionTests {
         assertFalse { version.covers("2.0.1") }
     }
 
+    @OptIn(InternalApi::class)
     @Test
     fun testToString() {
         assertEquals("1.2.3", Version.from("1.2.3").toString())

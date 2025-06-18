@@ -1,8 +1,10 @@
 package org.jetbrains.exposed.v1.core
 
 import java.math.BigDecimal
+import java.util.*
 
-data class Version(val major: Int, val minor: Int, val patch: Int) {
+class Version @InternalApi constructor(val major: Int, val minor: Int, val patch: Int) {
+
     fun covers(version: Version): Boolean {
         if (major > version.major) return true
         if (major < version.major) return false
@@ -18,13 +20,28 @@ data class Version(val major: Int, val minor: Int, val patch: Int) {
 
     fun covers(version: BigDecimal): Boolean = covers(from(version))
 
+    @OptIn(InternalApi::class)
     fun covers(major: Int, minor: Int = 0, patch: Int = 0): Boolean = covers(Version(major, minor, patch))
 
     override fun toString() = "$major.$minor.$patch"
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Version
+
+        return major == other.major && minor == other.minor && patch == other.patch
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(major, minor, patch)
+    }
+
     companion object {
         private val versionRegex = Regex("""^(\d+)(?:\.(\d+))?(?:\.(\d+))?(\D)?(.*)?""")
 
+        @OptIn(InternalApi::class)
         fun from(version: String): Version {
             val matchResult = versionRegex.find(version)
                 ?: throw IllegalArgumentException("Invalid version format: $version")
