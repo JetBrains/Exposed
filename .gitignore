@@ -11,3 +11,4 @@ classes/
 **/jetbrains.db
 .DS_Store
 .kotlin
+/.run/

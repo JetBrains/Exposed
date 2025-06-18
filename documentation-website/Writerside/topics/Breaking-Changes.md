@@ -9,6 +9,9 @@
   This method accepts the actual `ArrayColumnType` associated with the array value being bound to the statement as the second argument,
   instead of a string representation of the type. It is intended to replace the existing `setArray(index: Int, type: String, array: Array<*>)`,
   which is now deprecated.
+* Classes `BatchInsertStatement` and `BaseBatchInsertStatement` were joined into one open class `BatchInsertStatement`. The usages of `BaseBatchInsertStatement` could
+  be safely replaced with `BatchInsertStatement`.
+
 
 ## 1.0.0-beta-1
 

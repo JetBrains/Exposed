@@ -32,7 +32,6 @@ interface JdbcTransactionInterface : TransactionInterface {
  *
  * @throws [RuntimeException] If a manager has not been registered for the database.
  */
-// TODO check if we can move it to Database to make it field/method there.
 @Suppress("TooGenericExceptionThrown")
 val Database?.transactionManager: TransactionManager
     get() = TransactionManager.managerFor(this)

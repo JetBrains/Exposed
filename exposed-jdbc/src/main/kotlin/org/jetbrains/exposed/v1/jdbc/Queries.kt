@@ -466,7 +466,7 @@ private fun <T : Table, E> T.batchReplace(
 }
 
 @OptIn(InternalApi::class)
-private fun <E, S1 : BaseBatchInsertStatement, S2 : BatchInsertBlockingExecutable<S1>> executeBatch(
+private fun <E, S1 : BatchInsertStatement, S2 : BatchInsertBlockingExecutable<S1>> executeBatch(
     data: Iterator<E>,
     body: S1.(E) -> Unit,
     newBatchStatement: () -> S2

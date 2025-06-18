@@ -432,8 +432,8 @@ public final class org/jetbrains/exposed/v1/jdbc/UnionAll : org/jetbrains/expose
 }
 
 public class org/jetbrains/exposed/v1/jdbc/statements/BatchInsertBlockingExecutable : org/jetbrains/exposed/v1/jdbc/statements/InsertBlockingExecutable {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;)V
-	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;)V
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
 	public fun isAlwaysBatch ()Z
@@ -451,7 +451,7 @@ public class org/jetbrains/exposed/v1/jdbc/statements/BatchUpdateBlockingExecuta
 
 public class org/jetbrains/exposed/v1/jdbc/statements/BatchUpsertBlockingExecutable : org/jetbrains/exposed/v1/jdbc/statements/BatchInsertBlockingExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;)V
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
@@ -538,7 +538,7 @@ public class org/jetbrains/exposed/v1/jdbc/statements/ReturningBlockingExecutabl
 public class org/jetbrains/exposed/v1/jdbc/statements/SQLServerBatchInsertBlockingExecutable : org/jetbrains/exposed/v1/jdbc/statements/BatchInsertBlockingExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/SQLServerBatchInsertStatement;)V
 	protected fun execInsertFunction (Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;)Lkotlin/Pair;
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
 	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/SQLServerBatchInsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
@@ -817,7 +817,7 @@ public final class org/jetbrains/exposed/v1/jdbc/transactions/TransactionManager
 	public final fun getManager ()Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
 	public final fun isInitialized ()Z
 	public final fun managerFor (Lorg/jetbrains/exposed/v1/jdbc/Database;)Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;
-	public final fun registerManager (Lorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;)V
+	public final fun registerManager (Lorg/jetbrains/exposed/v1/jdbc/Database;Lorg/jetbrains/exposed/v1/core/transactions/TransactionManagerApi;)V
 	public final fun resetCurrent (Lorg/jetbrains/exposed/v1/jdbc/transactions/TransactionManager;)V
 	public final fun setDefaultDatabase (Lorg/jetbrains/exposed/v1/jdbc/Database;)V
 }

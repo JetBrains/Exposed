@@ -17,7 +17,7 @@ import org.jetbrains.exposed.v1.core.vendors.h2Mode
 open class BatchReplaceStatement(
     table: Table,
     shouldReturnGeneratedValues: Boolean = true
-) : BaseBatchInsertStatement(table, ignore = false, shouldReturnGeneratedValues) {
+) : BatchInsertStatement(table, ignore = false, shouldReturnGeneratedValues) {
     override fun prepareSQL(transaction: Transaction, prepared: Boolean): String {
         val values = arguments!!.first()
         val valuesSql = values.toSqlString(prepared)

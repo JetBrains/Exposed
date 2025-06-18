@@ -623,8 +623,8 @@ public final class org/jetbrains/exposed/v1/r2dbc/mtc/ThreadLocalMap : java/lang
 }
 
 public class org/jetbrains/exposed/v1/r2dbc/statements/BatchInsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/InsertSuspendExecutable {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;)V
-	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;)V
+	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
 	public fun isAlwaysBatch ()Z
@@ -641,7 +641,7 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/BatchUpdateSuspendExecuta
 
 public class org/jetbrains/exposed/v1/r2dbc/statements/BatchUpsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/BatchInsertSuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;)V
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchUpsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
@@ -754,7 +754,7 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/ReturningSuspendExecutabl
 public class org/jetbrains/exposed/v1/r2dbc/statements/SQLServerBatchInsertSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/BatchInsertSuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/SQLServerBatchInsertStatement;)V
 	protected fun execInsertFunction (Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BaseBatchInsertStatement;
+	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/BatchInsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;
 	public fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/SQLServerBatchInsertStatement;
 	public synthetic fun getStatement ()Lorg/jetbrains/exposed/v1/core/statements/Statement;
