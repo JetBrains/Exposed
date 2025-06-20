@@ -19,6 +19,10 @@ import java.sql.Clob
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 
 /**
  * Interface common to all column types.
@@ -1063,6 +1067,46 @@ class UUIDColumnType : ColumnType<UUID>() {
     }
 
     override fun nonNullValueToString(value: UUID): String = "'$value'"
+
+    @Suppress("MagicNumber")
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        @OptIn(InternalApi::class)
+        val db = CoreTransactionManager.currentTransaction().db
+        if (currentDialect is MariaDBDialect && !db.isVersionCovers(10, 0)) {
+            return rs.getObject(index, java.sql.Array::class.java)
+        }
+        return super.readObject(rs, index)
+    }
+
+    companion object {
+        private val uuidRegexp =
+            Regex("[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}", RegexOption.IGNORE_CASE)
+    }
+}
+
+/**
+ * Binary column for storing [Uuid].
+ */
+@OptIn(ExperimentalUuidApi::class)
+class UuidKtColumnType : ColumnType<Uuid>() {
+    override fun sqlType(): String = currentDialect.dataTypeProvider.uuidType()
+
+    override fun valueFromDB(value: Any): Uuid = when {
+        value is Uuid -> value
+        value is UUID -> value.toKotlinUuid()
+        value is ByteArray -> Uuid.fromByteArray(value)
+        value is String && value.matches(uuidRegexp) -> Uuid.parse(value)
+        value is String -> Uuid.fromByteArray(value.toByteArray())
+        value is ByteBuffer -> value.let { b -> Uuid.fromLongs(b.long, b.long) }
+        else -> error("Unexpected value of type UUID: $value of ${value::class.qualifiedName}")
+    }
+
+    override fun notNullValueToDB(value: Uuid): Any {
+        return ((currentDialect as? H2Dialect)?.originalDataTypeProvider ?: currentDialect.dataTypeProvider)
+            .uuidToDB(value.toJavaUuid())
+    }
+
+    override fun nonNullValueToString(value: Uuid): String = "'$value'"
 
     @Suppress("MagicNumber")
     override fun readObject(rs: RowApi, index: Int): Any? {
