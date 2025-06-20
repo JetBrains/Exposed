@@ -9,6 +9,8 @@
         <p>
             <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
         </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-supported"/>
     </tldr>
      <p>
          The <code>exposed-core</code> module provides support for various
@@ -30,7 +32,7 @@
         <deflist type="medium">
             <def id="integer-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/integer.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/integer.html">
                         <code>integer()</code>
                     </a>
                 </title>
@@ -39,7 +41,7 @@
             </def>
             <def id="short-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/short.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/short.html">
                         <code>short()</code>
                     </a>
                 </title>
@@ -48,7 +50,7 @@
             </def>
             <def id="long-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/long.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/long.html">
                         <code>long()</code>
                     </a>
                 </title>
@@ -57,7 +59,7 @@
             </def>
             <def id="float-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/float.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/float.html">
                         <code>float()</code>
                     </a>
                 </title>
@@ -68,7 +70,7 @@
             </def>
             <def id="decimal-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/decimal.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/decimal.html">
                         <code>decimal()</code>
                     </a>
                 </title>
@@ -81,7 +83,7 @@
         <deflist type="medium">
             <def id="bool-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/bool.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/bool.html">
                         <code>bool()</code>
                     </a>
                 </title>
@@ -98,7 +100,7 @@
         <deflist type="medium">
             <def id="char-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/char.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/char.html">
                         <code>char()</code>
                     </a>
                 </title>
@@ -106,7 +108,7 @@
             </def>
             <def id="varchar-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/varchar.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/varchar.html">
                         <code>varchar()</code>
                     </a>
                 </title>
@@ -115,7 +117,7 @@
             </def>
             <def id="text-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/text.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/text.html">
                         <code>text()</code>
                     </a>
                 </title>

@@ -4,6 +4,19 @@
     <var name="product" value="Writerside"/>
     <var name="exposed_version" value="1.0.0-beta-2"/>
     <var name="h2_db_version" value="2.2.224"/>
+    <var name="h2_r2dbc_version" value="1.0.0.RELEASE"/>
+    <var name="mariadb" value="3.3.1"/>
+    <var name="mariadb_r2dbc" value="1.3.0" />
+    <var name="mysql" value="8.0.33"/>
+    <var name="mysql_r2dbc" value="1.3.2"/>
+    <var name="oracle" value="19.24.0.0" />
+    <var name="oracle_r2dbc" value="1.3.0"/>
+    <var name="postgresql" value="42.7.3" />
+    <var name="postgresql_r2dbc" value="1.0.7.RELEASE" />
+    <var name="sqlserver" value="9.4.1.jre8" />
+    <var name="sqlserver_r2dbc" value="1.0.2.RELEASE" />
+    <var name="postgreNG" value="0.8.9" />
+    <var name="sqlite" value="3.49.1.0"/>
     <var name="slf4j_nop_version" value="1.7.30"/>
     <var name="BASE_API_URL" value="https://jetbrains.github.io/Exposed/api"/>
 </vars>
