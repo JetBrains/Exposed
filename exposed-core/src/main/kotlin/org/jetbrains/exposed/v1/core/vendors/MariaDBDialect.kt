@@ -92,7 +92,7 @@ open class MariaDBDialect : MysqlDialect() {
     override val supportsSetDefaultReferenceOption: Boolean = false
     override val supportsCreateSequence: Boolean by lazy {
         @OptIn(InternalApi::class)
-        CoreTransactionManager.currentTransaction().db.isVersionCovers(SEQUENCE_MIN_MAJOR_VERSION, SEQUENCE_MIN_MINOR_VERSION)
+        CoreTransactionManager.currentTransaction().db.version.covers(SEQUENCE_MIN_MAJOR_VERSION, SEQUENCE_MIN_MINOR_VERSION)
     }
 
     // actually MariaDb supports it but jdbc driver prepares statement without RETURNING clause
@@ -101,7 +101,7 @@ open class MariaDBDialect : MysqlDialect() {
     @Suppress("MagicNumber")
     override val sequenceMaxValue: Long by lazy {
         @OptIn(InternalApi::class)
-        if (CoreTransactionManager.currentTransaction().db.isVersionCovers(11, 5)) {
+        if (CoreTransactionManager.currentTransaction().db.version.covers(11, 5)) {
             super.sequenceMaxValue
         } else {
             Long.MAX_VALUE - 1
@@ -112,7 +112,7 @@ open class MariaDBDialect : MysqlDialect() {
     @Suppress("MagicNumber")
     override fun isFractionDateTimeSupported(): Boolean {
         @OptIn(InternalApi::class)
-        return CoreTransactionManager.currentTransaction().db.isVersionCovers(5, 3)
+        return CoreTransactionManager.currentTransaction().db.version.covers(5, 3)
     }
 
     override fun isTimeZoneOffsetSupported(): Boolean = false

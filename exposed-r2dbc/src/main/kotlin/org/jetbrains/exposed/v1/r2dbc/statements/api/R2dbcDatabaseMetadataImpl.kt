@@ -19,7 +19,6 @@ import org.jetbrains.exposed.v1.r2dbc.statements.getCurrentCatalog
 import org.jetbrains.exposed.v1.r2dbc.statements.getCurrentSchema
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
-import java.math.BigDecimal
 import java.sql.Types
 import java.util.concurrent.ConcurrentHashMap
 
@@ -37,12 +36,7 @@ class R2dbcDatabaseMetadataImpl(
     private val connectionData: ConnectionMetadata = connection.metadata
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
 
-    // TODO REVIEW db with major/minor/patch
-    override fun getVersion(): BigDecimal = connectionData.databaseVersion
-        .split('.', ' ')
-        .let {
-            BigDecimal("${it[0]}.${it[1]}")
-        }
+    override fun getVersion() = Version.from(connectionData.databaseVersion)
 
     override fun getMajorVersion(): Int = connectionData.databaseVersion.split('.', ' ')[0].toInt()
 

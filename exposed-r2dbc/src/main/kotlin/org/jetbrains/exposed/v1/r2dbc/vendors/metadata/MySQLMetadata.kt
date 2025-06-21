@@ -3,7 +3,6 @@ package org.jetbrains.exposed.v1.r2dbc.vendors.metadata
 import io.r2dbc.spi.IsolationLevel
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
-import java.math.BigDecimal
 
 @Suppress("MagicNumber")
 internal open class MySQLPropertyProvider : PropertyProvider() {
@@ -213,4 +212,4 @@ internal open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), My
 }
 
 private val isMySQL6Plus: Boolean
-    get() = TransactionManager.current().db.isVersionCovers(BigDecimal("6.0"))
+    get() = TransactionManager.current().db.version.covers("6.0")

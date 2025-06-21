@@ -2,7 +2,6 @@ package org.jetbrains.exposed.v1.core
 
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
-import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -33,14 +32,8 @@ abstract class DatabaseApi protected constructor(
     /** The mode of the database. This currently only applies to H2 databases. */
     abstract val dialectMode: String?
 
-    /** The version number of the database as a [BigDecimal]. */
-    abstract val version: BigDecimal
-
-    /** Whether the version number of the database is equal to or greater than the provided [version]. */
-    abstract fun isVersionCovers(version: BigDecimal): Boolean
-
-    /** Whether the version number of the database is equal to or greater than the provided [majorVersion] and [minorVersion]. */
-    abstract fun isVersionCovers(majorVersion: Int, minorVersion: Int): Boolean
+    /** The version number of the database as a [Version]. */
+    abstract val version: Version
 
     /** The full version number of the database as a String. */
     abstract val fullVersion: String

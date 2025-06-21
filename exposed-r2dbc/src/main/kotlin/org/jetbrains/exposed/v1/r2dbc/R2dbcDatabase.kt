@@ -7,6 +7,7 @@ import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
@@ -16,7 +17,6 @@ import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.vendors.*
-import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -71,21 +71,8 @@ class R2dbcDatabase private constructor(
     // TODO usage in core H2Dialect
     override val dialectMode: String? by lazy { runBlocking { metadata { getDatabaseDialectMode() } } }
 
-    // TODO cleanup -> getVersion() does not actually need suspend; relocate or refactor?
-    override val version: BigDecimal by lazy { runBlocking { metadata { getVersion() } } }
-
-    override fun isVersionCovers(version: BigDecimal): Boolean = this.version >= version
-
-    /** The major version number of the database as a [Int]. */
-    // TODO cleanup -> getMajorVersion() does not actually need suspend; relocate or refactor?
-    val majorVersion: Int by lazy { runBlocking { metadata { getMajorVersion() } } }
-
-    /** The minor version number of the database as a [Int]. */
-    // TODO cleanup -> getMinorVersion() does not actually need suspend; relocate or refactor?
-    val minorVersion: Int by lazy { runBlocking { metadata { getMinorVersion() } } }
-
-    override fun isVersionCovers(majorVersion: Int, minorVersion: Int): Boolean =
-        this.majorVersion > majorVersion || (this.majorVersion == majorVersion && this.minorVersion >= minorVersion)
+    // cleanup -> getVersion() does not actually need suspend; relocate or refactor?
+    override val version: Version by lazy { runBlocking { metadata { getVersion() } } }
 
     // TODO cleanup -> getDatabaseProductVersion() does not actually need suspend; relocate or refactor?
     override val fullVersion: String by lazy { runBlocking { metadata { getDatabaseProductVersion() } } }

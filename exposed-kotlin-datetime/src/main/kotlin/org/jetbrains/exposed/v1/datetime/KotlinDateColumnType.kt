@@ -438,7 +438,7 @@ class KotlinInstantColumnType : ColumnType<Instant>(), IDateColumnType {
         return when {
             dialect is SQLiteDialect ->
                 SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value.toJavaInstant())
-            dialect is MysqlDialect && dialect !is MariaDBDialect && !CoreTransactionManager.currentTransaction().db.isVersionCovers(8, 0) -> {
+            dialect is MysqlDialect && dialect !is MariaDBDialect && !CoreTransactionManager.currentTransaction().db.version.covers(8, 0) -> {
                 val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER else MYSQL_TIMESTAMP_STRING_FORMATTER
                 formatter.format(value.toJavaInstant())
             }

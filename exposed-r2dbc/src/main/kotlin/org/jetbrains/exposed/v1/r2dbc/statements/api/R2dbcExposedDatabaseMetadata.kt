@@ -6,11 +6,11 @@ import org.jetbrains.exposed.v1.core.ForeignKeyConstraint
 import org.jetbrains.exposed.v1.core.Index
 import org.jetbrains.exposed.v1.core.Sequence
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.ExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.SchemaMetadata
-import java.math.BigDecimal
 
 /**
  * Base class responsible for retrieving and storing information about the R2DBC driver and underlying database.
@@ -32,7 +32,7 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
     abstract val supportsLimitWithUpdateOrDelete: Boolean
 
     /** The version number of the database as a `BigDecimal`. */
-    abstract fun getVersion(): BigDecimal
+    abstract fun getVersion(): Version
 
     /**  The major version number of the database. */
     abstract fun getMajorVersion(): Int

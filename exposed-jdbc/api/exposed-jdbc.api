@@ -7,16 +7,12 @@ public final class org/jetbrains/exposed/v1/jdbc/Database : org/jetbrains/expose
 	public fun getDialectMode ()Ljava/lang/String;
 	public fun getFullVersion ()Ljava/lang/String;
 	public fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
-	public final fun getMajorVersion ()I
-	public final fun getMinorVersion ()I
 	public fun getSupportsAlterTableWithAddColumn ()Z
 	public fun getSupportsAlterTableWithDropColumn ()Z
 	public fun getSupportsMultipleResultSets ()Z
 	public fun getUrl ()Ljava/lang/String;
 	public fun getVendor ()Ljava/lang/String;
-	public fun getVersion ()Ljava/math/BigDecimal;
-	public fun isVersionCovers (II)Z
-	public fun isVersionCovers (Ljava/math/BigDecimal;)Z
+	public fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/Database$Companion {

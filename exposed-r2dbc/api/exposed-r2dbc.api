@@ -228,16 +228,12 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabase : org/jetbrains/
 	public fun getDialectMode ()Ljava/lang/String;
 	public fun getFullVersion ()Ljava/lang/String;
 	public fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
-	public final fun getMajorVersion ()I
-	public final fun getMinorVersion ()I
 	public fun getSupportsAlterTableWithAddColumn ()Z
 	public fun getSupportsAlterTableWithDropColumn ()Z
 	public fun getSupportsMultipleResultSets ()Z
 	public fun getUrl ()Ljava/lang/String;
 	public fun getVendor ()Ljava/lang/String;
-	public fun getVersion ()Ljava/math/BigDecimal;
-	public fun isVersionCovers (II)Z
-	public fun isVersionCovers (Ljava/math/BigDecimal;)Z
+	public fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabase$Companion {
@@ -825,7 +821,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMe
 	public fun getSupportsLimitWithUpdateOrDelete ()Z
 	public fun getSupportsMultipleResultSets ()Z
 	public fun getSupportsSelectForUpdate ()Z
-	public fun getVersion ()Ljava/math/BigDecimal;
+	public fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
 	public fun resetCurrentScheme ()V
 	public fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
 	public fun schemaNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -880,7 +876,7 @@ public abstract class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposed
 	public abstract fun getSupportsLimitWithUpdateOrDelete ()Z
 	public abstract fun getSupportsMultipleResultSets ()Z
 	public abstract fun getSupportsSelectForUpdate ()Z
-	public abstract fun getVersion ()Ljava/math/BigDecimal;
+	public abstract fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
 	public abstract fun schemaNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
