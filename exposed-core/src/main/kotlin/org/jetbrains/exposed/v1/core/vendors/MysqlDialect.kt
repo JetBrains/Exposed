@@ -4,7 +4,6 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.exceptions.throwUnsupportedException
-import java.math.BigDecimal
 
 internal open class MysqlDataTypeProvider : DataTypeProvider() {
     override fun binaryType(): String {
@@ -340,7 +339,7 @@ internal open class MysqlFunctionProvider : FunctionProvider() {
 open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTANCE, MysqlFunctionProvider.INSTANCE) {
     @OptIn(InternalApi::class)
     internal val isMysql8: Boolean by lazy {
-        CoreTransactionManager.currentTransaction().db.isVersionCovers(BigDecimal("8.0"))
+        CoreTransactionManager.currentTransaction().db.version.covers("8.0")
     }
 
     @OptIn(InternalApi::class)
@@ -362,7 +361,7 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
     @Suppress("MagicNumber")
     open fun isFractionDateTimeSupported(): Boolean {
         @OptIn(InternalApi::class)
-        return CoreTransactionManager.currentTransaction().db.isVersionCovers(5, 6)
+        return CoreTransactionManager.currentTransaction().db.version.covers(5, 6)
     }
 
     /** Returns `true` if a MySQL database is being used and its version is greater than or equal to 8.0. */

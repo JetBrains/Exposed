@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.jdbc
 import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
@@ -11,7 +12,6 @@ import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcExposedDatabaseMetadata
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.vendors.*
-import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.DriverManager
 import java.util.*
@@ -65,18 +65,7 @@ class Database private constructor(
 
     override val dialectMode: String? by lazy { metadata { databaseDialectMode } }
 
-    override val version: BigDecimal by lazy { metadata { version } }
-
-    override fun isVersionCovers(version: BigDecimal): Boolean = this.version >= version
-
-    /** The major version number of the database as a [Int]. */
-    val majorVersion by lazy { metadata { majorVersion } }
-
-    /** The minor version number of the database as a [Int]. */
-    val minorVersion by lazy { metadata { minorVersion } }
-
-    override fun isVersionCovers(majorVersion: Int, minorVersion: Int): Boolean =
-        this.majorVersion > majorVersion || (this.majorVersion == majorVersion && this.minorVersion >= minorVersion)
+    override val version: Version by lazy { metadata { Version.from(version) } }
 
     override val fullVersion: String by lazy { metadata { databaseProductVersion } }
 
