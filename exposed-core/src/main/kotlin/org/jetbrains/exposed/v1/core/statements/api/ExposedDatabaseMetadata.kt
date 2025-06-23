@@ -33,31 +33,6 @@ abstract class ExposedDatabaseMetadata(val database: String) {
     /** The database-specific and metadata-reliant implementation of [IdentifierManagerApi]. */
     abstract val identifierManager: IdentifierManagerApi
 
-    @InternalApi
-    @Suppress("ForbiddenComment")
-    // TODO: drop inner and move to utils package
-    protected inner class CachableMapWithDefault<K, V>(
-        private val map: MutableMap<K, V> = mutableMapOf(),
-        val default: (K) -> V
-    ) : Map<K, V> by map {
-        // TODO review replacement of get vs getOrDefault() in RDMI.kt
-        override fun get(key: K): V? = map.getOrPut(key) { default(key) }
-        override fun containsKey(key: K): Boolean = true
-        override fun isEmpty(): Boolean = false
-
-        override val entries: Set<Map.Entry<K, V>>
-            get() = throw UnsupportedOperationException(
-                "The entries field should not be used on CachableMapWithDefault because the lazy population of the collection for missing keys " +
-                    "and entries may lead to inconsistencies between calls."
-            )
-
-        override val keys: Set<K>
-            get() = throw UnsupportedOperationException(
-                "The keys field should not be used on CachableMapWithDefault because the lazy population of the collection for missing keys " +
-                    "and keys may lead to inconsistencies between calls."
-            )
-    }
-
     /**
      * Here is the table of default values which are returned from the column `"COLUMN_DEF"` depending on how it was configured:
      *

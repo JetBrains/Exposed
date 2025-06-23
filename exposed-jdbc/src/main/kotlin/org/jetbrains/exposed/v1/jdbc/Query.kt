@@ -76,9 +76,6 @@ open class Query(
      * @param columns The columns and their sort orders to apply the `DISTINCT ON` clause.
      * @return The current `Query` instance with the `DISTINCT ON` clause and reordering applied.
      */
-    // TODO Check if it could be moved to the base query class,
-    // TODO probably we need to create another base query class that extends AbstractQuery class and used
-    // TODO as a base for R2DBC and JDBC Queries
     fun withDistinctOn(vararg columns: Pair<Column<*>, SortOrder>): Query = apply {
         if (columns.isEmpty()) return@apply
 

@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.jdbc.vendors
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.utils.CacheWithDefault
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
@@ -12,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Common interface for all database dialect metadata.
  */
 abstract class DatabaseDialectMetadata {
-    private var _allTableNames: Map<String, List<String>>? = null
+    private var _allTableNames: CacheWithDefault<String, List<String>>? = null
 
     private var _allSchemaNames: List<String>? = null
 
@@ -26,7 +27,7 @@ abstract class DatabaseDialectMetadata {
             return connection.metadata { tableNamesByCurrentSchema(getAllTableNamesCache()).tableNames }
         }
 
-    protected fun getAllTableNamesCache(): Map<String, List<String>> {
+    protected fun getAllTableNamesCache(): CacheWithDefault<String, List<String>> {
         if (_allTableNames == null) {
             _allTableNames = TransactionManager.current().connection.metadata { tableNames }
         }
@@ -63,7 +64,7 @@ abstract class DatabaseDialectMetadata {
      */
     fun allTablesNamesInAllSchemas(): List<String> {
         return getAllSchemaNamesCache().flatMap { schema ->
-            getAllTableNamesCache().getValue(schema)
+            getAllTableNamesCache().get(schema)
         }
     }
 
@@ -71,7 +72,7 @@ abstract class DatabaseDialectMetadata {
     @OptIn(InternalApi::class)
     fun tableExists(table: Table): Boolean {
         return table.schemaName?.let { schema ->
-            getAllTableNamesCache().getValue(schema.inProperCase()).any {
+            getAllTableNamesCache().get(schema.inProperCase()).any {
                 it == table.nameInDatabaseCase()
             }
         } ?: run {

@@ -3249,37 +3249,6 @@ public abstract class org/jetbrains/exposed/v1/core/statements/api/ExposedDataba
 	protected final fun sanitizedDefault (Ljava/lang/String;)Ljava/lang/String;
 }
 
-protected final class org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata$CachableMapWithDefault : java/util/Map, kotlin/jvm/internal/markers/KMappedMarker {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata;Ljava/util/Map;Lkotlin/jvm/functions/Function1;)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata;Ljava/util/Map;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun clear ()V
-	public fun compute (Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;
-	public fun computeIfAbsent (Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;
-	public fun computeIfPresent (Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;
-	public fun containsKey (Ljava/lang/Object;)Z
-	public fun containsValue (Ljava/lang/Object;)Z
-	public final fun entrySet ()Ljava/util/Set;
-	public fun get (Ljava/lang/Object;)Ljava/lang/Object;
-	public final fun getDefault ()Lkotlin/jvm/functions/Function1;
-	public fun getEntries ()Ljava/util/Set;
-	public fun getKeys ()Ljava/util/Set;
-	public fun getSize ()I
-	public fun getValues ()Ljava/util/Collection;
-	public fun isEmpty ()Z
-	public final fun keySet ()Ljava/util/Set;
-	public fun merge (Ljava/lang/Object;Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;
-	public fun put (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun putAll (Ljava/util/Map;)V
-	public fun putIfAbsent (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun remove (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun remove (Ljava/lang/Object;Ljava/lang/Object;)Z
-	public fun replace (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun replace (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z
-	public fun replaceAll (Ljava/util/function/BiFunction;)V
-	public final fun size ()I
-	public final fun values ()Ljava/util/Collection;
-}
-
 public abstract class org/jetbrains/exposed/v1/core/statements/api/ExposedSavepoint {
 	public fun <init> (Ljava/lang/String;)V
 	public final fun getName ()Ljava/lang/String;
@@ -3399,6 +3368,28 @@ public final class org/jetbrains/exposed/v1/core/transactions/TransactionStore :
 	public final fun getInit ()Lkotlin/jvm/functions/Function1;
 	public fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
 	public fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
+}
+
+public final class org/jetbrains/exposed/v1/core/utils/CachableMapWithDefault : org/jetbrains/exposed/v1/core/utils/CacheWithDefault {
+	public fun <init> (Ljava/util/Map;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Ljava/util/Map;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun get (Ljava/lang/Object;)Ljava/lang/Object;
+	public final fun getDefault ()Lkotlin/jvm/functions/Function1;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/core/utils/CacheWithDefault {
+	public abstract fun get (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/core/utils/SuspendCachableMapWithDefault : org/jetbrains/exposed/v1/core/utils/SuspendCacheWithDefault {
+	public fun <init> (Ljava/util/Map;Lkotlin/jvm/functions/Function2;)V
+	public synthetic fun <init> (Ljava/util/Map;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun get (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getDefault ()Lkotlin/jvm/functions/Function2;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/core/utils/SuspendCacheWithDefault {
+	public abstract fun get (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/core/vendors/ColumnMetadata {

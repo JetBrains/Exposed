@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.utils.SuspendCachableMapWithDefault
+import org.jetbrains.exposed.v1.core.utils.SuspendCacheWithDefault
 import org.jetbrains.exposed.v1.core.vendors.*
-import org.jetbrains.exposed.v1.r2dbc.R2dbcScope
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.statements.executeSQL
 import org.jetbrains.exposed.v1.r2dbc.statements.getCurrentCatalog
@@ -22,7 +22,6 @@ import org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider
 import java.sql.Types
 import java.util.concurrent.ConcurrentHashMap
 
-// TODO review why constructor parameters are not being used, e.g. 'scope'
 /**
  * Base class responsible for retrieving and storing information about the R2DBC driver and underlying database.
  */
@@ -30,8 +29,7 @@ import java.util.concurrent.ConcurrentHashMap
 class R2dbcDatabaseMetadataImpl(
     database: String,
     private val connection: Connection,
-    private val vendorDialect: String,
-    private val scope: R2dbcScope
+    vendorDialect: String,
 ) : R2dbcExposedDatabaseMetadata(database) {
     private val connectionData: ConnectionMetadata = connection.metadata
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
@@ -125,12 +123,11 @@ class R2dbcDatabaseMetadataImpl(
         currentSchema = null
     }
 
-    override suspend fun tableNames(): Map<String, List<String>> {
+    override suspend fun tableNames(): SuspendCacheWithDefault<String, List<String>> {
         @OptIn(InternalApi::class)
-        return CachableMapWithDefault( // should this internal cache model be refactored?
+        return SuspendCachableMapWithDefault( // should this internal cache model be refactored?
             default = { schemaName ->
-                // TODO replace runBlocking with SuspendCachableMapWithDefault
-                runBlocking { tableNamesFor(schemaName) }
+                tableNamesFor(schemaName)
             }
         )
     }
@@ -171,9 +168,10 @@ class R2dbcDatabaseMetadataImpl(
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    override suspend fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata {
+    override suspend fun tableNamesByCurrentSchema(tableNamesCache: SuspendCacheWithDefault<String, List<String>>?): SchemaMetadata {
         // since properties are not used, should this be cached
-        val tablesInSchema = (tableNamesCache ?: tableNames()).getValue(getCurrentSchema())
+        val schema = getCurrentSchema()
+        val tablesInSchema = tableNamesCache?.get(schema) ?: tableNames().get(schema)
         return SchemaMetadata(getCurrentSchema(), tablesInSchema)
     }
 

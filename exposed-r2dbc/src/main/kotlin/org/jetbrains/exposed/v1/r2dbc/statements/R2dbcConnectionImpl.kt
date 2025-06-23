@@ -18,7 +18,6 @@ import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.r2dbc.R2dbcScope
 import org.jetbrains.exposed.v1.r2dbc.mappers.R2dbcTypeMapping
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcDatabaseMetadataImpl
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
@@ -37,7 +36,6 @@ import java.util.*
 class R2dbcConnectionImpl(
     override val connection: Publisher<out Connection>,
     private val vendorDialect: String,
-    private val scope: R2dbcScope,
     private val typeMapping: R2dbcTypeMapping
 ) : R2dbcExposedConnection<Publisher<out Connection>> {
     private val metadataProvider: MetadataProvider = MetadataProvider.getProvider(vendorDialect)
@@ -208,7 +206,7 @@ class R2dbcConnectionImpl(
 
     override suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T = withConnection {
         if (metadataImpl == null) {
-            metadataImpl = R2dbcDatabaseMetadataImpl(getCatalog(), this, vendorDialect, scope)
+            metadataImpl = R2dbcDatabaseMetadataImpl(getCatalog(), this, vendorDialect)
         }
         metadataImpl!!.body()
     }

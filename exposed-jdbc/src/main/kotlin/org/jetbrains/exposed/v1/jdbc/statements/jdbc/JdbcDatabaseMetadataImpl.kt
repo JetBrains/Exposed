@@ -4,6 +4,8 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.Sequence
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
+import org.jetbrains.exposed.v1.core.utils.CachableMapWithDefault
+import org.jetbrains.exposed.v1.core.utils.CacheWithDefault
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect.H2CompatibilityMode
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -128,7 +130,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         currentSchema = null
     }
 
-    override val tableNames: Map<String, List<String>>
+    override val tableNames: CacheWithDefault<String, List<String>>
         @OptIn(InternalApi::class)
         get() = CachableMapWithDefault(default = { schemeName ->
             tableNamesFor(schemeName)
@@ -166,8 +168,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    override fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata {
-        val tablesInSchema = (tableNamesCache ?: tableNames).getValue(currentSchema!!)
+    override fun tableNamesByCurrentSchema(tableNamesCache: CacheWithDefault<String, List<String>>?): SchemaMetadata {
+        val tablesInSchema = tableNamesCache?.get(currentSchema!!) ?: tableNames.get(currentSchema!!)
         return SchemaMetadata(currentSchema!!, tablesInSchema)
     }
 
