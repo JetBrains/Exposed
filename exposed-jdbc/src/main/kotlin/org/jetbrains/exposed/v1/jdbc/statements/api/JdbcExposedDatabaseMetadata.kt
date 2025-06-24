@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.Index
 import org.jetbrains.exposed.v1.core.Sequence
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.statements.api.ExposedDatabaseMetadata
+import org.jetbrains.exposed.v1.core.utils.CacheWithDefault
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.SchemaMetadata
@@ -55,7 +56,7 @@ abstract class JdbcExposedDatabaseMetadata(database: String) : ExposedDatabaseMe
     abstract fun supportsLimitWithUpdateOrDelete(): Boolean
 
     /** A mapping of all schema names in the database to a list of all defined table names in each schema. */
-    abstract val tableNames: Map<String, List<String>>
+    abstract val tableNames: CacheWithDefault<String, List<String>>
 
     /** A list of existing schema names. */
     abstract val schemaNames: List<String>
@@ -65,7 +66,7 @@ abstract class JdbcExposedDatabaseMetadata(database: String) : ExposedDatabaseMe
      *
      * A [tableNamesCache] of previously read metadata, if applicable, can be provided to avoid retrieving new metadata.
      */
-    abstract fun tableNamesByCurrentSchema(tableNamesCache: Map<String, List<String>>?): SchemaMetadata
+    abstract fun tableNamesByCurrentSchema(tableNamesCache: CacheWithDefault<String, List<String>>?): SchemaMetadata
 
     /** Returns a map with the [ColumnMetadata] of all the defined columns in each of the specified [tables]. */
     abstract fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>>

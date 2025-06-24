@@ -283,11 +283,6 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseKt {
 	public static final fun getName (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcDatabase;)Ljava/lang/String;
 }
 
-public final class org/jetbrains/exposed/v1/r2dbc/R2dbcScope : kotlinx/coroutines/CoroutineScope {
-	public fun <init> (Lkotlinx/coroutines/CoroutineDispatcher;)V
-	public fun getCoroutineContext ()Lkotlin/coroutines/CoroutineContext;
-}
-
 public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exposed/v1/core/Transaction, org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterface {
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterface;)V
@@ -687,7 +682,7 @@ public class org/jetbrains/exposed/v1/r2dbc/statements/MergeSuspendExecutable : 
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedConnection {
-	public fun <init> (Lorg/reactivestreams/Publisher;Ljava/lang/String;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcScope;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
+	public fun <init> (Lorg/reactivestreams/Publisher;Ljava/lang/String;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
 	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeInBatch (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -802,7 +797,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2DBCRow : org/
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedDatabaseMetadata {
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl$Companion;
-	public fun <init> (Ljava/lang/String;Lio/r2dbc/spi/Connection;Ljava/lang/String;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcScope;)V
+	public fun <init> (Ljava/lang/String;Lio/r2dbc/spi/Connection;Ljava/lang/String;)V
 	public fun cleanCache ()V
 	public fun columns ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun existingCheckConstraints ([Lorg/jetbrains/exposed/v1/core/Table;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -828,7 +823,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMe
 	public fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun tableNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun tableNamesByCurrentSchema (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun tableNamesByCurrentSchema (Lorg/jetbrains/exposed/v1/core/utils/CacheWithSuspendableDefault;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl$Companion {
@@ -881,7 +876,7 @@ public abstract class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposed
 	public abstract fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun tableNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun tableNamesByCurrentSchema (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun tableNamesByCurrentSchema (Lorg/jetbrains/exposed/v1/core/utils/CacheWithSuspendableDefault;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi : org/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi {

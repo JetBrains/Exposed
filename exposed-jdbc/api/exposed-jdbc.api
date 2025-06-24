@@ -604,13 +604,13 @@ public abstract class org/jetbrains/exposed/v1/jdbc/statements/api/JdbcExposedDa
 	public abstract fun getSupportsAlterTableWithDropColumn ()Z
 	public abstract fun getSupportsMultipleResultSets ()Z
 	public abstract fun getSupportsSelectForUpdate ()Z
-	public abstract fun getTableNames ()Ljava/util/Map;
+	public abstract fun getTableNames ()Lorg/jetbrains/exposed/v1/core/utils/CacheWithDefault;
 	public abstract fun getUrl ()Ljava/lang/String;
 	public abstract fun getVersion ()Ljava/math/BigDecimal;
 	public abstract fun sequences ()Ljava/util/List;
 	public abstract fun supportsLimitWithUpdateOrDelete ()Z
 	public abstract fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
-	public abstract fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/v1/core/vendors/SchemaMetadata;
+	public abstract fun tableNamesByCurrentSchema (Lorg/jetbrains/exposed/v1/core/utils/CacheWithDefault;)Lorg/jetbrains/exposed/v1/core/vendors/SchemaMetadata;
 }
 
 public abstract interface class org/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi : org/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi {
@@ -685,7 +685,7 @@ public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcDatabaseMet
 	public fun getSupportsAlterTableWithDropColumn ()Z
 	public fun getSupportsMultipleResultSets ()Z
 	public fun getSupportsSelectForUpdate ()Z
-	public fun getTableNames ()Ljava/util/Map;
+	public fun getTableNames ()Lorg/jetbrains/exposed/v1/core/utils/CacheWithDefault;
 	public fun getUrl ()Ljava/lang/String;
 	public fun getVersion ()Ljava/math/BigDecimal;
 	public fun resetCurrentScheme ()V
@@ -693,7 +693,7 @@ public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcDatabaseMet
 	public fun sequences ()Ljava/util/List;
 	public fun supportsLimitWithUpdateOrDelete ()Z
 	public fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
-	public fun tableNamesByCurrentSchema (Ljava/util/Map;)Lorg/jetbrains/exposed/v1/core/vendors/SchemaMetadata;
+	public fun tableNamesByCurrentSchema (Lorg/jetbrains/exposed/v1/core/utils/CacheWithDefault;)Lorg/jetbrains/exposed/v1/core/vendors/SchemaMetadata;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcDatabaseMetadataImpl$Companion {
@@ -847,7 +847,7 @@ public abstract class org/jetbrains/exposed/v1/jdbc/vendors/DatabaseDialectMetad
 	public final fun existingPrimaryKeys ([Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Map;
 	public final fun existingSequences ([Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Map;
 	protected fun fillConstraintCacheForTables (Ljava/util/List;)V
-	protected final fun getAllTableNamesCache ()Ljava/util/Map;
+	protected final fun getAllTableNamesCache ()Lorg/jetbrains/exposed/v1/core/utils/CacheWithDefault;
 	public final fun getAllTablesNames ()Ljava/util/List;
 	protected final fun getColumnConstraintsCache ()Ljava/util/Map;
 	public final fun getDatabase ()Ljava/lang/String;
