@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.core.utils.SuspendCachableMapWithDefault
-import org.jetbrains.exposed.v1.core.utils.SuspendCacheWithDefault
+import org.jetbrains.exposed.v1.core.utils.CachableMapWithSuspendableDefault
+import org.jetbrains.exposed.v1.core.utils.CacheWithSuspendableDefault
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.statements.executeSQL
@@ -123,9 +123,9 @@ class R2dbcDatabaseMetadataImpl(
         currentSchema = null
     }
 
-    override suspend fun tableNames(): SuspendCacheWithDefault<String, List<String>> {
+    override suspend fun tableNames(): CacheWithSuspendableDefault<String, List<String>> {
         @OptIn(InternalApi::class)
-        return SuspendCachableMapWithDefault( // should this internal cache model be refactored?
+        return CachableMapWithSuspendableDefault( // should this internal cache model be refactored?
             default = { schemaName ->
                 tableNamesFor(schemaName)
             }
@@ -168,7 +168,7 @@ class R2dbcDatabaseMetadataImpl(
         return schemas.map { identifierManager.inProperCase(it) }
     }
 
-    override suspend fun tableNamesByCurrentSchema(tableNamesCache: SuspendCacheWithDefault<String, List<String>>?): SchemaMetadata {
+    override suspend fun tableNamesByCurrentSchema(tableNamesCache: CacheWithSuspendableDefault<String, List<String>>?): SchemaMetadata {
         // since properties are not used, should this be cached
         val schema = getCurrentSchema()
         val tablesInSchema = tableNamesCache?.get(schema) ?: tableNames().get(schema)

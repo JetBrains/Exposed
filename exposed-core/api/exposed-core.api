@@ -3377,18 +3377,18 @@ public final class org/jetbrains/exposed/v1/core/utils/CachableMapWithDefault : 
 	public final fun getDefault ()Lkotlin/jvm/functions/Function1;
 }
 
-public abstract interface class org/jetbrains/exposed/v1/core/utils/CacheWithDefault {
-	public abstract fun get (Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public final class org/jetbrains/exposed/v1/core/utils/SuspendCachableMapWithDefault : org/jetbrains/exposed/v1/core/utils/SuspendCacheWithDefault {
+public final class org/jetbrains/exposed/v1/core/utils/CachableMapWithSuspendableDefault : org/jetbrains/exposed/v1/core/utils/CacheWithSuspendableDefault {
 	public fun <init> (Ljava/util/Map;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (Ljava/util/Map;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun get (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getDefault ()Lkotlin/jvm/functions/Function2;
 }
 
-public abstract interface class org/jetbrains/exposed/v1/core/utils/SuspendCacheWithDefault {
+public abstract interface class org/jetbrains/exposed/v1/core/utils/CacheWithDefault {
+	public abstract fun get (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class org/jetbrains/exposed/v1/core/utils/CacheWithSuspendableDefault {
 	public abstract fun get (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

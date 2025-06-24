@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.vendors
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.utils.SuspendCacheWithDefault
+import org.jetbrains.exposed.v1.core.utils.CacheWithSuspendableDefault
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
@@ -13,14 +13,14 @@ import java.util.concurrent.ConcurrentHashMap
  * Common interface for all database dialect metadata.
  */
 abstract class DatabaseDialectMetadata {
-    private var _allTableNames: SuspendCacheWithDefault<String, List<String>>? = null
+    private var _allTableNames: CacheWithSuspendableDefault<String, List<String>>? = null
 
     private var _allSchemaNames: List<String>? = null
 
     /** Returns `true` if the database supports the `LIMIT` clause with update and delete statements. */
     open suspend fun supportsLimitWithUpdateOrDelete(): Boolean = true
 
-    protected suspend fun getAllTableNamesCache(): SuspendCacheWithDefault<String, List<String>> {
+    protected suspend fun getAllTableNamesCache(): CacheWithSuspendableDefault<String, List<String>> {
         if (_allTableNames == null) {
             _allTableNames = TransactionManager.current().connection.metadata { tableNames() }
         }

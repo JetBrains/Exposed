@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.core.Sequence
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.ExposedDatabaseMetadata
-import org.jetbrains.exposed.v1.core.utils.SuspendCacheWithDefault
+import org.jetbrains.exposed.v1.core.utils.CacheWithSuspendableDefault
 import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.core.vendors.SchemaMetadata
@@ -54,7 +54,7 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
     abstract suspend fun getDefaultIsolationLevel(): IsolationLevel
 
     /** A mapping of all schema names in the database to a list of all defined table names in each schema. */
-    abstract suspend fun tableNames(): SuspendCacheWithDefault<String, List<String>>
+    abstract suspend fun tableNames(): CacheWithSuspendableDefault<String, List<String>>
 
     /** A list of existing schema names. */
     abstract suspend fun schemaNames(): List<String>
@@ -64,7 +64,7 @@ abstract class R2dbcExposedDatabaseMetadata(database: String) : ExposedDatabaseM
      *
      * A [tableNamesCache] of previously read metadata, if applicable, can be provided to avoid retrieving new metadata.
      */
-    abstract suspend fun tableNamesByCurrentSchema(tableNamesCache: SuspendCacheWithDefault<String, List<String>>?): SchemaMetadata
+    abstract suspend fun tableNamesByCurrentSchema(tableNamesCache: CacheWithSuspendableDefault<String, List<String>>?): SchemaMetadata
 
     /** Returns a map with the [ColumnMetadata] of all the defined columns in each of the specified [tables]. */
     abstract suspend fun columns(vararg tables: Table): Map<Table, List<ColumnMetadata>>

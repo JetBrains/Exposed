@@ -823,7 +823,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMe
 	public fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun tableNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun tableNamesByCurrentSchema (Lorg/jetbrains/exposed/v1/core/utils/SuspendCacheWithDefault;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun tableNamesByCurrentSchema (Lorg/jetbrains/exposed/v1/core/utils/CacheWithSuspendableDefault;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl$Companion {
@@ -876,7 +876,7 @@ public abstract class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposed
 	public abstract fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun tableNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun tableNamesByCurrentSchema (Lorg/jetbrains/exposed/v1/core/utils/SuspendCacheWithDefault;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun tableNamesByCurrentSchema (Lorg/jetbrains/exposed/v1/core/utils/CacheWithSuspendableDefault;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcPreparedStatementApi : org/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi {
