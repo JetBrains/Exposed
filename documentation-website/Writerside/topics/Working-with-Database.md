@@ -7,6 +7,36 @@ and [`R2DBCDatabase`](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.
 classes represent a database instance, and encapsulates the necessary connection details and configuration required to
 interact with a specific database.
 
+## Choosing between JDBC and R2DBC
+
+Exposed supports both JDBC and R2DBC as transport layers for database connectivity. Understanding their differences will
+help you choose the right approach for your application:
+
+### JDBC
+
+JDBC (Java Database Connectivity) is the traditional, synchronous and blocking API used for interacting with relational
+databases. Exposed's JDBC integration is well-established with broad database support and extensive tooling. It’s ideal
+for:
+
+- Traditional applications where simplicity is preferred over scalability.
+- Projects using connection pools and transaction management in a synchronous context.
+
+JDBC is well-supported and works seamlessly with most existing database drivers and tools.
+
+### R2DBC
+
+R2DBC (Reactive Relational Database Connectivity) is a non-blocking, asynchronous alternative to JDBC. Exposed's R2DBC
+support enables integration with reactive frameworks and Kotlin coroutines. Use R2DBC if:
+
+- You're building a high-concurrency, I/O-bound application.
+- You want to avoid thread-blocking and leverage Kotlin coroutines end-to-end.
+
+R2DBC is still evolving, and not all databases or features are supported equally compared to JDBC.
+
+Choose JDBC when you need simplicity, broad database compatibility, or are building a traditional application with
+moderate concurrency requirements. Choose R2DBC when building reactive applications, working with Kotlin coroutines, or
+need to handle many concurrent connections efficiently with limited resources.
+
 ## Connecting to a Database
 
 Every database access in Exposed begins by establishing a connection and creating a transaction.
