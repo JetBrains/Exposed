@@ -10,9 +10,9 @@ access.
 In Exposed, the `exposed-r2dbc` module integrates R2DBC support by allowing you to connect to a database using a 
 `ConnectionFactory`. This is done implicitly through the `R2dbcDatabase.connect()` function whenever a URL is passed:
 
-<code-block lang="kotlin"
-    src="exposed-databases-r2dbc/src/main/kotlin/org/example/R2DBCDatabases.kt"
-    include-symbol="database" />
+```kotlin
+```
+{src="exposed-databases-r2dbc/src/main/kotlin/org/example/R2DBCDatabases.kt" include-symbol="database" }
 
 This is equivalent to using the `R2dbcDatabase.connect()` overload that accepts a configuration block only:
 
@@ -76,8 +76,8 @@ val database = R2dbcDatabase.connect {
 }
 ```
 
-It is also possible to pre-construct a `ConnectionFactoryOptions` object and initialize a custom `R2dbcDatabaseConfig` instance,
-then pass them directly to `R2dbcDatabase.connect()` at some other point:
+You can also pre-construct a `ConnectionFactoryOptions` object and use it to initialize a custom `R2dbcDatabaseConfig`
+instance. You can then pass both directly to `R2dbcDatabase.connect()` at a later point:
 
 ```kotlin
 import io.r2dbc.spi.ConnectionFactoryOptions
@@ -141,9 +141,9 @@ If an explicit <code>ConnectionFactory</code> is being used, it is required in t
 from the <code>ConnectionFactory</code> or its configuration options.
 </note>
 
-For simplicity or for more fine-tuned connection customization, database-specific connection factories and configuration
-option builders can also be taken advantage of, via programmatic configuration. These database-specific objects can be
-created and passed in a similar manner to the general R2DBC SPI objects:
+For simplicity or for more fine-tuned connection customization, you can use database-specific connection factories and
+configuration builders via programmatic configuration. These database-specific objects can be
+created and passed in the same way as the general R2DBC SPI objects:
 
 ```kotlin
 import io.r2dbc.h2.H2ConnectionConfiguration
