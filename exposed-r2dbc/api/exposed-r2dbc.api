@@ -788,10 +788,10 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2DBCRow : org/
 	public fun <init> (Lio/r2dbc/spi/Row;Lorg/jetbrains/exposed/v1/r2dbc/mappers/R2dbcTypeMapping;)V
 	public fun getObject (I)Ljava/lang/Object;
 	public fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
-	public fun getObject (ILjava/lang/Class;Lorg/jetbrains/exposed/v1/core/ColumnType;)Ljava/lang/Object;
+	public fun getObject (ILjava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
 	public fun getObject (Ljava/lang/String;)Ljava/lang/Object;
 	public fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
-	public fun getObject (Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/ColumnType;)Ljava/lang/Object;
+	public fun getObject (Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
 	public final fun getRow ()Lio/r2dbc/spi/Row;
 }
 

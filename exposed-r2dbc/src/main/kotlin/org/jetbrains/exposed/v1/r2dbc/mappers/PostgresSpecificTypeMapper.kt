@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.r2dbc.mappers
 
 import io.r2dbc.postgresql.codec.Json
+import io.r2dbc.spi.Row
 import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
@@ -18,6 +19,18 @@ class PostgresSpecificTypeMapper : TypeMapper {
 
     override val dialects: List<KClass<out DatabaseDialect>>
         get() = listOf(PostgreSQLDialect::class)
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> getValue(row: Row, type: Class<T>?, index: Int, dialect: DatabaseDialect, columnType: IColumnType<*>): ValueContainer<T?> {
+        val value = type?.let { row.get(index - 1, it) } ?: row.get(index - 1) as T?
+
+        return when (value) {
+            // It will return always the string, event if it doesn't match `type`
+            // But Json could be fetched even with BooleanColumnType that expects that String could be returned
+            is Json -> PresentValueContainer(value.asString() as T)
+            else -> NoValueContainer()
+        }
+    }
 
     // We don't specify columnTypes because JsonColumnMarker is an interface, not a class that extends IColumnType<*>
     // Instead, we'll check for JsonColumnMarker in the setValue method
