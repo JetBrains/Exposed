@@ -14,7 +14,7 @@
         </snippet>
         <p>
             <code>Table</code> is located in the
-            <control>org.jetbrains.exposed.v1.sql</control>
+            <control>org.jetbrains.exposed.v1.core</control>
             package of the
             <control>exposed-core</control>
             module.

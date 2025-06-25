@@ -126,15 +126,15 @@ After that, you can provide any amount of additional parameters separated by a c
 There are also shortcuts for `String`, `Long`, and `DateTime` functions:
 * [`CustomStringFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-custom-string-function.html)
 * [`CustomLongFunction`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-custom-long-function.html)
-* [`CustomDateTimeFunction`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.sql.kotlin.datetime/-custom-date-time-function.html)
+* [`CustomDateTimeFunction`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/-custom-date-time-function.html)
 
 Using one of these shortcuts, the example above could be simplified to:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="46-48"/>
 
-In the following example, [`CustomDateFunction`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.sql.kotlin.datetime/-custom-date-function.html) 
+In the following example, [`CustomDateFunction`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/-custom-date-function.html) 
 is used in an H2 database to mimic its `DATEADD()` function in order to calculate a date three months before the current one.
-In is then chained with Exposed's built-in [`.month()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.sql.kotlin.datetime/month.html) 
+In is then chained with Exposed's built-in [`.month()`](https://jetbrains.github.io/Exposed/api/exposed-kotlin-datetime/org.jetbrains.exposed.v1.datetime/month.html) 
 function to return the month of the date found, so it can be used in a query:
 
 <code-block lang="kotlin" src="exposed-sql-functions/src/main/kotlin/org/example/examples/CustomFuncExamples.kt" include-lines="55-65"/>

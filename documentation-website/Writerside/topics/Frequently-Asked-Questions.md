@@ -106,7 +106,7 @@ transaction {
 ### How can I add another type of database?
 
 To add another type of database that is not currently supported by Exposed, implement the
-[`DatabaseDialect`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql.vendors/-database-dialect/index.html)
+[`DatabaseDialect`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core.vendors/-database-dialect/index.html)
 interface and register it with
 [`Database.registerDialect()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-database/-companion/register-dialect.html).
 
