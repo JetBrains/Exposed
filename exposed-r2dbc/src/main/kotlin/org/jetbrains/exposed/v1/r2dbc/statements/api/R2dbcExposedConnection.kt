@@ -73,6 +73,13 @@ interface R2dbcExposedConnection<OriginalConnection : Any> {
      */
     suspend fun <T> metadata(body: suspend R2dbcExposedDatabaseMetadata.() -> T): T
 
+    /**
+     * Calls the specified function [body] with an [R2dbcExposedDatabaseMetadata] implementation as its receiver and
+     * returns the data retrieved from either a local [org.jetbrains.exposed.v1.r2dbc.vendors.metadata.MetadataProvider]
+     * or the current transaction's connection metadata as a result.
+     */
+    fun <T> localMetadata(body: R2dbcExposedDatabaseMetadata.() -> T): T
+
     /** Sets and returns a new savepoint with the specified [name]. */
     suspend fun setSavepoint(name: String): ExposedSavepoint
 

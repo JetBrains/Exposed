@@ -712,6 +712,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/R2dbcConnectionImpl
 	public fun getSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getTransactionIsolation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun isClosed (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun localMetadata (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public fun metadata (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun prepareStatement (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun prepareStatement (Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -851,6 +852,7 @@ public abstract interface class org/jetbrains/exposed/v1/r2dbc/statements/api/R2
 	public abstract fun getSchema (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getTransactionIsolation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun isClosed (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun localMetadata (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 	public abstract fun metadata (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun prepareStatement (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun prepareStatement (Ljava/lang/String;[Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
