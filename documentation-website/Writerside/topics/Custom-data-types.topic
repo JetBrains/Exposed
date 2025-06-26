@@ -150,88 +150,169 @@
     <chapter title="Ranges of data" id="ranges-of-data">
         <p>PostgreSQL provides multiple <a href="https://www.postgresql.org/docs/16/rangetypes.html">range data
             types</a> of different subtypes.</p>
-        <p>If more than one range subtype needs to be used, a base <code>RangeColumnType</code> class could be first
-            introduced with the minimum common logic:</p>
+        <p>
+            If more than one range subtype needs to be used, a base <code>RangeColumnType</code> class could be first
+            introduced with the minimum common logic:
+        </p>
+        <tabs group="connectivity">
+            <tab id="jdbc-column-type" title="JDBC" group-key="jdbc">
+               <code-block lang="kotlin"><![CDATA[
+                    import org.postgresql.util.PGobject
 
-        <code-block lang="kotlin"><![CDATA[
-            import org.postgresql.util.PGobject
+                    abstract class RangeColumnType<T : Comparable<T>, R : ClosedRange<T>>(
+                        val subType: ColumnType<T>,
+                    ) : ColumnType<R>() {
+                        abstract fun List<String>.toRange(): R
 
-            abstract class RangeColumnType<T : Comparable<T>, R : ClosedRange<T>>(
-                val subType: ColumnType<T>,
-            ) : ColumnType<R>() {
-                abstract fun List<String>.toRange(): R
+                        override fun nonNullValueToString(value: R): String {
+                            return "[${value.start},${value.endInclusive}]"
+                        }
 
-                override fun nonNullValueToString(value: R): String {
-                    return "[${value.start},${value.endInclusive}]"
-                }
+                        override fun nonNullValueAsDefaultString(value: R): String {
+                            return "'${nonNullValueToString(value)}'"
+                        }
 
-                override fun nonNullValueAsDefaultString(value: R): String {
-                    return "'${nonNullValueToString(value)}'"
-                }
+                        override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+                            val parameterValue: PGobject? = value?.let {
+                                PGobject().apply {
+                                    type = sqlType()
+                                    this.value = nonNullValueToString(it as R)
+                                }
+                            }
+                            super.setParameter(stmt, index, parameterValue)
+                        }
 
-                override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-                    val parameterValue: PGobject? = value?.let {
-                        PGobject().apply {
-                            type = sqlType()
-                            this.value = nonNullValueToString(it as R)
+                        override fun valueFromDB(value: Any): R? = when (value) {
+                            is PGobject -> value.value?.let {
+                                val components = it.trim('[', ')').split(',')
+                                components.toRange()
+                            }
+                            else -> error("Retrieved unexpected value of type ${value::class.simpleName}")
                         }
                     }
-                    super.setParameter(stmt, index, parameterValue)
-                }
+                ]]>
+               </code-block>
+            </tab>
+            <tab id="r2dbc-col-type" title="R2DBC" group-key="r2dbc">
+                <code-block lang="kotlin"><![CDATA[
+                    abstract class RangeR2dbcColumnType<T : Comparable<T>, R : ClosedRange<T>>(
+                        val subType: ColumnType<T>,
+                    ) : ColumnType<R>() {
+                        abstract fun List<String>.toRange(): R
 
-                override fun valueFromDB(value: Any): R? = when (value) {
-                    is PGobject -> value.value?.let {
-                        val components = it.trim('[', ')').split(',')
-                        components.toRange()
+                        override fun nonNullValueToString(value: R): String =
+                            toPostgresqlValue(value)
+
+                        override fun nonNullValueAsDefaultString(value: R): String =
+                            "'${nonNullValueToString(value)}'"
+
+                        override fun valueFromDB(value: Any): R = when (value) {
+                            is String -> value.trim('[', ')').split(',').toRange()
+                            else -> error("Unexpected DB value type: ${value::class.simpleName}")
+                        }
+
+                        companion object {
+                            fun <T : Comparable<T>, R : ClosedRange<T>> toPostgresqlValue(range: R): String =
+                                "[${range.start},${range.endInclusive}]"
+                        }
                     }
-                    else -> error("Retrieved unexpected value of type ${value::class.simpleName}")
-                }
-            }
-        ]]></code-block>
+                ]]>
+                </code-block>
+            </tab>
+        </tabs>
+        <note>
+            In R2DBC, you must also implement a <code>TypeMapper</code> to correctly bind the value to a SQL parameter.
+            For more details, see the <a href="Custom-type-mapping.md"/> section.
+        </note>
         <p>A class for the type <code>int4range</code> that accepts <code>IntRange</code> values could then be
             implemented:</p>
 
+        <tabs group="connectivity">
+            <tab id="jdbc-int-col-type" title="JDBC" group-key="jdbc">
+                <code-block lang="kotlin"><![CDATA[
+                    class IntRangeColumnType : RangeColumnType<Int, IntRange>(IntegerColumnType()) {
+                        override fun sqlType(): String = "INT4RANGE"
+
+                        override fun List<String>.toRange(): IntRange {
+                            return IntRange(first().toInt(), last().toInt() - 1)
+                        }
+                    }
+                    ]]>
+                </code-block>
+            </tab>
+            <tab id="r2dbc-int-col-type" title="R2DBC" group-key="r2dbc">
+                <code-block lang="kotlin"><![CDATA[
+                    class IntRangeColumnType : RangeR2dbcColumnType<Int, IntRange>(IntegerColumnType()) {
+                        override fun sqlType(): String = "INT4RANGE"
+
+                        override fun List<String>.toRange(): IntRange {
+                            return IntRange(first().toInt(), last().toInt() - 1)
+                        }
+                    }
+                    ]]>
+                </code-block>
+            </tab>
+        </tabs>
+
+        <p>Register the column:</p>
         <code-block lang="kotlin"><![CDATA[
-            class IntRangeColumnType : RangeColumnType<Int, IntRange>(IntegerColumnType()) {
-                override fun sqlType(): String = "INT4RANGE"
-
-                override fun List<String>.toRange(): IntRange {
-                    return IntRange(first().toInt(), last().toInt() - 1)
-                }
-            }
-
             fun Table.intRange(name: String): Column<IntRange> = registerColumn(name, IntRangeColumnType())
-        ]]></code-block>
+            ]]>
+        </code-block>
         <p>If a custom Kotlin implementation for a <code>DateRange</code> is set up (using <code>Iterable</code> and
             <code>ClosedRange</code>),
             then a class for the type <code>daterange</code> can also be added. This implementation would require a
             dependency on <code>exposed-kotlin-datetime</code>:</p>
 
-        <code-block lang="kotlin"><![CDATA[
-            class DateRangeColumnType : RangeColumnType<LocalDate, DateRange>(KotlinLocalDateColumnType()) {
-                override fun sqlType(): String = "DATERANGE"
+        <tabs group="connectivity">
+            <tab id="jdbc-date-range" title="JDBC" group-key="jdbc">
+                <code-block lang="kotlin"><![CDATA[
+                    class DateRangeColumnType : RangeColumnType<LocalDate, DateRange>(KotlinLocalDateColumnType()) {
+                        override fun sqlType(): String = "DATERANGE"
 
-                override fun List<String>.toRange(): DateRange {
-                    val endInclusive = LocalDate.parse(last()).minus(1, DateTimeUnit.DAY)
-                    return DateRange(LocalDate.parse(first()), endInclusive)
-                }
-            }
+                        override fun List<String>.toRange(): DateRange {
+                            val endInclusive = LocalDate.parse(last()).minus(1, DateTimeUnit.DAY)
+                            return DateRange(LocalDate.parse(first()), endInclusive)
+                        }
+                    }
+                    ]]>
+                </code-block>
+            </tab>
+            <tab id="r2dbc-date-range" title="R2DBC" group-key="r2dbc">
+                <code-block lang="kotlin"><![CDATA[
+                    class DateRangeColumnType : RangeR2dbcColumnType<LocalDate, DateRange>(KotlinLocalDateColumnType()) {
+                        override fun sqlType(): String = "DATERANGE"
 
+                        override fun List<String>.toRange(): DateRange {
+                            val endInclusive = LocalDate.parse(last()).minus(1, DateTimeUnit.DAY)
+                            return DateRange(LocalDate.parse(first()), endInclusive)
+                        }
+                    }
+                    ]]>
+                </code-block>
+            </tab>
+        </tabs>
+        <p>Register the column:</p>
+        <code-block lang="Kotlin"><![CDATA[
             fun Table.dateRange(name: String): Column<DateRange> = registerColumn(name, DateRangeColumnType())
-        ]]></code-block>
-        <p>These new column types can be used in a table definition:</p>
+            ]]>
+        </code-block>
 
-        <code-block lang="kotlin">
+        <chapter title="Using the column in tables" id="using-range-col-in-table">
+            <p>These new column types can be used in a table definition:</p>
+            <code-block lang="kotlin">
             object TestTable : Table("test_table") {
                 val amounts = intRange("amounts").default(1..10)
                 val holidays = dateRange("holidays")
             }
-        </code-block>
-        <p>With the addition of some custom functions, the stored data can then be queried to return the upper bound
-            of the date range
-            for all records that have an integer range within the specified bounds:</p>
+            </code-block>
+        </chapter>
+        <chapter title="Querying and operators" id="querying-and-operators">
+            <p>With the addition of some custom functions, the stored data can then be queried to return the upper bound
+                of the date range
+                for all records that have an integer range within the specified bounds:</p>
 
-        <code-block lang="kotlin"><![CDATA[
+            <code-block lang="kotlin"><![CDATA[
             transaction {
                 val holidayEnd = TestTable.holidays.upperBound()
                 TestTable
@@ -251,6 +332,7 @@
                 right: Expression<R>
             ) : ComparisonOp(left, right, "<@")
         ]]></code-block>
+        </chapter>
     </chapter>
     <chapter title="Predefined string data" id="predefined-string-data">
         <p>MySQL and MariaDB provide a data type, <a href="https://dev.mysql.com/doc/refman/8.4/en/set.html"><code>SET</code></a>,
@@ -418,45 +500,86 @@
         <p>PostgreSQL provides a data type, <a
             href="https://www.postgresql.org/docs/16/citext.html"><code>citext</code></a>, that represents a
             case-insensitive string type.</p>
-        <p>The existing <code>StringColumnType</code> class can be extended with a few overrides:</p>
+        <p>
+            To support <code>citext</code> using JDBC, extend <code>VarCharColumnType</code> and override
+            <code>.sqlType()</code> and <code>.setParameter()</code>. For R2DBC, you need to extend the same base class
+            but skip <code>PGobject</code>:
+        </p>
+        <tabs group="connectivity">
+            <tab id="jdbc-citext-col-type" title="JDBC" group-key="jdbc">
+                <code-block lang="kotlin">
+                    import org.postgresql.util.PGobject
 
-        <code-block lang="kotlin">
-            import org.postgresql.util.PGobject
+                    class CitextColumnType(
+                        colLength: Int
+                    ) : VarCharColumnType(colLength) {
+                        override fun sqlType(): String = &quot;CITEXT&quot;
 
-            class CitextColumnType(
-                colLength: Int
-            ) : VarCharColumnType(colLength) {
-                override fun sqlType(): String = &quot;CITEXT&quot;
-
-                override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
-                    val parameterValue: PGobject? = value?.let {
-                        PGobject().apply {
-                            type = sqlType()
-                            this.value = value as? String
+                        override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+                            val parameterValue: PGobject? = value?.let {
+                                PGobject().apply {
+                                    type = sqlType()
+                                    this.value = value as? String
+                                }
+                            }
+                            super.setParameter(stmt, index, parameterValue)
                         }
                     }
-                    super.setParameter(stmt, index, parameterValue)
-                }
-            }
-        </code-block>
-        <p>A table extension function can then be added to register a new column with this type:</p>
+                </code-block>
+            </tab>
+            <tab id="r2dbc-citext-col-type" title="R2DBC" group-key="r2dbc">
+                <code-block lang="Kotlin">
+                    class CitextR2dbcColumnType(
+                        colLength: Int
+                    ) : VarCharColumnType(colLength) {
+                        override fun sqlType(): String = "CITEXT"
+                    }
+                </code-block>
+            </tab>
+        </tabs>
+        <note>
+            In R2DBC, you must also implement a <code>TypeMapper</code> to correctly bind the value to a SQL parameter.
+            For more details, see the <a href="Custom-type-mapping.md"/> section.
+        </note>
+        <p>Register the column in your table:</p>
+        <tabs group="connectivity">
+            <tab id="jdbc-citext-register-col" title="JDBC" group-key="jdbc">
+                <code-block lang="kotlin">
+                    fun Table.citext(name: String, length: Int): Column&lt;String&gt; =
+                        registerColumn(name, CitextColumnType(length))
+                </code-block>
+            </tab>
+            <tab id="r2dbc-citext-register-col" title="R2DBC" group-key="r2dbc">
+                <code-block lang="Kotlin"><![CDATA[
+                    fun Table.citext(name: String, length: Int): Column<String> =
+                        registerColumn(name, CitextR2dbcColumnType(length))
+                ]]>
+                </code-block>
+            </tab>
+        </tabs>
 
-        <code-block lang="kotlin">
-            fun Table.citext(name: String, length: Int): Column&lt;String&gt; =
-                registerColumn(name, CitextColumnType(length))
+        <chapter title="Using the column in tables">
+            <p>A table extension function can then be added to register a new column with this type:</p>
 
+            <code-block lang="kotlin">
             object TestTable : Table(&quot;test_table&quot;) {
                 val firstName = citext(&quot;first_name&quot;, 32)
             }
-        </code-block>
-        <note>
-            <p>To use the <code>citext</code> data type, the extension must first be enabled in the
-                database by running <code>exec(&quot;CREATE EXTENSION citext;&quot;)</code>.</p>
-        </note>
-        <p>String values can then be inserted and queried from the <code>firstName</code> column in a
-            case-insensitive manner:</p>
-
-        <code-block lang="kotlin">
+            </code-block>
+            <p>
+                To use the <code>citext</code> data type, the extension must first be enabled in the
+                database. You can enable it by running the following SQL query:
+            </p>
+            <code-block lang="sql">
+                CREATE EXTENSION IF NOT EXISTS citext;
+            </code-block>
+        </chapter>
+        <chapter title="Querying with case-insensitive matching" id="querying-with-case-insensitive-matching">
+            <p>
+                You can then insert and query string values from the <code>firstName</code> column in a
+                case-insensitive manner:
+            </p>
+            <code-block lang="kotlin">
             transaction {
                 val allNames = listOf(&quot;Anna&quot;, &quot;Anya&quot;, &quot;Agna&quot;)
                 TestTable.batchInsert(allNames) { name -&gt;
@@ -468,6 +591,7 @@
                     .where { TestTable.firstName like &quot;an%&quot; }
                     .toList()
             }
-        </code-block>
+            </code-block>
+        </chapter>
     </chapter>
 </topic>

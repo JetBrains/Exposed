@@ -25,6 +25,7 @@
             <toc-element topic="Date-and-time-types.topic"/>
             <toc-element topic="JSON-And-JSONB-types.topic"/>
             <toc-element topic="Custom-data-types.topic"/>
+            <toc-element topic="Custom-type-mapping.md"/>
             <toc-element topic="Column-transformation.topic"/>
         </toc-element>
         <toc-element topic="SQL-Functions.md"/>
