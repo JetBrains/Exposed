@@ -3240,10 +3240,11 @@ public final class org/jetbrains/exposed/v1/core/statements/api/ExposedBlob {
 
 public abstract class org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata {
 	public fun <init> (Ljava/lang/String;)V
+	protected final fun asColumnMetadata (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;Ljava/util/Map;)Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;
+	public static synthetic fun asColumnMetadata$default (Lorg/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata;Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;Ljava/util/Map;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;
 	public abstract fun cleanCache ()V
 	public final fun getDatabase ()Ljava/lang/String;
 	public abstract fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
-	protected final fun normalizedColumnType (Ljava/lang/String;)Ljava/lang/String;
 	public abstract fun resetCurrentScheme ()V
 	public abstract fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
 	protected final fun sanitizedDefault (Ljava/lang/String;)Ljava/lang/String;
