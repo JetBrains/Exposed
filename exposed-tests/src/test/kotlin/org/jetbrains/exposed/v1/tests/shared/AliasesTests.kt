@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.tests.shared
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
@@ -144,6 +145,35 @@ class AliasesTests : DatabaseTestsBase() {
                 this[EntityTestsData.XTable.b1] = it
             }
             val aliasedExpression = EntityTestsData.XTable.id.max().alias("maxId")
+            val aliasedQuery = EntityTestsData.XTable
+                .select(EntityTestsData.XTable.b1, aliasedExpression)
+                .groupBy(EntityTestsData.XTable.b1)
+                .alias("maxBoolean")
+
+            val aliasedBool = aliasedQuery[EntityTestsData.XTable.b1]
+            val expressionToCheck = aliasedQuery[aliasedExpression]
+            assertEquals("maxBoolean.maxId", expressionToCheck.toString())
+
+            val resultQuery = aliasedQuery
+                .leftJoin(EntityTestsData.XTable, { this[aliasedExpression] }, { id })
+                .select(aliasedBool, expressionToCheck)
+
+            val result = resultQuery.map {
+                it[aliasedBool] to it[expressionToCheck]!!.value
+            }
+
+            assertEqualCollections(listOf(true to 4, false to 3), result)
+        }
+    }
+
+    @Test
+    fun `test aliased expression with aliased query as expression`() {
+        withTables(EntityTestsData.XTable, EntityTestsData.YTable) {
+            val dataToInsert = listOf(true, true, false, true)
+            EntityTestsData.XTable.batchInsert(dataToInsert) {
+                this[EntityTestsData.XTable.b1] = it
+            }
+            val aliasedExpression = EntityTestsData.XTable.id.max().alias("maxId") as Expression<EntityID<Int>?>
             val aliasedQuery = EntityTestsData.XTable
                 .select(EntityTestsData.XTable.b1, aliasedExpression)
                 .groupBy(EntityTestsData.XTable.b1)
