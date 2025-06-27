@@ -215,7 +215,7 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
                 val columns = rs.extractColumns(tableName = table.nameInDatabaseCase())
                 check(columns.isNotEmpty())
                 result[table] = columns
-                rs.close()
+                rs.result.close()
             }
         }
 
