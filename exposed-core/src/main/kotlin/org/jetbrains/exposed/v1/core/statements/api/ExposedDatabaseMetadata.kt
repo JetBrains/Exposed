@@ -101,7 +101,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
         val autoIncrement = getObject("IS_AUTOINCREMENT", java.lang.String::class.java)?.toString() == "YES"
         val type = getObject("DATA_TYPE")?.toString()?.toInt() ?: 0
         val name = getObject("COLUMN_NAME", java.lang.String::class.java)?.toString() ?: ""
-        val nullable = getObject("NULLABLE", java.lang.Boolean::class.java)?.booleanValue() ?: false
+        val nullable = getObject("NULLABLE")?.toString()?.lowercase() in listOf("true", "1")
         val size = getObject("COLUMN_SIZE")?.toString()?.toInt().takeIf { it != 0 }
         val scale = getObject("DECIMAL_DIGITS")?.toString()?.toInt().takeIf { it != 0 }
         val sqlType = getColumnType(this, prefetchedColumnTypes)
