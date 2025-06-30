@@ -202,17 +202,20 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     var answer: T
     while (true) {
         val transaction = if (attempts == 0) tx.value else tx.value.resetIfClosed()
+        var shouldClose = false
 
         @Suppress("TooGenericExceptionCaught")
         try {
             answer = transaction.statement().apply {
                 if (shouldCommit) transaction.commit()
             }
+            shouldClose = shouldCommit
             break
         } catch (cause: SQLException) {
             handleSQLException(cause, transaction, attempts)
             attempts++
             if (attempts >= transaction.maxAttempts) {
+                shouldClose = true
                 throw cause
             }
 
@@ -242,7 +245,9 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
             }
             throw cause
         } finally {
-            if (shouldCommit) transaction.closeAsync()
+            if (shouldClose) {
+                transaction.closeAsync()
+            }
         }
     }
     answer
