@@ -27,7 +27,8 @@ class PrimitiveTypeMapper : TypeMapper {
             DecimalColumnType::class,
             BooleanColumnType::class,
             CharacterColumnType::class,
-            UUIDColumnType::class
+            UUIDColumnType::class,
+            StringColumnType::class,
         )
 
     override fun setValue(

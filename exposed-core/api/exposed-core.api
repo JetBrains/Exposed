@@ -3312,15 +3312,15 @@ public abstract interface class org/jetbrains/exposed/v1/core/statements/api/Res
 public abstract interface class org/jetbrains/exposed/v1/core/statements/api/RowApi {
 	public abstract fun getObject (I)Ljava/lang/Object;
 	public abstract fun getObject (ILjava/lang/Class;)Ljava/lang/Object;
-	public abstract fun getObject (ILjava/lang/Class;Lorg/jetbrains/exposed/v1/core/ColumnType;)Ljava/lang/Object;
+	public abstract fun getObject (ILjava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
 	public abstract fun getObject (Ljava/lang/String;)Ljava/lang/Object;
 	public abstract fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
-	public abstract fun getObject (Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/ColumnType;)Ljava/lang/Object;
+	public abstract fun getObject (Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/core/statements/api/RowApi$DefaultImpls {
-	public static fun getObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;ILjava/lang/Class;Lorg/jetbrains/exposed/v1/core/ColumnType;)Ljava/lang/Object;
-	public static fun getObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/ColumnType;)Ljava/lang/Object;
+	public static fun getObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;ILjava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
+	public static fun getObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
 }
 
 public final class org/jetbrains/exposed/v1/core/transactions/CoreTransactionManager {

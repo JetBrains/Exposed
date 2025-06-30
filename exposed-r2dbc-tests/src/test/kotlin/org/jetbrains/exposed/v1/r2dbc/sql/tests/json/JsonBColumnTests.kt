@@ -219,10 +219,10 @@ class JsonBColumnTests : R2dbcDatabaseTestsBase() {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
             } else {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns(defaultTester)
+                SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 assertTrue(defaultTester.exists())
                 // ensure defaults match returned metadata defaults
-                val alters = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
+                val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
                 assertTrue(alters.isEmpty())
 
                 defaultTester.insert {}

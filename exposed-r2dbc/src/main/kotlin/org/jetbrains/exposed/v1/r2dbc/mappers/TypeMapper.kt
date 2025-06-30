@@ -83,7 +83,7 @@ interface TypeMapper {
      */
     fun <T> getValue(
         row: Row,
-        type: Class<T>,
+        type: Class<T>?,
         index: Int,
         dialect: DatabaseDialect,
         columnType: IColumnType<*>,

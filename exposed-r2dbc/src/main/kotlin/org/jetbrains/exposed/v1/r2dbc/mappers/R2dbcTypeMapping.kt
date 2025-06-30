@@ -39,7 +39,7 @@ interface R2dbcTypeMapping {
      */
     fun <T> getValue(
         row: Row,
-        type: Class<T>,
+        type: Class<T>?,
         index: Int,
         dialect: DatabaseDialect,
         columnType: IColumnType<*>,
@@ -121,9 +121,10 @@ class R2dbcRegistryTypeMappingImpl : R2dbcRegistryTypeMapping {
         return false
     }
 
+    @Suppress("unchecked_cast")
     override fun <T> getValue(
         row: Row,
-        type: Class<T>,
+        type: Class<T>?,
         index: Int,
         dialect: DatabaseDialect,
         columnType: IColumnType<*>,
@@ -134,7 +135,8 @@ class R2dbcRegistryTypeMappingImpl : R2dbcRegistryTypeMapping {
                 return result.value() as T?
             }
         }
-        return row.get(index - 1, type)
+
+        return type?.let { row.get(index - 1, it) } ?: (row.get(index - 1) as T?)
     }
 
     private fun getMatchingMappers(
