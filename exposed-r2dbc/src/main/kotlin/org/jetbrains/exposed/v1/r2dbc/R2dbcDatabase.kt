@@ -43,14 +43,29 @@ class R2dbcDatabase private constructor(
         }
     }
 
+    internal fun <T> localMetadata(body: R2dbcExposedDatabaseMetadata.() -> T): T {
+        val transaction = TransactionManager.currentOrNull()
+        return if (transaction == null) {
+            val connection = connector()
+            try {
+                connection.localMetadata(body)
+            } finally {
+                runBlocking {
+                    connection.close()
+                }
+            }
+        } else {
+            transaction.connection.localMetadata(body)
+        }
+    }
+
     private var connectionUrl: String = ""
 
     override val url: String
         get() = connectionUrl
 
     override val vendor: String by lazy {
-        // cleanup -> getDatabaseDialectName() does not actually need suspend; relocate or refactor?
-        resolvedVendor ?: runBlocking { metadata { getDatabaseDialectName() } }
+        resolvedVendor ?: localMetadata { getDatabaseDialectName() }
     }
 
     override val dialect: DatabaseDialect by lazy {
@@ -71,22 +86,17 @@ class R2dbcDatabase private constructor(
     // TODO usage in core H2Dialect
     override val dialectMode: String? by lazy { runBlocking { metadata { getDatabaseDialectMode() } } }
 
-    // cleanup -> getVersion() does not actually need suspend; relocate or refactor?
-    override val version: Version by lazy { runBlocking { metadata { getVersion() } } }
+    override val version: Version by lazy { localMetadata { getVersion() } }
 
-    // TODO cleanup -> getDatabaseProductVersion() does not actually need suspend; relocate or refactor?
-    override val fullVersion: String by lazy { runBlocking { metadata { getDatabaseProductVersion() } } }
+    override val fullVersion: String by lazy { localMetadata { getDatabaseProductVersion() } }
 
-    // TODO cleanup -> none of these properties need suspend; better to call MetadataProvider directly?
-    // TODO for properties that do not actually query metadata (hard-coded), switch to metadat property
-    override val supportsAlterTableWithAddColumn: Boolean by lazy { runBlocking { metadata { supportsAlterTableWithAddColumn } } }
+    override val supportsAlterTableWithAddColumn: Boolean by lazy { localMetadata { supportsAlterTableWithAddColumn } }
 
-    override val supportsAlterTableWithDropColumn: Boolean by lazy { runBlocking { metadata { supportsAlterTableWithDropColumn } } }
+    override val supportsAlterTableWithDropColumn: Boolean by lazy { localMetadata { supportsAlterTableWithDropColumn } }
 
-    override val supportsMultipleResultSets: Boolean by lazy { runBlocking { metadata { supportsMultipleResultSets } } }
+    override val supportsMultipleResultSets: Boolean by lazy { localMetadata { supportsMultipleResultSets } }
 
-    // TODO cleanup -> definitely does not actually need suspend; relocate or refactor?
-    override val identifierManager: IdentifierManagerApi by lazy { runBlocking { metadata { identifierManager } } }
+    override val identifierManager: IdentifierManagerApi by lazy { localMetadata { identifierManager } }
 
     companion object {
 
