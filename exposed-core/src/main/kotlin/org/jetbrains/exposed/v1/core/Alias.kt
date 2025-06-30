@@ -194,7 +194,7 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
             ?: error("Column not found in original table")
 
     operator fun <T : Any?> get(original: Expression<T>): Expression<T> {
-        val aliases = query.set.fields.filterIsInstance<ExpressionAlias<T>>()
+        val aliases = query.set.fields.filterIsInstance<IExpressionAlias<T>>()
         return aliases.find { it == original }?.let {
             it.delegate.alias("$alias.${it.alias}").aliasOnlyExpression()
         } ?: aliases.find { it.delegate == original }?.aliasOnlyExpression()
