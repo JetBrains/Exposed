@@ -15,6 +15,6 @@ To use a custom interceptor that acts on all transactions, implement the
 interface instead. Exposed uses the Java SPI ServiceLoader to discover and load any implementations of this interface.
 In this situation, a new file should be created in the *resources* folder named:
 ```
-META-INF/services/org.jetbrains.exposed.v1.sql.statements.GlobalStatementInterceptor
+META-INF/services/org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor
 ```
 The contents of this file should be the fully qualified class names of all custom implementations.

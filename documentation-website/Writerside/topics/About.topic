@@ -5,8 +5,13 @@
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        title="Exposed, an ORM framework for Kotlin" id="About">
     <p>
-        Exposed is a lightweight SQL library on top of a JDBC driver for the Kotlin programming language. It offers
-        two approaches for database access: the Domain-Specific Language (DSL) API and the Data Access Object (DAO) API.
+        Exposed is a lightweight SQL library on top of a JDBC driver for the Kotlin programming language. It supports
+        both JDBC (blocking) and R2DBC (non-blocking) drivers, giving you flexibility to choose between traditional or
+        reactive database access models.
+    </p>
+    <p>
+        It offers two approaches for database access: the Domain-Specific Language (DSL) API and the Data Access Object
+        (DAO) API.
     </p>
     <p>
         The Domain-Specific Language (DSL) API of Exposed provides a Kotlin-based abstraction for interacting with databases
