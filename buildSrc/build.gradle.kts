@@ -20,5 +20,9 @@ gradlePlugin {
             id = "testWithDBs"
             implementationClass = "org.jetbrains.exposed.gradle.DBTestingPlugin"
         }
+        create("versionCatalog") {
+            id = "exposed-version-catalog"
+            implementationClass = "org.jetbrains.exposed.gradle.VersionCatalogPlugin"
+        }
     }
 }
