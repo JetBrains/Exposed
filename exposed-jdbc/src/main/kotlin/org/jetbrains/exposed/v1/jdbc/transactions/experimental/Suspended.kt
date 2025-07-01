@@ -199,56 +199,55 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
     var intermediateDelay: Long = 0
     var retryInterval: Long? = null
 
-    var answer: T
-    while (true) {
-        val transaction = if (attempts == 0) tx.value else tx.value.resetIfClosed()
-        var shouldClose = false
+    try {
+        var answer: T
+        while (true) {
+            val transaction = if (attempts == 0) tx.value else tx.value.resetIfClosed()
 
-        @Suppress("TooGenericExceptionCaught")
-        try {
-            answer = transaction.statement().apply {
-                if (shouldCommit) transaction.commit()
-            }
-            shouldClose = shouldCommit
-            break
-        } catch (cause: SQLException) {
-            handleSQLException(cause, transaction, attempts)
-            attempts++
-            if (attempts >= transaction.maxAttempts) {
-                shouldClose = true
+            @Suppress("TooGenericExceptionCaught")
+            try {
+                answer = transaction.statement().apply {
+                    if (shouldCommit) transaction.commit()
+                }
+                break
+            } catch (cause: SQLException) {
+                handleSQLException(cause, transaction, attempts)
+                attempts++
+                if (attempts >= transaction.maxAttempts) {
+                    throw cause
+                }
+
+                if (retryInterval == null) {
+                    retryInterval = transaction.getRetryInterval()
+                    intermediateDelay = transaction.minRetryDelay
+                }
+                // set delay value with an exponential backoff time period
+                val retryDelay = when {
+                    transaction.minRetryDelay < transaction.maxRetryDelay -> {
+                        intermediateDelay += retryInterval * attempts
+                        ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
+                    }
+                    transaction.minRetryDelay == transaction.maxRetryDelay -> transaction.minRetryDelay
+                    else -> 0
+                }
+                exposedLogger.warn("Wait $retryDelay milliseconds before retrying")
+                try {
+                    delay(retryDelay)
+                } catch (cause: InterruptedException) {
+                    // Do nothing
+                }
+            } catch (cause: Throwable) {
+                val currentStatement = transaction.currentStatement
+                transaction.rollbackLoggingException {
+                    exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it)
+                }
                 throw cause
             }
-
-            if (retryInterval == null) {
-                retryInterval = transaction.getRetryInterval()
-                intermediateDelay = transaction.minRetryDelay
-            }
-            // set delay value with an exponential backoff time period
-            val retryDelay = when {
-                transaction.minRetryDelay < transaction.maxRetryDelay -> {
-                    intermediateDelay += retryInterval * attempts
-                    ThreadLocalRandom.current().nextLong(intermediateDelay, intermediateDelay + retryInterval)
-                }
-                transaction.minRetryDelay == transaction.maxRetryDelay -> transaction.minRetryDelay
-                else -> 0
-            }
-            exposedLogger.warn("Wait $retryDelay milliseconds before retrying")
-            try {
-                delay(retryDelay)
-            } catch (cause: InterruptedException) {
-                // Do nothing
-            }
-        } catch (cause: Throwable) {
-            val currentStatement = transaction.currentStatement
-            transaction.rollbackLoggingException {
-                exposedLogger.warn("Transaction rollback failed: ${it.message}. Statement: $currentStatement", it)
-            }
-            throw cause
-        } finally {
-            if (shouldClose) {
-                transaction.closeAsync()
-            }
+        }
+        answer
+    } finally {
+        if (shouldCommit) {
+            tx.value.closeAsync()
         }
     }
-    answer
 }
