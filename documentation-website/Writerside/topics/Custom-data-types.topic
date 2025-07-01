@@ -44,7 +44,7 @@
             a JDBC mapping is set as a varying character string.
             To avoid a casting exception due to PostgreSQL's stricter type system, the type of the set parameter
             should be manually declared,
-            by using a <code>PGobject</code> in <code>setParamater()</code>, as shown in the example above.
+            by using a <code>PGobject</code> in <code>setParameter()</code>, as shown in the example above.
         </note>
         <p>A table extension function can then be added to register a new column with this type:</p>
         <code-block lang="kotlin"><![CDATA[

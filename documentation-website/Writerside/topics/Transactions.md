@@ -11,6 +11,8 @@ To create and execute a transaction with default parameters, simply pass a funct
 function:
 
 ```kotlin
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+
 transaction {
     // DSL/DAO operations go here
 }
@@ -28,6 +30,8 @@ Use [`suspendTansaction()`](https://jetbrains.github.io/Exposed/api/exposed-r2db
 to perform non-blocking operations in coroutine-based applications:
 
 ```kotlin
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+
 suspendTransaction {
     // DSL/DAO operations go here
 }
@@ -35,7 +39,7 @@ suspendTransaction {
 
 ## Accessing returned values
 
-Although you can modify variables from your code within the transaction block, `transaction()` supports returning a value
+Although you can modify variables from your code within the transaction block, it also supports returning a value
 directly, enabling immutability.
 
 In the following example, `jamesList` is a `List<ResultRow>` containing `UsersTable` data:

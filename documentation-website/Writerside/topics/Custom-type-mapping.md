@@ -65,6 +65,8 @@ Here's an example `CustomTypeMapper` that supports both `citext` and `int4range`
 
 ```kotlin
 class CustomTypeMapper : TypeMapper {
+    override val priority: Double = 1.9
+
     override val dialects = listOf(PostgreSQLDialect::class)
 
     override val columnTypes = listOf(
@@ -75,7 +77,7 @@ class CustomTypeMapper : TypeMapper {
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        mapperRegistry: TypeMapperRegistry,
+        typeMapping: R2dbcTypeMapping, // CHANGED
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
@@ -126,5 +128,5 @@ To register your mapper, a new file should be created in the **resources** folde
     com.example.mapper.CustomTypeMapper
     ```
 
-When Exposed initializes, your custom mapper will be loaded and added to the `TypeMapperRegistry`.
+When Exposed initializes, your custom mapper will be loaded and added to the `R2dbcRegistryTypeMapping`.
 

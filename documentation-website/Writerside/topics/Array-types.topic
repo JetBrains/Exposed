@@ -10,7 +10,7 @@
             <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
         </p>
         <include from="lib.topic" element-id="jdbc-supported"/>
-        <include from="lib.topic" element-id="r2dbc-not-supported"/>
+        <include from="lib.topic" element-id="r2dbc-limited-support"/>
     </tldr>
     <p>
         Exposed provides support for array data types, allowing you to store and manipulate arrays of various data
@@ -63,6 +63,9 @@
         />
     </chapter>
     <chapter title="Multidimensional arrays" id="multidimensional-arrays">
+        <tldr>
+            <include from="lib.topic" element-id="r2dbc-not-supported"/>
+        </tldr>
         <p>PostgreSQL supports multidimensional arrays, which can be defined using the <code>dimensions</code> parameter:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"

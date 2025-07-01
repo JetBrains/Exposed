@@ -27,7 +27,7 @@ fun main() {
             it[firstName] = "James"
         }
 
-        val jamesList = transaction(db) {
+        val jamesList = transaction(db = db) {
             UsersTable.selectAll().where { UsersTable.firstName eq "James" }.toList()
         }
         println(jamesList)

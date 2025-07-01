@@ -13,8 +13,8 @@ import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
 suspend fun main() {
-    val postgresdb = R2DBCDatabases().getPostgreSQLDB()
-    val jamesList = suspendTransaction {
+    val db = R2DBCDatabases().getPostgreSQLDB()
+    val jamesList = suspendTransaction(db = db) {
         UsersTable.selectAll().where { UsersTable.firstName eq "James" }.toList()
     }
     println(jamesList)

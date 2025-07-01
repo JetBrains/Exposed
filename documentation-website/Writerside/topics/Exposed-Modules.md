@@ -33,12 +33,12 @@ Exposed consists of multiple modules that we've split into two categories:
 
 To use Exposed in your application you need the following core modules:
 
-| Module          | Function                                                                                                                                                      |
-|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `exposed-core`  | Provides the foundational components and abstractions needed to work with databases in a type-safe manner and includes the Domain-Specific Language (DSL) API |
-| `exposed-dao`   | (Optional) Allows you to work with the Data Access Object (DAO) API                                                                                           |
-| `exposed-jdbc`  | Provides support for Java Database Connectivity (JDBC) with a transport-level implementation based on the Java JDBC API                                       |
-| `exposed-r2dbc` | Provides support for Reactive Relational Database Connectivity (R2DBC)                                                                                        |
+| Module          | Function                                                                                                                                                         |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `exposed-core`  | Provides the foundational components and abstractions needed to work with databases in a type-safe manner and includes the Domain-Specific Language (DSL) API    |
+| `exposed-dao`   | (Optional) Allows you to work with the Data Access Object (DAO) API. <br> It is only compatible with `exposed-jdbc` and does not work with `exposed-r2dbc`.</br> |
+| `exposed-jdbc`  | Provides support for Java Database Connectivity (JDBC) with a transport-level implementation based on the Java JDBC API                                          |
+| `exposed-r2dbc` | Provides support for Reactive Relational Database Connectivity (R2DBC)                                                                                           |
 
 > You only need one transport module – either `exposed-jdbc` or `exposed-r2dbc`, not both.
 > {style="note"}

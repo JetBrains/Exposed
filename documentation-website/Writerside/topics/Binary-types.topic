@@ -89,6 +89,9 @@
         />
     </chapter>
     <chapter title="PostgreSQL Object Identifiers" id="object-identifiers">
+        <tldr>
+            <include from="lib.topic" element-id="r2dbc-not-supported"/>
+        </tldr>
         <p>PostgreSQL supports storing large objects using Object Identifiers (OIDs):</p>
         <code-block lang="kotlin">
         val content = blob("content", useObjectIdentifier = true)
