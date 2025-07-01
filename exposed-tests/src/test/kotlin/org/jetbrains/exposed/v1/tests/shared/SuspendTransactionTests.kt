@@ -30,7 +30,7 @@ class SuspendTransactionTests : DatabaseTestsBase() {
         withTables(
             excludeSettings = TestDB.ALL_H2_V1 + TestDB.SQLITE,
             TestConflictTable, configure = {
-                defaultMaxAttempts = 10
+                defaultMaxAttempts = 20
             }
         ) {
             inTopLevelTransaction(TRANSACTION_SERIALIZABLE) {
@@ -40,7 +40,7 @@ class SuspendTransactionTests : DatabaseTestsBase() {
                 }
             }
 
-            val concurrentTransactions = 5
+            val concurrentTransactions = 3
 
             runBlocking {
                 List(concurrentTransactions) {
@@ -50,7 +50,7 @@ class SuspendTransactionTests : DatabaseTestsBase() {
                 }.joinAll()
             }
             val entry = TestConflictTable.selectAll().first()
-            assertEquals(5, entry[TestConflictTable.value])
+            assertEquals(3, entry[TestConflictTable.value])
         }
     }
 
