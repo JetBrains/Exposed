@@ -11,7 +11,8 @@
   which is now deprecated.
 * Classes `BatchInsertStatement` and `BaseBatchInsertStatement` were joined into one open class `BatchInsertStatement`. The usages of `BaseBatchInsertStatement` could
   be safely replaced with `BatchInsertStatement`.
-
+* The `type` parameter in the `TypeMapper::getValue()` method is now optional.
+  The method signature has been updated to `fun <T> getValue(row: Row, type: Class<T>?, ...): ValueContainer<T?>`.
 
 ## 1.0.0-beta-1
 
