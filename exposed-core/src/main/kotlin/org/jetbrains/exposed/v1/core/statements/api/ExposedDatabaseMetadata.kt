@@ -100,7 +100,7 @@ abstract class ExposedDatabaseMetadata(val database: String) {
         }
         val autoIncrement = getObject("IS_AUTOINCREMENT", java.lang.String::class.java)?.toString() == "YES"
         val type = getObject("DATA_TYPE")?.toString()?.toInt() ?: 0
-        val name = getObject("COLUMN_NAME", java.lang.String::class.java)?.toString() ?: ""
+        val name = getStringOrThrow("COLUMN_NAME")
         val nullable = getObject("NULLABLE")?.toString()?.lowercase() in listOf("true", "1")
         val size = getObject("COLUMN_SIZE")?.toString()?.toInt().takeIf { it != 0 }
         val scale = getObject("DECIMAL_DIGITS")?.toString()?.toInt().takeIf { it != 0 }
@@ -109,13 +109,22 @@ abstract class ExposedDatabaseMetadata(val database: String) {
         return ColumnMetadata(name, type, sqlType, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
     }
 
+    private fun RowApi.getStringOrThrow(
+        field: String,
+        transform: String.() -> String = { this }
+    ): String {
+        return getObject(field, java.lang.String::class.java)
+            ?.toString()
+            ?.transform()
+            ?: error("Object retrieved from field $field in current data row is null")
+    }
+
     private fun getColumnType(result: RowApi, prefetchedColumnTypes: Map<String, String>): String {
         if (currentDialect !is H2Dialect) return ""
 
-        val columnName = result.getObject("COLUMN_NAME", java.lang.String::class.java)?.toString() ?: ""
+        val columnName = result.getStringOrThrow("COLUMN_NAME")
         val columnType = prefetchedColumnTypes[columnName]
-            ?: result.getObject("TYPE_NAME", java.lang.String::class.java)?.toString()?.uppercase()
-            ?: ""
+            ?: result.getStringOrThrow("TYPE_NAME") { uppercase() }
         val dataType = result.getObject("DATA_TYPE")?.toString()?.toInt()
         return if (dataType == Types.ARRAY) {
             val baseType = columnType.substringBefore(" ARRAY")
