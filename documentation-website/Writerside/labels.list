@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE labels SYSTEM "https://resources.jetbrains.com/writerside/1.0/labels-list.dtd">
+<labels xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/labels.xsd">
+    <primary-label id="jdbc" short-name="" name="JDBC" color="blue">
+        JDBC-only
+    </primary-label>
+
+    <primary-label id="r2dbc" short-name="" name="R2DBC" color="purple">
+        R2DBC-only
+    </primary-label>
+
+</labels>

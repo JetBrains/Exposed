@@ -9,6 +9,8 @@
         <p>
             <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
         </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-limited-support"/>
     </tldr>
     <p>
         Exposed provides support for array data types, allowing you to store and manipulate arrays of various data
@@ -19,7 +21,7 @@
     <chapter title="Supported types" id="supported-types">
         <p>
             The <code>exposed-core</code> module supports two main ways to define array columns using the
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/array.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/array.html">
                 <code>.array()</code>
             </a>
             function:
@@ -61,6 +63,9 @@
         />
     </chapter>
     <chapter title="Multidimensional arrays" id="multidimensional-arrays">
+        <tldr>
+            <include from="lib.topic" element-id="r2dbc-not-supported"/>
+        </tldr>
         <p>PostgreSQL supports multidimensional arrays, which can be defined using the <code>dimensions</code> parameter:</p>
         <code-block lang="kotlin"
                     src="exposed-data-types/src/main/kotlin/org/example/examples/ArrayExamples.kt"
@@ -82,7 +87,7 @@
     <chapter title="Array slicing" id="array-slicing">
         <p>
             Use
-            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/slice.html">
+            <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/slice.html">
                 <code>.slice()</code>
             </a>
             to extract subarrays:

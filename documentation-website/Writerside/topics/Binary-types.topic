@@ -9,6 +9,8 @@
         <p>
             <b>Required dependencies</b>: <code>org.jetbrains.exposed:exposed-core</code>
         </p>
+        <include from="lib.topic" element-id="jdbc-supported"/>
+        <include from="lib.topic" element-id="r2dbc-limited-support"/>
     </tldr>
 
     <p>
@@ -23,7 +25,7 @@
         <deflist type="medium">
             <def id="blob-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/blob.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/blob.html">
                         <code>blob()</code>
                     </a>
                 </title>
@@ -37,7 +39,7 @@
 
             <def id="binary-type">
                 <title>
-                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-table/binary.html">
+                    <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-table/binary.html">
                         <code>binary()</code>
                     </a>
                 </title>
@@ -87,6 +89,9 @@
         />
     </chapter>
     <chapter title="PostgreSQL Object Identifiers" id="object-identifiers">
+        <tldr>
+            <include from="lib.topic" element-id="r2dbc-not-supported"/>
+        </tldr>
         <p>PostgreSQL supports storing large objects using Object Identifiers (OIDs):</p>
         <code-block lang="kotlin">
         val content = blob("content", useObjectIdentifier = true)

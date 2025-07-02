@@ -37,4 +37,35 @@
                   src="intellij_idea_gradle_icon.svg" width="16" height="26"/>)
             on the right side of the editor to load Gradle changes.</p>
     </snippet>
+
+    <snippet id="r2dbc-not-supported">
+        <p>
+            <b>R2DBC</b>: ❌ Not supported
+        </p>
+    </snippet>
+
+    <snippet id="r2dbc-supported">
+        <p>
+            <b>R2DBC</b>: ✅ Supported
+        </p>
+    </snippet>
+
+
+    <snippet id="r2dbc-limited-support">
+        <p>
+            <b>R2DBC</b>: ⚠️ Limited
+        </p>
+    </snippet>
+
+    <snippet id="r2dbc-driver-specific">
+        <p>
+            <b>R2DBC</b>: ⚠️️ Driver-specific
+        </p>
+    </snippet>
+
+    <snippet id="jdbc-supported">
+        <p>
+            <b>JDBC</b>: ✅ Supported
+        </p>
+    </snippet>
 </topic>
