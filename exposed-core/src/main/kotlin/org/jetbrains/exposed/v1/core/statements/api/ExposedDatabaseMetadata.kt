@@ -2,13 +2,9 @@ package org.jetbrains.exposed.v1.core.statements.api
 
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect.H2CompatibilityMode
-import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.core.vendors.OracleDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.core.vendors.h2Mode
+import java.sql.Types
 
 /**
  * Base class responsible for shared utility methods needed for retrieving and storing information about
@@ -96,9 +92,50 @@ abstract class ExposedDatabaseMetadata(val database: String) {
         else -> this
     }
 
-    /** Returns the normalized column type. */
+    /** Extracts result data about a specific column as [ColumnMetadata]. */
     @InternalApi
-    protected fun normalizedColumnType(columnType: String): String {
+    protected fun RowApi.asColumnMetadata(prefetchedColumnTypes: Map<String, String> = emptyMap()): ColumnMetadata {
+        val defaultDbValue = getObject("COLUMN_DEF", java.lang.String::class.java)?.toString()?.let {
+            sanitizedDefault(it)
+        }
+        val autoIncrement = getObject("IS_AUTOINCREMENT", java.lang.String::class.java)?.toString() == "YES"
+        val type = getObject("DATA_TYPE")?.toString()?.toInt() ?: 0
+        val name = getStringOrThrow("COLUMN_NAME")
+        val nullable = getObject("NULLABLE")?.toString()?.lowercase() in listOf("true", "1")
+        val size = getObject("COLUMN_SIZE")?.toString()?.toInt().takeIf { it != 0 }
+        val scale = getObject("DECIMAL_DIGITS")?.toString()?.toInt().takeIf { it != 0 }
+        val sqlType = getColumnType(this, prefetchedColumnTypes)
+
+        return ColumnMetadata(name, type, sqlType, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
+    }
+
+    private fun RowApi.getStringOrThrow(
+        field: String,
+        transform: String.() -> String = { this }
+    ): String {
+        return getObject(field, java.lang.String::class.java)
+            ?.toString()
+            ?.transform()
+            ?: error("Object retrieved from field $field in current data row is null")
+    }
+
+    private fun getColumnType(result: RowApi, prefetchedColumnTypes: Map<String, String>): String {
+        if (currentDialect !is H2Dialect) return ""
+
+        val columnName = result.getStringOrThrow("COLUMN_NAME")
+        val columnType = prefetchedColumnTypes[columnName]
+            ?: result.getStringOrThrow("TYPE_NAME") { uppercase() }
+        val dataType = result.getObject("DATA_TYPE")?.toString()?.toInt()
+        return if (dataType == Types.ARRAY) {
+            val baseType = columnType.substringBefore(" ARRAY")
+            normalizedColumnType(baseType) + columnType.replaceBefore(" ARRAY", "")
+        } else {
+            normalizedColumnType(columnType)
+        }
+    }
+
+    /** Returns the normalized column type. */
+    private fun normalizedColumnType(columnType: String): String {
         val h2Mode = currentDialect.h2Mode
         return when {
             columnType.matches(Regex("CHARACTER VARYING(?:\\(\\d+\\))?")) -> when (h2Mode) {

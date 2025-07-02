@@ -16,7 +16,6 @@ import java.math.BigDecimal
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.SQLException
-import java.sql.Types
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -173,7 +172,8 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return SchemaMetadata(currentSchema!!, tablesInSchema)
     }
 
-    private fun ResultSet.extractColumns(tableName: String): List<ColumnMetadata> {
+    @OptIn(InternalApi::class)
+    private fun JdbcResult.extractColumns(tableName: String): List<ColumnMetadata> {
         val prefetchedColumnTypes = fetchAllColumnTypes(tableName)
         val result = mutableListOf<ColumnMetadata>()
         while (next()) {
@@ -182,7 +182,11 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         return result
     }
 
-    /** Returns a map of all the columns' names mapped to their type. */
+    /**
+     * Returns a map of all the columns' names mapped to their type.
+     *
+     * Currently, only H2Dialect will actually return a result.
+     */
     private fun fetchAllColumnTypes(tableName: String): Map<String, String> {
         if (currentDialect !is H2Dialect) return emptyMap()
 
@@ -205,48 +209,17 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         for ((schema, schemaTables) in tablesBySchema.entries) {
             for (table in schemaTables) {
                 val catalog = if (!useSchemaInsteadOfDatabase || schema == currentSchema!!) databaseName else schema
-                val rs = metadata.getColumns(catalog, schema, table.nameInDatabaseCaseUnquoted(), "%")
+                val rs = JdbcResult(
+                    metadata.getColumns(catalog, schema, table.nameInDatabaseCaseUnquoted(), "%")
+                )
                 val columns = rs.extractColumns(tableName = table.nameInDatabaseCase())
                 check(columns.isNotEmpty())
                 result[table] = columns
-                rs.close()
+                rs.result.close()
             }
         }
 
         return result
-    }
-
-    // All H2 V1 databases are excluded because Exposed will be dropping support for it soon
-    @OptIn(InternalApi::class)
-    private fun getColumnType(resultSet: ResultSet, prefetchedColumnTypes: Map<String, String>): String {
-        if (currentDialect !is H2Dialect) {
-            return ""
-        }
-
-        val columnName = resultSet.getString("COLUMN_NAME")
-        val columnType = prefetchedColumnTypes[columnName] ?: resultSet.getString("TYPE_NAME").uppercase()
-        val dataType = resultSet.getInt("DATA_TYPE")
-        return if (dataType == Types.ARRAY) {
-            val baseType = columnType.substringBefore(" ARRAY")
-            normalizedColumnType(baseType) + columnType.replaceBefore(" ARRAY", "")
-        } else {
-            normalizedColumnType(columnType)
-        }
-    }
-
-    @OptIn(InternalApi::class)
-    private fun ResultSet.asColumnMetadata(prefetchedColumnTypes: Map<String, String> = emptyMap()): ColumnMetadata {
-        @OptIn(InternalApi::class)
-        val defaultDbValue = getString("COLUMN_DEF")?.let { sanitizedDefault(it) }
-        val autoIncrement = getString("IS_AUTOINCREMENT") == "YES"
-        val type = getInt("DATA_TYPE")
-        val name = getString("COLUMN_NAME")
-        val nullable = getBoolean("NULLABLE")
-        val size = getInt("COLUMN_SIZE").takeIf { it != 0 }
-        val scale = getInt("DECIMAL_DIGITS").takeIf { it != 0 }
-        val sqlType = getColumnType(this, prefetchedColumnTypes)
-
-        return ColumnMetadata(name, type, sqlType, nullable, size, scale, autoIncrement, defaultDbValue?.takeIf { !autoIncrement })
     }
 
     private val existingIndicesCache = HashMap<Table, List<Index>>()

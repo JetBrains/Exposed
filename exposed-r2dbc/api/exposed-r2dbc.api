@@ -1029,16 +1029,7 @@ public class org/jetbrains/exposed/v1/r2dbc/vendors/PostgreSQLDialectMetadata : 
 	public fun supportsLimitWithUpdateOrDelete (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class org/jetbrains/exposed/v1/r2dbc/vendors/PostgreSQLNGDialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/PostgreSQLDialectMetadata {
-	public fun <init> ()V
-}
-
 public class org/jetbrains/exposed/v1/r2dbc/vendors/SQLServerDialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {
 	public fun <init> ()V
-}
-
-public class org/jetbrains/exposed/v1/r2dbc/vendors/SQLiteDialectMetadata : org/jetbrains/exposed/v1/r2dbc/vendors/DatabaseDialectMetadata {
-	public fun <init> ()V
-	public fun supportsLimitWithUpdateOrDelete (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

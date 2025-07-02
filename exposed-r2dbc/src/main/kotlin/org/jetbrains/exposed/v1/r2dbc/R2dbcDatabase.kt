@@ -106,8 +106,6 @@ class R2dbcDatabase private constructor(
             registerDialect(H2Dialect.dialectName) { H2Dialect() }
             registerDialect(MysqlDialect.dialectName) { MysqlDialect() }
             registerDialect(PostgreSQLDialect.dialectName) { PostgreSQLDialect() }
-            registerDialect(PostgreSQLNGDialect.dialectName) { PostgreSQLNGDialect() }
-            registerDialect(SQLiteDialect.dialectName) { SQLiteDialect() }
             registerDialect(OracleDialect.dialectName) { OracleDialect() }
             registerDialect(SQLServerDialect.dialectName) { SQLServerDialect() }
             registerDialect(MariaDBDialect.dialectName) { MariaDBDialect() }
@@ -115,8 +113,6 @@ class R2dbcDatabase private constructor(
             registerDialectMetadata(H2Dialect.dialectName) { H2DialectMetadata() }
             registerDialectMetadata(MysqlDialect.dialectName) { MysqlDialectMetadata() }
             registerDialectMetadata(PostgreSQLDialect.dialectName) { PostgreSQLDialectMetadata() }
-            registerDialectMetadata(PostgreSQLNGDialect.dialectName) { PostgreSQLNGDialectMetadata() }
-            registerDialectMetadata(SQLiteDialect.dialectName) { SQLiteDialectMetadata() }
             registerDialectMetadata(OracleDialect.dialectName) { OracleDialectMetadata() }
             registerDialectMetadata(SQLServerDialect.dialectName) { SQLServerDialectMetadata() }
             registerDialectMetadata(MariaDBDialect.dialectName) { MariaDBDialectMetadata() }

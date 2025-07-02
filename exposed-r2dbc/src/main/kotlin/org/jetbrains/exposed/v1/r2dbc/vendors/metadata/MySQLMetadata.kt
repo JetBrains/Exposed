@@ -90,9 +90,8 @@ internal open class MySQLTypeProvider : SqlTypeProvider() {
 }
 
 internal open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), MySQLTypeProvider()) {
-    // TODO potential mismatch: MariaDB R2DBC returns User@Host, but MariaDB JDBC returns just User
     override fun getUsername(): String {
-        return "SELECT USER() AS USER_NAME"
+        return "SELECT SUBSTRING_INDEX(USER(), '@', 1) AS USER_NAME"
     }
 
     override fun getReadOnlyMode(): String {
@@ -174,8 +173,11 @@ internal open class MySQLMetadata : MetadataProvider(MySQLPropertyProvider(), My
 
     override fun getIndexInfo(catalog: String, schemaPattern: String, table: String): String {
         // EXPRESSION AS FILTER_CONDITION <-- this actually returns the correct functional index string
-        // but this goes against JDBC metadata query, which always returns null for this result field
-        // Todo: Assess current impact of this mismatch in JDBC migration & consider switching both to use EXPRESSION
+        // but this goes against JDBC metadata query, which always returns null for this result field.
+        // R2dbc migration tests that currently pass would fail if the correct query is used as different results would be returned.
+        // There is no way for built-in JDBC metadata check to use EXPRESSION without switching to a hard-coded SQL query like below.
+        // Leaving the original query so that JDBC and R2DBC migration checks match, until the potential future when
+        // a single metadata query can be shared between the 2 modules.
         return buildString {
             append("SELECT CASE WHEN NON_UNIQUE = 0 THEN 'FALSE' ELSE 'TRUE' END AS NON_UNIQUE, ")
             append("INDEX_NAME, SEQ_IN_INDEX AS ORDINAL_POSITION, ")

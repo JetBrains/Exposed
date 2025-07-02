@@ -141,7 +141,7 @@ internal class H2Metadata : MetadataProvider(H2PropertyProvider, H2TypeProvider)
             append(", ")
             typeProvider.appendDataPrecisions("DATA_TYPE", "COLUMN_SIZE", this)
             append(", ")
-            append("DATA_TYPE AS DATA_TYPE_OG, ")
+            append("DATA_TYPE AS TYPE_NAME, ")
             append("COALESCE(NUMERIC_SCALE, DATETIME_PRECISION) AS DECIMAL_DIGITS, ")
             append("CASE WHEN IS_NULLABLE = 'YES' THEN TRUE ELSE FALSE END AS NULLABLE, ")
             append("COLUMN_DEFAULT AS COLUMN_DEF, ORDINAL_POSITION, IS_IDENTITY AS IS_AUTOINCREMENT ")
@@ -214,8 +214,6 @@ internal class H2Metadata : MetadataProvider(H2PropertyProvider, H2TypeProvider)
             append("AND tc.TABLE_CATALOG = '$catalog' ")
             append("AND tc.TABLE_SCHEMA LIKE '$schemaPattern' ")
             append("AND tc.TABLE_NAME = '$table' ")
-            // TODO check & optimize
-//            append("ORDER BY COLUMN_NAME")
         }
     }
 }
