@@ -149,14 +149,12 @@
                 </p>
                 <code-block lang="Kotlin">
                      val options = PostgresqlConnectionConfiguration.builder()
-                         .host("127.0.0.1")
-                         .port(3004)
-                         .username(TestDB.POSTGRESQL.user)
-                         .password(TestDB.POSTGRESQL.pass)
-                         .database("postgres")
-                         .options(mapOf("lc_messages" to "en_US.UTF-8"))
+                         .host("...")
+                         .username("...")
+                         .password("...")
+                         .database("...")
                          // registered SQL enum name must match final name in database (PG always lower-case wrapped)
-                         .codecRegistrar(EnumCodec.builder().withEnum(enum.lowercase(), Foo::class.java).build())
+                         .codecRegistrar(EnumCodec.builder().withEnum("fooenum", Foo::class.java).build())
                          .build()
                      val cxFactory = PostgresqlConnectionFactory(options)
 

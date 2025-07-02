@@ -77,7 +77,7 @@ class CustomTypeMapper : TypeMapper {
     override fun setValue(
         statement: Statement,
         dialect: DatabaseDialect,
-        typeMapping: R2dbcTypeMapping, // CHANGED
+        typeMapping: R2dbcTypeMapping,
         columnType: IColumnType<*>,
         value: Any?,
         index: Int
