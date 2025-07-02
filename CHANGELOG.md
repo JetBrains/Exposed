@@ -1,3 +1,53 @@
+# 1.0.0-beta-3
+
+## What's Changed
+
+Infrastructure:
+* org.postgresql:postgresql 42.7.7
+* springBoot 3.5.3
+* springFramework 6.2.8
+* org.gradle.toolchains.foojay-resolver 1.0.0
+* org.junit:junit-bom 5.13.2
+* org.xerial:sqlite-jdbc 3.50.1.0
+* log4j2 2.25.0
+* org.jetbrains.kotlinx.binary-compatibility-validator 0.18.0
+
+Breaking changes:
+* fix!: EXPOSED-800 NoClassDefFoundError when using R2DBC with a database other than PostgreSQL by @bog-walk in https://github.com/JetBrains/Exposed/pull/2501
+* deprecate!: Replace PreparedStatementApi.setArray() with version that accepts column type by @bog-walk in https://github.com/JetBrains/Exposed/pull/2504
+* fix!: Join BatchInsertStatement with BaseBatchInsertStatement by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2521
+* fix!: Versioning via Version class instead of BigDecimals by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2520
+* fix!: Introduce SuspendCachableMapWithDefault to avoid using runBlocking inside CachableMapWithDefault by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2525
+* fix!: Move handling Json in R2DBC to TypeMappers by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2526
+
+Features:
+* feat: EXPOSED-786 Add R2dbcDatabase.connect() that matches JDBC constructor option by @bog-walk in https://github.com/JetBrains/Exposed/pull/2517
+
+Bug fixes:
+* fix: EXPOSED-787 Disparity between create/drop index statements when … by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2491
+* fix: EXPOSED-803 ImmutableCachedEntityClass throws NullPointerException on concurrent access by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2506
+* fix: getValue for type mappers by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2509
+* fix: Ordering of type mappers, interface for type mappers registry by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2513
+* revert: insert() and insertAndGetId() body parameter type by @bog-walk in https://github.com/JetBrains/Exposed/pull/2516
+* fix: EXPOSED-806 Inconsistent migration of JSON generated columns on Postgres by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2519
+* fix: Split date/time type mapper by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2518
+* fix: Remove duplications of inProperCase() by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2522
+* fix: Update resource paths in ExposedAotContribution to match current package structure by @marceligrabowski in https://github.com/JetBrains/Exposed/pull/2512
+* refactor: Address multiple metadata TODOs by @bog-walk in https://github.com/JetBrains/Exposed/pull/2531
+* fix: EXPOSED-752 Connection is closed is throw when `newSuspendedTransaction` is used by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2538
+
+Docs:
+* docs: update to 1.0.0-beta-1 and add release details by @vnikolova in https://github.com/JetBrains/Exposed/pull/2486
+* docs: Improve documentation through 'Deep Dive into DAO' section by @Attacktive in https://github.com/JetBrains/Exposed/pull/2495
+* docs: Add missing KDocs for version 1.0.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2505
+* docs: EXPOSED-799 Add migration guide for 1.0.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2498
+* docs: EXPOSED-531 Add sample project using Ktor and R2DBC by @bog-walk in https://github.com/JetBrains/Exposed/pull/2499
+* docs: EXPOSED-534 Add documentation for R2DBC support by @vnikolova in https://github.com/JetBrains/Exposed/pull/2503
+
+Tests:
+* test: Fix spring-boot-starter test blockage following bump to 3.5.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2502
+* test: Enable PostgreSQL tests for R2DBC customEnumeration() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2515
+
 # 1.0.0-beta-2
 
 ## What's Changed
