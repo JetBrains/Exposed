@@ -36,10 +36,6 @@ Bug fixes:
 * refactor: Address multiple metadata TODOs by @bog-walk in https://github.com/JetBrains/Exposed/pull/2531
 * fix: EXPOSED-752 Connection is closed is throw when `newSuspendedTransaction` is used by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2538
 
-Tests:
-* test: Fix spring-boot-starter test blockage following bump to 3.5.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2502
-* test: Enable PostgreSQL tests for R2DBC customEnumeration() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2515
-
 Docs:
 * docs: update to 1.0.0-beta-1 and add release details by @vnikolova in https://github.com/JetBrains/Exposed/pull/2486
 * docs: Improve documentation through 'Deep Dive into DAO' section by @Attacktive in https://github.com/JetBrains/Exposed/pull/2495
@@ -47,6 +43,10 @@ Docs:
 * docs: EXPOSED-799 Add migration guide for 1.0.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2498
 * docs: EXPOSED-531 Add sample project using Ktor and R2DBC by @bog-walk in https://github.com/JetBrains/Exposed/pull/2499
 * docs: EXPOSED-534 Add documentation for R2DBC support by @vnikolova in https://github.com/JetBrains/Exposed/pull/2503
+
+Tests:
+* test: Fix spring-boot-starter test blockage following bump to 3.5.0 by @bog-walk in https://github.com/JetBrains/Exposed/pull/2502
+* test: Enable PostgreSQL tests for R2DBC customEnumeration() by @bog-walk in https://github.com/JetBrains/Exposed/pull/2515
 
 # 1.0.0-beta-2
 
