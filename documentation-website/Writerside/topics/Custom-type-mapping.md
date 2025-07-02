@@ -54,7 +54,8 @@ abstract class RangeR2dbcColumnType<T : Comparable<T>, R : ClosedRange<T>>(
 }
 ```
 
-Concrete subclasses like `IntRangeColumnType` can then implement `toRange()` to handle parsing.
+Concrete subclasses like `IntRangeColumnType` can then implement `.toRange()` to handle parsing. For more information,
+see [](Custom-data-types.topic#ranges-of-data).
 
 ## Implementing a `TypeMapper`
 
