@@ -41,7 +41,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-beta-2
+        <div class="library-version" id="library-version">1.0.0-beta-3
         </div>
         <div class="navigation-controls">
         <div class="filter-section filter-section_loading" id="filter-section">
@@ -94,7 +94,7 @@
   <div class="breadcrumbs"><a href="../../index.html">exposed-core</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.core</a><span class="delimiter">/</span><span class="current">DatabaseApi</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Database</span><wbr><span><span>Api</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="index.html">DatabaseApi</a></div><p class="paragraph">Base class representing the underlying database to which connections are made and on which transaction tasks are performed.</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="index.html">DatabaseApi</a></div><p class="paragraph">Base class representing the underlying database to which connections are made and on which transaction tasks are performed.</p><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>config</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Configuration holding all parameters that apply to a transaction using this database instance.</p></div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
@@ -295,7 +295,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="vendor.html">vendor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The name of the database based on the name of the underlying JDBC driver.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="vendor.html">vendor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">The name of the database based on the name of the underlying driver implementation.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -310,7 +310,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="version.html">version</a><span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a></div><div class="brief "><p class="paragraph">The version number of the database as a <a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a>.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="version.html">version</a><span class="token operator">: </span><a href="../-version/index.html">Version</a></div><div class="brief "><p class="paragraph">The version number of the database as a <a href="../-version/index.html">Version</a>.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -319,22 +319,7 @@
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="">Functions</h2>
-        <div class="table"><a data-name="259275222%2FFunctions%2F-1435837140" anchor-label="isVersionCovers" id="259275222%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
-          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="is-version-covers.html"><span>is</span><wbr><span>Version</span><wbr><span><span>Covers</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="259275222%2FFunctions%2F-1435837140"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="is-version-covers.html"><span class="token function">isVersionCovers</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">version<span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the version number of the database is equal to or greater than the provided <a href="is-version-covers.html">version</a>.</p></div><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="is-version-covers.html"><span class="token function">isVersionCovers</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">majorVersion<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">minorVersion<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the version number of the database is equal to or greater than the provided <a href="is-version-covers.html">majorVersion</a> and <a href="is-version-covers.html">minorVersion</a>.</p></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="-1609364492%2FFunctions%2F-1435837140" anchor-label="toString" id="-1609364492%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+        <div class="table"><a data-name="-1609364492%2FFunctions%2F-1435837140" anchor-label="toString" id="-1609364492%2FFunctions%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
           <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">

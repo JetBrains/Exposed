@@ -41,7 +41,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-beta-2
+        <div class="library-version" id="library-version">1.0.0-beta-3
         </div>
         <div class="navigation-controls">
         <div class="filter-section filter-section_loading" id="filter-section">
@@ -95,7 +95,7 @@
   <div class="cover ">
     <h1 class="cover"><span>default</span><wbr><span>Isolation</span><wbr><span><span>Level</span></span></h1>
   </div>
-  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">var </span><a href="default-isolation-level.html">defaultIsolationLevel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><p class="paragraph">Default transaction isolation level. If not specified, the database-specific level will be used. This can be overridden on a per-transaction level by specifying the <code class="lang-kotlin">transactionIsolation</code> parameter of the <code class="lang-kotlin">transaction</code> function. Check Database.getDefaultIsolationLevel for the database defaults.</p></div></div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">var </span><a href="default-isolation-level.html">defaultIsolationLevel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><p class="paragraph">Default transaction isolation level. If not specified, the database-specific level will be used. This can be overridden on a per-transaction level by specifying the <code class="lang-kotlin">transactionIsolation</code> parameter of the <code class="lang-kotlin">transaction</code> function.</p><p class="paragraph">Check <code class="lang-kotlin">Database.getDefaultIsolationLevel()</code> for the database defaults.</p><p class="paragraph">If using Exposed with an R2DBC driver, <code class="lang-kotlin">defaultR2dbcIsolationLevel</code> should be used directly instead.</p></div></div>
 </div>
     <div class="footer">
         <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>

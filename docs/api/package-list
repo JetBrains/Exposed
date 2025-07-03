@@ -10,6 +10,7 @@ org.jetbrains.exposed.v1.core.ops
 org.jetbrains.exposed.v1.core.statements
 org.jetbrains.exposed.v1.core.statements.api
 org.jetbrains.exposed.v1.core.transactions
+org.jetbrains.exposed.v1.core.utils
 org.jetbrains.exposed.v1.core.vendors
 org.jetbrains.exposed.v1.exceptions
 module:exposed-crypt
@@ -37,6 +38,14 @@ module:exposed-migration
 org.jetbrains.exposed.v1.migration
 module:exposed-money
 org.jetbrains.exposed.v1.money
+module:exposed-r2dbc
+org.jetbrains.exposed.v1.r2dbc
+org.jetbrains.exposed.v1.r2dbc.mappers
+org.jetbrains.exposed.v1.r2dbc.mtc
+org.jetbrains.exposed.v1.r2dbc.statements
+org.jetbrains.exposed.v1.r2dbc.statements.api
+org.jetbrains.exposed.v1.r2dbc.transactions
+org.jetbrains.exposed.v1.r2dbc.vendors
 module:exposed-spring-boot-starter
 org.jetbrains.exposed.v1.spring.boot
 org.jetbrains.exposed.v1.spring.boot.autoconfigure
