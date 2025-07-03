@@ -361,4 +361,17 @@ class AliasesTests : DatabaseTestsBase() {
 
         assertEquals("all_weight.task_weight", aliasExpressionString)
     }
+
+    @Test
+    fun testColumnCastedToExpression() {
+        val tester = object : IntIdTable("Test") {
+            val weight = integer("weight")
+        }
+
+        val column = tester.weight
+        val query: QueryAlias = tester.select(column).alias("all_weight")
+
+        assertNotNull(query[column as Expression<Int>])
+        assertNotNull(query[column as ExpressionWithColumnType<Int>])
+    }
 }
