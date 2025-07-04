@@ -100,6 +100,7 @@ public final class org/jetbrains/exposed/v1/jdbc/IterableExKt {
 public class org/jetbrains/exposed/v1/jdbc/JdbcTransaction : org/jetbrains/exposed/v1/core/Transaction, org/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionInterface {
 	public static final field Companion Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/transactions/JdbcTransactionInterface;)V
+	public final fun addLogger ([Lorg/jetbrains/exposed/v1/core/SqlLogger;)Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
 	public fun close ()V
 	public final fun closeExecutedStatements ()V
 	public fun commit ()V
@@ -132,10 +133,6 @@ public class org/jetbrains/exposed/v1/jdbc/JdbcTransaction : org/jetbrains/expos
 
 public final class org/jetbrains/exposed/v1/jdbc/JdbcTransaction$Companion {
 	public final fun getGlobalInterceptors ()Ljava/util/ArrayList;
-}
-
-public final class org/jetbrains/exposed/v1/jdbc/JdbcTransactionKt {
-	public static final fun addLogger (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;[Lorg/jetbrains/exposed/v1/core/SqlLogger;)Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
 }
 
 public final class org/jetbrains/exposed/v1/jdbc/LazySizedCollection : org/jetbrains/exposed/v1/jdbc/SizedIterable {

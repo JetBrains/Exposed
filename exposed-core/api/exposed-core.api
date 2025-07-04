@@ -2292,6 +2292,7 @@ public final class org/jetbrains/exposed/v1/core/TimesOp : org/jetbrains/exposed
 
 public abstract class org/jetbrains/exposed/v1/core/Transaction : org/jetbrains/exposed/v1/core/UserDataHolder, org/jetbrains/exposed/v1/core/transactions/TransactionInterface {
 	public fun <init> ()V
+	public fun addLogger ([Lorg/jetbrains/exposed/v1/core/SqlLogger;)Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
 	public final fun fullIdentity (Lorg/jetbrains/exposed/v1/core/Column;)Ljava/lang/String;
 	public final fun getDebug ()Z
 	public final fun getDuration ()J
