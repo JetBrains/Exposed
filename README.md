@@ -20,7 +20,7 @@
 
 ## Welcome to **Exposed**, an ORM framework for [Kotlin](https://github.com/JetBrains/kotlin).
 
-Exposed is a lightweight SQL library on top of a JDBC driver for the Kotlin language.
+[Exposed](https://www.jetbrains.com/exposed/) is a lightweight SQL library on top of a JDBC driver for the Kotlin language.
 Exposed has two flavors of database access: typesafe SQL wrapping DSL and lightweight Data Access Objects (DAO).
 
 With Exposed, you have two options for database access: wrapping DSL and a lightweight DAO. Our official mascot is the cuttlefish, which is well-known for its outstanding mimicry ability that enables it to blend seamlessly into any environment.
@@ -193,7 +193,8 @@ Currently, Exposed is available for **maven/gradle builds**. Check the [Maven Ce
 <br><br>
 For more information visit the links below:
 
--   [Documentation](https://jetbrains.github.io/Exposed/home.html) with examples and docs
+-   [Website](https://www.jetbrains.com/exposed/)
+-   [Documentation](https://www.jetbrains.com/help/exposed/home.html) with examples and docs
 -   [Contributing to Exposed](#contributing)
 -   [Migration Guide](https://jetbrains.github.io/Exposed/migration-guide.html)
 -   [Breaking changes](https://jetbrains.github.io/Exposed/breaking-changes.html) and any migration details
