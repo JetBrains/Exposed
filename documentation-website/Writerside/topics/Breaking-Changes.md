@@ -1,5 +1,11 @@
 # Breaking Changes
 
+## 1.0.0-beta-4 <!--temporary version placeholder-->
+
+* `addLogger()` has been converted into a `Transaction` method (instead of an extension method of `JdbcTransaction` and `R2dbcTransaction`),
+  so its logic can remain common within `exposed-core`. Any explicit imports, like `import org.jetbrains.exposed.v1.jdbc.addLogger`,
+  will no longer compile and should be removed.
+
 ## 1.0.0-beta-3
 
 * `exposed-core` interface `PreparedStatementApi` has a new `set()` method that will require an override if implemented.
