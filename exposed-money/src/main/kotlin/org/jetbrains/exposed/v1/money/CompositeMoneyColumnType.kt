@@ -11,7 +11,7 @@ import javax.money.MonetaryAmount
  * - A numeric column, with the specified [amountName], for storing numbers with the specified [precision] and [scale].
  * - A character column, with the specified [currencyName], for storing currency (as javax.money.CurrencyUnit).
  *
- * @sample org.jetbrains.exposed.v1.sql.money.MoneyDefaultsTest.TableWithDBDefault
+ * @sample org.jetbrains.exposed.v1.money.MoneyDefaultsTest.TableWithDBDefault
  */
 fun Table.compositeMoney(precision: Int, scale: Int, amountName: String, currencyName: String = amountName + "_C") =
     registerCompositeColumn(CompositeMoneyColumn(this, precision, scale, amountName, currencyName))
@@ -19,7 +19,7 @@ fun Table.compositeMoney(precision: Int, scale: Int, amountName: String, currenc
 /**
  * Creates a composite column made up of a decimal column and a currency column.
  *
- * @sample org.jetbrains.exposed.v1.sql.money.MoneyBaseTest.testUsingManualCompositeMoneyColumns
+ * @sample org.jetbrains.exposed.v1.money.MoneyBaseTest.testUsingManualCompositeMoneyColumns
  */
 fun Table.compositeMoney(
     amountColumn: Column<BigDecimal>,
@@ -35,7 +35,7 @@ fun Table.compositeMoney(
 /**
  * Creates a composite column made up of a nullable decimal column and a nullable currency column.
  *
- * @sample org.jetbrains.exposed.v1.sql.money.MoneyBaseTest.testUsingManualCompositeMoneyColumns
+ * @sample org.jetbrains.exposed.v1.money.MoneyBaseTest.testUsingManualCompositeMoneyColumns
  */
 @JvmName("compositeMoneyNullable")
 fun Table.compositeMoney(

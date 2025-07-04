@@ -22,7 +22,7 @@ import javax.sql.DataSource
  * @param databaseConfig The configuration that defines custom properties to be used with connections.
  * If none is specified, the default configuration values will be used.
  * @property showSql Whether transaction queries should be logged. Defaults to `false`.
- * @sample org.jetbrains.exposed.spring.TestConfig
+ * @sample org.jetbrains.exposed.v1.spring.transaction.TestConfig
  */
 class SpringTransactionManager(
     dataSource: DataSource,

@@ -63,7 +63,7 @@ object EntityHook {
     /**
      * Registers a specific state-change [action] for alerts and returns the [action].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityHookTest.testCallingFlushNotifiesEntityHookSubscribers
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityHookTest.testCallingFlushNotifiesEntityHookSubscribers
      */
     fun subscribe(action: (EntityChange) -> Unit): (EntityChange) -> Unit {
         entitySubscribers.add(action)

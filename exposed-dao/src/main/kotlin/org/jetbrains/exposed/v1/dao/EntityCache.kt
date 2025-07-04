@@ -42,7 +42,7 @@ class EntityCache(private val transaction: Transaction) {
      * is greater than the current cache size, the adjusted cache will only be filled with more entities after
      * they are retrieved, for example by calling [EntityClass.all].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityCacheTests.changeEntityCacheMaxEntitiesToStoreInMiddleOfTransaction
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityCacheTests.changeEntityCacheMaxEntitiesToStoreInMiddleOfTransaction
      */
     var maxEntitiesToStore = transaction.db.config.maxEntitiesToStoreInCachePerEntity
         set(value) {
@@ -72,7 +72,7 @@ class EntityCache(private val transaction: Transaction) {
      * Returns a [SizedIterable] containing all child [Entity] instances that reference the parent entity with
      * the provided [sourceId] using the specified [key] column.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.preloadReferrersOnAnEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.preloadReferrersOnAnEntity
      */
     fun <R : Entity<*>> getReferrers(sourceId: EntityID<*>, key: Column<*>): SizedIterable<R>? {
         return referrers[key]?.get(sourceId) as? SizedIterable<R>
@@ -102,7 +102,7 @@ class EntityCache(private val transaction: Transaction) {
     /**
      * Gets all [Entity] instances in this [EntityCache] that match the associated [EntityClass].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityCacheTests.testPerTransactionEntityCacheLimit
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityCacheTests.testPerTransactionEntityCacheLimit
      */
     fun <ID : Any, T : Entity<ID>> findAll(f: EntityClass<ID, T>): Collection<T> = getMap(f).values as Collection<T>
 
@@ -306,7 +306,7 @@ class EntityCache(private val transaction: Transaction) {
      *
      * @param flush By default, pending inserts and updates for all cached entities will first be sent to the
      * database. If this is set to `false`, any pending operations will not be flushed and will be removed as well.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityCacheTests.changeEntityCacheMaxEntitiesToStoreInMiddleOfTransaction
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityCacheTests.changeEntityCacheMaxEntitiesToStoreInMiddleOfTransaction
      */
     fun clear(flush: Boolean = true) {
         if (flush) flush()
@@ -344,7 +344,7 @@ class EntityCache(private val transaction: Transaction) {
  * Sends all pending [Entity] inserts and updates stored in this transaction's [EntityCache] to the database.
  *
  * @return A list of all new entities that were stored as scheduled for insert.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testInsertChildWithFlush
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testInsertChildWithFlush
  */
 fun Transaction.flushCache(): List<Entity<*>> {
     with(entityCache) {

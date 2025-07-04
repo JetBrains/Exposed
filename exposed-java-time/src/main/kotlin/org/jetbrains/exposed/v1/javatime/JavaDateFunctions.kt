@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.javatime
 
-import org.jetbrains.exposed.v1.*
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -52,7 +51,7 @@ sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Functio
 /**
  * Represents an SQL function that returns the current date, as [LocalDate].
  *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ * @sample org.jetbrains.exposed.v1.javatime.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
 object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
@@ -68,21 +67,21 @@ object CurrentDate : Function<LocalDate>(JavaLocalDateColumnType.INSTANCE) {
 /**
  * Represents an SQL function that returns the current date and time, as [LocalDateTime].
  *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ * @sample org.jetbrains.exposed.v1.javatime.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
 object CurrentDateTime : CurrentTimestampBase<LocalDateTime>(JavaLocalDateTimeColumnType.INSTANCE)
 
 /**
  * Represents an SQL function that returns the current date and time, as [Instant].
  *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ * @sample org.jetbrains.exposed.v1.javatime.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
 object CurrentTimestamp : CurrentTimestampBase<Instant>(JavaInstantColumnType.INSTANCE)
 
 /**
  * Represents an SQL function that returns the current date and time with time zone, as [OffsetDateTime].
  *
- * @sample org.jetbrains.exposed.DefaultsTest.testTimestampWithTimeZoneDefaults
+ * @sample org.jetbrains.exposed.v1.javatime.DefaultsTest.testTimestampWithTimeZoneDefaults
  */
 object CurrentTimestampWithTimeZone : CurrentTimestampBase<OffsetDateTime>(JavaOffsetDateTimeColumnType.INSTANCE)
 

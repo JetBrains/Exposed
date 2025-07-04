@@ -294,7 +294,7 @@ class TransactionManager(
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
  * @return The final result of the [statement] block.
- * @sample org.jetbrains.exposed.v1.sql.tests.h2.MultiDatabaseTest.testTransactionWithDatabase
+ * @sample org.jetbrains.exposed.v1.tests.h2.MultiDatabaseTest.testTransactionWithDatabase
  */
 fun <T> transaction(db: Database? = null, statement: JdbcTransaction.() -> T): T =
     transaction(
@@ -312,7 +312,7 @@ fun <T> transaction(db: Database? = null, statement: JdbcTransaction.() -> T): T
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
  * @return The final result of the [statement] block.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.ConnectionTimeoutTest.testTransactionRepetitionWithDefaults
+ * @sample org.jetbrains.exposed.v1.tests.shared.ConnectionTimeoutTest.testTransactionRepetitionWithDefaults
  */
 fun <T> transaction(
     transactionIsolation: Int,
@@ -391,7 +391,7 @@ fun <T> transaction(
  * or the value associated with the parent transaction (if this function is invoked in an existing transaction).
  *
  * @return The final result of the [statement] block.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.RollbackTransactionTest.testRollbackWithoutSavepoints
+ * @sample org.jetbrains.exposed.v1.tests.shared.RollbackTransactionTest.testRollbackWithoutSavepoints
  */
 fun <T> inTopLevelTransaction(
     transactionIsolation: Int,

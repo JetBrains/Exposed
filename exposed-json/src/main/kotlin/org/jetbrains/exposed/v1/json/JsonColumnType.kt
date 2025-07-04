@@ -109,7 +109,7 @@ fun <T : Any> Table.json(
  * @param jsonConfig Configured instance of the `Json` class
  * @param kSerializer Serializer responsible for the representation of a serial form of type [T].
  * Defaults to a generic serializer for type [T]
- * @sample org.jetbrains.exposed.v1.sql.json.JsonColumnTests.testLoggerWithJsonCollections
+ * @sample org.jetbrains.exposed.v1.json.JsonColumnTests.testLoggerWithJsonCollections
  */
 inline fun <reified T : Any> Table.json(
     name: String,

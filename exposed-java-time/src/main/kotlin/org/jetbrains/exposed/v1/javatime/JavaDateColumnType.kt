@@ -172,7 +172,7 @@ private val LocalDate.millis get() = atStartOfDay(ZoneId.systemDefault()).toEpoc
 /**
  * Column for storing dates, as [LocalDate].
  *
- * @sample org.jetbrains.exposed.v1.sql.javatime.date
+ * @sample date
  */
 @Suppress("MagicNumber")
 class JavaLocalDateColumnType : ColumnType<LocalDate>(), IDateColumnType {
@@ -231,7 +231,7 @@ class JavaLocalDateColumnType : ColumnType<LocalDate>(), IDateColumnType {
 /**
  * Column for storing dates and times without time zone, as [LocalDateTime].
  *
- * @sample org.jetbrains.exposed.v1.sql.javatime.datetime
+ * @sample datetime
  */
 @Suppress("MagicNumber")
 class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType {
@@ -303,7 +303,7 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
 /**
  * Column for storing times, as [LocalTime].
  *
- * @sample org.jetbrains.exposed.v1.sql.javatime.time
+ * @sample time
  */
 class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
     override val hasTimePart: Boolean = true
@@ -390,7 +390,7 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
 /**
  * Column for storing dates and times without time zone, as [Instant].
  *
- * @sample org.jetbrains.exposed.v1.sql.javatime.timestamp
+ * @sample timestamp
  */
 class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     override val hasTimePart: Boolean = true
@@ -457,7 +457,7 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
 /**
  * Column for storing dates and times with time zone, as [OffsetDateTime].
  *
- * @sample org.jetbrains.exposed.v1.sql.javatime.timestampWithTimeZone
+ * @sample timestampWithTimeZone
  */
 class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnType {
     override val hasTimePart: Boolean = true
@@ -521,7 +521,7 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
 /**
  * Column for storing time-based amounts of time, as [Duration].
  *
- * @sample org.jetbrains.exposed.v1.sql.javatime.duration
+ * @sample duration
  */
 class JavaDurationColumnType : ColumnType<Duration>() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()

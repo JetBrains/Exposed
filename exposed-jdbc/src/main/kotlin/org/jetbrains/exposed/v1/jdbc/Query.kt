@@ -90,7 +90,7 @@ open class Query(
      *
      * @param body Builder for the new column set defined using `select()`, with the current [set]'s `source`
      * property used as the receiver and the current [set] as an argument.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.AdjustQueryTests.testAdjustQuerySlice
      */
     inline fun adjustSelect(body: ColumnSet.(FieldSet) -> Query): Query = apply { set = set.source.body(set).set }
 
@@ -99,7 +99,7 @@ open class Query(
      * while preserving its `fields` property.
      *
      * @param body Builder for the new column set, with the previous column set value as the receiver.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.AdjustQueryTests.testAdjustQueryColumnSet
      */
     inline fun adjustColumnSet(body: ColumnSet.() -> ColumnSet): Query {
         return adjustSelect { oldSlice -> body().select(oldSlice.fields) }
@@ -109,21 +109,21 @@ open class Query(
      * Changes the [where] field of this query.
      *
      * @param body Builder for the new `WHERE` condition, with the previous value used as the receiver.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.AdjustQueryTests.testAdjustQueryWhere
      */
     fun adjustWhere(body: Op<Boolean>?.() -> Op<Boolean>): Query = apply { where = where.body() }
 
     /**
      * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testSelect
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testSelect
      */
     fun where(predicate: SqlExpressionBuilder.() -> Op<Boolean>): Query = where(SqlExpressionBuilder.predicate())
 
     /**
      * Appends a `WHERE` clause with the specified [predicate] to this `SELECT` query.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.ExistsTests.testExists01
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.ExistsTests.testExists01
      */
     fun where(predicate: Op<Boolean>): Query {
         where?.let {
@@ -142,7 +142,7 @@ open class Query(
      * @param batchSize Size of each sub-collection to return.
      * @param sortOrder Order in which the results should be retrieved.
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.FetchBatchedResultsTests.testFetchBatchedResultsWithWhereAndSetBatchSize
      */
     fun fetchBatchedResults(
         batchSize: Int = 1000,
@@ -224,7 +224,7 @@ open class Query(
     /**
      * Returns the number of results retrieved after query execution.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.InsertSelectTests.testInsertSelect02
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.InsertSelectTests.testInsertSelect02
      */
     override fun count(): Long {
         return if (distinct || distinctOn != null || groupedByColumns.isNotEmpty() || limit != null || offset > 0) {
@@ -273,7 +273,7 @@ open class Query(
     /**
      * Returns whether any results were retrieved by query execution.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testSizedIterable
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testSizedIterable
      */
     override fun empty(): Boolean {
         val oldLimit = limit

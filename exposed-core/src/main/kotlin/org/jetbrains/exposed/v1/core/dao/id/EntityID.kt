@@ -8,8 +8,8 @@ package org.jetbrains.exposed.v1.core.dao.id
  *
  * @param table The [IdTable] that stores the identity value.
  * @param id The value of type [T] to store.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTestsData.YTable
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.InsertTests.testInsertWithPredefinedId
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData.YTable
+ * @sample org.jetbrains.exposed.v1.tests.shared.dml.InsertTests.testInsertWithPredefinedId
  */
 open class EntityID<T : Any> protected constructor(val table: IdTable<T>, id: T?) {
     constructor(id: T, table: IdTable<T>) : this(table, id)

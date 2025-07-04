@@ -82,28 +82,28 @@ sealed class CurrentTimestampBase<T>(columnType: IColumnType<T & Any>) : Functio
 /**
  * Represents an SQL function that returns the current date and time, as [LocalDateTime].
  *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ * @sample org.jetbrains.exposed.v1.datetime.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
 object CurrentDateTime : CurrentTimestampBase<LocalDateTime>(KotlinLocalDateTimeColumnType.INSTANCE)
 
 /**
  * Represents an SQL function that returns the current date and time, as [Instant].
  *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ * @sample org.jetbrains.exposed.v1.datetime.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
 object CurrentTimestamp : CurrentTimestampBase<Instant>(KotlinInstantColumnType.INSTANCE)
 
 /**
  * Represents an SQL function that returns the current date and time with time zone, as [OffsetDateTime].
  *
- * @sample org.jetbrains.exposed.DefaultsTest.testTimestampWithTimeZoneDefaults
+ * @sample org.jetbrains.exposed.v1.datetime.DefaultsTest.testTimestampWithTimeZoneDefaults
  */
 object CurrentTimestampWithTimeZone : CurrentTimestampBase<OffsetDateTime>(KotlinOffsetDateTimeColumnType.INSTANCE)
 
 /**
  * Represents an SQL function that returns the current date, as [LocalDate].
  *
- * @sample org.jetbrains.exposed.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
+ * @sample org.jetbrains.exposed.v1.datetime.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
 object CurrentDate : Function<LocalDate>(KotlinLocalDateColumnType.INSTANCE) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {

@@ -86,7 +86,7 @@ private fun oracleDateLiteral(dateTime: DateTime) =
 /**
  * Column for storing dates, as [DateTime]. If [time] is set to `true`, both date and time data is stored.
  *
- * @sample org.jetbrains.exposed.v1.sql.jodatime.datetime
+ * @sample datetime
  */
 class DateColumnType(val time: Boolean) : ColumnType<DateTime>(), IDateColumnType {
     override val hasTimePart: Boolean = time
@@ -195,7 +195,7 @@ class DateColumnType(val time: Boolean) : ColumnType<DateTime>(), IDateColumnTyp
 /**
  * Column for storing times, as [LocalTime].
  *
- * @sample org.jetbrains.exposed.v1.sql.jodatime.time
+ * @sample time
  */
 class LocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
     override val hasTimePart: Boolean = true
@@ -256,7 +256,7 @@ class LocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
 /**
  * Column for storing dates and times with time zone, as [DateTime].
  *
- * @sample org.jetbrains.exposed.v1.sql.jodatime.timestampWithTimeZone
+ * @sample timestampWithTimeZone
  */
 class DateTimeWithTimeZoneColumnType : ColumnType<DateTime>(), IDateColumnType {
     override val hasTimePart: Boolean = true

@@ -122,7 +122,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
      * Changes the [having] field of this query.
      *
      * @param body Builder for the new `HAVING` condition, with the previous value used as the receiver.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.AdjustQueryTests.testAdjustQueryHaving
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.AdjustQueryTests.testAdjustQueryHaving
      */
     fun adjustHaving(body: Op<Boolean>?.() -> Op<Boolean>): T = apply { having = having.body() } as T
 
@@ -132,7 +132,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
      * @param position The [CommentPosition] in the query that should be assigned a new value.
      * @param content The content of the comment that should be set. If left `null`, any comment at the specified
      * [position] will be removed.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testSelectWithComment
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testSelectWithComment
      */
     fun adjustComments(position: CommentPosition, content: String? = null): T = apply {
         content?.let {
@@ -159,7 +159,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     /**
      * Appends a `GROUP BY` clause with the specified [columns] to this `SELECT` query.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.GroupByTests.testGroupBy02
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupBy02
      */
     fun groupBy(vararg columns: Expression<*>): T {
         for (column in columns) {
@@ -171,7 +171,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     /**
      * Appends a `HAVING` clause with the specified [op] condition to this `SELECT` query.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.GroupByTests.testGroupBy02
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupBy02
      */
     fun having(op: SqlExpressionBuilder.() -> Op<Boolean>): T {
         val oop = SqlExpressionBuilder.op()
@@ -191,7 +191,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
      *
      * @throws IllegalStateException If a comment has already been appended at the specified [position]. An existing
      * comment can be removed or altered by [adjustComments].
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testSelectWithComment
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testSelectWithComment
      */
     fun comment(content: String, position: CommentPosition = CommentPosition.FRONT): T {
         comments[position]?.let {

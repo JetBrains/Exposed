@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.jodatime
 
-import org.jetbrains.exposed.v1.*
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -35,7 +34,7 @@ class Time<T : DateTime?>(val expr: Expression<T>) : Function<LocalTime>(LocalTi
 /**
  * Represents an SQL function that returns the current date and time, as [DateTime]
  *
- * @sample org.jetbrains.exposed.JodaTimeDefaultsTest.testDefaultExpressions02
+ * @sample org.jetbrains.exposed.v1.jodatime.JodaTimeDefaultsTest.testDefaultExpressions02
  */
 object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
@@ -49,7 +48,7 @@ object CurrentDateTime : Function<DateTime>(DateColumnType(true)) {
 /**
  * Represents an SQL function that returns the current date, as [DateTime].
  *
- * @sample org.jetbrains.exposed.JodaTimeDefaultsTest.testDefaultExpressions02
+ * @sample org.jetbrains.exposed.v1.jodatime.JodaTimeDefaultsTest.testDefaultExpressions02
  */
 object CurrentDate : Function<DateTime>(DateColumnType(false)) {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
