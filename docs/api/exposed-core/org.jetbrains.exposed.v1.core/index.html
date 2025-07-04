@@ -41,7 +41,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-beta-2
+        <div class="library-version" id="library-version">1.0.0-beta-3
         </div>
         <div class="navigation-controls">
         <div class="filter-section filter-section_loading" id="filter-section">
@@ -110,7 +110,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><a href="-abstract-query/index.html">T</a><span class="token operator"> : </span><a href="-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><a href="-abstract-query/index.html">T</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">targets<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-table/index.html">Table</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core.statements/-statement/index.html">Statement</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core.statements.api/-result-api/index.html">ResultApi</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class representing an SQL query that returns a ResultSet when executed.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><a href="-abstract-query/index.html">T</a><span class="token operator"> : </span><a href="-abstract-query/index.html">AbstractQuery</a><span class="token operator">&lt;</span><a href="-abstract-query/index.html">T</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">targets<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-table/index.html">Table</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <a href="../org.jetbrains.exposed.v1.core.statements/-statement/index.html">Statement</a><span class="token operator">&lt;</span><a href="../org.jetbrains.exposed.v1.core.statements.api/-result-api/index.html">ResultApi</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Base class representing an SQL query that returns a database result when executed.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -770,7 +770,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-database-config/index.html">DatabaseConfig</a></div><div class="brief "><p class="paragraph">A configuration for a <a href="-database-api/index.html">DatabaseApi</a> instance.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-database-config/index.html">DatabaseConfig</a></div><div class="brief "><p class="paragraph">Base configuration for a <a href="-database-api/index.html">DatabaseApi</a> instance.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -2285,7 +2285,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-sort-order/index.html">SortOrder</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-sort-order/index.html">SortOrder</a><span class="token operator">&gt; </span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-sort-order/index.html">SortOrder</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-sort-order/index.html">SortOrder</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents the SQL keywords for defining sort order in an <code class="lang-kotlin">ORDER BY</code> clause.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -2495,7 +2495,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-transaction/index.html">Transaction</a> : <a href="-user-data-holder/index.html">UserDataHolder</a>, <a href="../org.jetbrains.exposed.v1.core.transactions/-transaction-interface/index.html">TransactionInterface</a></div><div class="brief "><p class="paragraph">Class representing a unit block of work that is performed on a database.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-transaction/index.html">Transaction</a> : <a href="-user-data-holder/index.html">UserDataHolder</a>, <a href="../org.jetbrains.exposed.v1.core.transactions/-transaction-interface/index.html">TransactionInterface</a></div><div class="brief "><p class="paragraph">Base class representing a unit block of work that is performed on a database.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -2706,6 +2706,21 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-var-samp/index.html">VarSamp</a><span class="token operator">&lt;</span><a href="-var-samp/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>expression<span class="token operator">: </span><a href="-expression/index.html">Expression</a><span class="token operator">&lt;</span><a href="-var-samp/index.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">scale<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="-function/index.html">Function</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span>, <a href="-window-function/index.html">WindowFunction</a><span class="token operator">&lt;</span><a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a><span class="token operator">?</span><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Represents an SQL function that returns the sample variance of the non-null input values (square of the sample standard deviation), or <code class="lang-kotlin">null</code> if there are no non-null values.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1887218458%2FClasslikes%2F-1435837140" anchor-label="Version" id="-1887218458%2FClasslikes%2F-1435837140" data-filterable-set=":exposed-core/main"></a>
+          <div class="table-row" data-filterable-current=":exposed-core/main" data-filterable-set=":exposed-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-version/index.html"><span><span>Version</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1887218458%2FClasslikes%2F-1435837140"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-version/index.html">Version</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>major<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>minor<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>patch<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>

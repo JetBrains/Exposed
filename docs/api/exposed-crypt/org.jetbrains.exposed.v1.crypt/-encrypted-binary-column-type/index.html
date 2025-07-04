@@ -41,7 +41,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-beta-2
+        <div class="library-version" id="library-version">1.0.0-beta-3
         </div>
         <div class="navigation-controls">
         <div class="filter-section filter-section_loading" id="filter-section">
@@ -94,7 +94,14 @@
   <div class="breadcrumbs"><a href="../../index.html">exposed-crypt</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.crypt</a><span class="delimiter">/</span><span class="current">EncryptedBinaryColumnType</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Encrypted</span><wbr><span>Binary</span><wbr><span>Column</span><wbr><span><span>Type</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">EncryptedBinaryColumnType</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">encryptor<span class="token operator">: </span><a href="../-encryptor/index.html">Encryptor</a><span class="token punctuation">, </span></span><span class="parameter ">length<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-column-with-transform/index.html">ColumnWithTransform</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token operator">&gt; </span></div><p class="paragraph">Binary column for storing encrypted binary strings of a specific length, using the provided <a href="../../../exposed-crypt/org.jetbrains.exposed.v1.crypt/-encrypted-binary-column-type/encryptor.html">encryptor</a>.</p><h4 class="">Samples</h4>org.jetbrains.exposed.crypt.encryptedBinary</div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">EncryptedBinaryColumnType</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">encryptor<span class="token operator">: </span><a href="../-encryptor/index.html">Encryptor</a><span class="token punctuation">, </span></span><span class="parameter ">length<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <a href="../../../exposed-core/org.jetbrains.exposed.v1.core/-column-with-transform/index.html">ColumnWithTransform</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a><span class="token operator">&gt; </span></div><p class="paragraph">Binary column for storing encrypted binary strings of a specific length, using the provided <a href="../../../exposed-crypt/org.jetbrains.exposed.v1.crypt/-encrypted-binary-column-type/encryptor.html">encryptor</a>.</p><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Table
+
+fun main() { 
+   //sampleStart 
+   registerColumn(name, EncryptedBinaryColumnType(encryptor, cipherByteLength)) 
+   //sampleEnd
+}</code></pre></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
