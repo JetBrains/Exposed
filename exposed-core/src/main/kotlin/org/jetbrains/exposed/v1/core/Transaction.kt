@@ -101,4 +101,11 @@ abstract class Transaction : UserDataHolder(), TransactionInterface {
 
     /** Returns the string identifier of a [column], based on its [Column.name]. */
     fun identity(column: Column<*>): String = db.identifierManager.quoteIdentifierWhenWrongCaseOrNecessary(column.name)
+
+    /** Adds one or more [SqlLogger]s to this [Transaction]. */
+    open fun addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
+        return CompositeSqlLogger().apply {
+            logger.forEach { this.addLogger(it) }
+        }
+    }
 }

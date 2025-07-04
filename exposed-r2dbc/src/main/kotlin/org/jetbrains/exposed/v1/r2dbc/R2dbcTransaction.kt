@@ -240,6 +240,12 @@ open class R2dbcTransaction(
         executedStatements.clear()
     }
 
+    final override fun addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
+        return super.addLogger(*logger).apply {
+            registerInterceptor(this)
+        }
+    }
+
     internal fun getRetryInterval(): Long = if (maxAttempts > 0) {
         maxOf((maxRetryDelay - minRetryDelay) / (maxAttempts + 1), 1)
     } else {
@@ -256,14 +262,5 @@ open class R2dbcTransaction(
                 globalInterceptors.add(it)
             }
         }
-    }
-}
-
-// TODO Check why separated and if could be returned to single place in core (Transaction?)
-/** Adds one or more [SqlLogger]s to this [R2dbcTransaction]. */
-fun R2dbcTransaction.addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
-    return CompositeSqlLogger().apply {
-        logger.forEach { this.addLogger(it) }
-        registerInterceptor(this)
     }
 }
