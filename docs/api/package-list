@@ -10,6 +10,7 @@ org.jetbrains.exposed.v1.core.ops
 org.jetbrains.exposed.v1.core.statements
 org.jetbrains.exposed.v1.core.statements.api
 org.jetbrains.exposed.v1.core.transactions
+org.jetbrains.exposed.v1.core.utils
 org.jetbrains.exposed.v1.core.vendors
 org.jetbrains.exposed.v1.exceptions
 module:exposed-crypt
