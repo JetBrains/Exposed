@@ -618,7 +618,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Represents a primary key composed by the specified [columns], and with the specified [name].
      * If no name is specified, the table name with the "pk_" prefix will be used instead.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.demo.sql.Users
+     * @sample org.jetbrains.exposed.v1.tests.demo.sql.Users
      */
     inner class PrimaryKey(
         /** Returns the columns that compose the primary key. */
@@ -858,7 +858,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * For the rest, please specify a length.
      * For H2 dialects, the maximum size is 1,000,000,000 bytes.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.DDLTests.testBinaryWithoutLength
+     * @sample org.jetbrains.exposed.v1.tests.shared.DDLTests.testBinaryWithoutLength
      */
     fun binary(name: String): Column<ByteArray> = registerColumn(name, BasicBinaryColumnType())
 
@@ -867,7 +867,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * **Note:** The length of the binary column is not required in PostgreSQL and will be ignored.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.DDLTests.testBinary
+     * @sample org.jetbrains.exposed.v1.tests.shared.DDLTests.testBinary
      */
     fun binary(name: String, length: Int): Column<ByteArray> = registerColumn(name, BinaryColumnType(length))
 
@@ -876,7 +876,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * If [useObjectIdentifier] is `true`, then the column will use the `OID` type on PostgreSQL
      * for storing large binary objects. The parameter must not be `true` for other databases.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.types.BlobColumnTypeTests.testBlob
+     * @sample org.jetbrains.exposed.v1.tests.shared.types.BlobColumnTypeTests.testBlob
      */
     fun blob(name: String, useObjectIdentifier: Boolean = false): Column<ExposedBlob> =
         registerColumn(name, BlobColumnType(useObjectIdentifier))
@@ -1085,7 +1085,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      *
      * @receiver A column from the current table where reference values will be stored.
      * @param ref A column from another table which will be used as a "parent".
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.JoinTests.testJoin04
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.JoinTests.testJoin04
      */
     infix fun <T : Any, S : T, C : Column<S>> C.references(ref: Column<T>): C = references(
         ref,
@@ -1105,7 +1105,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.sqlite.ForeignKeyConstraintTests.testUpdateAndDeleteRulesReadCorrectlyWhenSpecifiedInChildTable
+     * @sample org.jetbrains.exposed.v1.tests.sqlite.ForeignKeyConstraintTests.testUpdateAndDeleteRulesReadCorrectlyWhenSpecifiedInChildTable
      */
     fun <T : Any, S : T, C : Column<S>> C.references(
         ref: Column<T>,
@@ -1133,7 +1133,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.ddl.CreateMissingTablesAndColumnsTests.ExplicitTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.ddl.CreateMissingTablesAndColumnsTests.ExplicitTable
      */
     @JvmName("referencesById")
     fun <T : Any, S : T, C : Column<S>> C.references(
@@ -1163,7 +1163,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Orders
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Orders
      */
     fun <T : Any> reference(
         name: String,
@@ -1193,7 +1193,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Schools
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Schools
      */
     @Suppress("UNCHECKED_CAST")
     @JvmName("referenceByIdColumn")
@@ -1220,7 +1220,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Schools
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Schools
      */
     fun <T : Any> reference(
         name: String,
@@ -1246,7 +1246,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Posts
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Posts
      */
     fun <T : Any> optReference(
         name: String,
@@ -1266,7 +1266,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param refColumn A column from another table which will be used as a "parent".
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Posts
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Posts
      */
     @JvmName("optReferenceByIdColumn")
     fun <T : Any, E : EntityID<T>> optReference(
@@ -1288,7 +1288,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onDelete Optional [ReferenceOption] for cases when a linked row from a parent table will be deleted.
      * @param onUpdate Optional [ReferenceOption] for cases when a value in a referenced column will be changed.
      * @param fkName Optional foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Schools
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Schools
      */
     fun <T : Any> optReference(
         name: String,
@@ -1583,7 +1583,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onUpdate [ReferenceOption] when performing update operations.
      * @param onDelete [ReferenceOption] when performing delete operations.
      * @param name Custom foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.ddl.CreateMissingTablesAndColumnsTests.CompositeForeignKeyTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.ddl.CreateMissingTablesAndColumnsTests.CompositeForeignKeyTable
      */
     fun foreignKey(
         vararg from: Column<*>,
@@ -1610,7 +1610,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * @param onUpdate [ReferenceOption] when performing update operations.
      * @param onDelete [ReferenceOption] when performing delete operations.
      * @param name Custom foreign key constraint name.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.DDLTests.testCompositeFKReferencingUniqueIndex
+     * @sample org.jetbrains.exposed.v1.tests.shared.DDLTests.testCompositeFKReferencingUniqueIndex
      */
     fun foreignKey(
         vararg references: Pair<Column<*>, Column<*>>,

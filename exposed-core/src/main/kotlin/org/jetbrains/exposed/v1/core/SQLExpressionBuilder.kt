@@ -32,7 +32,7 @@ fun <T : String?> Expression<T>.upperCase(): UpperCase<T> = UpperCase(this)
  * @param separator The separator to use between concatenated values. If left `null`, the database default will be used.
  * @param distinct If set to `true`, duplicate values will be eliminated.
  * @param orderBy If specified, values will be sorted in the concatenated string.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.GroupByTests.testGroupConcat
+ * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupConcat
  */
 fun <T : String?> Expression<T>.groupConcat(
     separator: String? = null,
@@ -46,7 +46,7 @@ fun <T : String?> Expression<T>.groupConcat(
  * @param separator The separator to use between concatenated values. If left `null`, the database default will be used.
  * @param distinct If set to `true`, duplicate values will be eliminated.
  * @param orderBy If specified, values will be sorted in the concatenated string.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.GroupByTests.testGroupConcat
+ * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupConcat
  */
 fun <T : String?> Expression<T>.groupConcat(
     separator: String? = null,
@@ -196,7 +196,7 @@ fun <E, T : List<E>?> allFrom(expression: Expression<T>): Op<E> = AllAnyFromExpr
 /**
  * Returns the array element stored at the one-based [index] position, or `null` if the stored array itself is null.
  *
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArrayGet
+ * @sample org.jetbrains.exposed.v1.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArrayGet
  */
 infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int): ArrayGet<E, T> {
     return when (this) {
@@ -210,7 +210,7 @@ infix operator fun <E, T : List<E>?> ExpressionWithColumnType<T>.get(index: Int)
  * or `null` if the stored array itself is null.
  * **Note** If either bounds is left `null`, the database will use the stored array's respective lower or upper limit.
  *
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArraySlice
+ * @sample org.jetbrains.exposed.v1.tests.shared.types.ArrayColumnTypeTests.testSelectUsingArraySlice
  */
 fun <E, T : List<E>?> ExpressionWithColumnType<T>.slice(lower: Int? = null, upper: Int? = null): ArraySlice<E, T> =
     ArraySlice(this, lower, upper, this.columnType)
@@ -887,7 +887,7 @@ interface ISqlExpressionBuilder {
      *
      * If [value] is `null`, chained conditionals will be evaluated separately until the first is evaluated as `true`.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.ConditionsTests.nullOpInCaseTest
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.ConditionsTests.nullOpInCaseTest
      */
     fun case(value: Expression<*>? = null): Case = Case(value)
 
@@ -922,7 +922,7 @@ interface ISqlExpressionBuilder {
     /**
      * Checks if this expression is equal to any element from [list].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testInListWithSingleExpression01
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithSingleExpression01
      */
     infix fun <T> ExpressionWithColumnType<T>.inList(list: Iterable<T>): InListOrNotInListBaseOp<T> = SingleValueInListOp(this, list, isInList = true)
 
@@ -930,7 +930,7 @@ interface ISqlExpressionBuilder {
      * Checks if expressions from this `Pair` are equal to elements from [list].
      * This syntax is unsupported by SQL Server.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testInListWithPairExpressions01
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithPairExpressions01
      **/
     infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.inList(list: Iterable<Pair<T1, T2>>): InListOrNotInListBaseOp<Pair<T1, T2>> =
         PairInListOp(this, list, isInList = true)
@@ -939,7 +939,7 @@ interface ISqlExpressionBuilder {
      * Checks if expressions from this `Triple` are equal to elements from [list].
      * This syntax is unsupported by SQL Server.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testInListWithTripleExpressions
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithTripleExpressions
      **/
     infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.inList(
         list: Iterable<Triple<T1, T2, T3>>
@@ -949,7 +949,7 @@ interface ISqlExpressionBuilder {
     /**
      * Checks if all columns in this `List` are equal to any of the lists of values from [list].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testInListWithMultipleColumns
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithMultipleColumns
      **/
     infix fun List<Column<*>>.inList(list: Iterable<List<*>>): InListOrNotInListBaseOp<List<*>> =
         MultipleInListOp(this, list, isInList = true)
@@ -957,7 +957,7 @@ interface ISqlExpressionBuilder {
     /**
      * Checks if all columns in this `List` are equal to any of the [CompositeID]s from [list].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
      **/
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListCompositeIDs")
@@ -975,7 +975,7 @@ interface ISqlExpressionBuilder {
     /**
      * Checks if this [EntityID] column is equal to any element from [list].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testInListWithEntityIDColumns
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithEntityIDColumns
      */
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListIds")
@@ -987,7 +987,7 @@ interface ISqlExpressionBuilder {
     /**
      * Checks if this [EntityID] column is equal to any element from [list].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
      */
     @Suppress("UNCHECKED_CAST")
     @JvmName("inListCompositeEntityIds")
@@ -999,7 +999,7 @@ interface ISqlExpressionBuilder {
     /**
      * Checks if this expression is not equal to any element from [list].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testInListWithSingleExpression01
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithSingleExpression01
      */
     infix fun <T> ExpressionWithColumnType<T>.notInList(list: Iterable<T>): InListOrNotInListBaseOp<T> =
         SingleValueInListOp(this, list, isInList = false)
@@ -1008,7 +1008,7 @@ interface ISqlExpressionBuilder {
      * Checks if expressions from this `Pair` are not equal to elements from [list].
      * This syntax is unsupported by SQL Server.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testNotInListWithPairExpressionsAndEmptyList
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testNotInListWithPairExpressionsAndEmptyList
      **/
     infix fun <T1, T2> Pair<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>>.notInList(
         list: Iterable<Pair<T1, T2>>
@@ -1019,7 +1019,7 @@ interface ISqlExpressionBuilder {
      * Checks if expressions from this `Triple` are not equal to elements from [list].
      * This syntax is unsupported by SQL Server.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testInListWithTripleExpressions
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithTripleExpressions
      **/
     infix fun <T1, T2, T3> Triple<ExpressionWithColumnType<T1>, ExpressionWithColumnType<T2>, ExpressionWithColumnType<T3>>.notInList(
         list: Iterable<Triple<T1, T2, T3>>
@@ -1029,7 +1029,7 @@ interface ISqlExpressionBuilder {
     /**
      * Checks if all columns in this `List` are not equal to any of the lists of values from [list].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testInListWithMultipleColumns
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithMultipleColumns
      **/
     infix fun List<Column<*>>.notInList(list: Iterable<List<*>>): InListOrNotInListBaseOp<List<*>> =
         MultipleInListOp(this, list, isInList = false)
@@ -1037,7 +1037,7 @@ interface ISqlExpressionBuilder {
     /**
      * Checks if all columns in this `List` are not equal to any of the [CompositeID]s from [list].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
      **/
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListCompositeIDs")
@@ -1055,7 +1055,7 @@ interface ISqlExpressionBuilder {
     /**
      * Checks if this [EntityID] column is not equal to any element from [list].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.SelectTests.testInListWithEntityIDColumns
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.SelectTests.testInListWithEntityIDColumns
      */
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListIds")
@@ -1067,7 +1067,7 @@ interface ISqlExpressionBuilder {
     /**
      * Checks if this [EntityID] column is not equal to any element from [list].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.testInListWithCompositeIdEntities
      */
     @Suppress("UNCHECKED_CAST")
     @JvmName("notInListCompositeEntityIds")

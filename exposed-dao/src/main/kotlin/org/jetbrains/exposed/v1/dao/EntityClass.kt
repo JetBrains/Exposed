@@ -63,7 +63,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @param id The id value of the entity.
      * @param block Lambda that contains entity field updates.
      * @return The updated entity that has this id value, or `null` if no entity was found.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testDaoFindByIdAndUpdate
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testDaoFindByIdAndUpdate
      */
     fun findByIdAndUpdate(id: ID, block: (it: T) -> Unit): T? {
         val result = find(table.id eq id).forUpdate().singleOrNull() ?: return null
@@ -78,7 +78,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @param block Lambda that contains entity field updates.
      * @return The updated entity that conforms to this condition, or `null` if either no entity was found
      * or if more than one entity conforms to the condition.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testDaoFindSingleByAndUpdate
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testDaoFindSingleByAndUpdate
      */
     fun findSingleByAndUpdate(op: Op<Boolean>, block: (it: T) -> Unit): T? {
         val result = find(op).forUpdate().singleOrNull() ?: return null
@@ -91,7 +91,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * @param id The [EntityID] value of the entity.
      * @return The entity that has this wrapped id value, or `null` if no entity was found.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityCacheNotUpdatedOnCommitIssue1380.testRegression
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityCacheNotUpdatedOnCommitIssue1380.testRegression
      */
     open fun findById(id: EntityID<ID>): T? = testCache(id) ?: find { table.id eq id }.firstOrNull()
 
@@ -102,7 +102,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @see removeFromCache
      *
      * @param flush Whether pending entity changes should be flushed prior to reloading.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testThatUpdateOfInsertedEntitiesGoesBeforeAnInsert
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testThatUpdateOfInsertedEntitiesGoesBeforeAnInsert
      */
     fun reload(entity: Entity<ID>, flush: Boolean = false): T? {
         if (flush) {
@@ -137,7 +137,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * Searches the current [EntityCache] for an [Entity] by its [EntityID] value.
      *
      * @return The entity that has this wrapped id value, or `null` if no entity was found.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testCacheInvalidatedOnDSLDelete
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testCacheInvalidatedOnDSLDelete
      */
     fun testCache(id: EntityID<ID>): T? = warmCache().find(this, id)
 
@@ -224,7 +224,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * The provided [alias] will be used to adjust the [ResultRow] mapping before returning the entity.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.AliasesTests.testWrapRowWithAliasedTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.AliasesTests.testWrapRowWithAliasedTable
      */
     fun wrapRow(row: ResultRow, alias: Alias<IdTable<*>>): T {
         require(alias.delegate == table) { "Alias for a wrong table ${alias.delegate.tableName} while ${table.tableName} expected" }
@@ -247,7 +247,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * The provided [alias] will be used to adjust the [ResultRow] mapping before returning the entity.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.AliasesTests.testWrapRowWithAliasedQuery
+     * @sample org.jetbrains.exposed.v1.tests.shared.AliasesTests.testWrapRowWithAliasedQuery
      */
     fun wrapRow(row: ResultRow, alias: QueryAlias): T {
         require(alias.columns.any { (it.table as Alias<*>).delegate == table }) { "QueryAlias doesn't have any column from ${table.tableName} table" }
@@ -274,7 +274,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
     /**
      * Gets all the [Entity] instances associated with this [EntityClass].
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testNonEntityIdReference
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testNonEntityIdReference
      */
     open fun all(): SizedIterable<T> = wrapRows(table.selectAll().notForUpdate())
 
@@ -294,7 +294,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * @param op The conditional expression to use when selecting the entity.
      * @return A [SizedIterable] of all the entities that conform to this condition.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
      */
     fun find(op: SqlExpressionBuilder.() -> Op<Boolean>): SizedIterable<T> = find(SqlExpressionBuilder.op())
 
@@ -328,7 +328,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * @param op The conditional expression to use when selecting the entity.
      * @return The amount of entities that conform to this condition.
-     * @sample org.jetbrains.exposed.v1.sql.tests.h2.MultiDatabaseEntityTest.crossReferencesProhibitedForEntitiesFromDifferentDB
+     * @sample org.jetbrains.exposed.v1.tests.h2.MultiDatabaseEntityTest.crossReferencesProhibitedForEntitiesFromDifferentDB
      */
     fun count(op: Op<Boolean>? = null): Long {
         val countExpression = table.idColumns.first().count()
@@ -358,7 +358,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * @param init The block where the entity's fields can be set.
      * @return The entity that has been created.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testNonEntityIdReference
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testNonEntityIdReference
      */
     open fun new(init: T.() -> Unit) = new(null, init)
 
@@ -368,7 +368,7 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @param id The id of the entity. Set this to `null` if it should be automatically generated.
      * @param init The block where the entity's fields can be set.
      * @return The entity that has been created.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.testNewIdWithGet
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.testNewIdWithGet
      */
     open fun new(id: ID?, init: T.() -> Unit): T {
         val entityId = if (id == null && table.id.defaultValueFun != null) {
@@ -417,9 +417,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Parent
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Children
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Child
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Parent
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Children
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Child
      */
     infix fun <REF : Any> referencedOn(column: Column<REF>) = registerRefRule(column) { Reference(column, this) }
 
@@ -429,9 +429,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Publisher
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Authors
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Author
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Publisher
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Authors
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Author
      */
     infix fun referencedOn(table: IdTable<*>): Reference<Any, ID, T> {
         val tableFK = getCompositeForeignKey(table)
@@ -446,9 +446,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a [column] using either `optReference()` or
      * `reference().nullable()` on the child table.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Board
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Posts
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Post
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Board
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Posts
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Post
      */
     infix fun <REF : Any> optionalReferencedOn(column: Column<REF?>) = registerRefRule(column) { OptionalReference(column, this) }
 
@@ -459,9 +459,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Publisher
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Offices
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Office
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Publisher
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Offices
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Office
      */
     infix fun optionalReferencedOn(table: IdTable<*>): OptionalReference<Any, ID, T> {
         val tableFK = getCompositeForeignKey(table)
@@ -475,9 +475,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTestsData.YEntity
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTestsData.XTable
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTestsData.BEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData.YEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData.XTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData.BEntity
      */
     infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.backReferencedOn(
         column: Column<REF>
@@ -489,9 +489,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * The reference should have been defined by the creation of a [column] using `reference()` on the child table.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTestsData.YEntity
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTestsData.XTable
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTestsData.BEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData.YEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData.XTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTestsData.BEntity
      */
     @JvmName("backReferencedOnOpt")
     infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.backReferencedOn(
@@ -505,9 +505,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Book
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Reviews
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Review
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Book
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Reviews
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Review
      */
     infix fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.backReferencedOn(
         table: IdTable<*>
@@ -525,9 +525,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * - By the creation of a [column] using either `optReference()` or `reference().nullable()`
      * - By the creation of a non-nullable `reference()` [column] where either 0 or 1 row(s) is expected in the relationship
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Student
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.StudentBios
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.StudentBio
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Student
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.StudentBios
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.StudentBio
      */
     infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.optionalBackReferencedOn(
         column: Column<REF>
@@ -542,9 +542,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * - By the creation of a [column] using either `optReference()` or `reference().nullable()`
      * - By the creation of a non-nullable `reference()` [column] where either 0 or 1 row(s) is expected in the relationship
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Student
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.StudentBios
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.StudentBio
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Student
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.StudentBios
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.StudentBio
      */
     @JvmName("optionalBackReferencedOnOpt")
     infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.optionalBackReferencedOn(
@@ -559,9 +559,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Publisher
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Offices
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Office
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Publisher
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Offices
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Office
      */
     infix fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalBackReferencedOn(
         table: IdTable<*>
@@ -579,9 +579,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * By default, this also stores the loaded entities to a cache.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityHookTestData.Country
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityHookTestData.Cities
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityHookTestData.City
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityHookTestData.Country
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityHookTestData.Cities
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityHookTestData.City
      */
     infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.referrersOn(column: Column<REF>) =
         registerRefRule(column) { Referrers<ID, Entity<ID>, TargetID, Target, REF>(column, this, true) }
@@ -593,9 +593,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * The reference should have been defined by the creation of a foreign key constraint on the child table,
      * by using `foreignKey()`.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Publisher
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Authors
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Author
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Publisher
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Authors
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Author
      */
     infix fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.referrersOn(
         table: IdTable<*>
@@ -613,9 +613,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * Set [cache] to `true` to also store the loaded entities to a cache.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.School
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Students
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Student
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.School
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Students
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Student
      */
     fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.referrersOn(
         column: Column<REF>,
@@ -650,9 +650,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * By default, this also stores the loaded entities to a cache.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Category
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Posts
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Post
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Category
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Posts
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Post
      */
     infix fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.optionalReferrersOn(
         column: Column<REF?>
@@ -668,9 +668,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * By default, this also stores the loaded entities to a cache.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Publisher
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Authors
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.CompositeIdTableEntityTest.Author
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Publisher
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Authors
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.CompositeIdTableEntityTest.Author
      */
     infix fun <TargetID : Any, Target : Entity<TargetID>> EntityClass<TargetID, Target>.optionalReferrersOn(
         table: IdTable<*>
@@ -689,9 +689,9 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * Set [cache] to `true` to also store the loaded entities to a cache.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Student
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Detentions
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.Detention
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Student
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Detentions
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.Detention
      */
     fun <TargetID : Any, Target : Entity<TargetID>, REF : Any> EntityClass<TargetID, Target>.optionalReferrersOn(
         column: Column<REF?>,
@@ -736,8 +736,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * Returns a [EntityFieldWithTransform] delegate that transforms this stored [Unwrapped] value on every read.
      *
      * @param transformer An instance of [ColumnTransformer] to handle the transformations.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationsTable
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
     fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.transform(
         transformer: ColumnTransformer<Unwrapped, Wrapped>
@@ -749,8 +749,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @param unwrap A pure function that converts a transformed value to a value that can be stored
      * in this original column type.
      * @param wrap A pure function that transforms a value stored in this original column type.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationsTable
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
     fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.transform(
         unwrap: (Wrapped) -> Unwrapped,
@@ -762,8 +762,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * @param unwrap A function that transforms the value to the wrapping type of previously defined transformation
      * @param wrap A function that transforms value to the wrapping type
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationsTable
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
     fun <TColumn : Any?, Unwrapped : Any?, Wrapped : Any?> EntityFieldWithTransform<TColumn, Unwrapped>.transform(
         unwrap: (Wrapped) -> Unwrapped,
@@ -776,8 +776,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * this same stored [Unwrapped] value.
      *
      * @param transformer An instance of [ColumnTransformer] to handle the transformations.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationsTable
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
     fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.memoizedTransform(
         transformer: ColumnTransformer<Unwrapped, Wrapped>
@@ -790,8 +790,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      * @param unwrap A pure function that converts a transformed value to a value that can be stored
      * in this original column type.
      * @param wrap A pure function that transforms a value stored in this original column type.
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationsTable
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
     fun <Unwrapped : Any?, Wrapped : Any?> Column<Unwrapped>.memoizedTransform(
         unwrap: (Wrapped) -> Unwrapped,
@@ -804,8 +804,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
      *
      * @param unwrap A function that transforms the value to the wrapping type of previously defined transformation
      * @param wrap A function that transforms value to the wrapping type
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationsTable
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.TransformationEntity
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationsTable
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.TransformationEntity
      */
     fun <TColumn : Any?, Unwrapped : Any?, Wrapped : Any?> EntityFieldWithTransform<TColumn, Unwrapped>.memoizedTransform(
         unwrap: (Wrapped) -> Unwrapped,
@@ -1070,8 +1070,8 @@ abstract class EntityClass<ID : Any, out T : Entity<ID>>(
  * @param [ctor] The function invoked to instantiate an [Entity] using a provided [EntityID] value. If a
  * reference to a specific entity constructor or a custom function is not passed as an argument, reflection will
  * be used to determine the primary constructor of the associated entity class on first access.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.ImmutableEntityTest.Schema.Organization
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.ImmutableEntityTest.EOrganization
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.ImmutableEntityTest.Schema.Organization
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.ImmutableEntityTest.EOrganization
  */
 abstract class ImmutableEntityClass<ID : Any, out T : Entity<ID>>(
     table: IdTable<ID>,
@@ -1084,7 +1084,7 @@ abstract class ImmutableEntityClass<ID : Any, out T : Entity<ID>>(
      * the current transaction scope. This is useful when needing to ensure that an entity is only updated with
      * data retrieved directly from a database query.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.ImmutableEntityTest.immutableEntityReadAfterUpdate
+     * @sample org.jetbrains.exposed.v1.tests.shared.entities.ImmutableEntityTest.immutableEntityReadAfterUpdate
      */
     open fun <T> forceUpdateEntity(entity: Entity<ID>, column: Column<T>, value: T) {
         table.update({ table.id eq entity.id }) {
@@ -1111,8 +1111,8 @@ abstract class ImmutableEntityClass<ID : Any, out T : Entity<ID>>(
  * @param [ctor] The function invoked to instantiate an [Entity] using a provided [EntityID] value. If a
  * reference to a specific entity constructor or a custom function is not passed as an argument, reflection will
  * be used to determine the primary constructor of the associated entity class on first access.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.ImmutableEntityTest.Schema.Organization
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.ImmutableEntityTest.ECachedOrganization
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.ImmutableEntityTest.Schema.Organization
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.ImmutableEntityTest.ECachedOrganization
  */
 abstract class ImmutableCachedEntityClass<ID : Any, out T : Entity<ID>>(
     table: IdTable<ID>,

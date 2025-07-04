@@ -52,7 +52,7 @@ fun <T : Any> Table.jsonb(
  * @param jsonConfig Configured instance of the `Json` class
  * @param kSerializer Serializer responsible for the representation of a serial form of type [T].
  * Defaults to a generic serializer for type [T]
- * @sample org.jetbrains.exposed.v1.sql.json.JsonBColumnTests.testLoggerWithJsonBCollections
+ * @sample org.jetbrains.exposed.v1.json.JsonBColumnTests.testLoggerWithJsonBCollections
  */
 inline fun <reified T : Any> Table.jsonb(
     name: String,

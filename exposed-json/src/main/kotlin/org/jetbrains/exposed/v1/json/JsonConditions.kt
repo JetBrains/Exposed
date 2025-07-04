@@ -48,7 +48,7 @@ class Exists(
  * @param candidate Expression to search for in [this] JSON expression.
  * @param path String representing JSON path/keys that match specific fields to search for [candidate].
  * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
- * @sample org.jetbrains.exposed.v1.sql.json.JsonColumnTests.testJsonContains
+ * @sample org.jetbrains.exposed.v1.json.JsonColumnTests.testJsonContains
  */
 fun ExpressionWithColumnType<*>.contains(candidate: Expression<*>, path: String? = null): Contains =
     Contains(this, candidate, path, columnType)
@@ -59,7 +59,7 @@ fun ExpressionWithColumnType<*>.contains(candidate: Expression<*>, path: String?
  * @param candidate Value to search for in [this] JSON expression.
  * @param path String representing JSON path/keys that match specific fields to search for [candidate].
  * **Note:** Optional [path] argument is not supported by all vendors; please check the documentation.
- * @sample org.jetbrains.exposed.v1.sql.json.JsonColumnTests.testJsonContains
+ * @sample org.jetbrains.exposed.v1.json.JsonColumnTests.testJsonContains
  */
 fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null): Contains = when (candidate) {
     is Iterable<*>, is Array<*> -> Contains(this, stringLiteral(asLiteral(candidate).toString()), path, columnType)
@@ -75,7 +75,7 @@ fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null)
  * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
  * @param optional String representing any optional vendor-specific clause or argument.
  * **Note:** [optional] function arguments are not supported by all vendors; please check the documentation.
- * @sample org.jetbrains.exposed.v1.sql.json.JsonColumnTests.testJsonExists
+ * @sample org.jetbrains.exposed.v1.json.JsonColumnTests.testJsonExists
  */
 fun ExpressionWithColumnType<*>.exists(vararg path: String, optional: String? = null): Exists =
     Exists(this, path = path, optional, columnType)

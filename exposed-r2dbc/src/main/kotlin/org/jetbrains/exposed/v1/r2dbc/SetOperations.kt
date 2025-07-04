@@ -275,27 +275,27 @@ class Except(
 /**
  * Combines all results from [this] query with the results of [other], WITHOUT including duplicates.
  *
- * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UnionTests.testUnionWithLimit
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testUnionWithLimit
  */
 fun AbstractQuery<*>.union(other: Query): Union = Union(this, other)
 
 /**
  * Combines all results from [this] query with the results of [other], WITH duplicates included.
  *
- * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UnionTests.testUnionWithAllResults
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testUnionWithAllResults
  */
 fun AbstractQuery<*>.unionAll(other: Query): UnionAll = UnionAll(this, other)
 
 /**
  * Returns only results from [this] query that are common to the results of [other], WITHOUT including any duplicates.
  *
- * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UnionTests.testIntersectWithThreeQueries
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testIntersectWithThreeQueries
  */
 fun AbstractQuery<*>.intersect(other: Query): Intersect = Intersect(this, other)
 
 /**
  * Returns only distinct results from [this] query that are NOT common to the results of [other].
  *
- * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.UnionTests.testExceptWithTwoQueries
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.UnionTests.testExceptWithTwoQueries
  */
 fun AbstractQuery<*>.except(other: Query): Except = Except(this, other)

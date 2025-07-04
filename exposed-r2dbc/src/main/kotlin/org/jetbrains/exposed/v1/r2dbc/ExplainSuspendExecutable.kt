@@ -52,7 +52,7 @@ open class ExplainSuspendExecutable(
  * **Note:** Optional parameters are not supported by all vendors, please check the documentation.
  * @param body The statement for which an execution plan should be queried. This can be a `SELECT`, `INSERT`,
  * `REPLACE`, `UPDATE` or `DELETE` statement.
- * @sample org.jetbrains.exposed.r2dbc.sql.tests.shared.dml.ExplainTests.testExplainWithStatementsNotExecuted
+ * @sample org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.ExplainTests.testExplainWithStatementsNotExecuted
  */
 fun R2dbcTransaction.explain(
     analyze: Boolean = false,

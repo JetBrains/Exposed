@@ -3,7 +3,7 @@ package org.jetbrains.exposed.v1.crypt
 /**
  * Base cipher class responsible for the encryption and decryption of data.
  *
- * @sample org.jetbrains.exposed.crypt.Algorithms.AES_256_PBE_GCM
+ * @sample org.jetbrains.exposed.v1.crypt.Algorithms.AES_256_PBE_GCM
  */
 class Encryptor(
     /** Encrypt a plaintext string to ciphertext. */

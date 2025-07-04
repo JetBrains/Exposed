@@ -404,7 +404,7 @@ private fun <ID : Any> List<Entity<ID>>.preloadRelations(
  * **See also:** [Eager Loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading)
  *
  * @param relations The reference fields of the entities, as [KProperty]s, which should be loaded.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.preloadRelationAtDepth
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.preloadRelationAtDepth
  */
 fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.with(vararg relations: KProperty1<out REF, Any?>): L {
     toList().apply {
@@ -423,7 +423,7 @@ fun <SRCID : Any, SRC : Entity<SRCID>, REF : Entity<*>, L : Iterable<SRC>> L.wit
  * **See also:** [Eager Loading](https://github.com/JetBrains/Exposed/wiki/DAO#eager-loading)
  *
  * @param relations The reference fields of this entity, as [KProperty]s, which should be loaded.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
+ * @sample org.jetbrains.exposed.v1.tests.shared.entities.EntityTests.preloadOptionalReferencesOnAnEntity
  */
 fun <SRCID : Any, SRC : Entity<SRCID>> SRC.load(vararg relations: KProperty1<out Entity<*>, Any?>): SRC = apply {
     listOf(this).with(*relations)

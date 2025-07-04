@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.core.VarCharColumnType
  * Character column for storing encrypted strings, using the provided [encryptor],
  * with the specified maximum [colLength].
  *
- * @sample org.jetbrains.exposed.crypt.encryptedVarchar
+ * @sample org.jetbrains.exposed.v1.crypt.encryptedVarchar
  */
 class EncryptedVarCharColumnType(
     private val encryptor: Encryptor,

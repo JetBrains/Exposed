@@ -38,7 +38,7 @@ class Extract<T>(
  * If none are provided, the root context item `'$'` will be used by default.
  * **Note:** Multiple [path] arguments are not supported by all vendors; please check the documentation.
  * @param toScalar If `true`, the extracted result is a scalar or text value; otherwise, it is a JSON object.
- * @sample org.jetbrains.exposed.v1.sql.json.JsonColumnTests.testJsonExtractWithArrays
+ * @sample org.jetbrains.exposed.v1.json.JsonColumnTests.testJsonExtractWithArrays
  */
 inline fun <reified T : Any> ExpressionWithColumnType<*>.extract(
     vararg path: String,

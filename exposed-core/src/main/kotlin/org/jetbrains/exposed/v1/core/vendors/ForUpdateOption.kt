@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.Table
 /**
  * Clauses that perform a locking read at row-level for SELECT statements.
  *
- * @sample org.jetbrains.exposed.v1.sql.tests.postgresql.PostgresqlTests.testForUpdateOptionsSyntax
+ * @sample org.jetbrains.exposed.v1.tests.postgresql.PostgresqlTests.testForUpdateOptionsSyntax
  */
 sealed class ForUpdateOption(open val querySuffix: String) {
     @InternalApi

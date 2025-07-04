@@ -85,7 +85,7 @@ sealed interface UpsertBuilder {
      * Specifies that this column should be updated using the same values that would be inserted if there was
      * no violation of a unique constraint in an upsert statement.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.UpsertTests.testUpsertWithManualUpdateUsingInsertValues
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.UpsertTests.testUpsertWithManualUpdateUsingInsertValues
      */
     fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
 

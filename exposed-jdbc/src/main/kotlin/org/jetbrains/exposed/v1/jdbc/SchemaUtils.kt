@@ -143,7 +143,7 @@ object SchemaUtils : SchemaUtilityApi() {
      *
      * For PostgreSQL, calls to this function should be preceded by connection.autoCommit = true,
      * and followed by connection.autoCommit = false.
-     * @see org.jetbrains.exposed.v1.sql.tests.shared.ddl.CreateDatabaseTest
+     * @see org.jetbrains.exposed.v1.tests.shared.ddl.CreateDatabaseTest
      */
     fun createDatabase(vararg databases: String, inBatch: Boolean = false) {
         val transaction = TransactionManager.current()
@@ -190,7 +190,7 @@ object SchemaUtils : SchemaUtilityApi() {
      *
      * For PostgreSQL, calls to this function should be preceded by connection.autoCommit = true,
      * and followed by connection.autoCommit = false.
-     * @see org.jetbrains.exposed.v1.sql.tests.shared.ddl.CreateDatabaseTest
+     * @see org.jetbrains.exposed.v1.tests.shared.ddl.CreateDatabaseTest
      */
     fun dropDatabase(vararg databases: String, inBatch: Boolean = false) {
         val transaction = TransactionManager.current()
@@ -436,7 +436,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * Sets the current default schema to [schema]. Supported by H2, MariaDB, Mysql, Oracle, PostgreSQL and SQL Server.
      * SQLite doesn't support schemas.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.SchemaTests
+     * @sample org.jetbrains.exposed.v1.tests.shared.SchemaTests
      */
     fun setSchema(schema: Schema, inBatch: Boolean = false) {
         with(TransactionManager.current()) {
@@ -458,7 +458,7 @@ object SchemaUtils : SchemaUtilityApi() {
     /**
      * Creates schemas
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.SchemaTests
+     * @sample org.jetbrains.exposed.v1.tests.shared.SchemaTests
      *
      * @param schemas the names of the schemas
      * @param inBatch flag to perform schema creation in a single batch
@@ -480,7 +480,7 @@ object SchemaUtils : SchemaUtilityApi() {
      * **Note** that when you are using Mysql or MariaDB, this will fail if you try to drop a schema that
      * contains a table that is referenced by a table in another schema.
      *
-     * @sample org.jetbrains.exposed.v1.sql.tests.shared.SchemaTests.testDropSchemaWithCascade
+     * @sample org.jetbrains.exposed.v1.tests.shared.SchemaTests.testDropSchemaWithCascade
      *
      * @param schemas the names of the schema
      * @param cascade flag to drop schema and all of its objects and all objects that depend on those objects.

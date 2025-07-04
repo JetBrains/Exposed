@@ -51,7 +51,7 @@ open class ExplainBlockingExecutable(
  * **Note:** Optional parameters are not supported by all vendors, please check the documentation.
  * @param body The statement for which an execution plan should be queried. This can be a `SELECT`, `INSERT`,
  * `REPLACE`, `UPDATE` or `DELETE` statement.
- * @sample org.jetbrains.exposed.v1.sql.tests.shared.dml.ExplainTests.testExplainWithStatementsNotExecuted
+ * @sample org.jetbrains.exposed.v1.tests.shared.dml.ExplainTests.testExplainWithStatementsNotExecuted
  */
 fun JdbcTransaction.explain(
     analyze: Boolean = false,
