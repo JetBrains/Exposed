@@ -1,4 +1,4 @@
-package org.jetbrains.exposed.v1.r2dbc.mtc
+package org.jetbrains.exposed.v1.r2dbc.transactions.mtc
 
 import java.util.*
 import kotlin.concurrent.getOrSet

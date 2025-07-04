@@ -3,7 +3,7 @@ package org.jetbrains.exposed.v1.r2dbc.transactions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ThreadContextElement
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
-import org.jetbrains.exposed.v1.r2dbc.mtc.MappedTransactionContext
+import org.jetbrains.exposed.v1.r2dbc.transactions.mtc.MappedTransactionContext
 import kotlin.coroutines.CoroutineContext
 
 internal class TransactionContext(val manager: TransactionManager?, val transaction: R2dbcTransaction?)
