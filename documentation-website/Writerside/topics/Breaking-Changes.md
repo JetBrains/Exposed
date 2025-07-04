@@ -1,5 +1,10 @@
 # Breaking Changes
 
+## 1.0.0-beta-4 <!--temporary version placeholder-->
+
+* `ThreadLocalMap` has been restricted to internal use, based on its current limited usage in already internal classes.
+  It, along with `MappedTransactionContext`, has been moved into the subpackage: `org.jetbrains.exposed.v1.r2dbc.transactions.mtc`.
+
 ## 1.0.0-beta-3
 
 * `exposed-core` interface `PreparedStatementApi` has a new `set()` method that will require an override if implemented.
