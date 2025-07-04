@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.UpsertBuilder.Companion.getFunctionProvider
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.vendors.*
 
@@ -87,19 +88,8 @@ sealed interface UpsertBuilder {
      *
      * @sample org.jetbrains.exposed.v1.tests.shared.dml.UpsertTests.testUpsertWithManualUpdateUsingInsertValues
      */
-    fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
-
     @OptIn(InternalApi::class)
-    private class InsertValue<T>(
-        val column: Column<T>,
-        override val columnType: IColumnType<T & Any>
-    ) : ExpressionWithColumnType<T>() {
-        override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-            val transaction = CoreTransactionManager.currentTransaction()
-            val functionProvider = getFunctionProvider(transaction.db.dialect)
-            functionProvider.insertValue(transaction.identity(column), queryBuilder)
-        }
-    }
+    fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
 
     companion object {
         /** Returns the [FunctionProvider] for valid upsert statement syntax. */
@@ -152,4 +142,22 @@ internal fun UpsertBuilder.getAdditionalArgs(
         }
         where?.toQueryBuilder(this)
     }.args
+}
+
+@InternalApi
+class InsertValue<T>(
+    val column: Column<T>,
+    override val columnType: IColumnType<T & Any>
+) : ExpressionWithColumnType<T>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        val transaction = CoreTransactionManager.currentTransaction()
+        val functionProvider = getFunctionProvider(transaction.db.dialect)
+        functionProvider.insertValue(transaction.identity(column), queryBuilder)
+    }
+}
+
+/** Builder object for creating SQL expressions in UpsertStatement */
+object UpsertSqlExpressionBuilder : ISqlExpressionBuilder by SqlExpressionBuilder {
+    @OptIn(InternalApi::class)
+    fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
 }
