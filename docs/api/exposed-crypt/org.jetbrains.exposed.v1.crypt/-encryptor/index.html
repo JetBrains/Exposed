@@ -94,7 +94,33 @@
   <div class="breadcrumbs"><a href="../../index.html">exposed-crypt</a><span class="delimiter">/</span><a href="../index.html">org.jetbrains.exposed.v1.crypt</a><span class="delimiter">/</span><span class="current">Encryptor</span></div>
   <div class="cover ">
     <h1 class="cover"><span><span>Encryptor</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">Encryptor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>encryptFn<span class="token operator">: </span><span class="token punctuation">(</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>decryptFn<span class="token operator">: </span><span class="token punctuation">(</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>maxColLengthFn<span class="token operator">: </span><span class="token punctuation">(</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div><p class="paragraph">Base cipher class responsible for the encryption and decryption of data.</p><h4 class="">Samples</h4>org.jetbrains.exposed.crypt.Algorithms.AES_256_PBE_GCM</div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":exposed-crypt/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">Encryptor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>encryptFn<span class="token operator">: </span><span class="token punctuation">(</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>decryptFn<span class="token operator">: </span><span class="token punctuation">(</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>maxColLengthFn<span class="token operator">: </span><span class="token punctuation">(</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span></div><p class="paragraph">Base cipher class responsible for the encryption and decryption of data.</p><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import org.springframework.security.crypto.encrypt.AesBytesEncryptor
+import org.springframework.security.crypto.keygen.KeyGenerators
+import org.springframework.security.crypto.util.EncodingUtils
+import java.util.*
+import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
+import kotlin.math.ceil
+
+fun main() { 
+   //sampleStart 
+   return AesBytesEncryptor(
+    password.toString(),
+    salt,
+    KeyGenerators.secureRandom(AES_256_GCM_BLOCK_LENGTH),
+    AesBytesEncryptor.CipherAlgorithm.GCM
+).run {
+    Encryptor(
+        { base64Encoder.encodeToString(encrypt(it.toByteArray())) },
+        { String(decrypt(base64Decoder.decode(it))) },
+        { inputLen -&gt;
+            base64EncodedLength(AES_256_GCM_BLOCK_LENGTH + inputLen + AES_256_GCM_TAG_LENGTH)
+        }
+    )
+} 
+   //sampleEnd
+}</code></pre></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
