@@ -20,6 +20,8 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /** Pair of expressions used to match rows from two joined tables. */
 typealias JoinCondition = Pair<Expression<*>, Expression<*>>
@@ -643,7 +645,7 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
      * Returns the primary key of the table if present, `null` otherwise.
      *
      * The primary key can be defined explicitly by overriding the property directly or by using one of the predefined
-     * table types like `IntIdTable`, `LongIdTable`, or `UUIDIdTable`.
+     * table types like `IntIdTable`, `LongIdTable`, `UUIDIdTable` or `UuidKtIdTable`.
      */
     open val primaryKey: PrimaryKey? = null
 
@@ -884,6 +886,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
     /** Creates a binary column, with the specified [name], for storing UUIDs. */
     fun uuid(name: String): Column<UUID> = registerColumn(name, UUIDColumnType())
 
+    /** Creates a binary column, with the specified [name], for storing UUIDs. */
+    @OptIn(ExperimentalUuidApi::class)
+    fun uuidKt(name: String): Column<Uuid> = registerColumn(name, UuidKtColumnType())
+
     // Boolean columns
 
     /** Creates a column, with the specified [name], for storing boolean values. */
@@ -1075,6 +1081,10 @@ open class Table(name: String = "") : ColumnSet(), DdlAware {
 
     /** UUID column will auto generate its value on a client side just before an insert. */
     fun Column<UUID>.autoGenerate(): Column<UUID> = clientDefault { UUID.randomUUID() }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @JvmName("autoGenerateKt")
+    fun Column<Uuid>.autoGenerate(): Column<Uuid> = clientDefault { Uuid.random() }
 
     // Column references
 
