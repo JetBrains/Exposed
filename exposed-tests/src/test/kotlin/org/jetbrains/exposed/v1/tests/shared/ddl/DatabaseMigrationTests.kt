@@ -1198,4 +1198,50 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             assertEqualLists(MigrationUtils.statementsRequiredForDatabaseMigration(testerWithAnotherDefinition), emptyList())
         }
     }
+
+    @Test
+    fun testDropUnmappedIndices() {
+        val dbTable = object : Table("testDropUnmappedIndices") {
+            val indexOnlyInDb = integer("indexOnlyInDb").index("indexOnlyInDbIdx")
+            val columnWithIndexOnlyInDb = integer("columnWithIndexOnlyInDb").index("columnWithIndexOnlyInDbIdx")
+            val indexInCodeAndDB = integer("indexInCodeAndDB").index("indexInCodeAndDBIdx")
+        }
+
+        val tester = object : Table("testDropUnmappedIndices") {
+            val indexOnlyInDb = integer("indexOnlyInDb")
+            val indexInCodeAndDB = integer("indexInCodeAndDB").index("indexInCodeAndDBIdx")
+            val indexOnlyInCode = integer("indexOnlyInCode").index("indexOnlyInCodeIdx")
+        }
+
+        withTables(dbTable) {
+            val statements = MigrationUtils.dropUnmappedIndices(tester)
+            assertEquals(2, statements.size)
+            assertEquals(1, statements.map { it.lowercase() }.filter { it.contains(" indexOnlyInDbIdx".lowercase()) }.size)
+            assertEquals(1, statements.map { it.lowercase() }.filter { it.contains(" columnWithIndexOnlyInDbIdx".lowercase()) }.size)
+        }
+    }
+
+    @Test
+    fun testDropUnmappedSequence() {
+        val dbTable = object : Table("testDropUnmappedSequence") {
+            val sequenceOnlyInDb = integer("sequenceOnlyInDb").autoIncrement()
+            val columnWithSequenceOnlyInDb = integer("columnWithSequenceOnlyInDb").autoIncrement()
+            val sequenceBothInDbAndCode = integer("sequenceBothInDbAndCode").autoIncrement()
+        }
+
+        val tester = object : Table("testDropUnmappedSequence") {
+            val sequenceOnlyInDb = integer("sequenceOnlyInDb")
+            val sequenceBothInDbAndCode = integer("sequenceBothInDbAndCode").autoIncrement()
+            val sequenceOnlyInCode = integer("sequenceOnlyInCode").autoIncrement()
+        }
+
+        // It doesn't look like Sequence metadata works stable for all databases. For some databases it can't find existing sequences
+        withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL, dbTable, configure = { sqlLogger = StdOutSqlLogger }) {
+            val statements = MigrationUtils.dropUnmappedSequences(tester)
+
+            assertEquals(2, statements.size)
+            assertEquals(1, statements.map { it.lowercase() }.filter { it.contains("_sequenceOnlyInDb_seq".lowercase()) }.size)
+            assertEquals(1, statements.map { it.lowercase() }.filter { it.contains("_columnWithSequenceOnlyInDb_seq".lowercase()) }.size)
+        }
+    }
 }

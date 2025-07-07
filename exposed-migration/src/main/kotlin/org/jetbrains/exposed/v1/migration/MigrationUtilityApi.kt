@@ -65,8 +65,13 @@ abstract class MigrationUtilityApi : SchemaUtilityApi() {
     @InternalApi
     protected fun Set<String>.filterUnmappedSequences(vararg tables: Table): List<Sequence> {
         val unmappedSequences = mutableSetOf<Sequence>()
-        val mappedSequencesNames = tables.flatMap { table -> table.sequences.map { it.identifier.inProperCase() } }.toSet()
-        unmappedSequences.addAll(subtract(mappedSequencesNames).map { Sequence(it) })
+        val mappedSequencesNames = tables.flatMap { table ->
+            table.sequences.map {
+                it.identifier.inProperCase()
+            }
+        }.toSet()
+
+        unmappedSequences.addAll(filter { !mappedSequencesNames.contains(it.inProperCase()) }.map { Sequence(it) })
         return unmappedSequences.toList()
     }
 }
