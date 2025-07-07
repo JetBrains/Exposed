@@ -18,8 +18,8 @@ import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
-import org.jetbrains.exposed.v1.r2dbc.mtc.MappedTransactionContext
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcExposedConnection
+import org.jetbrains.exposed.v1.r2dbc.transactions.mtc.MappedTransactionContext
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
