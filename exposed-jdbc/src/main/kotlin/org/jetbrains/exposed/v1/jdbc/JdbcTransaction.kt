@@ -239,6 +239,12 @@ open class JdbcTransaction(
         executedStatements.clear()
     }
 
+    final override fun addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
+        return super.addLogger(*logger).apply {
+            registerInterceptor(this)
+        }
+    }
+
     internal fun getRetryInterval(): Long = if (maxAttempts > 0) {
         maxOf((maxRetryDelay - minRetryDelay) / (maxAttempts + 1), 1)
     } else {
@@ -256,13 +262,5 @@ open class JdbcTransaction(
                 globalInterceptors.add(it)
             }
         }
-    }
-}
-
-/** Adds one or more [SqlLogger]s to this [JdbcTransaction]. */
-fun JdbcTransaction.addLogger(vararg logger: SqlLogger): CompositeSqlLogger {
-    return CompositeSqlLogger().apply {
-        logger.forEach { this.addLogger(it) }
-        registerInterceptor(this)
     }
 }

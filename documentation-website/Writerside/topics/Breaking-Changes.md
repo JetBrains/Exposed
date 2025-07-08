@@ -4,6 +4,9 @@
 
 * `ThreadLocalMap` has been restricted to internal use, based on its current limited usage in already internal classes.
   It, along with `MappedTransactionContext`, has been moved into the subpackage: `org.jetbrains.exposed.v1.r2dbc.transactions.mtc`.
+* `addLogger()` has been converted into a `Transaction` method (instead of an extension method of `JdbcTransaction` and `R2dbcTransaction`),
+  so its logic can remain common within `exposed-core`. Any explicit imports, like `import org.jetbrains.exposed.v1.jdbc.addLogger`,
+  will no longer compile and should be removed.
 
 ## 1.0.0-beta-3
 

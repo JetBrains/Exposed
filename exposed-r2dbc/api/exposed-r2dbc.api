@@ -286,6 +286,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/R2dbcDatabaseKt {
 public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exposed/v1/core/Transaction, org/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterface {
 	public static final field Companion Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion;
 	public fun <init> (Lorg/jetbrains/exposed/v1/r2dbc/transactions/R2dbcTransactionInterface;)V
+	public final fun addLogger ([Lorg/jetbrains/exposed/v1/core/SqlLogger;)Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
 	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun closeExecutedStatements (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun commit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -318,10 +319,6 @@ public class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction : org/jetbrains/exp
 
 public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransaction$Companion {
 	public final fun getGlobalInterceptors ()Ljava/util/ArrayList;
-}
-
-public final class org/jetbrains/exposed/v1/r2dbc/R2dbcTransactionKt {
-	public static final fun addLogger (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;[Lorg/jetbrains/exposed/v1/core/SqlLogger;)Lorg/jetbrains/exposed/v1/core/CompositeSqlLogger;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/SchemaUtils : org/jetbrains/exposed/v1/core/SchemaUtilityApi {
