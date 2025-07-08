@@ -923,7 +923,9 @@ class UpsertTests : DatabaseTestsBase() {
             assertEquals(name, tester.selectAll().where { tester.id eq id }.single()[tester.name])
         }
 
-        // SQL seems correct, but the statement fails on POSTGRESNG
+        // SQL seems correct, but the statement fails on POSTGRESNG.
+        // It looks like POSTGRESNG driver fails if batch insert fails if the amount of result rows less
+        // than amount of statements in batch (due to `where` condition in this case)
         withTables(excludeSettings = TestDB.ALL_MYSQL_LIKE + upsertViaMergeDB + TestDB.POSTGRESQLNG, tester) {
             testerBatchUpsert(
                 listOf(

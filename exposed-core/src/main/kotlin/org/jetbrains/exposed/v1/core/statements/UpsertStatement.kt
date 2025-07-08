@@ -88,7 +88,6 @@ sealed interface UpsertBuilder {
      *
      * @sample org.jetbrains.exposed.v1.tests.shared.dml.UpsertTests.testUpsertWithManualUpdateUsingInsertValues
      */
-    @OptIn(InternalApi::class)
     fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
 
     companion object {
@@ -144,11 +143,11 @@ internal fun UpsertBuilder.getAdditionalArgs(
     }.args
 }
 
-@InternalApi
-class InsertValue<T>(
+internal class InsertValue<T>(
     val column: Column<T>,
     override val columnType: IColumnType<T & Any>
 ) : ExpressionWithColumnType<T>() {
+    @OptIn(InternalApi::class)
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         val transaction = CoreTransactionManager.currentTransaction()
         val functionProvider = getFunctionProvider(transaction.db.dialect)
@@ -158,6 +157,5 @@ class InsertValue<T>(
 
 /** Builder object for creating SQL expressions in UpsertStatement */
 object UpsertSqlExpressionBuilder : ISqlExpressionBuilder by SqlExpressionBuilder {
-    @OptIn(InternalApi::class)
     fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
 }

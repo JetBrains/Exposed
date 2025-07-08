@@ -2975,13 +2975,6 @@ public class org/jetbrains/exposed/v1/core/statements/InsertStatement : org/jetb
 	public static synthetic fun valuesAndDefaults$default (Lorg/jetbrains/exposed/v1/core/statements/InsertStatement;Ljava/util/Map;ILjava/lang/Object;)Ljava/util/Map;
 }
 
-public final class org/jetbrains/exposed/v1/core/statements/InsertValue : org/jetbrains/exposed/v1/core/ExpressionWithColumnType {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/Column;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
-	public final fun getColumn ()Lorg/jetbrains/exposed/v1/core/Column;
-	public fun getColumnType ()Lorg/jetbrains/exposed/v1/core/IColumnType;
-	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
-}
-
 public class org/jetbrains/exposed/v1/core/statements/MergeSelectStatement : org/jetbrains/exposed/v1/core/statements/MergeStatement {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/QueryAlias;Lorg/jetbrains/exposed/v1/core/Op;)V
 	public fun arguments ()Ljava/lang/Iterable;
