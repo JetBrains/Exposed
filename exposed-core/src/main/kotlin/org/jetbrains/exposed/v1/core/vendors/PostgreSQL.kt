@@ -372,6 +372,8 @@ open class PostgreSQLDialect(override val name: String = dialectName) : VendorDi
 
     override val supportsWindowFrameGroupsMode: Boolean = true
 
+    override val supportsSelectForUpdate: Boolean = true
+
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun modifyColumn(column: Column<*>, columnDiff: ColumnDiff): List<String> {
