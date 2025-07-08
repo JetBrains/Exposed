@@ -1,3 +1,20 @@
+# 1.0.0-beta-4
+
+## What's Changed
+
+Breaking changes:
+* refactor!: Make ThreadLocalMap internal & move mtc package into transactions by @bog-walk in https://github.com/JetBrains/Exposed/pull/2542
+* refactor!: Move addLogger() to exposed-core Transaction class by @bog-walk in https://github.com/JetBrains/Exposed/pull/2543
+
+Infrastructure:
+* org.junit:junit-bom 5.13.3
+
+Docs:
+* docs: Update KDocs @sample to use correct v1 package paths by @bog-walk in https://github.com/JetBrains/Exposed/pull/2541
+
+Bug fixes:
+* fix: EXPOSED-827 forUpdate() query method doesn't add actual `FOR UDPATE` modifier by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2548
+
 # 1.0.0-beta-3
 
 ## What's Changed

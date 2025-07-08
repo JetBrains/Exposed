@@ -1,6 +1,6 @@
 # Breaking Changes
 
-## 1.0.0-beta-4 <!--temporary version placeholder-->
+## 1.0.0-beta-4
 
 * `ThreadLocalMap` has been restricted to internal use, based on its current limited usage in already internal classes.
   It, along with `MappedTransactionContext`, has been moved into the subpackage: `org.jetbrains.exposed.v1.r2dbc.transactions.mtc`.

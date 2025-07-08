@@ -86,17 +86,17 @@
         <dependency>
             <groupId>org.jetbrains.exposed</groupId>
             <artifactId>exposed-core</artifactId>
-            <version>1.0.0-beta-3</version>
+            <version>1.0.0-beta-4</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.exposed</groupId>
             <artifactId>exposed-jdbc</artifactId>
-            <version>1.0.0-beta-3</version>
+            <version>1.0.0-beta-4</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.exposed</groupId>
             <artifactId>exposed-dao</artifactId>
-            <version>1.0.0-beta-3</version>
+            <version>1.0.0-beta-4</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
