@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.avg
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -18,6 +19,7 @@ import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.Test
+import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertNotEquals
@@ -131,6 +133,24 @@ class H2Tests : DatabaseTestsBase() {
             val average = testTable.number.avg()
             val result = testTable.select(average).single()[average]
             assertEquals("6.00".toBigDecimal(), result)
+        }
+    }
+
+    @Test
+    fun testH2UUIDConversionWithBinary16ColumnType() {
+        val testTable = object : UUIDTable("test_table") {
+        }
+
+        withDb(TestDB.ALL_H2) {
+            exec("CREATE TABLE test_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")
+
+            val uuid = UUID.randomUUID()
+
+            testTable.insert { it[testTable.id] = uuid }
+
+            val actualId = testTable.select(testTable.id).single()[testTable.id].value
+
+            assertEquals(uuid, actualId)
         }
     }
 
