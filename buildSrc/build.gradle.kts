@@ -1,6 +1,9 @@
 repositories {
     maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+    val kotlinRepoUrl = providers.gradleProperty("kotlin_repo_url").orNull
+    if (kotlinRepoUrl != null) maven(kotlinRepoUrl)
     mavenCentral()
+    mavenLocal()
     gradlePluginPortal()
 }
 
