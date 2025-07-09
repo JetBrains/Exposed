@@ -82,8 +82,6 @@ interface IColumnType<T> {
     fun nonNullValueAsDefaultString(value: T & Any): String = nonNullValueToString(value)
 
     /** Returns the object at the specified [index] in the [rs]. */
-    // TODO Could we avoid breaking change here for users?
-    // TODO What should do the users with custom column types that override this method?
     fun readObject(rs: RowApi, index: Int): Any? = rs.getObject(index, null, this)
 
     /** Sets the [value] at the specified [index] into the [stmt]. */

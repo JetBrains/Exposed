@@ -55,3 +55,6 @@ class JdbcResult(
         statement?.close()
     }
 }
+
+/** Returns the actual underlying [ResultSet] at the current position in this result [RowApi]. */
+val RowApi.origin: ResultSet get() = (this as JdbcResult).result
