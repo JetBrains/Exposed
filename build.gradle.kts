@@ -98,6 +98,10 @@ dependencies {
 }
 
 repositories {
+    val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
+    if (kotlinRepoUrl?.isNotEmpty() == true) {
+        maven(kotlinRepoUrl)
+    }
     maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
     maven("https://packages.jetbrains.team/maven/p/kt/dev")
     mavenLocal()
@@ -138,54 +142,57 @@ apiValidation {
 }
 
 subprojects {
+
+    repositories {
+        val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
+        if (kotlinRepoUrl?.isNotEmpty() == true) {
+            maven(kotlinRepoUrl)
+        }
+        maven("https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+    }
+
     configureDetekt()
 
     dependencies {
         detektPlugins(rootProject.libs.detekt.formatting)
     }
 
-}
-
-tasks.withType<KotlinJvmCompile>().configureEach {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_21)
-        apiVersion.set(kotlin_api_version)
-        languageVersion.set(kotlin_language_version)
-
-        buildScriptLogger.log(LogLevel.INFO, "kotlin Api Version : $kotlin_api_version ")
-        buildScriptLogger.log(LogLevel.INFO, "kotlin Language Version : $kotlin_language_version ")
-        buildScriptLogger.log(LogLevel.INFO, "kotlin repository url : $kotlin_repo_url ")
-
-        println("Additional cli options ${kotlin_additional_cli_options?.joinToString(" ")}")
-
-        if (kotlin_additional_cli_options != null) {
-            compilerOptions.freeCompilerArgs.addAll(kotlin_additional_cli_options)
-            logger.info("<KUP> additional cli options added: ${kotlin_additional_cli_options.joinToString(" ")}")
-        }
-
-        freeCompilerArgs.add("-Xreport-all-warnings")
-        buildScriptLogger.log(LogLevel.INFO, "-Xreport-all-warnings enabled")
-
-        allWarningsAsErrors.set(warnings_as_errors)
-        buildScriptLogger.log(LogLevel.INFO, "-Werror state: $warnings_as_errors")
-
-        freeCompilerArgs.add("-Xrender-internal-diagnostic-names")
-        buildScriptLogger.log(LogLevel.INFO, "-Xrender-internal-diagnostic-names enabled")
-
-        freeCompilerArgs.add("-Wextra")
-        buildScriptLogger.log(LogLevel.INFO, "-Wextra enabled")
-
-        freeCompilerArgs.add("-Xuse-fir-experimental-checkers")
-        buildScriptLogger.log(LogLevel.INFO, "-Xuse-fir-experimental-checkers enabled")
-
-    }
-}
-
-subprojects {
     if (name == "exposed-bom") return@subprojects
 
     apply(plugin = rootProject.libs.plugins.jvm.get().pluginId)
     apply(plugin = rootProject.libs.plugins.kover.get().pluginId)
+
+    tasks.withType<KotlinJvmCompile>().configureEach {
+        compilerOptions {
+            apiVersion.set(kotlin_api_version)
+            languageVersion.set(kotlin_language_version)
+
+            buildScriptLogger.log(LogLevel.INFO, "kotlin Api Version : $kotlin_api_version ")
+            buildScriptLogger.log(LogLevel.INFO, "kotlin Language Version : $kotlin_language_version ")
+            buildScriptLogger.log(LogLevel.INFO, "kotlin repository url : $kotlin_repo_url ")
+
+            println("Additional cli options ${kotlin_additional_cli_options?.joinToString(" ")}")
+
+            if (kotlin_additional_cli_options != null) {
+                compilerOptions.freeCompilerArgs.addAll(kotlin_additional_cli_options)
+                logger.info("<KUP> additional cli options added: ${kotlin_additional_cli_options.joinToString(" ")}")
+            }
+
+            freeCompilerArgs.add("-Xreport-all-warnings")
+            buildScriptLogger.log(LogLevel.INFO, "-Xreport-all-warnings enabled")
+
+            allWarningsAsErrors.set(warnings_as_errors)
+            buildScriptLogger.log(LogLevel.INFO, "-Werror state: $warnings_as_errors")
+
+            freeCompilerArgs.add("-Xrender-internal-diagnostic-names")
+            buildScriptLogger.log(LogLevel.INFO, "-Xrender-internal-diagnostic-names enabled")
+
+            freeCompilerArgs.add("-Wextra")
+            buildScriptLogger.log(LogLevel.INFO, "-Wextra enabled")
+
+        }
+    }
+
 
     testDb("h2_v2") {
         withContainer = false

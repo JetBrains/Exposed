@@ -39,8 +39,7 @@ dependencyResolutionManagement {
 pluginManagement.resolutionStrategy.eachPlugin {
     if (requested.id.id.startsWith("org.jetbrains.kotlin.")) {
         useVersion(kotlin_version)
-        // Confusing log in CI build with community-plugin. Use it for local debug
-//        println("Using kotlin compiler version: $kotlin_version")
+        println("Using kotlin compiler version: $kotlin_version")
     }
 }
 
