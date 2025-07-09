@@ -10,6 +10,10 @@ plugins {
 
 repositories {
     mavenCentral()
+    val kotlinRepoUrl: String? = providers.gradleProperty("kotlin_repo_url").orNull
+    if (kotlinRepoUrl?.isNotEmpty() == true) {
+        maven(kotlinRepoUrl)
+    }
 }
 
 kotlin {
