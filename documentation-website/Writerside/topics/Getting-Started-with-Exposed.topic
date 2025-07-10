@@ -4,6 +4,7 @@
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
        id="Getting-Started-with-Exposed" title="Get started with Exposed, an ORM framework for Kotlin">
     <show-structure for="chapter,procedure" depth="2"/>
+    <var name="project_name" value="exposed-kotlin-app"/>
     <tldr>
         <var name="example_name" value="get-started-with-exposed"/>
         <include from="lib.topic" element-id="code_example"/>
@@ -67,8 +68,8 @@
                     the following commands to create a new folder and change directory into it:
                 </p>
                 <code-block lang="console" prompt="$" show-white-spaces="false">
-                    mkdir exposed-kotlin-app
-                    cd exposed-kotlin-app
+                    mkdir %project_name%
+                    cd %project_name%
                 </code-block>
             </step>
             <step>
@@ -143,17 +144,19 @@
                 <p>
                     Navigate to the
                     <path>gradle/libs.versions.toml</path>
-                    file and define the Exposed version and libraries:
+                    file and define the Exposed and H2 version and libraries:
                 </p>
                 <code-block lang="kotlin" noinject="true">
                 [versions]
                 //...
                 exposed = "%exposed_version%"
+                h2 = "%h2_db_version%"
 
                 [libraries]
                 //...
                 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
                 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+                h2 = { module = "com.h2database:h2", version.ref = "h2" }
                 </code-block>
                 <list>
                     <li>
@@ -177,7 +180,7 @@
                         //...
                         implementation(libs.exposed.core)
                         implementation(libs.exposed.jdbc)
-                        implementation("com.h2database:h2:%h2_db_version%")
+                        implementation(libs.h2)
                         //...
                     }
                 </code-block>
@@ -254,16 +257,16 @@
                     This can be modified when calling the <code>Database.connect</code> method by providing an argument to <code>connectionAutoRegistration</code>
                     in the parameter list.
                 </note>
-                <p>
-                    With this, you've added Exposed to your Kotlin project and configured a database connection.
-                    You're now ready to define your data model and engage with the database using Exposed's DSL API.
-                </p>
             </step>
         </procedure>
+        <p>
+            With this, you've added Exposed to your Kotlin project and configured a database connection.
+            You're now ready to define your data model and engage with the database using Exposed's DSL API.
+        </p>
     </chapter>
     <chapter title="Define a table object" id="define-table-object">
         <p>
-            In Exposed, a database table is represented by an object inherited from the Table class.
+            In Exposed, a database table is represented by an object inherited from the <code>Table</code> class.
             To define the table object, follow the steps below.
         </p>
         <procedure id="define-table-object-procedure">
@@ -318,9 +321,9 @@
     <chapter title="Create and query a table" id="create-and-query-table">
         <p>
             With Exposed’s DSL API, you can interact with a database using a type-safe syntax similar to SQL.
-            Before you start executing database operations, you must open a <a href="Transactions.md">transaction</a>.
+            Before you start executing database operations, you must open a <code>transaction</code>.
         </p>
-        <p>
+        <p id="transaction-definition">
             A <a href="Transactions.md">transaction</a> is represented by an instance of the <code>Transaction</code> class, within which you
             can define and manipulate data using its lambda function. Exposed will automatically manage the opening
             and closing of the transaction in the background, ensuring seamless operation.
@@ -487,7 +490,7 @@
                 </code-block>
             </step>
         </procedure>
-        <tip>
+        <tip id="second-transaction-behaviour-tip">
             It might be useful to know that if a second <code>transaction</code> is opened after the first one,
             you will find that the table and its data has been lost
             even though the app hasn't stopped. This is <a href="https://www.h2database.com/html/features.html#in_memory_databases">

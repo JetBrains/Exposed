@@ -9,6 +9,7 @@
     <toc-element topic="Home.topic" toc-title="Home"/>
     <toc-element topic="About.topic" toc-title="About"/>
     <toc-element topic="Getting-Started-with-Exposed.topic" toc-title="Get started with Exposed"/>
+    <toc-element topic="Get-started-with-Exposed-DAO.md"/>
     <toc-element topic="Exposed-Modules.md"/>
     <toc-element toc-title="Databases">
         <toc-element topic="Working-with-Database.md"/>
