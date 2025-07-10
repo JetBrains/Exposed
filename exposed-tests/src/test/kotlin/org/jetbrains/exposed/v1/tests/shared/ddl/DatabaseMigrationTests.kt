@@ -1236,7 +1236,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
         }
 
         // It doesn't look like Sequence metadata works stable for all databases. For some databases it can't find existing sequences
-        withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL, dbTable, configure = { sqlLogger = StdOutSqlLogger }) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.POSTGRESQL, dbTable) {
             val statements = MigrationUtils.dropUnmappedSequences(tester)
 
             assertEquals(2, statements.size)
