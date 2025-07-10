@@ -124,6 +124,7 @@ function helps identify columns that are no longer present in your current table
 ```
 {src="exposed-migrations/src/main/kotlin/org/example/App.kt" include-symbol="dropStatements"}
 
+For indices and sequences, there are similar methods: `MigrationUtils.dropUnmappedIndices()` and `MigrationUtils.dropUnmappedSequences()`.
 
 ## Logging
 
