@@ -60,7 +60,7 @@ interface DatabaseConfig {
 
         /**
          * The maximum amount of attempts that will be made to perform any transaction block.
-         * If this value is set to 1 and an SQLException happens, the exception will be thrown without performing a retry.
+         * If this value is set to 1 and a database exception happens, the exception will be thrown without performing a retry.
          * This can be overridden on a per-transaction level by specifying the `maxAttempts` property in a
          * `transaction` block.
          * Default amount of attempts is 3.
@@ -70,7 +70,7 @@ interface DatabaseConfig {
         var defaultMaxAttempts: Int = DEFAULT_MAX_ATTEMPTS
 
         /**
-         * The minimum number of milliseconds to wait before retrying a transaction if an SQLException happens.
+         * The minimum number of milliseconds to wait before retrying a transaction if a database exception happens.
          * This can be overridden on a per-transaction level by specifying the `minRetryDelay` property in a
          * `transaction` block.
          * Default minimum delay is 0.
@@ -78,7 +78,7 @@ interface DatabaseConfig {
         var defaultMinRetryDelay: Long = 0
 
         /**
-         * The maximum number of milliseconds to wait before retrying a transaction if an SQLException happens.
+         * The maximum number of milliseconds to wait before retrying a transaction if a database exception happens.
          * This can be overridden on a per-transaction level by specifying the `maxRetryDelay` property in a
          * `transaction` block.
          * Default maximum delay is 0.

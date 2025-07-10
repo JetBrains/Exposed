@@ -26,7 +26,7 @@ class WhereConditionsTests : R2dbcDatabaseTestsBase() {
             val namesResult = User.selectAll().where {
                 User.name like stringLiteral("Hich%").upperCase()
             }.map { it[User.name] }
-                .toList() // TODO this is the only unmapped Iterable <-> Flow operation; impossible?
+                .toList()
 
             assertEquals(1, namesResult.size)
             assertEquals("HICHEM", namesResult.first())

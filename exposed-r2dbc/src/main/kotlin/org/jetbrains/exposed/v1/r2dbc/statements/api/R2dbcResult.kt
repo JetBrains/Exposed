@@ -55,8 +55,11 @@ class R2dbcResult internal constructor(
         }
     }
 
-    // Todo relies on rowsUpdated throwing ISE if already consumed; should we fail earlier as in mapRows()?
-    /** Returns a Flow containing the number of rows updated by executing a statement. */
+    /**
+     * Returns a Flow containing the number of rows updated by executing a statement.
+     *
+     * @throws IllegalStateException If the result has already been consumed by another flow operation.
+     */
     fun rowsUpdated(): Flow<Int> = flow {
         resultPublisher.collect { result ->
             result.rowsUpdated.collect { count ->
