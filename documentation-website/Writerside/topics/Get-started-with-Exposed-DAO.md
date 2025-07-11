@@ -104,7 +104,7 @@ Open **Task.kt** and add the following table definition:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/Task.kt" include-lines="1-2,5,8-13"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/Task.kt" include-lines="1-2,5,8,10-14"}
 
 In the `IntIdTable` constructor, passing the name `tasks` configures a custom
 name for the table. If you don't provide a name, Exposed will derive it from the object name, which may lead to
@@ -135,7 +135,7 @@ To define the entity, update your **Task.kt** file with the following code:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/Task.kt" include-lines="3-4,6-8,14-23"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/Task.kt" include-lines="3-4,6-8,15-24"}
 
 - `Task` extends `IntEntity`, which is a base class for entities with an `Int`-based primary key.
 - The `EntityID<Int>` parameter represents the primary key of the database row this entity maps to.

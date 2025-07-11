@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 
+@Suppress("MagicNumber")
 object Tasks : IntIdTable("tasks") {
     val title = varchar("name", 128)
     val description = varchar("description", 128)
