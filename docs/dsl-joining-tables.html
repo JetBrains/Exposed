@@ -1,79 +1,9 @@
-<!DOCTYPE html SYSTEM "about:legacy-compat">
-<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2025-01-15T14:46:39.373460168"><title>Joining tables | Exposed</title><script type="application/json" id="virtual-toc-data">[{"id":"join","level":0,"title":"Join","anchor":"#join"},{"id":"inner-join","level":1,"title":"Join on a foreign key","anchor":"#inner-join"},{"id":"union","level":0,"title":"Union","anchor":"#union"},{"id":"union-all","level":1,"title":"Include duplicates","anchor":"#union-all"}]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.css" rel="stylesheet"><link rel="icon" type="image/svg" sizes="16x16" href="images/exposed-logo.svg"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="Joining tables | Exposed"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="Exposed Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/docs/0.58.0/dsl-joining-tables.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="Joining tables | Exposed"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
-    "@context": "http://schema.org",
-    "@type": "WebPage",
-    "@id": "writerside-documentation/docs/0.58.0/dsl-joining-tables.html#webpage",
-    "url": "writerside-documentation/docs/0.58.0/dsl-joining-tables.html",
-    "name": "Joining tables | Exposed",
-    "description": "",
-    "image": "",
-    "inLanguage":"en-US"
-}</script><!-- End Schema.org --><!-- Schema.org WebSite --><script type="application/ld+json">{
-    "@type": "WebSite",
-    "@id": "writerside-documentation/docs/#website",
-    "url": "writerside-documentation/docs/",
-    "name": "Exposed Help"
-}</script><!-- End Schema.org --></head><body data-id="DSL-Joining-tables" data-main-title="Joining tables" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs="Deep Dive into DSL"><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>Exposed 0.58.0 Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="DSL-Joining-tables" id="DSL-Joining-tables.topic">Joining tables</h1><section class="chapter"><h2 id="join" data-toc="join">Join</h2><p id="-xsyvpv_2">For the join examples below, consider the following tables:</p><div class="tabs" id="-xsyvpv_3" data-anchors="[ActorsIntIdTable,RolesTable,StarWarsFilmsIntIdTable]"><div class="tabs__content" data-gtm="tab" id="StarWarsFilmsIntIdTable" data-title="StarWarsFilmsIntIdTable"><div class="code-block" data-lang="kotlin" data-title="Kotlin" data-disable-link-processing="true">package org.example.tables
-
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-
-object StarWarsFilmsIntIdTable : IntIdTable(&quot;star_wars_films_table&quot;) {
-    val sequelId = integer(&quot;sequel_id&quot;).uniqueIndex()
-    val name = varchar(&quot;name&quot;, MAX_VARCHAR_LENGTH)
-    val director = varchar(&quot;director&quot;, MAX_VARCHAR_LENGTH)
-}
-</div></div><div class="tabs__content" data-gtm="tab" id="ActorsIntIdTable" data-title="ActorsIntIdTable"><div class="code-block" data-lang="kotlin" data-title="Kotlin" data-disable-link-processing="true">package org.example.tables
-
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-
-const val MAX_NAME_LENGTH = 50
-
-object ActorsIntIdTable : IntIdTable(&quot;actors&quot;) {
-    val sequelId = integer(&quot;sequel_id&quot;).uniqueIndex()
-    val name = varchar(&quot;name&quot;, MAX_NAME_LENGTH)
-}
-</div></div><div class="tabs__content" data-gtm="tab" id="RolesTable" data-title="RolesTable"><div class="code-block" data-lang="kotlin" data-title="Kotlin" data-disable-link-processing="true">package org.example.tables
-
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-
-const val MAX_CHARACTER_NAME_LENGTH = 50
-
-object RolesTable : IntIdTable() {
-    val sequelId = integer(&quot;sequel_id&quot;)
-    val actorId = reference(&quot;actor_id&quot;, ActorsIntIdTable)
-    val characterName = varchar(&quot;name&quot;, MAX_CHARACTER_NAME_LENGTH)
-}
-</div></div></div><p id="-xsyvpv_7">In the following example, the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-column-set/join.html" id="-xsyvpv_8" data-external="true" rel="noopener noreferrer"><code class="code" id="-xsyvpv_9">.join()</code></a> function is used to count how many actors star in each movie:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">        ActorsIntIdTable.join(
-            StarWarsFilmsIntIdTable,
-            JoinType.INNER,
-            onColumn = ActorsIntIdTable.sequelId,
-            otherColumn = StarWarsFilmsIntIdTable.sequelId
-        )
-            .select(ActorsIntIdTable.name.count(), StarWarsFilmsIntIdTable.name)
-            .groupBy(StarWarsFilmsIntIdTable.name)</div><p id="-xsyvpv_11">Instead of specifying <code class="code" id="-xsyvpv_12">onColumn</code> and <code class="code" id="-xsyvpv_13">otherColumn</code>, <code class="code" id="-xsyvpv_14">additionalConstraint</code> can be used, which allows specifying additional types of join conditions.</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">        ActorsIntIdTable.join(
-            StarWarsFilmsIntIdTable,
-            JoinType.INNER,
-            additionalConstraint = { StarWarsFilmsIntIdTable.sequelId eq ActorsIntIdTable.sequelId }
-        )
-            .select(ActorsIntIdTable.name.count(), StarWarsFilmsIntIdTable.name)
-            .groupBy(StarWarsFilmsIntIdTable.name)</div><section class="chapter"><h3 id="inner-join" data-toc="inner-join">Join on a foreign key</h3><p id="-xsyvpv_16">When joining on a foreign key, the more concise <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/-column-set/inner-join.html" id="-xsyvpv_17" data-external="true" rel="noopener noreferrer"><code class="code" id="-xsyvpv_18">innerJoin</code></a> can be used:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">        (ActorsIntIdTable innerJoin RolesTable)
-            .select(RolesTable.characterName.count(), ActorsIntIdTable.name)
-            .groupBy(ActorsIntIdTable.name)
-            .toList()</div><p id="-xsyvpv_20">This is equivalent to using a <code class="code" id="-xsyvpv_21">.join()</code> with a <code class="code" id="-xsyvpv_22">JoinType.INNER</code>:</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">        ActorsIntIdTable.join(RolesTable, JoinType.INNER, onColumn = ActorsIntIdTable.id, otherColumn = RolesTable.actorId)
-            .select(RolesTable.characterName.count(), ActorsIntIdTable.name)
-            .groupBy(ActorsIntIdTable.name)
-            .toList()</div></section></section><section class="chapter"><h2 id="union" data-toc="union">Union</h2><p id="-xsyvpv_24">To combine the results of multiple queries, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/union.html" id="-xsyvpv_25" data-external="true" rel="noopener noreferrer"><code class="code" id="-xsyvpv_26">.union()</code></a> function. Per the SQL specification, the queries must have the same number of columns, and not be marked for update. Subqueries may be combined when supported by the database.</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">        val lucasDirectedQuery =
-            StarWarsFilmsIntIdTable.select(StarWarsFilmsIntIdTable.name).where { StarWarsFilmsIntIdTable.director eq &quot;George Lucas&quot; }
-
-        val abramsDirectedQuery =
-            StarWarsFilmsIntIdTable.select(StarWarsFilmsIntIdTable.name).where { StarWarsFilmsIntIdTable.director eq &quot;J.J. Abrams&quot; }
-
-        val filmNames = lucasDirectedQuery.union(abramsDirectedQuery).map { it[StarWarsFilmsIntIdTable.name] }
-</div><section class="chapter"><h3 id="union-all" data-toc="union-all">Include duplicates</h3><p id="-xsyvpv_28">By default, <code class="code" id="-xsyvpv_29">.union()</code> returns only unique rows. To include duplicates in the results, use the <a href="https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.sql/union-all.html" id="-xsyvpv_30" data-external="true" rel="noopener noreferrer"><code class="code" id="-xsyvpv_31">.unionAll()</code></a> function instead.</p><div class="code-block" data-lang="kotlin" data-disable-link-processing="true">        val lucasDirectedQuery =
-            StarWarsFilmsIntIdTable.select(StarWarsFilmsIntIdTable.name).where { StarWarsFilmsIntIdTable.director eq &quot;George Lucas&quot; }
-
-        val originalTrilogyQuery =
-            StarWarsFilmsIntIdTable.select(StarWarsFilmsIntIdTable.name).where { StarWarsFilmsIntIdTable.sequelId inList (3..5) }
-
-        val allFilmNames = lucasDirectedQuery.unionAll(originalTrilogyQuery).map { it[StarWarsFilmsIntIdTable.name] }
-</div></section></section><div class="last-modified">Last modified: 14 January 2025</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="dsl-table-types.html" class="navigation-links__prev">Table types</a><a href="dsl-crud-operations.html" class="navigation-links__next">CRUD operations</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.10.0-b267/app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en-US">
+<meta charset="utf-8">
+<title>You will be redirected shortly</title>
+<meta http-equiv="refresh" content="0; url=https://www.jetbrains.com/help/exposed/dsl-joining-tables.html">
+<h1>Redirecting&hellip;</h1>
+<a href="https://www.jetbrains.com/help/exposed/dsl-joining-tables.html">Click here if you are not redirected.</a>
+<script>location = "https://www.jetbrains.com/help/exposed/dsl-joining-tables.html"</script>
+</html>
