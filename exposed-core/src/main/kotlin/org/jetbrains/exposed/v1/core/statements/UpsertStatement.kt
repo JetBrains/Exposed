@@ -1,6 +1,7 @@
 package org.jetbrains.exposed.v1.core.statements
 
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.UpsertBuilder.Companion.getFunctionProvider
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.vendors.*
 
@@ -89,18 +90,6 @@ sealed interface UpsertBuilder {
      */
     fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
 
-    @OptIn(InternalApi::class)
-    private class InsertValue<T>(
-        val column: Column<T>,
-        override val columnType: IColumnType<T & Any>
-    ) : ExpressionWithColumnType<T>() {
-        override fun toQueryBuilder(queryBuilder: QueryBuilder) {
-            val transaction = CoreTransactionManager.currentTransaction()
-            val functionProvider = getFunctionProvider(transaction.db.dialect)
-            functionProvider.insertValue(transaction.identity(column), queryBuilder)
-        }
-    }
-
     companion object {
         /** Returns the [FunctionProvider] for valid upsert statement syntax. */
         fun getFunctionProvider(dialect: DatabaseDialect): FunctionProvider = when (dialect) {
@@ -152,4 +141,21 @@ internal fun UpsertBuilder.getAdditionalArgs(
         }
         where?.toQueryBuilder(this)
     }.args
+}
+
+internal class InsertValue<T>(
+    val column: Column<T>,
+    override val columnType: IColumnType<T & Any>
+) : ExpressionWithColumnType<T>() {
+    @OptIn(InternalApi::class)
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        val transaction = CoreTransactionManager.currentTransaction()
+        val functionProvider = getFunctionProvider(transaction.db.dialect)
+        functionProvider.insertValue(transaction.identity(column), queryBuilder)
+    }
+}
+
+/** Builder object for creating SQL expressions in UpsertStatement */
+object UpsertSqlExpressionBuilder : ISqlExpressionBuilder by SqlExpressionBuilder {
+    fun <T> insertValue(column: Column<T>): ExpressionWithColumnType<T> = InsertValue(column, column.columnType)
 }

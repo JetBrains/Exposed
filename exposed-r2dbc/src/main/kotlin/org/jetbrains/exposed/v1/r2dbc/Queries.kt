@@ -673,7 +673,7 @@ suspend fun <T : Table> T.upsert(
     vararg keys: Column<*>,
     onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
     body: T.(UpsertStatement<Long>) -> Unit
 ): UpsertStatement<Long> {
     val stmt = buildStatement { upsert(keys = keys, onUpdate, onUpdateExclude, where, body) }
@@ -732,7 +732,7 @@ suspend fun <T : Table, E : Any> T.batchUpsert(
     vararg keys: Column<*>,
     onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> {
@@ -761,7 +761,7 @@ suspend fun <T : Table, E : Any> T.batchUpsert(
     vararg keys: Column<*>,
     onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
     body: BatchUpsertStatement.(E) -> Unit
 ): List<ResultRow> {
@@ -774,7 +774,7 @@ private suspend fun <T : Table, E> T.batchUpsert(
     onUpdateList: List<Pair<Column<*>, Any?>>? = null,
     onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
     onUpdateExclude: List<Column<*>>? = null,
-    where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+    where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
     shouldReturnGeneratedValues: Boolean = true,
     vararg keys: Column<*>,
     body: BatchUpsertStatement.(E) -> Unit

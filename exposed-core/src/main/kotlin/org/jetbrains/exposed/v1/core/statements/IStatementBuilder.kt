@@ -301,14 +301,14 @@ interface IStatementBuilder {
         vararg keys: Column<*>,
         onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
         onUpdateExclude: List<Column<*>>? = null,
-        where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
         body: T.(UpsertStatement<Long>) -> Unit
     ): UpsertStatement<Long> {
         return UpsertStatement<Long>(
             table = this,
             keys = keys,
             onUpdateExclude = onUpdateExclude,
-            where = where?.let { SqlExpressionBuilder.it() }
+            where = where?.let { UpsertSqlExpressionBuilder.it() }
         ).apply {
             onUpdate?.let { storeUpdateValues(it) }
             body(this)
@@ -371,7 +371,7 @@ interface IStatementBuilder {
         onUpdateList: List<Pair<Column<*>, Any?>>? = null,
         onUpdate: (UpsertBuilder.(UpdateStatement) -> Unit)? = null,
         onUpdateExclude: List<Column<*>>? = null,
-        where: (SqlExpressionBuilder.() -> Op<Boolean>)? = null,
+        where: (UpsertSqlExpressionBuilder.() -> Op<Boolean>)? = null,
         shouldReturnGeneratedValues: Boolean = true,
         vararg keys: Column<*>,
         body: BatchUpsertStatement.(E) -> Unit
@@ -380,7 +380,7 @@ interface IStatementBuilder {
             table = this,
             keys = keys,
             onUpdateExclude = onUpdateExclude,
-            where = where?.let { SqlExpressionBuilder.it() },
+            where = where?.let { UpsertSqlExpressionBuilder.it() },
             shouldReturnGeneratedValues = shouldReturnGeneratedValues
         ).apply {
             onUpdate?.let { storeUpdateValues(it) }
@@ -425,6 +425,7 @@ interface IStatementBuilder {
     ): MergeSelectStatement {
         return MergeSelectStatement(this, selectQuery, SqlExpressionBuilder.on()).apply(body)
     }
+
     private fun Column<*>.isValidIfAutoIncrement(): Boolean =
         !columnType.isAutoInc || autoIncColumnType?.nextValExpression != null
 }
