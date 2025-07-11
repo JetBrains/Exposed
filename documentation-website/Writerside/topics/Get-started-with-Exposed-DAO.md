@@ -1,4 +1,4 @@
-# Get started with Exposed DAO
+# Get started with Exposed's DAO API
 
 <show-structure for="chapter,procedure" depth="2"/>
 <tldr>
@@ -13,14 +13,14 @@
     Learn how to create and query tables in Kotlin with Exposed's DAO API.
 </link-summary>
 
-In this tutorial, you’ll learn how to use Exposed’s DAO (Data Access Object) API to store and retrieve data in a
+In this tutorial, you’ll learn how to use Exposed’s Data Access Object (DAO) API to store and retrieve data in a
 relational database by building a simple console application.
 
-By the end, you’ll be able to:
+By the end of this tutorial, you’ll be able to do the following:
 
-- Configure a database connection.
+- Configure a database connection using an in-memory database.
 - Define database tables and corresponding DAO entities.
-- Perform basic CRUD operations using object-oriented style.
+- Perform basic CRUD (Create, Read, Update, and Delete) operations using object-oriented style.
 
 <include from="Getting-Started-with-Exposed.topic" element-id="prerequisites"/>
 <var name="project_name" value="exposed-dao-kotlin-app"/>
@@ -107,45 +107,54 @@ Open **Task.kt** and add the following table definition:
 {src="get-started-with-exposed-dao/src/main/kotlin/org/example/Task.kt" include-lines="1-2,5,8-13"}
 
 In the `IntIdTable` constructor, passing the name `tasks` configures a custom
-name for the table. Keep in mind that if no custom name is specified, Exposed will generate
-one from the class name, which might lead to unexpected results.
+name for the table. If you don't provide a name, Exposed will derive it from the object name, which may lead to
+unexpected results depending on naming conventions.
 
-Within the `Tasks` object, three columns are defined:
+The `Tasks` object defines three columns:
 
-- `title` and `description` of type `String` are defined with the `varchar()` method.
-- `isCompleted` of type `Boolean` is defined with the `bool()` method. Using the `default()` function, you configure the
-default value to `false`.
+- `title` and `description` are `String` columns, created using the `varchar()` function. Each column has a maximum
+length of 128 characters.
+- `isCompleted` is a `Boolean` column, defined using the `bool()` function. Using the `default(false)` call, you
+configure the default value to `false`.
 
-The `IntIdTable` class will automatically generate an auto-incrementing integer id
-column, to serve as the primary key for the table. At this point, you have defined a table with columns, which essentially creates the
-blueprint for the `Tasks` table.
+The `IntIdTable` class automatically adds an auto-incrementing integer `id`
+column as the primary key for the table. At this point, you have defined a table with columns, which essentially 
+creates the blueprint for the `tasks` table.
 
 </step>
 </procedure>
 
 ## Define an entity
 
-When you use DAO approach, the `IntIdTable` needs to be associated with an `Entity`. This is because every database
-record in this table needs to be mapped to an `Entity` instance, identified by its primary key.
+When using the DAO approach, each table defined using `IntIdTable` must be associated with a corresponding
+[entity class](DAO-Entity-definition.topic).
+This is because each database record in the table is represented by an entity instance, uniquely identified by its
+primary key.
 
-To do that, add the following entity definition in your **Task.kt** file:
+To define the entity, update your **Task.kt** file with the following code:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/Task.kt" include-lines="3-4,6-8,14-25"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/Task.kt" include-lines="3-4,6-8,14-23"}
+
+- `Task` extends `IntEntity`, which is a base class for entities with an `Int`-based primary key.
+- The `EntityID<Int>` parameter represents the primary key of the database row this entity maps to.
+- The `companion object` extends `IntEntityClass<Task>`, linking the entity class to the `Tasks` table.
+- Each property (`title`, `description`, and `isCompleted`) is delegated to its corresponding column in the `Tasks`
+table using Kotlin's `by` keyword.
 
 ## Create and query a table
 
-With Exposed’s DAO API, you can interact with a database using a type-safe syntax similar to Kotlin objects.
-Before you start executing database operations, you must open a `transaction`.
+With Exposed’s DAO API, you can interact with your database using a type-safe, object-oriented syntax similar to
+working with regular Kotlin classes. Before executing any database operations, you must run them inside a `transaction`.
 
 <include from="Getting-Started-with-Exposed.topic" element-id="transaction-definition"/>
 
-Navigate back to the **App.kt** file and add the following transaction function:
+Open your **App.kt** file and add the following transaction function:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="1-2,4-33,43"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="1-2,4-11,16-33,41-42"}
 
 First, you create the tasks table using the `SchemaUtils.create()` method. The `SchemaUtils` object holds utility 
 methods for creating, altering, and dropping database objects.
@@ -164,7 +173,7 @@ INSERT INTO TASKS ("name", DESCRIPTION, COMPLETED) VALUES ('Learn Exposed DAO', 
 INSERT INTO TASKS ("name", DESCRIPTION, COMPLETED) VALUES ('Read The Hobbit', 'Read chapter one', TRUE)
 ```
 
-With the `.find()` method you then create a query to retrieve all entity instances with `isCompleted` set to `true`:
+With the `.find()` method you then perform a filtered query, retrieving all tasks where `isCompleted` is `true`:
 
 ```kotlin
 ```
@@ -175,11 +184,11 @@ database. For this, you need to add a logger.
 
 ## Enable logging
 
-At the beginning of your transaction block, add the following line to enable SQL query logging:
+At the beginning of your `transaction` block, add the following to enable SQL query logging:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="11-15,42"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="3,7,11-14,41"}
 
 ## Run the application
 
@@ -209,19 +218,19 @@ In the same `transaction()` function, add the following code to your implementat
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="12,14-16,35-42"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="11,13-15,34-41"}
 
 You update the value of a property just as you would with any property in a Kotlin class:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="36"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="35"}
 
-Similarly, to delete a task, you use the `.delete()` function on the entity:
+Similarly, to delete a task, you use the `.delete()` method on the entity:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="40"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="39"}
 
 </step>
 <step>
@@ -251,6 +260,9 @@ Remaining tasks: [Task(id=1, title=Learn Exposed DAO, completed=true)]
 
 ## Next steps
 
-Way to go! You have now implemented a simple console application that uses Exposed's DAO API to fetch and modify task
-data from an in-memory database. Now that you’ve covered the basics, you can explore everything DAO has to offer,
-from [CRUD operations](DAO-CRUD-Operations.topic) to [Relationships](DAO-Relationships.topic) and more.
+Great job! You've built a simple console application using Exposed's DAO API to create, query, and manipulate task
+data in an in-memory database.
+
+Now that you've covered the fundamentals, you're ready to dive deeper into what the DAO API offers. Continue exploring
+[CRUD operations](DAO-CRUD-Operations.topic) or learn how to [define relationships between entities](DAO-Relationships.topic).
+These next chapters will help you build more complex, real-world data models using Exposed’s type-safe, object-oriented approach.
