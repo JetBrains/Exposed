@@ -8,6 +8,7 @@ dependencies {
     implementation(libs.jvm)
     implementation(libs.docker.compose)
     implementation(libs.detekt)
+    implementation(libs.maven.publish)
 }
 
 plugins {
