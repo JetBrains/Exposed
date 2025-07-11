@@ -109,9 +109,6 @@ class R2dbcConnectionImpl(
         } else {
             createStatement(preparedSql)
         }
-//        TODO
-//        val r2dbcQuery = if (returnKeys) "$preparedSql RETURNING *" else preparedSql
-//        R2dbcPreparedStatementImpl(createStatement(r2dbcQuery), this, returnKeys, isInsert = r2dbcQuery.startsWith("INSERT"))
         R2dbcPreparedStatementImpl(r2dbcStatement, this, returnKeys, currentDialect, typeMapping)
     }
 

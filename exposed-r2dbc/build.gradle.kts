@@ -26,7 +26,6 @@ dependencies {
     compileOnly(libs.postgre)
     compileOnly(libs.r2dbc.postgresql)
 }
-// TODO confirm use of repomix.config.json +/- remove?
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
