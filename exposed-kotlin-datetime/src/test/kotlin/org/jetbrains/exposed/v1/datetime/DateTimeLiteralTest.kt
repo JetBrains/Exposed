@@ -1,6 +1,5 @@
 package org.jetbrains.exposed.v1.datetime
 
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -11,6 +10,8 @@ import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.junit.Test
 import kotlin.test.assertNotNull
+import kotlin.time.Instant
+import kotlinx.datetime.Instant as xInstant
 
 class DateTimeLiteralTest : DatabaseTestsBase() {
     private val defaultDate = LocalDate(2000, 1, 1)
@@ -25,6 +26,14 @@ class DateTimeLiteralTest : DatabaseTestsBase() {
 
     object TableWithDatetime : IntIdTable() {
         val datetime = datetime("datetime")
+    }
+
+    @Deprecated("Deprecated due to usage of old kotlinx.datetime.Instant")
+    private val xDefaultTimestamp = xInstant.parse("2000-01-01T01:00:00.00Z")
+
+    @Deprecated("Deprecated due to usage of old kotlinx.datetime.Instant")
+    object XTableWithTimestamp : IntIdTable() {
+        val timestamp = xTimestamp("timestamp")
     }
 
     private val defaultTimestamp = Instant.parse("2000-01-01T01:00:00.00Z")
@@ -76,6 +85,18 @@ class DateTimeLiteralTest : DatabaseTestsBase() {
             }
             val query = TableWithDatetime.selectAll().where { TableWithDatetime.datetime less dateTimeLiteral(futureDatetime) }
             assertNotNull(query.firstOrNull())
+        }
+    }
+
+    @Test
+    fun testSelectByXTimestampLiteralEquality() {
+        withTables(XTableWithTimestamp) {
+            XTableWithTimestamp.insert {
+                it[timestamp] = xDefaultTimestamp
+            }
+
+            val query = XTableWithTimestamp.select(XTableWithTimestamp.timestamp).where { XTableWithTimestamp.timestamp eq timestampLiteral(xDefaultTimestamp) }
+            assertEquals(xDefaultTimestamp, query.single()[XTableWithTimestamp.timestamp])
         }
     }
 

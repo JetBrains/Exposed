@@ -31,7 +31,9 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlin.test.assertEquals
+import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 class KotlinTimeTests : R2dbcDatabaseTestsBase() {
 
@@ -55,7 +57,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             val insertedSecond = CitiesTime.select(CitiesTime.local_time.second()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.second()]
 
             assertEquals(now.year, insertedYear)
-            assertEquals(now.month.value, insertedMonth)
+            assertEquals(now.month.number, insertedMonth)
             assertEquals(now.dayOfMonth, insertedDay)
             assertEquals(now.hour, insertedHour)
             assertEquals(now.minute, insertedMinute)
@@ -93,6 +95,8 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
         val testTable = object : Table() {
             val ts = timestamp("ts")
             val tsn = timestamp("tsn").nullable()
+            val xts = xTimestamp("xts")
+            val xtsn = xTimestamp("xtsn").nullable()
         }
 
         val now = Clock.System.nowAsJdk8()
@@ -101,6 +105,8 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             testTable.insert {
                 it[ts] = now
                 it[tsn] = now
+                it[xts] = now.toDeprecatedInstant()
+                it[xtsn] = now.toDeprecatedInstant()
             }
 
             val maxTsExpr = testTable.ts.max()
@@ -118,6 +124,22 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             val minTsnExpr = testTable.tsn.min()
             val minNullableTimestamp = testTable.select(minTsnExpr).single()[minTsnExpr]
             assertEqualDateTime(now, minNullableTimestamp)
+
+            val xMaxTsExpr = testTable.xts.max()
+            val xMaxTimestamp = testTable.select(xMaxTsExpr).single()[xMaxTsExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMaxTimestamp)
+
+            val xMinTsExpr = testTable.xts.min()
+            val xMinTimestamp = testTable.select(xMinTsExpr).single()[xMinTsExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMinTimestamp)
+
+            val xMaxTsnExpr = testTable.xtsn.max()
+            val xMaxNullableTimestamp = testTable.select(xMaxTsnExpr).single()[xMaxTsnExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMaxNullableTimestamp)
+
+            val xMinTsnExpr = testTable.xtsn.min()
+            val xMinNullableTimestamp = testTable.select(xMinTsnExpr).single()[xMinTsnExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMinNullableTimestamp)
         }
     }
 
@@ -460,6 +482,31 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
                 tableWithTime.select(tableWithTime.id, tableWithTime.time)
                     .where { tableWithTime.time eq localTimeLiteral }
                     .single()[tableWithTime.time]
+            )
+        }
+    }
+
+    @Test
+    fun testXTimestampAlwaysSavedInUTC() {
+        val tester = object : Table("tester") {
+            val x_timestamp_col = xTimestamp("timestamp_col")
+        }
+
+        // TODO MYSQL_V8 test does not work on R2DBC now. The problem is that received timestamp is shifted by timezone.
+        withTables(excludeSettings = listOf(TestDB.MYSQL_V8), tester) {
+            // Cairo time zone
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+            assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
+
+            val instant = Clock.System.nowAsJdk8()
+
+            tester.insert {
+                it[x_timestamp_col] = instant.toDeprecatedInstant()
+            }
+
+            assertEquals(
+                instant.toDeprecatedInstant(),
+                tester.selectAll().single()[tester.x_timestamp_col]
             )
         }
     }

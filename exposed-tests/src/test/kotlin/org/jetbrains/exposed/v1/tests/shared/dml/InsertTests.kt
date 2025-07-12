@@ -13,7 +13,9 @@ import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
+import org.jetbrains.exposed.v1.datetime.XCurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.timestamp
+import org.jetbrains.exposed.v1.datetime.xTimestamp
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.statements.BatchInsertBlockingExecutable
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
@@ -728,6 +730,19 @@ class InsertTests : DatabaseTestsBase() {
             }.single()
             assertEquals("custom-id-value", result1[tester.id].value)
             assertEquals("custom-id-value", result1[tester.customId])
+        }
+    }
+
+    @Test
+    fun testXInsertReturnsValuesFromDefaultExpression() {
+        val tester = object : Table() {
+            val xDefaultDate = xTimestamp(name = "default_date").defaultExpression(XCurrentTimestamp)
+        }
+
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES, tester) {
+            val entry = tester.insert {}
+
+            assertNotNull(entry[tester.xDefaultDate])
         }
     }
 

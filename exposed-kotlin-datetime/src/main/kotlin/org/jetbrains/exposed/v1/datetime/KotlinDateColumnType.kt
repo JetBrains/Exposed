@@ -21,6 +21,10 @@ import java.time.temporal.ChronoField
 import java.util.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
+import kotlinx.datetime.Instant as xInstant
 
 private const val MILLIS_IN_SECOND = 1000
 
@@ -393,9 +397,83 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
 }
 
 /**
- * Column for storing dates and times without time zone, as [Instant].
+ * Column for storing dates and times without time zone, as [kotlinx.datetime.Instant].
  *
  * @sample timestamp
+ */
+class XKotlinInstantColumnType : ColumnType<xInstant>(), IDateColumnType {
+    override val hasTimePart: Boolean = true
+
+    override fun sqlType(): String = currentDialect.dataTypeProvider.timestampType()
+
+    override fun nonNullValueToString(value: xInstant): String {
+        val instant = value.toStdlibInstant().toJavaInstant()
+
+        return when (val dialect = currentDialect) {
+            is MysqlDialect -> {
+                val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER else MYSQL_TIMESTAMP_STRING_FORMATTER
+                "'${formatter.format(instant)}'"
+            }
+
+            is SQLiteDialect ->
+                "'${SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(instant)}'"
+
+            is OracleDialect -> oracleTimestampLiteral(value.toStdlibInstant())
+
+            else -> "'${DEFAULT_TIMESTAMP_STRING_FORMATTER.format(instant)}'"
+        }
+    }
+
+    override fun valueFromDB(value: Any): xInstant = when (value) {
+        is java.sql.Timestamp -> value.toInstant().toKotlinInstant().toDeprecatedInstant()
+        is String -> xInstant.parse(value)
+        is java.time.LocalDateTime -> value.atZone(ZoneId.systemDefault()).toInstant().toKotlinInstant().toDeprecatedInstant()
+        else -> valueFromDB(value.toString())
+    }
+
+    override fun readObject(rs: RowApi, index: Int): Any? {
+        return rs.getObject(index, java.sql.Timestamp::class.java, this)
+    }
+
+    @Suppress("MagicNumber")
+    override fun notNullValueToDB(value: xInstant): Any {
+        val dialect = currentDialect
+        @OptIn(InternalApi::class)
+        return when {
+            dialect is SQLiteDialect ->
+                SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value.toStdlibInstant().toJavaInstant())
+            dialect is MysqlDialect && dialect !is MariaDBDialect && !CoreTransactionManager.currentTransaction().db.version.covers(8, 0) -> {
+                val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER else MYSQL_TIMESTAMP_STRING_FORMATTER
+                formatter.format(value.toStdlibInstant().toJavaInstant())
+            }
+            else -> java.sql.Timestamp.from(value.toStdlibInstant().toJavaInstant())
+        }
+    }
+
+    override fun nonNullValueAsDefaultString(value: xInstant): String {
+        val dialect = currentDialect
+        return when {
+            dialect is PostgreSQLDialect ->
+                "'${
+                    SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value.toStdlibInstant().toJavaInstant()).trimEnd('0').trimEnd('.')
+                }'::timestamp without time zone"
+
+            dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
+                "'${SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value.toStdlibInstant().toJavaInstant()).trimEnd('0').trimEnd('.')}'"
+
+            else -> super.nonNullValueAsDefaultString(value)
+        }
+    }
+
+    companion object {
+        internal val INSTANCE = XKotlinInstantColumnType()
+    }
+}
+
+/**
+ * Column for storing dates and times without time zone, as [kotlin.time.Instant].
+ *
+ * @sample Timestamp
  */
 class KotlinInstantColumnType : ColumnType<Instant>(), IDateColumnType {
     override val hasTimePart: Boolean = true
@@ -582,6 +660,17 @@ fun Table.datetime(name: String): Column<LocalDateTime> = registerColumn(name, K
  * @param name The column name
  */
 fun Table.time(name: String): Column<LocalTime> = registerColumn(name, KotlinLocalTimeColumnType())
+
+/**
+ * A timestamp column to store both a date and a time without time zone.
+ *
+ * @param name The column name
+ */
+@Deprecated(
+    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    replaceWith = ReplaceWith("timestamp")
+)
+fun Table.xTimestamp(name: String): Column<xInstant> = registerColumn(name, XKotlinInstantColumnType())
 
 /**
  * A timestamp column to store both a date and a time without time zone.

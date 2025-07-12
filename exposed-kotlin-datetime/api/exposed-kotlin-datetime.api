@@ -27,6 +27,7 @@ public final class org/jetbrains/exposed/v1/datetime/KotlinDateColumnTypeKt {
 	public static final fun time (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static final fun timestamp (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 	public static final fun timestampWithTimeZone (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
+	public static final fun xTimestamp (Lorg/jetbrains/exposed/v1/core/Table;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/Column;
 }
 
 public final class org/jetbrains/exposed/v1/datetime/KotlinDateFunctionsKt {
@@ -100,6 +101,23 @@ public final class org/jetbrains/exposed/v1/datetime/KotlinDateFunctionsKt {
 	public static final fun OffsetDateTimeTimeFunction (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
 	public static final fun OffsetDateTimeYearExt (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
 	public static final fun OffsetDateTimeYearFunction (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XCustomTimeStampFunction (Ljava/lang/String;[Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/CustomFunction;
+	public static final fun XInstantDateExt (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantDateFunction (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantDayExt (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantDayFunction (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantHourExt (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantHourFunction (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantMinuteExt (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantMinuteFunction (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantMonthExt (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantMonthFunction (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantSecondExt (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantSecondFunction (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantTimeExt (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantTimeFunction (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantYearExt (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
+	public static final fun XInstantYearFunction (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Function;
 	public static final fun dateLiteral (Lkotlinx/datetime/LocalDate;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun dateParam (Lkotlinx/datetime/LocalDate;)Lorg/jetbrains/exposed/v1/core/Expression;
 	public static final fun dateTimeLiteral (Lkotlinx/datetime/LocalDateTime;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
@@ -108,7 +126,9 @@ public final class org/jetbrains/exposed/v1/datetime/KotlinDateFunctionsKt {
 	public static final fun durationParam-LRDsOJo (J)Lorg/jetbrains/exposed/v1/core/Expression;
 	public static final fun timeLiteral (Lkotlinx/datetime/LocalTime;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun timeParam (Lkotlinx/datetime/LocalTime;)Lorg/jetbrains/exposed/v1/core/Expression;
+	public static final fun timestampLiteral (Lkotlin/time/Instant;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun timestampLiteral (Lkotlinx/datetime/Instant;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
+	public static final fun timestampParam (Lkotlin/time/Instant;)Lorg/jetbrains/exposed/v1/core/Expression;
 	public static final fun timestampParam (Lkotlinx/datetime/Instant;)Lorg/jetbrains/exposed/v1/core/Expression;
 	public static final fun timestampWithTimeZoneLiteral (Ljava/time/OffsetDateTime;)Lorg/jetbrains/exposed/v1/core/LiteralOp;
 	public static final fun timestampWithTimeZoneParam (Ljava/time/OffsetDateTime;)Lorg/jetbrains/exposed/v1/core/Expression;
@@ -134,15 +154,15 @@ public final class org/jetbrains/exposed/v1/datetime/KotlinInstantColumnType : o
 	public fun <init> ()V
 	public fun getHasTimePart ()Z
 	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueAsDefaultString (Lkotlinx/datetime/Instant;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Lkotlin/time/Instant;)Ljava/lang/String;
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
-	public fun nonNullValueToString (Lkotlinx/datetime/Instant;)Ljava/lang/String;
+	public fun nonNullValueToString (Lkotlin/time/Instant;)Ljava/lang/String;
 	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun notNullValueToDB (Lkotlinx/datetime/Instant;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lkotlin/time/Instant;)Ljava/lang/Object;
 	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
 	public fun sqlType ()Ljava/lang/String;
 	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun valueFromDB (Ljava/lang/Object;)Lkotlinx/datetime/Instant;
+	public fun valueFromDB (Ljava/lang/Object;)Lkotlin/time/Instant;
 }
 
 public final class org/jetbrains/exposed/v1/datetime/KotlinInstantColumnType$Companion {
@@ -222,6 +242,29 @@ public final class org/jetbrains/exposed/v1/datetime/KotlinOffsetDateTimeColumnT
 }
 
 public final class org/jetbrains/exposed/v1/datetime/KotlinOffsetDateTimeColumnType$Companion {
+}
+
+public final class org/jetbrains/exposed/v1/datetime/XCurrentTimestamp : org/jetbrains/exposed/v1/datetime/CurrentTimestampBase {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/datetime/XCurrentTimestamp;
+}
+
+public final class org/jetbrains/exposed/v1/datetime/XKotlinInstantColumnType : org/jetbrains/exposed/v1/core/ColumnType, org/jetbrains/exposed/v1/core/IDateColumnType {
+	public static final field Companion Lorg/jetbrains/exposed/v1/datetime/XKotlinInstantColumnType$Companion;
+	public fun <init> ()V
+	public fun getHasTimePart ()Z
+	public synthetic fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueAsDefaultString (Lkotlinx/datetime/Instant;)Ljava/lang/String;
+	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
+	public fun nonNullValueToString (Lkotlinx/datetime/Instant;)Ljava/lang/String;
+	public synthetic fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun notNullValueToDB (Lkotlinx/datetime/Instant;)Ljava/lang/Object;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
+	public fun sqlType ()Ljava/lang/String;
+	public synthetic fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun valueFromDB (Ljava/lang/Object;)Lkotlinx/datetime/Instant;
+}
+
+public final class org/jetbrains/exposed/v1/datetime/XKotlinInstantColumnType$Companion {
 }
 
 public final class org/jetbrains/exposed/v1/datetime/YearInternal : org/jetbrains/exposed/v1/core/Function {
