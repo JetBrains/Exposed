@@ -181,6 +181,48 @@ object MigrationUtils : MigrationUtilityApi() {
     }
 
     /**
+     * Returns the SQL statements that drop any indices that exist in the database but are not defined in [tables].
+     *
+     * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
+     * This can be disabled by setting [withLogs] to `false`.
+     *
+     * @param tables The table definitions to check for unmapped indices
+     * @param withLogs Whether to log intermediate steps and execution time. Defaults to `true`
+     * @return A list of SQL DROP INDEX statements for unmapped indices
+     */
+    @OptIn(InternalApi::class)
+    fun dropUnmappedIndices(vararg tables: Table, withLogs: Boolean = true): List<String> {
+        if (tables.isEmpty()) return emptyList()
+
+        val foreignKeyConstraints = currentDialectMetadata.columnConstraints(*tables).keys
+        val existingIndices = currentDialectMetadata.existingIndices(*tables)
+
+        val (_, toDrop) = existingIndices.filterAndLogMissingAndUnmappedIndices(foreignKeyConstraints, withDropIndices = true, withLogs = withLogs, tables = tables)
+
+        return toDrop.flatMap {
+            it.dropStatement()
+        }
+    }
+
+    /**
+     * Returns the SQL statements that drop any sequences that exist in the database but are not defined in [tables].
+     *
+     * By default, a description for each intermediate step, as well as its execution time, is logged at the INFO level.
+     * This can be disabled by setting [withLogs] to `false`.
+     *
+     * @param tables The table definitions to check for unmapped sequences
+     * @param withLogs Whether to log intermediate steps and execution time. Defaults to `true`
+     * @return A list of SQL DROP SEQUENCE statements for unmapped sequences
+     */
+    fun dropUnmappedSequences(vararg tables: Table, withLogs: Boolean = true): List<String> {
+        if (tables.isEmpty()) return emptyList()
+
+        val sequences = checkUnmappedSequences(tables = tables, withLogs = withLogs)
+
+        return sequences.flatMap { it.dropStatement() }
+    }
+
+    /**
      * Log Exposed table mappings <-> real database mapping problems and returns DDL Statements to fix them, including
      * DROP/DELETE statements (unlike [checkMappingConsistence]).
      *
