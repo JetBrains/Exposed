@@ -395,7 +395,8 @@ by common interfaces, like `RowApi`.
 
 The `IColumnType` interface has a method `readObject()` for performing any special read or conversion logic when
 accessing an object at a specific index in the result.
-The signature of this method has changed to use `RowApi` instead of `ResultSet`, which still allows access via `getObject()`:
+The signature of this method has changed to use `RowApi` instead of `ResultSet`, which still allows access to either the
+underlying JDBC `ResultSet` or R2DBC `Row` via `getObject()`:
 
 <compare first-title="0.61.0" second-title="1.0.0-beta-1">
 
@@ -431,6 +432,53 @@ class ShortTextColumnType : TextColumnType() {
         return rs
             .getObject(index, java.lang.String::class.java)
             ?.take(MAX_CHARS)
+    }
+
+    companion object {
+        private const val MAX_CHARS = 128
+    }
+}
+```
+
+</compare>
+
+Instead of switching to `getObject()` as above, the original code called on a `ResultSet` could still be used by accessing
+the underlying wrapped result via `RowApi.origin`:
+
+<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+
+```kotlin
+import org.jetbrains.exposed.sql.TextColumnType
+import java.sql.ResultSet
+
+class ShortTextColumnType : TextColumnType() {
+    override fun readObject(
+        rs: ResultSet,
+        index: Int
+    ): Any? {
+        return rs
+            .getString(index)
+            .take(MAX_CHARS)
+    }
+
+    companion object {
+        private const val MAX_CHARS = 128
+    }
+}
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.core.TextColumnType
+import org.jetbrains.exposed.v1.core.statements.api.RowApi
+
+class ShortTextColumnType : TextColumnType() {
+    override fun readObject(
+        rs: RowApi,
+        index: Int
+    ): Any? {
+        return rs.origin
+            .getString(index)
+            .take(MAX_CHARS)
     }
 
     companion object {

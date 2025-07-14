@@ -738,6 +738,10 @@ public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcResult : or
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcResultKt {
+	public static final fun getOrigin (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;)Ljava/sql/ResultSet;
+}
+
 public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcSavepoint : org/jetbrains/exposed/v1/core/statements/api/ExposedSavepoint {
 	public fun <init> (Ljava/lang/String;Ljava/sql/Savepoint;)V
 }
