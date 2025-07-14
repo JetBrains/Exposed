@@ -9,7 +9,7 @@
     <toc-element topic="Home.topic" toc-title="Home"/>
     <toc-element topic="About.topic" toc-title="About"/>
     <toc-element toc-title="Get started">
-        <toc-element topic="Getting-Started-with-Exposed.topic" toc-title="Get started with Exposed"/>
+        <toc-element topic="Get-Started-with-Exposed.topic" toc-title="Get started with Exposed" accepts-web-file-names="getting-started-with-exposed.html"/>
         <toc-element topic="Get-started-with-Exposed-DAO.md"/>
     </toc-element>
     <toc-element topic="Exposed-Modules.md"/>

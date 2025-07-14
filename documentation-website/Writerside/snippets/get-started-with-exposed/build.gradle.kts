@@ -31,7 +31,7 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
-    implementation("com.h2database:h2:2.2.224")
+    implementation(libs.h2)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

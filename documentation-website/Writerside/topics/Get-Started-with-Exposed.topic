@@ -2,7 +2,7 @@
 <!DOCTYPE topic SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
-       id="Getting-Started-with-Exposed" title="Get started with Exposed, an ORM framework for Kotlin">
+       id="Get-Started-with-Exposed" title="Get started with Exposed, an ORM framework for Kotlin">
     <show-structure for="chapter,procedure" depth="2"/>
     <var name="project_name" value="exposed-kotlin-app"/>
     <tldr>
@@ -216,8 +216,8 @@
                     file with the following implementation:
                 </p>
                 <code-block lang="kotlin"
-                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="4-5,9,18-20,61"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="4-5,9,17-19,60"
                 />
                 <p>
                     The <code>Database.connect()</code> function creates an instance of a class that represents
@@ -284,7 +284,7 @@
             <step>
                 <p>Open <path>Task.kt</path> and add the following table definition:</p>
                 <code-block lang="kotlin"
-                            src="get-started-with-exposed/app/src/main/kotlin/org/example/Task.kt"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/Task.kt"
                 />
                 <p>
                     In the <code>Table</code> constructor, passing the name <code>tasks</code> configures a custom
@@ -336,8 +336,8 @@
                     file and add the following transaction function:
                 </p>
                 <code-block lang="kotlin"
-                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="4-22,28-45,60-61"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="4-20,26-45,58-60"
                 />
                 <p>Let's break down the code and go over each section.</p>
                 <p>
@@ -349,8 +349,8 @@
                     Once the table has been created, you use the <code>Table</code> extension method <code>insert()</code>
                     to add two new Task records.</p>
                 <code-block lang="kotlin"
-                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="30-39"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="29-38"
                 />
                 <p>
                     Within the <code>insert</code> block, you set the values for
@@ -372,8 +372,8 @@
                     of rows and to retrieve the <code>isCompleted</code> value for each row in the table.
                 </p>
                 <code-block lang="kotlin"
-                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="43-45"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="42-44"
                 />
                 <p>
                     Using <code>groupBy()</code> groups the results of the query by the <code>isCompleted</code>
@@ -400,8 +400,8 @@
             At the beginning of your transaction block, add the following line to enable SQL query logging:
         </p>
         <code-block lang="kotlin"
-                    src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                    include-lines="22-26,60"
+                    src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                    include-lines="21-25,59"
         />
     </chapter>
     <chapter title="Run the application" id="run-in-intellij-idea">
@@ -429,8 +429,8 @@
             <step>
                 <p>In the same <code>transaction()</code> function, add the following code to your implementation:</p>
                 <code-block lang="kotlin"
-                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="22,26,46-60"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="21,25,45-59"
                 />
                 <p>Here's the breakdown:</p>
                 <p>
@@ -439,8 +439,8 @@
                     the <code>isCompleted</code> field of the found task is set to <code>true</code>.
                 </p>
                 <code-block lang="kotlin"
-                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="48-51"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="47-50"
                 />
                 <p>
                     Unlike the <code>insert()</code> function, <code>update()</code> returns the number of updated rows.
@@ -449,8 +449,8 @@
                     equal to <code>taskId</code>.
                 </p>
                 <code-block lang="kotlin"
-                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="52"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-symbol="updatedTask"
                 />
                 <p>
                     Using the <code>single()</code> extension function
@@ -460,8 +460,8 @@
                     The <code>deleteWhere()</code> function, on the other hand, deletes the task with the specified condition.
                 </p>
                 <code-block lang="kotlin"
-                            src="get-started-with-exposed/app/src/main/kotlin/org/example/App.kt"
-                            include-lines="57"
+                            src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
+                            include-lines="56"
                 />
                 <p>
                     Similarly to <code>update()</code>, it returns the number of rows that have been deleted.

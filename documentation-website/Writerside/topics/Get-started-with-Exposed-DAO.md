@@ -22,9 +22,9 @@ By the end of this tutorial, you’ll be able to do the following:
 - Define database tables and corresponding DAO entities.
 - Perform basic CRUD (Create, Read, Update, and Delete) operations using object-oriented style.
 
-<include from="Getting-Started-with-Exposed.topic" element-id="prerequisites"/>
+<include from="Get-Started-with-Exposed.topic" element-id="prerequisites"/>
 <var name="project_name" value="exposed-dao-kotlin-app"/>
-<include from="Getting-Started-with-Exposed.topic" element-id="create-new-project"/>
+<include from="Get-Started-with-Exposed.topic" element-id="create-new-project"/>
 
 ## Add dependencies
 
@@ -81,7 +81,7 @@ dependencies {
 Every database access using Exposed is started by obtaining a connection and creating a transaction.
 To configure the database connection, use the `Database.connect()` function.
 
-<include from="Getting-Started-with-Exposed.topic" element-id="config-db-connection-procedure"/>
+<include from="Get-Started-with-Exposed.topic" element-id="config-db-connection-procedure"/>
 
 With this, you've added Exposed to your Kotlin project and configured a database connection.
 You're now ready to define your data model and engage with the database using Exposed's DAO API.
@@ -148,7 +148,7 @@ table using Kotlin's `by` keyword.
 With Exposed’s DAO API, you can interact with your database using a type-safe, object-oriented syntax similar to
 working with regular Kotlin classes. Before executing any database operations, you must run them inside a `transaction`.
 
-<include from="Getting-Started-with-Exposed.topic" element-id="transaction-definition"/>
+<include from="Get-Started-with-Exposed.topic" element-id="transaction-definition"/>
 
 Open your **App.kt** file and add the following transaction function:
 
@@ -256,7 +256,7 @@ Remaining tasks: [Task(id=1, title=Learn Exposed DAO, completed=true)]
 ```
 </step>
 </procedure>
-<include from="Getting-Started-with-Exposed.topic" element-id="second-transaction-behaviour-tip"/>
+<include from="Get-Started-with-Exposed.topic" element-id="second-transaction-behaviour-tip"/>
 
 ## Next steps
 
