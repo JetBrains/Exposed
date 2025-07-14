@@ -21,4 +21,8 @@ class Task(id: EntityID<Int>) : IntEntity(id) {
     var title by Tasks.title
     var description by Tasks.description
     var isCompleted by Tasks.isCompleted
+
+    override fun toString(): String {
+        return "Task(id=$id, title=$title, completed=$isCompleted)"
+    }
 }

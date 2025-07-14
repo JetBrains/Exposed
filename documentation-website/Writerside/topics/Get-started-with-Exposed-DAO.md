@@ -135,13 +135,15 @@ To define the entity, update your **Task.kt** file with the following code:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/Task.kt" include-lines="3-4,6-8,15-24"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/Task.kt" include-lines="3-4,6-8,15-28"}
 
 - `Task` extends `IntEntity`, which is a base class for entities with an `Int`-based primary key.
 - The `EntityID<Int>` parameter represents the primary key of the database row this entity maps to.
 - The `companion object` extends `IntEntityClass<Task>`, linking the entity class to the `Tasks` table.
 - Each property (`title`, `description`, and `isCompleted`) is delegated to its corresponding column in the `Tasks`
 table using Kotlin's `by` keyword.
+- The `override fun toString()` function customizes how a `Task` instance is represented as a string. This is especially
+useful for debugging or logging. When printed, the output will include the entity’s ID, title, and completion status.
 
 ## Create and query a table
 
@@ -154,19 +156,20 @@ Open your **App.kt** file and add the following transaction function:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="1-2,4-11,16-33,41-42"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="1-2,4-11,16-33,42-43"}
 
 First, you create the tasks table using the `SchemaUtils.create()` method. The `SchemaUtils` object holds utility 
 methods for creating, altering, and dropping database objects.
 
-Once the table has been created, you use the `IntEntity` extension method `.new()` to add two new `Task` records:
+Once the table has been created, you use the `IntEntityClass` extension method `.new()` to add two new `Task` records:
 
 ```kotlin
 ```
 {src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-symbol="task1,task2"}
 
-Within the `new` block, you set the values for each column. Exposed will translate the functions into the following
-SQL queries:
+In this example, `task1` and `task2` are instances of the `Task` entity, each representing a new row in the `Tasks`
+table. Within the `new` block, you set the values for each column. Exposed will translate the functions into the
+following SQL queries:
 
 ```sql
 INSERT INTO TASKS ("name", DESCRIPTION, COMPLETED) VALUES ('Learn Exposed DAO', 'Follow the DAO tutorial', FALSE)
@@ -188,7 +191,7 @@ At the beginning of your `transaction` block, add the following to enable SQL qu
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="3,7,11-14,41"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="3,7-8,11-14,42-43"}
 
 ## Run the application
 
@@ -203,13 +206,13 @@ SQL: CREATE TABLE IF NOT EXISTS TASKS (ID INT AUTO_INCREMENT PRIMARY KEY, "name"
 SQL: INSERT INTO TASKS ("name", DESCRIPTION, COMPLETED) VALUES ('Learn Exposed DAO', 'Follow the DAO tutorial', FALSE)
 SQL: INSERT INTO TASKS ("name", DESCRIPTION, COMPLETED) VALUES ('Read The Hobbit', 'Read chapter one', TRUE)
 Created new tasks with ids 1 and 2
-Completed tasks:
 SQL: SELECT TASKS.ID, TASKS."name", TASKS.DESCRIPTION, TASKS.COMPLETED FROM TASKS WHERE TASKS.COMPLETED = TRUE
+Completed tasks: 1
 ```
 
 ## Update and delete a task
 
-Let’s extend the app’s functionality by updating and deleting the same task.
+Let’s extend the app’s functionality by updating and deleting a task.
 
 <procedure>
 <step>
@@ -218,19 +221,19 @@ In the same `transaction()` function, add the following code to your implementat
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="11,13-15,34-41"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="11,13-15,34-42"}
 
 You update the value of a property just as you would with any property in a Kotlin class:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="35"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="35-36"}
 
 Similarly, to delete a task, you use the `.delete()` method on the entity:
 
 ```kotlin
 ```
-{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="39"}
+{src="get-started-with-exposed-dao/src/main/kotlin/org/example/App.kt" include-lines="40"}
 
 </step>
 <step>
@@ -246,14 +249,23 @@ SQL: INSERT INTO TASKS ("name", DESCRIPTION, COMPLETED) VALUES ('Read The Hobbit
 Created new tasks with ids 1 and 2
 SQL: SELECT COUNT(*) FROM TASKS WHERE TASKS.COMPLETED = TRUE
 Completed tasks: 1
-SQL: SELECT TASKS.ID, TASKS."name", TASKS.DESCRIPTION, TASKS.COMPLETED FROM TASKS WHERE TASKS.COMPLETED = TRUE
-Task(id=2, title=Read The Hobbit, completed=true)
-Updated task1: Task(id=1, title=Learn Exposed DAO, completed=true)
-SQL: UPDATE TASKS SET COMPLETED=TRUE WHERE ID = 1
+Updated task1: Task(id=1, title=Try Exposed DAO, completed=true)
+SQL: UPDATE TASKS SET COMPLETED=TRUE, "name"='Try Exposed DAO' WHERE ID = 1
 SQL: DELETE FROM TASKS WHERE TASKS.ID = 2
 SQL: SELECT TASKS.ID, TASKS."name", TASKS.DESCRIPTION, TASKS.COMPLETED FROM TASKS
-Remaining tasks: [Task(id=1, title=Learn Exposed DAO, completed=true)]
+Remaining tasks: [Task(id=1, title=Try Exposed DAO, completed=true)]
 ```
+
+> Exposed does not immediately issue an `UPDATE` statement when you modify entity properties such as
+> `task1.title` or `task1.isCompleted`. Instead, it caches those changes in memory and flushes them to the database right
+> before the next read operation or at the end of the transaction:
+>
+> ```generic
+> SQL: UPDATE TASKS SET COMPLETED=TRUE, "name"='Try Exposed DAO' WHERE ID = 1
+> ```
+> 
+{style="note"}
+
 </step>
 </procedure>
 <include from="Get-Started-with-Exposed.topic" element-id="second-transaction-behaviour-tip"/>

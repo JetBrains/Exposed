@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 fun main() {
-    Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
+    Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
     transaction {
         addLogger(StdOutSqlLogger)
@@ -28,10 +28,11 @@ fun main() {
 
         println("Created new tasks with ids ${task1.id} and ${task2.id}")
 
-        val completed = Task.find { Tasks.isCompleted eq true }
+        val completed = Task.find { Tasks.isCompleted eq true }.toList()
         println("Completed tasks: ${completed.count()}")
 
         // Update
+        task1.title = "Try Exposed DAO"
         task1.isCompleted = true
         println("Updated task1: $task1")
 
