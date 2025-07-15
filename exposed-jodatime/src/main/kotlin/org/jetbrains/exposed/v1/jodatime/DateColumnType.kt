@@ -210,7 +210,6 @@ class LocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         return "'${DEFAULT_TIME_STRING_FORMATTER.print(value)}'"
     }
 
-    // TODO run jdbc tests & check all green
     override fun valueFromDB(value: Any): LocalTime? = when (value) {
         is LocalTime -> value
         is java.sql.Time -> value.toLocalTime().let { LocalTime(it.hour, it.minute, it.second) }

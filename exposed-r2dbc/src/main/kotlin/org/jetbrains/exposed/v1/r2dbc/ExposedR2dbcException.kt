@@ -1,5 +1,3 @@
-@file:Suppress("PackageDirectoryMismatch", "InvalidPackageDeclaration")
-
 package org.jetbrains.exposed.v1.r2dbc
 
 import io.r2dbc.spi.R2dbcException
@@ -9,7 +7,6 @@ import org.jetbrains.exposed.v1.core.statements.Statement
 import org.jetbrains.exposed.v1.core.statements.StatementContext
 import org.jetbrains.exposed.v1.core.statements.expandArgs
 
-// TODO Discuss need for package mismatch (cf. core module ExposedSQLException)
 /**
  * An exception that provides information about a database access error,
  * within the [contexts] of the executed statements that caused the exception.

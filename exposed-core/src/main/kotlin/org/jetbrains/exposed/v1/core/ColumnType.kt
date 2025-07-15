@@ -693,8 +693,6 @@ class DecimalColumnType(
         is BigDecimal -> value
         is Double -> {
             if (value.isNaN()) {
-                // TODO check for all `throw SQLException` in the code?
-                // TODO could some of them replaced wit other errors?
                 error("Unexpected value of type Double: NaN of ${value::class.qualifiedName}")
             } else {
                 value.toBigDecimal()
