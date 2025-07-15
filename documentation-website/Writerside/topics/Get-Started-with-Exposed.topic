@@ -337,7 +337,7 @@
                 </p>
                 <code-block lang="kotlin"
                             src="get-started-with-exposed/src/main/kotlin/org/example/App.kt"
-                            include-lines="4-20,26-45,58-60"
+                            include-lines="4-21,27-45,58-60"
                 />
                 <p>Let's break down the code and go over each section.</p>
                 <p>

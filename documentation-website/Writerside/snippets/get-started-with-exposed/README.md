@@ -1,7 +1,7 @@
 # Get started with Exposed tutorial project
 
 A sample Gradle/Kotlin project built by following the steps explained in
-the [Get started with Exposed](https://www.jetbrains.com/help/exposed/getting-started-with-exposed.html) tutorial.
+the [Get started with Exposed](https://www.jetbrains.com/help/exposed/get-started-with-exposed.html) tutorial.
 
 ## Build
 
