@@ -88,7 +88,7 @@ You're now ready to define your data model and engage with the database using Ex
 
 ## Define a table object
 
-Exposed's DAO API provides the base `IdTable` class and its subclasses to define tables that use a standard id column
+Exposed's DAO API provides the base `IdTable` class and its subclasses to define tables that use a standard `id` column
 as the primary key.
 To define the table object, follow the steps below.
 
@@ -142,7 +142,7 @@ To define the entity, update your **Task.kt** file with the following code:
 - The `companion object` extends `IntEntityClass<Task>`, linking the entity class to the `Tasks` table.
 - Each property (`title`, `description`, and `isCompleted`) is delegated to its corresponding column in the `Tasks`
 table using Kotlin's `by` keyword.
-- The `override fun toString()` function customizes how a `Task` instance is represented as a string. This is especially
+- The `toString()` function customizes how a `Task` instance is represented as a string. This is especially
 useful for debugging or logging. When printed, the output will include the entity’s ID, title, and completion status.
 
 ## Create and query a table
