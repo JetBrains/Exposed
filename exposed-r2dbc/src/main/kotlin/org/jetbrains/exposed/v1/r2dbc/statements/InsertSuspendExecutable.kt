@@ -144,6 +144,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         val dialect = currentDialect
         val sendsResultsOnFailure = dialect is MysqlDialect && dialect !is MariaDBDialect
 
+        var isSqlServerBatchInsert = false
+
         mapSegments { segment ->
             var values: MutableMap<Column<*>, Any?>? = null
             var count: Int? = null
@@ -154,7 +156,9 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
                 count = segment.value().toInt()
             }
 
-            if (segment is Result.RowSegment) {
+            if (segment is Result.RowSegment && !isSQLServerLastRowId(segment, isSqlServerBatchInsert)) {
+                isSqlServerBatchInsert = isSqlServerBatchInsert || isSQLServerBatchSegment(segment)
+
                 val row = R2DBCRow(segment.row(), typeMapping)
 
                 if (columnIndexesInResultSet == null) {
@@ -218,17 +222,6 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             values.takeIf { !sendsResultsOnFailure }?.let { resultSetsValues.add(it) }
         }
 
-        // SQL Server returns a duplicate terminal row result from batch, even though it only attempts the correct executions;
-        // This happens with mapSegments(), mapRows(), and exec(), but not with plain SQL execution;
-        // So there must be some reason on our end that such a result is included
-        // Todo investigate why SQL Server delivers a duplicate final record
-        if (currentDialect is SQLServerDialect && resultSetsValues.size > 1 && resultSetsCounts.sum() >= 1) {
-            // equality check is tricky because of potential type mismatch
-            // e.g. An Int id returns a duplicated final row of type BigDecimal - is this maybe the mssql last_inserted_id?
-            val lastIndex = resultSetsValues.lastIndex
-            resultSetsValues.removeAt(lastIndex)
-        }
-
         // Some databases, like H2 and MariaDB, aren't returning UpdateCount segments;
         // The workaround below therefore fails for upsert operations
         // Todo review alternatives for these dialects
@@ -272,6 +265,28 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             this?.columnMetadatas?.withIndex()?.firstOrNull { it.value.name == col.name }?.let {
                 col to (it.index + 1)
             }
+        }
+    }
+
+    /* This check is needed for SQLServer batch insert. The problem is that R2DBC driver for SQLServer database
+    returns extra `Result.RowSegment` with the id of the last row. Every insert of batch is returned as
+    a segment with `GENERATED_KEYS` column name in metadata, but after them the one extra segment with `id` name
+    is also returned.
+
+    We can't just filter segments with name `id`, because that name is also returned in general insert for column
+    with name `id`.
+
+    This check is quite optimistic, and we recognize the whole insert as batch insert if there is at least one
+    `GENERATED_KEYS` segment in the whole sequence. */
+    private fun isSQLServerLastRowId(segment: Result.RowSegment, isSqlServerBatchInsert: Boolean): Boolean {
+        return currentDialect is SQLServerDialect && isSqlServerBatchInsert && segment.row().metadata.columnMetadatas.let {
+            it.size == 1 && it[0].name != "GENERATED_KEYS"
+        }
+    }
+
+    private fun isSQLServerBatchSegment(segment: Result.RowSegment): Boolean {
+        return currentDialect is SQLServerDialect && segment.row().metadata.columnMetadatas.let {
+            it.size == 1 && it[0].name == "GENERATED_KEYS"
         }
     }
 
