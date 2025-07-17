@@ -30,7 +30,9 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlin.test.assertEquals
+import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 class KotlinTimeTests : DatabaseTestsBase() {
 
@@ -54,7 +56,7 @@ class KotlinTimeTests : DatabaseTestsBase() {
             val insertedSecond = CitiesTime.select(CitiesTime.local_time.second()).where { CitiesTime.id.eq(cityID) }.single()[CitiesTime.local_time.second()]
 
             assertEquals(now.year, insertedYear)
-            assertEquals(now.month.value, insertedMonth)
+            assertEquals(now.month.number, insertedMonth)
             assertEquals(now.dayOfMonth, insertedDay)
             assertEquals(now.hour, insertedHour)
             assertEquals(now.minute, insertedMinute)
@@ -121,6 +123,9 @@ class KotlinTimeTests : DatabaseTestsBase() {
     @Test
     fun `test selecting Instant using expressions`() {
         val testTable = object : Table() {
+            val xTs = xTimestamp("xts")
+            val xTsn = xTimestamp("xtsn").nullable()
+
             val ts = timestamp("ts")
             val tsn = timestamp("tsn").nullable()
         }
@@ -129,9 +134,27 @@ class KotlinTimeTests : DatabaseTestsBase() {
 
         withTables(testTable) {
             testTable.insert {
+                it[xTs] = now.toDeprecatedInstant()
+                it[xTsn] = now.toDeprecatedInstant()
                 it[ts] = now
                 it[tsn] = now
             }
+
+            val xMaxTsExpr = testTable.xTs.max()
+            val xMaxTimestamp = testTable.select(xMaxTsExpr).single()[xMaxTsExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMaxTimestamp)
+
+            val xMinTsExpr = testTable.xTs.min()
+            val xMinTimestamp = testTable.select(xMinTsExpr).single()[xMinTsExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMinTimestamp)
+
+            val xMaxTsnExpr = testTable.xTsn.max()
+            val xMaxNullableTimestamp = testTable.select(xMaxTsnExpr).single()[xMaxTsnExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMaxNullableTimestamp)
+
+            val xMinTsnExpr = testTable.xTsn.min()
+            val xMinNullableTimestamp = testTable.select(xMinTsnExpr).single()[xMinTsnExpr]
+            assertEqualDateTime(now.toDeprecatedInstant(), xMinNullableTimestamp)
 
             val maxTsExpr = testTable.ts.max()
             val maxTimestamp = testTable.select(maxTsExpr).single()[maxTsExpr]
@@ -616,6 +639,30 @@ class KotlinTimeTests : DatabaseTestsBase() {
         withTables(testTable) {
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
             assertTrue(statements.isEmpty())
+        }
+    }
+
+    @Test
+    fun testXTimestampAlwaysSavedInUTC() {
+        val tester = object : Table("tester") {
+            val x_timestamp_col = xTimestamp("timestamp_col")
+        }
+
+        withTables(tester) {
+            // Cairo time zone
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+            assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
+
+            val instant = Clock.System.now()
+
+            tester.insert {
+                it[x_timestamp_col] = instant.toDeprecatedInstant()
+            }
+
+            assertEquals(
+                instant.toDeprecatedInstant(),
+                tester.selectAll().single()[tester.x_timestamp_col]
+            )
         }
     }
 

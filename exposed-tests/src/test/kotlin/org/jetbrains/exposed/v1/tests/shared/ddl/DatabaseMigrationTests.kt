@@ -1131,6 +1131,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val datetime = datetime("datetime_col")
             val time = time("time_col")
             val timestamp = timestamp("timestamp_col")
+            val xTimestamp = xTimestamp("x_timestamp_col")
             val timestampWithTimeZone = timestampWithTimeZone("timestampWithTimeZone_col")
             val duration = duration("duration_col")
             val intArrayJson = json<IntArray>("json_col", Json.Default)
@@ -1166,6 +1167,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
             val datetimeArray = array("datetimeArray", KotlinLocalDateTimeColumnType(), 10)
             val timeArray = array("timeArray", KotlinLocalTimeColumnType(), 14)
             val timestampArray = array("timestampArray", KotlinInstantColumnType(), 10)
+            val xTimestampArray = array("xTimestampArray", XKotlinInstantColumnType(), 10)
             val timestampWithTimeZoneArray = array("timestampWithTimeZoneArray", KotlinOffsetDateTimeColumnType(), 10)
             val durationArray = array("durationArray", KotlinDurationColumnType(), 7)
         }
