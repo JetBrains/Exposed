@@ -34,6 +34,15 @@
 
 The 1.0.0-beta-1 release introduces support for R2DBC and includes breaking changes to import paths.
 
+On the way to Exposed 1.0, several changes were made to package names. There are two key changes in package naming: unique prefixes for every module and artifact, and
+adding a `v1` prefix to all packages.
+
+With the unique prefix on every module, it would be easier to differentiate which dependency a particular class, function, or other element comes from. This becomes
+more important as the number of packages grows larger.
+
+The unique `v1` prefix for the whole version will help users who have transient dependencies to the `0.x` version of Exposed. It's expected that every major release
+could change that prefix.
+
 ### Updated JDBC imports
 
 Imports of the `exposed-jdbc` package previously under `org.jetbrains.exposed.sql.*` are now
