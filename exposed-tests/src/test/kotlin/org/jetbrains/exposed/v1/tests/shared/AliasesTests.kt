@@ -371,7 +371,14 @@ class AliasesTests : DatabaseTestsBase() {
         val column = tester.weight
         val query: QueryAlias = tester.select(column).alias("all_weight")
 
-        assertNotNull(query[column as Expression<Int>])
-        assertNotNull(query[column as ExpressionWithColumnType<Int>])
+        fun Expression<*>.toExpressionString() = QueryBuilder(true)
+            .also { this.toQueryBuilder(it) }
+            .toString().lowercase()
+
+        withTables(tester) {
+            assertEquals("all_weight.weight", query[column].toExpressionString())
+            assertEquals("all_weight.weight", query[column as Expression<Int>].toExpressionString())
+            assertEquals("all_weight.weight", query[column as ExpressionWithColumnType<Int>].toExpressionString())
+        }
     }
 }
