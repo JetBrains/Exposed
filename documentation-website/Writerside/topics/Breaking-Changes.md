@@ -4,7 +4,9 @@
 
 * Migration of kotlinx-datetime from version 6 to version 7. The only package affected is `exposed-kotlin-datetime`. `KotlinInstantColumnType`, and
   `Table.timestamp(name: String)` are parametrized with `kotlin.time.Instant` class now. If you need to use `kotlinx.datetime.Instant` with Exposed, you have to
-  replace usages of `KotlinInstantColumnType` and `Table.timestamp(name: String)` with `XKotlinInstantColumnType` and `Table.xTimestamp(name: String)` respectively.
+  replace usages of `KotlinInstantColumnType` and `Table.timestamp(name: String)` with `XKotlinInstantColumnType` and `Table.xTimestamp(name: String)` respectively,
+  also the `CurrentTimestamp` constant should be changed with `XCurrentTimestamp`, `CustomTimeStampFunction` with `XCustomTimeStampFunction`. 
+  
 
 ## 1.0.0-beta-4
 

@@ -34,7 +34,9 @@ fun <T : LocalDateTime?> Date(expr: Expression<T>): Function<LocalDate> = DateIn
 
 /** Represents an SQL function that extracts the date part from a given timestamp [expr]. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("Date")
 )
 @JvmName("XInstantDateFunction")
@@ -69,7 +71,9 @@ fun <T : LocalDateTime?> Time(expr: Expression<T>): Function<LocalTime> = TimeIn
 
 /** Represents an SQL function that extracts the time part from a given timestamp [expr]. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("Time")
 )
 @JvmName("XInstantTimeFunction")
@@ -107,7 +111,9 @@ object CurrentDateTime : CurrentTimestampBase<LocalDateTime>(KotlinLocalDateTime
  * @sample org.jetbrains.exposed.v1.datetime.DefaultsTest.testConsistentSchemeWithFunctionAsDefaultExpression
  */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("CurrentTimestamp")
 )
 object XCurrentTimestamp : CurrentTimestampBase<xInstant>(XKotlinInstantColumnType.INSTANCE)
@@ -163,7 +169,9 @@ fun <T : LocalDateTime?> Year(expr: Expression<T>): Function<Int> = YearInternal
 
 /** Represents an SQL function that extracts the year field from a given timestamp [expr]. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("Year")
 )
 @JvmName("XInstantYearFunction")
@@ -198,7 +206,9 @@ fun <T : LocalDateTime?> Month(expr: Expression<T>): Function<Int> = MonthIntern
 
 /** Represents an SQL function that extracts the month field from a given timestamp [expr]. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("Month")
 )
 @JvmName("XInstantMonthFunction")
@@ -233,7 +243,9 @@ fun <T : LocalDateTime?> Day(expr: Expression<T>): Function<Int> = DayInternal(e
 
 /** Represents an SQL function that extracts the day field from a given timestamp [expr]. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("Day")
 )
 @JvmName("XInstantDayFunction")
@@ -268,7 +280,9 @@ fun <T : LocalDateTime?> Hour(expr: Expression<T>): Function<Int> = HourInternal
 
 /** Represents an SQL function that extracts the hour field from a given timestamp [expr]. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("Hour")
 )
 @JvmName("XInstantHourFunction")
@@ -303,7 +317,9 @@ fun <T : LocalDateTime?> Minute(expr: Expression<T>): Function<Int> = MinuteInte
 
 /** Represents an SQL function that extracts the minute field from a given timestamp [expr]. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("Minute")
 )
 @JvmName("XInstantMinuteFunction")
@@ -338,7 +354,9 @@ fun <T : LocalDateTime?> Second(expr: Expression<T>): Function<Int> = SecondInte
 
 /** Represents an SQL function that extracts the second field from a given timestamp [expr]. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("Second")
 )
 @JvmName("XInstantSecondFunction")
@@ -364,7 +382,9 @@ fun <T : LocalDateTime?> Expression<T>.date() = Date(this)
 
 /** Returns the date from this timestamp expression. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("date")
 )
 @JvmName("InstantDateExt")
@@ -388,7 +408,9 @@ fun <T : LocalDateTime?> Expression<T>.time() = Time(this)
 
 /** Returns the time from this timestamp expression. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("time")
 )
 @JvmName("XInstantTimeExt")
@@ -412,7 +434,9 @@ fun <T : LocalDateTime?> Expression<T>.year() = Year(this)
 
 /** Returns the year from this timestamp expression, as an integer. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("year")
 )
 @JvmName("XInstantYearExt")
@@ -440,7 +464,9 @@ fun <T : xInstant?> Expression<T>.month() = Month(this)
 
 /** Returns the month from this timestamp expression, as an integer between 1 and 12 inclusive. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("month")
 )
 @JvmName("XInstantMonthExt")
@@ -460,7 +486,9 @@ fun <T : LocalDateTime?> Expression<T>.day() = Day(this)
 
 /** Returns the day from this timestamp expression, as an integer between 1 and 31 inclusive. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("day")
 )
 @JvmName("XInstantDayExt")
@@ -484,7 +512,9 @@ fun <T : LocalDateTime?> Expression<T>.hour() = Hour(this)
 
 /** Returns the hour from this timestamp expression, as an integer between 0 and 23 inclusive. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("hour")
 )
 @JvmName("XInstantHourExt")
@@ -508,7 +538,9 @@ fun <T : LocalDateTime?> Expression<T>.minute() = Minute(this)
 
 /** Returns the minute from this timestamp expression, as an integer between 0 and 59 inclusive. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("minute")
 )
 @JvmName("XInstantMinuteExt")
@@ -532,7 +564,9 @@ fun <T : LocalDateTime?> Expression<T>.second() = Second(this)
 
 /** Returns the second from this timestamp expression, as an integer between 0 and 59 inclusive. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("second")
 )
 @JvmName("InstantSecondExt")
@@ -560,7 +594,9 @@ fun dateTimeParam(value: LocalDateTime): Expression<LocalDateTime> = QueryParame
 
 /** Returns the specified [value] as a timestamp query parameter. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("timestampParam")
 )
 fun timestampParam(value: xInstant): Expression<xInstant> = QueryParameter(value, XKotlinInstantColumnType.INSTANCE)
@@ -586,7 +622,9 @@ fun dateTimeLiteral(value: LocalDateTime): LiteralOp<LocalDateTime> = LiteralOp(
 
 /** Returns the specified [value] as a timestamp literal. */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("timestampLiteral")
 )
 fun timestampLiteral(value: xInstant): LiteralOp<xInstant> = LiteralOp(XKotlinInstantColumnType.INSTANCE, value)
@@ -627,7 +665,9 @@ fun CustomDateTimeFunction(functionName: String, vararg params: Expression<*>): 
  * and passing [params] as its arguments.
  */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("CustomTimeStampFunction")
 )
 fun XCustomTimeStampFunction(functionName: String, vararg params: Expression<*>): CustomFunction<xInstant?> =

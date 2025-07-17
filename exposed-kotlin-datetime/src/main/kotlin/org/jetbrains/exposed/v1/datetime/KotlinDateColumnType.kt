@@ -401,6 +401,10 @@ class KotlinLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
  *
  * @sample timestamp
  */
+@Deprecated(
+    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    replaceWith = ReplaceWith("KotlinInstantColumnType")
+)
 class XKotlinInstantColumnType : ColumnType<xInstant>(), IDateColumnType {
     override val hasTimePart: Boolean = true
 
@@ -667,7 +671,9 @@ fun Table.time(name: String): Column<LocalTime> = registerColumn(name, KotlinLoc
  * @param name The column name
  */
 @Deprecated(
-    "Deprecated due to usage of old kotlinx.datetime.Instant",
+    "Deprecated due to usage of old kotlinx.datetime.Instant. " +
+        "The change caused by deprecation of Instant in the kotlinx.datetime " +
+        "(see more on https://github.com/Kotlin/kotlinx-datetime?tab=readme-ov-file#deprecation-of-instant)",
     replaceWith = ReplaceWith("timestamp")
 )
 fun Table.xTimestamp(name: String): Column<xInstant> = registerColumn(name, XKotlinInstantColumnType())
