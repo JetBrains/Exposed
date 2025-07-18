@@ -8,12 +8,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.BatchReplaceStatement
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.ReplaceStatement
-import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
-import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
-import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
-import org.jetbrains.exposed.v1.core.vendors.currentDialect
-import org.jetbrains.exposed.v1.core.vendors.inProperCase
+import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2DBCRow
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
@@ -156,8 +151,8 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
                 count = segment.value().toInt()
             }
 
-            if (segment is Result.RowSegment && !isSQLServerLastRowId(segment, isSqlServerBatchInsert)) {
-                isSqlServerBatchInsert = isSqlServerBatchInsert || isSQLServerBatchSegment(segment)
+            if (segment is Result.RowSegment && !isSQLServerLastRowId(segment, isSqlServerBatchInsert, dialect)) {
+                isSqlServerBatchInsert = isSqlServerBatchInsert || isSQLServerBatchSegment(segment, dialect)
 
                 val row = R2DBCRow(segment.row(), typeMapping)
 
@@ -278,14 +273,14 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
 
     This check is quite optimistic, and we recognize the whole insert as batch insert if there is at least one
     `GENERATED_KEYS` segment in the whole sequence. */
-    private fun isSQLServerLastRowId(segment: Result.RowSegment, isSqlServerBatchInsert: Boolean): Boolean {
-        return currentDialect is SQLServerDialect && isSqlServerBatchInsert && segment.row().metadata.columnMetadatas.let {
+    private fun isSQLServerLastRowId(segment: Result.RowSegment, isSqlServerBatchInsert: Boolean, dialect: DatabaseDialect): Boolean {
+        return dialect is SQLServerDialect && isSqlServerBatchInsert && segment.row().metadata.columnMetadatas.let {
             it.size == 1 && it[0].name != "GENERATED_KEYS"
         }
     }
 
-    private fun isSQLServerBatchSegment(segment: Result.RowSegment): Boolean {
-        return currentDialect is SQLServerDialect && segment.row().metadata.columnMetadatas.let {
+    private fun isSQLServerBatchSegment(segment: Result.RowSegment, dialect: DatabaseDialect): Boolean {
+        return dialect is SQLServerDialect && segment.row().metadata.columnMetadatas.let {
             it.size == 1 && it[0].name == "GENERATED_KEYS"
         }
     }
