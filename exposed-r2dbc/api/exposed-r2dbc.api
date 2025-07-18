@@ -758,6 +758,10 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable$D
 	public static fun prepared (Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public final class org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutableKt {
+	public static final fun toExecutable (Lorg/jetbrains/exposed/v1/core/statements/Statement;)Lorg/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable;
+}
+
 public class org/jetbrains/exposed/v1/r2dbc/statements/UpdateSuspendExecutable : org/jetbrains/exposed/v1/r2dbc/statements/SuspendExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/UpdateStatement;)V
 	public fun execute (Lorg/jetbrains/exposed/v1/r2dbc/R2dbcTransaction;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

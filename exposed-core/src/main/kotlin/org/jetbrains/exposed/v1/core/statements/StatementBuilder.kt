@@ -6,12 +6,7 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
 
 /** Represents all the DSL methods available when building SQL statements. */
 @Suppress("TooManyFunctions")
-@Deprecated(
-    message = "This interface has been renamed and will be removed in future releases.",
-    replaceWith = ReplaceWith("StatementBuilder", "org.jetbrains.exposed.v1.core.statements.StatementBuilder"),
-    level = DeprecationLevel.WARNING
-)
-interface IStatementBuilder {
+interface StatementBuilder {
     /**
      * Represents the SQL statement that deletes only rows in a table that match the provided [op].
      *
@@ -434,3 +429,21 @@ interface IStatementBuilder {
     private fun Column<*>.isValidIfAutoIncrement(): Boolean =
         !columnType.isAutoInc || autoIncColumnType?.nextValExpression != null
 }
+
+/** Builder object for creating SQL statements. Made it private to avoid imports clash */
+private object StatementBuilderImpl : StatementBuilder
+
+/**
+ * Builder block for generating instances representing SQl statements, without the statement being sent to the database
+ * for execution.
+ *
+ * ```kotlin
+ * val insertTaskStatement = buildStatement {
+ *     Tasks.insert {
+ *         it[title] = "Follow Exposed tutorial"
+ *         it[isComplete] = false
+ *     }
+ * }
+ * ```
+ */
+fun <S> buildStatement(body: StatementBuilder.() -> S): S = body(StatementBuilderImpl)

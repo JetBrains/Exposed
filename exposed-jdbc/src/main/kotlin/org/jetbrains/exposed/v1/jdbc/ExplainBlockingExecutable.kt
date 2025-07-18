@@ -2,8 +2,8 @@ package org.jetbrains.exposed.v1.jdbc
 
 import org.jetbrains.exposed.v1.core.ExplainQuery
 import org.jetbrains.exposed.v1.core.ExplainResultRow
-import org.jetbrains.exposed.v1.core.statements.IStatementBuilder
 import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementBuilder
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.jdbc.statements.BlockingExecutable
@@ -56,7 +56,7 @@ open class ExplainBlockingExecutable(
 fun JdbcTransaction.explain(
     analyze: Boolean = false,
     options: String? = null,
-    body: IStatementBuilder.() -> Statement<*>
+    body: StatementBuilder.() -> Statement<*>
 ): ExplainBlockingExecutable {
     val stmt = ExplainQuery(analyze, options, buildStatement(body))
     return ExplainBlockingExecutable(stmt)
