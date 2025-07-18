@@ -151,6 +151,16 @@ public final class org/jetbrains/exposed/v1/core/Avg : org/jetbrains/exposed/v1/
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
 
+public abstract class org/jetbrains/exposed/v1/core/BaseCaseWhen : org/jetbrains/exposed/v1/core/ExpressionWithColumnType, org/jetbrains/exposed/v1/core/ComplexExpression {
+	public fun <init> ()V
+	public abstract fun expressions ()Ljava/util/List;
+	public abstract fun getCases ()Ljava/util/List;
+	public fun getColumnType ()Lorg/jetbrains/exposed/v1/core/IColumnType;
+	public fun getElseResult ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun getValue ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+}
+
 public class org/jetbrains/exposed/v1/core/BasicBinaryColumnType : org/jetbrains/exposed/v1/core/ColumnType {
 	public fun <init> ()V
 	public synthetic fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
@@ -230,26 +240,26 @@ public final class org/jetbrains/exposed/v1/core/ByteColumnType : org/jetbrains/
 
 public final class org/jetbrains/exposed/v1/core/Case {
 	public fun <init> ()V
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun When (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/CaseWhen;
-	public final fun getValue ()Lorg/jetbrains/exposed/v1/core/Expression;
 }
 
-public final class org/jetbrains/exposed/v1/core/CaseWhen {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;)V
+public final class org/jetbrains/exposed/v1/core/CaseWhen : org/jetbrains/exposed/v1/core/BaseCaseWhen {
+	public fun <init> ()V
+	public final fun Else (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/core/CaseWhenElse;
 	public final fun Else (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
+	public static synthetic fun Else$default (Lorg/jetbrains/exposed/v1/core/CaseWhen;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/CaseWhenElse;
+	public final fun When (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/core/CaseWhen;
 	public final fun When (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/CaseWhen;
-	public final fun getCases ()Ljava/util/List;
-	public final fun getValue ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public static synthetic fun When$default (Lorg/jetbrains/exposed/v1/core/CaseWhen;Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/CaseWhen;
+	public fun expressions ()Ljava/util/List;
+	public fun getCases ()Ljava/util/List;
 }
 
-public final class org/jetbrains/exposed/v1/core/CaseWhenElse : org/jetbrains/exposed/v1/core/ExpressionWithColumnType, org/jetbrains/exposed/v1/core/ComplexExpression {
-	public fun <init> (Lorg/jetbrains/exposed/v1/core/CaseWhen;Lorg/jetbrains/exposed/v1/core/Expression;)V
-	public final fun getCaseWhen ()Lorg/jetbrains/exposed/v1/core/CaseWhen;
-	public fun getColumnType ()Lorg/jetbrains/exposed/v1/core/IColumnType;
-	public final fun getElseResult ()Lorg/jetbrains/exposed/v1/core/Expression;
-	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
+public final class org/jetbrains/exposed/v1/core/CaseWhenElse : org/jetbrains/exposed/v1/core/BaseCaseWhen {
+	public fun <init> (Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Expression;)V
+	public fun expressions ()Ljava/util/List;
+	public fun getCases ()Ljava/util/List;
+	public fun getElseResult ()Lorg/jetbrains/exposed/v1/core/Expression;
 }
 
 public final class org/jetbrains/exposed/v1/core/Cast : org/jetbrains/exposed/v1/core/Function {
@@ -955,7 +965,8 @@ public abstract interface class org/jetbrains/exposed/v1/core/ISqlExpressionBuil
 	public abstract fun bitwiseOr (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/OrBitOp;
 	public abstract fun bitwiseXor (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/XorBitOp;
 	public abstract fun bitwiseXor (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/XorBitOp;
-	public abstract fun case (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Case;
+	public abstract fun case ()Lorg/jetbrains/exposed/v1/core/Case;
+	public abstract fun case (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/ValueCase;
 	public abstract fun coalesce (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;[Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Coalesce;
 	public abstract fun concat (Ljava/lang/String;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/Concat;
 	public abstract fun concat ([Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Concat;
@@ -1095,8 +1106,8 @@ public final class org/jetbrains/exposed/v1/core/ISqlExpressionBuilder$DefaultIm
 	public static fun bitwiseOr (Lorg/jetbrains/exposed/v1/core/ISqlExpressionBuilder;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/OrBitOp;
 	public static fun bitwiseXor (Lorg/jetbrains/exposed/v1/core/ISqlExpressionBuilder;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/XorBitOp;
 	public static fun bitwiseXor (Lorg/jetbrains/exposed/v1/core/ISqlExpressionBuilder;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/XorBitOp;
-	public static fun case (Lorg/jetbrains/exposed/v1/core/ISqlExpressionBuilder;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Case;
-	public static synthetic fun case$default (Lorg/jetbrains/exposed/v1/core/ISqlExpressionBuilder;Lorg/jetbrains/exposed/v1/core/Expression;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/Case;
+	public static fun case (Lorg/jetbrains/exposed/v1/core/ISqlExpressionBuilder;)Lorg/jetbrains/exposed/v1/core/Case;
+	public static fun case (Lorg/jetbrains/exposed/v1/core/ISqlExpressionBuilder;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/ValueCase;
 	public static fun coalesce (Lorg/jetbrains/exposed/v1/core/ISqlExpressionBuilder;Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;[Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Coalesce;
 	public static fun concat (Lorg/jetbrains/exposed/v1/core/ISqlExpressionBuilder;Ljava/lang/String;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/Concat;
 	public static fun concat (Lorg/jetbrains/exposed/v1/core/ISqlExpressionBuilder;[Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Concat;
@@ -1690,9 +1701,9 @@ public final class org/jetbrains/exposed/v1/core/QueryBuilder {
 	public final fun unaryPlus (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/QueryBuilder;
 }
 
-public final class org/jetbrains/exposed/v1/core/QueryParameter : org/jetbrains/exposed/v1/core/Expression {
+public final class org/jetbrains/exposed/v1/core/QueryParameter : org/jetbrains/exposed/v1/core/ExpressionWithColumnType {
 	public fun <init> (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)V
-	public final fun getSqlType ()Lorg/jetbrains/exposed/v1/core/IColumnType;
+	public fun getColumnType ()Lorg/jetbrains/exposed/v1/core/IColumnType;
 	public final fun getValue ()Ljava/lang/Object;
 	public fun toQueryBuilder (Lorg/jetbrains/exposed/v1/core/QueryBuilder;)V
 }
@@ -1917,7 +1928,8 @@ public final class org/jetbrains/exposed/v1/core/SqlExpressionBuilder : org/jetb
 	public fun bitwiseOr (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/OrBitOp;
 	public fun bitwiseXor (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/XorBitOp;
 	public fun bitwiseXor (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/XorBitOp;
-	public fun case (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Case;
+	public fun case ()Lorg/jetbrains/exposed/v1/core/Case;
+	public fun case (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/ValueCase;
 	public fun coalesce (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;[Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Coalesce;
 	public fun concat (Ljava/lang/String;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/Concat;
 	public fun concat ([Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Concat;
@@ -2402,6 +2414,42 @@ public class org/jetbrains/exposed/v1/core/UserDataHolder {
 	protected final fun getUserdata ()Ljava/util/concurrent/ConcurrentHashMap;
 	public final fun putUserData (Lorg/jetbrains/exposed/v1/core/Key;Ljava/lang/Object;)V
 	public final fun removeUserData (Lorg/jetbrains/exposed/v1/core/Key;)Ljava/lang/Object;
+}
+
+public final class org/jetbrains/exposed/v1/core/ValueCase {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)V
+	public final fun When (Ljava/lang/Object;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public final fun When (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public final fun When (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public final fun When (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public static synthetic fun When$default (Lorg/jetbrains/exposed/v1/core/ValueCase;Ljava/lang/Object;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public static synthetic fun When$default (Lorg/jetbrains/exposed/v1/core/ValueCase;Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public final fun getValue ()Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
+}
+
+public final class org/jetbrains/exposed/v1/core/ValueCaseWhen : org/jetbrains/exposed/v1/core/BaseCaseWhen {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)V
+	public final fun Else (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhenElse;
+	public final fun Else (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhenElse;
+	public static synthetic fun Else$default (Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhenElse;
+	public final fun When (Ljava/lang/Object;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public final fun When (Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public final fun When (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public final fun When (Lorg/jetbrains/exposed/v1/core/Expression;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public static synthetic fun When$default (Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;Ljava/lang/Object;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public static synthetic fun When$default (Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;Lorg/jetbrains/exposed/v1/core/Expression;Ljava/lang/Object;Lorg/jetbrains/exposed/v1/core/IColumnType;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/ValueCaseWhen;
+	public fun expressions ()Ljava/util/List;
+	public fun getCases ()Ljava/util/List;
+	public synthetic fun getValue ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun getValue ()Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;
+}
+
+public final class org/jetbrains/exposed/v1/core/ValueCaseWhenElse : org/jetbrains/exposed/v1/core/BaseCaseWhen {
+	public fun <init> (Lorg/jetbrains/exposed/v1/core/Expression;Ljava/util/List;Lorg/jetbrains/exposed/v1/core/Expression;)V
+	public fun expressions ()Ljava/util/List;
+	public fun getCases ()Ljava/util/List;
+	public fun getElseResult ()Lorg/jetbrains/exposed/v1/core/Expression;
+	public fun getValue ()Lorg/jetbrains/exposed/v1/core/Expression;
 }
 
 public class org/jetbrains/exposed/v1/core/VarCharColumnType : org/jetbrains/exposed/v1/core/StringColumnType {
@@ -3297,7 +3345,8 @@ public final class org/jetbrains/exposed/v1/core/statements/UpsertSqlExpressionB
 	public fun bitwiseOr (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/OrBitOp;
 	public fun bitwiseXor (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Ljava/lang/Object;)Lorg/jetbrains/exposed/v1/core/XorBitOp;
 	public fun bitwiseXor (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/XorBitOp;
-	public fun case (Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Case;
+	public fun case ()Lorg/jetbrains/exposed/v1/core/Case;
+	public fun case (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;)Lorg/jetbrains/exposed/v1/core/ValueCase;
 	public fun coalesce (Lorg/jetbrains/exposed/v1/core/ExpressionWithColumnType;Lorg/jetbrains/exposed/v1/core/Expression;[Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Coalesce;
 	public fun concat (Ljava/lang/String;Ljava/util/List;)Lorg/jetbrains/exposed/v1/core/Concat;
 	public fun concat ([Lorg/jetbrains/exposed/v1/core/Expression;)Lorg/jetbrains/exposed/v1/core/Concat;

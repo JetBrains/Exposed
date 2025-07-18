@@ -15,6 +15,8 @@
   now throw an exception if H2 version 1.x.x is detected. Moving forward, new features will no longer be tested on H2 version
   1.0.0+, so support for those versions will not be guaranteed. Depending on the built-in support from these older H2 versions,
   Exposed API may still mostly be compatible, but may now throw syntax or unsupported exceptions when generating certain SQL clauses.
+* `Case` was split into `Case()` and `ValueCase()` to represent `case when <condition> then <result> end` and `case <value0> when <value1> then <result> end`
+  respectively. The `value` parameter from the `Case` class was removed.
 
 ## 1.0.0-beta-4
 
