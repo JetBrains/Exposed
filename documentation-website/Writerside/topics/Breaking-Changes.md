@@ -6,7 +6,8 @@
   `Table.timestamp(name: String)` are parametrized with `kotlin.time.Instant` class now. If you need to use `kotlinx.datetime.Instant` with Exposed, you have to
   replace usages of `KotlinInstantColumnType` and `Table.timestamp(name: String)` with `XKotlinInstantColumnType` and `Table.xTimestamp(name: String)` respectively,
   also the `CurrentTimestamp` constant should be changed with `XCurrentTimestamp`, `CustomTimeStampFunction` with `XCustomTimeStampFunction`. 
-  
+* `Case` was split into `Case()` and `ValueCase()` to represent `case when <condition> then <result> end` and `case <value0> when <value1> then <result> end`
+  respectively. The `value` parameter from the `Case` class was removed.
 
 ## 1.0.0-beta-4
 
