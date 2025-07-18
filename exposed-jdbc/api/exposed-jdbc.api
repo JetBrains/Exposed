@@ -465,6 +465,10 @@ public final class org/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable$D
 	public static fun prepared (Lorg/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable;Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;Ljava/lang/String;)Lorg/jetbrains/exposed/v1/jdbc/statements/api/JdbcPreparedStatementApi;
 }
 
+public final class org/jetbrains/exposed/v1/jdbc/statements/BlockingExecutableKt {
+	public static final fun toExecutable (Lorg/jetbrains/exposed/v1/core/statements/Statement;)Lorg/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable;
+}
+
 public class org/jetbrains/exposed/v1/jdbc/statements/DeleteBlockingExecutable : org/jetbrains/exposed/v1/jdbc/statements/BlockingExecutable {
 	public fun <init> (Lorg/jetbrains/exposed/v1/core/statements/DeleteStatement;)V
 	public fun execute (Lorg/jetbrains/exposed/v1/jdbc/JdbcTransaction;)Ljava/lang/Integer;

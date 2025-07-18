@@ -1,8 +1,7 @@
 package org.jetbrains.exposed.v1.jdbc.statements
 
 import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.statements.Statement
-import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.*
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
@@ -77,6 +76,43 @@ interface BlockingExecutable<out T, S : Statement<T>> {
             transaction.exec(this)
         }
     }
+}
+
+/**
+ * Returns the associated [BlockingExecutable] that accepts this [Statement] type as an argument,
+ * allowing the provided statement to be then sent to the database for execution.
+ *
+ *```kotlin
+ * transaction {
+ *     val insertTaskStatement = buildStatement {
+ *         Tasks.insert {
+ *             it[title] = "Follow Exposed tutorial"
+ *             it[isComplete] = false
+ *         }
+ *     }
+ *
+ *     exec(insertTask.toExecutable())
+ * }
+ * ```
+ *
+ * @throws IllegalStateException If the invoking statement does not have a corresponding built-in executable.
+ */
+fun <T : Any, S : Statement<T>> S.toExecutable(): BlockingExecutable<T, S> {
+    @Suppress("UNCHECKED_CAST")
+    return when (this) {
+        is BatchUpsertStatement -> BatchUpsertBlockingExecutable(this)
+        is UpsertStatement<*> -> UpsertBlockingExecutable(this as UpsertStatement<T>)
+        is SQLServerBatchInsertStatement -> SQLServerBatchInsertBlockingExecutable(this)
+        is BatchInsertStatement -> BatchInsertBlockingExecutable(this)
+        is InsertStatement<*> -> InsertBlockingExecutable(this as InsertStatement<T>)
+        is BatchUpdateStatement -> BatchUpdateBlockingExecutable(this)
+        is UpdateStatement -> UpdateBlockingExecutable(this)
+        is DeleteStatement -> DeleteBlockingExecutable(this)
+        is InsertSelectStatement -> InsertSelectBlockingExecutable(this)
+        is MergeStatement -> MergeBlockingExecutable(this)
+        is ReturningStatement -> ReturningBlockingExecutable(this)
+        else -> error("An executable could not be associated with ${this::class.qualifiedName}. Pass this statement to a custom executable instance directly.")
+    } as BlockingExecutable<T, S>
 }
 
 @OptIn(InternalApi::class)

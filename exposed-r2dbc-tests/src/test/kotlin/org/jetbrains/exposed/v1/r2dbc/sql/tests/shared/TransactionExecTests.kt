@@ -1,16 +1,24 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.autoIncColumnType
 import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.statements.buildStatement
+import org.jetbrains.exposed.v1.core.upperCase
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.select
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.withCitiesAndUsers
+import org.jetbrains.exposed.v1.r2dbc.statements.toExecutable
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.getInt
@@ -164,6 +172,51 @@ class TransactionExecTests : R2dbcDatabaseTestsBase() {
                 row.getString(title)
             }?.singleOrNull()
             assertNull(nullTransformResult)
+        }
+    }
+
+    @Test
+    fun testExecWithBuildStatement() {
+        withCitiesAndUsers { cities, users, userData ->
+            val initialCityCount = cities.selectAll().count()
+            val initialUserDataCount = userData.selectAll().count()
+
+            val newCity = "Amsterdam"
+            val insertCity = buildStatement {
+                cities.insert {
+                    it[name] = newCity
+                }
+            }
+            val upsertCity = buildStatement {
+                cities.upsert(onUpdate = { it[cities.name] = cities.name.upperCase() }) {
+                    it[id] = initialCityCount.toInt() + 1
+                    it[name] = newCity
+                }
+            }
+            val newName = "Alexey"
+            val userFilter = users.id eq "alex"
+            val updateUser = buildStatement {
+                users.update({ userFilter }) {
+                    it[users.name] = newName
+                }
+            }
+            val deleteAllUserData = buildStatement { userData.deleteAll() }
+
+            insertCity.toExecutable().execute(this)
+            assertEquals(initialCityCount + 1, cities.selectAll().count())
+
+            exec(upsertCity.toExecutable())
+            assertEquals(initialCityCount + 1, cities.selectAll().count())
+            val updatedCity = cities.selectAll().where { cities.id eq (initialCityCount.toInt() + 1) }.single()
+            assertEquals(newCity.uppercase(), updatedCity[cities.name])
+
+            updateUser.toExecutable().execute(this)
+            val updatedUserName = users.select(users.name).where { userFilter }.first()
+            assertEquals(newName, updatedUserName[users.name])
+
+            val rowsDeleted = exec(deleteAllUserData.toExecutable())
+            assertEquals(initialUserDataCount, rowsDeleted?.toLong())
+            assertEquals(0, userData.selectAll().count())
         }
     }
 }

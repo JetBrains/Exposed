@@ -291,7 +291,7 @@ suspend fun <Key : Any, T : IdTable<Key>> T.insertIgnoreAndGetId(
 suspend fun <T : Table> T.insert(
     selectQuery: AbstractQuery<*>,
     columns: List<Column<*>>? = null
-): org.jetbrains.exposed.v1.core.statements.InsertSelectStatement {
+): InsertSelectStatement {
     val stmt = buildStatement { insert(selectQuery, columns) }
     return InsertSelectSuspendExecutable(stmt).apply { execute(TransactionManager.current()) }.statement
 }

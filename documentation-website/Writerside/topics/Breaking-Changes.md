@@ -1,5 +1,12 @@
 # Breaking Changes
 
+## 1.0.0-beta-5
+
+* The newly introduced `IStatementBuilder` interface has been renamed and deprecated in favor of `StatementBuilder`,
+  which contains all the original and unchanged methods. It's associated function `buildStatement()` no longer accepts the
+  deprecated interface as the receiver of its `body` parameter; the parameter expects the new `StatementBuilder` instead.
+  The same parameter type change applies to the function `explain()`.
+
 ## 1.0.0-beta-4
 
 * `ThreadLocalMap` has been restricted to internal use, based on its current limited usage in already internal classes.

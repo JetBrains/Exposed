@@ -90,12 +90,8 @@ open class DeleteStatement(
                 Replace directly with a table extension function:
                     `table.deleteWhere(limit) { op }` OR `table.deleteIgnoreWhere(limit) { op }`
 
-                Or pass the expected statement to an instance of Executable:
-                For JDBC:
-                `DeleteBlockingExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
-
-                FOR R2DBC:
-                `DeleteSuspendExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
+                Or convert the expected statement to an instance of Executable:
+                    `buildStatement { table.deleteWhere(limit, { op }) }.toExecutable().execute(transaction) ?: 0`
             """,
             level = DeprecationLevel.ERROR
         )
@@ -105,13 +101,8 @@ open class DeleteStatement(
         @Deprecated(
             message = """
                 Statement execution has been removed from exposed-core.
-                Replace directly with a table extension function or pass the expected statement to an instance of Executable:
-
-                For JDBC:
-                `DeleteBlockingExecutable(buildStatement { table.deleteAll() }).execute(transaction) ?: 0`
-
-                FOR R2DBC:
-                `DeleteSuspendExecutable(buildStatement { table.deleteAll() }).execute(transaction) ?: 0`
+                Replace directly with a table extension function or convert the expected statement to an instance of Executable:
+                    `buildStatement { table.deleteAll() }.toExecutable().execute(transaction) ?: 0`
             """,
             level = DeprecationLevel.ERROR
         )

@@ -2,8 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.statements
 
 import io.r2dbc.spi.R2dbcException
 import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.statements.Statement
-import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.*
 import org.jetbrains.exposed.v1.r2dbc.ExposedR2dbcException
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
@@ -77,6 +76,43 @@ interface SuspendExecutable<out T, S : Statement<T>> {
             transaction.exec(this)
         }
     }
+}
+
+/**
+ * Returns the associated [SuspendExecutable] that accepts this [Statement] type as an argument,
+ * allowing the provided statement to be then sent to the database for execution.
+ *
+ *```kotlin
+ * suspendTransaction {
+ *     val insertTaskStatement = buildStatement {
+ *         Tasks.insert {
+ *             it[title] = "Follow Exposed tutorial"
+ *             it[isComplete] = false
+ *         }
+ *     }
+ *
+ *     exec(insertTask.toExecutable())
+ * }
+ * ```
+ *
+ * @throws IllegalStateException If the invoking statement does not have a corresponding built-in executable.
+ */
+fun <T : Any, S : Statement<T>> S.toExecutable(): SuspendExecutable<T, S> {
+    @Suppress("UNCHECKED_CAST")
+    return when (this) {
+        is BatchUpsertStatement -> BatchUpsertSuspendExecutable(this)
+        is UpsertStatement<*> -> UpsertSuspendExecutable(this as UpsertStatement<T>)
+        is SQLServerBatchInsertStatement -> SQLServerBatchInsertSuspendExecutable(this)
+        is BatchInsertStatement -> BatchInsertSuspendExecutable(this)
+        is InsertStatement<*> -> InsertSuspendExecutable(this as InsertStatement<T>)
+        is BatchUpdateStatement -> BatchUpdateSuspendExecutable(this)
+        is UpdateStatement -> UpdateSuspendExecutable(this)
+        is DeleteStatement -> DeleteSuspendExecutable(this)
+        is InsertSelectStatement -> InsertSelectSuspendExecutable(this)
+        is MergeStatement -> MergeSuspendExecutable(this)
+        is ReturningStatement -> ReturningSuspendExecutable(this)
+        else -> error("An executable could not be associated with ${this::class.qualifiedName}. Pass this statement to a custom executable instance directly.")
+    } as SuspendExecutable<T, S>
 }
 
 @OptIn(InternalApi::class)
