@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.jdbc.statements.jdbc
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.Sequence
+import org.jetbrains.exposed.v1.core.statements.api.ExposedMetadataUtils
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.utils.CachableMapWithDefault
 import org.jetbrains.exposed.v1.core.utils.CacheWithDefault
@@ -177,7 +178,9 @@ class JdbcDatabaseMetadataImpl(database: String, val metadata: DatabaseMetaData)
         val prefetchedColumnTypes = fetchAllColumnTypes(tableName)
         val result = mutableListOf<ColumnMetadata>()
         while (next()) {
-            result.add(asColumnMetadata(prefetchedColumnTypes))
+            with(ExposedMetadataUtils) {
+                result.add(asColumnMetadata(prefetchedColumnTypes))
+            }
         }
         return result
     }
