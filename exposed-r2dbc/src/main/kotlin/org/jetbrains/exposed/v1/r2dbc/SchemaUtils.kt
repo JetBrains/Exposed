@@ -84,12 +84,12 @@ object SchemaUtils : SchemaUtilityApi() {
         val statements = ArrayList<String>()
 
         @OptIn(InternalApi::class)
-        val existingTablesColumns = logTimeSpent(columnsLogMessage, withLogs) {
+        val existingTablesColumns = logTimeSpent(COLUMNS_LOG_MESSAGE, withLogs) {
             currentDialectMetadata.tableColumns(*tables)
         }
 
         @OptIn(InternalApi::class)
-        val existingPrimaryKeys = logTimeSpent(primaryKeysLogMessage, withLogs) {
+        val existingPrimaryKeys = logTimeSpent(PRIMARY_KEYS_LOG_MESSAGE, withLogs) {
             currentDialectMetadata.existingPrimaryKeys(*tables)
         }
 
@@ -107,7 +107,7 @@ object SchemaUtils : SchemaUtilityApi() {
 
         @OptIn(InternalApi::class)
         if (dbSupportsAlterTableWithAddColumn) {
-            val existingColumnConstraints = logTimeSpent(constraintsLogMessage, withLogs) {
+            val existingColumnConstraints = logTimeSpent(CONSTRAINTS_LOG_MESSAGE, withLogs) {
                 currentDialectMetadata.columnConstraints(*tables)
             }
             mapMissingConstraintsTo(statements, existingColumnConstraints, tables = tables)
@@ -242,30 +242,30 @@ object SchemaUtils : SchemaUtilityApi() {
         with(TransactionManager.current()) {
             db.dialectMetadata.resetCaches()
             @OptIn(InternalApi::class)
-            val createStatements = logTimeSpent(createTablesLogMessage, withLogs) {
+            val createStatements = logTimeSpent(CREATE_TABLES_LOG_MESSAGE, withLogs) {
                 createStatements(*tables)
             }
 
             @OptIn(InternalApi::class)
-            logTimeSpent(executeCreateTablesLogMessage, withLogs) {
+            logTimeSpent(EXECUTE_CREATE_TABLES_LOG_MESSAGE, withLogs) {
                 execStatements(inBatch, createStatements)
                 commit()
             }
 
             @OptIn(InternalApi::class)
-            val alterStatements = logTimeSpent(alterTablesLogMessage, withLogs) {
+            val alterStatements = logTimeSpent(ALTER_TABLES_LOG_MESSAGE, withLogs) {
                 addMissingColumnsStatements(tables = tables, withLogs)
             }
 
             @OptIn(InternalApi::class)
-            logTimeSpent(executeAlterTablesLogMessage, withLogs) {
+            logTimeSpent(EXECUTE_ALTER_TABLES_LOG_MESSAGE, withLogs) {
                 execStatements(inBatch, alterStatements)
                 commit()
             }
             val executedStatements = createStatements + alterStatements
 
             @OptIn(InternalApi::class)
-            logTimeSpent(mappingConsistenceLogMessage, withLogs) {
+            logTimeSpent(MAPPING_CONSISTENCE_LOG_MESSAGE, withLogs) {
                 val modifyTablesStatements = checkMappingConsistence(
                     tables = tables,
                     withLogs
@@ -298,18 +298,18 @@ object SchemaUtils : SchemaUtilityApi() {
         val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() }
 
         @OptIn(InternalApi::class)
-        val createStatements = logTimeSpent(createTablesLogMessage, withLogs) {
+        val createStatements = logTimeSpent(CREATE_TABLES_LOG_MESSAGE, withLogs) {
             createStatements(tables = tablesToCreate.toTypedArray())
         }
 
         @OptIn(InternalApi::class)
-        val alterStatements = logTimeSpent(alterTablesLogMessage, withLogs) {
+        val alterStatements = logTimeSpent(ALTER_TABLES_LOG_MESSAGE, withLogs) {
             addMissingColumnsStatements(tables = tablesToAlter.toTypedArray(), withLogs)
         }
         val executedStatements = createStatements + alterStatements
 
         @OptIn(InternalApi::class)
-        val modifyTablesStatements = logTimeSpent(mappingConsistenceLogMessage, withLogs) {
+        val modifyTablesStatements = logTimeSpent(MAPPING_CONSISTENCE_LOG_MESSAGE, withLogs) {
             checkMappingConsistence(
                 tables = tablesToAlter.toTypedArray(),
                 withLogs

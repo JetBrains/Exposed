@@ -1830,20 +1830,21 @@ public final class org/jetbrains/exposed/v1/core/Schema {
 }
 
 public abstract class org/jetbrains/exposed/v1/core/SchemaUtilityApi {
+	public static final field ALTER_TABLES_LOG_MESSAGE Ljava/lang/String;
+	public static final field COLUMNS_LOG_MESSAGE Ljava/lang/String;
+	public static final field CONSTRAINTS_LOG_MESSAGE Ljava/lang/String;
+	public static final field CREATE_SEQUENCES_LOG_MESSAGE Ljava/lang/String;
+	public static final field CREATE_TABLES_LOG_MESSAGE Ljava/lang/String;
+	public static final field Companion Lorg/jetbrains/exposed/v1/core/SchemaUtilityApi$Companion;
+	public static final field EXECUTE_ALTER_TABLES_LOG_MESSAGE Ljava/lang/String;
+	public static final field EXECUTE_CREATE_TABLES_LOG_MESSAGE Ljava/lang/String;
+	public static final field MAPPING_CONSISTENCE_LOG_MESSAGE Ljava/lang/String;
+	public static final field PRIMARY_KEYS_LOG_MESSAGE Ljava/lang/String;
 	public fun <init> ()V
 	protected final fun createDdl (Lorg/jetbrains/exposed/v1/core/ForeignKeyConstraint;)Ljava/util/List;
 	protected final fun filterAndLogExcessConstraints (Ljava/util/Map;Z)Ljava/util/List;
 	protected final fun filterAndLogExcessIndices (Ljava/util/Map;Z)Ljava/util/List;
 	protected final fun filterAndLogMissingAndUnmappedIndices (Ljava/util/Map;Ljava/util/Set;ZZ[Lorg/jetbrains/exposed/v1/core/Table;)Lkotlin/Pair;
-	protected final fun getAlterTablesLogMessage ()Ljava/lang/String;
-	protected final fun getColumnsLogMessage ()Ljava/lang/String;
-	protected final fun getConstraintsLogMessage ()Ljava/lang/String;
-	protected final fun getCreateSequencesLogMessage ()Ljava/lang/String;
-	protected final fun getCreateTablesLogMessage ()Ljava/lang/String;
-	protected final fun getExecuteAlterTablesLogMessage ()Ljava/lang/String;
-	protected final fun getExecuteCreateTablesLogMessage ()Ljava/lang/String;
-	protected final fun getMappingConsistenceLogMessage ()Ljava/lang/String;
-	protected final fun getPrimaryKeysLogMessage ()Ljava/lang/String;
 	protected final fun hasCycle (Ljava/util/List;)Z
 	protected final fun log (Ljava/util/Collection;Ljava/lang/String;Z)V
 	protected final fun logTimeSpent (Ljava/lang/String;ZLkotlin/jvm/functions/Function0;)Ljava/lang/Object;
@@ -1851,6 +1852,9 @@ public abstract class org/jetbrains/exposed/v1/core/SchemaUtilityApi {
 	protected final fun mapMissingConstraintsTo (Ljava/util/Collection;Ljava/util/Map;[Lorg/jetbrains/exposed/v1/core/Table;)Ljava/util/Collection;
 	protected final fun sortByReferences (Ljava/lang/Iterable;)Ljava/util/List;
 	protected final fun tableDdlWithoutExistingSequence (Lorg/jetbrains/exposed/v1/core/Table;Lorg/jetbrains/exposed/v1/core/Sequence;)Lkotlin/Pair;
+}
+
+public final class org/jetbrains/exposed/v1/core/SchemaUtilityApi$Companion {
 }
 
 public final class org/jetbrains/exposed/v1/core/Sequence {
@@ -3383,14 +3387,17 @@ public final class org/jetbrains/exposed/v1/core/statements/api/ExposedBlob {
 
 public abstract class org/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata {
 	public fun <init> (Ljava/lang/String;)V
-	protected final fun asColumnMetadata (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;Ljava/util/Map;)Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;
-	public static synthetic fun asColumnMetadata$default (Lorg/jetbrains/exposed/v1/core/statements/api/ExposedDatabaseMetadata;Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;Ljava/util/Map;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;
 	public abstract fun cleanCache ()V
 	public final fun getDatabase ()Ljava/lang/String;
 	public abstract fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
 	public abstract fun resetCurrentScheme ()V
 	public abstract fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
-	protected final fun sanitizedDefault (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/core/statements/api/ExposedMetadataUtils {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/core/statements/api/ExposedMetadataUtils;
+	public final fun asColumnMetadata (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;Ljava/util/Map;)Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;
+	public static synthetic fun asColumnMetadata$default (Lorg/jetbrains/exposed/v1/core/statements/api/ExposedMetadataUtils;Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;Ljava/util/Map;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/core/vendors/ColumnMetadata;
 }
 
 public abstract class org/jetbrains/exposed/v1/core/statements/api/ExposedSavepoint {

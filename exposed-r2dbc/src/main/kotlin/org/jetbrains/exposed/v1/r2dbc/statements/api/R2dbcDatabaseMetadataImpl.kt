@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.collect
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.statements.api.ExposedMetadataUtils
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.utils.CachableMapWithSuspendableDefault
 import org.jetbrains.exposed.v1.core.utils.CacheWithSuspendableDefault
@@ -193,7 +194,9 @@ class R2dbcDatabaseMetadataImpl(
                 @OptIn(InternalApi::class)
                 val columns = connection.executeSQL(query) { row, _ ->
                     // Unlike JdbcResult, R2dbcResult is split apart for ResultApi vs RowApi, so a 2nd arg placeholder has to be used
-                    R2DBCRow(row, R2dbcRegistryTypeMappingImpl()).asColumnMetadata(prefetchedColumnTypes)
+                    with(ExposedMetadataUtils) {
+                        R2DBCRow(row, R2dbcRegistryTypeMappingImpl()).asColumnMetadata(prefetchedColumnTypes)
+                    }
                 }.orEmpty()
                 check(columns.isNotEmpty())
                 result[table] = columns

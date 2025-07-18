@@ -2,9 +2,6 @@ package org.jetbrains.exposed.v1.core
 
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 
-// TODO instead of magic number? put back into DatabaseConfig?
-internal const val DEFAULT_MAX_ATTEMPTS = 3
-
 /**
  * Base configuration for a [DatabaseApi] instance.
  *
@@ -67,7 +64,8 @@ interface DatabaseConfig {
          *
          * @throws IllegalArgumentException If the amount of attempts is set to a value less than 1.
          */
-        var defaultMaxAttempts: Int = DEFAULT_MAX_ATTEMPTS
+        @Suppress("MagicNumber")
+        var defaultMaxAttempts: Int = 3
 
         /**
          * The minimum number of milliseconds to wait before retrying a transaction if a database exception happens.
