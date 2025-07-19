@@ -188,27 +188,24 @@ class QueryAlias(val query: AbstractQuery<*>, val alias: String) : ColumnSet() {
 
     override val columns: List<Column<*>> = fields.filterIsInstance<Column<*>>()
 
-    @Suppress("UNCHECKED_CAST")
     operator fun <T : Any?> get(original: Column<T>): Column<T> =
-        query.set.source.columns.find { it == original }?.clone() as? Column<T>
-            ?: error("Column not found in original table")
+        get(original as Expression<T>) as Column<T>
 
     operator fun <T : Any?> get(original: Expression<T>): Expression<T> {
-        val aliases = query.set.fields.filterIsInstance<ExpressionAlias<T>>()
-        return aliases.find { it == original }?.let {
-            it.delegate.alias("$alias.${it.alias}").aliasOnlyExpression()
-        } ?: aliases.find { it.delegate == original }?.aliasOnlyExpression()
-            ?: error("Field not found in original table fields")
+        @Suppress("UNCHECKED_CAST")
+        return if (original is Column<*>) {
+            query.set.source.columns.find { it == original }?.clone() ?: error("Column not found in original table")
+        } else {
+            val aliases = query.set.fields.filterIsInstance<ExpressionWithColumnTypeAlias<T>>()
+            return aliases.find { it == original }
+                ?.let { it.delegate.alias("$alias.${it.alias}").aliasOnlyExpression() }
+                ?: aliases.find { it.delegate == original }?.aliasOnlyExpression()
+                ?: error("Field not found in original table fields")
+        } as Expression<T>
     }
 
     operator fun <T : Any?> get(original: ExpressionWithColumnType<T>): ExpressionWithColumnType<T> {
-        val aliases = query.set.fields.filterIsInstance<ExpressionWithColumnTypeAlias<T>>()
-        return (
-            aliases.find { it == original }?.let {
-                it.delegate.alias("$alias.${it.alias}").aliasOnlyExpression()
-            } ?: aliases.find { it.delegate == original }?.aliasOnlyExpression()
-            ) as? ExpressionWithColumnType<T>
-            ?: error("Field not found in original table fields")
+        return get(original as Expression<T>) as ExpressionWithColumnType<T>
     }
 
     override fun join(
