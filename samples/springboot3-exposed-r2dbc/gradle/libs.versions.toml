@@ -3,14 +3,14 @@
 # https://docs.gradle.org/current/userguide/platforms.html#sub::toml-dependencies-format
 
 [versions]
-kotlin = "2.1.20"
+kotlin = "2.2.0"
 kotlinxDatetime = "0.6.2"
 kotlinxSerializationJSON = "1.8.1"
 kotlinxCoroutines = "1.10.2"
-springBootVersion = "3.5.0"
+springBootVersion = "3.5.3"
 springDependencyManagement = "1.1.7"
 graalvmNativeVersion = "0.10.6"
-exposed = "1.0.0-beta-2"
+exposed = "1.0.0-beta-4"
 mysqlR2dbc = "1.4.1"
 slf4jVersion = "2.0.17"
 logbackVersion = "1.5.18"
