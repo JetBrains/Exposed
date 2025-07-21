@@ -304,6 +304,7 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsOrderByNullsFirstLast: Boolean by lazy { resolveDelegatedDialect()?.supportsOrderByNullsFirstLast ?: super.supportsOrderByNullsFirstLast }
     override val supportsWindowFrameGroupsMode: Boolean by lazy { resolveDelegatedDialect()?.supportsWindowFrameGroupsMode ?: super.supportsWindowFrameGroupsMode }
     override val supportsColumnTypeChange: Boolean get() = isSecondVersion
+    override val supportsSelectForUpdate: Boolean get() = isSecondVersion
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
