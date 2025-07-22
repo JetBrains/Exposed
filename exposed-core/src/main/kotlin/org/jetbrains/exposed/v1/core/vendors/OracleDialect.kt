@@ -445,6 +445,7 @@ open class OracleDialect : VendorDialect(dialectName, OracleDataTypeProvider, Or
     override val supportsOrderByNullsFirstLast: Boolean = true
     override val supportsOnUpdate: Boolean = false
     override val supportsSetDefaultReferenceOption: Boolean = false
+    override val supportsSelectForUpdate: Boolean = true
 
     // Preventing the deletion of a parent row if a child row references it is the default behaviour in Oracle.
     override val supportsRestrictReferenceOption: Boolean = false

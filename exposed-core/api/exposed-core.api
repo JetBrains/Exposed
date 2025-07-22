@@ -3898,6 +3898,7 @@ public class org/jetbrains/exposed/v1/core/vendors/H2Dialect : org/jetbrains/exp
 	public fun getSupportsMultipleGeneratedKeys ()Z
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSequenceAsGeneratedKeys ()Z
 	public fun getSupportsSubqueryUnions ()Z
 	public fun getSupportsTernaryAffectedRowValues ()Z
@@ -3970,6 +3971,7 @@ public class org/jetbrains/exposed/v1/core/vendors/MysqlDialect : org/jetbrains/
 	protected final fun getNotAcceptableDefaults ()Ljava/util/List;
 	public fun getSupportsCreateSequence ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
+	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z
 	public fun getSupportsSubqueryUnions ()Z
 	public fun getSupportsTernaryAffectedRowValues ()Z
@@ -4000,6 +4002,7 @@ public class org/jetbrains/exposed/v1/core/vendors/OracleDialect : org/jetbrains
 	public fun getSupportsOnlyIdentifiersInGeneratedKeys ()Z
 	public fun getSupportsOrderByNullsFirstLast ()Z
 	public fun getSupportsRestrictReferenceOption ()Z
+	public fun getSupportsSelectForUpdate ()Z
 	public fun getSupportsSetDefaultReferenceOption ()Z
 	public fun isAllowedAsColumnDefault (Lorg/jetbrains/exposed/v1/core/Expression;)Z
 	public fun listDatabases ()Ljava/lang/String;
