@@ -60,9 +60,12 @@ private val ORACLE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormat.forPattern("1970-01-01 HH:mm:ss").withLocale(Locale.ROOT).withZone(DateTimeZone.UTC)
 }
 
-private val DEFAULT_TIME_STRING_FORMATTER by lazy {
-    DateTimeFormat.forPattern("HH:mm:ss").withLocale(Locale.ROOT).withZone(DateTimeZone.getDefault())
+private val DEFAULT_TIME_STRING_FORMATTER_NOTZ by lazy {
+    DateTimeFormat.forPattern("HH:mm:ss").withLocale(Locale.ROOT)
 }
+
+private val DEFAULT_TIME_STRING_FORMATTER
+    get() = DEFAULT_TIME_STRING_FORMATTER_NOTZ.withZone(DateTimeZone.getDefault())
 
 private fun formatterForDateTimeString(date: String) = dateTimeWithFractionFormat(
     date.substringAfterLast('.', "").length
