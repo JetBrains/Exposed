@@ -25,6 +25,8 @@ are now located under `org.jetbrains.exposed.v1.core.*`. The table below shows e
 | `org.jetbrains.exposed.sql.javatime.datetime` | `org.jetbrains.exposed.v1.javatime.datetime`    |
 | `org.jetbrains.exposed.sql.json.json`         | `org.jetbrains.exposed.v1.json.json`            |
 
+Check [Breaking Changes - 1.0.0-beta-1](https://www.jetbrains.com/help/exposed/breaking-changes.html#1-0-0-beta-1) for more details about the changes in imports.  
+
 ### Moved imports
 
 The major design change for allowing R2DBC functionality involved extracting some of the classes and interfaces
