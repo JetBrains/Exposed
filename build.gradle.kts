@@ -1,5 +1,5 @@
 import org.jetbrains.exposed.gradle.configureDetekt
-import org.jetbrains.exposed.gradle.configurePublishing
+import org.jetbrains.exposed.gradle.configureMavenCentralMetadata
 import org.jetbrains.exposed.gradle.testDb
 
 plugins {
@@ -9,6 +9,7 @@ plugins {
     id(libs.plugins.docker.compose.get().pluginId)
 
     alias(libs.plugins.dokka)
+    alias(libs.plugins.maven.publish)
 }
 
 dokka {
@@ -39,8 +40,16 @@ repositories {
 }
 
 allprojects {
-    if (this.name != "exposed-tests" && this.name != "exposed-bom" && this.name != "exposed-r2dbc-tests" && this != rootProject) {
-        configurePublishing()
+    if (this.name != "exposed-tests" && this.name != "exposed-r2dbc-tests" && this != rootProject) {
+        apply(plugin = "com.vanniktech.maven.publish")
+        this@allprojects.mavenPublishing {
+            pom {
+                configureMavenCentralMetadata(this@allprojects)
+            }
+
+            publishToMavenCentral()
+            signAllPublications()
+        }
     }
 }
 
