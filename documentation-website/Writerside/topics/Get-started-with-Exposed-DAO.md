@@ -30,10 +30,10 @@ By the end of this tutorial, you’ll be able to do the following:
 
 
 <procedure>
-Before you start using Exposed, you need to provide dependencies to your project.
+Before you start using Exposed, you need to add dependencies to your project.
 <step>
 
-Navigate to the **gradle/libs.versions.toml** file and define the Exposed and H2 version and libraries:
+Navigate to the **gradle/libs.versions.toml** file and define the Exposed and H2 versions and artifacts:
 
 ```kotlin
 [versions]
@@ -78,7 +78,7 @@ dependencies {
 
 ## Configure a database connection
 
-Every database access using Exposed is started by obtaining a connection and creating a transaction.
+Whenever you access a database using Exposed, you start by obtaining a connection and creating a transaction.
 To configure the database connection, use the `Database.connect()` function.
 
 <include from="Get-Started-with-Exposed.topic" element-id="config-db-connection-procedure"/>
@@ -110,7 +110,7 @@ In the `IntIdTable` constructor, passing the name `tasks` configures a custom
 name for the table. If you don't provide a name, Exposed will derive it from the object name, which may lead to
 unexpected results depending on naming conventions.
 
-The `Tasks` object defines three columns:
+The `Tasks` object defines the following columns:
 
 - `title` and `description` are `String` columns, created using the `varchar()` function. Each column has a maximum
 length of 128 characters.
@@ -128,8 +128,7 @@ creates the blueprint for the `tasks` table.
 
 When using the DAO approach, each table defined using `IntIdTable` must be associated with a corresponding
 [entity class](DAO-Entity-definition.topic).
-This is because each database record in the table is represented by an entity instance, uniquely identified by its
-primary key.
+The entity class represents individual records in the table and is uniquely identified by a primary key.
 
 To define the entity, update your **Task.kt** file with the following code:
 
@@ -148,7 +147,8 @@ useful for debugging or logging. When printed, the output will include the entit
 ## Create and query a table
 
 With Exposed’s DAO API, you can interact with your database using a type-safe, object-oriented syntax similar to
-working with regular Kotlin classes. Before executing any database operations, you must run them inside a `transaction`.
+working with regular Kotlin classes. When executing any database operations, you must run them inside a
+<emphasis>transaction</emphasis>.
 
 <include from="Get-Started-with-Exposed.topic" element-id="transaction-definition"/>
 

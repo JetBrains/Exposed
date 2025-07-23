@@ -137,14 +137,14 @@
     </chapter>
     <chapter title="Add dependencies" id="add-dependencies">
         <p>
-            Before you start using Exposed, you need to provide dependencies to your project.
+            Before you start using Exposed, you need to add dependencies to your project.
         </p>
         <procedure id="add-dependencies-procedure">
             <step>
                 <p>
                     Navigate to the
                     <path>gradle/libs.versions.toml</path>
-                    file and define the Exposed and H2 version and libraries:
+                    file and define the Exposed and H2 version and artifacts:
                 </p>
                 <code-block lang="kotlin" noinject="true">
                 [versions]
@@ -192,7 +192,7 @@
     </chapter>
     <chapter title="Configure a database connection" id="configure-db-connection">
         <p>
-            Every database access using Exposed is started by obtaining a connection and creating a transaction.
+            Whenever you access a database using Exposed, you start by obtaining a connection and creating a transaction.
             To configure the database connection, use the <code>Database.connect()</code> function.
         </p>
         <procedure id="config-db-connection-procedure">
@@ -252,16 +252,15 @@
                     to the database will be established later when a database operation is performed.
                 </note>
                 <note>
-                    By default, Exposed uses a <code>ServiceLoader</code> to get an implementation of the <code>DatabaseConnectionAutoRegistration</code>
-                    interface that represents a connection accessed by the <code>Database</code> instance.
-                    This can be modified when calling the <code>Database.connect</code> method by providing an argument to <code>connectionAutoRegistration</code>
-                    in the parameter list.
+                    By default, Exposed automatically registers the database connection. You can change
+                    this behavior by setting the <code>connectionAutoRegistration</code> parameter
+                    when calling <code>Database.connect()</code>.
                 </note>
             </step>
         </procedure>
         <p>
             With this, you've added Exposed to your Kotlin project and configured a database connection.
-            You're now ready to define your data model and engage with the database using Exposed's DSL API.
+            You're now ready to define your data model and engage with the database using Exposed's DSL.
         </p>
     </chapter>
     <chapter title="Define a table object" id="define-table-object">
@@ -291,7 +290,7 @@
                     name for the table. Keep in mind that if no custom name is specified, Exposed will generate
                     one from the class name, which might lead to unexpected results.
                 </p>
-                <p>Within the <code>Tasks</code> object, four columns are defined:</p>
+                <p>Within the <code>Tasks</code> object, the following columns are defined:</p>
                 <list>
                     <li>
                         <code>id</code> of type <code>Int</code> is defined with the <code>integer()</code> method.
@@ -321,7 +320,8 @@
     <chapter title="Create and query a table" id="create-and-query-table">
         <p>
             With Exposed’s DSL API, you can interact with a database using a type-safe syntax similar to SQL.
-            Before you start executing database operations, you must open a <code>transaction</code>.
+            Before you start executing database operations, you must open a
+            <emphasis>transaction</emphasis>.
         </p>
         <p id="transaction-definition">
             A <a href="Transactions.md">transaction</a> is represented by an instance of the <code>Transaction</code> class, within which you
