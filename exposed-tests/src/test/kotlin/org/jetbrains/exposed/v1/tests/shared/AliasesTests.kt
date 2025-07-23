@@ -344,22 +344,44 @@ class AliasesTests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testAliasCastedToExpression() {
+    fun testExpressionWithColumnTypeAliasCastedToExpression() {
         val tester = object : IntIdTable("Test") {
             val weight = integer("weight")
         }
 
         val expression = tester.weight.sum()
-        val alias: Expression<Int?> = expression.alias("task_weight")
+        val alias: ExpressionWithColumnTypeAlias<Int?> = expression.alias("task_weight")
         val query: QueryAlias = tester.select(alias).alias("all_weight")
 
-        // EXPOSED-815 Resolving an aliased field on a query alias doesn't work
-        // Reading `query[alias]` crashed before the fix
-        val aliasExpressionString = QueryBuilder(true).also {
-            query[alias].toQueryBuilder(it)
-        }.toString()
+        fun Expression<*>.toExpressionString() = QueryBuilder(true)
+            .also { this.toQueryBuilder(it) }
+            .toString().lowercase()
 
-        assertEquals("all_weight.task_weight", aliasExpressionString)
+        withTables(tester) {
+            assertEquals("all_weight.task_weight", query[alias].toExpressionString())
+            assertEquals("all_weight.task_weight", query[alias as ExpressionWithColumnType<Int?>].toExpressionString())
+            assertEquals("all_weight.task_weight", query[alias as Expression<Int?>].toExpressionString())
+        }
+    }
+
+    @Test
+    fun testExpressionAliasCastedToExpression() {
+        val tester = object : IntIdTable("Test") {
+            val weight = integer("weight")
+        }
+
+        val expression: Expression<Int?> = tester.weight.sum()
+        val alias: ExpressionAlias<Int?> = expression.alias("task_weight")
+        val query: QueryAlias = tester.select(alias).alias("all_weight")
+
+        fun Expression<*>.toExpressionString() = QueryBuilder(true)
+            .also { this.toQueryBuilder(it) }
+            .toString().lowercase()
+
+        withTables(tester) {
+            assertEquals("all_weight.task_weight", query[alias].toExpressionString())
+            assertEquals("all_weight.task_weight", query[alias as Expression<Int?>].toExpressionString())
+        }
     }
 
     @Test
@@ -368,7 +390,7 @@ class AliasesTests : DatabaseTestsBase() {
             val weight = integer("weight")
         }
 
-        val column = tester.weight
+        val column: Column<Int> = tester.weight
         val query: QueryAlias = tester.select(column).alias("all_weight")
 
         fun Expression<*>.toExpressionString() = QueryBuilder(true)
@@ -377,8 +399,8 @@ class AliasesTests : DatabaseTestsBase() {
 
         withTables(tester) {
             assertEquals("all_weight.weight", query[column].toExpressionString())
-            assertEquals("all_weight.weight", query[column as Expression<Int>].toExpressionString())
             assertEquals("all_weight.weight", query[column as ExpressionWithColumnType<Int>].toExpressionString())
+            assertEquals("all_weight.weight", query[column as Expression<Int>].toExpressionString())
         }
     }
 }
