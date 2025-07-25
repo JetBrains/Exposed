@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.jdbc.*
     line numbers in the `code-block` element of the referenced file.
 */
 
+@Suppress("MagicNumber")
 class BuildStatementExamples {
     fun Transaction.prepareQuerySql() {
         val filmQuery = StarWarsFilmsTable
@@ -26,7 +27,7 @@ class BuildStatementExamples {
             SELECT STARWARSFILMS.ID, STARWARSFILMS.SEQUEL_ID, STARWARSFILMS."name", STARWARSFILMS.DIRECTOR
             FROM STARWARSFILMS
             WHERE (STARWARSFILMS.SEQUEL_ID <= ?) OR (STARWARSFILMS.SEQUEL_ID > ?)
-        */
+         */
 
         val fullQuerySql = filmQuery
             .orWhere { StarWarsFilmsTable.sequelId greater 6 }

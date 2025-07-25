@@ -37,7 +37,7 @@ You can then call `.prepareSQL()` to check the SQL string representation of the 
 
 <code-block lang="kotlin"
     src="exposed-dsl/src/main/kotlin/org/example/examples/BuildStatementExamples.kt"
-    include-lines="26-28"/>
+    include-lines="27-29"/>
 
 By default, a parameterized SQL string is prepared and returned. To generate a SQL string without parameter placeholders,
 set the `prepared` argument to `false`:
@@ -48,7 +48,7 @@ set the `prepared` argument to `false`:
 
 <code-block lang="kotlin"
     src="exposed-dsl/src/main/kotlin/org/example/examples/BuildStatementExamples.kt"
-    include-lines="37-39"/>
+    include-lines="38-40"/>
 
 ## Other operations
 
@@ -71,7 +71,7 @@ As for [queries](#read-operations), you can access the SQL string to be executed
 
 <code-block lang="kotlin"
     src="exposed-dsl/src/main/kotlin/org/example/examples/BuildStatementExamples.kt"
-    include-lines="56"/>
+    include-lines="57"/>
 
 <code-block lang="kotlin"
     src="exposed-dsl/src/main/kotlin/org/example/examples/BuildStatementExamples.kt"
@@ -79,7 +79,7 @@ As for [queries](#read-operations), you can access the SQL string to be executed
 
 <code-block lang="kotlin"
     src="exposed-dsl/src/main/kotlin/org/example/examples/BuildStatementExamples.kt"
-    include-lines="63"/>
+    include-lines="64"/>
 
 ### Executing a statement
 
