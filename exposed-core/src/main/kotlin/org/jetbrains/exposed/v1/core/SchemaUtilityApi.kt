@@ -8,34 +8,6 @@ import java.math.BigDecimal
  * Base class representing helper functions necessary for creating, altering, and dropping database schema objects.
  */
 abstract class SchemaUtilityApi {
-    // TODO make companion object with public string fields
-    @InternalApi
-    protected val columnsLogMessage = "Extracting table columns"
-
-    @InternalApi
-    protected val primaryKeysLogMessage = "Extracting primary keys"
-
-    @InternalApi
-    protected val constraintsLogMessage = "Extracting column constraints"
-
-    @InternalApi
-    protected val createTablesLogMessage = "Preparing create tables statements"
-
-    @InternalApi
-    protected val executeCreateTablesLogMessage = "Executing create tables statements"
-
-    @InternalApi
-    protected val createSequencesLogMessage = "Preparing create sequences statements"
-
-    @InternalApi
-    protected val alterTablesLogMessage = "Preparing alter tables statements"
-
-    @InternalApi
-    protected val executeAlterTablesLogMessage = "Executing alter tables statements"
-
-    @InternalApi
-    protected val mappingConsistenceLogMessage = "Checking mapping consistence"
-
     /** Returns this list of tables sorted according to the targets of their foreign key constraints, if any exist. */
     @InternalApi
     protected fun Iterable<Table>.sortByReferences(): List<Table> = TableDepthGraph(this).sorted()
@@ -280,6 +252,26 @@ abstract class SchemaUtilityApi {
         }
     }
 
+    companion object {
+        const val COLUMNS_LOG_MESSAGE = "Extracting table columns"
+
+        const val PRIMARY_KEYS_LOG_MESSAGE = "Extracting primary keys"
+
+        const val CONSTRAINTS_LOG_MESSAGE = "Extracting column constraints"
+
+        const val CREATE_TABLES_LOG_MESSAGE = "Preparing create tables statements"
+
+        const val EXECUTE_CREATE_TABLES_LOG_MESSAGE = "Executing create tables statements"
+
+        const val CREATE_SEQUENCES_LOG_MESSAGE = "Preparing create sequences statements"
+
+        const val ALTER_TABLES_LOG_MESSAGE = "Preparing alter tables statements"
+
+        const val EXECUTE_ALTER_TABLES_LOG_MESSAGE = "Executing alter tables statements"
+
+        const val MAPPING_CONSISTENCE_LOG_MESSAGE = "Checking mapping consistence"
+    }
+
     @OptIn(InternalApi::class)
     private fun Map<Column<*>, ColumnMetadata>.mapColumnDiffs(): Map<Column<*>, ColumnDiff> {
         val dialect = currentDialect
@@ -519,69 +511,6 @@ abstract class SchemaUtilityApi {
             answer
         } else {
             block()
-        }
-    }
-
-    // TODO extract tp separate file & move this top-level internal class
-    private class TableDepthGraph(val tables: Iterable<Table>) {
-        val graph = fetchAllTables().let { tables ->
-            if (tables.isEmpty()) {
-                emptyMap()
-            } else {
-                tables.associateWith { t ->
-                    t.foreignKeys.map { it.targetTable }
-                }
-            }
-        }
-
-        private fun fetchAllTables(): HashSet<Table> {
-            val result = HashSet<Table>()
-            fun parseTable(table: Table) {
-                if (result.add(table)) {
-                    table.foreignKeys.map { it.targetTable }.forEach(::parseTable)
-                }
-            }
-            tables.forEach(::parseTable)
-            return result
-        }
-
-        fun sorted(): List<Table> {
-            if (!tables.iterator().hasNext()) return emptyList()
-            val visited = mutableSetOf<Table>()
-            val result = arrayListOf<Table>()
-            fun traverse(table: Table) {
-                if (table !in visited) {
-                    visited += table
-                    graph.getValue(table).forEach { t ->
-                        if (t !in visited) {
-                            traverse(t)
-                        }
-                    }
-                    result += table
-                }
-            }
-            tables.forEach(::traverse)
-            return result
-        }
-
-        fun hasCycle(): Boolean {
-            if (!tables.iterator().hasNext()) return false
-            val visited = mutableSetOf<Table>()
-            val recursion = mutableSetOf<Table>()
-            val sortedTables = sorted()
-            fun traverse(table: Table): Boolean {
-                if (table in recursion) return true
-                if (table in visited) return false
-                recursion += table
-                visited += table
-                return if (graph[table]!!.any { traverse(it) }) {
-                    true
-                } else {
-                    recursion -= table
-                    false
-                }
-            }
-            return sortedTables.any { traverse(it) }
         }
     }
 }

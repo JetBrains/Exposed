@@ -68,22 +68,22 @@ object MigrationUtils : MigrationUtilityApi() {
         val (tablesToCreate, tablesToAlter) = tables.partition { !it.exists() }
 
         @OptIn(InternalApi::class)
-        val createStatements = logTimeSpent(createTablesLogMessage, withLogs) {
+        val createStatements = logTimeSpent(CREATE_TABLES_LOG_MESSAGE, withLogs) {
             createTableStatements(tables = tablesToCreate.toTypedArray())
         }
 
         @OptIn(InternalApi::class)
-        val createSequencesStatements = logTimeSpent(createSequencesLogMessage, withLogs) {
+        val createSequencesStatements = logTimeSpent(CREATE_SEQUENCES_LOG_MESSAGE, withLogs) {
             checkMissingSequences(tables = tables, withLogs).flatMap { it.createStatement() }
         }
 
         @OptIn(InternalApi::class)
-        val alterStatements = logTimeSpent(alterTablesLogMessage, withLogs) {
+        val alterStatements = logTimeSpent(ALTER_TABLES_LOG_MESSAGE, withLogs) {
             addMissingAndDropUnmappedColumns(tables = tablesToAlter.toTypedArray(), withLogs)
         }
 
         @OptIn(InternalApi::class)
-        val modifyTablesStatements = logTimeSpent(mappingConsistenceLogMessage, withLogs) {
+        val modifyTablesStatements = logTimeSpent(MAPPING_CONSISTENCE_LOG_MESSAGE, withLogs) {
             mappingConsistenceRequiredStatements(
                 tables = tablesToAlter.toTypedArray(),
                 withLogs
@@ -115,12 +115,12 @@ object MigrationUtils : MigrationUtilityApi() {
         val statements = ArrayList<String>()
 
         @OptIn(InternalApi::class)
-        val existingTablesColumns = logTimeSpent(columnsLogMessage, withLogs) {
+        val existingTablesColumns = logTimeSpent(COLUMNS_LOG_MESSAGE, withLogs) {
             currentDialectMetadata.tableColumns(*tables)
         }
 
         @OptIn(InternalApi::class)
-        val existingPrimaryKeys = logTimeSpent(primaryKeysLogMessage, withLogs) {
+        val existingPrimaryKeys = logTimeSpent(PRIMARY_KEYS_LOG_MESSAGE, withLogs) {
             currentDialectMetadata.existingPrimaryKeys(*tables)
         }
         val tr = TransactionManager.current()
@@ -134,7 +134,7 @@ object MigrationUtils : MigrationUtilityApi() {
         }
         @OptIn(InternalApi::class)
         if (dbSupportsAlterTableWithAddColumn) {
-            val existingColumnConstraints = logTimeSpent(constraintsLogMessage, withLogs) {
+            val existingColumnConstraints = logTimeSpent(CONSTRAINTS_LOG_MESSAGE, withLogs) {
                 currentDialectMetadata.columnConstraints(*tables)
             }
             mapMissingConstraintsTo(statements, existingColumnConstraints, tables = tables)
@@ -168,7 +168,7 @@ object MigrationUtils : MigrationUtilityApi() {
 
         @OptIn(InternalApi::class)
         if (dbSupportsAlterTableWithDropColumn) {
-            val existingTablesColumns = logTimeSpent(columnsLogMessage, withLogs) {
+            val existingTablesColumns = logTimeSpent(COLUMNS_LOG_MESSAGE, withLogs) {
                 currentDialectMetadata.tableColumns(*tables)
             }
 
