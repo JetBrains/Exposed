@@ -1,10 +1,6 @@
 package org.jetbrains.exposed.v1.javatime
 
-import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.ColumnType
-import org.jetbrains.exposed.v1.core.IDateColumnType
-import org.jetbrains.exposed.v1.core.InternalApi
-import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.statements.api.RowApi
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.vendors.*
@@ -29,40 +25,52 @@ private val DEFAULT_TIMESTAMP_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE_TIME.withLocale(Locale.ROOT).withZone(UTC)
 }
 
-private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER by lazy {
+private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER_NOTZ by lazy {
     DateTimeFormatter.ofPattern(
         "yyyy-MM-dd HH:mm:ss.SSS",
         Locale.ROOT
-    ).withZone(ZoneId.systemDefault())
+    )
 }
 
-private val SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER by lazy {
+private val SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER
+    get() = SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER_NOTZ.withZone(ZoneId.systemDefault())
+
+private val SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER_NOTZ by lazy {
     DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss.SSS",
-        Locale.ROOT
-    ).withZone(UTC)
+        "yyyy-MM-dd HH:mm:ss.SSS"
+    )
 }
 
-private val MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER by lazy {
+private val SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER
+    get() = SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER_NOTZ.withZone(ZoneId.systemDefault())
+
+private val MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER_NOTZ by lazy {
     DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss.SSSSSS",
-        Locale.ROOT
-    ).withZone(ZoneId.systemDefault())
+        "yyyy-MM-dd HH:mm:ss.SSSSSS"
+    )
 }
 
-private val MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER by lazy {
+private val MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER
+    get() = MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER_NOTZ.withZone(ZoneId.systemDefault())
+
+private val MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER_NOTZ by lazy {
     DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss.SSSSSS",
-        Locale.ROOT
-    ).withZone(UTC)
+        "yyyy-MM-dd HH:mm:ss.SSSSSS"
+    )
 }
 
-private val MYSQL_DATE_TIME_STRING_FORMATTER by lazy {
+private val MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER
+    get() = MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER_NOTZ.withZone(ZoneId.systemDefault())
+
+private val MYSQL_DATE_TIME_STRING_FORMATTER_NOTZ by lazy {
     DateTimeFormatter.ofPattern(
         "yyyy-MM-dd HH:mm:ss",
         Locale.ROOT
-    ).withZone(ZoneId.systemDefault())
+    )
 }
+
+private val MYSQL_DATE_TIME_STRING_FORMATTER
+    get() = MYSQL_DATE_TIME_STRING_FORMATTER_NOTZ.withZone(ZoneId.systemDefault())
 
 private val MYSQL_TIMESTAMP_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
@@ -75,12 +83,15 @@ private val ORACLE_TIME_STRING_FORMATTER by lazy {
     DateTimeFormatter.ofPattern(
         "1970-01-01 HH:mm:ss",
         Locale.ROOT
-    ).withZone(ZoneOffset.UTC)
+    ).withZone(UTC)
 }
 
-private val DEFAULT_TIME_STRING_FORMATTER by lazy {
+private val DEFAULT_TIME_STRING_FORMATTER_NOTZ by lazy {
     DateTimeFormatter.ISO_LOCAL_TIME.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
+
+private val DEFAULT_TIME_STRING_FORMATTER
+    get() = DEFAULT_TIME_STRING_FORMATTER_NOTZ.withZone(ZoneId.systemDefault())
 
 // Example result: 2023-07-07 14:42:29.343+02:00 or 2023-07-07 12:42:29.343Z
 private val SQLITE_OFFSET_DATE_TIME_FORMATTER by lazy {
@@ -221,7 +232,8 @@ class JavaLocalDateColumnType : ColumnType<LocalDate>(), IDateColumnType {
         }
     }
 
-    private fun longToLocalDate(instant: Long) = Instant.ofEpochMilli(instant).atZone(ZoneId.systemDefault()).toLocalDate()
+    private fun longToLocalDate(instant: Long) =
+        Instant.ofEpochMilli(instant).atZone(ZoneId.systemDefault()).toLocalDate()
 
     companion object {
         internal val INSTANCE = JavaLocalDateColumnType()
@@ -245,9 +257,11 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
             is SQLiteDialect -> "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(instant)}'"
             is OracleDialect -> oracleDateTimeLiteral(instant)
             is MysqlDialect -> {
-                val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER else MYSQL_DATE_TIME_STRING_FORMATTER
+                val formatter =
+                    if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_DATE_TIME_STRING_FORMATTER else MYSQL_DATE_TIME_STRING_FORMATTER
                 "'${formatter.format(instant)}'"
             }
+
             else -> "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(instant)}'"
         }
     }
@@ -266,6 +280,7 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
     override fun notNullValueToDB(value: LocalDateTime): Any = when {
         currentDialect is SQLiteDialect ->
             SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value.atZone(ZoneId.systemDefault()))
+
         else -> {
             val instant = value.atZone(ZoneId.systemDefault()).toInstant()
             java.sql.Timestamp(instant.toEpochMilli()).apply { nanos = instant.nano }
@@ -284,14 +299,20 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
         val dialect = currentDialect
         return when {
             dialect is PostgreSQLDialect ->
-                "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
+                "'${
+                    SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')
+                }'::timestamp without time zone"
+
             (dialect as? H2Dialect)?.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                 "'${SQLITE_AND_ORACLE_DATE_TIME_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'"
+
             else -> super.nonNullValueAsDefaultString(value)
         }
     }
 
-    private fun longToLocalDateTime(millis: Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
+    private fun longToLocalDateTime(millis: Long) =
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
+
     private fun longToLocalDateTime(seconds: Long, nanos: Long) =
         LocalDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneId.systemDefault())
 
@@ -344,6 +365,7 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
             }
             LocalTime.parse(value, formatter)
         }
+
         else -> valueFromDB(value.toString())
     }
 
@@ -354,11 +376,13 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
             dialect is SQLiteDialect -> {
                 DEFAULT_TIME_STRING_FORMATTER.format(value)
             }
+
             dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
                 // For Oracle dialect, convert LocalTime to java.sql.Timestamp with a fixed date (1970-01-01)
                 val dateTime = LocalDateTime.of(LocalDate.of(ORACLE_START_YEAR, 1, 1), value)
                 java.sql.Timestamp.valueOf(dateTime)
             }
+
             else -> {
                 java.sql.Time.valueOf(value)
             }
@@ -380,7 +404,8 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         }
     }
 
-    private fun longToLocalTime(millis: Long) = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalTime()
+    private fun longToLocalTime(millis: Long) =
+        Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalTime()
 
     companion object {
         internal val INSTANCE = JavaLocalTimeColumnType()
@@ -405,9 +430,11 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
                 "'${SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value)}'"
 
             is MysqlDialect -> {
-                val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER else MYSQL_TIMESTAMP_STRING_FORMATTER
+                val formatter =
+                    if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER else MYSQL_TIMESTAMP_STRING_FORMATTER
                 "'${formatter.format(value)}'"
             }
+
             else -> "'${DEFAULT_TIMESTAMP_STRING_FORMATTER.format(value)}'"
         }
     }
@@ -430,10 +457,15 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
         return when {
             dialect is SQLiteDialect ->
                 SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value)
-            dialect is MysqlDialect && dialect !is MariaDBDialect && !CoreTransactionManager.currentTransaction().db.version.covers(8) -> {
-                val formatter = if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER else MYSQL_TIMESTAMP_STRING_FORMATTER
+
+            dialect is MysqlDialect && dialect !is MariaDBDialect && !CoreTransactionManager.currentTransaction().db.version.covers(
+                8
+            ) -> {
+                val formatter =
+                    if (dialect.isFractionDateTimeSupported()) MYSQL_FRACTION_TIMESTAMP_STRING_FORMATTER else MYSQL_TIMESTAMP_STRING_FORMATTER
                 formatter.format(value)
             }
+
             else -> java.sql.Timestamp.from(value)
         }
     }
@@ -442,9 +474,13 @@ class JavaInstantColumnType : ColumnType<Instant>(), IDateColumnType {
         val dialect = currentDialect
         return when {
             dialect is PostgreSQLDialect ->
-                "'${SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'::timestamp without time zone"
+                "'${
+                    SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')
+                }'::timestamp without time zone"
+
             dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                 "'${SQLITE_AND_ORACLE_TIMESTAMP_STRING_FORMATTER.format(value).trimEnd('0').trimEnd('.')}'"
+
             else -> super.nonNullValueAsDefaultString(value)
         }
     }
@@ -486,6 +522,7 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
                 OffsetDateTime.parse(value)
             }
         }
+
         else -> error("Unexpected value: $value of ${value::class.qualifiedName}")
     }
 
@@ -506,8 +543,10 @@ class JavaOffsetDateTimeColumnType : ColumnType<OffsetDateTime>(), IDateColumnTy
         return when {
             dialect is PostgreSQLDialect -> // +00 appended because PostgreSQL stores it in UTC time zone
                 "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}+00'::timestamp with time zone"
+
             dialect is H2Dialect && dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle ->
                 "'${value.format(POSTGRESQL_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
+
             dialect is MysqlDialect -> "'${value.format(MYSQL_FRACTION_OFFSET_DATE_TIME_AS_DEFAULT_FORMATTER)}'"
             else -> super.nonNullValueAsDefaultString(value)
         }

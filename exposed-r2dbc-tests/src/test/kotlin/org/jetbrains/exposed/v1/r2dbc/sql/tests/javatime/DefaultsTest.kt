@@ -9,17 +9,12 @@ import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.javatime.*
-import org.jetbrains.exposed.v1.r2dbc.batchInsert
-import org.jetbrains.exposed.v1.r2dbc.insert
-import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
-import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.tests.*
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
-import org.jetbrains.exposed.v1.r2dbc.tests.sorted
-import org.jetbrains.exposed.v1.r2dbc.update
 import org.junit.Test
 import java.time.*
 import java.time.temporal.ChronoUnit
@@ -53,8 +48,15 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         val returnedDefault = table.clientDefault.defaultValueFun?.invoke()
 
         assertTrue(table.clientDefault.columnType.nullable, "Expected clientDefault columnType to be nullable")
-        assertNotNull(table.clientDefault.defaultValueFun, "Expected clientDefault column to have a default value fun, but was null")
-        assertEquals(defaultValue, returnedDefault, "Expected clientDefault to return $defaultValue, but was $returnedDefault")
+        assertNotNull(
+            table.clientDefault.defaultValueFun,
+            "Expected clientDefault column to have a default value fun, but was null"
+        )
+        assertEquals(
+            defaultValue,
+            returnedDefault,
+            "Expected clientDefault to return $defaultValue, but was $returnedDefault"
+        )
     }
 
     @Test
@@ -66,8 +68,15 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         val returnedDefault = table.clientDefault.defaultValueFun?.invoke()
 
         assertTrue(table.clientDefault.columnType.nullable, "Expected clientDefault columnType to be nullable")
-        assertNotNull(table.clientDefault.defaultValueFun, "Expected clientDefault column to have a default value fun, but was null")
-        assertEquals(defaultValue, returnedDefault, "Expected clientDefault to return $defaultValue, but was $returnedDefault")
+        assertNotNull(
+            table.clientDefault.defaultValueFun,
+            "Expected clientDefault column to have a default value fun, but was null"
+        )
+        assertEquals(
+            defaultValue,
+            returnedDefault,
+            "Expected clientDefault to return $defaultValue, but was $returnedDefault"
+        )
     }
 
     private val initBatch = listOf<(BatchInsertStatement) -> Unit>(
@@ -159,6 +168,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         fun Expression<*>.itOrNull() = when {
             currentDialectTest.isAllowedAsColumnDefault(this) ->
                 "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+
             else -> "NULL"
         }
 
@@ -193,15 +203,20 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
                     TestDB.ORACLE ->
                         ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})" +
                             ", CONSTRAINT chk_t_signed_long_l CHECK (L BETWEEN ${Long.MIN_VALUE} AND ${Long.MAX_VALUE})"
+
                     else -> ""
                 } +
                 ")"
 
-            val expected = if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-                arrayListOf("CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807", baseExpression)
-            } else {
-                arrayListOf(baseExpression)
-            }
+            val expected =
+                if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+                    arrayListOf(
+                        "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
+                        baseExpression
+                    )
+                } else {
+                    arrayListOf(baseExpression)
+                }
 
             assertEqualLists(expected, testTable.ddl)
 
@@ -332,6 +347,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         fun Expression<*>.itOrNull() = when {
             currentDialectTest.isAllowedAsColumnDefault(this) ->
                 "DEFAULT ${currentDialectTest.dataTypeProvider.processForDefaultValue(this)} NOT NULL"
+
             else -> "NULL"
         }
 
@@ -349,6 +365,7 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
                 when (testDb) {
                     TestDB.ORACLE ->
                         ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
+
                     else -> ""
                 } +
                 ")"
@@ -426,7 +443,8 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
 
         val tester = object : Table("tester") {
             val timestampWithDefault = timestamp("timestampWithDefault").default(instant)
-            val timestampWithDefaultExpression = timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp)
+            val timestampWithDefaultExpression =
+                timestamp("timestampWithDefaultExpression").defaultExpression(CurrentTimestamp)
         }
 
         withTables(tester) {
@@ -441,7 +459,8 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
 
         val tester = object : Table("tester") {
             val datetimeWithDefault = datetime("datetimeWithDefault").default(datetime)
-            val datetimeWithDefaultExpression = datetime("datetimeWithDefaultExpression").defaultExpression(CurrentDateTime)
+            val datetimeWithDefaultExpression =
+                datetime("datetimeWithDefaultExpression").defaultExpression(CurrentDateTime)
         }
 
         withTables(tester) {
@@ -469,7 +488,8 @@ class DefaultsTest : R2dbcDatabaseTestsBase() {
         val offsetDateTime = OffsetDateTime.parse("2024-02-08T20:48:04.700+09:00")
 
         val tester = object : Table("tester") {
-            val timestampWithTimeZoneWithDefault = timestampWithTimeZone("timestampWithTimeZoneWithDefault").default(offsetDateTime)
+            val timestampWithTimeZoneWithDefault =
+                timestampWithTimeZone("timestampWithTimeZoneWithDefault").default(offsetDateTime)
         }
 
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
