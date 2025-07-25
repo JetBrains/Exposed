@@ -23,8 +23,8 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 open class Query(
     override var set: FieldSet,
     where: Op<Boolean>?
-) : AbstractQuery<Query>(set.source.targetTables()),
-    SuspendExecutable<ResultApi, Query>,
+) : AbstractQuery<R2dbcResult>(set.source.targetTables()),
+    SuspendExecutable<R2dbcResult, Query>,
     SizedIterable<ResultRow> {
 
     override val statement: Query = this

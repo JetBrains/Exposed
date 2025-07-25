@@ -25,7 +25,7 @@ sealed class SetOperation(
     operationName: String,
     _firstStatement: AbstractQuery<*>,
     val secondStatement: AbstractQuery<*>
-) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()),
+) : AbstractQuery<JdbcResult>((_firstStatement.targets + secondStatement.targets).distinct()),
     BlockingExecutable<ResultApi, SetOperation>,
     SizedIterable<ResultRow> {
 

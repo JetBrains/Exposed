@@ -11,9 +11,9 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
 // TODO: check if Statement<T> is limited to ResultApi & if we can introduce typed exec()s to avoid casting ResultApi
 // TODO: consider naming this as QueryState (or something related to state of the query) and check that it has only single responsibility
 /** Base class representing an SQL query that returns a database result when executed. */
-abstract class AbstractQuery<T : AbstractQuery<T>>(
+abstract class AbstractQuery<T>(
     targets: List<Table>
-) : Statement<ResultApi>(StatementType.SELECT, targets) {
+) : Statement<T>(StatementType.SELECT, targets) {
     /** The stored list of columns and their [SortOrder] for an `ORDER BY` clause in this query. */
     var orderByExpressions: List<Pair<Expression<*>, SortOrder>> = mutableListOf()
         private set
@@ -65,7 +65,7 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
      *
      * Override this function to additionally copy any properties that are not part of the primary constructor.
      */
-    open fun copyTo(other: T) {
+    open fun copyTo(other: AbstractQuery<T>) {
         other.orderByExpressions = orderByExpressions.toMutableList()
         other.limit = limit
         other.offset = offset
@@ -84,12 +84,12 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
     }
 
     /** Modifies this query to retrieve only distinct results if [value] is set to `true`. */
-    open fun withDistinct(value: Boolean = true): T = apply {
+    open fun withDistinct(value: Boolean = true): AbstractQuery<T> = apply {
         if (value) {
             require(distinctOn == null) { "DISTINCT cannot be used with the DISTINCT ON modifier. Only one of them should be applied." }
         }
         distinct = value
-    } as T
+    } as AbstractQuery<T>
 
     /** Modifies the number of results that should be fetched when this query is executed. */
     fun fetchSize(n: Int): T = apply {
@@ -161,11 +161,11 @@ abstract class AbstractQuery<T : AbstractQuery<T>>(
      *
      * @sample org.jetbrains.exposed.v1.tests.shared.dml.GroupByTests.testGroupBy02
      */
-    fun groupBy(vararg columns: Expression<*>): T {
+    fun groupBy(vararg columns: Expression<*>): AbstractQuery<T> {
         for (column in columns) {
             (groupedByColumns as MutableList).add(column)
         }
-        return this as T
+        return this
     }
 
     /**

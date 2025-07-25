@@ -27,8 +27,8 @@ sealed class SetOperation(
     operationName: String,
     _firstStatement: AbstractQuery<*>,
     val secondStatement: AbstractQuery<*>
-) : AbstractQuery<SetOperation>((_firstStatement.targets + secondStatement.targets).distinct()),
-    SuspendExecutable<ResultApi, SetOperation>,
+) : AbstractQuery<R2dbcResult>((_firstStatement.targets + secondStatement.targets).distinct()),
+    SuspendExecutable<R2dbcResult, SetOperation>,
     SizedIterable<ResultRow> {
 
     override val statement: SetOperation = this

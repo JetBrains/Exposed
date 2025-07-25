@@ -18,7 +18,7 @@ import java.sql.ResultSet
 open class Query(
     override var set: FieldSet,
     where: Op<Boolean>?
-) : AbstractQuery<Query>(set.source.targetTables()),
+) : AbstractQuery<JdbcResult>(set.source.targetTables()),
     BlockingExecutable<ResultApi, Query>,
     SizedIterable<ResultRow> {
 

@@ -1,13 +1,17 @@
 package org.jetbrains.exposed.v1.r2dbc.sql.tests.shared
 
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.buildStatement
 import org.jetbrains.exposed.v1.core.upperCase
@@ -18,6 +22,7 @@ import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.withCitiesAndUsers
+import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
 import org.jetbrains.exposed.v1.r2dbc.statements.toExecutable
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
@@ -217,6 +222,32 @@ class TransactionExecTests : R2dbcDatabaseTestsBase() {
             val rowsDeleted = exec(deleteAllUserData.toExecutable())
             assertEquals(initialUserDataCount, rowsDeleted?.toLong())
             assertEquals(0, userData.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testTestTest() {
+        val tester = object : IntIdTable("tester") {
+            val name = varchar("name", 32)
+        }
+
+        withTables(tester, configure = { StdOutSqlLogger }) {
+            tester.insert { it[name] = "qwertykun" }
+            tester.insert { it[name] = "qwertytyan" }
+
+            val abc = exec(tester.select(tester.name))
+            println(abc?.rowsUpdated())
+
+            exec(tester.select(tester.name))
+                ?.mapRows { rowApi ->
+                    rowApi.getObject("name")
+                }
+                ?.collect { println("name: $it") }
+
+//            exec("select id, name from tester") { row ->
+//                row.getString("name")
+//            }
+//                ?.collect { println("name: $it") }
         }
     }
 }
