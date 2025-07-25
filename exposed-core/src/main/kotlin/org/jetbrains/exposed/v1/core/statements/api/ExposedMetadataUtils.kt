@@ -97,8 +97,6 @@ object ExposedMetadataUtils {
      * MySql8              null       null                        "NULL"
      * MariaDB3            "NULL"     "NULL"                      "'NULL'"
      * MariaDB2            "NULL"     "NULL"                      "'NULL'"
-     * H2V1                null       "NULL"                      "'NULL'"
-     * H2V1 (MySql)        null       "NULL"                      "'NULL'"
      * H2V2                null       "NULL"                      "'NULL'"
      * H2V2 (MySql)        null       "NULL"                      "'NULL'"
      * H2V2 (MariaDB)      null       "NULL"                      "'NULL'"

@@ -375,7 +375,7 @@ class EntityTests : DatabaseTestsBase() {
 
     @Test
     fun testCacheInvalidatedOnDSLUpsert() {
-        withTables(excludeSettings = TestDB.ALL_H2_V1, Items) { testDb ->
+        withTables(Items) { testDb ->
             val oldPrice = 20.0
             val itemA = Item.new {
                 name = "Item A"

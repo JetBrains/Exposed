@@ -271,7 +271,7 @@ class CreateIndexTests : DatabaseTestsBase() {
             }
         }
 
-        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
         withTables(excludeSettings = functionsNotSupported, tester) {
             org.jetbrains.exposed.v1.jdbc.SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())

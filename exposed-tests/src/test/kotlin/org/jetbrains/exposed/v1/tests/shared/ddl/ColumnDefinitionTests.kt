@@ -29,7 +29,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
             val amount = integer("amount").withDefinition("COMMENT", stringLiteral(comment))
         }
 
-        val columnCommentSupportedDB = TestDB.ALL_H2 + TestDB.ALL_MYSQL_MARIADB + TestDB.SQLITE
+        val columnCommentSupportedDB = TestDB.ALL_H2_V2 + TestDB.ALL_MYSQL_MARIADB + TestDB.SQLITE
 
         withTables(excludeSettings = TestDB.ALL - columnCommentSupportedDB, tester) { testDb ->
             assertTrue { org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(tester).isEmpty() }
@@ -166,7 +166,7 @@ class ColumnDefinitionTests : DatabaseTestsBase() {
 
         fun FieldSet.selectImplicitAll(): Query = ImplicitQuery(this, null)
 
-        val invisibilitySupportedDB = TestDB.ALL_H2 + TestDB.ALL_MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE
+        val invisibilitySupportedDB = TestDB.ALL_H2_V2 + TestDB.ALL_MARIADB + TestDB.MYSQL_V8 + TestDB.ORACLE
 
         withTables(excludeSettings = TestDB.ALL - invisibilitySupportedDB, tester) { testDb ->
             if (testDb == TestDB.MYSQL_V8 || testDb == TestDB.ORACLE) {

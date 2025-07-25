@@ -58,7 +58,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWithSliceExtract() {
-        withJsonTable(exclude = TestDB.ALL_H2) { tester, user1, data1, _ ->
+        withJsonTable(exclude = TestDB.ALL_H2_V2) { tester, user1, data1, _ ->
             val pathPrefix = if (currentDialectTest is PostgreSQLDialect) "" else "."
             // SQLServer & Oracle return null if extracted JSON is not scalar
             val requiresScalar = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect
@@ -79,7 +79,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWhereWithExtract() {
-        withJsonTable(exclude = TestDB.ALL_H2) { tester, _, data1, _ ->
+        withJsonTable(exclude = TestDB.ALL_H2_V2) { tester, _, data1, _ ->
             val newId = tester.insertAndGetId {
                 it[jsonColumn] = data1.copy(logins = 1000)
             }
@@ -132,7 +132,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
             assertEquals(updatedUser, dataEntity.all().single().jsonColumn)
 
-            if (testDb !in TestDB.ALL_H2) {
+            if (testDb !in TestDB.ALL_H2_V2) {
                 dataEntity.new { jsonColumn = dataA }
                 val path = if (currentDialectTest is PostgreSQLDialect) {
                     arrayOf("user", "team")
@@ -177,7 +177,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExists() {
-        withJsonTable(exclude = TestDB.ALL_H2 + TestDB.SQLSERVER) { tester, _, data1, testDb ->
+        withJsonTable(exclude = TestDB.ALL_H2_V2 + TestDB.SQLSERVER) { tester, _, data1, testDb ->
             val maximumLogins = 1000
             val teamA = "A"
             val newId = tester.insertAndGetId {
@@ -222,7 +222,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExtractWithArrays() {
-        withJsonArrays(exclude = TestDB.ALL_H2) { tester, singleId, _, testDb ->
+        withJsonArrays(exclude = TestDB.ALL_H2_V2) { tester, singleId, _, testDb ->
             val path1 = if (currentDialectTest is PostgreSQLDialect) {
                 arrayOf("users", "0", "team")
             } else {
@@ -254,7 +254,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExistsWithArrays() {
-        withJsonArrays(exclude = TestDB.ALL_H2 + TestDB.SQLSERVER) { tester, _, tripleId, testDb ->
+        withJsonArrays(exclude = TestDB.ALL_H2_V2 + TestDB.SQLSERVER) { tester, _, tripleId, testDb ->
             val optional = if (testDb in TestDB.ALL_MYSQL_LIKE) "one" else null
 
             val hasMultipleUsers = JsonTestsData.JsonArrays.groups.exists(".users[1]", optional = optional)
@@ -390,7 +390,7 @@ class JsonColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonWithUpsert() {
-        withJsonTable(exclude = TestDB.ALL_H2_V1) { tester, _, _, _ ->
+        withJsonTable { tester, _, _, _ ->
             val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
             val newId = tester.insertAndGetId {
                 it[jsonColumn] = newData

@@ -26,7 +26,7 @@ import java.math.RoundingMode
 
 class WindowFunctionsTests : DatabaseTestsBase() {
 
-    private val supportsCountDistinctAsWindowFunction = TestDB.ALL_H2 + TestDB.ORACLE
+    private val supportsCountDistinctAsWindowFunction = TestDB.ALL_H2_V2 + TestDB.ORACLE
     private val supportsStatisticsAggregateFunctions = TestDB.ALL - listOf(TestDB.SQLSERVER, TestDB.SQLITE)
     private val supportsNthValueFunction = TestDB.ALL - TestDB.SQLSERVER
     private val supportsExpressionsInWindowFunctionArguments = TestDB.ALL - TestDB.ALL_MYSQL

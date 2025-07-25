@@ -55,7 +55,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWithSliceExtract() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, user1, data1, _ ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, user1, data1, _ ->
             val pathPrefix = if (currentDialectTest is PostgreSQLDialect) "" else "."
             val isActive = JsonTestsData.JsonBTable.jsonBColumn.extract<Boolean>("${pathPrefix}active", toScalar = false)
             val result1 = tester.select(isActive).singleOrNull()
@@ -74,7 +74,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testSelectWhereWithExtract() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, _, data1, _ ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, _, data1, _ ->
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = data1.copy(logins = 1000)
             }
@@ -97,7 +97,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
         val dataTable = JsonTestsData.JsonBTable
         val dataEntity = JsonTestsData.JsonBEntity
 
-        withTables(excludeSettings = binaryJsonNotSupportedDB + TestDB.ALL_H2_V1, dataTable) { testDb ->
+        withTables(excludeSettings = binaryJsonNotSupportedDB, dataTable) { testDb ->
             val dataA = DataHolder(User("Admin", "Alpha"), 10, true, null)
             val newUser = dataEntity.new {
                 jsonBColumn = dataA
@@ -127,7 +127,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonContains() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, user1, data1, testDb ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, user1, data1, testDb ->
             val alphaTeamUser = user1.copy(team = "Alpha")
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = data1.copy(user = alphaTeamUser)
@@ -151,7 +151,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonExists() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2) { tester, _, data1, testDb ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V2) { tester, _, data1, testDb ->
             val maximumLogins = 1000
             val teamA = "A"
             val newId = tester.insertAndGetId {
@@ -322,7 +322,7 @@ class JsonBColumnTests : DatabaseTestsBase() {
 
     @Test
     fun testJsonBWithUpsert() {
-        withJsonBTable(exclude = binaryJsonNotSupportedDB + TestDB.ALL_H2_V1) { tester, _, _, _ ->
+        withJsonBTable(exclude = binaryJsonNotSupportedDB) { tester, _, _, _ ->
             val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
             val newId = tester.insertAndGetId {
                 it[jsonBColumn] = newData
