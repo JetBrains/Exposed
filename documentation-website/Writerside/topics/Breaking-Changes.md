@@ -5,8 +5,11 @@
 * Migration of kotlinx-datetime from version 6 to version 7. The only package affected is `exposed-kotlin-datetime`. `KotlinInstantColumnType`, and
   `Table.timestamp(name: String)` are parametrized with `kotlin.time.Instant` class now. If you need to use `kotlinx.datetime.Instant` with Exposed, you have to
   replace usages of `KotlinInstantColumnType` and `Table.timestamp(name: String)` with `XKotlinInstantColumnType` and `Table.xTimestamp(name: String)` respectively,
-  also the `CurrentTimestamp` constant should be changed with `XCurrentTimestamp`, `CustomTimeStampFunction` with `XCustomTimeStampFunction`. 
-  
+  also the `CurrentTimestamp` constant should be changed with `XCurrentTimestamp`, `CustomTimeStampFunction` with `XCustomTimeStampFunction`.
+* The newly introduced `IStatementBuilder` interface has been renamed and deprecated in favor of `StatementBuilder`,
+  which contains all the original and unchanged methods. It's associated function `buildStatement()` no longer accepts the
+  deprecated interface as the receiver of its `body` parameter; the parameter expects the new `StatementBuilder` instead.
+  The same parameter type change applies to the function `explain()`.
 
 ## 1.0.0-beta-4
 
