@@ -14,7 +14,7 @@
         </description>
 
         <spotlight>
-            <a href="Getting-Started-with-Exposed.topic" type="learn"
+            <a href="Get-Started-with-Exposed.topic" type="learn"
                summary="Learn how to create and query tables in Kotlin with Exposed DSL API">
                 Get Started with Exposed
             </a>
