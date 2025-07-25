@@ -529,7 +529,7 @@ class JodaTimeDefaultsTest : DatabaseTestsBase() {
 
     @Test
     fun testCustomDefaultTimestampFunctionWithEntity() {
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2, DefaultTimestampTable) {
+        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_POSTGRES - TestDB.MYSQL_V8 - TestDB.ALL_H2_V2, DefaultTimestampTable) {
             val entity = DefaultTimestampEntity.new {}
 
             val timestamp = DefaultTimestampTable.selectAll().first()[DefaultTimestampTable.timestamp]

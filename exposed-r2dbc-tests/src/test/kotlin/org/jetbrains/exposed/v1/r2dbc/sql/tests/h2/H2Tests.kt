@@ -4,17 +4,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.avg
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
-import org.jetbrains.exposed.v1.r2dbc.batchInsert
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.replace
-import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
@@ -39,13 +36,10 @@ class H2Tests : R2dbcDatabaseTestsBase() {
                     it.getString(1)
                 }?.first()
 
-                assertTrue(systemTestName == "h2_v2" || systemTestName == "h2_v1")
+                assertTrue(systemTestName == "h2_v2")
                 if (systemTestName == "h2_v2") {
                     assertNotEquals("2.1.214", version)
                     assertEquals("2", version?.first()?.toString())
-                }
-                if (systemTestName == "h2_v1") {
-                    assertEquals("1", version?.first()?.toString())
                 }
             }
         }
@@ -119,23 +113,6 @@ class H2Tests : R2dbcDatabaseTestsBase() {
             } finally {
                 org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(t)
             }
-        }
-    }
-
-    @Test
-    fun testH2V1WithBigDecimalFunctionThatReturnsShort() {
-        val testTable = object : Table("test_table") {
-            val number = short("number")
-        }
-
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2, testTable) {
-            testTable.batchInsert(listOf<Short>(2, 4, 6, 8, 10)) { n ->
-                this[testTable.number] = n
-            }
-
-            val average = testTable.number.avg()
-            val result = testTable.select(average).single()[average]
-            assertEquals("6.00".toBigDecimal(), result)
         }
     }
 

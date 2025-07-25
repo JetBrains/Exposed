@@ -58,7 +58,7 @@ class TransactionExecTests : DatabaseTestsBase() {
         // Both SQLite and H2 drivers allow multiple but only return the result of the first statement:
         // SQLite issue tracker: https://github.com/xerial/sqlite-jdbc/issues/277
         // H2 issue tracker: https://github.com/h2database/h2database/issues/3704
-        val toExclude = TestDB.ALL_H2 + TestDB.ALL_MYSQL_LIKE + listOf(TestDB.SQLITE, TestDB.POSTGRESQLNG)
+        val toExclude = TestDB.ALL_H2_V2 + TestDB.ALL_MYSQL_LIKE + listOf(TestDB.SQLITE, TestDB.POSTGRESQLNG)
 
         withTables(excludeSettings = toExclude, ExecTable) { testDb ->
             testInsertAndSelectInSingleExec(testDb)

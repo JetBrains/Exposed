@@ -16,7 +16,7 @@ import kotlin.test.assertContentEquals
 
 class ReplaceTests : DatabaseTestsBase() {
 
-    private val replaceNotSupported = TestDB.ALL - TestDB.ALL_MYSQL_LIKE - TestDB.SQLITE + TestDB.ALL_H2_V1
+    private val replaceNotSupported = TestDB.ALL - TestDB.ALL_MYSQL_LIKE - TestDB.SQLITE
 
     private object NewAuth : Table("new_auth") {
         val username = varchar("username", 16)
