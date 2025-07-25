@@ -2,7 +2,6 @@ package org.jetbrains.exposed.v1.tests.h2
 
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.avg
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
@@ -10,7 +9,11 @@ import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.core.vendors.inProperCase
-import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.replace
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
@@ -19,7 +22,7 @@ import org.jetbrains.exposed.v1.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.tests.shared.assertTrue
 import org.junit.Test
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertNotEquals
@@ -28,7 +31,7 @@ class H2Tests : DatabaseTestsBase() {
     @Test
     fun testH2VersionIsCorrect() {
         val systemTestName = System.getProperty("exposed.test.name")
-        withDb(TestDB.ALL_H2) {
+        withDb(TestDB.ALL_H2_V2) {
             val dialect = currentDialect
             if (dialect is H2Dialect) {
                 val version = exec("SELECT H2VERSION();") {
@@ -36,13 +39,10 @@ class H2Tests : DatabaseTestsBase() {
                     it.getString(1)
                 }
 
-                assertTrue(systemTestName == "h2_v2" || systemTestName == "h2_v1")
+                assertTrue(systemTestName == "h2_v2")
                 if (systemTestName == "h2_v2") {
                     assertNotEquals("2.1.214", version)
                     assertEquals("2", version?.first()?.toString())
-                }
-                if (systemTestName == "h2_v1") {
-                    assertEquals("1", version?.first()?.toString())
                 }
             }
         }
@@ -120,28 +120,11 @@ class H2Tests : DatabaseTestsBase() {
     }
 
     @Test
-    fun testH2V1WithBigDecimalFunctionThatReturnsShort() {
-        val testTable = object : Table("test_table") {
-            val number = short("number")
-        }
-
-        withTables(excludeSettings = TestDB.ALL - TestDB.ALL_H2, testTable) {
-            testTable.batchInsert(listOf<Short>(2, 4, 6, 8, 10)) { n ->
-                this[testTable.number] = n
-            }
-
-            val average = testTable.number.avg()
-            val result = testTable.select(average).single()[average]
-            assertEquals("6.00".toBigDecimal(), result)
-        }
-    }
-
-    @Test
     fun testH2UUIDConversionWithBinary16ColumnType() {
         val testTable = object : UUIDTable("test_table") {
         }
 
-        withDb(TestDB.ALL_H2) {
+        withDb(TestDB.ALL_H2_V2) {
             exec("CREATE TABLE test_table (id BINARY(16) NOT NULL, CONSTRAINT PK_TEST_TABLE PRIMARY KEY (id))")
 
             val uuid = UUID.randomUUID()

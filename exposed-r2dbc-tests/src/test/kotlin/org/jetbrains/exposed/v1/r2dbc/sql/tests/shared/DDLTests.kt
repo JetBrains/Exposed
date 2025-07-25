@@ -127,7 +127,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         withDb { testDb ->
             assertTrue(db.config.preserveKeywordCasing)
 
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(keywordTable)
+            SchemaUtils.create(keywordTable)
             assertTrue(keywordTable.exists())
 
             val (tableName, publicName, dataName, constraintName) = keywords.map {
@@ -158,10 +158,10 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             }
 
             // check that identifiers match with returned jdbc metadata
-            val statements = org.jetbrains.exposed.v1.r2dbc.SchemaUtils.statementsRequiredToActualizeScheme(keywordTable, withLogs = false)
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(keywordTable, withLogs = false)
             assertTrue(statements.isEmpty())
 
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(keywordTable)
+            SchemaUtils.drop(keywordTable)
         }
     }
 
@@ -324,10 +324,10 @@ class DDLTests : R2dbcDatabaseTestsBase() {
 
             assertTrue(singleColumnDescription.contains("PRIMARY KEY"))
 
-            if (h2Dialect.isSecondVersion && !isOracleMode) {
+            if (!isOracleMode) {
                 expect(Unit) {
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(testTable)
-                    org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.create(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             } else {
                 expectException<ExposedR2dbcException> {
@@ -406,7 +406,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
                 "CREATE TABLE " + addIfNotExistsIfSupported() + tableProperName + " (" + testTable.columns.single().descriptionDdl(false) + ")", testTable.ddl
             )
 
-            if (h2Dialect.isSecondVersion && !isOracleMode) {
+            if (!isOracleMode) {
                 assertEquals(
                     "CREATE INDEX $indexProperName ON $tableProperName ($columnProperName)", indexStatement
                 )
@@ -813,7 +813,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
     fun testDeleteMissingTable() {
         val missingTable = Table("missingTable")
         withDb {
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(missingTable)
+            SchemaUtils.drop(missingTable)
         }
     }
 
@@ -970,13 +970,13 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         val one = prepareSchemaForTest("one")
         val two = prepareSchemaForTest("two")
         withSchemas(two, one) {
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(TableFromSchemeOne)
+            SchemaUtils.create(TableFromSchemeOne)
 
             if (currentDialectTest is OracleDialect) {
                 exec("GRANT REFERENCES ON ${TableFromSchemeOne.tableName} to TWO")
             }
 
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(TableFromSchemeTwo)
+            SchemaUtils.create(TableFromSchemeTwo)
             val idFromOne = TableFromSchemeOne.insertAndGetId { }
 
             TableFromSchemeTwo.insert {
@@ -987,7 +987,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             assertEquals(1L, TableFromSchemeTwo.selectAll().count())
 
             if (currentDialectTest is SQLServerDialect) {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
+                SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
             }
         }
     }
@@ -1156,7 +1156,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
         }
 
         withSchemas(one) {
-            org.jetbrains.exposed.v1.r2dbc.SchemaUtils.create(tableA, tableB)
+            SchemaUtils.create(tableA, tableB)
             tableA.insert {
                 it[idA] = 1
                 it[idB] = 1
@@ -1170,7 +1170,7 @@ class DDLTests : R2dbcDatabaseTestsBase() {
             assertEquals(1, tableB.selectAll().count())
 
             if (currentDialectTest is SQLServerDialect) {
-                org.jetbrains.exposed.v1.r2dbc.SchemaUtils.drop(tableA, tableB)
+                SchemaUtils.drop(tableA, tableB)
             }
         }
     }

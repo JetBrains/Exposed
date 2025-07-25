@@ -28,7 +28,7 @@ Similar to our mascot, Exposed can be used to mimic a variety of database engine
 
 ## Supported Databases
 
-- H2 (versions 2.x; 1.x version is deprecated and will be removed in future releases)
+- H2 (versions 2.x)
 - [![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)](https://github.com/mariadb-corporation/mariadb-connector-j)
 - [![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)](https://github.com/mysql/mysql-connector-j)
 - [![Oracle](https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=white)](https://www.oracle.com/ca-en/database/technologies/appdev/jdbc-downloads.html)

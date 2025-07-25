@@ -60,7 +60,7 @@ class ExplainTests : DatabaseTestsBase() {
             explainCount++
         }
 
-        withCitiesAndUsers(exclude = withH2V1(explainUnsupportedDb)) { cities, users, userData ->
+        withCitiesAndUsers(exclude = explainUnsupportedDb) { cities, users, userData ->
             val testDb = currentDialectTest
             debug = true
             statementCount = 0

@@ -256,7 +256,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             }
             val found2 = Publisher.find { Publishers.isbn eq isbn }.single()
             assertEquals(p2.id, found2.id)
-            val expectedNextVal1 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == TestDB.H2_V1) 579 else 1
+            val expectedNextVal1 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE) 579 else 1
             assertEquals(expectedNextVal1, found2.id.value[Publishers.pubId].value)
         }
     }
@@ -300,7 +300,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
             val id2: EntityID<CompositeID> = Publishers.insertAndGetId {
                 it[name] = "Publisher B"
             }
-            val expectedNextVal1 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == TestDB.H2_V1) 726 else 1
+            val expectedNextVal1 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE) 726 else 1
             assertEquals(expectedNextVal1, id2.value[Publishers.pubId].value)
 
             // insert as composite ID
@@ -342,7 +342,7 @@ class CompositeIdTableEntityTest : DatabaseTestsBase() {
                 }
                 it[name] = "Publisher C"
             }
-            val expectedNextVal2 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == TestDB.H2_V1) 1002 else 2
+            val expectedNextVal2 = if (currentTestDB in TestDB.ALL_MYSQL_LIKE) 1002 else 2
             assertEquals(expectedNextVal2, id6.value[Publishers.pubId].value)
         }
     }

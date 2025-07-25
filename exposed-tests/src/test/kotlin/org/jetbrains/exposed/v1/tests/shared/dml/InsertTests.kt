@@ -407,7 +407,7 @@ class InsertTests : DatabaseTestsBase() {
         }
         val emojis = "\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDC69\uD83C\uDFFF\u200D\uD83D\uDC67\uD83C\uDFFF\u200D\uD83D\uDC66\uD83C\uDFFF"
 
-        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLSERVER, table) { testDb ->
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLSERVER, table) { testDb ->
             if (testDb == TestDB.MYSQL_V5) {
                 exec("ALTER TABLE ${table.nameInDatabaseCase()} DEFAULT CHARSET utf8mb4, MODIFY emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
             }
@@ -655,7 +655,7 @@ class InsertTests : DatabaseTestsBase() {
     @OptIn(InternalApi::class)
     @Test
     fun testInsertIntoNullableGeneratedColumn() {
-        withDb(excludeSettings = TestDB.ALL_H2_V1) { testDb ->
+        withDb { testDb ->
             val generatedTable = object : IntIdTable("generated_table") {
                 val amount = integer("amount").nullable()
                 val computedAmount = integer("computed_amount").nullable().databaseGenerated().apply {

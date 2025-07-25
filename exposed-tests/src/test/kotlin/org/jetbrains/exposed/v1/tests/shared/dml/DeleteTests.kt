@@ -110,7 +110,7 @@ class DeleteTests : DatabaseTestsBase() {
 
     @Test
     fun testDeleteWithMultipleAliasJoins() {
-        withCitiesAndUsers(exclude = TestDB.ALL_H2 + TestDB.SQLITE) { cities, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { cities, users, userData ->
             val towns = cities.alias("towns")
             val people = users.alias("people")
             val stats = userData.alias("stats")
@@ -127,7 +127,7 @@ class DeleteTests : DatabaseTestsBase() {
 
     @Test
     fun testDeleteWithJoinQuery() {
-        withCitiesAndUsers(exclude = TestDB.ALL_H2_V1 + TestDB.SQLITE) { _, users, userData ->
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLITE)) { _, users, userData ->
             val singleJoinQuery = userData.joinQuery(
                 on = { userData.user_id eq it[users.id] },
                 joinPart = { users.selectAll().where { users.cityId eq 2 } }

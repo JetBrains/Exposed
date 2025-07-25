@@ -92,7 +92,7 @@ fun DatabaseTestsBase.withJsonArrays(
 ) {
     val tester = JsonTestsData.JsonArrays
 
-    withTables(excludeSettings = withH2V1(exclude), tester) { testDb ->
+    withTables(excludeSettings = exclude, tester) { testDb ->
         val singleId = tester.insertAndGetId {
             it[groups] = UserGroup(listOf(User("A", "Team A")))
             it[numbers] = intArrayOf(100)
@@ -117,7 +117,7 @@ fun DatabaseTestsBase.withJsonBArrays(
 ) {
     val tester = JsonTestsData.JsonBArrays
 
-    withTables(excludeSettings = withH2V1(exclude), tester) { testDb ->
+    withTables(excludeSettings = exclude, tester) { testDb ->
         val singleId = tester.insertAndGetId {
             it[groups] = UserGroup(listOf(User("A", "Team A")))
             it[numbers] = intArrayOf(100)

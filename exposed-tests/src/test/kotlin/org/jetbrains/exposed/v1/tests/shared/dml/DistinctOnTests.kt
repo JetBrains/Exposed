@@ -16,7 +16,7 @@ import kotlin.test.assertNull
 
 class DistinctOnTests : DatabaseTestsBase() {
 
-    private val distinctOnSupportedDb = TestDB.ALL_POSTGRES + TestDB.ALL_H2
+    private val distinctOnSupportedDb = TestDB.ALL_POSTGRES + TestDB.ALL_H2_V2
 
     @Test
     fun testDistinctOn() {

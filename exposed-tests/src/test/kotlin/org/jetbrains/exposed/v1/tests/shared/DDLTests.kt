@@ -122,7 +122,7 @@ class DDLTests : DatabaseTestsBase() {
         withDb { testDb ->
             assertTrue(db.config.preserveKeywordCasing)
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(keywordTable)
+            SchemaUtils.create(keywordTable)
             assertTrue(keywordTable.exists())
 
             val (tableName, publicName, dataName, constraintName) = keywords.map {
@@ -157,10 +157,10 @@ class DDLTests : DatabaseTestsBase() {
             }
 
             // check that identifiers match with returned jdbc metadata
-            val statements = org.jetbrains.exposed.v1.jdbc.SchemaUtils.statementsRequiredToActualizeScheme(keywordTable, withLogs = false)
+            val statements = SchemaUtils.statementsRequiredToActualizeScheme(keywordTable, withLogs = false)
             assertTrue(statements.isEmpty())
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(keywordTable)
+            SchemaUtils.drop(keywordTable)
         }
     }
 
@@ -369,17 +369,17 @@ class DDLTests : DatabaseTestsBase() {
             override val primaryKey = PrimaryKey(column1)
         }
 
-        withDb(TestDB.ALL_H2) {
+        withDb(TestDB.ALL_H2_V2) {
             val h2Dialect = currentDialectTest as H2Dialect
             val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             val singleColumnDescription = testTable.columns.single().descriptionDdl(false)
 
             assertTrue(singleColumnDescription.contains("PRIMARY KEY"))
 
-            if (h2Dialect.isSecondVersion && !isOracleMode) {
+            if (!isOracleMode) {
                 expect(Unit) {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(testTable)
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(testTable)
+                    SchemaUtils.create(testTable)
+                    SchemaUtils.drop(testTable)
                 }
             } else {
                 expectException<ExposedSQLException> {
@@ -447,7 +447,7 @@ class DDLTests : DatabaseTestsBase() {
             }
         }
 
-        withDb(TestDB.ALL_H2) {
+        withDb(TestDB.ALL_H2_V2) {
             val h2Dialect = currentDialectTest as H2Dialect
             val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
             val tableProperName = testTable.tableName.inProperCase()
@@ -462,7 +462,7 @@ class DDLTests : DatabaseTestsBase() {
                 testTable.ddl
             )
 
-            if (h2Dialect.isSecondVersion && !isOracleMode) {
+            if (!isOracleMode) {
                 assertEquals(
                     "CREATE INDEX $indexProperName ON $tableProperName ($columnProperName)",
                     indexStatement
@@ -599,7 +599,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withDb { testDb ->
-            val functionsNotSupported = testDb in TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+            val functionsNotSupported = testDb in TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
 
             val tableProperName = tester.tableName.inProperCase()
             val priceColumnName = tester.price.nameInDatabaseCase()
@@ -896,7 +896,7 @@ class DDLTests : DatabaseTestsBase() {
     fun testDeleteMissingTable() {
         val missingTable = Table("missingTable")
         withDb {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(missingTable)
+            SchemaUtils.drop(missingTable)
         }
     }
 
@@ -1071,13 +1071,13 @@ class DDLTests : DatabaseTestsBase() {
         val one = prepareSchemaForTest("one")
         val two = prepareSchemaForTest("two")
         withSchemas(two, one) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(TableFromSchemeOne)
+            SchemaUtils.create(TableFromSchemeOne)
 
             if (currentDialectTest is OracleDialect) {
                 exec("GRANT REFERENCES ON ${TableFromSchemeOne.tableName} to TWO")
             }
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(TableFromSchemeTwo)
+            SchemaUtils.create(TableFromSchemeTwo)
             val idFromOne = TableFromSchemeOne.insertAndGetId { }
 
             TableFromSchemeTwo.insert {
@@ -1088,7 +1088,7 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(1L, TableFromSchemeTwo.selectAll().count())
 
             if (currentDialectTest is SQLServerDialect) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
+                SchemaUtils.drop(TableFromSchemeTwo, TableFromSchemeOne)
             }
         }
     }
@@ -1257,7 +1257,7 @@ class DDLTests : DatabaseTestsBase() {
         }
 
         withSchemas(one) {
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tableA, tableB)
+            SchemaUtils.create(tableA, tableB)
             tableA.insert {
                 it[idA] = 1
                 it[idB] = 1
@@ -1271,7 +1271,7 @@ class DDLTests : DatabaseTestsBase() {
             assertEquals(1, tableB.selectAll().count())
 
             if (currentDialectTest is SQLServerDialect) {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tableA, tableB)
+                SchemaUtils.drop(tableA, tableB)
             }
         }
     }

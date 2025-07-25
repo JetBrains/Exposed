@@ -516,9 +516,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement, withLogs = false)
                     when (testDb) {
-                        TestDB.H2_V1 -> {
-                            assertEquals(0, statements.size)
-                        }
                         in TestDB.ALL_POSTGRES -> {
                             // previous sequence used by column is altered but no longer dropped as not linked
                             assertEquals(0, statements.size)
@@ -565,10 +562,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                             assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
                             assertTrue(statements[1].equals(expectedDropSequenceStatement(sequenceName), ignoreCase = true))
                         }
-                        TestDB.H2_V1 -> {
-                            assertEquals(1, statements.size)
-                            assertEquals("ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", statements[0])
-                        }
                         TestDB.MARIADB -> {
                             assertEquals(2, statements.size)
                             assertEquals("ALTER TABLE test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL", statements[0])
@@ -598,10 +591,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementCustomSequence, withLogs = false)
                     when (testDb) {
-                        TestDB.H2_V1 -> {
-                            assertEquals(1, statements.size)
-                            assertEquals(expectedCreateSequenceStatement(sequence.name), statements[0])
-                        }
                         in TestDB.ALL_POSTGRES -> {
                             // previous sequence used by column is altered but no longer dropped as not linked
                             assertEquals(1, statements.size)
@@ -631,7 +620,7 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithoutAutoIncrement, withLogs = false)
                     when (testDb) {
-                        TestDB.H2_V1, in TestDB.ALL_POSTGRES -> {
+                        in TestDB.ALL_POSTGRES -> {
                             // previous sequence used by column is altered but no longer dropped as not linked
                             assertEquals(0, statements.size)
                         }
@@ -677,10 +666,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
                             assertEquals(expectedCreateSequenceStatement("test_table_id_seq"), statements[0])
                             assertTrue(statements[1].equals(expectedDropSequenceStatement(sequence.name), ignoreCase = true))
                         }
-                        TestDB.H2_V1 -> {
-                            assertEquals(1, statements.size)
-                            assertEquals("ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL", statements[0])
-                        }
                         TestDB.MARIADB -> {
                             assertEquals(2, statements.size)
                             assertEquals("ALTER TABLE test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL", statements[0])
@@ -710,10 +695,6 @@ class DatabaseMigrationTests : DatabaseTestsBase() {
 
                     val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tableWithAutoIncrementSequenceName, withLogs = false)
                     when (testDb) {
-                        TestDB.H2_V1 -> {
-                            assertEquals(1, statements.size)
-                            assertEquals(expectedCreateSequenceStatement(sequenceName), statements[0])
-                        }
                         in TestDB.ALL_POSTGRES -> {
                             // previous sequence used by column is altered but no longer dropped as not linked
                             assertEquals(1, statements.size)
