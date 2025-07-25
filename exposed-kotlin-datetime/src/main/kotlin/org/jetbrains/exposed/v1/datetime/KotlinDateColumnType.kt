@@ -283,15 +283,6 @@ class KotlinLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnTy
             val instant = value.toJavaLocalDateTime().atZone(ZoneId.systemDefault()).toInstant()
             java.sql.Timestamp(instant.toEpochMilli())
                 .apply { nanos = instant.nano }
-                .let {
-                    // TODO this check fixes the problem with precisions on R2DBC MySql
-                    //  Related test: org.jetbrains.exposed.r2dbc.sql.tests.kotlindatetime.KotlinTimeTests::testStoringLocalDateTimeWithNanos
-                    if (currentDialect is MysqlDialect) {
-                        it.toString()
-                    } else {
-                        it
-                    }
-                }
         }
     }
 

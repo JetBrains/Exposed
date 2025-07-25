@@ -1,7 +1,9 @@
 package org.jetbrains.exposed.v1.r2dbc.mappers
 
 import io.r2dbc.spi.Row
+import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.IColumnType
+import org.jetbrains.exposed.v1.core.IDateColumnType
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
@@ -13,6 +15,26 @@ class DateTimeMySqlTypeMapper : TypeMapper {
     override val priority = 0.25
 
     override val dialects = listOf(MysqlDialect::class)
+
+    override fun setValue(
+        statement: Statement,
+        dialect: DatabaseDialect,
+        typeMapping: R2dbcTypeMapping,
+        columnType: IColumnType<*>,
+        value: Any?,
+        index: Int
+    ): Boolean {
+        if (columnType !is IDateColumnType) return false
+        if (value == null) return false
+
+        // this conversion is required to retain MySQL precision
+        if (value is java.sql.Timestamp && dialect is MysqlDialect) {
+            statement.bind(index - 1, value.toString())
+            return true
+        }
+
+        return false
+    }
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> getValue(

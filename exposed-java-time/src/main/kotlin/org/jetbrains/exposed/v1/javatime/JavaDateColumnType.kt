@@ -308,18 +308,7 @@ class JavaLocalDateTimeColumnType : ColumnType<LocalDateTime>(), IDateColumnType
 class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
     override val hasTimePart: Boolean = true
 
-    override fun sqlType(): String {
-        val dialect = currentDialect
-        // TODO Check if this change actually changes something?
-        // TODO If it changes from 'TIME' to 'TIMESTAMP' for H2 Oracle, should it be inside OracleDataTypeProvider
-        // TODO like `integerType` for example
-        return if (dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
-            // For Oracle dialect, use TIMESTAMP type
-            "TIMESTAMP"
-        } else {
-            dialect.dataTypeProvider.timeType()
-        }
-    }
+    override fun sqlType(): String = currentDialect.dataTypeProvider.timeType()
 
     override fun nonNullValueToString(value: LocalTime): String {
         val dialect = currentDialect
