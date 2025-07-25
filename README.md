@@ -81,24 +81,30 @@ For complete documentation, samples, and tutorials, see the following links:
 -   [Migration Guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html)
 -   [Breaking changes](https://www.jetbrains.com/help/exposed/breaking-changes.html)
 
-## Reporting Issues / Support
+## Contributing
+
+### Reporting issues
 
 We encourage your feedback in any form, such as feature requests, bug reports, documentation updates, and questions.
+
 Please use [our issue tracker](https://youtrack.jetbrains.com/issues/EXPOSED) to report any issues or to log new requests.
+
 While issues are visible publicly, either creating a new issue or commenting on an existing one does require logging in to YouTrack.
 
-Have questions or want to contribute to the discussion? Join us in the [#exposed](https://kotlinlang.slack.com/messages/exposed/) channel on the [Kotlin Slack](https://kotlinlang.slack.com/).
-If you're not a member yet, you can [request an invitation](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up).
-
-## Contributing
+### Submitting pull requests
 
 We actively welcome your pull requests and encourage you to link your work to an [existing issue](https://youtrack.jetbrains.com/issues/EXPOSED).
 
 
-See the full [contribution guide](https://www.jetbrains.com/help/exposed/contributing.html) for more details.
+See the full [contribution guide](https://www.jetbrains.com/help/exposed/contributing.html#pull-requests) for more details.
 
 By contributing to the Exposed project, you agree that your contributions will be licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 <br><br>
+
+## Support
+
+Have questions or want to contribute to the discussion? Join us in the [#exposed](https://kotlinlang.slack.com/messages/exposed/) channel on the [Kotlin Slack](https://kotlinlang.slack.com/).
+If you're not a member yet, you can [request an invitation](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up).
 
 ## Examples
 
