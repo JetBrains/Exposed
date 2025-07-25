@@ -736,8 +736,8 @@ class QueryParameter<T>(
     /** Returns the value being used as a query parameter. */
     val value: T,
     /** Returns the column type of this expression. */
-    val sqlType: IColumnType<T & Any>
-) : Expression<T>() {
+    override val columnType: IColumnType<T & Any>
+) : ExpressionWithColumnType<T>() {
     internal val compositeValue: CompositeID? = (value as? EntityID<*>)?.value as? CompositeID
 
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
@@ -746,7 +746,7 @@ class QueryParameter<T>(
                 it.values.entries.appendTo { (column, value) ->
                     registerArgument(column.columnType, value)
                 }
-            } ?: registerArgument(sqlType, value)
+            } ?: registerArgument(columnType, value)
         }
     }
 }
