@@ -2,6 +2,8 @@ package org.jetbrains.exposed.v1.tests.shared
 
 import com.impossibl.postgres.jdbc.PGSQLSimpleException
 import com.microsoft.sqlserver.jdbc.SQLServerException
+import nl.altindag.log.LogCaptor
+import org.jetbrains.exposed.v1.core.exposedLogger
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
@@ -97,5 +99,28 @@ class QueryTimeoutTest : DatabaseTestsBase() {
                 }
             }
         }
+    }
+
+    @Test
+    fun testLongQueryThrowsWarning() {
+        val logCaptor = LogCaptor.forName(exposedLogger.name)
+
+        withDb(timeoutTestDBList) { testDB ->
+            this.warnLongQueriesDuration = 2
+
+            assertTrue(logCaptor.warnLogs.isEmpty())
+
+            try {
+                TransactionManager.current().exec(
+                    generateTimeoutStatements(testDB, 4)
+                )
+            } catch (cause: ExposedSQLException) {
+                assertTrue(cause.cause is SQLTimeoutException)
+            }
+
+            assertTrue(logCaptor.warnLogs.single().contains("Long query"))
+        }
+
+        logCaptor.clearLogs()
     }
 }
