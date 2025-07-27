@@ -10,6 +10,11 @@
   which contains all the original and unchanged methods. It's associated function `buildStatement()` no longer accepts the
   deprecated interface as the receiver of its `body` parameter; the parameter expects the new `StatementBuilder` instead.
   The same parameter type change applies to the function `explain()`.
+* Support for H2 versions earlier than 2.0.202 (namely 1.4.200 and earlier) has now been fully phased out. In addition,
+  `H2Dialect.H2MajorVersion.One` is now deprecated and `H2Dialect`-specific properties, like `majorVersion` and `isSecondVersion`,
+  now throw an exception if H2 version 1.x.x is detected. Moving forward, new features will no longer be tested on H2 version
+  1.0.0+, so support for those versions will not be guaranteed. Depending on the built-in support from these older H2 versions,
+  Exposed API may still mostly be compatible, but may now throw syntax or unsupported exceptions when generating certain SQL clauses.
 
 ## 1.0.0-beta-4
 

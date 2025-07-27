@@ -183,9 +183,7 @@ class TransactionExecTests : DatabaseTestsBase() {
 
     @Test
     fun testExecWithBuildStatement() {
-        withCitiesAndUsers(
-            exclude = TestDB.ALL_H2_V1
-        ) { cities, users, userData ->
+        withCitiesAndUsers { cities, users, userData ->
             val initialCityCount = cities.selectAll().count()
             val initialUserDataCount = userData.selectAll().count()
 

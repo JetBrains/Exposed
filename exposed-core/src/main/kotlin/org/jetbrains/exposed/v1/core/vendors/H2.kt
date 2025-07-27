@@ -229,8 +229,11 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         }
     }
 
-    /** Indicates whether the H2 Database Engine version is greater than or equal to 2.0. */
-    // Adding a note to discuss keeping, as this will only ever be true now (otherwise throws)
+    /**
+     * Indicates whether the H2 Database Engine version is greater than or equal to 2.0.
+     *
+     * @throws IllegalStateException If the major version is not 2.x.x.
+     */
     val isSecondVersion: Boolean get() = majorVersion == H2MajorVersion.Two
 
     private fun exactH2Version(transaction: Transaction): String = transaction.db.version.toString()
