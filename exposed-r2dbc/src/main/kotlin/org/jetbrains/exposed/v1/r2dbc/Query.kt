@@ -3,6 +3,7 @@ package org.jetbrains.exposed.v1.r2dbc
 import io.r2dbc.spi.R2dbcException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.single
@@ -16,7 +17,6 @@ import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.r2dbc.statements.SuspendExecutable
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcPreparedStatementApi
 import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
-import org.jetbrains.exposed.v1.r2dbc.statements.api.rowsCount
 import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 
 /** Class representing an SQL `SELECT` statement on which query clauses can be built. */
@@ -280,10 +280,7 @@ open class Query(
         try {
             if (!isForUpdate()) limit = 1
             val rs = transaction.exec(this) as R2dbcResult
-            // TODO could we avoid reading all the lines from the result for checking emptyness
-            // TODO can we send a query to ask if this query has results in DB without fetching actual results
-            // TODO probably something like `explain` query
-            return rs.rowsCount() == 0
+            return rs.mapRows { }.firstOrNull() == null
         } catch (cause: R2dbcException) {
             throw ExposedR2dbcException(cause, this.getContexts(), TransactionManager.current())
         } finally {

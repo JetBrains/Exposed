@@ -111,7 +111,7 @@ class R2DBCRow(val row: Row, private val typeMapping: R2dbcTypeMapping) : RowApi
  *
  * Calling this function will fully consume the original flow of results without transforming or emitting them.
  */
-suspend fun ResultApi.rowsCount() = mapRows { }.count()
+suspend fun ResultApi.rowsCount(): Int = mapRows { }.count()
 
 /** Returns the actual underlying [Row] at the current position in this result [RowApi]. */
 val RowApi.origin: Row get() = (this as R2DBCRow).row
