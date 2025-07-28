@@ -132,17 +132,17 @@ abstract class DatabaseTestsBase {
 
         withDb(dialect, configure = configure) {
             try {
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(*tables)
+                SchemaUtils.drop(*tables)
             } catch (_: Throwable) {
             }
 
-            org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(*tables)
+            SchemaUtils.create(*tables)
             try {
                 statement(dialect)
                 commit() // Need commit to persist data before drop tables
             } finally {
                 try {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(*tables)
+                    SchemaUtils.drop(*tables)
                     commit()
                 } catch (_: Exception) {
                     val database = dialect.db!!
