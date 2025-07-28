@@ -248,7 +248,7 @@ class JodaTimeTests : DatabaseTestsBase() {
             val modified = jsonb<ModifierData>("modified", Json.Default)
         }
 
-        withTables(excludeSettings = TestDB.ALL_H2 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
+        withTables(excludeSettings = TestDB.ALL_H2_V2 + TestDB.SQLITE + TestDB.SQLSERVER + TestDB.ORACLE, tester) {
             val dateTimeNow = DateTime.now()
             tester.insert {
                 it[created] = dateTimeNow.minusYears(1)
@@ -367,7 +367,7 @@ class JodaTimeTests : DatabaseTestsBase() {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
 
-        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1, testTable) {
+        withTables(excludeSettings = timestampWithTimeZoneUnsupportedDB, testTable) {
             // UTC time zone
             DateTimeZone.setDefault(DateTimeZone.UTC)
             assertEquals("UTC", DateTimeZone.getDefault().id)
@@ -395,7 +395,7 @@ class JodaTimeTests : DatabaseTestsBase() {
     fun testCurrentDateTimeFunction() {
         val fakeTestTable = object : IntIdTable("fakeTable") {}
 
-        withTables(excludeSettings = TestDB.ALL_H2_V1, fakeTestTable) {
+        withTables(fakeTestTable) {
             fun currentDbDateTime(): DateTime {
                 return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
             }

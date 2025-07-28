@@ -79,15 +79,6 @@ subprojects {
         }
     }
 
-    testDb("h2_v1") {
-        withContainer = false
-        dialects("H2_V1", "H2_V1_MYSQL")
-
-        dependencies {
-            dependency(rootProject.libs.h1)
-        }
-    }
-
     testDb("sqlite") {
         withContainer = false
         dialects("SQLITE")

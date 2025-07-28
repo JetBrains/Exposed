@@ -86,8 +86,7 @@ class UnionTests : DatabaseTestsBase() {
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
             val expectedUsers = usersQuery.map { it[users.id] } + "sergey"
             val intersectAppliedFirst = when (currentDialect) {
-                is PostgreSQLDialect, is SQLServerDialect, is MariaDBDialect -> true
-                is H2Dialect -> (currentDialect as H2Dialect).isSecondVersion
+                is PostgreSQLDialect, is SQLServerDialect, is MariaDBDialect, is H2Dialect -> true
                 else -> false
             }
             usersQuery.unionAll(usersQuery).intersect(sergeyQuery).map { it[users.id] }.apply {

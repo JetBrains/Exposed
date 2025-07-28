@@ -200,8 +200,6 @@ abstract class DatabaseTestsBase {
         ""
     }
 
-    fun withH2V1(testDB: Collection<TestDB>) = (testDB + TestDB.ALL_H2_V1).toSet()
-
     protected fun prepareSchemaForTest(schemaName: String): Schema = Schema(
         schemaName,
         defaultTablespace = "USERS",

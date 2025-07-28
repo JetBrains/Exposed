@@ -32,10 +32,10 @@ internal object H2FunctionProvider : FunctionProvider() {
     override fun nextVal(seq: Sequence, builder: QueryBuilder) =
         @OptIn(InternalApi::class)
         when ((CoreTransactionManager.currentTransaction().db.dialect as H2Dialect).majorVersion) {
-            H2Dialect.H2MajorVersion.One -> super.nextVal(seq, builder)
             H2Dialect.H2MajorVersion.Two -> builder {
                 append("NEXT VALUE FOR ${seq.identifier}")
             }
+            else -> error("Unsupported H2 version")
         }
 
     override fun <T> arraySlice(expression: Expression<T>, lower: Int?, upper: Int?, queryBuilder: QueryBuilder) {
@@ -200,8 +200,16 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
 
     override fun toString(): String = "H2Dialect[$dialectName, $h2Mode]"
 
+    /** Represents the major version number x.0.0 of the H2 Database. */
     enum class H2MajorVersion {
-        One, Two
+        @Deprecated(
+            message = "This H2 database version is no longer supported and will be removed in future releases.",
+            level = DeprecationLevel.WARNING
+        )
+        One,
+
+        /** H2 database version 2.0.0+. */
+        Two,
     }
 
     @OptIn(InternalApi::class)
@@ -209,16 +217,24 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
         exactH2Version(CoreTransactionManager.currentTransaction())
     }
 
+    /**
+     * Returns the [H2MajorVersion] for the current H2 database being used.
+     *
+     * @throws IllegalStateException If the major version is not 2.x.x.
+     */
     val majorVersion: H2MajorVersion by lazy {
         when {
-            version.startsWith("1.") -> H2MajorVersion.One
             version.startsWith("2.") -> H2MajorVersion.Two
             else -> error("Unsupported H2 version: $version")
         }
     }
 
-    /** Indicates whether the H2 Database Engine version is greater than or equal to 2.0. */
-    val isSecondVersion get() = majorVersion == H2MajorVersion.Two
+    /**
+     * Indicates whether the H2 Database Engine version is greater than or equal to 2.0.
+     *
+     * @throws IllegalStateException If the major version is not 2.x.x.
+     */
+    val isSecondVersion: Boolean get() = majorVersion == H2MajorVersion.Two
 
     private fun exactH2Version(transaction: Transaction): String = transaction.db.version.toString()
 
@@ -303,14 +319,14 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsDualTableConcept: Boolean by lazy { resolveDelegatedDialect()?.supportsDualTableConcept ?: super.supportsDualTableConcept }
     override val supportsOrderByNullsFirstLast: Boolean by lazy { resolveDelegatedDialect()?.supportsOrderByNullsFirstLast ?: super.supportsOrderByNullsFirstLast }
     override val supportsWindowFrameGroupsMode: Boolean by lazy { resolveDelegatedDialect()?.supportsWindowFrameGroupsMode ?: super.supportsWindowFrameGroupsMode }
-    override val supportsColumnTypeChange: Boolean get() = isSecondVersion
-    override val supportsSelectForUpdate: Boolean get() = isSecondVersion
+    override val supportsColumnTypeChange: Boolean get() = true
+    override val supportsSelectForUpdate: Boolean get() = true
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true
 
     override fun createIndex(index: Index): String {
         if (
-            (majorVersion == H2MajorVersion.One || h2Mode == H2CompatibilityMode.Oracle) &&
+            h2Mode == H2CompatibilityMode.Oracle &&
             index.columns.any { it.columnType is TextColumnType }
         ) {
             exposedLogger.warn("Index on ${index.table.tableName} for ${index.columns.joinToString { it.name }} can't be created on CLOB in H2")

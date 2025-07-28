@@ -265,7 +265,7 @@ class CreateIndexTests : R2dbcDatabaseTestsBase() {
             }
         }
 
-        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
+        val functionsNotSupported = TestDB.ALL_MARIADB + TestDB.ALL_H2_V2 + TestDB.SQLSERVER + TestDB.MYSQL_V5
         withTables(excludeSettings = functionsNotSupported, tester) {
             org.jetbrains.exposed.v1.r2dbc.SchemaUtils.createMissingTablesAndColumns()
             assertTrue(tester.exists())

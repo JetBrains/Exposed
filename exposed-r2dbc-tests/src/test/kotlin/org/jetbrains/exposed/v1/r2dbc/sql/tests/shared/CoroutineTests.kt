@@ -236,7 +236,7 @@ class CoroutineTests : R2dbcDatabaseTestsBase() {
     @Test
     @RepeatableTest(10)
     fun nestedSuspendAsyncTxTest() {
-        withTables(TestDB.ALL_H2, Testing) {
+        withTables(TestDB.ALL_H2_V2, Testing) {
             val mainJob = GlobalScope.async {
                 val job = launch(Dispatchers.IO) {
                     suspendTransaction(db = db) {

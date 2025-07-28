@@ -1,7 +1,6 @@
 package org.jetbrains.exposed.v1.migration
 
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.exists
@@ -280,7 +279,7 @@ object MigrationUtils : MigrationUtilityApi() {
      * @return List of sequences that are unmapped and can be dropped.
      */
     private fun checkUnmappedSequences(vararg tables: Table, withLogs: Boolean): List<Sequence> {
-        if (!currentDialect.supportsCreateSequence || (currentDialect as? H2Dialect)?.majorVersion == H2Dialect.H2MajorVersion.One) {
+        if (!currentDialect.supportsCreateSequence) {
             return emptyList()
         }
 
