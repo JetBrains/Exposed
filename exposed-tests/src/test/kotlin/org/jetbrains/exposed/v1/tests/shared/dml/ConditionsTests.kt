@@ -308,7 +308,10 @@ class ConditionsTests : DatabaseTestsBase() {
                 .Else(Op.nullOp())
             // Case().When().Else() invokes CaseWhenElse() so the 2 formats should be interchangeable as arguments
 
-            val caseCondition2 = case().When(condition, stringLiteral(original)).Else(Op.nullOp())
+            val caseCondition2 = CaseWhenElse(
+                cases = listOf(condition to stringLiteral(original)),
+                elseResult = Op.nullOp()
+            )
             val function1 = Coalesce(caseCondition1, stringLiteral(copy))
             val function2 = Coalesce(caseCondition2, stringLiteral(copy))
 
@@ -557,9 +560,20 @@ class ConditionsTests : DatabaseTestsBase() {
                         .let { assertEquals(100, it) }
                 }
 
+            case(tester.key).When(0, 100).Else(10)
+                .let { expr ->
+                    tester
+                        .select(expr)
+                        .where { tester.key eq 0 }
+                        .first()[expr]
+                        .let { assertEquals(100, it) }
+                }
+
+            class SimpleValueContainer(val value: Int)
+
             assertFails {
                 // There is no source of column type for the result
-                case(tester.key).When(0, 100).Else(10)
+                case(tester.key).When(0, SimpleValueContainer(1)).Else(SimpleValueContainer(1))
                     .let { expr ->
                         tester
                             .select(expr)

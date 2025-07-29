@@ -527,9 +527,20 @@ class ConditionsTests : R2dbcDatabaseTestsBase() {
                         .let { assertEquals(100, it) }
                 }
 
+            case(tester.key).When(0, 100).Else(10)
+                .let { expr ->
+                    tester
+                        .select(expr)
+                        .where { tester.key eq 0 }
+                        .first()[expr]
+                        .let { assertEquals(100, it) }
+                }
+
+            class SimpleValueContainer(val value: Int)
+
             assertFails {
                 // There is no source of column type for the result
-                case(tester.key).When(0, 100).Else(10)
+                case(tester.key).When(0, SimpleValueContainer(1)).Else(SimpleValueContainer(1))
                     .let { expr ->
                         tester
                             .select(expr)

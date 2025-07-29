@@ -431,7 +431,7 @@ class ValueCase<T>(
      * @param R The return type of the result expression
      * @param cond The literal value to compare against
      * @param result The expression to return if the condition matches
-     * @return A ValueCaseWhen instance for method chaining
+     * @return A [ValueCaseWhen] instance for method chaining
      */
     fun <R> When(cond: T, result: Expression<R>): ValueCaseWhen<T, R> {
         return ValueCaseWhen<T, R>(value).When(cond, result)
@@ -443,7 +443,7 @@ class ValueCase<T>(
      * @param R The return type of the result expression
      * @param cond The expression to compare against
      * @param result The expression to return if the condition matches
-     * @return A ValueCaseWhen instance for method chaining
+     * @return A [ValueCaseWhen] instance for method chaining
      */
     fun <R> When(cond: Expression<T>, result: Expression<R>): ValueCaseWhen<T, R> {
         return ValueCaseWhen<T, R>(value).When(cond, result)
@@ -456,7 +456,7 @@ class ValueCase<T>(
      * @param cond The expression to compare against
      * @param result The literal value to return if the condition matches
      * @param resultType Optional column type for the result value
-     * @return A ValueCaseWhen instance for method chaining
+     * @return A [ValueCaseWhen] instance for method chaining
      */
     fun <R> When(cond: Expression<T>, result: R, resultType: IColumnType<R & Any>? = null): ValueCaseWhen<T, R> {
         return ValueCaseWhen<T, R>(value).When(cond, result, resultType)
@@ -469,7 +469,7 @@ class ValueCase<T>(
      * @param cond The literal value to compare against
      * @param result The literal value to return if the condition matches
      * @param resultType Optional column type for the result value
-     * @return A ValueCaseWhen instance for method chaining
+     * @return A [ValueCaseWhen] instance for method chaining
      */
     fun <R> When(cond: T, result: R, resultType: IColumnType<R & Any>? = null): ValueCaseWhen<T, R> {
         return ValueCaseWhen<T, R>(value).When(cond, result, resultType)
@@ -517,13 +517,24 @@ class ValueCaseWhen<T, R>(
     /**
      * Adds a WHEN clause that compares against an expression condition with a literal result.
      *
+     * If the result isn't an [Expression], it should be automatically converted to one behind the scenes.
+     * This requires providing an `IColumnType` for that value.
+     * That is needed only once at the start of the chain - after that, the column type value gets saved
+     * and reused for subsequent results.
+     *
      * @param cond The expression to compare the case value against
      * @param result The literal value to return if the condition matches
      * @param resultType Optional column type for the result value
      * @return This ValueCaseWhen instance for method chaining
      */
+    @OptIn(InternalApi::class)
+    @Suppress("UNCHECKED_CAST")
     fun When(cond: Expression<T>, result: R, resultType: IColumnType<R & Any>? = null): ValueCaseWhen<T, R> {
-        return When(cond, QueryParameter(result, resultType ?: columnType))
+        val resultColumnType = resultType
+            ?: result?.let { resolveColumnType(it::class) as IColumnType<R & Any> }
+            ?: columnType
+
+        return When(cond, QueryParameter(result, resultColumnType))
     }
 
     /**
