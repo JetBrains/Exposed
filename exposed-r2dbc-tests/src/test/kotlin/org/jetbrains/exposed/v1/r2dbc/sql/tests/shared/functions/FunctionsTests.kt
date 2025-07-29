@@ -315,7 +315,7 @@ class FunctionsTests : R2dbcDatabaseTestsBase() {
     @Test
     fun testSelectCase01() {
         withCitiesAndUsers { _, users, _ ->
-            val field = Expression.build { case().When(users.id eq "alex", stringLiteral("11")).Else(stringLiteral("22")) }
+            val field = Expression.build { this.case().When(users.id eq "alex", stringLiteral("11")).Else(stringLiteral("22")) }
             val r = users.select(users.id, field).orderBy(users.id).limit(2).toList()
             assertEquals(2, r.size)
             assertEquals("11", r[0][field])

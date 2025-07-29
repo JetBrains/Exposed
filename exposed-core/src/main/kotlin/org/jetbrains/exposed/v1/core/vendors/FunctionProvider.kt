@@ -728,7 +728,7 @@ abstract class FunctionProvider {
                 onUpdate.appendTo { (columnToUpdate, updateExpression) ->
                     append("T.${transaction.identity(columnToUpdate)}=")
                     when (updateExpression) {
-                        is QueryParameter<*>, !is Expression<*> -> registerArgument(columnToUpdate.columnType, updateExpression)
+                        !is Expression<*> -> registerArgument(columnToUpdate.columnType, updateExpression)
                         else -> append(updateExpression.toString().replace("$tableIdentifier.", "T."))
                     }
                 }
@@ -759,7 +759,9 @@ abstract class FunctionProvider {
      * @param columnName Name of the column for update.
      * @param queryBuilder Query builder to append the SQL syntax to.
      */
-    open fun insertValue(columnName: String, queryBuilder: QueryBuilder) { queryBuilder { +"S.$columnName" } }
+    open fun insertValue(columnName: String, queryBuilder: QueryBuilder) {
+        queryBuilder { +"S.$columnName" }
+    }
 
     /**
      * Returns the SQL command that deletes one or more rows of a table.

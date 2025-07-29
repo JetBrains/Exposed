@@ -883,13 +883,49 @@ interface ISqlExpressionBuilder {
     ): Coalesce<T, S> = Coalesce<T, S>(expr, alternate, others = others)
 
     /**
-     * Compares [value] against any chained conditional expressions.
+     * Creates a conditional CASE expression builder where each WHEN clause contains
+     * an independent boolean condition that is evaluated separately.
      *
-     * If [value] is `null`, chained conditionals will be evaluated separately until the first is evaluated as `true`.
+     * This function creates a CASE expression without a comparison value, meaning each
+     * WHEN clause will contain its own boolean condition. The conditions are evaluated
+     * in order until the first one that evaluates to `true` is found, and its
+     * corresponding result is returned.
      *
+     * Example usage:
+     * ```kotlin
+     * case()
+     *   .When(Users.age greater 18, "adult")
+     *   .When(Users.age greater 13, "teenager")
+     *   .Else("child")
+     * ```
+     *
+     * @return A Case builder instance for creating conditional CASE expressions
      * @sample org.jetbrains.exposed.v1.tests.shared.dml.ConditionsTests.nullOpInCaseTest
      */
-    fun case(value: Expression<*>? = null): Case = Case(value)
+    fun case(): Case = Case()
+
+    /**
+     * Creates a value-based CASE expression builder that compares a specific value
+     * against different conditions in each WHEN clause.
+     *
+     * This function creates a CASE expression with a comparison value, where each WHEN
+     * clause specifies a value or expression to compare against the provided [value].
+     * The first matching condition determines the result that is returned.
+     *
+     * Example usage:
+     * ```kotlin
+     * case(Users.status)
+     *   .When("ACTIVE", stringParam("User is active"))
+     *   .When("INACTIVE", "User is inactive")
+     *   .Else("Unknown status")
+     * ```
+     *
+     * @param T The type of the value being compared
+     * @param value The expression whose value will be compared against WHEN conditions
+     * @return A ValueCase builder instance for creating value-based CASE expressions
+     * @sample org.jetbrains.exposed.v1.tests.shared.dml.ConditionsTests.nullOpInCaseTest
+     */
+    fun <T> case(value: ExpressionWithColumnType<T>): ValueCase<T> = ValueCase(value)
 
     // Subquery Expressions
 
