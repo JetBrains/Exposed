@@ -126,13 +126,13 @@ To evaluate whether a table has excessive indices or foreign keys, which might i
 
 ### Database metadata inspection
 
-To retrieve metadata from the current dialect to compare with your defined Exposed schema, use one of the following `currentDialect` methods:
+To retrieve metadata from the current dialect to compare with your defined Exposed schema, use one of the following `currentDialectMetadata` methods:
 
-- `currentDialect.tableColumns()` ([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.vendors/-database-dialect-metadata/table-columns.html),
+- `currentDialectMetadata.tableColumns()` ([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.vendors/-database-dialect-metadata/table-columns.html),
   [R2DBC](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.vendors/-database-dialect-metadata/table-columns.html))
-- `currentDialect.existingIndices()` ([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.vendors/-database-dialect-metadata/existing-indices.html),
+- `currentDialectMetadata.existingIndices()` ([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.vendors/-database-dialect-metadata/existing-indices.html),
   [R2DBC](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.vendors/-database-dialect-metadata/existing-indices.html))
-- `currentDialect.existingPrimaryKeys()` ([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.vendors/-database-dialect-metadata/existing-primary-keys.html),
+- `currentDialectMetadata.existingPrimaryKeys()` ([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.vendors/-database-dialect-metadata/existing-primary-keys.html),
   [R2DBC](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.vendors/-database-dialect-metadata/existing-primary-keys.html))
 
 ## Legacy columns cleanup
@@ -146,6 +146,8 @@ function helps identify columns that are no longer present in your current table
 ```Kotlin
 ```
 {src="exposed-migrations/src/main/kotlin/org/example/App.kt" include-symbol="dropStatements"}
+
+For indices and sequences, you can use the `MigrationUtils.dropUnmappedIndices()` and `MigrationUtils.dropUnmappedSequences()` methods.
 
 ## Logging
 
