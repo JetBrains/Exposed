@@ -17,8 +17,10 @@ import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
 import org.jetbrains.exposed.v1.r2dbc.tests.forEach
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
+import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.expectException
 import org.jetbrains.exposed.v1.r2dbc.tests.sorted
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.junit.Test
 import kotlin.test.assertNull
 
@@ -631,6 +633,20 @@ class SelectTests : R2dbcDatabaseTestsBase() {
                 val offsetResult = alphabet.selectAll().offset(start).map { it[alphabet.letter] }
                 assertEqualLists(allLetters.drop(start.toInt()), offsetResult)
             }
+        }
+    }
+
+    @Test
+    fun testSelectForUpdate() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER)) { cities, _, _ ->
+            val query = cities.selectAll()
+                .forUpdate()
+
+            query.prepareSQL(TransactionManager.current())
+                .let { sql ->
+                    println(sql)
+                    assertTrue(sql.contains("FOR UPDATE"))
+                }
         }
     }
 }

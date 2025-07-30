@@ -6,7 +6,6 @@ import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.statements.api.ResultApi
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
-import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.statements.BlockingExecutable
 import org.jetbrains.exposed.v1.jdbc.statements.StatementIterator
 import org.jetbrains.exposed.v1.jdbc.statements.api.JdbcPreparedStatementApi
@@ -37,8 +36,9 @@ open class Query(
     }
 
     override fun forUpdate(option: ForUpdateOption): Query {
+        val supportsSelectForUpdate = TransactionManager.current().connection.metadata { supportsSelectForUpdate }
         @OptIn(InternalApi::class)
-        this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || currentDialect.supportsSelectForUpdate) {
+        this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || supportsSelectForUpdate) {
             option
         } else {
             null
