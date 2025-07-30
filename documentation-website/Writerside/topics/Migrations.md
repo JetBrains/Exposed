@@ -14,8 +14,8 @@
 Managing database schema changes is a critical part of application development. Exposed offers several tools to help with schema migrations, allowing you to
 evolve your database alongside your codebase.
 
-While Exposed provides basic migration support through [`SchemaUtils`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/index.html),
-the [`MigrationUtils`](https://jetbrains.github.io/Exposed/api/exposed-migration/[root]/-migration-utils/index.html) methods from the `exposed-migration` package
+While Exposed provides basic migration support through `SchemaUtils`,
+the [`MigrationUtils`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/index.html) methods from the `exposed-migration` package
 provide a more structured and production-ready way to manage schema changes. They allow you to [inspect differences](#aligning-the-database-schema) between the current
 database state and your defined table schema and to generate or apply migration scripts accordingly.
 
@@ -37,10 +37,19 @@ When you need to bring your database schema in line with your current Exposed ta
 
 ### Generate missing column statements
 
+<tldr>
+    <p>API references:
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/-schema-utils/add-missing-columns-statements.html">
+            <code>addMissingColumnsStatements</code> (JDBC)
+        </a>,
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-schema-utils/add-missing-columns-statements.html">
+            <code>addMissingColumnsStatements</code> (R2DBC)
+        </a>
+    </p>
+</tldr>
+
 If you only need the SQL statements that create any columns that are missing from the existing
-tables in the database, use the
-[`SchemaUtils.addMissingColumnsStatements()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/add-missing-columns-statements.html)
-function:
+tables in the database, use the `SchemaUtils.addMissingColumnsStatements()` function:
 
 ```Kotlin
 ```
@@ -55,7 +64,7 @@ simultaneously adds any associated constraints such as primary keys, indexes, an
 
 To compare your live database schema against your current Exposed table definitions and generate all statements
 required to align the two, use the
-[`MigrationUtils.statementsRequiredForDatabaseMigration()`](https://jetbrains.github.io/Exposed/api/exposed-migration/[root]/-migration-utils/statements-required-for-database-migration.html)
+[`MigrationUtils.statementsRequiredForDatabaseMigration()`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/statements-required-for-database-migration.html)
 function:
 
 ```Kotlin
@@ -70,7 +79,7 @@ or `DELETE`, so review them carefully before choosing to execute them.
 ### Generate a migration script
 
 To generate a migration script based on schema differences between your database and the current Exposed model, use the
-[`MigrationUtils.generateMigrationScript()`](https://jetbrains.github.io/Exposed/api/exposed-migration/[root]/-migration-utils/generate-migration-script.html)
+[`MigrationUtils.generateMigrationScript()`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/generate-migration-script.html)
 function:
 
 ```Kotlin
@@ -91,40 +100,52 @@ used internally by Exposed to generate migration statements, but you can also us
 
 ### Check for existence of a database object
 
-To determine if a specific database object is already present, use one of the following methods:
+<tldr>
+    <p>API references:
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/exists.html">
+            <code>exists</code> (JDBC)
+        </a>
+        <a href="https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/exists.html">
+            <code>exists</code> (R2DBC)
+        </a>
+    </p>
+</tldr>
 
-- [`Table.exists()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/exists.html)
-- [`Sequence.exists()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-sequence/exists.html)
-- [`Schema.exists()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema/exists.html)
+To determine if a specific database object is already present, use the `.exists()` method on a `Table`, `Sequence`, or
+`Schema`.
 
 ### Structural integrity checks
 
 To evaluate whether a table has excessive indices or foreign keys, which might indicate schema drift or duplication, use one of the following `SchemaUtils` methods:
 
-- [`SchemaUtils.checkExcessiveIndices()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/check-excessive-indices.html)
-- [`SchemaUtils.checkExcessiveForeignKeyConstraints()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql/-schema-utils/check-excessive-foreign-key-constraints.html)
+- `SchemaUtils.checkExcessiveIndices()` ([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/-schema-utils/check-excessive-indices.html),
+  [R2DBC](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-schema-utils/check-excessive-indices.html))
+- `SchemaUtils.checkExcessiveForeignKeyConstraints()` (
+  [JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc/-schema-utils/check-excessive-foreign-key-constraints.html),
+  [R2DBC](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc/-schema-utils/check-excessive-foreign-key-constraints.html))
 
 ### Database metadata inspection
 
 To retrieve metadata from the current dialect to compare with your defined Exposed schema, use one of the following `currentDialect` methods:
 
-- [`currentDialect.tableColumns()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.vendors/-database-dialect/table-columns.html)
-- [`currentDialect.existingIndices()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.vendors/-database-dialect/existing-indices.html)
-- [`currentDialect.existingPrimaryKeys()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.sql.vendors/-database-dialect/existing-primary-keys.html)
+- `currentDialect.tableColumns()` ([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.vendors/-database-dialect-metadata/table-columns.html),
+  [R2DBC](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.vendors/-database-dialect-metadata/table-columns.html))
+- `currentDialect.existingIndices()` ([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.vendors/-database-dialect-metadata/existing-indices.html),
+  [R2DBC](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.vendors/-database-dialect-metadata/existing-indices.html))
+- `currentDialect.existingPrimaryKeys()` ([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.vendors/-database-dialect-metadata/existing-primary-keys.html),
+  [R2DBC](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.vendors/-database-dialect-metadata/existing-primary-keys.html))
 
 ## Legacy columns cleanup
 
 As your schema evolves, it's common to remove or rename columns in your table definitions. However, old columns may still exist in the database unless
 explicitly dropped.
 
-The [`MigrationUtils.dropUnmappedColumnsStatements()`](https://jetbrains.github.io/Exposed/api/exposed-migration/[root]/-migration-utils/drop-unmapped-columns-statements.html)
+The [`MigrationUtils.dropUnmappedColumnsStatements()`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/drop-unmapped-columns-statements.html)
 function helps identify columns that are no longer present in your current table definitions and returns the SQL statements to remove them:
 
 ```Kotlin
 ```
 {src="exposed-migrations/src/main/kotlin/org/example/App.kt" include-symbol="dropStatements"}
-
-For indices and sequences, there are similar methods: `MigrationUtils.dropUnmappedIndices()` and `MigrationUtils.dropUnmappedSequences()`.
 
 ## Logging
 
