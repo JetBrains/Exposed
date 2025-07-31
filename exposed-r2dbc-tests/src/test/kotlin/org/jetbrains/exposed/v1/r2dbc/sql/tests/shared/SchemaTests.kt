@@ -16,6 +16,7 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFailAndRollback
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertFalse
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertTrue
+import org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.Assume
 import org.junit.Test
@@ -25,6 +26,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
     fun `create and set schema in mysql`() {
         withDb(TestDB.ALL_MYSQL_MARIADB) {
             val schema = Schema("MYSCHEMA")
+            val manualSchema = Schema("MANUAL_SCHEMA")
             try {
                 SchemaUtils.createSchema(schema)
                 SchemaUtils.setSchema(schema)
@@ -32,8 +34,13 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
                 val catalogName = connection.getCatalog()
 
                 assertEquals(catalogName, schema.identifier)
+
+                // set schema directly through connection
+                SchemaUtils.createSchema(manualSchema)
+                connection.setCatalog(manualSchema.identifier)
+                assertEquals(manualSchema.identifier, connection.getCatalog())
             } finally {
-                SchemaUtils.dropSchema(schema)
+                SchemaUtils.dropSchema(schema, manualSchema)
             }
         }
     }
@@ -57,7 +64,7 @@ class SchemaTests : R2dbcDatabaseTestsBase() {
                     SchemaUtils.createSchema(schema)
                     SchemaUtils.setSchema(schema)
                     assertEquals(
-                        org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.identifierManager.inProperCase(schema.identifier),
+                        TransactionManager.current().db.identifierManager.inProperCase(schema.identifier),
                         connection.getSchema()
                     )
                 } finally {

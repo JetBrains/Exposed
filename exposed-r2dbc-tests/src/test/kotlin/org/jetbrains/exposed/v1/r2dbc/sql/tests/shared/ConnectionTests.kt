@@ -12,14 +12,17 @@ import org.jetbrains.exposed.v1.core.vendors.ColumnMetadata
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
+import org.jetbrains.exposed.v1.r2dbc.name
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
+import org.jetbrains.exposed.v1.r2dbc.tests.currentDialectMetadataTest
 import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEquals
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.Assume
 import org.junit.Test
 import java.sql.Types
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class ConnectionTests : R2dbcDatabaseTestsBase() {
 
@@ -50,6 +53,29 @@ class ConnectionTests : R2dbcDatabaseTestsBase() {
             )
 
             assertEquals(expected, columnMetadata)
+        }
+    }
+
+    @Test
+    fun testDatabaseNameParsedFromConnectionUrl() {
+        // MSSQL connection url with a named database requires that the database already exists in the server,
+        // so TestDB.SQLSERVER uses a url that omits this to connect to the default (master) database.
+        // All H2 modes omitted for simplicity because they follow the same pattern as TestDB.H2_V2 but with different names.
+        val excludedDb = TestDB.ALL_H2_V2 - TestDB.H2_V2 + TestDB.SQLSERVER
+
+        withDb(excludeSettings = excludedDb) { testDb ->
+            val expectedName = when (testDb) {
+                TestDB.ORACLE -> "FREEPDB1"
+                in TestDB.ALL_POSTGRES -> "postgres"
+                TestDB.H2_V2 -> "regular"
+                else -> "testdb"
+            }
+            val actualName = this.db.name
+            assertEquals(expectedName, actualName)
+
+            // this executes SQL strings from each R2DBC dialect's QueryProvider implementation
+            val resultName = currentDialectMetadataTest.getDatabase()
+            assertTrue(actualName.equals(resultName, ignoreCase = true))
         }
     }
 
