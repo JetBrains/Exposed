@@ -162,10 +162,11 @@ subprojects {
 }
 
 fun signPublicationIfKeyPresent(project: Project, publication: MavenPublishBaseExtension) {
-    val keyId = System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKeyId")
-    val signingKey = System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKey")
-    val signingKeyPassphrase = System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKeyPassword")
+    val keyId = System.getenv("SIGNING_KEY_ID")
+    val signingKey = System.getenv("SIGNING_KEY")
+    val signingKeyPassphrase = System.getenv("SIGNING_PASSWORD")
     if (!signingKey.isNullOrBlank()) {
+        println("In-memory GPG key found. Signing artifacts for ${project.path}.")
         project.extensions.configure<SigningExtension>("signing") {
             useInMemoryPgpKeys(keyId, preprocessPrivateGpgKey(signingKey), signingKeyPassphrase)
             publication.signAllPublications()
