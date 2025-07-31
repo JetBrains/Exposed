@@ -20,10 +20,11 @@
 
 ## Welcome to **Exposed**, an ORM framework for [Kotlin](https://github.com/JetBrains/kotlin).
 
-Exposed is a lightweight SQL library on top of a JDBC driver for the Kotlin language.
-Exposed has two flavors of database access: typesafe SQL wrapping DSL and lightweight Data Access Objects (DAO).
+[Exposed](https://www.jetbrains.com/exposed/) is a lightweight SQL library on top of a database connectivity driver for the Kotlin programming language,
+with support for both JDBC and R2DBC (since version 1.0.0-*) drivers. 
+It offers two approaches for database access: a typesafe SQL-wrapping Domain-Specific Language (DSL) and a lightweight Data Access Object (DAO) API.
 
-With Exposed, you have two options for database access: wrapping DSL and a lightweight DAO. Our official mascot is the cuttlefish, which is well-known for its outstanding mimicry ability that enables it to blend seamlessly into any environment.
+Our official mascot is the cuttlefish, which is well-known for its outstanding mimicry ability that enables it to blend seamlessly into any environment.
 Similar to our mascot, Exposed can be used to mimic a variety of database engines, which helps you to build applications without dependencies on any specific database engine and to switch between them with very little or no changes.
 
 ## Supported Databases
@@ -39,209 +40,95 @@ Similar to our mascot, Exposed can be used to mimic a variety of database engine
 
 ## Dependencies
 
-### Maven Central configuration
-
-Releases of Exposed are available in the Maven Central repository. You can declare this repository in your build script as follows:
-
-#### Gradle Groovy and Kotlin DSL
-
-**Warning:** You might need to set your Kotlin JVM target to 8, and when using Spring to 17, in order for this to work properly:
-
-```kotlin
-repositories {
-    // Versions after 0.30.1
-    // Versions before 0.30.1 is unavailable for now
-    mavenCentral()
-}
-```
-
-#### Maven
-
-The Maven Central repository is enabled by default for Maven users.
+Releases of Exposed are available in the [Maven Central repository](https://search.maven.org/search?q=org.jetbrains.exposed).
+For details on how to configure this repository and how to add Exposed dependencies to an existing Gradle/Maven project,
+see the full [guide on modules](https://www.jetbrains.com/help/exposed/exposed-modules.html).
 
 ### Exposed modules
 
-`Exposed` consists of the following modules:
+`Exposed` consists of the following core modules:
 
-* exposed-core - base module, which contains both DSL api along with mapping
-* exposed-crypt - provides additional column types to store encrypted data in DB and encode/decode it on client-side
-* exposed-dao - DAO api
-* exposed-java-time - date-time extensions based on Java8 Time API
-* exposed-jdbc - transport level implementation based on Java JDBC API
-* exposed-jodatime - date-time extensions based on JodaTime library
-* exposed-json - JSON and JSONB data type extensions
-* exposed-kotlin-datetime - date-time extensions based on kotlinx-datetime
-* exposed-money - extensions to support MonetaryAmount from "javax.money:money-api"
-* exposed-spring-boot-starter - a starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM instead
-  of [Hibernate](https://hibernate.org/)
+| Module          | Function                                                                                                                                                         |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `exposed-core`  | Provides the foundational components and abstractions needed to work with databases in a type-safe manner and includes the Domain-Specific Language (DSL) API    |
+| `exposed-dao`   | (Optional) Allows you to work with the Data Access Object (DAO) API. <br> It is only compatible with `exposed-jdbc` and does not work with `exposed-r2dbc`.</br> |
+| `exposed-jdbc`  | Provides support for Java Database Connectivity (JDBC) with a transport-level implementation based on the Java JDBC API                                          |
+| `exposed-r2dbc` | Provides support for Reactive Relational Database Connectivity (R2DBC)                                                                                           |
 
-```xml
+As well as the following extension modules:
 
-<dependencies>
-    <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
-        <artifactId>exposed-core</artifactId>
-        <version>1.0.0-beta-4</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
-        <artifactId>exposed-crypt</artifactId>
-        <version>1.0.0-beta-4</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
-        <artifactId>exposed-dao</artifactId>
-        <version>1.0.0-beta-4</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
-        <artifactId>exposed-java-time</artifactId>
-        <version>1.0.0-beta-4</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
-        <artifactId>exposed-jdbc</artifactId>
-        <version>1.0.0-beta-4</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
-        <artifactId>exposed-jodatime</artifactId>
-        <version>1.0.0-beta-4</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
-        <artifactId>exposed-json</artifactId>
-        <version>1.0.0-beta-4</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
-        <artifactId>exposed-kotlin-datetime</artifactId>
-        <version>1.0.0-beta-4</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
-        <artifactId>exposed-money</artifactId>
-        <version>1.0.0-beta-4</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jetbrains.exposed</groupId>
-        <artifactId>exposed-spring-boot-starter</artifactId>
-        <version>1.0.0-beta-4</version>
-    </dependency>
-</dependencies>
+| Module                        | Function                                                                                                                                                                        |
+|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `exposed-crypt`               | Provides additional column types to store encrypted data in the database and encode/decode it on the client-side                                                                |
+| `exposed-java-time`           | Date-time extensions based on the [Java 8 Time API](https://docs.oracle.com/javase/8/docs/api/java/time/package-summary.html)                                                   |
+| `exposed-jodatime`            | Date-time extensions based on the [Joda-Time](https://www.joda.org/joda-time/) library                                                                                          |
+| `exposed-json`                | JSON and JSONB data type extensions                                                                                                                                             |
+| `exposed-kotlin-datetime`     | Date-time extensions based on the [`kotlinx-datetime`](https://kotlinlang.org/api/kotlinx-datetime/) library                                                                    |
+| `exposed-migration`           | Provides utilities to support database schema migrations                                                                                                                        |
+| `exposed-money`               | Extensions to support [`MonetaryAmount`](https://javamoney.github.io/apidocs/java.money/javax/money/MonetaryAmount.html) from the [JavaMoney API](https://javamoney.github.io/) |
+| `exposed-spring-boot-starter` | A starter for [Spring Boot](https://spring.io/projects/spring-boot) to utilize Exposed as the ORM instead of [Hibernate](https://hibernate.org/)                                |
+| `spring-transaction`          | Transaction manager that builds on top of Spring's standard transaction workflow                                                                                                |
 
-```
+## Samples using Exposed
 
-#### Gradle Groovy
+Follow the [Getting Started with DSL tutorial](https://www.jetbrains.com/help/exposed/getting-started-with-exposed.html) for a quick start or check out the [samples](samples/README.md) for more in-depth projects.
 
-```groovy
-dependencies {
-    implementation 'org.jetbrains.exposed:exposed-core:1.0.0-beta-4'
-    implementation 'org.jetbrains.exposed:exposed-crypt:1.0.0-beta-4'
-    implementation 'org.jetbrains.exposed:exposed-dao:1.0.0-beta-4'
-    implementation 'org.jetbrains.exposed:exposed-jdbc:1.0.0-beta-4'
-    
-    implementation 'org.jetbrains.exposed:exposed-jodatime:1.0.0-beta-4'
-    // or
-    implementation 'org.jetbrains.exposed:exposed-java-time:1.0.0-beta-4'
-    // or
-    implementation 'org.jetbrains.exposed:exposed-kotlin-datetime:1.0.0-beta-4'
-    
-    implementation 'org.jetbrains.exposed:exposed-json:1.0.0-beta-4'
-    implementation 'org.jetbrains.exposed:exposed-money:1.0.0-beta-4'
-    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:1.0.0-beta-4'
-}
-```
+## Documentation
 
-#### Gradle Kotlin DSL
+For complete documentation, samples, and tutorials, see the following links:
 
-In `build.gradle.kts`:
-
-```kotlin
-val exposedVersion: String by project
-dependencies {
-    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-crypt:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    
-    implementation("org.jetbrains.exposed:exposed-jodatime:$exposedVersion")
-    // or
-    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
-    // or
-    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
-    
-    implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-money:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")
-}
-```
-
-and in `gradle.properties`
-
-```
-exposedVersion=1.0.0-beta-4
-```
-
-## Samples
-
-Check out the [samples](samples/README.md) for a quick start.
-
-## Links
-
-Currently, Exposed is available for **maven/gradle builds**. Check the [Maven Central](https://search.maven.org/search?q=g:org.jetbrains.exposed) and read [Getting Started](https://www.jetbrains.com/help/exposed/getting-started-with-exposed.html) to get an insight on setting up Exposed.
-<br><br>
-For more information visit the links below:
-
--   [Documentation](https://www.jetbrains.com/help/exposed/home.html) with examples and docs
--   [Contributing to Exposed](#contributing)
--   [Migration Guide](https://www.jetbrains.com/help/exposed/migration-guide.html)
--   [Breaking changes](https://www.jetbrains.com/help/exposed/breaking-changes.html) and any migration details
--   [Slack Channel](https://kotlinlang.slack.com/messages/exposed/)
--   [Filing Issues](#contributing)
--   [Issue Tracker](https://youtrack.jetbrains.com/issues/EXPOSED)
-<br><br>
-
-## Community
-
-Do you have questions? Feel free to [request an invitation](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up) for the [kotlinlang slack](https://kotlinlang.slack.com/) and join the project conversation at our [#exposed](https://kotlinlang.slack.com/messages/exposed/) channel.
+-   [Documentation](https://www.jetbrains.com/help/exposed/home.html)
+-   [Migration Guide](https://www.jetbrains.com/help/exposed/migration-guide-1-0-0.html)
+-   [Breaking changes](https://www.jetbrains.com/help/exposed/breaking-changes.html)
 
 ## Contributing
 
+### Reporting issues
+
 We encourage your feedback in any form, such as feature requests, bug reports, documentation updates, and questions.
-Note that we are moving away from GitHub Issues for this reporting. Log any new requests on [YouTrack](https://youtrack.jetbrains.com/issues/EXPOSED).
+
+Please use [our issue tracker](https://youtrack.jetbrains.com/issues/EXPOSED) to report any issues or to log new requests.
+
 While issues are visible publicly, either creating a new issue or commenting on an existing one does require logging in to YouTrack.
 
-We also actively welcome your pull requests. However, linking your work to an [existing issue](https://youtrack.jetbrains.com/issues/EXPOSED) is preferred.
+### Submitting pull requests
+
+We actively welcome your pull requests and encourage you to link your work to an [existing issue](https://youtrack.jetbrains.com/issues/EXPOSED).
 
 
-See the full [contribution guide](https://www.jetbrains.com/help/exposed/contributing.html) for more details.
+See the full [contribution guide](https://www.jetbrains.com/help/exposed/contributing.html#pull-requests) for more details.
 
 By contributing to the Exposed project, you agree that your contributions will be licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 <br><br>
+
+## Support
+
+Have questions or want to contribute to the discussion? Join us in the [#exposed](https://kotlinlang.slack.com/messages/exposed/) channel on the [Kotlin Slack](https://kotlinlang.slack.com/).
+If you're not a member yet, you can [request an invitation](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up).
 
 ## Examples
 
 ### SQL DSL
 
 ```kotlin
-import org.jetbrains.exposed.v1.*
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.transactions.transaction
-
-object Users : Table() {
-    val id: Column<String> = varchar("id", 10)
-    val name: Column<String> = varchar("name", length = 50)
-    val cityId: Column<Int?> = (integer("city_id") references Cities.id).nullable()
-
-    override val primaryKey = PrimaryKey(id, name = "PK_User_ID") // name is optional here
-}
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object Cities : Table() {
-    val id: Column<Int> = integer("id").autoIncrement()
-    val name: Column<String> = varchar("name", 50)
+    val id = integer("id").autoIncrement()
+    val name = varchar("name", 50)
 
-    override val primaryKey = PrimaryKey(id, name = "PK_Cities_ID")
+    override val primaryKey = PrimaryKey(id)
+}
+
+object Users : Table() {
+    val id = varchar("id", 10)
+    val name = varchar("name", length = 50)
+    val cityId = integer("city_id").references(Cities.id).nullable()
+
+    override val primaryKey = PrimaryKey(id, name = "PK_User_ID")
 }
 
 fun main() {
@@ -264,60 +151,65 @@ fun main() {
             it.update(name, stringLiteral("   Prague   ").trim().substring(1, 2))
         }[Cities.id]
 
-        val pragueName = Cities.selectAll().where { Cities.id eq pragueId }.single()[Cities.name]
+        val pragueName = Cities
+            .selectAll()
+            .where { Cities.id eq pragueId }
+            .single()[Cities.name]
         println("pragueName = $pragueName")
 
         Users.insert {
             it[id] = "andrey"
             it[name] = "Andrey"
-            it[Users.cityId] = saintPetersburgId
+            it[cityId] = saintPetersburgId
         }
 
         Users.insert {
             it[id] = "sergey"
             it[name] = "Sergey"
-            it[Users.cityId] = munichId
+            it[cityId] = munichId
         }
 
         Users.insert {
             it[id] = "eugene"
             it[name] = "Eugene"
-            it[Users.cityId] = munichId
+            it[cityId] = munichId
         }
 
         Users.insert {
             it[id] = "alex"
             it[name] = "Alex"
-            it[Users.cityId] = null
+            it[cityId] = null
         }
 
         Users.insert {
             it[id] = "smth"
             it[name] = "Something"
-            it[Users.cityId] = null
+            it[cityId] = null
         }
 
-        Users.update({ Users.id eq "alex" }) {
+        Users.update(where = { Users.id eq "alex" }) {
             it[name] = "Alexey"
         }
 
-        Users.deleteWhere{ Users.name like "%thing" }
+        Users.deleteWhere { Users.name like "%thing" }
 
         println("All cities:")
 
-        for (city in Cities.selectAll()) {
-            println("${city[Cities.id]}: ${city[Cities.name]}")
-        }
+        Cities
+            .selectAll()
+            .forEach { result ->
+                println("${result[Cities.id]}: ${result[Cities.name]}")
+            }
 
         println("Manual join:")
-        
+
         (Users innerJoin Cities)
             .select(Users.name, Cities.name)
             .where {
                 (Users.id.eq("andrey") or Users.name.eq("Sergey")) and
                     Users.id.eq("sergey") and Users.cityId.eq(Cities.id)
-            }.forEach { 
-                println("${it[Users.name]} lives in ${it[Cities.name]}") 
+            }.forEach { result ->
+                println("${result[Users.name]} lives in ${result[Cities.name]}")
             }
 
         println("Join with foreign key:")
@@ -325,23 +217,22 @@ fun main() {
         (Users innerJoin Cities)
             .select(Users.name, Users.cityId, Cities.name)
             .where { Cities.name.eq("St. Petersburg") or Users.cityId.isNull() }
-            .forEach { 
-                if (it[Users.cityId] != null) { 
-                    println("${it[Users.name]} lives in ${it[Cities.name]}") 
-                } 
-                else { 
-                    println("${it[Users.name]} lives nowhere") 
-                } 
+            .forEach { result ->
+                if (result[Users.cityId] != null) {
+                    println("${result[Users.name]} lives in ${result[Cities.name]}")
+                } else {
+                    println("${result[Users.name]} lives nowhere")
+                }
             }
 
         println("Functions and group by:")
 
-        ((Cities innerJoin Users)
+        (Cities innerJoin Users)
             .select(Cities.name, Users.id.count())
             .groupBy(Cities.name)
-            ).forEach {
-                val cityName = it[Cities.name]
-                val userCount = it[Users.id.count()]
+            .forEach { result ->
+                val cityName = result[Cities.name]
+                val userCount = result[Users.id.count()]
 
                 if (userCount > 0) {
                     println("$userCount user(s) live(s) in $cityName")
@@ -359,56 +250,63 @@ fun main() {
 Generated SQL:
 
 ```sql
-    SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT, name VARCHAR(50) NOT NULL, CONSTRAINT PK_Cities_ID PRIMARY KEY (id))
-    SQL: CREATE TABLE IF NOT EXISTS Users (id VARCHAR(10), name VARCHAR(50) NOT NULL, city_id INT NULL, CONSTRAINT PK_User_ID PRIMARY KEY (id), CONSTRAINT FK_Users_city_id__ID FOREIGN KEY (city_id) REFERENCES Cities(id) ON DELETE RESTRICT ON UPDATE RESTRICT)
-    SQL: INSERT INTO Cities (name) VALUES ('St. Petersburg')
-    SQL: INSERT INTO Cities (name) VALUES ('Munich')
-    SQL: INSERT INTO Cities (name) VALUES (SUBSTRING(TRIM('   Prague   '), 1, 2))
-    SQL: SELECT Cities.id, Cities.name FROM Cities WHERE Cities.id = 3
+    SQL: CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
+    SQL: CREATE TABLE IF NOT EXISTS USERS (ID VARCHAR(10), "name" VARCHAR(50) NOT NULL, CITY_ID INT NULL, CONSTRAINT PK_User_ID PRIMARY KEY (ID), CONSTRAINT FK_USERS_CITY_ID__ID FOREIGN KEY (CITY_ID) REFERENCES CITIES(ID) ON DELETE RESTRICT ON UPDATE RESTRICT)
+    SQL: INSERT INTO CITIES ("name") VALUES ('St. Petersburg')
+    SQL: INSERT INTO CITIES ("name") VALUES ('Munich')
+    SQL: INSERT INTO CITIES ("name") VALUES (SUBSTRING(TRIM('   Prague   '), 1, 2))
+    SQL: SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 3
     pragueName = Pr
-    SQL: INSERT INTO Users (id, name, city_id) VALUES ('andrey', 'Andrey', 1)
-    SQL: INSERT INTO Users (id, name, city_id) VALUES ('sergey', 'Sergey', 2)
-    SQL: INSERT INTO Users (id, name, city_id) VALUES ('eugene', 'Eugene', 2)
-    SQL: INSERT INTO Users (id, name, city_id) VALUES ('alex', 'Alex', NULL)
-    SQL: INSERT INTO Users (id, name, city_id) VALUES ('smth', 'Something', NULL)
-    SQL: UPDATE Users SET name='Alexey' WHERE Users.id = 'alex'
-    SQL: DELETE FROM Users WHERE Users.name LIKE '%thing'
+    SQL: INSERT INTO USERS (ID, "name", CITY_ID) VALUES ('andrey', 'Andrey', 1)
+    SQL: INSERT INTO USERS (ID, "name", CITY_ID) VALUES ('sergey', 'Sergey', 2)
+    SQL: INSERT INTO USERS (ID, "name", CITY_ID) VALUES ('eugene', 'Eugene', 2)
+    SQL: INSERT INTO USERS (ID, "name", CITY_ID) VALUES ('alex', 'Alex', NULL)
+    SQL: INSERT INTO USERS (ID, "name", CITY_ID) VALUES ('smth', 'Something', NULL)
+    SQL: UPDATE USERS SET "name"='Alexey' WHERE USERS.ID = 'alex'
+    SQL: DELETE FROM USERS WHERE USERS."name" LIKE '%thing'
     All cities:
-    SQL: SELECT Cities.id, Cities.name FROM Cities
+    SQL: SELECT CITIES.ID, CITIES."name" FROM CITIES
     1: St. Petersburg
     2: Munich
     3: Pr
     Manual join:
-    SQL: SELECT Users.name, Cities.name FROM Users INNER JOIN Cities ON Cities.id = Users.city_id WHERE ((Users.id = 'andrey') or (Users.name = 'Sergey')) and (Users.id = 'sergey') and (Users.city_id = Cities.id)
+    SQL: SELECT USERS."name", CITIES."name" FROM USERS INNER JOIN CITIES ON CITIES.ID = USERS.CITY_ID WHERE ((USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')) AND (USERS.ID = 'sergey') AND (USERS.CITY_ID = CITIES.ID)
     Sergey lives in Munich
     Join with foreign key:
-    SQL: SELECT Users.name, Users.city_id, Cities.name FROM Users INNER JOIN Cities ON Cities.id = Users.city_id WHERE (Cities.name = 'St. Petersburg') or (Users.city_id IS NULL)
+    SQL: SELECT USERS."name", USERS.CITY_ID, CITIES."name" FROM USERS INNER JOIN CITIES ON CITIES.ID = USERS.CITY_ID WHERE (CITIES."name" = 'St. Petersburg') OR (USERS.CITY_ID IS NULL)
     Andrey lives in St. Petersburg
     Functions and group by:
-    SQL: SELECT Cities.name, COUNT(Users.id) FROM Cities INNER JOIN Users ON Cities.id = Users.city_id GROUP BY Cities.name
-    1 user(s) live(s) in St. Petersburg
+    SQL: SELECT CITIES."name", COUNT(USERS.ID) FROM CITIES INNER JOIN USERS ON CITIES.ID = USERS.CITY_ID GROUP BY CITIES."name"
     2 user(s) live(s) in Munich
-    SQL: DROP TABLE IF EXISTS Users
-    SQL: DROP TABLE IF EXISTS Cities
+    1 user(s) live(s) in St. Petersburg
+    SQL: DROP TABLE IF EXISTS USERS
+    SQL: DROP TABLE IF EXISTS CITIES
 ```
 
 ### DAO
 
 ```kotlin
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.dao.id.*
 import org.jetbrains.exposed.v1.dao.*
-import org.jetbrains.exposed.v1.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.*
-import org.jetbrains.exposed.v1.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+
+object Cities: IntIdTable() {
+    val name = varchar("name", 50)
+}
 
 object Users : IntIdTable() {
-    val name = varchar("name", 50).index()
+    val name = varchar("name", length = 50).index()
     val city = reference("city", Cities)
     val age = integer("age")
 }
 
-object Cities: IntIdTable() {
-    val name = varchar("name", 50)
+class City(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<City>(Cities)
+
+    var name by Cities.name
+    val users by User referrersOn Users.city
 }
 
 class User(id: EntityID<Int>) : IntEntity(id) {
@@ -419,22 +317,13 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     var age by Users.age
 }
 
-class City(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<City>(Cities)
-
-    var name by Cities.name
-    val users by User referrersOn Users.city
-}
-
 fun main() {
     Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver", user = "root", password = "")
 
     transaction {
         addLogger(StdOutSqlLogger)
 
-        SchemaUtils.create(Cities, Users)
-
-        val stPete = City.new {
+        val saintPetersburg = City.new {
             name = "St. Petersburg"
         }
 
@@ -443,26 +332,38 @@ fun main() {
         }
 
         User.new {
-            name = "a"
-            city = stPete
+            name = "Andrey"
+            city = saintPetersburg
             age = 5
         }
 
         User.new {
-            name = "b"
-            city = stPete
+            name = "Sergey"
+            city = saintPetersburg
             age = 27
         }
 
         User.new {
-            name = "c"
+            name = "Eugene"
             city = munich
             age = 42
         }
 
+        val alex = User.new {
+            name = "alex"
+            city = munich
+            age = 11
+        }
+
+        alex.name = "Alexey"
+
         println("Cities: ${City.all().joinToString { it.name }}")
-        println("Users in ${stPete.name}: ${stPete.users.joinToString { it.name }}")
+
+        println("Users in ${saintPetersburg.name}: ${saintPetersburg.users.joinToString { it.name }}")
+
         println("Adults: ${User.find { Users.age greaterEq 18 }.joinToString { it.name }}")
+
+        SchemaUtils.drop(Users, Cities)
     }
 }
 ```
@@ -470,18 +371,21 @@ fun main() {
 Generated SQL:
 
 ```sql
-    SQL: CREATE TABLE IF NOT EXISTS Cities (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50) NOT NULL)
-    SQL: CREATE TABLE IF NOT EXISTS Users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50) NOT NULL, city INT NOT NULL, age INT NOT NULL, CONSTRAINT FK_Users_city__ID FOREIGN KEY (city) REFERENCES Cities(id) ON DELETE RESTRICT ON UPDATE RESTRICT)
-    SQL: CREATE INDEX Users_name ON Users (name)
-    SQL: INSERT INTO Cities (name) VALUES ('St. Petersburg')
-    SQL: INSERT INTO Cities (name) VALUES ('Munich')
-    SQL: SELECT Cities.id, Cities.name FROM Cities
+    SQL: CREATE TABLE IF NOT EXISTS CITIES (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
+    SQL: CREATE TABLE IF NOT EXISTS USERS (ID INT AUTO_INCREMENT PRIMARY KEY, "name" VARCHAR(50) NOT NULL, CITY INT NOT NULL, AGE INT NOT NULL, CONSTRAINT FK_USERS_CITY__ID FOREIGN KEY (CITY) REFERENCES CITIES(ID) ON DELETE RESTRICT ON UPDATE RESTRICT)
+    SQL: CREATE INDEX USERS_NAME ON USERS ("name")
+    SQL: INSERT INTO CITIES ("name") VALUES ('St. Petersburg')
+    SQL: INSERT INTO CITIES ("name") VALUES ('Munich')
+    SQL: SELECT CITIES.ID, CITIES."name" FROM CITIES
     Cities: St. Petersburg, Munich
-    SQL: INSERT INTO Users (name, city, age) VALUES ('a', 1, 5)
-    SQL: INSERT INTO Users (name, city, age) VALUES ('b', 1, 27)
-    SQL: INSERT INTO Users (name, city, age) VALUES ('c', 2, 42)
-    SQL: SELECT Users.id, Users.name, Users.city, Users.age FROM Users WHERE Users.city = 1
-    Users in St. Petersburg: a, b
-    SQL: SELECT Users.id, Users.name, Users.city, Users.age FROM Users WHERE Users.age >= 18
-    Adults: b, c
+    SQL: INSERT INTO USERS ("name", CITY, AGE) VALUES ('Andrey', 1, 5)
+    SQL: INSERT INTO USERS ("name", CITY, AGE) VALUES ('Sergey', 1, 27)
+    SQL: INSERT INTO USERS ("name", CITY, AGE) VALUES ('Eugene', 2, 42)
+    SQL: INSERT INTO USERS ("name", CITY, AGE) VALUES ('Alexey', 2, 11)
+    SQL: SELECT USERS.ID, USERS."name", USERS.CITY, USERS.AGE FROM USERS WHERE USERS.CITY = 1
+    Users in St. Petersburg: Andrey, Sergey
+    SQL: SELECT USERS.ID, USERS."name", USERS.CITY, USERS.AGE FROM USERS WHERE USERS.AGE >= 18
+    Adults: Sergey, Eugene
+    SQL: DROP TABLE IF EXISTS USERS
+    SQL: DROP TABLE IF EXISTS CITIES
 ```
