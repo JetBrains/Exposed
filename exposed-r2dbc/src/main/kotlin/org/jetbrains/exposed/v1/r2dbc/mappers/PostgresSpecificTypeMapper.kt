@@ -6,7 +6,6 @@ import io.r2dbc.spi.Statement
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
-import org.postgresql.util.PGobject
 import kotlin.reflect.KClass
 
 /**
@@ -21,8 +20,16 @@ class PostgresSpecificTypeMapper : TypeMapper {
         get() = listOf(PostgreSQLDialect::class)
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T> getValue(row: Row, type: Class<T>?, index: Int, dialect: DatabaseDialect, columnType: IColumnType<*>): ValueContainer<T?> {
-        val value = type?.let { row.get(index - 1, it) } ?: row.get(index - 1) as T?
+    override fun <T> getValue(
+        row: Row,
+        type: Class<T>?,
+        index: Int,
+        dialect: DatabaseDialect,
+        columnType: IColumnType<*>
+    ): ValueContainer<T?> {
+        val value = type
+            ?.let { row.get(index - 1, it) }
+            ?: row.get(index - 1) as T?
 
         return when (value) {
             // It will return always the string, event if it doesn't match `type`
@@ -50,9 +57,6 @@ class PostgresSpecificTypeMapper : TypeMapper {
 
         if (value == null) {
             statement.bindNull(index - 1, Json::class.java)
-            return true
-        } else if (value is PGobject) {
-            statement.bind(index - 1, Json.of(value.value!!))
             return true
         } else if (value is String) {
             statement.bind(index - 1, Json.of(value))

@@ -23,7 +23,6 @@ dependencies {
 
     implementation(libs.slf4j)
 
-    compileOnly(libs.postgre)
     compileOnly(libs.r2dbc.postgresql)
 }
 

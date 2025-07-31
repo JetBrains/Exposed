@@ -3583,6 +3583,7 @@ public abstract interface class org/jetbrains/exposed/v1/core/statements/api/Row
 	public abstract fun getObject (Ljava/lang/String;)Ljava/lang/Object;
 	public abstract fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
 	public abstract fun getObject (Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
+	public abstract fun getString (I)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/core/statements/api/RowApi$DefaultImpls {
