@@ -1,7 +1,6 @@
 plugins {
     `java-platform`
-    `maven-publish`
-    signing
+    alias(libs.plugins.maven.publish)
 }
 
 group = "org.jetbrains.exposed"

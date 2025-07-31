@@ -1,16 +1,9 @@
+
 package org.jetbrains.exposed.gradle
 
 import org.gradle.api.Project
-import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
-import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
-import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.kotlin.dsl.apply
-import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.provideDelegate
-import org.gradle.plugins.signing.SigningExtension
 
 infix fun <T> Property<T>.by(value: T) {
     set(value)
