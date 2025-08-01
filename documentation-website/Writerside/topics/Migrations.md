@@ -147,7 +147,9 @@ function helps identify columns that are no longer present in your current table
 ```
 {src="exposed-migrations/src/main/kotlin/org/example/App.kt" include-symbol="dropStatements"}
 
-For indices and sequences, you can use the `MigrationUtils.dropUnmappedIndices()` and `MigrationUtils.dropUnmappedSequences()` methods.
+For indices and sequences, you can use the [`MigrationUtils.dropUnmappedIndices()`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/drop-unmapped-indices.html)
+and [`MigrationUtils.dropUnmappedSequences()`](https://jetbrains.github.io/Exposed/api/exposed-migration/org.jetbrains.exposed.v1.migration/-migration-utils/drop-unmapped-sequences.html)
+methods.
 
 ## Logging
 

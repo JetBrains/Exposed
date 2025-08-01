@@ -101,6 +101,8 @@ exec(InsertBlockingExecutable(insertFilm))
 ```
 
 Alternatively, if the statement is created using the Exposed API, you can use `Statement.toExecutable()`
+([JDBC](https://jetbrains.github.io/Exposed/api/exposed-jdbc/org.jetbrains.exposed.v1.jdbc.statements/to-executable.html),
+[R2DBC](https://jetbrains.github.io/Exposed/api/exposed-r2dbc/org.jetbrains.exposed.v1.r2dbc.statements/to-executable.html))
 resolve the appropriate executable class instance for the calling statement type:
 
 ```kotlin
