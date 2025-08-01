@@ -1,6 +1,7 @@
 package org.example
 
 import org.example.examples.AliasExamples
+import org.example.examples.BuildStatementExamples
 import org.example.examples.CreateExamples
 import org.example.examples.CustomSelectExamples
 import org.example.examples.DeleteExamples
@@ -10,6 +11,7 @@ import org.example.examples.UpdateExamples
 import org.example.tables.*
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.addLogger
@@ -44,6 +46,7 @@ fun main() {
         runQueryingExamples()
         runAliasExamples()
         runDeleteExamples()
+        runBuildStatementExamples()
     }
 
     transaction(sqliteDb) {
@@ -118,4 +121,12 @@ fun runAliasExamples() {
 fun runCustomSelectExamples() {
     val customSelectExamples = CustomSelectExamples()
     customSelectExamples.useCustomQueryWithHint()
+}
+
+fun Transaction.runBuildStatementExamples() {
+    val buildStatementExamples = BuildStatementExamples()
+    with(buildStatementExamples) {
+        prepareQuerySql()
+        prepareInsertSql()
+    }
 }

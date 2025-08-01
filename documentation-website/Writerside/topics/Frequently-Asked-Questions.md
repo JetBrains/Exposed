@@ -36,16 +36,7 @@ necessary even if the query is never executed.
 
 ### How do I get a plain SQL query which will be executed?
 
-To get the SQL representation of a query without executing it, use the
-[`prepareSQL()`](https://jetbrains.github.io/Exposed/api/exposed-core/org.jetbrains.exposed.v1.core/-abstract-query/prepare-s-q-l.html)
-method:
-
-```kotlin
-val plainSQL = StarWarsFilmsTable.selectAll()
-    .where{ StarWarsFilmsTable.sequelId eq ActorsTable.sequelId }
-    .prepareSQL(QueryBuilder(false))
-```
-In this example `QueryBuiler` is used with `false` to return a non-parameterized string.
+You can use `Statement.prepareSQL()`, and potentially `buildStatement()`. For more details, see [](DSL-Statement-Builder.md).
 
 ### Is it possible to update a field relative to current field value?
 
