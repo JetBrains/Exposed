@@ -25,11 +25,8 @@ interface R2dbcPreparedStatementApi : PreparedStatementApi {
 
     /**
      * Executes an SQL statement stored in an [io.r2dbc.spi.Statement].
-     *
-     * @return The affected row count if the executed statement is a DML type;
-     * otherwise, 0 if the statement returns nothing.
      */
-    suspend fun executeUpdate(): Int
+    suspend fun executeUpdate()
 
     /**
      * Executes multiple SQL statements stored in a single [io.r2dbc.spi.Statement].
