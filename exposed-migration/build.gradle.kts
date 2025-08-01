@@ -10,7 +10,7 @@ repositories {
 
 dependencies {
     api(project(":exposed-core"))
-    compileOnly(project(":exposed-jdbc"))
+    api(project(":exposed-jdbc"))
 
     testImplementation(platform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
