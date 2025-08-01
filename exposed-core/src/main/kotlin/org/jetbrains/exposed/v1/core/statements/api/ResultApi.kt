@@ -92,4 +92,12 @@ interface RowApi {
      * @return The object converted to the specified type
      */
     fun <T> getObject(name: String, type: Class<T>, columnType: IColumnType<*>): T? = getObject(name, type)
+
+    /**
+     * Retrieves the value from the current data row at the specified [index] position as a String.
+     *
+     * @param index The first column is at position one, the second at position two, and onwards.
+     * @return The string at the specified index or `null` if SQL NULL is retrieved
+     */
+    fun getString(index: Int): String?
 }

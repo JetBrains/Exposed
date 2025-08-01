@@ -104,6 +104,8 @@ class R2DBCRow(val row: Row, private val typeMapping: R2dbcTypeMapping) : RowApi
     override fun <T> getObject(index: Int, type: Class<T>?, columnType: IColumnType<*>): T? {
         return typeMapping.getValue(row, type, index, currentDialect, columnType)
     }
+
+    override fun getString(index: Int): String? = row.get(index - 1, java.lang.String::class.java)?.toString()
 }
 
 /**

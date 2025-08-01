@@ -40,10 +40,10 @@ public class org/jetbrains/exposed/v1/json/JsonColumnType : org/jetbrains/expose
 	public final fun getDeserialize ()Lkotlin/jvm/functions/Function1;
 	public final fun getSerialize ()Lkotlin/jvm/functions/Function1;
 	public fun getUsesBinaryFormat ()Z
-	public fun nonNullValueAsDefaultString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun nonNullValueToString (Ljava/lang/Object;)Ljava/lang/String;
 	public fun notNullValueToDB (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun parameterMarker (Ljava/lang/Object;)Ljava/lang/String;
+	public fun readObject (Lorg/jetbrains/exposed/v1/core/statements/api/RowApi;I)Ljava/lang/Object;
 	public fun setParameter (Lorg/jetbrains/exposed/v1/core/statements/api/PreparedStatementApi;ILjava/lang/Object;)V
 	public fun sqlType ()Ljava/lang/String;
 	public fun valueFromDB (Ljava/lang/Object;)Ljava/lang/Object;
