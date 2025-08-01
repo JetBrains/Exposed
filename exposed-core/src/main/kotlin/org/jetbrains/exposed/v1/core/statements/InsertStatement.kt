@@ -47,7 +47,6 @@ open class InsertStatement<Key : Any>(
      * retrieved from the database or if the column cannot be found in the row.
      */
     fun <T> getOrNull(column: Column<T>): T? = resultedValues?.firstOrNull()?.getOrNull(column)
-    // TODO: log issue about unifying process result method for jdbc and r2dbc
 
     @OptIn(InternalApi::class)
     @Suppress("NestedBlockDepth")

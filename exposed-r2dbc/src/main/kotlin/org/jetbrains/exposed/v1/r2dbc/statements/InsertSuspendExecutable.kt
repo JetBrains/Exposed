@@ -209,7 +209,6 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
             // which leads to incorrect stored values in the insert statement;
             // If an insert did not occur, no generated values should be received and stored statement
             // values should be generated based on user-provided values
-            // Todo review potential edge cases not covered by tests
             count?.let { c ->
                 resultSetsCounts.add(c)
                 values.takeIf { sendsResultsOnFailure && c != 0 }?.let { resultSetsValues.add(it) }
@@ -218,8 +217,7 @@ open class InsertSuspendExecutable<Key : Any, S : InsertStatement<Key>>(
         }
 
         // Some databases, like H2 and MariaDB, aren't returning UpdateCount segments;
-        // The workaround below therefore fails for upsert operations
-        // Todo review alternatives for these dialects
+        // The workaround below therefore fails for upsert operations; documented in upsert()
         val inserted = if (resultSetsCounts.isEmpty()) {
             resultSetsValues.size
         } else {

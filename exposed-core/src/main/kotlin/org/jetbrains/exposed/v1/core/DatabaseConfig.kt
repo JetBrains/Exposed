@@ -145,7 +145,6 @@ interface DatabaseConfig {
             val builder = Builder().apply(body)
             require(builder.defaultMaxAttempts > 0) { "defaultMaxAttempts must be set to perform at least 1 attempt." }
 
-            // TODO make default implementation to simplify & call constructor func instead
             return object : DatabaseConfig {
                 override val sqlLogger: SqlLogger
                     get() = builder.sqlLogger ?: Slf4jSqlDebugLogger

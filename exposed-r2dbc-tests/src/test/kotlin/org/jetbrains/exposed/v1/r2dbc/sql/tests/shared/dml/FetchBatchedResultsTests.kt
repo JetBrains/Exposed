@@ -18,7 +18,6 @@ import org.jetbrains.exposed.v1.r2dbc.tests.shared.assertEqualLists
 import org.junit.Test
 import java.util.*
 
-// Todo Confirm return type of fetchBatchedResults() & expected behavior on collection
 // not possible to avoid emitting an empty flow, so tests needed to be altered to remove empty flow results
 class FetchBatchedResultsTests : R2dbcDatabaseTestsBase() {
     @Test
