@@ -210,18 +210,6 @@ class R2dbcConnectionImpl(
 
     private var localConnection: Connection? = null
 
-    // TODO Recheck the reason of creating new context with `scope.coroutineContext`
-    //   It couses the issues `No transaction in context` if Exposed is used inside ktor server
-    //   To reproduce the problem it's enough to run the following script with any table Customers inside the server code
-    //   runBlocking {
-    //        val database = R2dbcDatabase.connect("r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1")
-    //        suspendTransaction(db = database) {
-    //            SchemaUtils.create(Customers)
-    //        }
-    //    }
-    //
-    //    Old function definition
-    //    private suspend fun <T> withConnection(body: suspend Connection.() -> T): T = withContext(scope.coroutineContext) {
     private suspend fun <T> withConnection(body: suspend Connection.() -> T): T {
         if (localConnection == null) {
             localConnection = connection.awaitFirst().also {

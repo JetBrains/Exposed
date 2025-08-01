@@ -144,6 +144,11 @@ open class Query(
      *
      * This query's [FieldSet] will be ordered by the first auto-increment column.
      *
+     * **Note:** There is a possibility that the final batched sub-collection emitted may be empty, as the flow of results
+     * cannot be pre-checked before being yielded. Whether the amount of results retrieved is less than the provided batch
+     * size will not be determined until the batch is consumed on the user-end, which means the amount of results in a
+     * batch may be zero.
+     *
      * @param batchSize Size of each sub-collection to return.
      * @param sortOrder Order in which the results should be retrieved.
      * @return Retrieved results as a collection of batched [ResultRow] sub-collections.
