@@ -49,7 +49,7 @@ class R2dbcConnectionImpl(
     }
 
     override suspend fun setCatalog(value: String) {
-        withConnection { executeSQL(metadataProvider.getCatalog()) }
+        withConnection { executeSQL(metadataProvider.setCatalog(value)) }
     }
 
     override suspend fun getSchema(): String = withConnection {

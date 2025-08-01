@@ -83,7 +83,12 @@ internal class OracleMetadata : MetadataProvider(OraclePropertyProvider, OracleT
 
     override fun getDatabaseMode(): String = ""
 
-    override fun getCatalog(): String = ""
+    override fun getCatalog(): String {
+        return buildString {
+            append("SELECT SYS_CONTEXT('userenv','db_name') AS TABLE_CAT ")
+            append("FROM DUAL")
+        }
+    }
 
     override fun setCatalog(value: String): String = ""
 

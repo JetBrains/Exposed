@@ -59,7 +59,7 @@ class R2dbcDatabase private constructor(
                 @OptIn(InternalApi::class)
                 dialects[vendor.lowercase()]?.invoke()
             }
-            ?: error("No dialect registered for $name. URL=$url")
+            ?: error("No dialect registered for the database connected using URL=$url")
     }
 
     /** The name of the database as a [DatabaseDialectMetadata]. */
@@ -251,4 +251,7 @@ class R2dbcDatabase private constructor(
 
 /** Returns the name of the database obtained from its connection URL. */
 val R2dbcDatabase.name: String
-    get() = url.substringBefore('?').substringAfterLast('/')
+    get() {
+        val propertyDelimiter = if (dialect is H2Dialect) ';' else '?'
+        return url.substringBefore(propertyDelimiter).substringAfterLast('/')
+    }
