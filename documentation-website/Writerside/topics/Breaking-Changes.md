@@ -1,5 +1,12 @@
 # Breaking Changes
 
+## 1.0.0-beta-6 <!--- temp name; potential RC -->
+
+* `R2dbcPreparedStatementApi.executeUpdate()` no longer returns a value. It was previously defined as returning an integer of the affected row count,
+  as per the JDBC variant, but it always returned a value of zero due to the nature of R2DBC result processing. If you wish to still retrieve the affected
+  row count manually after calling `executeUpdate()` (and have no further need of the statement results after), this can be achieved by calling
+  `R2dbcPreparedStatementApi.getResultRow()?.rowsUpdated()?.singleOrNull()`.
+
 ## 1.0.0-beta-5
 
 * Migration of kotlinx-datetime from version 6 to version 7. The only package affected is `exposed-kotlin-datetime`. `KotlinInstantColumnType`, and

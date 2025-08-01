@@ -59,13 +59,10 @@ class R2dbcPreparedStatementImpl(
 
     override suspend fun executeQuery(): R2dbcResult = R2dbcResult(statement.execute(), typeMapping)
 
-    override suspend fun executeUpdate(): Int {
+    override suspend fun executeUpdate() {
         val result = statement.execute()
         val r2dbcResult = R2dbcResult(result, typeMapping)
         resultRow = r2dbcResult
-
-        // Todo discuss if a return value is even necessary (since never used)
-        return 0
     }
 
     override suspend fun executeMultiple(): List<StatementResult> {
