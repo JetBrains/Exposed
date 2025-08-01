@@ -1,3 +1,49 @@
+# 1.0.0-beta-5
+
+## What's Changed
+
+Breaking changes:
+* Separate multiple internal classes from single file by @bog-walk in https://github.com/JetBrains/Exposed/pull/2564
+* Rename IStatementBuilder interface and add executable converter by @bog-walk in https://github.com/JetBrains/Exposed/pull/2562
+* Address internal TODOs and checks by @bog-walk in https://github.com/JetBrains/Exposed/pull/2572
+* EXPOSED-813 When is the plan to migrate kotlinx.datetime.Instant to kotlin.time.Instant? by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2557
+* Add hint about package naming changes in Exposed 1.0.0 by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2561
+* Phase out support for H2 version 1.x  by @bog-walk in https://github.com/JetBrains/Exposed/pull/2573
+
+Infrastructure:
+* Bump org.jetbrains.kotlinx.binary-compatibility-validator from 0.18.0 to 0.18.1 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2554
+* Bump springFramework from 6.2.8 to 6.2.9 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2560
+* Bump springBoot from 3.5.3 to 3.5.4 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2571
+* Bump org.junit:junit-bom from 5.13.3 to 5.13.4 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2566
+* Bump io.asyncer:r2dbc-mysql from 1.3.2 to 1.4.1 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2477
+* Bump io.github.hakky54:logcaptor from 2.11.0 to 2.12.0 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2574
+* Bump com.vanniktech:gradle-maven-publish-plugin from 0.33.0 to 0.34.0 by @dependabot[bot] in https://github.com/JetBrains/Exposed/pull/2570
+* Migrate to Vanniktech Maven Publish plugin by @e5l in https://github.com/JetBrains/Exposed/pull/2552
+* Remove fixed or addressed TODOs by @bog-walk in https://github.com/JetBrains/Exposed/pull/2551
+ 
+Docs:
+* docs: Merge gh-pages commits into main by @bog-walk in https://github.com/JetBrains/Exposed/pull/2546
+
+Features:
+* feat: EXPOSED-826 Extend MigrationUtils with dropUnmappedIndices and dropUnmappedSequence by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2547
+
+Bug fixes:
+* EXPOSED-768 UUID inserts into BINARY(16) column types in H2 by @med01-flutter-uki in https://github.com/JetBrains/Exposed/pull/2463
+* EXPOSED-811 argument "where" in "batchUpsert" have no way to use it by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2529
+* readObject() parameter change requires casting to keep using by @bog-walk in https://github.com/JetBrains/Exposed/pull/2550
+* Fix the duplicated segments on SQLServer dialect by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2558
+* EXPOSED-815 Check types for QueryAlias.get() at runtime by @ntkoopman in https://github.com/JetBrains/Exposed/pull/2532
+* Enable "SELECT FOR UPDATE" for the several applicable dialects by @sokomishalov in https://github.com/JetBrains/Exposed/pull/2567
+* EXPOSED-731 Timestamp support for SQLite is broken by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2568
+* EXPOSED-825 Case().When(...).Else(...) with QueryParameter(...,… by @obabichevjb in https://github.com/JetBrains/Exposed/pull/2565
+
+## New Contributors
+* @med01-flutter-uki made their first contribution in https://github.com/JetBrains/Exposed/pull/2463
+* @ntkoopman made their first contribution in https://github.com/JetBrains/Exposed/pull/2532
+* @sokomishalov made their first contribution in https://github.com/JetBrains/Exposed/pull/2567
+
+**Full Changelog**: https://github.com/JetBrains/Exposed/compare/1.0.0-beta-4...1.0.0-beta-5
+
 # 1.0.0-beta-4
 
 ## What's Changed

@@ -1,3 +1,4 @@
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.exposed.gradle.configureDetekt
 import org.jetbrains.exposed.gradle.configureMavenCentralMetadata
 import org.jetbrains.exposed.gradle.testDb
@@ -42,13 +43,14 @@ repositories {
 allprojects {
     if (this.name != "exposed-tests" && this.name != "exposed-r2dbc-tests" && this != rootProject) {
         apply(plugin = "com.vanniktech.maven.publish")
+        apply(plugin = "signing")
         this@allprojects.mavenPublishing {
             pom {
                 configureMavenCentralMetadata(this@allprojects)
             }
 
-            publishToMavenCentral()
-            signAllPublications()
+            publishToMavenCentral(automaticRelease = true)
+            signPublicationIfKeyPresent(this@allprojects, this)
         }
     }
 }
@@ -157,4 +159,27 @@ subprojects {
             dependency(rootProject.libs.mssql)
         }
     }
+}
+
+fun signPublicationIfKeyPresent(project: Project, publication: MavenPublishBaseExtension) {
+    val keyId = System.getenv("SIGNING_KEY_ID")
+    val signingKey = System.getenv("SIGNING_KEY")
+    val signingKeyPassphrase = System.getenv("SIGNING_PASSWORD")
+    if (!signingKey.isNullOrBlank()) {
+        println("In-memory GPG key found. Signing artifacts for ${project.path}.")
+        project.extensions.configure<SigningExtension>("signing") {
+            useInMemoryPgpKeys(keyId, preprocessPrivateGpgKey(signingKey), signingKeyPassphrase)
+            publication.signAllPublications()
+        }
+    }
+}
+
+private fun preprocessPrivateGpgKey(key: String): String {
+    val prefix = "-----BEGIN PGP PRIVATE KEY BLOCK-----"
+    val suffix = "-----END PGP PRIVATE KEY BLOCK-----"
+    val delimiter = "\r\n"
+    return prefix + delimiter + key
+        .replace(prefix, "")
+        .replace(suffix, "")
+        .replace(" ", "\r\n") + delimiter + suffix
 }

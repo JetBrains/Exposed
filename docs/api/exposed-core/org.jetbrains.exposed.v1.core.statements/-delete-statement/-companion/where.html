@@ -41,7 +41,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">1.0.0-beta-3
+        <div class="library-version" id="library-version">1.0.0-beta-5
         </div>
         <div class="navigation-controls">
         <div class="filter-section filter-section_loading" id="filter-section">
@@ -100,12 +100,8 @@
                 Replace directly with a table extension function:
                     `table.deleteWhere(limit) { op }` OR `table.deleteIgnoreWhere(limit) { op }`
 
-                Or pass the expected statement to an instance of Executable:
-                For JDBC:
-                `DeleteBlockingExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
-
-                FOR R2DBC:
-                `DeleteSuspendExecutable(buildStatement { table.deleteWhere(limit, { op }) }).execute(transaction) ?: 0`
+                Or convert the expected statement to an instance of Executable:
+                    `buildStatement { table.deleteWhere(limit, { op }) }.toExecutable().execute(transaction) ?: 0`
             </p></div></div></div>
 </div>
     <div class="footer">
