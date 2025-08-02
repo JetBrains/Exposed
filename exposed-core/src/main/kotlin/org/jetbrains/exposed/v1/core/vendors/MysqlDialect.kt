@@ -357,6 +357,10 @@ open class MysqlDialect : VendorDialect(dialectName, MysqlDataTypeProvider.INSTA
 
     override val supportsSetDefaultReferenceOption: Boolean = false
 
+    @Deprecated(
+        "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
+        ReplaceWith("TransactionManager.current().connection.metadata { supportsSelectForUpdate }")
+    )
     override val supportsSelectForUpdate: Boolean = true
 
     /** Returns `true` if the MySQL database version is greater than or equal to 5.6. */
