@@ -20,3 +20,35 @@ public final class org/jetbrains/exposed/v1/migration/MigrationUtils : org/jetbr
 	public static synthetic fun statementsRequiredForDatabaseMigration$default (Lorg/jetbrains/exposed/v1/migration/MigrationUtils;[Lorg/jetbrains/exposed/v1/core/Table;ZILjava/lang/Object;)Ljava/util/List;
 }
 
+public final class org/jetbrains/exposed/v1/migration/SchemaValidationException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun getMigrationStatements ()Ljava/util/List;
+}
+
+public final class org/jetbrains/exposed/v1/migration/SchemaValidationKt {
+	public static final fun assertSchemaIsCorrect ([Lorg/jetbrains/exposed/v1/core/Table;Z)V
+	public static synthetic fun assertSchemaIsCorrect$default ([Lorg/jetbrains/exposed/v1/core/Table;ZILjava/lang/Object;)V
+	public static final fun validateSchema ([Lorg/jetbrains/exposed/v1/core/Table;Z)Lorg/jetbrains/exposed/v1/migration/SchemaValidationResult;
+	public static synthetic fun validateSchema$default ([Lorg/jetbrains/exposed/v1/core/Table;ZILjava/lang/Object;)Lorg/jetbrains/exposed/v1/migration/SchemaValidationResult;
+}
+
+public abstract class org/jetbrains/exposed/v1/migration/SchemaValidationResult {
+	public final fun getMigrationStatements ()Ljava/util/List;
+	public final fun isValid ()Z
+}
+
+public final class org/jetbrains/exposed/v1/migration/SchemaValidationResult$Invalid : org/jetbrains/exposed/v1/migration/SchemaValidationResult {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/jetbrains/exposed/v1/migration/SchemaValidationResult$Invalid;
+	public static synthetic fun copy$default (Lorg/jetbrains/exposed/v1/migration/SchemaValidationResult$Invalid;Ljava/util/List;ILjava/lang/Object;)Lorg/jetbrains/exposed/v1/migration/SchemaValidationResult$Invalid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStatements ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/jetbrains/exposed/v1/migration/SchemaValidationResult$Valid : org/jetbrains/exposed/v1/migration/SchemaValidationResult {
+	public static final field INSTANCE Lorg/jetbrains/exposed/v1/migration/SchemaValidationResult$Valid;
+}
+
