@@ -21,22 +21,28 @@ class SchemaTests : DatabaseTestsBase() {
     fun `create and set schema in mysql`() {
         withDb(TestDB.ALL_MYSQL_MARIADB) {
             val schema = Schema("MYSCHEMA")
+            val manualSchema = Schema("MANUAL_SCHEMA")
             try {
                 SchemaUtils.createSchema(schema)
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
+                SchemaUtils.setSchema(schema)
 
                 val catalogName = connection.catalog
 
                 assertEquals(catalogName, schema.identifier)
+
+                // set schema directly through connection
+                SchemaUtils.createSchema(manualSchema)
+                connection.catalog = manualSchema.identifier
+                assertEquals(manualSchema.identifier, connection.catalog)
             } finally {
-                SchemaUtils.dropSchema(schema)
+                SchemaUtils.dropSchema(schema, manualSchema)
             }
         }
     }
 
     @Test
     fun `create and set schema tests`() {
-        withDb(excludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_MARIADB) {
+        withDb(excludeSettings = TestDB.ALL_MYSQL_MARIADB) {
             if (currentDialect.supportsCreateSchema) {
                 val schema = when (currentDialect) {
                     is SQLServerDialect -> {
@@ -51,7 +57,7 @@ class SchemaTests : DatabaseTestsBase() {
 
                 try {
                     SchemaUtils.createSchema(schema)
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
+                    SchemaUtils.setSchema(schema)
                     assertEquals(TransactionManager.current().db.identifierManager.inProperCase(schema.identifier), connection.schema)
                 } finally {
                     SchemaUtils.dropSchema(schema)
@@ -85,7 +91,7 @@ class SchemaTests : DatabaseTestsBase() {
 
                 exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT PRIMARY KEY)")
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.setSchema(schema)
+                SchemaUtils.setSchema(schema)
                 exec("DROP TABLE IF EXISTS test")
                 exec("CREATE TABLE test(id INT REFERENCES $firstCatalogName.test(id))")
 
@@ -198,7 +204,7 @@ class SchemaTests : DatabaseTestsBase() {
             val schema = prepareSchemaForTest(schemaName)
             try {
                 SchemaUtils.createSchema(schema)
-                org.jetbrains.exposed.v1.jdbc.SchemaUtils.create(tester)
+                SchemaUtils.create(tester)
 
                 tester.insert {
                     it[amount1] = 99u
@@ -222,7 +228,7 @@ class SchemaTests : DatabaseTestsBase() {
                 }
             } finally {
                 if (testDb == TestDB.SQLSERVER) {
-                    org.jetbrains.exposed.v1.jdbc.SchemaUtils.drop(tester)
+                    SchemaUtils.drop(tester)
                     SchemaUtils.dropSchema(schema)
                 } else {
                     SchemaUtils.dropSchema(schema, cascade = true)

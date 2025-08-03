@@ -2,6 +2,7 @@ package org.jetbrains.exposed.v1.r2dbc.sql.tests.h2
 
 import io.r2dbc.spi.IsolationLevel
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.last
@@ -186,51 +187,49 @@ class MultiDatabaseTest {
         }
     }
 
-    // TODO convert or keep behavior?
-//    @Test
-//    fun testCoroutinesWithMultiDb() = runTest {
-//        suspendTransaction(Dispatchers.IO, db = db1) { // issue due to context arg...
-//            val tr1 = this
-//            SchemaUtils.create(DMLTestsData.Cities)
-//            assertTrue(DMLTestsData.Cities.selectAll().empty())
-//            DMLTestsData.Cities.insert {
-//                it[DMLTestsData.Cities.name] = "city1"
-//            }
-// this should not?
-//            suspendTransaction(Dispatchers.IO, db = db2) {
-//                assertFalse(DMLTestsData.Cities.exists())
-//                SchemaUtils.create(DMLTestsData.Cities)
-//                DMLTestsData.Cities.insert {
-//                    it[DMLTestsData.Cities.name] = "city2"
-//                }
-//                DMLTestsData.Cities.insert {
-//                    it[DMLTestsData.Cities.name] = "city3"
-//                }
-//                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
-//                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
-//
-    // this should nest?
-//                suspendTransaction {
-//                    assertEquals(1L, DMLTestsData.Cities.selectAll().count())
-//                    DMLTestsData.Cities.insert {
-//                        it[DMLTestsData.Cities.name] = "city4"
-//                    }
-//                    DMLTestsData.Cities.insert {
-//                        it[DMLTestsData.Cities.name] = "city5"
-//                    }
-//                    assertEquals(3L, DMLTestsData.Cities.selectAll().count())
-//                }
-//
-//                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
-//                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
-//                SchemaUtils.drop(DMLTestsData.Cities)
-//            }
-//
-//            assertEquals(3L, DMLTestsData.Cities.selectAll().count())
-//            assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
-//            SchemaUtils.drop(DMLTestsData.Cities)
-//        }
-//    }
+    @Test
+    fun testCoroutinesWithMultiDb() = runTest {
+        suspendTransaction(Dispatchers.IO, db = db1) {
+            val tr1 = this
+            SchemaUtils.create(DMLTestsData.Cities)
+            assertTrue(DMLTestsData.Cities.selectAll().empty())
+            DMLTestsData.Cities.insert {
+                it[name] = "city1"
+            }
+
+            suspendTransaction(Dispatchers.IO, db = db2) {
+                assertFalse(DMLTestsData.Cities.exists())
+                SchemaUtils.create(DMLTestsData.Cities)
+                DMLTestsData.Cities.insert {
+                    it[name] = "city2"
+                }
+                DMLTestsData.Cities.insert {
+                    it[name] = "city3"
+                }
+                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
+                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
+
+                tr1.suspendTransaction {
+                    assertEquals(1L, DMLTestsData.Cities.selectAll().count())
+                    DMLTestsData.Cities.insert {
+                        it[name] = "city4"
+                    }
+                    DMLTestsData.Cities.insert {
+                        it[name] = "city5"
+                    }
+                    assertEquals(3L, DMLTestsData.Cities.selectAll().count())
+                }
+
+                assertEquals(2L, DMLTestsData.Cities.selectAll().count())
+                assertEquals("city3", DMLTestsData.Cities.selectAll().last()[DMLTestsData.Cities.name])
+                SchemaUtils.drop(DMLTestsData.Cities)
+            }
+
+            assertEquals(3L, DMLTestsData.Cities.selectAll().count())
+            assertEqualLists(listOf("city1", "city4", "city5"), DMLTestsData.Cities.selectAll().map { it[DMLTestsData.Cities.name] })
+            SchemaUtils.drop(DMLTestsData.Cities)
+        }
+    }
 
     @Test
     fun `when default database is not explicitly set - should return the latest connection`() {
@@ -261,27 +260,26 @@ class MultiDatabaseTest {
     @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
     @Test // this test always fails for one reason or another
     fun `when the default database is changed, coroutines should respect that`() = runTest {
-        // TODO R2dbcDatabase.name parsing logic
-//        assertEquals("jdbc:h2:mem:db1", db1.name) // These two asserts fail sometimes for reasons that escape me
-//        assertEquals("jdbc:h2:mem:db2", db2.name) // but if you run just these tests one at a time, they pass.
+        assertEquals("db1", db1.name) // These two asserts fail sometimes for reasons that escape me
+        assertEquals("db2", db2.name) // but if you run just these tests one at a time, they pass.
         val coroutineDispatcher1 = newSingleThreadContext("first")
         TransactionManager.defaultDatabase = db1
-        org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction(coroutineDispatcher1) {
+        suspendTransaction(coroutineDispatcher1) {
             assertEquals(
                 db1.name,
-                org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.name
+                TransactionManager.current().db.name
             ) // when running all tests together, this one usually fails
-            org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().exec("SELECT 1") { row ->
+            TransactionManager.current().exec("SELECT 1") { row ->
                 assertEquals(1, row.getInt(1))
             }
         }
         TransactionManager.defaultDatabase = db2
-        org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction(coroutineDispatcher1) {
+        suspendTransaction(coroutineDispatcher1) {
             assertEquals(
                 db2.name,
-                org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.name
+                TransactionManager.current().db.name
             ) // fails??
-            org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().exec("SELECT 1") { row ->
+            TransactionManager.current().exec("SELECT 1") { row ->
                 assertEquals(1, row.getInt(1))
             }
         }
@@ -290,24 +288,23 @@ class MultiDatabaseTest {
 
     @Test // If the first two assertions pass, the entire test passes
     fun `when the default database is changed, threads should respect that`() = runTest {
-        // TODO R2dbcDatabase.name parsing logic
-//        assertEquals("jdbc:h2:mem:db1", db1.name)
-//        assertEquals("jdbc:h2:mem:db2", db2.name)
+        assertEquals("db1", db1.name)
+        assertEquals("db2", db2.name)
         val threadpool = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         TransactionManager.defaultDatabase = db1
         threadpool.invoke {
-            org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction {
-                assertEquals(db1.name, org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.name)
-                org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().exec("SELECT 1") { row ->
+            suspendTransaction {
+                assertEquals(db1.name, TransactionManager.current().db.name)
+                TransactionManager.current().exec("SELECT 1") { row ->
                     assertEquals(1, row.getInt(1))
                 }
             }
         }
         TransactionManager.defaultDatabase = db2
         threadpool.invoke {
-            org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction {
-                assertEquals(db2.name, org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().db.name)
-                org.jetbrains.exposed.v1.r2dbc.transactions.TransactionManager.current().exec("SELECT 1") { row ->
+            suspendTransaction {
+                assertEquals(db2.name, TransactionManager.current().db.name)
+                TransactionManager.current().exec("SELECT 1") { row ->
                     assertEquals(1, row.getInt(1))
                 }
             }
