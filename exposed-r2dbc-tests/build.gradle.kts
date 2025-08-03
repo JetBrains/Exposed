@@ -57,7 +57,6 @@ dependencies {
     testRuntimeOnly(libs.r2dbc.mysql)
     testRuntimeOnly(libs.r2dbc.oracle)
     testImplementation(libs.r2dbc.postgresql)
-    testCompileOnly(libs.postgre)
     testRuntimeOnly(libs.r2dbc.sqlserver)
 
     testImplementation(libs.logcaptor)

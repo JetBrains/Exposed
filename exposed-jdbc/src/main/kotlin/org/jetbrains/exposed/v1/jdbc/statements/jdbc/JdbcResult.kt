@@ -37,6 +37,8 @@ class JdbcResult(
 
     override fun <T> getObject(name: String, type: Class<T>): T? = result.getObject(name, type)
 
+    override fun getString(index: Int): String? = result.getString(index)
+
     /**
      * Moves from the current position in the [ResultSet] to the next row and returns `true`,
      * or returns `false` if there are no more rows to move forward to.

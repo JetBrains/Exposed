@@ -789,6 +789,7 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2DBCRow : org/
 	public fun getObject (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
 	public fun getObject (Ljava/lang/String;Ljava/lang/Class;Lorg/jetbrains/exposed/v1/core/IColumnType;)Ljava/lang/Object;
 	public final fun getRow ()Lio/r2dbc/spi/Row;
+	public fun getString (I)Ljava/lang/String;
 }
 
 public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMetadataImpl : org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcExposedDatabaseMetadata {

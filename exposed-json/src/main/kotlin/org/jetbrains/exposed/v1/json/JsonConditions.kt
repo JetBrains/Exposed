@@ -62,7 +62,6 @@ fun ExpressionWithColumnType<*>.contains(candidate: Expression<*>, path: String?
  * @sample org.jetbrains.exposed.v1.json.JsonColumnTests.testJsonContains
  */
 fun <T> ExpressionWithColumnType<*>.contains(candidate: T, path: String? = null): Contains = when (candidate) {
-    is Iterable<*>, is Array<*> -> Contains(this, stringLiteral(asLiteral(candidate).toString()), path, columnType)
     is String -> Contains(this, stringLiteral(candidate), path, columnType)
     else -> Contains(this, asLiteral(candidate), path, columnType)
 }
