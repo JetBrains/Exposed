@@ -48,6 +48,14 @@ class DateTimeOracleTypeMapper : TypeMapper {
                 }
             }
         }
+        if (value is String) {
+            when {
+                dialect is H2Dialect && dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
+                    statement.bind(index - 1, Timestamp.valueOf(value).toLocalDateTime())
+                    return true
+                }
+            }
+        }
 
         return false
     }

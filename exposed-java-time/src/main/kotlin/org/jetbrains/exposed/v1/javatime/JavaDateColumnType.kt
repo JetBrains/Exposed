@@ -11,8 +11,6 @@ import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 import java.util.*
 
-private const val ORACLE_START_YEAR = 1970
-
 private val DEFAULT_DATE_STRING_FORMATTER by lazy {
     DateTimeFormatter.ISO_LOCAL_DATE.withLocale(Locale.ROOT).withZone(ZoneId.systemDefault())
 }
@@ -358,24 +356,10 @@ class JavaLocalTimeColumnType : ColumnType<LocalTime>(), IDateColumnType {
         else -> valueFromDB(value.toString())
     }
 
-    // TODO check if we still need it after introducing type mappers?
-    override fun notNullValueToDB(value: LocalTime): Any {
-        val dialect = currentDialect
-        return when {
-            dialect is SQLiteDialect -> {
-                DEFAULT_TIME_STRING_FORMATTER.format(value)
-            }
-
-            dialect is OracleDialect || dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> {
-                // For Oracle dialect, convert LocalTime to java.sql.Timestamp with a fixed date (1970-01-01)
-                val dateTime = LocalDateTime.of(LocalDate.of(ORACLE_START_YEAR, 1, 1), value)
-                java.sql.Timestamp.valueOf(dateTime)
-            }
-
-            else -> {
-                java.sql.Time.valueOf(value)
-            }
-        }
+    override fun notNullValueToDB(value: LocalTime): Any = when {
+        currentDialect is SQLiteDialect -> DEFAULT_TIME_STRING_FORMATTER.format(value)
+        currentDialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle -> ORACLE_TIME_STRING_FORMATTER.format(value)
+        else -> java.sql.Time.valueOf(value)
     }
 
     override fun nonNullValueAsDefaultString(value: LocalTime): String = when (currentDialect) {
