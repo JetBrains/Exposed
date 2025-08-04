@@ -43,6 +43,7 @@ open class Query(
 
     override fun forUpdate(option: ForUpdateOption): Query {
         // Should we make the whole method `forUpdate` suspend, or should we think about an option to get metadata synchronously?
+        // TODO remove runBlocking after introducing non-suspend metadata
         val supportsSelectForUpdate = runBlocking { TransactionManager.current().connection.metadata { supportsSelectForUpdate } }
         @OptIn(InternalApi::class)
         this.forUpdate = if (option is ForUpdateOption.NoForUpdateOption || supportsSelectForUpdate) {

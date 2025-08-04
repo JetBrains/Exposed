@@ -664,11 +664,7 @@ class SelectTests : DatabaseTestsBase() {
             val query = cities.selectAll()
                 .forUpdate()
 
-            query.prepareSQL(TransactionManager.current())
-                .let { sql ->
-                    println(sql)
-                    assertTrue(sql.contains("FOR UPDATE"))
-                }
+            assertTrue(query.prepareSQL(TransactionManager.current()).contains("FOR UPDATE"))
         }
     }
 }
