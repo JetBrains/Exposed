@@ -24,7 +24,7 @@ open class ExplainSuspendExecutable(
     override suspend fun R2dbcPreparedStatementApi.executeInternal(transaction: R2dbcTransaction): R2dbcResult = executeQuery()
 
     override suspend fun collect(collector: FlowCollector<ExplainResultRow>) {
-        val rs = TransactionManager.current().exec(this)!! as R2dbcResult
+        val rs = TransactionManager.current().execQuery(this)
         var fieldIndex: Map<String, Int>? = null
 
         try {

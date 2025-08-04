@@ -18,6 +18,8 @@ import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.select
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.sql.tests.shared.dml.withCitiesAndUsers
+import org.jetbrains.exposed.v1.r2dbc.statements.api.R2dbcResult
+import org.jetbrains.exposed.v1.r2dbc.statements.api.origin
 import org.jetbrains.exposed.v1.r2dbc.statements.toExecutable
 import org.jetbrains.exposed.v1.r2dbc.tests.R2dbcDatabaseTestsBase
 import org.jetbrains.exposed.v1.r2dbc.tests.TestDB
@@ -217,6 +219,42 @@ class TransactionExecTests : R2dbcDatabaseTestsBase() {
             val rowsDeleted = exec(deleteAllUserData.toExecutable())
             assertEquals(initialUserDataCount, rowsDeleted?.toLong())
             assertEquals(0, userData.selectAll().count())
+        }
+    }
+
+    @Test
+    fun testExecWithQueryInstance() {
+        withTables(ExecTable) {
+            val selectQuery = ExecTable.select(ExecTable.amount).where { ExecTable.amount less 100 }
+
+            val amounts = (90..99).toList()
+            ExecTable.batchInsert(amounts, shouldReturnGeneratedValues = false) { amount ->
+                this[ExecTable.id] = (amount % 10 + 1)
+                this[ExecTable.amount] = amount
+            }
+
+            val expectedSum = amounts.sum()
+
+            // using broader exec(BlockingExecutable) with cast to R2dbcResult
+            val result1 = exec(selectQuery) {
+                it as R2dbcResult
+                it.mapRows { row ->
+                    row.getObject(1, java.lang.Integer::class.java)?.toInt()
+                }
+                    .toList()
+                    .sumOf { num -> num ?: 0 }
+            }
+            assertEquals(expectedSum, result1)
+
+            // using typed exec(AbstractQuery) that exposes R2dbcResult directly
+            val result2 = execQuery(selectQuery) {
+                it.mapRows { row ->
+                    row.origin.get(0, java.lang.Integer::class.java)?.toInt()
+                }
+                    .toList()
+                    .sumOf { num -> num ?: 0 }
+            }
+            assertEquals(expectedSum, result2)
         }
     }
 }

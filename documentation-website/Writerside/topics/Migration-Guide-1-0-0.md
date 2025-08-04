@@ -273,6 +273,15 @@ transaction {
 
 </compare>
 
+<note>
+Starting from version 1.0.0-beta-5, the appropriate executable class instance can be resolved for you by calling <code>.toExecutable()</code>,
+as long as the custom statement extends an existing subclass from the Exposed API.
+In the example above, the <code>executable</code> variable would instead look like:
+<code-block lang="kotlin">
+val executable = BatchInsertOnConflictDoNothing(TableA).toExecutable()
+</code-block>
+</note>
+
 ### `exec()` parameter type changed
 
 Prior to version 1.0.0, it was possible to create a `Statement` instance, using a built-in or custom implementation,
@@ -319,7 +328,74 @@ transaction {
 
 </compare>
 
+<note>
+Starting from version 1.0.0-beta-5, the appropriate executable class instance can be resolved for you by calling <code>.toExecutable()</code>.
+In the example above, the <code>delete</code> variable would instead look like:
+<code-block lang="kotlin">
+val delete = deleteStmt.toExecutable()
+</code-block>
+</note>
+
 This signature change does not affect the method's use with a `Query` argument, as `Query` implements `BlockingExecutable` directly.
+But changes to how Exposed processes query results does affect the type of the lambda block's argument.
+
+Prior to version 1.0.0, the `java.sql.ResultSet` retrieved from the database was passed directly as the argument.
+In version 1.0.0, this result is wrapped by a common `ResultApi` object and requires casting to a `JdbcResult`
+if you want to process the underlying `ResultSet` directly:
+
+<compare first-title="0.61.0" second-title="1.0.0-beta-1">
+
+```kotlin
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
+
+transaction {
+    val query = TablA
+        .select(TableA.amount)
+        .where { TableA.amount greater 100 }
+
+    val result = exec(query) {
+        val amounts = mutableListOf<Int>()
+        while (it.next()) {
+            amounts += it.getInt("amount") % 10
+        }
+        amounts
+    }
+}
+```
+
+```kotlin
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+
+transaction {
+    val query = TablA
+        .select(TableA.amount)
+        .where { TableA.amount greater 100 }
+
+    val result = exec(query) {
+        val rs = (it as JdbcResult).result
+        val amounts = mutableListOf<Int>()
+        while (rs.next()) {
+            amounts += rs.getInt("amount") % 10
+        }
+        amounts
+    }
+}
+```
+
+</compare>
+
+<note>
+Starting from version 1.0.0-beta-6, the original pre-version 1.0.0 code in your lambda can once again be used by replacing <code>exec(query)</code>
+with <code>execQuery(query)</code>. The latter automatically performs the necessary casting and unwrapping under-the-hood,
+so you can continue to use <code>ResultSet</code> directly as before. It is also recommended to use this method
+if the statement originally passed to <code>exec()</code> was obtained via <code>explain()</code> or any DML
+functions that return results, for example, <code>.insertReturning()</code>.
+</note>
+
+See [result wrappers](#result-wrappers) for more details behind the changes made to how Exposed handles query results.
 
 ### `ReturningStatement` return type changed
 
