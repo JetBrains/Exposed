@@ -1,8 +1,10 @@
 package org.jetbrains.exposed.v1.tests.shared.dml
 
+import junit.framework.TestCase.assertTrue
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.tests.DatabaseTestsBase
 import org.jetbrains.exposed.v1.tests.TestDB
 import org.jetbrains.exposed.v1.tests.shared.assertEqualLists
@@ -653,6 +655,16 @@ class SelectTests : DatabaseTestsBase() {
                 val offsetResult = alphabet.selectAll().offset(start).map { it[alphabet.letter] }
                 assertEqualLists(allLetters.drop(start.toInt()), offsetResult)
             }
+        }
+    }
+
+    @Test
+    fun testSelectForUpdate() {
+        withCitiesAndUsers(exclude = listOf(TestDB.SQLSERVER, TestDB.SQLITE)) { cities, _, _ ->
+            val query = cities.selectAll()
+                .forUpdate()
+
+            assertTrue(query.prepareSQL(TransactionManager.current()).contains("FOR UPDATE"))
         }
     }
 }

@@ -320,6 +320,11 @@ open class H2Dialect : VendorDialect(dialectName, H2DataTypeProvider, H2Function
     override val supportsOrderByNullsFirstLast: Boolean by lazy { resolveDelegatedDialect()?.supportsOrderByNullsFirstLast ?: super.supportsOrderByNullsFirstLast }
     override val supportsWindowFrameGroupsMode: Boolean by lazy { resolveDelegatedDialect()?.supportsWindowFrameGroupsMode ?: super.supportsWindowFrameGroupsMode }
     override val supportsColumnTypeChange: Boolean get() = true
+
+    @Deprecated(
+        "The parameter was moved to JdbcExposedDatabaseMetadata/R2dbcExposedDatabaseMetadata classes",
+        ReplaceWith("TransactionManager.current().connection.metadata { supportsSelectForUpdate }")
+    )
     override val supportsSelectForUpdate: Boolean get() = true
 
     override fun isAllowedAsColumnDefault(e: Expression<*>): Boolean = true

@@ -1,5 +1,10 @@
 # Breaking Changes
 
+## 1.0.0-beta-6
+
+* Parameter `supportsSelectForUpdate` from `DatabaseDialect` was deprecated and should not be used. The parameter was moved to `JdbcExposedDatabaseMetadata`/
+  `R2dbcExposedDatabaseMetadata` classes. It could be used with call `TransactionManager.current().connection.metadata { supportsSelectForUpdate }` now.
+
 ## 1.0.0-beta-5
 
 * Migration of kotlinx-datetime from version 6 to version 7. The only package affected is `exposed-kotlin-datetime`. `KotlinInstantColumnType`, and
