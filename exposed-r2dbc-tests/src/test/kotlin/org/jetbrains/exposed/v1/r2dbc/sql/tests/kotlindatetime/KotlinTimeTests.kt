@@ -506,8 +506,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             val x_timestamp_col = xTimestamp("timestamp_col")
         }
 
-        // TODO MYSQL_V8 test does not work on R2DBC now. The problem is that received timestamp is shifted by timezone.
-        withTables(excludeSettings = listOf(TestDB.MYSQL_V8), tester) {
+        withTables(tester) {
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
             val instant = Clock.System.nowAsJdk8()
@@ -531,8 +530,7 @@ class KotlinTimeTests : R2dbcDatabaseTestsBase() {
             val timestamp_col = timestamp("timestamp_col")
         }
 
-        // TODO MYSQL_V8 test does not work on R2DBC now. The problem is that received timestamp is shifted by timezone.
-        withTables(excludeSettings = listOf(TestDB.MYSQL_V8), tester) {
+        withTables(tester) {
             assertEquals("Africa/Cairo", ZoneId.systemDefault().id)
 
             val instant = Clock.System.nowAsJdk8()
