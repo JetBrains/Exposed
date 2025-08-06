@@ -12,6 +12,7 @@
         <custom-favicons>
             exposed-logo.svg
         </custom-favicons>
+        <analytics-head-script-file>google-search.html</analytics-head-script-file>
     </variables>
     <build-profile instance="hi">
         <variables>
