@@ -2,7 +2,6 @@ package org.jetbrains.exposed.v1.jdbc.statements.jdbc
 
 import org.intellij.lang.annotations.Language
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.core.Sequence
 import org.jetbrains.exposed.v1.core.statements.api.ExposedMetadataUtils
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
 import org.jetbrains.exposed.v1.core.utils.CachableMapWithDefault

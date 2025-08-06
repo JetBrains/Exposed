@@ -130,12 +130,15 @@ interface DatabaseDialect {
         }
     }
 
-    // TODO move it to JDBC or R2DBC metadata
     /** Returns whether the [columnMetadataSqlType] type and the [columnType] are equivalent.
      *
      * [columnMetadataJdbcType], the value of which comes from [java.sql.Types], is taken into consideration if needed by a specific database.
      * @see [H2Dialect.areEquivalentColumnTypes]
      */
+    @Deprecated(
+        "This method was moved to ExposedDatabaseMetadata and should not be used anymore from here.",
+        ReplaceWith("TransactionManager.current().db.metadata { areEquivalentColumnTypes() }")
+    )
     fun areEquivalentColumnTypes(columnMetadataSqlType: String, columnMetadataJdbcType: Int, columnType: String): Boolean =
         columnMetadataSqlType.equals(columnType, ignoreCase = true)
 
