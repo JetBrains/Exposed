@@ -214,7 +214,6 @@ private fun <T> TransactionScope.suspendedTransactionAsyncInternal(
                 handleSQLException(cause, transaction, attempts)
                 attempts++
                 if (attempts >= transaction.maxAttempts) {
-                    // TODO Probably we should wrap the exception to indicate attempts
                     throw cause
                 }
 

@@ -713,6 +713,10 @@ fun <T : Table> T.upsertReturning(
 /**
  * Represents the SQL statement that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
  *
+ * **Note:** It is a known limitation that R2DBC drivers for H2 and MariaDB do not return a means to access both the generated
+ * values and the updated row count from a single statement execution. If the database-accurate updated row count is required,
+ * via [BatchUpsertStatement.insertedCount], then [shouldReturnGeneratedValues] should be set to false.
+ *
  * @param data Collection of values to use in batch upsert.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
  * primary keys will be used. If the table does not have any primary keys, the first unique index will be attempted.
@@ -741,6 +745,10 @@ suspend fun <T : Table, E : Any> T.batchUpsert(
 
 /**
  * Represents the SQL statement that either batch inserts new rows into a table, or updates the existing rows if insertions violate unique constraints.
+ *
+ * **Note:** It is a known limitation that R2DBC drivers for H2 and MariaDB do not return a means to access both the generated
+ * values and the updated row count from a single statement execution. If the database-accurate updated row count is required,
+ * via [BatchUpsertStatement.insertedCount], then [shouldReturnGeneratedValues] should be set to false.
  *
  * @param data Sequence of values to use in batch upsert.
  * @param keys (optional) Columns to include in the condition that determines a unique constraint match. If no columns are provided,
