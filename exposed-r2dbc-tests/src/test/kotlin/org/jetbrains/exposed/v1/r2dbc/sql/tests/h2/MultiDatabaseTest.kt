@@ -12,6 +12,7 @@ import kotlinx.coroutines.invoke
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.exists
 import org.jetbrains.exposed.v1.r2dbc.insert
@@ -39,7 +40,7 @@ class MultiDatabaseTest {
     private val db1 by lazy {
         R2dbcDatabase.connect(
             "r2dbc:h2:mem:///db1;USER=root;DB_CLOSE_DELAY=-1;",
-            databaseConfig = {
+            databaseConfig = R2dbcDatabaseConfig {
                 defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
             }
         )
@@ -47,7 +48,7 @@ class MultiDatabaseTest {
     private val db2 by lazy {
         R2dbcDatabase.connect(
             "r2dbc:h2:mem:///db2;USER=root;DB_CLOSE_DELAY=-1;",
-            databaseConfig = {
+            databaseConfig = R2dbcDatabaseConfig {
                 defaultR2dbcIsolationLevel = IsolationLevel.READ_COMMITTED
             }
         )
