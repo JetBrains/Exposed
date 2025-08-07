@@ -5,7 +5,6 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Version
 import org.jetbrains.exposed.v1.core.statements.api.IdentifierManagerApi
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.*
 import org.jetbrains.exposed.v1.jdbc.statements.api.ExposedConnection
@@ -174,9 +173,7 @@ class Database private constructor(
             return Database(explicitVendor, config ?: DatabaseConfig.invoke()) {
                 connectionAutoRegistration(getNewConnection().apply { setupConnection(this) })
             }.apply {
-                CoreTransactionManager.registerDatabaseManager(this, manager(this))
-                // TODO ABOVE should be replaced with BELOW when ThreadLocalTransactionManager is fully deprecated
-                // TransactionManager.registerManager(this, manager(this))
+                TransactionManager.registerManager(this, manager(this))
             }
         }
 

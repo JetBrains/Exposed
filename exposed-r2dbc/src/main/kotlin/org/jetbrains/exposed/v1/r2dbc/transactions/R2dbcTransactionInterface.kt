@@ -15,7 +15,6 @@ interface R2dbcTransactionInterface : TransactionInterface {
     /** The transaction isolation level of the transaction, which may differ from the set database level. */
     val transactionIsolation: IsolationLevel
 
-    // TODO Remove from interface & make suspend function
     /** The database connection used by the transaction. */
     val connection: R2dbcExposedConnection<*>
 

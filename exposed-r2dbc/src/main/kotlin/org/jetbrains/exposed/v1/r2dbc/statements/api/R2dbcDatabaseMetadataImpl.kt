@@ -404,7 +404,6 @@ class R2dbcDatabaseMetadataImpl(
         )
     }
 
-    @OptIn(InternalApi::class)
     override fun resolveReferenceOption(refOption: String): ReferenceOption? {
         val refOptionInt = refOption.toIntOrNull() ?: return null
 

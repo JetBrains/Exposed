@@ -268,14 +268,6 @@ internal object OracleFunctionProvider : FunctionProvider() {
             expression to ((expression as? ExpressionWithColumnType<*>)?.alias("c$index") ?: expression.alias("c$index"))
         }.toMap()
 
-        // TODO check if it could be replaced with buildStatement
-        // TODO The old version:
-        // TODO val subQuery = targets.select(columnsToSelect.values.toList())
-        // TODO        where?.let {
-        // TODO            subQuery.adjustWhere { it }
-        // TODO        }
-        // TODO        subQuery.prepareSQL(this)
-        // TODO        +") x"
         +"SELECT "
         columnsToSelect.values.appendTo { +it }
         +" FROM "
@@ -362,7 +354,6 @@ internal object OracleFunctionProvider : FunctionProvider() {
             )
         targets.checkJoinTypes(StatementType.DELETE)
 
-        // TODO the same as above
         @OptIn(InternalApi::class)
         return with(QueryBuilder(true)) {
             +"DELETE (SELECT "
