@@ -815,7 +815,6 @@ public final class org/jetbrains/exposed/v1/r2dbc/statements/api/R2dbcDatabaseMe
 	public fun getSupportsSelectForUpdate ()Z
 	public fun getVersion ()Lorg/jetbrains/exposed/v1/core/Version;
 	public fun resetCurrentScheme ()V
-	public fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
 	public fun schemaNames (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun sequences (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun tableConstraints (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

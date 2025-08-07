@@ -3507,7 +3507,7 @@ public abstract class org/jetbrains/exposed/v1/core/statements/api/ExposedDataba
 	public final fun getDatabase ()Ljava/lang/String;
 	public abstract fun getIdentifierManager ()Lorg/jetbrains/exposed/v1/core/statements/api/IdentifierManagerApi;
 	public abstract fun resetCurrentScheme ()V
-	public abstract fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
+	protected abstract fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
 }
 
 public final class org/jetbrains/exposed/v1/core/statements/api/ExposedMetadataUtils {

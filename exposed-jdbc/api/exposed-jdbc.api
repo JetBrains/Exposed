@@ -690,7 +690,6 @@ public final class org/jetbrains/exposed/v1/jdbc/statements/jdbc/JdbcDatabaseMet
 	public fun getUrl ()Ljava/lang/String;
 	public fun getVersion ()Ljava/math/BigDecimal;
 	public fun resetCurrentScheme ()V
-	public fun resolveReferenceOption (Ljava/lang/String;)Lorg/jetbrains/exposed/v1/core/ReferenceOption;
 	public fun sequences ()Ljava/util/List;
 	public fun supportsLimitWithUpdateOrDelete ()Z
 	public fun tableConstraints (Ljava/util/List;)Ljava/util/Map;
