@@ -12,6 +12,7 @@ import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.collect
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.statements.api.ExposedSavepoint
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
@@ -206,6 +207,18 @@ class R2dbcConnectionImpl(
             metadataImpl = R2dbcDatabaseMetadataImpl(getCatalog(), this, vendorDialect)
         }
         metadataImpl!!.body()
+    }
+
+    override fun <T> localMetadata(body: R2dbcExposedDatabaseMetadata.() -> T): T {
+        if (metadataImpl == null) {
+            metadataImpl = runBlocking {
+                withConnection {
+                    R2dbcDatabaseMetadataImpl(getCatalog(), this, vendorDialect)
+                }
+            }
+        }
+
+        return metadataImpl!!.body()
     }
 
     private var localConnection: Connection? = null
