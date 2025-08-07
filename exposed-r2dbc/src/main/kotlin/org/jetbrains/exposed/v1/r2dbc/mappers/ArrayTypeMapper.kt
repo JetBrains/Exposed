@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.util.UUID
 import kotlin.reflect.KClass
 
 /**
@@ -115,6 +116,7 @@ class ArrayTypeMapper : TypeMapper {
             columnType.delegate is BinaryColumnType -> (mappedList as List<ByteArray>).toTypedArray()
             columnType.delegate is TextColumnType -> (mappedList as List<String>).toTypedArray()
             columnType.delegate is DecimalColumnType -> (mappedList as List<java.math.BigDecimal>).toTypedArray()
+            columnType.delegate is UUIDColumnType -> (mappedList as List<UUID>).toTypedArray()
             columnType.delegate is IDateColumnType -> {
                 // For date/time types, we need to handle them specially
                 // The hasTimePart property tells us whether it's a DATE or DATETIME column
